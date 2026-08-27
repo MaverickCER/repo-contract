@@ -1,0 +1,51 @@
+node_modules
+# Anchored to the repo root (leading slash) -- a bare `dist`/`coverage`/`reports` entry matches a
+# directory of that name at ANY depth in git's own ignore semantics, which silently gitignored
+# this repository's own test/unit/coverage/** (a real, tracked test suite, not a build artifact --
+# discovered when it also made checks/coverage.ts's test-only exports invisible to knip, which
+# infers its own ignore patterns from the same .gitignore). Root-anchoring keeps this covering only
+# the actual build-output directories these entries exist for.
+/dist
+/coverage
+/reports
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+.claude
+.continue
+.github/copilot-instructions.md
+.cursor
+.windsurf
+.clinerules
+.cline
+.aider.conf.yml
+.aider
+.amazonq
+.roo
+.roo-code
+GEMINI.md
+.idea
+.tabnine
+
+# A stray `npm pack` output file from manual local testing -- the real
+# package-acceptance suites (test/e2e/consumer-install*.test.ts) each pack
+# into their own mkdtempSync(tmpdir()) scratch directory, outside the repo
+# entirely, so nothing under the repo tree needs ignoring for them.
+*.tgz
+
+# Stryker's own scratch workspace
+.stryker-tmp
+
+# Ephemeral, fully re-derivable from dist/ on every `npm run contract` run --
+# .repo-contract/api-contract/baseline.* is the only committed state.
+.repo-contract/api-contract/current.api.md
+.repo-contract/api-contract/current.api.json
+.repo-contract/api-contract/current.d.ts
+
+# scripts/run-contract.mjs's own local run log -- appended to on every
+# `npm run contract` invocation, capped to the most recent runs (see
+# MAX_HISTORY_ENTRIES in that script). A local audit trail for a developer's
+# own machine, not committed source.
+history.json
