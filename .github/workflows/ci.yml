@@ -13,30 +13,29 @@ permissions:
   contents: read
 
 jobs:
-  # Matches engines.node's own floor (see CONTRIBUTING.md's "Node.js note"
-  # and specs/decisions/0009-self-hosting-tool-and-dependency-choices.md).
-  # macOS is restricted to one Node version to bound total job count -- the
-  # OS axis is what's actually new for this package (neither env-cap nor
-  # data-cap spawns processes, so neither needs a real macOS/Windows runner
-  # at all), not re-proving every Node version cross-platform on every OS.
+  # The repository's own verification toolchain -- typecheck, lint, build,
+  # every test category, size. This runs on a single modern Node line, NOT
+  # the published package's `engines.node` floor: the dev/verification
+  # dependency tree (ts-json-schema-generator, watskeburt via
+  # dependency-cruiser, @stryker-mutator's Babel 8, ...) has moved past Node
+  # 20, so `npm ci` there now warns EBADENGINE and some tools refuse to run.
+  # The published package still supports Node >=20 -- that's proven
+  # independently by `published-floor` below, against the packed artifact,
+  # with none of this toolchain installed. See CONTRIBUTING.md's "Node.js
+  # note". The OS axis (windows/macos) is what's genuinely new for this
+  # package vs. env-cap/data-cap, which never spawn processes.
   verify:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [20.x, 22.x, 24.x]
-        exclude:
-          - os: macos-latest
-            node-version: 20.x
-          - os: macos-latest
-            node-version: 24.x
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24.x
           cache: npm
 
       - run: npm ci
@@ -102,7 +101,10 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22.x
+          # Same modern line as `verify`/`contract` -- this job runs the repo's
+          # own test harness (vitest), so it belongs on the verification-toolchain
+          # Node version, not the published floor.
+          node-version: 24.x
           cache: npm
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -120,9 +122,9 @@ jobs:
   verify-current:
     runs-on: ubuntu-latest
     # Deliberate canary, not a required gate: this job tracks the newest Node
-    # line ahead of this package's own supported engines.node floor (see
+    # line ahead of the verification toolchain's own line (24.x above; see
     # CONTRIBUTING.md's "Node.js note"), specifically so a real incompatibility
-    # is visible before that version becomes the floor -- but a brand-new Node
+    # is visible before that version is adopted -- but a brand-new Node
     # line failing here is frequently an upstream toolchain gap (a
     # devDependency not yet supporting it) rather than a defect in this
     # package, and this repository has no control over when its own
@@ -144,18 +146,73 @@ jobs:
       - run: npm test
       - run: npm run size
 
+  # Builds the package once, on the verification-toolchain Node line, and
+  # hands the resulting tarball to `published-floor` below. Nothing downstream
+  # rebuilds it -- the whole point is that the artifact tested on the old Node
+  # floor is bit-for-bit the one a modern toolchain produced.
+  package-build:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm pack --pack-destination ./artifacts
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: package-tarball
+          path: artifacts/*.tgz
+          retention-days: 1
+          if-no-files-found: error
+
+  # The published package's real Node floor, proven the only way that means
+  # anything: install the packed tarball into a throwaway project as an
+  # external consumer would, on each Node version `engines.node` promises,
+  # and exercise both entry points. This job NEVER runs `npm ci` / `npm run
+  # build` / the test harness -- it never installs the verification toolchain
+  # at all, so a Node-22-only devDependency cannot affect it. See
+  # scripts/smoke-consumer.mjs.
+  published-floor:
+    needs: package-build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          # No `cache: npm` -- this job never runs `npm ci`.
+          node-version: ${{ matrix.node-version }}
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: package-tarball
+          path: artifacts
+
+      - run: node scripts/smoke-consumer.mjs artifacts
+
   # The slow, self-hosting proof: runs this repository's own
   # repo-contract.config.ts through the real, just-built public API -- see
   # that file's own `checks` record for the current, authoritative list of
   # every category it runs, and specs/verification-taxonomy.md for what each
   # one establishes. Doesn't
-  # need the full OS/Node matrix (mutation testing dominates runtime, and
-  # the checks it runs are already covered per-OS/per-Node by `verify`
-  # above) -- one Node version, high enough to satisfy
-  # @stryker-mutator/core's own >=22.0.0 requirement (a devDependency-only,
-  # local-development-and-CI requirement, distinct from the published
-  # package's own engines.node >=20.0.0 floor -- see CONTRIBUTING.md's
-  # "Node.js note").
+  # need the full OS matrix (mutation testing dominates runtime, and the
+  # checks it runs are already covered per-OS by `verify` above) -- one
+  # Node version on the verification-toolchain line (>= the
+  # >=22.0.0 that @stryker-mutator/core itself requires), a
+  # local-development-and-CI requirement distinct from the published
+  # package's own engines.node >=20.0.0 floor (proven by `published-floor`)
+  # -- see CONTRIBUTING.md's "Node.js note".
   contract:
     needs: verify
     runs-on: ubuntu-latest
@@ -173,7 +230,7 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: npm
 
       - run: npm ci

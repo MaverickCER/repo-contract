@@ -28,9 +28,17 @@ Two checks worth knowing about before you start:
   changeset file — replace each `_(needs description)_` placeholder (see
   [ADR 0010](specs/decisions/0010-changeset-adr-and-pr-documentation-discipline.md)).
 
-**Node.js note**: the published package needs Node `>=20`, but `npm run contract`'s
-mutation-testing check needs `>=22` to run locally — every other check runs fine on Node 20/21.
-CI's `contract` job runs on Node 22.
+**Node.js note**: two different floors, proven independently.
+
+- **The published package** supports Node `>=20` (`engines.node`). CI's `published-floor` job
+  installs the packed tarball into a throwaway project and exercises both entry points on Node
+  20 and 22 — with none of the repo's dev dependencies installed — so this stays honest no
+  matter what the toolchain does.
+- **The repository's own verification toolchain** (`npm run contract`, `lint`, `schema`,
+  mutation testing, …) needs Node `>=24` to run: several dev dependencies
+  (`ts-json-schema-generator`, `watskeburt` via `dependency-cruiser`, `@stryker-mutator`'s
+  Babel 8) have moved past Node 20/22. Use Node 24 locally. CI's `verify`, `contract`, and
+  `runtime-compat` jobs all run on Node 24.
 
 ## Making a change
 

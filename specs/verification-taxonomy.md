@@ -62,7 +62,7 @@ These are five different concepts, deliberately kept distinct throughout this re
 | Concept               | Example                                 | Answers                                                       |
 | --------------------- | --------------------------------------- | ------------------------------------------------------------- |
 | Verification category | Unit testing                            | What semantic question is being asked?                        |
-| Execution environment | Node 20.x on `ubuntu-latest` in CI      | Where/under what conditions does it run?                      |
+| Execution environment | Node 24.x on `ubuntu-latest` in CI      | Where/under what conditions does it run?                      |
 | Test runner / tool    | Vitest, fast-check, dependency-cruiser  | What executes the check and produces raw output?              |
 | Evidence              | `CheckEvidence`, `ArchitectureEvidence` | What happened, captured as structured, machine-readable fact? |
 | Policy                | `evaluateArchitecturePolicy`            | Does the repository consider that evidence acceptable?        |

@@ -28,19 +28,18 @@ import { execFileSync } from "node:child_process"
 import { closeSync, mkdirSync, mkdtempSync, openSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
+import { packTarball } from "./npm-pack.mjs"
 
 mkdirSync("reports", { recursive: true })
 
 const packDir = mkdtempSync(path.join(tmpdir(), "repo-contract-attw-pack-"))
 
 try {
-  const packOutput = execFileSync(
-    "npm",
-    ["pack", "--pack-destination", packDir, "--json", "--ignore-scripts"],
-    { encoding: "utf8" },
-  )
-  const [{ filename }] = JSON.parse(packOutput)
-  const tarballPath = path.join(packDir, filename)
+  // packTarball() handles `--ignore-scripts` (see the note above), platform-aware `npm`
+  // resolution, and tolerant parsing of `npm pack --json` -- npm 10.x prepends its own
+  // ANSI-coloured log lines to that stdout, which a bare `JSON.parse` chokes on. See
+  // scripts/npm-pack.mjs.
+  const { tarballPath } = packTarball(packDir)
 
   const fd = openSync("reports/arethetypeswrong.json", "w")
   try {

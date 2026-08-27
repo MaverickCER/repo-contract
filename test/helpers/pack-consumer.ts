@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { NPM_COMMAND, packTarball } from "../../scripts/npm-pack.mjs"
 
 /**
  * Shared by every "install the real packed tarball into a fresh consumer project" E2E test --
@@ -40,29 +41,18 @@ interface ConsumerFixture {
 export function createConsumerFixture(tmpDirPrefix: string): ConsumerFixture {
   const consumerDir = mkdtempSync(path.join(tmpdir(), tmpDirPrefix))
 
-  // --ignore-scripts: without it, `npm pack` also runs this package's own `prepare` lifecycle
-  // script (`npm run build`), whose console output (tsup's own build log) interleaves with and
-  // corrupts the `--json` output below. `dist/` is already built by the time this runs (callers
-  // skip entirely otherwise, see `distIsBuilt` above), so skipping lifecycle scripts here is also
-  // strictly correct, not just a workaround.
-  const packResult = spawnSync(
-    "npm",
-    ["pack", "--pack-destination", consumerDir, "--json", "--ignore-scripts"],
-    { cwd: packageRoot, encoding: "utf8" },
-  )
-  if (packResult.status !== 0) {
-    throw new Error(`npm pack failed: ${packResult.stderr}`)
-  }
-  const [packInfo] = JSON.parse(packResult.stdout) as { filename: string }[]
-  if (!packInfo) throw new Error("npm pack produced no output")
-  const tarballPath = path.join(consumerDir, packInfo.filename)
+  // packTarball() packs `packageRoot` into `consumerDir` with `--ignore-scripts` (so `npm pack`
+  // never triggers this package's own `prepare`/`npm run build`) and parses `npm pack --json`
+  // tolerantly -- see scripts/npm-pack.mjs for why a bare `JSON.parse` was fragile, and why `npm`
+  // needs platform-aware resolution here (this suite runs on windows-latest in CI).
+  const { tarballPath } = packTarball(consumerDir, { cwd: packageRoot })
 
   writeFileSync(
     path.join(consumerDir, "package.json"),
     JSON.stringify({ name: "repo-contract-consumer-fixture", version: "0.0.0", type: "module" }),
   )
 
-  const installResult = spawnSync("npm", ["install", tarballPath, "--no-save"], {
+  const installResult = spawnSync(NPM_COMMAND, ["install", tarballPath, "--no-save"], {
     cwd: consumerDir,
     encoding: "utf8",
   })
@@ -73,7 +63,11 @@ export function createConsumerFixture(tmpDirPrefix: string): ConsumerFixture {
   return { consumerDir, tarballPath }
 }
 
-export function removeConsumerFixture(consumerDir: string): void {
+export function removeConsumerFixture(consumerDir: string | undefined): void {
+  // Tolerate `undefined`: when `createConsumerFixture` throws in a suite's `beforeAll`, that
+  // suite's `afterAll` still runs with `consumerDir` never assigned -- cleanup shouldn't then
+  // throw a second, less informative error on top of the real failure.
+  if (consumerDir === undefined) return
   rmSync(consumerDir, { recursive: true, force: true })
 }
 

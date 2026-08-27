@@ -40,9 +40,19 @@ function runJsonTool(command, args) {
   })
 }
 
-const [eslint, oxlint] = await Promise.all([
-  runJsonTool("eslint", [".", "--format", "json", "--fix"]),
-  runJsonTool("oxlint", ["--format", "json", "--fix", "--ignore-pattern=test/e2e/*/fixtures", "."]),
+// Sequential, NOT Promise.all: both tools run with `--fix`, so both hold write ownership of the
+// same working tree. Run concurrently, one rewrites a file while the other is mid-read of it, and
+// ESLint aborts without emitting any JSON -- the check then reports "eslint did not produce valid
+// JSON: Unexpected end of JSON input" (a real, timing-dependent CI failure). Serializing the two
+// fixers removes the race entirely; the extra few seconds is not worth the nondeterminism.
+// test/integration/lint/no-concurrent-fixers.test.ts guards this ordering.
+const eslint = await runJsonTool("eslint", [".", "--format", "json", "--fix"])
+const oxlint = await runJsonTool("oxlint", [
+  "--format",
+  "json",
+  "--fix",
+  "--ignore-pattern=test/e2e/*/fixtures",
+  ".",
 ])
 
 process.stdout.write(JSON.stringify({ eslint, oxlint }))

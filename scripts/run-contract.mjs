@@ -14,7 +14,7 @@
 
 import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
 import { runRepoContract } from "../dist/index.js"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
@@ -28,7 +28,12 @@ const historyPath = path.join(root, "history.json")
 // own exit code and printed summary each time), so bounding it to the most
 // recent runs loses nothing load-bearing.
 const MAX_HISTORY_ENTRIES = 20
-const { default: config } = await import(path.join(root, "repo-contract.config.ts"))
+// pathToFileURL, not a bare path: on Windows `import()` treats an absolute
+// path like `D:\...` as a URL with scheme `d:` and rejects it
+// (ERR_UNSUPPORTED_ESM_URL_SCHEME) -- it requires a real file:// URL.
+const { default: config } = await import(
+  pathToFileURL(path.join(root, "repo-contract.config.ts")).href
+)
 
 const checks = process.argv.slice(2)
 

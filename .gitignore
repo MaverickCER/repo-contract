@@ -8,6 +8,9 @@ node_modules
 /dist
 /coverage
 /reports
+# `npm pack --pack-destination ./artifacts` -- CI's package-build job and the local
+# `npm run smoke` (scripts/smoke-consumer.mjs) both land the packed tarball here.
+/artifacts
 *.log
 .DS_Store
 .env
