@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  # Runs the full self-hosting contract with NO credentials in scope --
+  # deliberately a separate job, not a step inside `release` below, because
+  # GitHub Actions grants `permissions:`/injects the OIDC
+  # ACTIONS_ID_TOKEN_REQUEST_* env vars per-job, not per-step. `release`
+  # still re-verifies via its own `prepublishOnly` hook when `npm publish`
+  # actually runs (defense in depth against a race between this job's commit
+  # and that one), but every third-party CLI repo-contract's own checks spawn
+  # (eslint, stryker, `npm audit`, ...) inherits the *full* process
+  # environment by default (`inheritEnv: true` -- see SECURITY.md), so
+  # running the slow, most-likely-to-fail verification here first, before
+  # `release` ever requests `id-token: write`/sees `GITHUB_TOKEN`, keeps that
+  # credentialed re-run a fast, already-known-good confirmation in the common
+  # case rather than the primary place a real failure is first discovered
+  # while third-party tools already have those credentials in their
+  # environment. See SECURITY.md's "Environment inheritance" note for the
+  # residual, accepted exposure this does not eliminate.
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run contract
+
+  release:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      # Enables npm's OIDC trusted publishing -- no NPM_TOKEN secret exists
+      # or is needed. npm verifies this exact workflow/repo against a
+      # trusted-publisher registration made once, manually, on npmjs.com
+      # (see CONTRIBUTING.md).
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+
+      # OIDC trusted publishing requires a current npm CLI -- don't rely on
+      # whatever version happens to be bundled.
+      - run: npm install -g npm@latest
+
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@ce079ea084e08a340947ed4d6ecedb2433c8f293 # v1
+        with:
+          publish: npm run release
+          version: npm run version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

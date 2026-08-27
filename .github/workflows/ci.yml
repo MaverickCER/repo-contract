@@ -1,0 +1,181 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Explicit least-privilege default so every job's GITHUB_TOKEN scope is a
+# property of this file, not an assumption about the repo/org's ambient
+# default -- mirrors env-cap/data-cap's own ci.yml.
+permissions:
+  contents: read
+
+jobs:
+  # Matches engines.node's own floor (see CONTRIBUTING.md's "Node.js note"
+  # and specs/decisions/0009-self-hosting-tool-and-dependency-choices.md).
+  # macOS is restricted to one Node version to bound total job count -- the
+  # OS axis is what's actually new for this package (neither env-cap nor
+  # data-cap spawns processes, so neither needs a real macOS/Windows runner
+  # at all), not re-proving every Node version cross-platform on every OS.
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [20.x, 22.x, 24.x]
+        exclude:
+          - os: macos-latest
+            node-version: 20.x
+          - os: macos-latest
+            node-version: 24.x
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      # A bare, read-only `prettier --check .` -- not `npm run format`,
+      # which runs the auto-fixing (`--write`) preset dogfooded by `npm run
+      # contract` and always exits 0 once it finishes rewriting files, so it
+      # can never actually fail this gate on unformatted code.
+      - run: npm run format:check
+      # No wrapper npm script for this anymore -- package.json only carries
+      # generic package scripts, and repo-contract's own `architecture`
+      # check already invokes this same script directly (see
+      # repo-contract.config.ts). Static, no build required -- production
+      # src/ dependency graph plus every verification category's own Vitest
+      # config staying inside its own directory (see
+      # specs/verification-taxonomy.md). Report-only (see the script's own
+      # doc comment) -- this step is a cross-platform "doesn't crash" smoke
+      # check now, not a policy gate; `npm run contract` below is the real
+      # gate. Run through `npx` (not bare `node`) so the script's own
+      # `depcruise` sub-spawn resolves via node_modules/.bin on PATH -- only
+      # npm run/npx provide that for a `run:` step, unlike repo-contract's
+      # own invocation of this script, which inherits it transitively from
+      # the outer `npm run contract`.
+      - run: npx node scripts/check-architecture.mjs
+      - run: npm run build
+      - run: npm run schema
+      # Unit + integration + property, each independently, aggregated and
+      # reported against this repository's coverage thresholds -- see
+      # scripts/run-coverage.mjs. Report-only, same as above: real gating
+      # happens in repo-contract's own `coverage` check via `npm run
+      # contract`, not here.
+      - run: npm run test:coverage
+      # No wrapper npm script for this anymore, same as architecture above --
+      # repo-contract's own `test-e2e` check invokes run-test-category.mjs
+      # the same way (see repo-contract.config.ts). Also run through `npx`
+      # for the same PATH reason: this script spawns `vitest` by bare name.
+      # test/e2e/consumer-install.test.ts -- a real `npm pack` + tarball
+      # install + import (both ESM and CommonJS), proving the built artifact
+      # (not just the source tree) actually works from a clean install. Not
+      # part of test:coverage (E2E doesn't produce coverage -- see the
+      # coverage-contribution matrix in specs/verification-taxonomy.md), so
+      # it must run as its own explicit step here rather than silently
+      # riding along inside it.
+      - run: npx node scripts/run-test-category.mjs e2e
+      # Report-only (see scripts/check-size.mjs) -- a cross-platform smoke
+      # check, not a policy gate; repo-contract's `size` check owns the
+      # actual required size and is what `npm run contract` enforces.
+      - run: npm run size
+
+  # Bun and Deno actually consuming the real, packed tarball -- see
+  # specs/decisions/0011-bun-and-deno-runtime-support.md. One OS, one Node
+  # version: Bun/Deno compatibility doesn't depend on which Node version or
+  # OS also happens to be on the runner (neither runtime invokes Node's own
+  # binary), so it isn't re-run across `verify`'s full matrix above. The
+  # test/e2e/consumer-install-{bun,deno}.test.ts suites self-skip when their
+  # runtime isn't on PATH -- installing both here via their official setup
+  # actions is what makes this job actually exercise them instead of skip.
+  runtime-compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: latest
+
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: v2.x
+
+      - run: npm ci
+      - run: npm run build
+      - run: npx node scripts/run-test-category.mjs e2e
+
+  verify-current:
+    runs-on: ubuntu-latest
+    # Deliberate canary, not a required gate: this job tracks the newest Node
+    # line ahead of this package's own supported engines.node floor (see
+    # CONTRIBUTING.md's "Node.js note"), specifically so a real incompatibility
+    # is visible before that version becomes the floor -- but a brand-new Node
+    # line failing here is frequently an upstream toolchain gap (a
+    # devDependency not yet supporting it) rather than a defect in this
+    # package, and this repository has no control over when its own
+    # dependencies catch up. continue-on-error keeps that upstream lag from
+    # blocking every PR while this job still surfaces the result for a human
+    # to actually look at, rather than silently skipping the check entirely.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 26.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      - run: npm run size
+
+  # The slow, self-hosting proof: runs this repository's own
+  # repo-contract.config.ts through the real, just-built public API -- see
+  # that file's own `checks` record for the current, authoritative list of
+  # every category it runs, and specs/verification-taxonomy.md for what each
+  # one establishes. Doesn't
+  # need the full OS/Node matrix (mutation testing dominates runtime, and
+  # the checks it runs are already covered per-OS/per-Node by `verify`
+  # above) -- one Node version, high enough to satisfy
+  # @stryker-mutator/core's own >=22.0.0 requirement (a devDependency-only,
+  # local-development-and-CI requirement, distinct from the published
+  # package's own engines.node >=20.0.0 floor -- see CONTRIBUTING.md's
+  # "Node.js note").
+  contract:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 (full history, all branches -- see release.yml's own
+      # identical setting) is required here, not optional: changeset-docs and
+      # adr-governance both diff against `origin/main` (scripts/diff-files.ts),
+      # which the default single-commit shallow checkout leaves unresolvable
+      # on a pull_request build and identical-to-HEAD on a push-to-main build
+      # -- either way landing both checks on their vacuous "nothing changed"
+      # pass path instead of actually evaluating this run's diff.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run contract
