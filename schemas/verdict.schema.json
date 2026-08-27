@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maverickcer.github.io/repo-contract/schema/verdict.schema.json",
+  "title": "repo-contract Verdict",
+  "description": "Machine-readable aggregate pass/fail result produced by evaluating repository-owned policies against an Evidence object -- one entry per configured check, each individually inspectable. Generated from src/types.ts's Verdict type -- never hand-authored.",
+  "$ref": "#/definitions/VerdictSchemaSource",
+  "definitions": {
+    "VerdictSchemaSource": {
+      "$ref": "#/definitions/Verdict"
+    },
+    "Verdict": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "const": 2,
+          "description": "Schema version of this shape; see VERSIONING.md."
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "`true` only if every check's `outcome` is `\"pass\"` or `\"warn\"`."
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/PolicyResult"
+          },
+          "description": "Each configured check's own `PolicyResult`, verbatim, keyed by check id."
+        }
+      },
+      "required": [
+        "version",
+        "passed",
+        "checks"
+      ],
+      "description": "Versioned, immutable aggregate result of evaluating every configured check's policy against its evidence -- each check's own `PolicyResult`, verbatim, keyed by check id. `passed` is `true` only if every check's `outcome` is `\"pass\"` or `\"warn\"` -- `\"fail\"` is the only outcome that fails the run; one failing check never collapses into a single generic message, every check remains individually inspectable under `checks`. Versioned independently of `Evidence` (see VERSIONING.md's schema-versioning policy) -- `version: 2` reflects `checks[id]` changing shape from `{ passed, reason? }` to a full `PolicyResult` (`{ outcome, rationale }`); see ADR 0002."
+    },
+    "PolicyResult": {
+      "type": "object",
+      "properties": {
+        "outcome": {
+          "$ref": "#/definitions/PolicyOutcome",
+          "description": "The policy's pass/fail/warn decision."
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Why the policy reached `outcome`, in enough detail to act on without rerunning anything."
+        }
+      },
+      "required": [
+        "outcome",
+        "rationale"
+      ],
+      "description": "A repository-owned policy's interpretation of one check's captured evidence -- fully JSON-serializable (a plain object of primitives only, never an `Error`, class instance, function, or tool-specific object) so it can be persisted, transmitted, aggregated across parallel checks, and consumed directly by a human or an AI without rerunning anything.\n\n`rationale` is mandatory and must contain enough actionable detail -- specific file/line locations, rule ids, test names, counts -- for a consumer to understand *why* the policy reached its outcome from this value alone. A rationale like \"see output above\" or \"check the report for details\" defeats the purpose: it forces the consumer back to raw, unstructured command output, exactly what this type exists to avoid. See specs/architecture.md for the evidence/rationale/judgment distinction this type is built around: evidence answers \"what happened?\", `rationale` answers \"what does the repository's policy conclude about what happened?\", and a policy's `outcome` is not the final word -- a human or AI consumer still makes the final judgment call using both."
+    },
+    "PolicyOutcome": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "warn"
+      ],
+      "description": "`\"pass\"`: the repository-owned policy evaluated the captured evidence as satisfying its configured requirements. `\"fail\"`: the evidence did not satisfy them. `\"warn\"`: the evidence does not violate the policy's blocking requirements, but the policy has intentionally decided the condition is materially relevant and wants it surfaced -- not a synonym for \"minor failure\"; a `warn` never fails `Verdict.passed` (see `runPolicies` in `src/policy/run-policies.ts`)."
+    }
+  }
+}
