@@ -528,6 +528,16 @@ section[id] {
   margin-bottom: var(--space-2);
 }
 
+/* The generic .section-eyebrow color (--color-link) is tuned for the light
+   page background; on the hero's fixed navy panel the light-mode value
+   (#2563eb) is only ~3.6:1, below WCAG2AA. Pin an explicit light blue that
+   clears AA on --color-navy in both themes (~7:1), the same way .hero h1 /
+   .hero-lede / .hero-support all set their own on-navy colors rather than
+   inheriting a theme token. */
+.hero .section-eyebrow {
+  color: #60a5fa;
+}
+
 .hero-lede {
   font-size: 1.2rem;
   max-width: 46rem;

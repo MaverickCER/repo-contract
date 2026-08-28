@@ -34,7 +34,7 @@
 - **checks/crap.ts** (added, +123/-0): `crap` check policy -- compares crap4ts's per-function CRAP scores against the repo-pinned threshold passed via `--threshold`.
 - **checks/docs.ts** (added, +155/-0): `docs` check policy -- interprets the combined markdownlint-cli2 + linkinator JSON evidence; lint errors and broken links fail.
 - **checks/lint.ts** (added, +161/-0): `lint` check policy -- interprets combined ESLint + oxlint JSON evidence: errors fail, warnings warn, a tool-infrastructure failure fails.
-- **checks/mutation.ts** (added, +406/-0): `mutation` check policy -- requires every applicable Stryker mutant to be `Killed`, cross-checking any comment-ignored mutant against a justified `disable-comments.json` Stryker-domain record; a static mutant skipped by the config-level `ignoreStatic` option is accepted outright and excluded from the applicable count.
+- **checks/mutation.ts** (added, +428/-0): `mutation` check policy -- requires every applicable Stryker mutant to be `Killed`, cross-checking any comment-ignored mutant against a justified `disable-comments.json` Stryker-domain record; a static mutant skipped by the config-level `ignoreStatic` option is accepted outright and excluded from the applicable count.
 - **checks/schema.ts** (added, +92/-0): `schema` check policy -- re-reads every regenerated `schemas/*.schema.json` target off disk and confirms valid JSON carrying the `$id`/`title` the generator's own `TARGETS` declares.
 - **checks/security-network.ts** (added, +61/-0): `security-network` check policy -- fails on any prohibited or unverifiable network capability found in `src/**/*.ts` by the AST scan (ADR 0013).
 - **checks/shared/require-parsed-output.ts** (added, +32/-0): Shared guard nearly every check policy calls first -- fail with a fixed rationale when parsed JSON output is missing or failed to parse, otherwise return it narrowed to `T`.
@@ -48,7 +48,7 @@
 - **CODE_REVIEW.md** (added, +1527/-0): The residual-risk review guide referenced by the PR template -- everything a human reviewer must judge beyond what `npm run contract` verifies mechanically.
 - **CODEOWNERS** (added, +18/-0): Single-owner-every-path ownership, plus the note that `src/execution`/`src/policy` changes need an ADR (mechanically enforced by `adr-governance`).
 - **CONTRIBUTING.md** (added, +112/-0): Contributor workflow: running the contract, adding an ADR, changeset discipline, and the verification-category boundaries.
-- **disable-comments.json** (added, +882/-0): The suppression-governance registry -- every lint/Stryker suppression in the tree with its hand-authored justification/alternatives/remediation/category/verificationMethod; auto-synchronized by its own check, so never `git checkout` it blindly.
+- **disable-comments.json** (added, +897/-0): The suppression-governance registry -- every lint/Stryker suppression in the tree with its hand-authored justification/alternatives/remediation/category/verificationMethod; auto-synchronized by its own check, so never `git checkout` it blindly.
 - **docs/api-report/repo-contract-presets.api.md** (added, +55/-0): Generated API Extractor report for the `repo-contract/presets` entry point -- drift- and completeness-gated by the `api-docs` check.
 - **docs/api-report/repo-contract.api.md** (added, +201/-0): Generated API Extractor report for the package-root entry point -- drift- and completeness-gated by the `api-docs` check.
 - **docs/assets/og-image-source.svg** (added, +22/-0): Editable SVG source for the landing page's Open Graph image.
@@ -99,7 +99,7 @@
 - **scripts/changeset-docs/evidence-types.ts** (added, +33/-0): Internal evidence contract for the changeset-docs check -- `allDescribed` is the single fact the policy gates on; rows are always sorted by path.
 - **scripts/changeset-docs/table-manager.ts** (added, +208/-0): Reconciles the machine-owned "### Changed Files" section against the diff -- adds/keeps/drops rows and preserves each existing description verbatim, including across a detected rename.
 - **scripts/changeset-file-locator.ts** (added, +72/-0): Shared logic picking the single `.changeset/*.md` file both machine-owned sections write into -- recognizes any `<!-- repo-contract:<owner>:start:` marker.
-- **scripts/check-accessibility.mjs** (added, +47/-0): Entry point for the `accessibility` check -- runs pa11y against `docs/index.html` via a `file://` URL through its Node API (with `--no-sandbox` for Chromium on restricted CI kernels) and prints a `{ ok, value | error }` result.
+- **scripts/check-accessibility.mjs** (added, +51/-0): Entry point for the `accessibility` check -- runs pa11y against `docs/index.html` via a `file://` URL through its Node API (with `--no-sandbox` for Chromium on restricted CI kernels) and prints a `{ ok, value | error }` result.
 - **scripts/check-adr-structure.d.mts** (added, +12/-0): Type declaration for `check-adr-structure.mjs`.
 - **scripts/check-adr-structure.mjs** (added, +99/-0): Static ADR-set guardrail -- filename shape, no duplicate numbers, and the five required headings; evaluates the current tree only, numbering gaps allowed.
 - **scripts/check-architecture.mjs** (added, +103/-0): Entry point for the `architecture` check -- runs dependency-cruiser plus the test-boundary and ADR-structure analyses and prints one combined JSON evidence object.
@@ -162,7 +162,7 @@
 - **specs/verification-taxonomy.md** (added, +491/-0): The verification-category taxonomy -- what unit/integration/property/e2e/mutation/architecture each mean, and the coverage-contribution matrix.
 - **src/config/define-repo-contract.ts** (added, +38/-0): `defineRepoContract` -- an identity function for type inference (output -> policy flow, static `dependsOn` validation); performs no runtime validation or cloning.
 - **src/config/tokenize-command.ts** (added, +182/-0): POSIX-style `run`-string tokenizer -- splits a command into argv without a shell; no shell operator is executed and no glob is expanded.
-- **src/config/validate-config.ts** (added, +346/-0): Structural `RepoContractConfig` validation that throws before any process spawns -- defensive about runtime field types, with dependency-cycle detection.
+- **src/config/validate-config.ts** (added, +355/-0): Structural `RepoContractConfig` validation that throws before any process spawns -- defensive about runtime field types, with dependency-cycle detection.
 - **src/errors.ts** (added, +229/-0): The error hierarchy -- every error carries a stable `code` and never embeds stdout/stderr/env; three deliberately-separate failure classes (structural, execution-discovered, policy bug).
 - **src/evidence/build-evidence.ts** (added, +91/-0): Attaches parsed output to each check's raw evidence and assembles the versioned, immutable `Evidence` object -- everything is fully assembled before any policy reads it.
 - **src/execution/abort-signals.ts** (added, +56/-0): `composeSignals` -- combines signals into one that aborts on any input; native `AbortSignal.any` where available, a manual fallback for Node 20.0-20.2, with `dispose` to avoid listener leaks.
@@ -202,7 +202,7 @@
 - **src/presets/typecheck.ts** (added, +25/-0): `typecheck` preset -- `tsc --noEmit -p tsconfig.json`, exit-code based.
 - **src/run-repo-contract.ts** (added, +80/-0): `runRepoContract` -- validate -> execute -> build evidence -> evaluate policies -> aggregate verdict; strictly phased, and never calls `process.exit()`.
 - **src/types.ts** (added, +340/-0): The public type surface -- `Evidence`, `Verdict`, `CheckStatus`, `PolicyResult`, `RepoContractConfig`, and friends; Evidence describes what happened, Verdict whether it was acceptable.
-- **stryker.config.mjs** (added, +38/-0): Stryker config -- Vitest runner, `coverageAnalysis: "perTest"` with `ignoreStatic` for a CI-viable run time, the `mutate` globs (the process/signal/scheduling core is excluded -- mutating it destabilizes the Stryker runner itself; covered by the integration/e2e categories instead), and the JSON reporter `checks/mutation.ts` reads.
+- **stryker.config.mjs** (added, +91/-0): Stryker config -- Vitest runner, `coverageAnalysis: "perTest"` with `ignoreStatic` for a CI-viable run time, the `mutate` globs (the process/signal/scheduling core is excluded -- mutating it destabilizes the Stryker runner itself; covered by the integration/e2e categories instead), and the JSON reporter `checks/mutation.ts` reads.
 - **SUPPORT.md** (added, +50/-0): Where to ask questions and file issues.
 - **test/e2e/consumer-install-bun.test.ts** (added, +137/-0): E2E -- installs the real packed tarball into a fresh project and runs its entry points under Bun (ADR 0011).
 - **test/e2e/consumer-install-deno.test.ts** (added, +153/-0): E2E -- the same packed-tarball install exercised under Deno with `--allow-read/-run/-env` (ADR 0011).
@@ -258,7 +258,7 @@
 - **test/unit/checks/shared/require-parsed-output.test.ts** (added, +32/-0): Unit -- `requireParsedOutput` returns the fail result on missing/failed output and the narrowed value otherwise.
 - **test/unit/config/define-repo-contract.test.ts** (added, +166/-0): Unit -- `defineRepoContract` returns the config untouched, plus its type-level inference behavior.
 - **test/unit/config/tokenize-command.test.ts** (added, +181/-0): Unit -- command tokenization: quotes, escapes, Windows paths in single quotes, and that no shell operator is executed.
-- **test/unit/config/validate-config.test.ts** (added, +527/-0): Unit -- every structural config rejection, the valid zero-checks case, and dependency-cycle detection.
+- **test/unit/config/validate-config.test.ts** (added, +533/-0): Unit -- every structural config rejection, the valid zero-checks case, and dependency-cycle detection.
 - **test/unit/coverage/aggregate-coverage-paths.test.ts** (added, +48/-0): Unit -- the aggregate coverage path constants stay consistent.
 - **test/unit/coverage/policy.test.ts** (added, +59/-0): Unit -- `checks/coverage.ts` per-metric threshold comparison, including missing/invalid percentages.
 - **test/unit/crap/policy.test.ts** (added, +88/-0): Unit -- `checks/crap.ts` threshold comparison and invalid-report handling.
@@ -270,7 +270,7 @@
 - **test/unit/evidence/build-evidence-yaml-missing-dependency.test.ts** (added, +43/-0): Unit -- a missing `yaml` dependency surfaces as `ParserDependencyMissingError` during evidence build.
 - **test/unit/evidence/build-evidence.test.ts** (added, +141/-0): Unit -- assembles the versioned, immutable `Evidence` and the flat parsed-entry array.
 - **test/unit/execution/abort-signals.test.ts** (added, +127/-0): Unit -- `composeSignals` native and fallback paths, abort-reason propagation, and `dispose` listener cleanup.
-- **test/unit/execution/concurrency-pool.test.ts** (added, +118/-0): Unit -- order preservation, the concurrency bound, and the deferred first-rejection rethrow.
+- **test/unit/execution/concurrency-pool.test.ts** (added, +138/-0): Unit -- order preservation, the concurrency bound, and the deferred first-rejection rethrow.
 - **test/unit/execution/dependency-scheduler.test.ts** (added, +308/-0): Unit -- dependency ordering, diamond/fan-out shapes, the stall guard, and worker-rejection forwarding.
 - **test/unit/execution/fixtures/sigint-cleanup-queued.ts** (added, +43/-0): Fixture -- a real child process with a queued (not-yet-started) check, for the SIGINT-cleanup test.
 - **test/unit/execution/fixtures/sigint-cleanup.ts** (added, +36/-0): Fixture -- a real child process running a check, spawned via tsx so a real SIGINT can be sent from the test.
@@ -281,7 +281,7 @@
 - **test/unit/index.test.ts** (added, +52/-0): Unit -- the public barrel re-exports exactly the intended surface and nothing internal.
 - **test/unit/lint/policy.test.ts** (added, +145/-0): Unit -- `checks/lint.ts` policy over combined ESLint/oxlint evidence (errors fail, warnings warn, infra failure fails).
 - **test/unit/lint/require-stryker-rationale.test.ts** (added, +80/-0): Unit -- the custom ESLint rule flags an unexplained `// Stryker disable` and accepts a real adjacent rationale.
-- **test/unit/mutation/policy.test.ts** (added, +408/-0): Unit -- `checks/mutation.ts` policy: every mutant status, the comment-ignored cross-check against `disable-comments.json`, and invalid-report handling.
+- **test/unit/mutation/policy.test.ts** (added, +429/-0): Unit -- `checks/mutation.ts` policy: every mutant status, the comment-ignored cross-check against `disable-comments.json`, and invalid-report handling.
 - **test/unit/npm-pack.test.ts** (added, +36/-0): Unit -- `parseNpmPackFilename` isolates the JSON block from npm's log noise and asserts its shape.
 - **test/unit/parsing/parse-json.test.ts** (added, +0/-0): Unit -- `parseJson` over valid JSON, arrays, primitives, and malformed input (failure returned as data with raw stdout preserved).
 - **test/unit/parsing/parse-output.test.ts** (added, +24/-0): Unit -- `parseOutput` dispatches to the correct parser per format.
