@@ -146,6 +146,3 @@ export function packTarball(destinationDir, options = {}) {
   const filename = parseNpmPackFilename(result.stdout, result.stderr)
   return { filename, tarballPath: path.join(destinationDir, filename) }
 }
-
-/** npm's command name -- exported for callers that still spawn npm directly; prefer `runNpm`, which resolves and invokes it safely on every platform. */
-export const NPM_COMMAND = NPM

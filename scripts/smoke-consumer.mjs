@@ -17,7 +17,13 @@ import { spawnSync } from "node:child_process"
 import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { NPM_COMMAND } from "./npm-pack.mjs"
+
+// Node built-ins only (see this file's header) -- must NOT import scripts/npm-pack.mjs, which pulls
+// in the `cross-spawn` runtime dependency at module load. The `published-floor` job runs this
+// against a bare checkout with no `node_modules`, so that import throws ERR_MODULE_NOT_FOUND before
+// `main()` ever runs. This job is Linux-only, so the Windows `npm.cmd` hazard that motivates
+// npm-pack.mjs's `cross-spawn` use does not apply -- a plain `spawnSync("npm", ...)` is fine here.
+const NPM_COMMAND = "npm"
 
 /** The consumer contract, asserted from OUTSIDE the package -- literal names, no repo introspection. */
 const SHARED_PROBE_BODY = `

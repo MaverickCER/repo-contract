@@ -14,5 +14,3 @@ export declare function runNpm(
   readonly stderr: string
   readonly error?: Error
 }
-
-export declare const NPM_COMMAND: string
