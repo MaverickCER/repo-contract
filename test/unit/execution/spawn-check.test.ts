@@ -280,23 +280,33 @@ describe("spawnCheck -- bounded output capture", () => {
 })
 
 describe("spawnCheck -- activeHandles registry and manual kill", () => {
-  it("never registers a handle for a spawn that fails before ever getting a pid", async () => {
-    const activeHandles = new Set<ActiveCheckHandle>()
-    const check: CheckDefinition = {
-      run: ["definitely-not-a-real-binary-xyz-spawn-check"],
-      policy: okPolicy,
-    }
-    const promise = spawnCheck("id", check, undefined, activeHandles)
+  // POSIX-only: on Windows, cross-spawn routes a bare, non-existent command
+  // through `cmd.exe /c ...`, so `child.pid` is the real (transient) cmd.exe
+  // pid rather than `undefined`, and the handle is registered before cmd exits
+  // with a "not recognized" code. cross-spawn then synthesizes the ENOENT
+  // `error` event, and cleanup() still deregisters the handle -- the check's
+  // resolved evidence is identical -- but the "never assigned a pid" invariant
+  // this test pins simply doesn't hold there.
+  it.skipIf(process.platform === "win32")(
+    "never registers a handle for a spawn that fails before ever getting a pid",
+    async () => {
+      const activeHandles = new Set<ActiveCheckHandle>()
+      const check: CheckDefinition = {
+        run: ["definitely-not-a-real-binary-xyz-spawn-check"],
+        policy: okPolicy,
+      }
+      const promise = spawnCheck("id", check, undefined, activeHandles)
 
-    // Checked synchronously, before any "error"/"close" event has had a
-    // chance to fire: a real ENOENT spawn never assigns child.pid at all
-    // (confirmed empirically), so activeHandles must still be empty right
-    // here -- not just by the time cleanup() eventually runs.
-    expect(activeHandles.size).toBe(0)
+      // Checked synchronously, before any "error"/"close" event has had a
+      // chance to fire: a real ENOENT spawn never assigns child.pid at all
+      // (confirmed empirically), so activeHandles must still be empty right
+      // here -- not just by the time cleanup() eventually runs.
+      expect(activeHandles.size).toBe(0)
 
-    await promise
-    expect(activeHandles.size).toBe(0)
-  })
+      await promise
+      expect(activeHandles.size).toBe(0)
+    },
+  )
 
   it("registers a handle while the process is running and removes it once evidence resolves", async () => {
     const activeHandles = new Set<ActiveCheckHandle>()
@@ -485,7 +495,13 @@ describe("spawnCheck -- cleanup clears the pending timeout", () => {
     expect(clearTimeoutSpy).toHaveBeenCalledTimes(2)
   })
 
-  it("on a spawn error", async () => {
+  // POSIX-only: on Windows, cross-spawn's non-existent-command emulation drives
+  // the child through `cmd.exe`, which produces both a real "close" event and a
+  // synthesized ENOENT "error" event, so cleanup() (and with it clearTimeout)
+  // runs twice. That double-cleanup is harmless -- clearTimeout no-ops on an
+  // already-cleared handle and the resolved evidence is unchanged -- but the
+  // exact call count this test pins is a POSIX single-event-path property.
+  it.skipIf(process.platform === "win32")("on a spawn error", async () => {
     const clearTimeoutSpy = vi.spyOn(global, "clearTimeout")
     const check: CheckDefinition = {
       run: ["definitely-not-a-real-binary-xyz-spawn-check"],

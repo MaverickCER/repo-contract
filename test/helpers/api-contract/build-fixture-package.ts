@@ -60,6 +60,16 @@ export async function writeFixtureSource(
 ): Promise<void> {
   await mkdir(path.join(root, "src"), { recursive: true })
   await writeFile(path.join(root, "src", "index.ts"), sourceText, "utf8")
+  // Mirror the real repository's own .gitattributes rule for this path (see the
+  // repo-root .gitattributes): API Extractor emits the baseline.api.json /
+  // baseline.d.ts snapshots with CRLF line endings unconditionally, and
+  // `readBaseline` compares `git show HEAD:...` output byte-for-byte against the
+  // hash recorded in baseline.meta.json. Without `-text` here, a fixture repo
+  // created on Windows (where `core.autocrlf=true` is the runner default)
+  // normalizes those CRLFs to LF on `git add`, so the committed blob no longer
+  // matches its own recorded hash and every baseline read throws "corrupted
+  // baseline". macOS/Linux runners leave line endings alone and never hit this.
+  await writeFile(path.join(root, ".gitattributes"), ".repo-contract/** -text\n", "utf8")
   await writeFile(
     path.join(root, "package.json"),
     JSON.stringify({ name: packageName, version, types: "dist/index.d.ts" }),

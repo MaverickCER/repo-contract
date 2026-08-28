@@ -12,6 +12,13 @@ import type { CheckSchema, PolicyResult } from "../../../src/types.js"
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
 const here = path.dirname(fileURLToPath(import.meta.url))
 
+// The host-process SIGINT/SIGTERM cleanup path can only be exercised by sending
+// a real signal to a real child process. Windows has no POSIX signal delivery:
+// `child.kill("SIGINT")` there ignores the name and abruptly terminates the
+// child (TerminateProcess), so run-checks.ts's cooperative `process.once`
+// handler never runs and there is nothing for these tests to observe.
+const itSkipOnWindows = it.skipIf(process.platform === "win32")
+
 /** Same technique as abort-signals.test.ts's own helper of the same name (duplicated locally rather than imported, since that one is private to its own test file): temporarily removes the native `AbortSignal.any` so a test can force `composeSignals`'s manual-composition fallback path, where `dispose()` has a real, observable effect (removing a real "abort" listener) instead of being an unconditional no-op. */
 async function withoutNativeAbortSignalAny(run: () => Promise<void>): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/unbound-method -- reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.
@@ -470,124 +477,132 @@ describe("runChecks", () => {
     )
   })
 
-  it("SIGINT while checks are in flight kills every spawned process tree before the host process exits", async () => {
-    // Runs run-checks.ts inside a real child Node process (via tsx, so the
-    // fixture can import the TypeScript source directly with no build step
-    // required), sends that child process a real SIGINT, and asserts the
-    // grandchild check process it spawned is also gone -- this is the only
-    // way to actually exercise "the *host* process receiving SIGINT" since
-    // vitest's own process is the host for every other test here.
-    const fixture = path.join(here, "fixtures", "sigint-cleanup.ts")
-    const tsxBin = path.join(here, "..", "..", "..", "node_modules", ".bin", "tsx")
-    const pidFilePath = path.join(
-      os.tmpdir(),
-      `repo-contract-sigint-test-${String(process.pid)}-${String(Date.now())}.pid`,
-    )
-    const child = spawn(tsxBin, [fixture, pidFilePath], { stdio: ["ignore", "pipe", "pipe"] })
+  itSkipOnWindows(
+    "SIGINT while checks are in flight kills every spawned process tree before the host process exits",
+    async () => {
+      // Runs run-checks.ts inside a real child Node process (via tsx, so the
+      // fixture can import the TypeScript source directly with no build step
+      // required), sends that child process a real SIGINT, and asserts the
+      // grandchild check process it spawned is also gone -- this is the only
+      // way to actually exercise "the *host* process receiving SIGINT" since
+      // vitest's own process is the host for every other test here.
+      const fixture = path.join(here, "fixtures", "sigint-cleanup.ts")
+      const tsxBin = path.join(here, "..", "..", "..", "node_modules", ".bin", "tsx")
+      const pidFilePath = path.join(
+        os.tmpdir(),
+        `repo-contract-sigint-test-${String(process.pid)}-${String(Date.now())}.pid`,
+      )
+      const child = spawn(tsxBin, [fixture, pidFilePath], { stdio: ["ignore", "pipe", "pipe"] })
 
-    try {
-      const grandchildPid = await new Promise<number>((resolve, reject) => {
-        const deadline = Date.now() + 10000
-        const poll = (): void => {
-          if (existsSync(pidFilePath)) {
-            resolve(Number(readFileSync(pidFilePath, "utf8")))
-            return
+      try {
+        const grandchildPid = await new Promise<number>((resolve, reject) => {
+          const deadline = Date.now() + 10000
+          const poll = (): void => {
+            if (existsSync(pidFilePath)) {
+              resolve(Number(readFileSync(pidFilePath, "utf8")))
+              return
+            }
+            if (Date.now() > deadline) {
+              reject(new Error("timed out waiting for the fixture's pid file"))
+              return
+            }
+            setTimeout(poll, 50)
           }
-          if (Date.now() > deadline) {
-            reject(new Error("timed out waiting for the fixture's pid file"))
-            return
-          }
-          setTimeout(poll, 50)
-        }
-        poll()
-      })
-      expect(Number.isInteger(grandchildPid)).toBe(true)
-
-      child.kill("SIGINT")
-
-      const exitCode = await new Promise<number | null>((resolve) => {
-        child.once("exit", (code) => {
-          resolve(code)
+          poll()
         })
-      })
+        expect(Number.isInteger(grandchildPid)).toBe(true)
 
-      const isAlive = (pid: number): boolean => {
-        try {
-          process.kill(pid, 0)
-          return true
-        } catch {
-          return false
-        }
-      }
-      // A generous deadline: under heavy concurrent load (e.g. this whole
-      // suite running alongside Stryker's own worker processes as part of
-      // the self-hosting `npm run contract`), the killed-fixture process
-      // may simply not get scheduled promptly enough to react to SIGINT and
-      // run its own cleanup -- that's real contention, not a logic bug in
-      // killTree, so the fix is patience here, not a tighter deadline.
-      const deadline = Date.now() + 15000
-      while (isAlive(grandchildPid) && Date.now() < deadline) {
-        await new Promise((resolve) => setTimeout(resolve, 50))
-      }
+        child.kill("SIGINT")
 
-      expect(isAlive(grandchildPid)).toBe(false)
-      expect(exitCode).not.toBe(0)
-    } finally {
-      rmSync(pidFilePath, { force: true })
-    }
-  }, 30000)
-
-  it("does not spawn a check still queued behind the concurrency limit once SIGINT cleanup has begun", async () => {
-    // Regression test: installTerminationHandlers' handler used to kill only the checks already
-    // active at the instant the signal arrived, then immediately remove its own listeners --
-    // leaving nothing to supervise a check that the concurrency pool/scheduler launched
-    // *afterward*, once the killed check's slot freed. With concurrency: 1 and two checks
-    // declared, `second` can only ever be considered once `first`'s slot frees -- exactly the
-    // window this test exercises.
-    const fixture = path.join(here, "fixtures", "sigint-cleanup-queued.ts")
-    const tsxBin = path.join(here, "..", "..", "..", "node_modules", ".bin", "tsx")
-    const runId = `${String(process.pid)}-${String(Date.now())}`
-    const pidFilePath = path.join(os.tmpdir(), `repo-contract-sigint-queued-pid-${runId}`)
-    const queuedMarkerPath = path.join(os.tmpdir(), `repo-contract-sigint-queued-marker-${runId}`)
-    const child = spawn(tsxBin, [fixture, pidFilePath, queuedMarkerPath], {
-      stdio: ["ignore", "pipe", "pipe"],
-    })
-
-    try {
-      const firstPid = await new Promise<number>((resolve, reject) => {
-        const deadline = Date.now() + 10000
-        const poll = (): void => {
-          if (existsSync(pidFilePath)) {
-            resolve(Number(readFileSync(pidFilePath, "utf8")))
-            return
-          }
-          if (Date.now() > deadline) {
-            reject(new Error("timed out waiting for the fixture's pid file"))
-            return
-          }
-          setTimeout(poll, 50)
-        }
-        poll()
-      })
-      expect(Number.isInteger(firstPid)).toBe(true)
-
-      child.kill("SIGINT")
-
-      await new Promise<number | null>((resolve) => {
-        child.once("exit", (code) => {
-          resolve(code)
+        const exitCode = await new Promise<number | null>((resolve) => {
+          child.once("exit", (code) => {
+            resolve(code)
+          })
         })
+
+        const isAlive = (pid: number): boolean => {
+          try {
+            process.kill(pid, 0)
+            return true
+          } catch {
+            return false
+          }
+        }
+        // A generous deadline: under heavy concurrent load (e.g. this whole
+        // suite running alongside Stryker's own worker processes as part of
+        // the self-hosting `npm run contract`), the killed-fixture process
+        // may simply not get scheduled promptly enough to react to SIGINT and
+        // run its own cleanup -- that's real contention, not a logic bug in
+        // killTree, so the fix is patience here, not a tighter deadline.
+        const deadline = Date.now() + 15000
+        while (isAlive(grandchildPid) && Date.now() < deadline) {
+          await new Promise((resolve) => setTimeout(resolve, 50))
+        }
+
+        expect(isAlive(grandchildPid)).toBe(false)
+        expect(exitCode).not.toBe(0)
+      } finally {
+        rmSync(pidFilePath, { force: true })
+      }
+    },
+    30000,
+  )
+
+  itSkipOnWindows(
+    "does not spawn a check still queued behind the concurrency limit once SIGINT cleanup has begun",
+    async () => {
+      // Regression test: installTerminationHandlers' handler used to kill only the checks already
+      // active at the instant the signal arrived, then immediately remove its own listeners --
+      // leaving nothing to supervise a check that the concurrency pool/scheduler launched
+      // *afterward*, once the killed check's slot freed. With concurrency: 1 and two checks
+      // declared, `second` can only ever be considered once `first`'s slot frees -- exactly the
+      // window this test exercises.
+      const fixture = path.join(here, "fixtures", "sigint-cleanup-queued.ts")
+      const tsxBin = path.join(here, "..", "..", "..", "node_modules", ".bin", "tsx")
+      const runId = `${String(process.pid)}-${String(Date.now())}`
+      const pidFilePath = path.join(os.tmpdir(), `repo-contract-sigint-queued-pid-${runId}`)
+      const queuedMarkerPath = path.join(os.tmpdir(), `repo-contract-sigint-queued-marker-${runId}`)
+      const child = spawn(tsxBin, [fixture, pidFilePath, queuedMarkerPath], {
+        stdio: ["ignore", "pipe", "pipe"],
       })
 
-      // The host process has now fully exited (including its own
-      // SELF_TERMINATE_DELAY_MS wait) -- `second` had every opportunity to spawn and write its
-      // marker file if the queued-check bug were still present.
-      expect(existsSync(queuedMarkerPath)).toBe(false)
-    } finally {
-      rmSync(pidFilePath, { force: true })
-      rmSync(queuedMarkerPath, { force: true })
-    }
-  }, 30000)
+      try {
+        const firstPid = await new Promise<number>((resolve, reject) => {
+          const deadline = Date.now() + 10000
+          const poll = (): void => {
+            if (existsSync(pidFilePath)) {
+              resolve(Number(readFileSync(pidFilePath, "utf8")))
+              return
+            }
+            if (Date.now() > deadline) {
+              reject(new Error("timed out waiting for the fixture's pid file"))
+              return
+            }
+            setTimeout(poll, 50)
+          }
+          poll()
+        })
+        expect(Number.isInteger(firstPid)).toBe(true)
+
+        child.kill("SIGINT")
+
+        await new Promise<number | null>((resolve) => {
+          child.once("exit", (code) => {
+            resolve(code)
+          })
+        })
+
+        // The host process has now fully exited (including its own
+        // SELF_TERMINATE_DELAY_MS wait) -- `second` had every opportunity to spawn and write its
+        // marker file if the queued-check bug were still present.
+        expect(existsSync(queuedMarkerPath)).toBe(false)
+      } finally {
+        rmSync(pidFilePath, { force: true })
+        rmSync(queuedMarkerPath, { force: true })
+      }
+    },
+    30000,
+  )
 })
 
 describe("SELF_TERMINATE_DELAY_MS", () => {
