@@ -34,7 +34,7 @@
 - **checks/crap.ts** (added, +123/-0): `crap` check policy -- compares crap4ts's per-function CRAP scores against the repo-pinned threshold passed via `--threshold`.
 - **checks/docs.ts** (added, +155/-0): `docs` check policy -- interprets the combined markdownlint-cli2 + linkinator JSON evidence; lint errors and broken links fail.
 - **checks/lint.ts** (added, +161/-0): `lint` check policy -- interprets combined ESLint + oxlint JSON evidence: errors fail, warnings warn, a tool-infrastructure failure fails.
-- **checks/mutation.ts** (added, +406/-0): `mutation` check policy -- requires every applicable Stryker mutant to be `Killed`, cross-checking any comment-ignored mutant against a justified `disable-comments.json` Stryker-domain record.
+- **checks/mutation.ts** (added, +406/-0): `mutation` check policy -- requires every applicable Stryker mutant to be `Killed`, cross-checking any comment-ignored mutant against a justified `disable-comments.json` Stryker-domain record; a static mutant skipped by the config-level `ignoreStatic` option is accepted outright and excluded from the applicable count.
 - **checks/schema.ts** (added, +92/-0): `schema` check policy -- re-reads every regenerated `schemas/*.schema.json` target off disk and confirms valid JSON carrying the `$id`/`title` the generator's own `TARGETS` declares.
 - **checks/security-network.ts** (added, +61/-0): `security-network` check policy -- fails on any prohibited or unverifiable network capability found in `src/**/*.ts` by the AST scan (ADR 0013).
 - **checks/shared/require-parsed-output.ts** (added, +32/-0): Shared guard nearly every check policy calls first -- fail with a fixed rationale when parsed JSON output is missing or failed to parse, otherwise return it narrowed to `T`.
@@ -99,7 +99,7 @@
 - **scripts/changeset-docs/evidence-types.ts** (added, +33/-0): Internal evidence contract for the changeset-docs check -- `allDescribed` is the single fact the policy gates on; rows are always sorted by path.
 - **scripts/changeset-docs/table-manager.ts** (added, +208/-0): Reconciles the machine-owned "### Changed Files" section against the diff -- adds/keeps/drops rows and preserves each existing description verbatim, including across a detected rename.
 - **scripts/changeset-file-locator.ts** (added, +72/-0): Shared logic picking the single `.changeset/*.md` file both machine-owned sections write into -- recognizes any `<!-- repo-contract:<owner>:start:` marker.
-- **scripts/check-accessibility.mjs** (added, +47/-0): Entry point for the `accessibility` check -- spawns pa11y against `docs/index.html` via a `file://` URL and prints its JSON report.
+- **scripts/check-accessibility.mjs** (added, +47/-0): Entry point for the `accessibility` check -- runs pa11y against `docs/index.html` via a `file://` URL through its Node API (with `--no-sandbox` for Chromium on restricted CI kernels) and prints a `{ ok, value | error }` result.
 - **scripts/check-adr-structure.d.mts** (added, +12/-0): Type declaration for `check-adr-structure.mjs`.
 - **scripts/check-adr-structure.mjs** (added, +99/-0): Static ADR-set guardrail -- filename shape, no duplicate numbers, and the five required headings; evaluates the current tree only, numbering gaps allowed.
 - **scripts/check-architecture.mjs** (added, +103/-0): Entry point for the `architecture` check -- runs dependency-cruiser plus the test-boundary and ADR-structure analyses and prints one combined JSON evidence object.
@@ -202,7 +202,7 @@
 - **src/presets/typecheck.ts** (added, +25/-0): `typecheck` preset -- `tsc --noEmit -p tsconfig.json`, exit-code based.
 - **src/run-repo-contract.ts** (added, +80/-0): `runRepoContract` -- validate -> execute -> build evidence -> evaluate policies -> aggregate verdict; strictly phased, and never calls `process.exit()`.
 - **src/types.ts** (added, +340/-0): The public type surface -- `Evidence`, `Verdict`, `CheckStatus`, `PolicyResult`, `RepoContractConfig`, and friends; Evidence describes what happened, Verdict whether it was acceptable.
-- **stryker.config.mjs** (added, +38/-0): Stryker config -- Vitest runner, `coverageAnalysis: "all"`, the `mutate` globs, and the JSON reporter `checks/mutation.ts` reads.
+- **stryker.config.mjs** (added, +38/-0): Stryker config -- Vitest runner, `coverageAnalysis: "perTest"` with `ignoreStatic` for a CI-viable run time, the `mutate` globs (the process/signal/scheduling core is excluded -- mutating it destabilizes the Stryker runner itself; covered by the integration/e2e categories instead), and the JSON reporter `checks/mutation.ts` reads.
 - **SUPPORT.md** (added, +50/-0): Where to ask questions and file issues.
 - **test/e2e/consumer-install-bun.test.ts** (added, +137/-0): E2E -- installs the real packed tarball into a fresh project and runs its entry points under Bun (ADR 0011).
 - **test/e2e/consumer-install-deno.test.ts** (added, +153/-0): E2E -- the same packed-tarball install exercised under Deno with `--allow-read/-run/-env` (ADR 0011).

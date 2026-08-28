@@ -135,6 +135,12 @@ describe("validateRepoContractConfig", () => {
     }).toThrow(/first element .* is empty or contains only whitespace/)
   })
 
+  it("rejects an array run whose first element (the executable) is whitespace only", () => {
+    expect(() => {
+      validateRepoContractConfig(configWith({ run: ["   ", "--flag"], policy: okPolicy }))
+    }).toThrow(/first element .* is empty or contains only whitespace/)
+  })
+
   it("rejects a check with a non-string element in the run array", () => {
     expect(() => {
       validateRepoContractConfig(configWith({ run: ["echo", 5], policy: okPolicy }))

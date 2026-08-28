@@ -53,10 +53,23 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 // record to also carry justification/alternatives/remediation -- is what
 // this policy actually relies on. See
 // specs/decisions/0007-suppression-governance.md. An Ignored
-// mutant with any other statusReason (e.g. a config-level
-// `mutator.excludedMutations` or `ignoreStatic` exclusion) bypasses both
-// gates entirely and is treated as unjustified.
+// mutant with any statusReason other than this one or STATIC_IGNORE_REASON
+// (e.g. a `mutator.excludedMutations` exclusion) bypasses both gates
+// entirely and is treated as unjustified.
 const COMMENT_IGNORE_REASON = "Ignored using a comment"
+
+// Stryker's own hardcoded statusReason for a static mutant skipped because
+// stryker.config.mjs sets `ignoreStatic: true` (see
+// @stryker-mutator/core's mutant-test-planner.ts). Unlike a comment-ignored
+// mutant, this one carries no hand-authored justification and does not go
+// through the suppression-governance registry -- it is a single, config-level
+// decision, documented in stryker.config.mjs's own `ignoreStatic` comment,
+// that load-time-constant expressions are out of scope for this run because
+// "perTest" coverage analysis cannot attribute them to a covering test.
+// Accepted as detected-equivalent (it is not a test gap this run can act on),
+// but tracked separately so it can never be confused with a comment-ignored
+// mutant that skipped the registry gate.
+const STATIC_IGNORE_REASON = 'Static mutant (and "ignoreStatic" was enabled)'
 
 interface StrykerLocationPosition {
   readonly line: number
@@ -227,8 +240,14 @@ export const mutation: CheckDefinitionConfig = {
       ({ mutant }) => mutant.statusReason === COMMENT_IGNORE_REASON,
     )
 
+    const staticIgnored = ignored.filter(
+      ({ mutant }) => mutant.statusReason === STATIC_IGNORE_REASON,
+    )
+
     const unjustifiedIgnored = ignored.filter(
-      ({ mutant }) => mutant.statusReason !== COMMENT_IGNORE_REASON,
+      ({ mutant }) =>
+        mutant.statusReason !== COMMENT_IGNORE_REASON &&
+        mutant.statusReason !== STATIC_IGNORE_REASON,
     )
 
     const unknown = mutants.filter(({ mutant }) => !KNOWN_MUTANT_STATUSES.has(mutant.status))
@@ -286,7 +305,7 @@ export const mutation: CheckDefinitionConfig = {
           })()
 
     const detected = killed.length + runtimeErrors.length + compileErrors.length
-    const applicableMutants = mutants.length - justifiedIgnored.length
+    const applicableMutants = mutants.length - justifiedIgnored.length - staticIgnored.length
 
     const score = applicableMutants === 0 ? 100 : (detected / applicableMutants) * 100 // Killed, RuntimeError, and CompileError are all accepted: a mutant a
     // test suite could not even execute cleanly is not evidence of a test
@@ -294,7 +313,9 @@ export const mutation: CheckDefinitionConfig = {
     // unjustified Ignored mutants each fail the check outright, and so does
     // any status this policy doesn't recognize. A comment-ignored mutant is
     // accepted only once the Stryker suppression gate above finds nothing to
-    // object to.
+    // object to; a static mutant skipped by the config-level `ignoreStatic`
+    // option (staticIgnored) is accepted outright and excluded from
+    // `applicableMutants` entirely, the same as a comment-ignored one.
     const passed =
       survived.length === 0 &&
       noCoverage.length === 0 &&
@@ -320,6 +341,7 @@ export const mutation: CheckDefinitionConfig = {
     const passingBreakdown = [
       `${String(killed.length)} Killed`,
       `${String(justifiedIgnored.length)} Ignored (accepted)`,
+      `${String(staticIgnored.length)} Static (ignoreStatic)`,
       `${String(runtimeErrors.length)} Runtime errors`,
       `${String(compileErrors.length)} Compile errors`,
     ].join(", ")
@@ -393,13 +415,13 @@ export const mutation: CheckDefinitionConfig = {
 
     if (!passed) {
       sections.push(
-        `Policy: failed. The repository requires zero Survived, NoCoverage, Timeout, and unjustified Ignored mutants (Killed, RuntimeError, CompileError, and comment-ignored mutants are accepted); a comment-ignored mutant is accepted only once every Stryker-domain suppression in the registry is fully justified.`,
+        `Policy: failed. The repository requires zero Survived, NoCoverage, Timeout, and unjustified Ignored mutants (Killed, RuntimeError, CompileError, comment-ignored, and static mutants skipped via the config-level ignoreStatic option are accepted); a comment-ignored mutant is accepted only once every Stryker-domain suppression in the registry is fully justified.`,
       )
       return { outcome: "fail", rationale: sections.join("\n") }
     }
 
     sections.push(
-      `Policy: passed. The repository requires zero Survived, NoCoverage, Timeout, and unjustified Ignored mutants (Killed, RuntimeError, CompileError, and comment-ignored mutants are accepted); a comment-ignored mutant is accepted only once every Stryker-domain suppression in the registry is fully justified.`,
+      `Policy: passed. The repository requires zero Survived, NoCoverage, Timeout, and unjustified Ignored mutants (Killed, RuntimeError, CompileError, comment-ignored, and static mutants skipped via the config-level ignoreStatic option are accepted); a comment-ignored mutant is accepted only once every Stryker-domain suppression in the registry is fully justified.`,
     )
     return { outcome: "pass", rationale: sections.join("\n") }
   },

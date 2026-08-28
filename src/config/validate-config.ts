@@ -132,6 +132,15 @@ function validateStringRun(checkId: string, run: string, usesShell: boolean): vo
     // only later as an opaque spawn error rather than a synchronous config
     // error like every other structurally-broken `run`.
     const [executable] = tokenizeRunString(run, checkId)
+    // `noUncheckedIndexedAccess` types the destructured `executable` as
+    // `string | undefined`, but `tokenizeRunString` throws on any input that
+    // would produce an empty token array (it rejects an empty or
+    // whitespace-only string outright), so `executable` is always a real
+    // string by the time control reaches here. The `?.` exists only to
+    // satisfy the compiler; removing it is behaviourally equivalent, so the
+    // OptionalChaining mutant here is an equivalent mutant with no test that
+    // could ever distinguish it.
+    // Stryker disable next-line OptionalChaining -- equivalent mutant: `executable` is provably always a string here (see comment above), so `executable?.trim()` and `executable.trim()` are identical.
     if (executable?.trim().length === 0) {
       throw new InvalidCheckConfigError(
         checkId,

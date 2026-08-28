@@ -176,6 +176,27 @@ describe("mutation policy", () => {
     expect(result.outcome).toBe("pass")
   })
 
+  it("accepts a static mutant skipped by the config-level ignoreStatic option, without consulting the suppression gate", async () => {
+    readFile.mockResolvedValue(
+      JSON.stringify(
+        strykerReport([
+          killedMutant(),
+          {
+            id: 7,
+            mutatorName: "X",
+            replacement: "y",
+            status: "Ignored",
+            statusReason: 'Static mutant (and "ignoreStatic" was enabled)',
+          },
+        ]),
+      ),
+    )
+    const result = await mutation.policy(contextWithDependencies({}))
+    expect(result.outcome).toBe("pass")
+    expect(result.rationale).toContain("1 Static (ignoreStatic)")
+    expect(result.rationale).not.toContain("Unjustified ignores")
+  })
+
   it("accepts a comment-ignored mutant when every Stryker-domain registry record is fully justified", async () => {
     readFile.mockResolvedValue(
       JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),

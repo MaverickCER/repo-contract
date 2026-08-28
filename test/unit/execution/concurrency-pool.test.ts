@@ -82,13 +82,33 @@ describe("runWithConcurrency", () => {
     expect(results).toEqual([2, 4, 6])
   })
 
-  it("propagates a worker rejection", async () => {
+  it("propagates a worker rejection -- the exact rejection value, unwrapped", async () => {
+    const boom = new Error("boom")
     await expect(
       runWithConcurrency([1, 2, 3], 2, (item) => {
-        if (item === 2) return Promise.reject(new Error("boom"))
+        if (item === 2) return Promise.reject(boom)
         return Promise.resolve(item)
       }),
-    ).rejects.toThrow("boom")
+      // `.toBe(boom)`, not `.toThrow("boom")`: vitest's `.rejects.toThrow(msg)`
+      // passes for a rejection value of `undefined` regardless of `msg`, so it
+      // would not notice the first rejection being recorded without its error.
+    ).rejects.toBe(boom)
+  })
+
+  it("stops pulling new work as soon as any worker has rejected", async () => {
+    const started: number[] = []
+    await expect(
+      runWithConcurrency([0, 1, 2, 3, 4, 5], 2, async (item) => {
+        started.push(item)
+        if (item === 1) throw new Error("stop")
+        await new Promise((resolve) => setTimeout(resolve, 10))
+        return item
+      }),
+    ).rejects.toThrow("stop")
+    // Concurrency 2: the two workers pick up items 0 and 1; item 1 rejects
+    // before item 0's timer fires, so neither worker should ever advance to
+    // item 2. Without the early-out, every remaining item still runs.
+    expect(started).toEqual([0, 1])
   })
 
   it("propagates the FIRST rejection and does not leak a later sibling rejection as unhandled", async () => {

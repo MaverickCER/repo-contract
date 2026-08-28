@@ -50,7 +50,22 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 231,
+    "line": 143,
+    "domain": "stryker",
+    "rule": [
+      "OptionalChaining"
+    ],
+    "content": "Stryker disable next-line OptionalChaining -- equivalent mutant: `executable` is provably always a string here (see comment above), so `executable?.trim()` and `executable.trim()` are identical.",
+    "justification": "`executable` is the first element destructured from `tokenizeRunString(run, checkId)`, which throws (InvalidCheckConfigError) on any input that would yield an empty token array -- it rejects an empty or whitespace-only string before returning -- so the array always has at least one string element and `executable` is never `undefined` at this line. The `?.` is present only because `noUncheckedIndexedAccess` types the destructured element as `string | undefined`; with `executable` provably a string, `executable?.trim()` and `executable.trim()` evaluate identically, so no test can distinguish the OptionalChaining mutant.",
+    "alternatives": "Assert the non-null with `executable!.trim()` or a local `const exe = executable ?? \"\"`, which would still leave an equivalent mutant (now on the `!`/`??`); or restructure `validateStringRun` to take the already-tokenized array from a single call site so the element type is narrowed -- a larger change to thread the tokens through, with no behavioural benefit.",
+    "remediation": "If `tokenizeRunString` ever gains a code path that returns an empty array without throwing, this `?.` becomes load-bearing and the mutant becomes killable -- add a test passing a `run` string that tokenizes to `[]` and expects the \"first token ... is empty or contains only whitespace\" error, and remove this suppression.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "equivalent mutant: `executable` is provably always a string here (see comment above), so `executable?.trim()` and `executable.trim()` are identical."
+  },
+  {
+    "file": "src/config/validate-config.ts",
+    "line": 240,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression"
@@ -65,7 +80,7 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 253,
+    "line": 262,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression"
@@ -80,7 +95,7 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 335,
+    "line": 344,
     "domain": "stryker",
     "rule": [
       "OptionalChaining"
