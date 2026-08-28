@@ -5,4 +5,14 @@ export declare function packTarball(
   options?: { readonly cwd?: string },
 ): { readonly filename: string; readonly tarballPath: string }
 
+export declare function runNpm(
+  args: readonly string[],
+  options?: { readonly cwd?: string },
+): {
+  readonly status: number | null
+  readonly stdout: string
+  readonly stderr: string
+  readonly error?: Error
+}
+
 export declare const NPM_COMMAND: string

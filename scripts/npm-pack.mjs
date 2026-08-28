@@ -12,19 +12,25 @@
 //      `parseNpmPackFilename` below isolates the JSON block and asserts its
 //      shape regardless, so a future npm behaviour change can't reintroduce
 //      the failure silently.
-//   2. `spawnSync("npm", ...)` cannot find npm on Windows -- it's `npm.cmd`,
-//      and Node >=20 refuses to spawn a `.cmd` without a shell. CI runs the
-//      E2E suite on windows-latest.
+//   2. On Windows `npm` is `npm.cmd`, and since the CVE-2024-27980 mitigation
+//      (Node 18.20.2 / 20.12.2 / 22+) `child_process.spawnSync` refuses to run
+//      a `.cmd`/`.bat` file at all unless `shell: true` -- it fails with
+//      `status: null` and no captured stderr, which is exactly the opaque
+//      "npm pack failed (exit null)" the E2E suite hit on windows-latest.
+//      `cross-spawn` (already a runtime dependency, used the same way by
+//      scripts/run-test-category.mjs) resolves `npm` -> `npm.cmd` and invokes
+//      it through `cmd.exe` with correct argument quoting, with none of the
+//      `shell: true` quoting hazards, so callers just pass `"npm"`.
 //
 // scripts/ is lower-level tooling that checks/ and test/ build on (see
 // eslint.config.js's boundary rules) -- both callers importing from here is
 // the allowed direction; this module never imports from either of them.
 
-import { spawnSync } from "node:child_process"
+import { sync as spawnSync } from "cross-spawn"
 import path from "node:path"
 
-/** npm's executable name -- `npm.cmd` on Windows, which `spawnSync` won't resolve without help. */
-const NPM = process.platform === "win32" ? "npm.cmd" : "npm"
+/** npm's command name -- `cross-spawn` resolves this to `npm.cmd` on Windows and runs it safely. */
+const NPM = "npm"
 
 const JSON_OPEN = new Set(["[", "{", "[]", "{}"])
 const JSON_CLOSE = new Set(["]", "}", "[]", "{}"])
@@ -93,6 +99,18 @@ export function parseNpmPackFilename(stdout, stderr = "") {
 }
 
 /**
+ * Runs `npm <args>` synchronously via `cross-spawn`, capturing stdout/stderr as UTF-8 text. The
+ * single place this repository spawns `npm` from Node -- see this module's header for why the
+ * plain `child_process` route is a Windows footgun.
+ * @param args - Arguments to pass to `npm` (e.g. `["install", tarball, "--no-save"]`).
+ * @param options - Optional `cwd` for the invocation.
+ * @returns The `spawnSync` result (`status`, `stdout`, `stderr`, `error`, ...).
+ */
+export function runNpm(args, options = {}) {
+  return spawnSync(NPM, args, { cwd: options.cwd, encoding: "utf8" })
+}
+
+/**
  * Runs a real `npm pack` into `destinationDir` and returns where the tarball landed.
  * `--ignore-scripts` so packing never triggers this package's own `prepare` (`npm run build`),
  * whose output would otherwise corrupt `--json` and whose `dist/` delete+rebuild would race every
@@ -102,8 +120,7 @@ export function parseNpmPackFilename(stdout, stderr = "") {
  * @returns The tarball's `filename` and its full `tarballPath` inside `destinationDir`.
  */
 export function packTarball(destinationDir, options = {}) {
-  const result = spawnSync(
-    NPM,
+  const result = runNpm(
     [
       "pack",
       "--pack-destination",
@@ -112,9 +129,14 @@ export function packTarball(destinationDir, options = {}) {
       "--loglevel=silent",
       "--ignore-scripts",
     ],
-    { cwd: options.cwd, encoding: "utf8" },
+    { cwd: options.cwd },
   )
 
+  if (result.error) {
+    throw new Error(`npm pack could not be spawned: ${result.error.message}`, {
+      cause: result.error,
+    })
+  }
   if (result.status !== 0) {
     throw new Error(
       `npm pack failed (exit ${String(result.status)}):\n${result.stderr || result.stdout}`,
@@ -125,5 +147,5 @@ export function packTarball(destinationDir, options = {}) {
   return { filename, tarballPath: path.join(destinationDir, filename) }
 }
 
-/** npm's executable name for this platform -- exported so callers that spawn npm directly (e.g. `npm install`) resolve it the same way. */
+/** npm's command name -- exported for callers that still spawn npm directly; prefer `runNpm`, which resolves and invokes it safely on every platform. */
 export const NPM_COMMAND = NPM

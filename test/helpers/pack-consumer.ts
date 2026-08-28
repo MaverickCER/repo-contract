@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { NPM_COMMAND, packTarball } from "../../scripts/npm-pack.mjs"
+import { packTarball, runNpm } from "../../scripts/npm-pack.mjs"
 
 /**
  * Shared by every "install the real packed tarball into a fresh consumer project" E2E test --
@@ -52,10 +52,10 @@ export function createConsumerFixture(tmpDirPrefix: string): ConsumerFixture {
     JSON.stringify({ name: "repo-contract-consumer-fixture", version: "0.0.0", type: "module" }),
   )
 
-  const installResult = spawnSync(NPM_COMMAND, ["install", tarballPath, "--no-save"], {
-    cwd: consumerDir,
-    encoding: "utf8",
-  })
+  const installResult = runNpm(["install", tarballPath, "--no-save"], { cwd: consumerDir })
+  if (installResult.error) {
+    throw new Error(`npm install could not be spawned: ${installResult.error.message}`)
+  }
   if (installResult.status !== 0) {
     throw new Error(`npm install of the packed tarball failed: ${installResult.stderr}`)
   }
