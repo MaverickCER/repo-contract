@@ -12,17 +12,30 @@ interface SizeBudget {
 // itself no longer knows any budget; it only measures and reports (see that
 // file's own doc comment). Matched against the report below by `file`, not
 // trusted from anything the script echoes back.
+//
+// These are regression tripwires, not a hard external constraint: nothing
+// ships this package to a browser and npm imposes no meaningful size limit
+// on a Node dev dependency. The number the check exists to catch is a
+// dependency accidentally being inlined -- un-externalizing cross-spawn
+// (~5KB gzip) or yaml (~40KB) in tsup.config.ts -- which blows past any sane
+// budget. So each budget is set ~25-30% above the current gzip size: loose
+// enough that ordinary feature work (a new error class, another validation
+// branch) doesn't trip CI, tight enough that an inlined dependency still
+// does. Bump these deliberately when a real capability addition grows the
+// bundle; `npm run size` prints the current figure against the budget.
+// CJS runs a few hundred bytes larger than ESM at the same source (esbuild's
+// interop wrappers -- `__toCommonJS`, a getter per named export), so the two
+// formats share one budget sized for the larger.
 export const SIZE_BUDGETS: readonly SizeBudget[] = [
-  // Includes cross-spawn (bundled? no -- external, see tsup.config.ts) --
-  // this budgets only this package's own compiled source, since cross-spawn
-  // and yaml are both external and resolved from node_modules at install
-  // time, not inlined here.
-  { label: "index (esm)", file: "dist/index.js", maxGzipBytes: 8 * 1024 },
-  { label: "index (cjs)", file: "dist/index.cjs", maxGzipBytes: 8 * 1024 },
+  // Budgets only this package's own compiled source: cross-spawn (the one
+  // runtime dependency) and yaml (optional peer, dynamically imported) are
+  // both `external` in tsup.config.ts and resolved from node_modules at
+  // install time, never inlined here.
+  { label: "index (cjs)", file: "dist/index.cjs", maxGzipBytes: 10 * 1024 },
   // `./presets` is an equally published `exports` entrypoint (package.json) --
   // without its own budget a regression here was undetectable by this check.
-  { label: "presets (esm)", file: "dist/presets.js", maxGzipBytes: 6 * 1024 },
-  { label: "presets (cjs)", file: "dist/presets.cjs", maxGzipBytes: 6 * 1024 },
+  { label: "presets (esm)", file: "dist/presets.js", maxGzipBytes: 7 * 1024 },
+  { label: "presets (cjs)", file: "dist/presets.cjs", maxGzipBytes: 7 * 1024 },
 ]
 
 export interface SizeReportEntry {

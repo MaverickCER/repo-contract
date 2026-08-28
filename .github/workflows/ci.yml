@@ -163,6 +163,8 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+      # `npm pack --pack-destination` does not create the target directory.
+      - run: mkdir -p ./artifacts
       - run: npm pack --pack-destination ./artifacts
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
