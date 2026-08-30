@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process"
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
@@ -10,6 +10,7 @@ import {
   sha256,
   writeBaselineFiles,
 } from "../../../scripts/api-contract/baseline-store.js"
+import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 
 /**
  * Real, disposable git repositories in os.tmpdir() -- never mocked -- per CONTRIBUTING.md's
@@ -47,7 +48,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await rm(repoDir, { recursive: true, force: true })
+  await removeTempDir(repoDir)
 })
 
 describe("readBaseline", () => {
@@ -67,7 +68,7 @@ describe("readBaseline", () => {
     try {
       await expect(readBaseline(nonGitDir)).rejects.toThrow(/git working tree/)
     } finally {
-      await rm(nonGitDir, { recursive: true, force: true })
+      await removeTempDir(nonGitDir)
     }
   })
 

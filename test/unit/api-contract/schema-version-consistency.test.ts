@@ -1,10 +1,11 @@
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { normalizeApiPackage } from "../../../scripts/api-contract/model-normalizer.js"
 import { detectSchemaVersionDrift } from "../../../scripts/api-contract/schema-version-consistency.js"
 import { buildFixturePackage } from "../../helpers/api-contract/build-fixture-package.js"
+import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 
 /**
  * Real `Extractor.invoke()` over real baseline/current fixture package pairs -- the structural
@@ -19,7 +20,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await rm(root, { recursive: true, force: true })
+  await removeTempDir(root)
 })
 
 async function normalize(sourceText: string, sub: string) {

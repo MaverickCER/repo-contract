@@ -1,10 +1,11 @@
 import { execFileSync } from "node:child_process"
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdtemp, readFile, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { runApiContractCheck } from "../../../scripts/api-contract/check.js"
 import { writeFixtureSource } from "../../helpers/api-contract/build-fixture-package.js"
+import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 
 /**
  * The complete real path: source -> API Extractor -> API JSON -> historical comparison (from a
@@ -56,7 +57,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await rm(root, { recursive: true, force: true })
+  await removeTempDir(root)
 })
 
 describe("runApiContractCheck -- full real path", () => {

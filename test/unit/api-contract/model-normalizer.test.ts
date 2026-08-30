@@ -1,10 +1,11 @@
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import type { NormalizedMember } from "../../../scripts/api-contract/model-normalizer.js"
 import { normalizeApiPackage } from "../../../scripts/api-contract/model-normalizer.js"
 import { buildFixturePackage } from "../../helpers/api-contract/build-fixture-package.js"
+import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 
 /**
  * Real `Extractor.invoke()` over a real, compiled fixture package -- asserted against real
@@ -103,7 +104,7 @@ beforeEach(async () => {
 }, 30_000)
 
 afterEach(async () => {
-  await rm(root, { recursive: true, force: true })
+  await removeTempDir(root)
 })
 
 describe("normalizeApiPackage", () => {
@@ -208,7 +209,7 @@ export function internalOnly(): void {}
       expect(findByName(normalized, "alphaOnly")).toBeDefined()
       expect(findByName(normalized, "internalOnly")).toBeUndefined()
     } finally {
-      await rm(alphaRoot, { recursive: true, force: true })
+      await removeTempDir(alphaRoot)
     }
   }, 30_000)
 })
