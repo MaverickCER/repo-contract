@@ -107,6 +107,7 @@ import { EXEMPT_UNUSED_DEV_DEPENDENCIES } from "./scripts/lint-config.mjs"
 import { defineRepoContract } from "./src/index.js"
 import type { AttwReport } from "./src/presets/arethetypeswrong.js"
 import { evaluateAttwReport } from "./src/presets/arethetypeswrong.js"
+import { readJsonReport } from "./src/presets/shared/read-json-report.js"
 import {
   commitlint,
   deadCode,
@@ -178,30 +179,12 @@ export default defineRepoContract({
       run: ["node", "scripts/run-attw-to-file.mjs"],
       policy: async () => {
         const { readFile } = await import("node:fs/promises")
-
-        let raw: string
-
-        try {
-          raw = await readFile("reports/arethetypeswrong.json", "utf8")
-        } catch {
-          return {
-            outcome: "fail",
-            rationale: "@arethetypeswrong/cli did not produce its expected JSON report.",
-          }
-        }
-
-        let report: AttwReport
-
-        try {
-          report = JSON.parse(raw) as AttwReport
-        } catch {
-          return {
-            outcome: "fail",
-            rationale: "@arethetypeswrong/cli produced invalid JSON evidence.",
-          }
-        }
-
-        return evaluateAttwReport(report)
+        const parsed = await readJsonReport<AttwReport>(
+          () => readFile("reports/arethetypeswrong.json", "utf8"),
+          "@arethetypeswrong/cli did not produce its expected JSON report.",
+          "@arethetypeswrong/cli produced invalid JSON evidence.",
+        )
+        return parsed.ok ? evaluateAttwReport(parsed.value) : parsed.result
       },
     },
     license,
