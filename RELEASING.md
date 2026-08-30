@@ -27,13 +27,32 @@ guardrail, so no manual dry run is needed before a release.
 
 ## One-time setup
 
-- Before the first release: `git tag v0.1.0 <main HEAD> && git push origin v0.1.0`, so
-  release-please's first Release PR only covers commits after it, not all history.
-- GitHub → Settings → Pull Requests: **disable "Allow squash merging"** (keep merge commits
-  and/or rebase).
-- On [npmjs.com](https://www.npmjs.com): add a trusted publisher for `repo-contract` — user
-  `maverickcer`, repository `repo-contract`, workflow `release.yml`. The workflow's
-  `id-token: write` permission plus that registration is the entire trust relationship.
+- **Baseline tag.** Before the first release-please run:
+  `git tag repo-contract-v<current version> <main HEAD> && git push origin --tags`, so
+  release-please's first Release PR only covers commits after it, not all history. The tag
+  is component-prefixed (`repo-contract-v0.1.0`, not `v0.1.0`) — that is the format
+  release-please itself creates and the `compare/…` links in `CHANGELOG.md` expect.
+- **Merge style.** GitHub → Settings → Pull Requests: **disable "Allow squash merging"**
+  (keep merge commits and/or rebase).
+- **Let Actions open the Release PR.** GitHub → Settings → Actions → General → Workflow
+  permissions: tick **"Allow GitHub Actions to create and approve pull requests"**. Without
+  it the `release-please` job fails with
+  _"GitHub Actions is not permitted to create or approve pull requests"_ — it still pushes
+  the `release-please--branches--main--components--repo-contract` branch, but no PR opens.
+  If you cannot enable it, see [First-release bootstrap](#first-release-bootstrap) — a
+  human opens that one PR by hand and every later run updates it in place (updating an
+  existing PR is not gated by that setting).
+- **npm trusted publishing.** npm will not let you register a trusted publisher for a
+  package that does not exist yet, so this cannot be done "before the first release".
+  Bootstrap it once, then the workflow's `id-token: write` permission plus the registration
+  is the entire trust relationship from the next version on — no `NPM_TOKEN` ever exists:
+  1. Publish the first version manually, once, from a maintainer machine:
+     `npm login` (as `maverickcer`), then `npm publish --ignore-scripts --provenance=false`
+     on the release commit. `--provenance=false` is required — the `.npmrc` sets
+     `provenance=true`, which only works inside the OIDC workflow.
+  2. On [npmjs.com](https://www.npmjs.com) → the `repo-contract` package → **Settings →
+     Trusted Publisher → GitHub Actions**: organization/user `MaverickCER`, repository
+     `repo-contract`, workflow `release.yml`.
 
 ### Branch protection on `main`
 
@@ -51,6 +70,22 @@ entirely on these settings, which live in the repo config, not the tree — set 
 - Release authority is the `release.yml` workflow plus the npm trusted-publisher
   registration above — no human holds a publish token. A merged PR cannot publish; only
   merging release-please's own Release PR can.
+
+## First-release bootstrap
+
+This section applies only until the automated flow has produced one release, or whenever
+_"Allow GitHub Actions to create and approve pull requests"_ (One-time setup, above) is off.
+
+1. Merge the feature PRs to `main` as normal. The `release-please` job runs, pushes the
+   `release-please--branches--main--components--repo-contract` branch, and fails at the
+   "create pull request" step.
+2. Open that PR by hand: base `main`, head
+   `release-please--branches--main--components--repo-contract`, title
+   `chore(main): release repo-contract <version>`, body = the `CHANGELOG.md` section from
+   the branch. Add the label **`autorelease: pending`** (create it if missing) — the
+   post-merge `release-please` run keys off that label to tag the release.
+3. Review and merge it like any Release PR. From here on, later `release-please` runs
+   update this same PR in place; only the initial creation needed a human.
 
 ## Versioning
 
