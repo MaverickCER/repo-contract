@@ -8,7 +8,7 @@ interface EvaluateApiDocsPolicyInput {
 
 /**
  * @param report - one target's evidence.
- * @returns a `- <detail>` line describing why `report` failed, or `undefined` if it didn't.
+ * @returns one `- <detail>` line per reason `report` failed; an empty array if it passed.
  */
 function formatFailure(report: ApiDocsReportEvidence): string[] {
   const lines: string[] = []

@@ -59,13 +59,17 @@ describe("deadCode preset", () => {
     })
   })
 
-  it("fails when report.issues is not an array", async () => {
+  it.each([
+    ["issues is not an array", { issues: "not-an-array" }],
+    ["value is null", null],
+    ["value is a primitive", 42],
+  ])("fails cleanly (does not throw) when %s", async (_label, value) => {
     const check = deadCode()
     const result = await check.policy(
       fakeContext(
         fakeCheckEvidence({
           args: argsFor(check),
-          output: { format: "json", success: true, value: { issues: "not-an-array" } },
+          output: { format: "json", success: true, value },
         }),
       ),
     )
@@ -119,6 +123,7 @@ describe("deadCode preset", () => {
           nsExports: [{ name: "ns.unused" }],
           types: [{ name: "UnusedType" }],
           nsTypes: [{ name: "ns.UnusedType" }],
+          namespaceMembers: [{ name: "ns.member" }],
           enumMembers: [{ name: "Enum.MEMBER" }],
           binaries: [{ name: "some-bin" }],
           duplicates: [[{ name: "DupA" }, { name: "DupB" }]],
@@ -146,6 +151,7 @@ describe("deadCode preset", () => {
       "src/a.ts — unused export (namespace): ns.unused",
       "src/a.ts — unused type: UnusedType",
       "src/a.ts — unused type (namespace): ns.UnusedType",
+      "src/a.ts — unused namespace member: ns.member",
       "src/a.ts — unused enum member: Enum.MEMBER",
       "src/a.ts — unlisted binary: some-bin",
       "src/a.ts — duplicate export: DupA, DupB",

@@ -124,6 +124,28 @@ describe("evaluateApiContractPolicy", () => {
     expect(result.rationale).toContain("`BREAKING CHANGE:` footer")
   })
 
+  it.each([
+    ["minor", "Use `feat:` for the commit or PR title"],
+    ["patch", "Use `fix:` (or `perf:`) for the commit or PR title"],
+  ] as const)(
+    "tailors the remediation to a %s under-declaration (not the breaking-change advice)",
+    (requiredLevel, expectedFragment) => {
+      const result = evaluateApiContractPolicy({
+        evidence: evidence({
+          impact: "compatible",
+          requiredLevel,
+          minimumRequiredVersion: "1.5.0",
+          summary: "1 public contract change(s) detected:\n- Added getUsers.",
+          commits: commits({ declaredLevel: "none", satisfied: false }),
+        }),
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain(`do not declare a \`${requiredLevel}\` release`)
+      expect(result.rationale).toContain(expectedFragment)
+      expect(result.rationale).not.toContain("BREAKING CHANGE:")
+    },
+  )
+
   it("warns (never fails) when impact is unknown, and never invents a minimum version", () => {
     const result = evaluateApiContractPolicy({
       evidence: evidence({

@@ -71,6 +71,28 @@ function getApiContractDeterminant(evidence: ApiContractEvidence): ApiContractDe
 }
 
 /**
+ * The Conventional-Commit change a contributor must make so the branch declares `level`.
+ * "the commit or PR title" covers both the normal (merge-commit / rebase) flow and the
+ * squash-merge case, where the PR title becomes the sole commit on `main` (see `PR_TITLE`).
+ * @param level - the release level the public-API diff requires (never `"none"` here -- a
+ *   `"none"` requirement is always satisfied).
+ * @returns an imperative sentence, e.g. ``Use `feat:` for the commit or PR title that makes this change``.
+ */
+function remediationForLevel(level: RequiredReleaseLevel | undefined): string {
+  const target = "the commit or PR title that makes this change"
+  switch (level) {
+    case "major":
+      return `Add \`!\` after the type (e.g. \`feat!:\`), or a \`BREAKING CHANGE:\` footer, on ${target}`
+    case "minor":
+      return `Use \`feat:\` for ${target}`
+    case "patch":
+      return `Use \`fix:\` (or \`perf:\`) for ${target}`
+    default:
+      return `Declare the required bump on ${target}`
+  }
+}
+
+/**
  * Versioning is Conventional-Commits-driven (ADR 0009): release-please derives the version from
  * the commit types, so this check can and does **gate** -- it fails a PR whose commits declare a
  * smaller bump than the public-API diff requires (a breaking API change committed as `fix:`,
@@ -114,8 +136,8 @@ export function evaluateApiContractPolicy({
           : []),
         "",
         `The commits on this branch do not declare a \`${determinant.requiredLevel ?? "?"}\` ` +
-          `release. Add \`!\` after the type (e.g. \`feat!:\`) or a \`BREAKING CHANGE:\` footer ` +
-          `to the commit that makes this change, so release-please bumps the version correctly.`,
+          `release. ${remediationForLevel(determinant.requiredLevel)}, so release-please bumps ` +
+          `the version correctly.`,
         ...(determinant.lowerTierLine ? ["", determinant.lowerTierLine] : []),
       ].join("\n"),
     }

@@ -40,7 +40,7 @@ export function evaluateCoveragePolicy({
 
     if (actual < threshold) {
       failures.push(
-        `${metric}: ${String(actual)}% actual, ${String(threshold)}% required, ${String(threshold - actual)} percentage points below threshold`,
+        `${metric}: ${String(actual)}% actual, ${String(threshold)}% required, ${(threshold - actual).toFixed(2)} percentage points below threshold`,
       )
     }
   }

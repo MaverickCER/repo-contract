@@ -78,8 +78,16 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
         "jscpd produced invalid JSON evidence.",
       )
       if (!parsed.ok) return parsed.result
-      const report = parsed.value
+      // `readJsonReport<T>` narrows only at the type level -- the value is `unknown` at
+      // runtime. Guard it is a real object before trusting the cast, so `.statistics` /
+      // `.duplicates` never throw a TypeError out of the policy (matching markdownlint.ts).
+      const value: unknown = parsed.value
 
+      if (typeof value !== "object" || value === null) {
+        return { outcome: "fail", rationale: "jscpd produced invalid JSON report data." }
+      }
+
+      const report = value as JscpdReport
       const total = report.statistics?.total
 
       if (!Array.isArray(report.duplicates) || !total) {

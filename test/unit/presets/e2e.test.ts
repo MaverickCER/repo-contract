@@ -42,6 +42,19 @@ describe("e2e preset", () => {
     })
   })
 
+  it.each([
+    ["null", null],
+    ["a primitive", 42],
+  ])("fails without throwing when the parsed value is %s", async (_label, value) => {
+    const result = await e2e.policy(
+      fakeContext(fakeCheckEvidence({ output: { format: "json", success: true, value } })),
+    )
+    expect(result).toEqual({
+      outcome: "fail",
+      rationale: "Playwright produced invalid JSON report data.",
+    })
+  })
+
   it("passes when unexpected and flaky are both 0", async () => {
     const result = await e2e.policy(
       fakeContext(

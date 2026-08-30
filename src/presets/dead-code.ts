@@ -32,6 +32,7 @@ interface KnipIssue {
   readonly types?: KnipCategory
   readonly nsExports?: KnipCategory
   readonly nsTypes?: KnipCategory
+  readonly namespaceMembers?: KnipCategory
   readonly enumMembers?: KnipCategory
   readonly binaries?: KnipCategory
   readonly duplicates?: KnipCategory
@@ -145,7 +146,16 @@ export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
         return { outcome: "fail", rationale: "Knip output could not be parsed as JSON." }
       }
 
-      const report = result.output.value as KnipReport
+      // `output.success` only means `JSON.parse` didn't throw -- `value` is `unknown` at
+      // runtime. Guard that it is a real object (not `null` / a primitive / an array) before
+      // trusting the `KnipReport` cast, so a policy TypeError never escapes into the run.
+      const value: unknown = result.output.value
+
+      if (typeof value !== "object" || value === null) {
+        return { outcome: "fail", rationale: "Knip produced invalid JSON report data." }
+      }
+
+      const report = value as KnipReport
 
       if (!Array.isArray(report.issues)) {
         return { outcome: "fail", rationale: "Knip produced invalid JSON report data." }
@@ -189,6 +199,7 @@ export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
         addEntries("unused export (namespace)", issue.nsExports)
         addEntries("unused type", issue.types)
         addEntries("unused type (namespace)", issue.nsTypes)
+        addEntries("unused namespace member", issue.namespaceMembers)
         addEntries("unused enum member", issue.enumMembers)
         addEntries("unlisted binary", issue.binaries)
         addEntries("duplicate export", issue.duplicates)

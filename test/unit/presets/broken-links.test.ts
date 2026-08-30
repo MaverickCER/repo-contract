@@ -81,6 +81,19 @@ describe("brokenLinks preset", () => {
     })
   })
 
+  it.each([
+    ["null", null],
+    ["a primitive", 42],
+  ])("fails cleanly (does not throw) when the parsed value is %s", async (_label, value) => {
+    const result = await brokenLinks().policy(
+      fakeContext(fakeCheckEvidence({ output: { format: "json", success: true, value } })),
+    )
+    expect(result).toEqual({
+      outcome: "fail",
+      rationale: "linkinator produced invalid JSON report data.",
+    })
+  })
+
   it("fails and lists each broken link, ignoring OK/SKIPPED ones, joined by newline", async () => {
     const result = await brokenLinks().policy(
       fakeContext(

@@ -103,6 +103,18 @@ describe("duplication preset", () => {
     })
   })
 
+  it.each([
+    ["null", "null"],
+    ["a primitive", "42"],
+  ])("fails cleanly (does not throw) when the report parses to %s", async (_label, raw) => {
+    readFile.mockResolvedValue(raw)
+    const result = await duplication().policy(fakeContext(fakeCheckEvidence()))
+    expect(result).toEqual({
+      outcome: "fail",
+      rationale: "jscpd produced invalid JSON report data.",
+    })
+  })
+
   it("passes when there are 0 duplicates", async () => {
     readFile.mockResolvedValue(
       JSON.stringify({

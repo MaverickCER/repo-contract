@@ -31,6 +31,10 @@ export const SIZE_BUDGETS: readonly SizeBudget[] = [
   // runtime dependency) and yaml (optional peer, dynamically imported) are
   // both `external` in tsup.config.ts and resolved from node_modules at
   // install time, never inlined here.
+  // Both `.` entrypoint formats: ESM and CJS share one budget sized for the
+  // larger (CJS -- see the comment above). Without the ESM entry a regression
+  // in `dist/index.js` alone was undetectable by this check.
+  { label: "index (esm)", file: "dist/index.js", maxGzipBytes: 10 * 1024 },
   { label: "index (cjs)", file: "dist/index.cjs", maxGzipBytes: 10 * 1024 },
   // `./presets` is an equally published `exports` entrypoint (package.json) --
   // without its own budget a regression here was undetectable by this check.

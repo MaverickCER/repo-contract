@@ -26,7 +26,9 @@ describe("semver helpers -- property-based", () => {
   it("compareVersions is antisymmetric: swapping the arguments always flips the sign", () => {
     fc.assert(
       fc.property(versionArbitrary, versionArbitrary, (a, b) => {
-        expect(Math.sign(compareVersions(a, b))).toBe(-Math.sign(compareVersions(b, a)))
+        // Sum of the two signs is 0 iff they're opposite (a<b / a>b) or both zero (a==b).
+        // Asserting on the sum sidesteps `toBe`'s `Object.is(0, -0) === false` on the equal case.
+        expect(Math.sign(compareVersions(a, b)) + Math.sign(compareVersions(b, a))).toBe(0)
       }),
       { numRuns: 200 },
     )

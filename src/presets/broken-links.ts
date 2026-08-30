@@ -50,13 +50,19 @@ export function brokenLinks(options: BrokenLinksOptions = {}): CheckDefinitionCo
         return { outcome: "fail", rationale: "linkinator output could not be parsed as JSON." }
       }
 
-      const report = result.output.value as LinkinatorReport
-
       // Valid JSON of an unexpected shape (a future linkinator reporter
-      // change, or any leading non-JSON line that still parses to something
-      // without `.links`) must produce a clean fail, not a TypeError that
-      // escapes the policy and crashes the whole run -- matching how
-      // dead-code.ts / duplication.ts guard their own parsed reports.
+      // change, `null`, a primitive, or any leading non-JSON line that still
+      // parses to something without `.links`) must produce a clean fail, not
+      // a TypeError that escapes the policy and crashes the whole run --
+      // matching how dead-code.ts / duplication.ts guard their own reports.
+      const value: unknown = result.output.value
+
+      if (typeof value !== "object" || value === null) {
+        return { outcome: "fail", rationale: "linkinator produced invalid JSON report data." }
+      }
+
+      const report = value as LinkinatorReport
+
       if (!Array.isArray(report.links)) {
         return { outcome: "fail", rationale: "linkinator produced invalid JSON report data." }
       }

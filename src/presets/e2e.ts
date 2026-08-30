@@ -92,7 +92,16 @@ export const e2e: CheckDefinitionConfig = {
       return { outcome: "fail", rationale: "Playwright output could not be parsed as JSON." }
     }
 
-    const report = result.output.value as PlaywrightReport
+    // `output.success` only means `JSON.parse` didn't throw -- `value` is `unknown` at
+    // runtime. Guard it is a real object before trusting the cast, matching how
+    // dead-code.ts / duplication.ts guard theirs, so `.stats` never throws out of the policy.
+    const value: unknown = result.output.value
+
+    if (typeof value !== "object" || value === null) {
+      return { outcome: "fail", rationale: "Playwright produced invalid JSON report data." }
+    }
+
+    const report = value as PlaywrightReport
     const stats = report.stats
 
     if (!stats) {
