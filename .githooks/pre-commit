@@ -1,0 +1,22 @@
+#!/bin/sh
+# repo-contract fast pre-commit gate -- a quick, offline subset of the
+# self-assurance suite. The full `npm run contract` runs on pre-push and in CI.
+# Bypass a genuine work-in-progress checkpoint with `git commit --no-verify`.
+# See CONTRIBUTING.md and specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
+set -eu
+
+# Nothing staged (e.g. `git commit --amend --no-edit`) -> nothing to check.
+if git diff --cached --quiet --diff-filter=ACMR; then
+  exit 0
+fi
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+
+npm run --silent precommit
+
+# Re-stage auto-fixes (prettier / eslint --fix, regenerated schemas) that the
+# checks applied to files which were already staged. Files that were NOT staged
+# are left untouched -- the full pre-push run and CI still see them.
+printf '%s\n' "$STAGED" | while IFS= read -r file; do
+  [ -n "$file" ] && [ -e "$file" ] && git add -- "$file"
+done
