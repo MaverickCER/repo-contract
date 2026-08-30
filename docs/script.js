@@ -40,17 +40,26 @@
         return
       }
 
-      navigator.clipboard.writeText(text).then(function () {
-        button.textContent = "Copied"
-        // The button's own text change is silent to screen readers -- this
-        // is the announcement assistive tech actually hears.
-        if (copyStatus) {
-          copyStatus.textContent = "Copied to clipboard."
-        }
-        window.setTimeout(function () {
-          button.textContent = defaultLabel
-        }, 2000)
-      })
+      navigator.clipboard.writeText(text).then(
+        function () {
+          button.textContent = "Copied"
+          // The button's own text change is silent to screen readers -- this
+          // is the announcement assistive tech actually hears.
+          if (copyStatus) {
+            copyStatus.textContent = "Copied to clipboard."
+          }
+          window.setTimeout(function () {
+            button.textContent = defaultLabel
+          }, 2000)
+        },
+        function () {
+          // Permission denied or the write rejected -- announce the failure
+          // rather than leaving an unhandled rejection and a silent button.
+          if (copyStatus) {
+            copyStatus.textContent = "Couldn't copy to clipboard."
+          }
+        },
+      )
     })
   })
 

@@ -97,10 +97,12 @@ preserved unchanged and not repeated here — see the repo-contract checks list 
 | Suppression governance       | Is every static-analysis suppression directive centrally inventoried and justified against policy?          | TypeScript compiler scanner + `scripts/suppression-governance/` | governed source files (`find-source-files.ts`)                                                                        | No                                                            | JSON (`SuppressionGovernanceEvidence`) | `suppression-governance` |
 | Security -- no network       | Does the shipped surface (src/**) avoid network-capable imports, globals, and unreviewed spawned commands?  | TypeScript compiler scanner + `scripts/security-network/`       | `src/**/*.ts`                                                                                                         | No                                                            | JSON (`NetworkScanEvidence`)           | `security-network`       |
 
-Every row above with its own `###` section below is detailed there, including the exact command to
-run it alone (`npm run test:unit`, etc. — see "Execution layers"). Coverage, Mutation, and API compatibility keep
-their pre-existing tools, evidence shapes, and policies; only Coverage's _aggregation mechanism_
-changed (see "Coverage" below) — its evidence shape and the `coverage` check's policy did not.
+Rows with their own `###` section below are detailed there, including the exact command to run
+each alone (`npm run test:unit`, etc. — see "Execution layers"). Mutation, Coverage, and API
+compatibility have no separate `###` section: the table row plus the check's own source
+(`checks/*.ts`, `scripts/*/`) and its ADR are the description. Coverage's aggregation mechanism
+is documented under "Coverage architecture" below; API compatibility's commit-based gate is
+[ADR 0009](decisions/0009-conventional-commits-versioning-and-local-gates.md).
 
 ### Unit — `test-unit`
 

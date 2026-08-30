@@ -26,9 +26,10 @@
 // failure (a tool crashing, or producing output that can't be parsed) fails it.
 
 import spawn from "cross-spawn"
-import { readdir, readFile, rm } from "node:fs/promises"
+import { mkdir, readdir, readFile, rm } from "node:fs/promises"
 
 const MARKDOWNLINT_REPORT_PATH = "reports/markdownlint.json"
+const REPORTS_DIR = "reports"
 const DOCS_GLOBS = ["*.md", "specs/**/*.md", ".github/**/*.md"]
 
 // linkinator's own CLI hard-fails -- writing a plain-text warning to stdout instead of its
@@ -75,6 +76,10 @@ function runTool(command, args) {
 }
 
 async function runMarkdownlint() {
+  // markdownlint-cli2-formatter-json writes MARKDOWNLINT_REPORT_PATH but does not create its
+  // parent -- and `reports/` is git-ignored, so a clean checkout won't have it until some
+  // other check happens to create it first. Don't depend on scheduling luck.
+  await mkdir(REPORTS_DIR, { recursive: true })
   await rm(MARKDOWNLINT_REPORT_PATH, { force: true })
 
   const spawned = await runTool("markdownlint-cli2", ["**/*.md"])
