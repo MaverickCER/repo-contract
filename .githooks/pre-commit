@@ -5,11 +5,14 @@
 # See CONTRIBUTING.md and specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
 set -eu
 
-# Nothing staged (e.g. `git commit --amend --no-edit`) -> nothing to check.
-if git diff --cached --quiet --diff-filter=ACMR; then
+# Nothing staged at all (e.g. `git commit --amend --no-edit`) -> nothing to check.
+# A deletion-only commit still runs the gate (a removed file can break a build/import).
+if git diff --cached --quiet; then
   exit 0
 fi
 
+# The re-stage list below is scoped to files that still exist on disk (ACMR); a
+# deleted path can't be `git add`ed back.
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 
 npm run --silent precommit

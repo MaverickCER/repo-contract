@@ -8,9 +8,10 @@ import { defineConfig } from "vitest/config"
 // its own `include`/`coverage.reportsDirectory` explicitly, so the execution
 // boundary stays visible in that file rather than hidden here.
 //
-// `poolOptions.forks.maxForks` is capped at half the machine's own core
-// count (minimum 2, so a 1-2 core machine still gets some parallelism)
-// rather than left at Vitest's own default (one fork per core): each of
+// `maxWorkers` (Vitest 4's replacement for `poolOptions.forks.maxForks`) is
+// capped at half the machine's own core count (minimum 2, so a 1-2 core
+// machine still gets some parallelism) rather than left at Vitest's own
+// default (one worker per core): each of
 // these four test categories is itself one of repo-contract's own
 // concurrently-scheduled checks (`repo-contract.config.ts` has no
 // `dependsOn`/`isolated` between test-unit/test-integration/test-property/
@@ -32,19 +33,20 @@ import { defineConfig } from "vitest/config"
 // fork budget leaves headroom for the other concurrently-scheduled checks
 // instead of both layers independently assuming the whole machine is
 // theirs.
-const maxForks = Math.max(2, Math.floor(os.availableParallelism() / 2))
+const maxWorkers = Math.max(2, Math.floor(os.availableParallelism() / 2))
 
 export default defineConfig({
   test: {
     environment: "node",
     watch: false,
+    // The process-spawning tests need real process isolation, not worker
+    // threads -- `forks` is Vitest's default but pin it so a future default
+    // flip can't silently change the isolation model these tests rely on.
+    pool: "forks",
     // Process-spawning tests (timeouts, signals, real subprocess trees) need
     // more headroom than vitest's 5s default.
     testTimeout: 20_000,
-    poolOptions: {
-      forks: {
-        maxForks,
-      },
-    },
+    // Vitest 4 renamed `poolOptions.forks.maxForks` -> top-level `maxWorkers`.
+    maxWorkers,
   },
 })
