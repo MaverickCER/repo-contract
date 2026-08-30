@@ -104,6 +104,33 @@ describe("checkAdrStructure -- true positive / true negative", () => {
     )
   })
 
+  it("flags a required heading present only at the wrong level or inside prose, not as its own line", async () => {
+    await writeFile(
+      path.join(root, "specs", "decisions", "0001-shallow-headings.md"),
+      [
+        "# 0001: x",
+        "",
+        "### Status", // a level-3 heading, not `## Status`
+        "",
+        "This section discusses `## Context` and `## Decision` handling.", // mentioned in prose
+        "",
+        "## Consequences",
+        "",
+        "## Alternatives considered",
+      ].join("\n"),
+      "utf8",
+    )
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.violations).toContainEqual(
+      expect.stringContaining(
+        "0001-shallow-headings.md is missing required heading(s): ## Status, ## Context, ## Decision",
+      ),
+    )
+  })
+
   it("does not flag an extra heading beyond the required five", async () => {
     await writeAdr("0001", "with-extra-section", [...ALL_HEADINGS, "## Related"])
 

@@ -73,6 +73,12 @@ export function experimental(): void {}
 
 /**
  * @public
+ * @deprecated use {@link createBox} instead
+ */
+export function legacyBox(): void {}
+
+/**
+ * @public
  */
 export type Shape = "circle" | "square"
 `
@@ -118,6 +124,11 @@ describe("normalizeApiPackage", () => {
     expect(findByName(normalizedPublic, "experimental")).toBeUndefined()
     expect(findByName(normalizedBeta, "experimental")).toBeDefined()
     expect(findByName(normalizedBeta, "experimental")?.releaseTag).toBe("beta")
+  })
+
+  it("flags a member with a TSDoc @deprecated block as isDeprecated, and a plain member as not", () => {
+    expect(findByName(normalizedPublic, "legacyBox")?.isDeprecated).toBe(true)
+    expect(findByName(normalizedPublic, "createBox")?.isDeprecated).toBe(false)
   })
 
   it("marks a top-level export as isTopLevelExport, and a nested class member as not", () => {

@@ -306,19 +306,32 @@ export function validateSuppressionRegistry(value: unknown): RegistryValidationR
 }
 
 /**
+ * Compares two strings by UTF-16 code unit -- locale-independent, unlike `localeCompare`, whose
+ * ordering depends on the runtime's default locale and ICU data and so differs across the OSes
+ * this check runs on in CI. `sortRecords` needs a total order that is byte-identical everywhere.
+ * @param a - the first string.
+ * @param b - the second string.
+ * @returns `-1`, `0`, or `1`.
+ */
+function compareCodeUnits(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0
+}
+
+/**
  * Stable sort by `(file, line, domain, rule, content)` -- the registry's deterministic on-disk
- * ordering, independent of discovery order (directory traversal order, JSON key order, etc.).
+ * ordering, independent of discovery order (directory traversal order, JSON key order, etc.) and
+ * of the host OS / locale.
  * @param records - The records to sort.
  * @returns A new, sorted array; `records` itself is never mutated.
  */
 export function sortRecords<T extends DisableCommentRecord>(records: readonly T[]): T[] {
   return [...records].sort(
     (a, b) =>
-      a.file.localeCompare(b.file) ||
+      compareCodeUnits(a.file, b.file) ||
       a.line - b.line ||
-      a.domain.localeCompare(b.domain) ||
-      a.rule.join(",").localeCompare(b.rule.join(",")) ||
-      a.content.localeCompare(b.content),
+      compareCodeUnits(a.domain, b.domain) ||
+      compareCodeUnits(a.rule.join(","), b.rule.join(",")) ||
+      compareCodeUnits(a.content, b.content),
   )
 }
 

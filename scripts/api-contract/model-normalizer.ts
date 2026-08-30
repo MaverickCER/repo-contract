@@ -1,6 +1,7 @@
 import {
   ApiClass,
   ApiDeclaredItem,
+  ApiDocumentedItem,
   ApiExportedMixin,
   ApiInitializerMixin,
   ApiInterface,
@@ -142,9 +143,7 @@ function resolveFileUrlPath(item: ApiItem): string | undefined {
  * @returns True if `item` carries a TSDoc comment with a `deprecatedBlock`.
  */
 function isDeprecated(item: ApiItem): boolean {
-  if (!("tsdocComment" in item)) return false
-  const documented = item as unknown as { tsdocComment?: { deprecatedBlock?: unknown } }
-  return documented.tsdocComment?.deprecatedBlock !== undefined
+  return item instanceof ApiDocumentedItem && item.tsdocComment?.deprecatedBlock !== undefined
 }
 
 /**

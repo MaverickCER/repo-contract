@@ -66,7 +66,10 @@ export function checkAdrStructure(root = DEFAULT_ROOT) {
 
     for (const file of files) {
       const text = readFileSync(path.join(decisionsDir, file), "utf8")
-      const missing = REQUIRED_HEADINGS.filter((heading) => !text.includes(heading))
+      // Match a heading only when it is its own complete line -- `text.includes("## Status")`
+      // also accepts `### Status`, a mention in prose, or an occurrence inside a code fence.
+      const lines = new Set(text.split(/\r?\n/))
+      const missing = REQUIRED_HEADINGS.filter((heading) => !lines.has(heading))
       if (missing.length > 0) {
         violations.push(`${file} is missing required heading(s): ${missing.join(", ")}`)
       }

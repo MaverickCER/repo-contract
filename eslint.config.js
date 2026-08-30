@@ -21,6 +21,31 @@ import {
   RESTRICTED_NAMED_IMPORTS,
 } from "./scripts/security-network/network-surface.mjs"
 
+// The eslint-plugin-security / eslint-plugin-secure-coding rule set applied to every one of this
+// repository's own source layers. `src/**` and `checks/**` take it verbatim; `scripts/**` /
+// `eslint-rules/**` override exactly one entry (`detect-non-literal-fs-filename` -> "off": those
+// are one-shot local tooling scripts that build paths from `import.meta`/`process.cwd()`, never
+// network input -- see that block's own comment). Single source of truth so the two scopes can
+// only ever differ by an explicit override, not by drift.
+const SECURITY_RULES = {
+  ...secureCoding.configs.strict.rules,
+  "secure-coding/detect-object-injection": "off",
+  "security/detect-buffer-noassert": "error",
+  "security/detect-child-process": "error",
+  "security/detect-disable-mustache-escape": "error",
+  "security/detect-eval-with-expression": "error",
+  "security/detect-new-buffer": "error",
+  "security/detect-no-csrf-before-method-override": "error",
+  "security/detect-non-literal-fs-filename": "error",
+  "security/detect-non-literal-regexp": "error",
+  "security/detect-non-literal-require": "error",
+  "security/detect-object-injection": "off",
+  "security/detect-possible-timing-attacks": "error",
+  "security/detect-pseudoRandomBytes": "error",
+  "security/detect-unsafe-regex": "error",
+  "security/detect-bidi-characters": "error",
+}
+
 /**
  * Scoped to this package's own source (src/, test/, checks/) plus root-level
  * scripts/config files. test/e2e/*\/fixtures/** are self-contained
@@ -527,24 +552,7 @@ export default tseslint.config(
     // comments would be noise, not rigor.
     files: ["src/**/*.ts", "checks/**/*.ts"],
     plugins: { "secure-coding": secureCoding, security },
-    rules: {
-      ...secureCoding.configs.strict.rules,
-      "secure-coding/detect-object-injection": "off",
-      "security/detect-buffer-noassert": "error",
-      "security/detect-child-process": "error",
-      "security/detect-disable-mustache-escape": "error",
-      "security/detect-eval-with-expression": "error",
-      "security/detect-new-buffer": "error",
-      "security/detect-no-csrf-before-method-override": "error",
-      "security/detect-non-literal-fs-filename": "error",
-      "security/detect-non-literal-regexp": "error",
-      "security/detect-non-literal-require": "error",
-      "security/detect-object-injection": "off",
-      "security/detect-possible-timing-attacks": "error",
-      "security/detect-pseudoRandomBytes": "error",
-      "security/detect-unsafe-regex": "error",
-      "security/detect-bidi-characters": "error",
-    },
+    rules: SECURITY_RULES,
   },
   {
     // Same rule set as the src/checks block above, except
@@ -559,22 +567,9 @@ export default tseslint.config(
     files: ["scripts/**/*.ts", "scripts/**/*.mjs", "eslint-rules/**/*.mjs"],
     plugins: { "secure-coding": secureCoding, security },
     rules: {
-      ...secureCoding.configs.strict.rules,
-      "secure-coding/detect-object-injection": "off",
-      "security/detect-buffer-noassert": "error",
-      "security/detect-child-process": "error",
-      "security/detect-disable-mustache-escape": "error",
-      "security/detect-eval-with-expression": "error",
-      "security/detect-new-buffer": "error",
-      "security/detect-no-csrf-before-method-override": "error",
+      ...SECURITY_RULES,
+      // One-shot local tooling: paths come from `import.meta`/`process.cwd()`, never network input.
       "security/detect-non-literal-fs-filename": "off",
-      "security/detect-non-literal-regexp": "error",
-      "security/detect-non-literal-require": "error",
-      "security/detect-object-injection": "off",
-      "security/detect-possible-timing-attacks": "error",
-      "security/detect-pseudoRandomBytes": "error",
-      "security/detect-unsafe-regex": "error",
-      "security/detect-bidi-characters": "error",
     },
   },
   {
@@ -884,11 +879,8 @@ export default tseslint.config(
     // the same way source is, so these get syntax-only TS linting -- no
     // `projectService`, hence no type-aware rules -- rather than failing to
     // resolve a TS project.
+    // (`*.config.ts` already matches `repo-contract.config.ts` -- no separate block for it).
     files: ["*.config.ts"],
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
-  },
-  {
-    files: ["repo-contract.config.ts"],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
   },
   {

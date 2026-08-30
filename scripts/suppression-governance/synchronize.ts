@@ -1,11 +1,11 @@
 import type { DiscoveredSuppression } from "./discover-suppressions.js"
-import type { DisableCommentRecord } from "./evidence-types.js"
+import type { DisableCommentRecord, SuppressionRecordStatus } from "./evidence-types.js"
 import { recordIdentity, sortRecords } from "./registry.js"
 
-export type SynchronizedRecordStatus = "new" | "existing" | "moved"
-
+// `SuppressionRecordStatus` ("new" | "existing" | "moved") is the single source of truth for
+// this classification, shared with SuppressionGovernanceRecordEvidence in evidence-types.ts.
 export interface SynchronizedRecord extends DisableCommentRecord {
-  readonly status: SynchronizedRecordStatus
+  readonly status: SuppressionRecordStatus
 }
 
 interface SynchronizeResult {

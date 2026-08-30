@@ -63,6 +63,21 @@ describe("runAdrGovernanceCheck -- full real path", () => {
     expect(evidence.satisfied).toBe(false)
   }, 30_000)
 
+  it("still governs a file renamed OUT of src/execution/ -- reports the governed side, unsatisfied with no ADR", async () => {
+    await writeFile(path.join(root, "src/execution/legacy.ts"), "export const x = 1\n", "utf8")
+    commitAll("add src/execution/legacy.ts") // on main
+    git("checkout", "-q", "-b", "feature")
+    await mkdir(path.join(root, "src/util"), { recursive: true })
+    git("mv", "src/execution/legacy.ts", "src/util/legacy.ts")
+    commitAll("move legacy.ts out of the execution engine")
+
+    const evidence = await runAdrGovernanceCheck(root, "main")
+
+    expect(evidence.governedFilesTouched).toEqual(["src/execution/legacy.ts"])
+    expect(evidence.adrFilesTouched).toEqual([])
+    expect(evidence.satisfied).toBe(false)
+  }, 30_000)
+
   it("is satisfied when the same change also touches specs/decisions/, even just amending an existing ADR", async () => {
     git("checkout", "-q", "-b", "feature")
     await writeFile(path.join(root, "src/policy/run-policies.ts"), "// change\n", "utf8")

@@ -48,7 +48,10 @@ const SHARED_PROBE_BODY = `
   if (verdict.passed !== true) throw new Error("expected verdict.passed to be true");
   if (verdict.checks.noop.outcome !== "pass") throw new Error("expected the noop check to pass");
 
-  require.resolve("repo-contract/presets");
+  const presets = require("repo-contract/presets");
+  if (typeof presets.format !== "object" || presets.format === null) throw new Error("repo-contract/presets did not export the format preset");
+  if (!Array.isArray(presets.format.run) || typeof presets.format.policy !== "function") throw new Error("repo-contract/presets format is not a { run, policy } check definition");
+
   const schema = JSON.parse(readFileSync(require.resolve("repo-contract/schema"), "utf8"));
   if (typeof schema.$schema !== "string") throw new Error("schema export missing $schema");
   if (typeof schema.$id !== "string") throw new Error("schema export missing $id");

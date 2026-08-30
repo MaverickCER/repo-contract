@@ -68,9 +68,15 @@ export async function runAdrGovernanceCheck(
 ): Promise<AdrGovernanceEvidence> {
   const files = await listChangedFiles(root, baseRef)
 
+  const isGoverned = (p: string): boolean =>
+    GOVERNED_PATH_PREFIXES.some((prefix) => p.startsWith(prefix))
+
+  // A file moved *out of* a governed prefix is still a change to the engine's shape -- git
+  // reports it as a rename whose `path` is the new (ungoverned) location, so `renamedFrom` has
+  // to be checked too. Report the governed side of such a move.
   const governedFilesTouched = files
-    .filter((f) => GOVERNED_PATH_PREFIXES.some((prefix) => f.path.startsWith(prefix)))
-    .map((f) => f.path)
+    .filter((f) => isGoverned(f.path) || (f.renamedFrom !== undefined && isGoverned(f.renamedFrom)))
+    .map((f) => (isGoverned(f.path) ? f.path : (f.renamedFrom ?? f.path)))
     .sort()
 
   const adrFilesTouched = files

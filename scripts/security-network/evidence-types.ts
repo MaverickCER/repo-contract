@@ -11,7 +11,6 @@ export type NetworkCapabilityKind =
   | "restricted-named-import"
   | "restricted-global-usage"
   | "dynamic-import-non-literal-specifier"
-  | "require-call"
   | "non-literal-preset-command"
   | "unreviewed-preset-command"
 
