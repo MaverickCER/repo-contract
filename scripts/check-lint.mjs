@@ -56,6 +56,10 @@ const oxlint = await runJsonTool("oxlint", [
   "json",
   "--fix",
   "--ignore-pattern=test/e2e/*/fixtures",
+  // examples/ is a self-contained demonstration workspace with its own toolchain
+  // (see examples/README.md and eslint.config.js's own `ignores`) -- not this
+  // package's source, and never linted here.
+  "--ignore-pattern=examples",
   ".",
 ])
 

@@ -60,6 +60,13 @@ export default tseslint.config(
       "node_modules",
       "**/node_modules",
       "test/e2e/*/fixtures",
+      // examples/ is a self-contained npm workspace with its own package.json,
+      // tsconfig, and ESLint/Prettier configs -- a demonstration consumer of the
+      // published package (see examples/README.md), not this package's own source.
+      // It carries its own toolchain and is never installed, built, or run by this
+      // repo's CI or `npm run contract`. Linting it here would fail
+      // `boundaries/no-unknown-files` (it fits no element model) for no benefit.
+      "examples",
       // Stryker's own scratch workspace -- a full copy of the project tree
       // it mutates and runs tests against; never source, and its transient
       // presence/absence between runs shouldn't affect lint results.

@@ -1,0 +1,18 @@
+# Illustrative caller workflow. Replace `your-org` with your GitHub organization.
+#
+# GitHub only runs workflows from a repository's own root .github/workflows/, so
+# in a real project this file lives there and references the reusable workflow the
+# organization publishes alongside its standard.
+name: Contract
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    uses: your-org/internal-boilerplate-contract/.github/workflows/contract.yml@v1

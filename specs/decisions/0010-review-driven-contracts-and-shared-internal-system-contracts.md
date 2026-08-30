@@ -152,10 +152,10 @@ Conversely, changes to boilerplate can establish improved defaults for future re
 
 The two mechanisms should therefore be treated as complementary rather than interchangeable:
 
-* **Boilerplate provides defaults and establishes conventions.**
-* **Shared contracts enforce durable requirements.**
-* **Independent review discovers weaknesses in both.**
-* **Contract evolution converts meaningful discoveries into permanent controls.**
+- **Boilerplate provides defaults and establishes conventions.**
+- **Shared contracts enforce durable requirements.**
+- **Independent review discovers weaknesses in both.**
+- **Contract evolution converts meaningful discoveries into permanent controls.**
 
 ## Decision
 
@@ -165,12 +165,12 @@ Review findings are evaluated for their underlying failure class rather than han
 
 For each meaningful finding, the consumer should determine:
 
-* what class of error the finding represents;
-* whether that class is already covered;
-* whether the existing contract is insufficient;
-* whether the class is objectively and repeatedly detectable;
-* whether detection belongs in tests, static analysis, a contract, or an existing external capability;
-* whether the requirement is specific to one repository or common across multiple repositories.
+- what class of error the finding represents;
+- whether that class is already covered;
+- whether the existing contract is insufficient;
+- whether the class is objectively and repeatedly detectable;
+- whether detection belongs in tests, static analysis, a contract, or an existing external capability;
+- whether the requirement is specific to one repository or common across multiple repositories.
 
 A finding does not become a contract merely because a reviewer reported it.
 
@@ -196,15 +196,15 @@ The particular implementation is intentionally outside this ADR. Tool selection 
 
 A repository should own requirements that depend on its own:
 
-* architecture;
-* public API;
-* domain behavior;
-* repository structure;
-* deployment model;
-* release model;
-* local governance;
-* contributor workflow;
-* repository-specific security requirements.
+- architecture;
+- public API;
+- domain behavior;
+- repository structure;
+- deployment model;
+- release model;
+- local governance;
+- contributor workflow;
+- repository-specific security requirements.
 
 Those requirements belong in that repository's contract configuration or its local contract implementation.
 
