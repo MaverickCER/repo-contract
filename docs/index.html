@@ -1,0 +1,1595 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script>
+      ;(function () {
+        try {
+          var stored = window.localStorage.getItem("repo-contract-theme")
+          var isDark =
+            stored === "dark"
+              ? true
+              : stored === "light"
+                ? false
+                : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+
+          document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light")
+        } catch (error) {
+          // localStorage/matchMedia unavailable -- leave [data-theme] unset;
+          // styles.css's prefers-color-scheme media query still applies.
+        }
+      })()
+    </script>
+
+    <title>repo-contract — Turn engineering standards into enforceable contracts</title>
+
+    <meta
+      name="description"
+      content="Turn your repository's engineering standards into enforceable contracts. Define checks, capture execution evidence, apply repository-owned policies, and produce one structured verdict locally or in CI."
+    />
+
+    <link rel="canonical" href="https://maverickcer.github.io/repo-contract/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://maverickcer.github.io/repo-contract/" />
+    <meta
+      property="og:title"
+      content="repo-contract — Turn engineering standards into enforceable contracts"
+    />
+    <meta
+      property="og:description"
+      content="Your tools produce results. Your repository decides what those results mean. repo-contract turns that decision into an executable, inspectable contract."
+    />
+    <meta
+      property="og:image"
+      content="https://maverickcer.github.io/repo-contract/assets/og-image.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="repo-contract — Turn engineering standards into enforceable contracts"
+    />
+    <meta
+      name="twitter:description"
+      content="Your tools produce results. Your repository decides what those results mean. repo-contract turns that decision into an executable, inspectable contract."
+    />
+    <meta
+      name="twitter:image"
+      content="https://maverickcer.github.io/repo-contract/assets/og-image.png"
+    />
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon.png" type="image/png" sizes="48x48" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container">
+        <a class="site-logo" href="#top">repo-contract</a>
+
+        <nav class="primary-nav" id="primary-nav" aria-label="Primary">
+          <ul class="primary-nav-list">
+            <li><a href="#problem">Problem</a></li>
+            <li><a href="#contract">Contract</a></li>
+            <li><a href="#pipeline">Pipeline</a></li>
+            <li><a href="#configure">Configure</a></li>
+            <li><a href="#execute">Execute</a></li>
+            <li><a href="#evidence">Evidence</a></li>
+            <li><a href="#policy">Policy</a></li>
+            <li><a href="#verdict">Verdict</a></li>
+            <li><a href="#comparison">Why repo-contract</a></li>
+            <li><a href="#architecture">Architecture</a></li>
+            <li><a href="#adoption">Adoption</a></li>
+            <li><a href="#proof">Proof</a></li>
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#getting-started">Getting Started</a></li>
+          </ul>
+        </nav>
+
+        <div class="header-actions">
+          <button
+            class="icon-button"
+            type="button"
+            id="search-trigger"
+            aria-haspopup="dialog"
+            aria-controls="search-dialog"
+          >
+            <span aria-hidden="true">⌘K</span>
+            <span class="sr-only">Search this page</span>
+          </button>
+
+          <a class="github-link" href="https://github.com/maverickcer/repo-contract"> GitHub ↗ </a>
+
+          <a class="button button--primary button--header" href="#getting-started"> Get Started </a>
+
+          <button
+            class="nav-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="primary-nav"
+          >
+            Menu
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="search-overlay" id="search-overlay" hidden>
+      <div
+        class="search-dialog"
+        id="search-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="search-dialog-title"
+      >
+        <h2 id="search-dialog-title" class="sr-only">Search this page</h2>
+
+        <div class="search-input-row">
+          <span aria-hidden="true" class="search-icon">🔎</span>
+
+          <input
+            type="text"
+            id="search-input"
+            class="search-input"
+            placeholder="Search sections, FAQ…"
+            autocomplete="off"
+            aria-label="Search this page"
+            aria-controls="search-results"
+            aria-expanded="false"
+            role="combobox"
+          />
+
+          <kbd class="search-kbd">Esc</kbd>
+        </div>
+
+        <ul
+          class="search-results"
+          id="search-results"
+          role="listbox"
+          aria-label="Search results"
+        ></ul>
+
+        <p class="search-empty" id="search-empty" hidden>No matches.</p>
+      </div>
+    </div>
+
+    <main id="main">
+      <!-- Hero -->
+      <section class="hero" id="top" aria-labelledby="hero-heading">
+        <div class="container">
+          <p class="section-eyebrow">Engineering standards, made executable</p>
+
+          <h1 id="hero-heading">
+            Turn your repository's engineering standards into enforceable contracts.
+          </h1>
+
+          <p class="hero-lede">
+            Your linters, test runners, security scanners, type checkers, and other tools already
+            produce results. The missing piece is the contract that says what those results mean for
+            your repository.
+          </p>
+
+          <p class="hero-support">
+            repo-contract executes the checks you configure, captures what actually happened as
+            structured evidence, and hands that evidence to policies your repository owns. Your
+            tools produce the facts. Your repository decides what those facts mean.
+          </p>
+
+          <ul class="benefit-list">
+            <li>Configure any command as a check — no plugin API to learn.</li>
+            <li>Run checks concurrently, with explicit ordering and isolation when needed.</li>
+            <li>Capture exit code, signal, timing, and output as structured evidence.</li>
+            <li>Decide pass, fail, or warn with a policy function you own.</li>
+            <li>Run the exact same gate locally and in CI — no drift.</li>
+            <li>No CLI, no network calls, no telemetry, no hidden state.</li>
+          </ul>
+
+          <div class="hero-actions">
+            <a class="button button--primary" href="#getting-started">Get Started</a>
+
+            <a class="button button--secondary button--on-dark" href="#contract">
+              See the Contract
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Problem -->
+      <section class="section" id="problem" aria-labelledby="problem-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">The problem</p>
+
+          <h2 id="problem-heading">
+            Your repository has standards. Your automation has commands. The contract between them
+            is usually scattered.
+          </h2>
+
+          <p class="section-lede">
+            A mature repository may enforce dozens of engineering requirements: tests must pass,
+            coverage must remain above a threshold, public APIs must remain compatible, dependency
+            vulnerabilities must be absent, mutation scores must meet a target, architecture
+            boundaries must hold, and documentation must stay synchronized.
+          </p>
+
+          <ul class="principles-list">
+            <li>
+              The checks themselves live in different tools, each with its own output and failure
+              semantics.
+            </li>
+
+            <li>
+              The meaning of those results is frequently encoded across CI YAML, shell scripts,
+              package scripts, and tool-specific configuration.
+            </li>
+
+            <li>
+              Cross-check requirements become workflow conditions and ad hoc glue instead of
+              repository-owned policy.
+            </li>
+
+            <li>
+              CI becomes responsible not only for executing standards, but for defining what the
+              standards actually are.
+            </li>
+
+            <li>
+              Local reproduction becomes a matter of reproducing CI's implementation rather than
+              simply executing the repository's contract.
+            </li>
+          </ul>
+
+          <div class="callout callout--note">
+            <p class="callout-title">The missing layer</p>
+
+            <p>
+              Repositories need a layer between "run these tools" and "what does this mean?" That
+              layer should capture execution as fact, apply repository-owned policy to those facts,
+              and return a structured result that another system can enforce.
+            </p>
+
+            <p>
+              <strong>repo-contract is that layer.</strong>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contract -->
+      <section class="section section--muted" id="contract" aria-labelledby="contract-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">The contract</p>
+
+          <h2 id="contract-heading">
+            Your CI system should execute your engineering standards, not define them.
+          </h2>
+
+          <p class="section-lede">
+            GitHub Actions, GitLab CI, CircleCI, or another automation platform can execute a
+            contract. ESLint, Vitest, Playwright, Stryker, npm audit, and other tools can produce
+            the evidence. repo-contract connects those pieces without becoming the tool that defines
+            quality for you.
+          </p>
+
+          <div class="diagram">
+            <p class="sr-only">
+              The repository defines an engineering contract. repo-contract executes configured
+              checks, assembles evidence, evaluates repository-owned policies, and produces a
+              verdict. Local scripts and CI systems consume that verdict.
+            </p>
+
+            <ol class="diagram-tree">
+              <li>
+                <strong>Your repository</strong>
+                <ol>
+                  <li>Defines what must be checked</li>
+                  <li>Defines what evidence matters</li>
+                  <li>Defines what constitutes pass, warn, or fail</li>
+                </ol>
+              </li>
+
+              <li>
+                <strong>repo-contract</strong>
+                <ol>
+                  <li>Executes the configured checks</li>
+                  <li>Captures structured evidence</li>
+                  <li>Evaluates repository-owned policies</li>
+                  <li>Produces one verdict</li>
+                </ol>
+              </li>
+
+              <li>
+                <strong>Local or CI automation</strong>
+                <ol>
+                  <li>Runs the same contract</li>
+                  <li>Consumes the evidence and verdict</li>
+                  <li>Decides what action to take</li>
+                </ol>
+              </li>
+            </ol>
+          </div>
+
+          <p>
+            The distinction matters: repo-contract is not another CI provider, test runner, linter,
+            or static-analysis platform. It is the contract runtime that lets those existing tools
+            participate in a repository-owned engineering standard.
+          </p>
+
+          <div class="callout callout--note">
+            <p class="callout-title">The simplest mental model</p>
+
+            <p>
+              <strong
+                >Your tools produce results. Your repository decides what those results
+                mean.</strong
+              >
+            </p>
+
+            <p>repo-contract makes that decision executable, inspectable, and reusable.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pipeline -->
+      <section class="section" id="pipeline" aria-labelledby="pipeline-heading">
+        <div class="container">
+          <p class="section-eyebrow">The pipeline</p>
+
+          <h2 id="pipeline-heading">Five stages, strictly in order, every run</h2>
+
+          <p class="section-lede">
+            A contract has one execution model: configure what to run, execute it, assemble what
+            happened into evidence, apply repository-owned policy, and aggregate the results into a
+            verdict.
+          </p>
+
+          <div class="diagram">
+            <p class="sr-only">
+              The repo-contract pipeline progresses from configuring checks, executing them,
+              assembling evidence, evaluating policy, and aggregating a verdict.
+            </p>
+
+            <ol class="diagram-tree">
+              <li>
+                <strong>Configure</strong>
+                <ol>
+                  <li>A command per check</li>
+                  <li>Optional output parsing</li>
+                  <li>A policy function you write</li>
+                </ol>
+              </li>
+
+              <li>
+                <strong>Execute</strong>
+                <ol>
+                  <li>No shell by default</li>
+                  <li>Bounded concurrency</li>
+                  <li><code>dependsOn</code> / <code>isolated</code> ordering</li>
+                </ol>
+              </li>
+
+              <li>
+                <strong>Evidence</strong>
+                <ol>
+                  <li>Exit code, signal, timing</li>
+                  <li>Captured stdout/stderr</li>
+                  <li>Parsed output, if requested</li>
+                </ol>
+              </li>
+
+              <li>
+                <strong>Policy</strong>
+                <ol>
+                  <li>Runs after all evidence exists</li>
+                  <li>Can read every sibling check</li>
+                  <li>Returns pass, fail, or warn</li>
+                </ol>
+              </li>
+
+              <li>
+                <strong>Verdict</strong>
+                <ol>
+                  <li>One outcome per check</li>
+                  <li>A mandatory rationale</li>
+                  <li>Aggregated pass/fail</li>
+                </ol>
+              </li>
+            </ol>
+          </div>
+
+          <p>
+            repo-contract deliberately keeps execution and policy evaluation separate. Every check's
+            evidence is fully assembled before policies run. That makes cross-check policy
+            deterministic by construction rather than dependent on timing or CI-specific
+            orchestration behavior.
+          </p>
+
+          <div class="callout callout--note">
+            <p class="callout-title">The contract boundary</p>
+
+            <p>
+              Configuration and policy belong to the repository. Execution, evidence assembly, and
+              verdict aggregation belong to repo-contract.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Configure -->
+      <section class="section section--muted" id="configure" aria-labelledby="configure-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">01 · Configure</p>
+
+          <h2 id="configure-heading">
+            A check is a command, optional output parsing, and a policy
+          </h2>
+
+          <p class="section-lede">
+            There is no plugin API to learn and no requirement to replace the tools your repository
+            already uses. A check is the command you would already run from a terminal, plus the
+            policy that defines what its result means.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">repo-contract.config.ts</span>
+
+              <button class="copy-button" type="button" data-copy-target="configure-code">
+                Copy
+              </button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="configure-code">checks: {
+  lint: {
+    run: ["eslint", ".", "--format", "json"],
+    output: { format: "json" },
+    policy: ({ result }) => {
+      if (!result.output?.success) {
+        return { outcome: "fail", rationale: "eslint output was not valid JSON." }
+      }
+
+      const files = result.output.value as { errorCount: number }[]
+      const errors = files.reduce((sum, file) => sum + file.errorCount, 0)
+
+      return errors === 0
+        ? { outcome: "pass", rationale: "eslint reported 0 errors." }
+        : { outcome: "fail", rationale: `${errors} lint error(s).` }
+    },
+  },
+}</code></pre>
+          </div>
+
+          <p>
+            A published, Experimental preset catalog can provide ready-made configurations for
+            common tools while keeping the final configuration in your repository. Presets are
+            conveniences; the contract remains yours to inspect and override.
+          </p>
+
+          <div class="callout callout--note">
+            <p class="callout-title">Proof in the repository</p>
+
+            <p>
+              This repository's own <code>repo-contract.config.ts</code> configures 20+ checks using
+              the package's real public API to validate itself.
+            </p>
+
+            <p>
+              <a
+                href="https://github.com/maverickcer/repo-contract/blob/main/README.md#defining-checks"
+              >
+                Read "Defining checks" in the README ↗
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Execute -->
+      <section class="section" id="execute" aria-labelledby="execute-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">02 · Execute</p>
+
+          <h2 id="execute-heading">
+            Run existing tools without turning your contract into shell glue
+          </h2>
+
+          <p class="section-lede">
+            A <code>run</code> string is tokenized into an executable and its arguments without
+            invoking a shell by default. Checks run independently and in parallel unless the
+            contract explicitly requires ordering or isolation.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">ordering two checks</span>
+
+              <button class="copy-button" type="button" data-copy-target="execute-code">
+                Copy
+              </button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="execute-code">checks: {
+  build: {
+    run: "npm run build",
+    policy: ({ result }) =>
+      result.exitCode === 0
+        ? { outcome: "pass", rationale: "Build succeeded." }
+        : { outcome: "fail", rationale: "Build failed." },
+  },
+
+  integration: {
+    run: "npm run test:integration",
+    dependsOn: ["build"],
+    policy: ({ result }) =>
+      result.exitCode === 0
+        ? { outcome: "pass", rationale: "Integration tests passed." }
+        : { outcome: "fail", rationale: "Integration tests failed." },
+  },
+}</code></pre>
+          </div>
+
+          <ul class="reasoning-list">
+            <li>
+              <strong><code>dependsOn</code> is ordering only.</strong>
+
+              <p>
+                A dependency's policy result is never silently used to decide whether a dependent
+                spawns. The dependent receives evidence and its own policy determines what that
+                evidence means.
+              </p>
+            </li>
+
+            <li>
+              <strong><code>isolated</code> is exclusivity, not a dependency.</strong>
+
+              <p>
+                A check whose tooling needs exclusive access to the machine can request isolation
+                without manually naming every other check.
+              </p>
+            </li>
+
+            <li>
+              <strong>A timeout or abort kills the whole process tree.</strong>
+
+              <p>
+                Wrapper commands frequently spawn child processes. Cleanup therefore targets the
+                process tree across supported platforms, including Windows.
+              </p>
+            </li>
+          </ul>
+
+          <div class="callout callout--note">
+            <p class="callout-title">Proof in the repository</p>
+
+            <p>
+              The tokenizer, concurrency pool, and dependency scheduler are real, independently
+              tested modules rather than conceptual abstractions.
+            </p>
+
+            <p>
+              <a href="https://github.com/maverickcer/repo-contract/tree/main/src/execution">
+                Browse src/execution ↗
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Evidence -->
+      <section class="section section--muted" id="evidence" aria-labelledby="evidence-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">03 · Evidence</p>
+
+          <h2 id="evidence-heading">Capture what happened before deciding what it means</h2>
+
+          <p class="section-lede">
+            Evidence describes execution without deciding whether that execution was acceptable. It
+            records the facts a repository policy can reason about.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">one check's evidence</span>
+
+              <button class="copy-button" type="button" data-copy-target="evidence-code">
+                Copy
+              </button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="evidence-code">{
+  command: "eslint",
+  args: [".", "--format", "json"],
+  exitCode: 1,
+  signal: null,
+  stdout: "...",
+  stderr: "",
+  status: "completed", // | "timed_out" | "signaled" | "host_terminated" | "spawn_error" | "aborted"
+  output: { format: "json", success: true, value: [ /* parsed */ ] },
+}</code></pre>
+          </div>
+
+          <p>
+            <code>status</code> describes why a process ended. A non-zero exit code can still have
+            <code>status: "completed"</code>; a timeout remains a timeout even when the policy
+            ultimately treats it as failure. Evidence does not have to agree with the policy.
+          </p>
+
+          <div class="callout callout--note">
+            <p class="callout-title">Evidence is a fact layer</p>
+
+            <p>
+              The same evidence can support different repository policies. A repository may treat a
+              non-zero exit code as failure, while another policy may intentionally interpret parsed
+              output differently.
+            </p>
+
+            <p>
+              <a href="https://github.com/maverickcer/repo-contract/blob/main/README.md#evidence">
+                Read the Evidence reference in the README ↗
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Policy -->
+      <section class="section" id="policy" aria-labelledby="policy-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">04 · Policy</p>
+
+          <h2 id="policy-heading">Your repository decides what the evidence means</h2>
+
+          <p class="section-lede">
+            Policy is where engineering standards become executable. repo-contract does not
+            prescribe coverage thresholds, lint severity, mutation scores, security tolerances, or
+            other definitions of quality. Your repository does.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">a policy reading a sibling check</span>
+
+              <button class="copy-button" type="button" data-copy-target="policy-code">Copy</button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="policy-code">policy: ({ result, evidence }) => {
+  const testsPassed = evidence.checks.tests?.exitCode === 0
+
+  if (!testsPassed) {
+    return {
+      outcome: "fail",
+      rationale: "Mutation testing requires a passing test suite.",
+    }
+  }
+
+  const score = Number(result.stdout)
+
+  return score >= 90
+    ? { outcome: "pass", rationale: `Mutation score was ${score}%.` }
+    : { outcome: "fail", rationale: "Mutation score was below the 90% requirement." }
+}</code></pre>
+          </div>
+
+          <ul class="reasoning-list">
+            <li>
+              <strong>Every policy runs, for every check, every time.</strong>
+
+              <p>
+                repo-contract does not silently reinterpret a timeout, signal, spawn error, or
+                non-zero exit code as a policy decision.
+              </p>
+            </li>
+
+            <li>
+              <strong>A policy that throws is a bug, not a failing check.</strong>
+
+              <p>
+                A policy error rejects <code>runRepoContract()</code> distinctly from a policy that
+                successfully returns <code>{ outcome: "fail" }</code>.
+              </p>
+            </li>
+          </ul>
+
+          <div class="callout callout--note">
+            <p class="callout-title">The repository owns the standard</p>
+
+            <p>
+              repo-contract supplies the execution and evidence model. It does not impose its own
+              definition of "good code" on the repository using it.
+            </p>
+
+            <p>
+              <a
+                href="https://github.com/maverickcer/repo-contract/blob/main/specs/decisions/0001-execution-and-policy-are-a-strict-sequential-contract.md"
+              >
+                Read ADR 0001 ↗
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Verdict -->
+      <section class="section section--muted" id="verdict" aria-labelledby="verdict-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">05 · Verdict</p>
+
+          <h2 id="verdict-heading">One structured answer, with a rationale you can act on</h2>
+
+          <p class="section-lede">
+            Every check produces a policy result. Those results aggregate into one
+            <code>Verdict</code> that another system can consume without parsing CI logs or
+            rerunning the tools.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">reading the result</span>
+
+              <button class="copy-button" type="button" data-copy-target="verdict-code">
+                Copy
+              </button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="verdict-code">const { evidence, verdict } = await runRepoContract(config)
+
+console.log(verdict.passed) // true | false
+console.log(verdict.checks.lint) // { outcome: "fail", rationale: "3 lint error(s)." }
+
+process.exitCode = verdict.passed ? 0 : 1</code></pre>
+          </div>
+
+          <p>
+            <code>rationale</code> is mandatory for every outcome, including <code>"pass"</code>. It
+            is a plain, JSON-serializable string rather than a tool-specific report shape, so the
+            verdict can be persisted, transmitted, inspected, or consumed by another program.
+          </p>
+
+          <div class="callout callout--note">
+            <p class="callout-title">The caller remains in control</p>
+
+            <p>
+              <code>runRepoContract()</code> does not call <code>process.exit()</code>. A local
+              script, CI job, release system, or another consumer decides what action to take from
+              the returned evidence and verdict.
+            </p>
+
+            <p>
+              <a href="https://github.com/maverickcer/repo-contract/blob/main/README.md#verdict">
+                Read "Verdict" in the README ↗
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Three questions -->
+      <section class="section" id="questions" aria-labelledby="questions-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">Three questions, three answers</p>
+
+          <h2 id="questions-heading">Evidence, policy, and enforcement stay separate on purpose</h2>
+
+          <p class="section-lede">
+            A reliable engineering contract should distinguish what happened from what the
+            repository concluded and what an external system ultimately does about that conclusion.
+          </p>
+
+          <div class="diagram">
+            <p class="sr-only">
+              Evidence answers what happened. Policy answers what the repository concludes. Consumer
+              judgment answers what an external system does about that conclusion.
+            </p>
+
+            <ol class="diagram-tree">
+              <li>
+                <span class="diagram-branch-label">Evidence answers "what happened?"</span>
+                <ol>
+                  <li>Exit code, signal, timing</li>
+                  <li>Captured and parsed output</li>
+                  <li>Facts without policy interpretation</li>
+                </ol>
+              </li>
+
+              <li>
+                <span class="diagram-branch-label">
+                  Policy answers "what does our standard require?"
+                </span>
+                <ol>
+                  <li>Repository-owned judgment</li>
+                  <li>Pass, fail, or warn</li>
+                  <li>A mandatory rationale</li>
+                </ol>
+              </li>
+
+              <li>
+                <span class="diagram-branch-label">
+                  The consumer answers "what do we do about it?"
+                </span>
+                <ol>
+                  <li>CI can block a merge</li>
+                  <li>A script can set an exit code</li>
+                  <li>A bot or human can inspect the result</li>
+                </ol>
+              </li>
+            </ol>
+          </div>
+
+          <p>
+            <code>Verdict</code> is returned alongside <code>Evidence</code>, never merged into it.
+            A consumer therefore has both <code>evidence.checks[id]</code> and
+            <code>verdict.checks[id]</code> available independently.
+          </p>
+
+          <div class="callout callout--note">
+            <p class="callout-title">The contract is not the automation platform</p>
+
+            <p>
+              A CI provider can enforce the verdict. It does not have to own the definition of the
+              standard that produced it.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Comparison -->
+      <section class="section section--muted" id="comparison" aria-labelledby="comparison-heading">
+        <div class="container">
+          <p class="section-eyebrow">Why repo-contract</p>
+
+          <h2 id="comparison-heading">
+            Keep the tools. Keep the CI. Move the contract into the repository.
+          </h2>
+
+          <p class="section-lede">
+            repo-contract does not replace the tools that analyze your code or the systems that
+            automate your repository. It gives those systems a common, repository-owned contract to
+            execute.
+          </p>
+
+          <div class="table-scroll">
+            <table class="comparison-table">
+              <caption>
+                Where common approaches stop and repo-contract begins
+              </caption>
+
+              <thead>
+                <tr>
+                  <th scope="col">Concern</th>
+                  <th scope="col">Existing approach</th>
+                  <th scope="col">repo-contract</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <th scope="row">Tool execution</th>
+                  <td>Each tool is run by its own script, workflow step, or integration</td>
+                  <td>Any command becomes a configured check</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Quality analysis</th>
+                  <td>Use the analyzer that specializes in the problem</td>
+                  <td>Keep the analyzer; repo-contract consumes its result</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Engineering standard</th>
+                  <td>Often distributed across CI YAML, shell, scripts, and tool configuration</td>
+                  <td>Defined as repository-owned configuration and policy</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Cross-check logic</th>
+                  <td>Workflow conditions, shell glue, job dependencies, or custom scripts</td>
+                  <td>Policy functions reading structured evidence</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Execution facts</th>
+                  <td>Usually scattered across logs and tool-specific output</td>
+                  <td>Structured evidence with a stable versioned shape</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Verdict</th>
+                  <td>Often inferred from process exit codes or CI job state</td>
+                  <td>Explicit policy outcomes with mandatory rationales</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Local reproduction</th>
+                  <td>Reproduce the CI workflow and its environment</td>
+                  <td>Execute the same repository contract directly</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">CI provider</th>
+                  <td>Contract semantics can become coupled to the provider's workflow model</td>
+                  <td>CI is simply one consumer of the contract</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Execution</th>
+                  <td>Provider-specific orchestration</td>
+                  <td>Concurrent by default, explicitly ordered or isolated when needed</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout--note">
+            <p class="callout-title">Why not just use CI?</p>
+
+            <p>
+              You should use your existing CI system. repo-contract does not compete with it.
+              Instead, it keeps the repository's engineering contract independent from the system
+              that happens to execute it.
+            </p>
+
+            <p>
+              <strong>CI executes the contract. The repository owns the contract.</strong>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Architecture -->
+      <section class="section" id="architecture" aria-labelledby="architecture-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">Architecture</p>
+
+          <h2 id="architecture-heading">
+            A deliberately small runtime around a strict contract boundary
+          </h2>
+
+          <p class="section-lede">
+            The public API exposes only what consumers need to define and execute a contract.
+            Internal modules remain separate so execution, evidence assembly, and policy evaluation
+            cannot silently collapse into one implementation concern.
+          </p>
+
+          <div class="diagram">
+            <p class="sr-only">
+              The public barrel exports defineRepoContract and runRepoContract. Internally, config
+              validation, execution, evidence assembly, and policy evaluation remain separate
+              modules composed by run-repo-contract.ts.
+            </p>
+
+            <ol class="diagram-tree">
+              <li>
+                <code>src/index.ts</code> — public barrel
+
+                <ol class="diagram-branches">
+                  <li>
+                    <span class="diagram-branch-label">config/</span>
+
+                    <ol>
+                      <li>Tokenize <code>run</code></li>
+                      <li>Validate configuration structure</li>
+                    </ol>
+                  </li>
+
+                  <li>
+                    <span class="diagram-branch-label">execution/</span>
+
+                    <ol>
+                      <li>Spawn, timeout, abort</li>
+                      <li>Concurrency and dependency scheduling</li>
+                      <li>Process-tree cleanup</li>
+                    </ol>
+                  </li>
+
+                  <li>
+                    <span class="diagram-branch-label">evidence/</span>
+
+                    <ol>
+                      <li>Attach parsed output</li>
+                      <li>Assemble the versioned evidence object</li>
+                    </ol>
+                  </li>
+
+                  <li>
+                    <span class="diagram-branch-label">policy/</span>
+
+                    <ol>
+                      <li>Invoke every policy</li>
+                      <li>Aggregate the verdict</li>
+                    </ol>
+                  </li>
+
+                  <li>
+                    <span class="diagram-branch-label">presets/</span>
+
+                    <ol>
+                      <li>Independent public barrel</li>
+                      <li>Published under <code>./presets</code></li>
+                    </ol>
+                  </li>
+                </ol>
+              </li>
+            </ol>
+          </div>
+
+          <p>
+            <code>src/presets/</code> is deliberately independent from the root barrel. The core API
+            and the Experimental preset catalog therefore have separate public boundaries and
+            compatibility expectations.
+          </p>
+
+          <div class="callout callout--note">
+            <p class="callout-title">Proof in the repository</p>
+
+            <p>
+              The module-boundary map and reasoning behind the architectural decisions are committed
+              documentation rather than conventions that consumers have to infer.
+            </p>
+
+            <p>
+              <a
+                href="https://github.com/maverickcer/repo-contract/blob/main/specs/architecture.md"
+              >
+                Read specs/architecture.md ↗
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Adoption -->
+      <section class="section section--muted" id="adoption" aria-labelledby="adoption-heading">
+        <div class="container">
+          <p class="section-eyebrow">Adoption</p>
+
+          <h2 id="adoption-heading">Do not replace your stack. Put a contract around it.</h2>
+
+          <p class="section-lede">
+            repo-contract is intentionally incremental. Keep your CI provider, linters, test
+            runners, security tools, and repository scripts. Introduce the contract around the
+            checks that matter first.
+          </p>
+
+          <div class="callout callout--note">
+            <p class="callout-title">Start with one requirement</p>
+
+            <p>
+              Pick one existing check. Define its policy. Run the contract locally. Once the
+              contract produces the result you expect, add the next requirement.
+            </p>
+          </div>
+
+          <div class="adoption-grid">
+            <a class="adoption-card" href="https://github.com/maverickcer/repo-contract">
+              <span class="adoption-card-title">Existing CI provider</span>
+
+              <span class="adoption-card-desc">
+                Keep GitHub Actions, GitLab CI, CircleCI, or another provider. Call
+                <code>runRepoContract()</code> from your existing automation.
+              </span>
+
+              <span class="external-link-note">Explore the repository ↗</span>
+            </a>
+
+            <a
+              class="adoption-card"
+              href="https://github.com/maverickcer/repo-contract#preset-checks"
+            >
+              <span class="adoption-card-title">Existing tools</span>
+
+              <span class="adoption-card-desc">
+                Keep ESLint, Vitest, Playwright, Stryker, npm audit, or whatever tools already
+                produce the evidence your repository trusts.
+              </span>
+
+              <span class="external-link-note">See preset checks ↗</span>
+            </a>
+
+            <a
+              class="adoption-card"
+              href="https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md"
+            >
+              <span class="adoption-card-title">Locked-down environments</span>
+
+              <span class="adoption-card-desc">
+                No CLI, no network calls, no telemetry, and no implicit filesystem discovery. The
+                primary surface is a programmatic function call.
+              </span>
+
+              <span class="external-link-note">Read the security model ↗</span>
+            </a>
+
+            <a
+              class="adoption-card"
+              href="https://github.com/maverickcer/repo-contract#defining-checks"
+            >
+              <span class="adoption-card-title">Monorepos</span>
+
+              <span class="adoption-card-desc">
+                Define the contract centrally and execute a selected subset of checks where
+                appropriate.
+              </span>
+
+              <span class="external-link-note">See check options ↗</span>
+            </a>
+
+            <a
+              class="adoption-card"
+              href="https://github.com/maverickcer/repo-contract#quick-start"
+            >
+              <span class="adoption-card-title">Incremental adoption</span>
+
+              <span class="adoption-card-desc">
+                Introduce one repository requirement at a time instead of migrating an entire
+                automation pipeline.
+              </span>
+
+              <span class="external-link-note">See the Quick Start ↗</span>
+            </a>
+
+            <a
+              class="adoption-card"
+              href="https://github.com/maverickcer/repo-contract/blob/main/docs/api-report/repo-contract.api.md"
+            >
+              <span class="adoption-card-title">TypeScript-first teams</span>
+
+              <span class="adoption-card-desc">
+                Evidence and verdict data are typed from the configured check definitions, keeping
+                repository policy close to the code that defines it.
+              </span>
+
+              <span class="external-link-note">Read the API reference ↗</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Proof -->
+      <section class="section" id="proof" aria-labelledby="proof-heading">
+        <div class="container">
+          <p class="section-eyebrow">Proof, not promises</p>
+
+          <h2 id="proof-heading">The repository uses the contract it asks you to trust.</h2>
+
+          <p class="section-lede">
+            repo-contract is self-hosted: its own repository defines a contract using the public API
+            and uses that contract to validate the repository. The implementation, tests,
+            architecture documentation, and decision records are the evidence behind the claims on
+            this page.
+          </p>
+
+          <div class="adoption-grid">
+            <a class="adoption-card" href="https://github.com/maverickcer/repo-contract#readme">
+              <span class="adoption-card-title">README</span>
+
+              <span class="adoption-card-desc">
+                The complete usage narrative, including the contract model, security model, API, and
+                supported behavior.
+              </span>
+
+              <span class="external-link-note">Read the README ↗</span>
+            </a>
+
+            <a
+              class="adoption-card"
+              href="https://github.com/maverickcer/repo-contract/blob/main/specs/architecture.md"
+            >
+              <span class="adoption-card-title">Architecture</span>
+
+              <span class="adoption-card-desc">
+                The current-state description of the pipeline, module boundaries, and architectural
+                invariants.
+              </span>
+
+              <span class="external-link-note">Read architecture.md ↗</span>
+            </a>
+
+            <a
+              class="adoption-card"
+              href="https://github.com/maverickcer/repo-contract/tree/main/specs/decisions"
+            >
+              <span class="adoption-card-title">Architecture decisions</span>
+
+              <span class="adoption-card-desc">
+                The reasoning behind the contract model, execution semantics, and other structural
+                decisions.
+              </span>
+
+              <span class="external-link-note">Read the ADRs ↗</span>
+            </a>
+
+            <a
+              class="adoption-card"
+              href="https://github.com/maverickcer/repo-contract/blob/main/docs/api-report/repo-contract.api.md"
+            >
+              <span class="adoption-card-title">API reference</span>
+
+              <span class="adoption-card-desc">
+                The exported API, types, fields, and error codes documented against the actual
+                public surface.
+              </span>
+
+              <span class="external-link-note">Read the API reference ↗</span>
+            </a>
+          </div>
+
+          <div class="callout callout--note">
+            <p class="callout-title">A deliberate rule</p>
+
+            <p>
+              This page should never claim something the repository cannot substantiate. Where a
+              capability is still experimental or under development, the documentation says so
+              rather than presenting it as established behavior.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="section section--muted" id="faq" aria-labelledby="faq-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">FAQ</p>
+
+          <h2 id="faq-heading">Common questions about repo-contract</h2>
+
+          <details class="faq-item">
+            <summary>What problem does repo-contract solve?</summary>
+
+            <p class="section-lede">
+              Repositories accumulate engineering standards across linting, testing, security,
+              architecture, API compatibility, coverage, documentation, and other concerns. The
+              tools that implement those checks are usually excellent at producing results, but the
+              repository's rules about how those results should be interpreted often end up
+              scattered across CI workflows and scripts.
+            </p>
+
+            <p>
+              repo-contract provides the layer between those tools and the automation that enforces
+              them: execute checks, capture evidence, apply repository-owned policies, and produce a
+              structured verdict.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Is repo-contract a CI provider?</summary>
+
+            <p>
+              No. Keep your existing CI provider. GitHub Actions, GitLab CI, CircleCI, or another
+              automation system can execute the contract. repo-contract is the repository-owned
+              contract runtime underneath that automation.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Is repo-contract a test runner, linter, or static-analysis tool?</summary>
+
+            <p>
+              No. It does not attempt to replace specialized engineering tools. It executes the
+              commands your repository already trusts and provides the evidence and policy layer
+              around their results.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Why not just use GitHub Actions or another CI system?</summary>
+
+            <p>
+              You should use your existing CI system. The distinction is ownership: CI should
+              execute the repository's engineering contract rather than become the place where that
+              contract is defined.
+            </p>
+
+            <p>
+              repo-contract lets the same contract run locally and in CI while keeping its execution
+              semantics, evidence model, and policy in repository-owned code.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Why not just use npm scripts, Make, or shell scripts?</summary>
+
+            <p>
+              Those tools are useful for command orchestration and can reproduce much of what
+              repo-contract does. repo-contract adds a defined evidence model, explicit policy
+              functions, cross-check access, structured rationales, and an aggregated verdict.
+            </p>
+
+            <p>
+              The value is not that arbitrary command execution is impossible without repo-contract.
+              The value is having a reusable, typed, tested contract model instead of rebuilding
+              that infrastructure in every repository.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              Does repo-contract replace SonarQube, Qodana, or similar quality platforms?
+            </summary>
+
+            <p>
+              No. Those systems provide analysis capabilities and quality models of their own.
+              repo-contract can run them as checks when their results are part of your repository's
+              engineering contract.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Does repo-contract decide what counts as good code?</summary>
+
+            <p>
+              No, by design. It does not impose built-in coverage thresholds, lint tolerances,
+              mutation-score requirements, or other definitions of quality. Those decisions belong
+              to repository-owned policy functions.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Can a policy read another check's evidence?</summary>
+
+            <p>
+              Yes. Every configured check's evidence is fully assembled before any policy runs.
+              Execution and policy evaluation are strictly sequential phases, so policies can safely
+              read sibling evidence without race conditions caused by checks still being executed.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Does repo-contract persist evidence or maintain a baseline?</summary>
+
+            <p>
+              No. It does not maintain a baseline or persist evidence on your behalf. If your
+              repository wants regression detection, it can persist evidence and compare it inside
+              its own policy.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>What happens if my policy throws an error?</summary>
+
+            <p>
+              A policy exception is treated as an error in the contract itself rather than as a
+              normal failing outcome. <code>runRepoContract()</code> rejects with a dedicated error,
+              distinct from a policy that successfully returns a failing outcome.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>What does "warn" mean?</summary>
+
+            <p>
+              <code>"warn"</code> represents a policy that is satisfied but wants to surface
+              additional information. It does not fail the aggregate verdict and is not intended to
+              be a softer representation of failure.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Does repo-contract run checks in parallel?</summary>
+
+            <p>
+              Yes, by default, within the configured concurrency boundary. Checks that require
+              ordering can declare <code>dependsOn</code>. Checks whose tooling needs exclusive
+              access can declare <code>isolated</code>.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Does repo-contract work on Windows?</summary>
+
+            <p>
+              Yes. Windows command resolution and process-tree cleanup are handled explicitly and
+              tested on a real Windows CI runner.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Does the repo-contract repository use repo-contract itself?</summary>
+
+            <p>
+              Yes. The repository's own contract configures the checks used to validate the project,
+              using the package's public API rather than a special internal execution path.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Is the website itself checked?</summary>
+
+            <p>
+              Yes. The page participates in the repository's verification suite, including
+              accessibility verification against the built page.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Is repo-contract production-ready today?</summary>
+
+            <p>
+              It is pre-1.0. Minor versions may still include breaking changes to the Stable tier
+              before 1.0. The versioning policy documents exactly what is covered by the current
+              compatibility guarantees.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Does repo-contract sandbox or restrict commands?</summary>
+
+            <p>
+              No. It does not sandbox, restrict, or review commands configured by the repository.
+              Command execution is a security-sensitive boundary controlled by the configuration
+              owner. See the security model for the complete threat model and execution rules.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary>Where can I read the detailed architecture?</summary>
+
+            <p>
+              The architecture specification and Architecture Decision Records contain the full
+              reasoning behind the package's structural choices and execution guarantees.
+            </p>
+
+            <p>
+              <a
+                href="https://github.com/maverickcer/repo-contract/blob/main/specs/architecture.md"
+              >
+                Read the architecture specification ↗
+              </a>
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <!-- Getting Started -->
+      <section class="section" id="getting-started" aria-labelledby="getting-started-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">Getting started</p>
+
+          <h2 id="getting-started-heading">Define one requirement. Run the contract.</h2>
+
+          <p class="section-lede">
+            No config-file discovery, no separate CLI to learn, and no replacement for your existing
+            tools. Define the contract, call one function, and decide what your automation should do
+            with the result.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">repo-contract.config.ts</span>
+
+              <button class="copy-button" type="button" data-copy-target="getting-started-code">
+                Copy
+              </button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="getting-started-code">import { defineRepoContract } from "repo-contract"
+
+export default defineRepoContract({
+  checks: {
+    tests: {
+      run: "npm test",
+      policy: ({ result }) =>
+        result.exitCode === 0
+          ? { outcome: "pass", rationale: "Tests exited 0." }
+          : { outcome: "fail", rationale: "Tests must pass." },
+    },
+  },
+})</code></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">run it</span>
+
+              <button class="copy-button" type="button" data-copy-target="getting-started-run">
+                Copy
+              </button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="getting-started-run">import { runRepoContract } from "repo-contract"
+import config from "./repo-contract.config.js"
+
+const { verdict } = await runRepoContract(config)
+
+console.log(verdict.passed)
+process.exitCode = verdict.passed ? 0 : 1</code></pre>
+          </div>
+
+          <p>
+            <code>npm install --save-dev repo-contract</code> — requires Node.js
+            <code>&gt;=20.0.0</code>. No config-file discovery magic and no hidden state.
+          </p>
+
+          <div class="hero-actions">
+            <a
+              class="button button--primary"
+              href="https://github.com/maverickcer/repo-contract#quick-start"
+            >
+              Read the Quick Start
+            </a>
+
+            <a class="button button--secondary" href="https://github.com/maverickcer/repo-contract">
+              View on GitHub
+            </a>
+          </div>
+
+          <div class="callout callout--note">
+            <p class="callout-title">The contract belongs to the repository</p>
+
+            <p>
+              Keep your existing CI, testing, analysis, and security tools. repo-contract gives the
+              repository a single executable layer that defines how those tools participate in its
+              engineering standard.
+            </p>
+
+            <p>
+              Use the README for the current supported API and the generated
+              <a
+                href="https://github.com/maverickcer/repo-contract/blob/main/docs/api-report/repo-contract.api.md"
+                >API report</a
+              >
+              for the exact reference.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <ul class="footer-nav">
+          <li><a href="#problem">Problem</a></li>
+          <li><a href="#contract">Contract</a></li>
+          <li><a href="#pipeline">Pipeline</a></li>
+          <li><a href="#configure">Configure</a></li>
+          <li><a href="#execute">Execute</a></li>
+          <li><a href="#evidence">Evidence</a></li>
+          <li><a href="#policy">Policy</a></li>
+          <li><a href="#verdict">Verdict</a></li>
+          <li><a href="#comparison">Why repo-contract</a></li>
+          <li><a href="#architecture">Architecture</a></li>
+          <li><a href="#adoption">Adoption</a></li>
+          <li><a href="#proof">Proof</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#getting-started">Getting Started</a></li>
+
+          <li>
+            <a href="https://github.com/maverickcer/repo-contract">GitHub ↗</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/maverickcer/repo-contract/issues">Issues ↗</a>
+          </li>
+        </ul>
+
+        <p class="footer-meta">
+          <span>© repo-contract contributors</span>
+
+          <span>
+            <a href="https://github.com/maverickcer/repo-contract/blob/main/LICENSE">
+              MIT License
+            </a>
+          </span>
+        </p>
+      </div>
+    </footer>
+
+    <div class="sr-only" role="status" aria-live="polite" id="copy-status"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
