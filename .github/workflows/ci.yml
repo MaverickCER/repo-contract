@@ -1,0 +1,289 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Supersede an in-progress PR run when the PR is pushed again -- the older run's
+# result is worthless once the branch has moved. Keyed by PR number for
+# pull_request events and by ref otherwise, so distinct branches and every
+# push-to-main run stay isolated and are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Explicit least-privilege default so every job's GITHUB_TOKEN scope is a
+# property of this file, not an assumption about the repo/org's ambient
+# default -- mirrors env-cap/data-cap's own ci.yml.
+permissions:
+  contents: read
+
+jobs:
+  # The repository's own verification toolchain -- typecheck, lint, build,
+  # every test category, size. This runs on a single modern Node line, NOT
+  # the published package's `engines.node` floor: the dev/verification
+  # dependency tree (ts-json-schema-generator, watskeburt via
+  # dependency-cruiser, @stryker-mutator's Babel 8, ...) has moved past Node
+  # 20, so `npm ci` there now warns EBADENGINE and some tools refuse to run.
+  # The published package still supports Node >=20 -- that's proven
+  # independently by `published-floor` below, against the packed artifact,
+  # with none of this toolchain installed. Local dev uses the same modern line
+  # (.nvmrc). The OS axis (windows/macos) is what's genuinely new for this
+  # package vs. env-cap/data-cap, which never spawn processes.
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # No job here pushes; nothing needs the checkout's stored token, so
+          # don't leave it in `.git/config` for later steps to reach.
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      # A bare, read-only `prettier --check .` -- not `npm run format`,
+      # which runs the auto-fixing (`--write`) preset dogfooded by `npm run
+      # contract` and always exits 0 once it finishes rewriting files, so it
+      # can never actually fail this gate on unformatted code.
+      - run: npm run format:check
+      # No wrapper npm script for this anymore -- package.json only carries
+      # generic package scripts, and repo-contract's own `architecture`
+      # check already invokes this same script directly (see
+      # repo-contract.config.ts). Static, no build required -- production
+      # src/ dependency graph plus every verification category's own Vitest
+      # config staying inside its own directory (see
+      # specs/verification-taxonomy.md). Report-only (see the script's own
+      # doc comment) -- this step is a cross-platform "doesn't crash" smoke
+      # check now, not a policy gate; `npm run contract` below is the real
+      # gate. Run through `npx` (not bare `node`) so the script's own
+      # `depcruise` sub-spawn resolves via node_modules/.bin on PATH -- only
+      # npm run/npx provide that for a `run:` step, unlike repo-contract's
+      # own invocation of this script, which inherits it transitively from
+      # the outer `npm run contract`.
+      - run: npx node scripts/check-architecture.mjs
+      - run: npm run build
+      - run: npm run schema
+      # Unit + integration + property, each independently, aggregated and
+      # reported against this repository's coverage thresholds -- see
+      # scripts/run-coverage.mjs. Report-only, same as above: real gating
+      # happens in repo-contract's own `coverage` check via `npm run
+      # contract`, not here.
+      - run: npm run test:coverage
+      # No wrapper npm script for this anymore, same as architecture above --
+      # repo-contract's own `test-e2e` check invokes run-test-category.mjs
+      # the same way (see repo-contract.config.ts). Also run through `npx`
+      # for the same PATH reason: this script spawns `vitest` by bare name.
+      # test/e2e/consumer-install.test.ts -- a real `npm pack` + tarball
+      # install + import (both ESM and CommonJS), proving the built artifact
+      # (not just the source tree) actually works from a clean install. Not
+      # part of test:coverage (E2E doesn't produce coverage -- see the
+      # coverage-contribution matrix in specs/verification-taxonomy.md), so
+      # it must run as its own explicit step here rather than silently
+      # riding along inside it.
+      - run: npx node scripts/run-test-category.mjs e2e
+      # Report-only (see scripts/check-size.mjs) -- a cross-platform smoke
+      # check, not a policy gate; repo-contract's `size` check owns the
+      # actual required size and is what `npm run contract` enforces.
+      - run: npm run size
+
+  # Bun and Deno actually consuming the real, packed tarball -- see
+  # specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md. One OS, one Node
+  # version: Bun/Deno compatibility doesn't depend on which Node version or
+  # OS also happens to be on the runner (neither runtime invokes Node's own
+  # binary), so it isn't re-run across `verify`'s full matrix above. The
+  # test/e2e/consumer-install-{bun,deno}.test.ts suites self-skip when their
+  # runtime isn't on PATH -- installing both here via their official setup
+  # actions is what makes this job actually exercise them instead of skip.
+  runtime-compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # No job here pushes; nothing needs the checkout's stored token, so
+          # don't leave it in `.git/config` for later steps to reach.
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          # Same modern line as `verify`/`contract` -- this job runs the repo's
+          # own test harness (vitest), so it belongs on the verification-toolchain
+          # Node version, not the published floor.
+          node-version: 24.x
+          cache: npm
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: latest
+
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: v2.x
+
+      - run: npm ci
+      - run: npm run build
+      - run: npx node scripts/run-test-category.mjs e2e
+
+  verify-current:
+    runs-on: ubuntu-latest
+    # Deliberate canary, not a required gate: this job tracks the newest Node
+    # line ahead of the verification toolchain's own line (24.x above, the
+    # .nvmrc line), specifically so a real incompatibility
+    # is visible before that version is adopted -- but a brand-new Node
+    # line failing here is frequently an upstream toolchain gap (a
+    # devDependency not yet supporting it) rather than a defect in this
+    # package, and this repository has no control over when its own
+    # dependencies catch up. continue-on-error keeps that upstream lag from
+    # blocking every PR while this job still surfaces the result for a human
+    # to actually look at, rather than silently skipping the check entirely.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # No job here pushes; nothing needs the checkout's stored token, so
+          # don't leave it in `.git/config` for later steps to reach.
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 26.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      - run: npm run size
+
+  # Builds the package once, on the verification-toolchain Node line, and
+  # hands the resulting tarball to `published-floor` below. Nothing downstream
+  # rebuilds it -- the whole point is that the artifact tested on the old Node
+  # floor is bit-for-bit the one a modern toolchain produced.
+  package-build:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # No job here pushes; nothing needs the checkout's stored token, so
+          # don't leave it in `.git/config` for later steps to reach.
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      # `npm pack --pack-destination` does not create the target directory.
+      - run: mkdir -p ./artifacts
+      - run: npm pack --pack-destination ./artifacts
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: package-tarball
+          path: artifacts/*.tgz
+          retention-days: 1
+          if-no-files-found: error
+
+  # The published package's real Node floor, proven the only way that means
+  # anything: install the packed tarball into a throwaway project as an
+  # external consumer would, on each Node version `engines.node` promises,
+  # and exercise both entry points. This job NEVER runs `npm ci` / `npm run
+  # build` / the test harness -- it never installs the verification toolchain
+  # at all, so a Node-22-only devDependency cannot affect it. See
+  # scripts/smoke-consumer.mjs.
+  published-floor:
+    needs: package-build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # No job here pushes; nothing needs the checkout's stored token, so
+          # don't leave it in `.git/config` for later steps to reach.
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          # No `cache: npm` -- this job never runs `npm ci`.
+          node-version: ${{ matrix.node-version }}
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: package-tarball
+          path: artifacts
+
+      - run: node scripts/smoke-consumer.mjs artifacts
+
+  # The slow, self-hosting proof: runs this repository's own
+  # repo-contract.config.ts through the real, just-built public API -- see
+  # that file's own `checks` record for the current, authoritative list of
+  # every category it runs, and specs/verification-taxonomy.md for what each
+  # one establishes. Doesn't
+  # need the full OS matrix (mutation testing dominates runtime, and the
+  # checks it runs are already covered per-OS by `verify` above) -- one
+  # Node version on the verification-toolchain line (the .nvmrc line, >= the
+  # >=22.0.0 that @stryker-mutator/core itself requires), a
+  # local-development-and-CI requirement distinct from the published
+  # package's own engines.node >=20.0.0 floor (proven by `published-floor`).
+  contract:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 (full history, all branches -- see release.yml's own
+      # identical setting) is required here, not optional: adr-governance,
+      # api-contract, and commitlint all read `origin/main..HEAD`
+      # (scripts/git-commits.ts / scripts/diff-files.ts), which the default
+      # single-commit shallow checkout leaves unresolvable on a pull_request
+      # build and identical-to-HEAD on a push-to-main build -- either way
+      # landing the checks on a vacuous "nothing changed" pass path instead of
+      # actually evaluating this run's commits.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          # This job only reads `origin/main..HEAD`; it never pushes, so the
+          # checkout's token does not need to persist into `.git/config`.
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run contract
+        # Under a squash merge the PR title becomes the sole commit on main, so
+        # api-contract must count it toward the declared release bump too.
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+
+  # Belt-and-suspenders for the squash-merge case (see
+  # specs/decisions/0009-conventional-commits-versioning-and-local-gates.md): the merge-commit /
+  # rebase policy keeps every commit conforming, but if a squash ever slips
+  # through, the PR title was still a valid Conventional Commit.
+  pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

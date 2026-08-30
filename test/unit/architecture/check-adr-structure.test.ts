@@ -1,0 +1,212 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import os from "node:os"
+import path from "node:path"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { checkAdrStructure } from "../../../scripts/check-adr-structure.mjs"
+
+/**
+ * True positive / true negative for scripts/check-adr-structure.mjs, matching
+ * rules.test.ts's own precedent for the dependency-cruiser layering rules: real fixture files,
+ * both violating and clean cases, so an overly-strict or overly-loose validator would be caught
+ * here, not just "the script exists and runs."
+ */
+
+let root: string
+
+async function writeAdr(number: string, slug: string, headings: readonly string[]): Promise<void> {
+  const body = [`# ${number}: A fixture decision`, "", ...headings.map((h) => `${h}\n\nsome text.`)]
+  await writeFile(
+    path.join(root, "specs", "decisions", `${number}-${slug}.md`),
+    body.join("\n\n"),
+    "utf8",
+  )
+}
+
+const ALL_HEADINGS = [
+  "## Status",
+  "## Context",
+  "## Decision",
+  "## Consequences",
+  "## Alternatives considered",
+]
+
+beforeEach(async () => {
+  root = await mkdtemp(path.join(os.tmpdir(), "repo-contract-adr-structure-"))
+  await mkdir(path.join(root, "specs", "decisions"), { recursive: true })
+})
+
+afterEach(async () => {
+  await rm(root, { recursive: true, force: true })
+})
+
+describe("checkAdrStructure -- true positive / true negative", () => {
+  it("reports zero violations on a correctly-shaped ADR tree", async () => {
+    await writeAdr("0001", "first-decision", ALL_HEADINGS)
+    await writeAdr("0002", "second-decision", ALL_HEADINGS)
+
+    const result = checkAdrStructure(root)
+
+    expect(result).toEqual({ ok: true, filesScanned: 2, violations: [] })
+  })
+
+  it("accepts a numbering gap with no duplicate -- gaps are deliberately allowed, not accidentally allowed", async () => {
+    await writeAdr("0001", "first-decision", ALL_HEADINGS)
+    await writeAdr("0003", "third-decision", ALL_HEADINGS)
+
+    const result = checkAdrStructure(root)
+
+    expect(result).toEqual({ ok: true, filesScanned: 2, violations: [] })
+  })
+
+  it("flags a filename that doesn't match the required NNNN-kebab-title.md shape", async () => {
+    await writeFile(
+      path.join(root, "specs", "decisions", "not-a-valid-adr-name.md"),
+      "# not a valid ADR\n",
+      "utf8",
+    )
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.violations).toContainEqual(
+      expect.stringContaining(
+        "not-a-valid-adr-name.md does not match the required NNNN-kebab-title.md filename shape",
+      ),
+    )
+  })
+
+  it("flags two files that share the same ADR number", async () => {
+    await writeAdr("0003", "first-take", ALL_HEADINGS)
+    await writeAdr("0003", "second-take", ALL_HEADINGS)
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.violations).toContainEqual(
+      expect.stringContaining("ADR number 0003 is used by more than one file"),
+    )
+  })
+
+  it("flags a file missing a required heading", async () => {
+    await writeAdr(
+      "0001",
+      "incomplete-decision",
+      ALL_HEADINGS.filter((h) => h !== "## Alternatives considered"),
+    )
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.violations).toContainEqual(
+      expect.stringContaining(
+        "0001-incomplete-decision.md is missing required heading(s): ## Alternatives considered",
+      ),
+    )
+  })
+
+  it("does not count a required heading that appears only inside a fenced code block", async () => {
+    const body = [
+      "# 0001: A fixture decision",
+      "",
+      "## Status\n\naccepted.",
+      "## Context\n\nsome text.",
+      "## Decision\n\nsome text.",
+      "## Consequences\n\nsome text.",
+      "Here is the template we started from:",
+      "",
+      "```markdown",
+      "## Alternatives considered",
+      "",
+      "- none",
+      "```",
+    ].join("\n\n")
+    await writeFile(path.join(root, "specs", "decisions", "0001-fenced-heading.md"), body, "utf8")
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.violations).toContainEqual(
+      expect.stringContaining(
+        "0001-fenced-heading.md is missing required heading(s): ## Alternatives considered",
+      ),
+    )
+  })
+
+  it("still passes when real headings coexist with a fenced code block that repeats them", async () => {
+    const body = [
+      "# 0001: A fixture decision",
+      "",
+      ...ALL_HEADINGS.map((h) => `${h}\n\nsome text.`),
+      "For reference, the scaffold looks like:",
+      "",
+      "```markdown",
+      ...ALL_HEADINGS,
+      "```",
+    ].join("\n\n")
+    await writeFile(path.join(root, "specs", "decisions", "0001-fenced-and-real.md"), body, "utf8")
+
+    const result = checkAdrStructure(root)
+
+    expect(result).toEqual({ ok: true, filesScanned: 1, violations: [] })
+  })
+
+  it("does not accept a level-three heading or a superset title in place of the required level-two heading", async () => {
+    const body = [
+      "# 0001: A fixture decision",
+      "",
+      "### Status\n\nnested too deep.",
+      "## Statuses\n\nwrong title.",
+      "## Context\n\nsome text.",
+      "## Decision\n\nsome text.",
+      "## Consequences\n\nsome text.",
+      "## Alternatives considered\n\nsome text.",
+    ].join("\n\n")
+    await writeFile(
+      path.join(root, "specs", "decisions", "0001-near-miss-headings.md"),
+      body,
+      "utf8",
+    )
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.violations).toContainEqual(
+      expect.stringContaining(
+        "0001-near-miss-headings.md is missing required heading(s): ## Status",
+      ),
+    )
+  })
+
+  it("flags an empty or hyphen-only title segment in the filename", async () => {
+    await writeFile(
+      path.join(root, "specs", "decisions", "0001--.md"),
+      ALL_HEADINGS.map((h) => `${h}\n\nx.`).join("\n\n"),
+      "utf8",
+    )
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.violations).toContainEqual(
+      expect.stringContaining(
+        "0001--.md does not match the required NNNN-kebab-title.md filename shape",
+      ),
+    )
+  })
+
+  it("does not flag an extra heading beyond the required five", async () => {
+    await writeAdr("0001", "with-extra-section", [...ALL_HEADINGS, "## Related"])
+
+    const result = checkAdrStructure(root)
+
+    expect(result).toEqual({ ok: true, filesScanned: 1, violations: [] })
+  })
+
+  it("reports a tool-infrastructure failure, not a violation, when specs/decisions/ doesn't exist", async () => {
+    await rm(path.join(root, "specs", "decisions"), { recursive: true, force: true })
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(false)
+  })
+})

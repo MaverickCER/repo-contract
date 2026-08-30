@@ -260,6 +260,18 @@ module.exports = {
       from: { path: "^(checks|scripts)" },
       to: { path: "^src/(config|execution|evidence|parsing|policy)" },
     },
+    {
+      name: "src-must-lazy-load-yaml",
+      severity: "error",
+      comment:
+        "`yaml` is an optional peer dependency (README 'Installation'; ADR 0008), loaded only when a check requests `output: { format: 'yaml' }`. src/ must reach it exclusively via a dynamic `await import('yaml')` (src/parsing/parse-yaml.ts) so a consumer who never requests YAML output does not need it installed -- a real static `import ... from 'yaml'` in src/ silently breaks that. A compile-erased `import type ... from 'yaml'` is fine and is excluded here via dependencyTypesNot. `peer-deps-used` above only warns; this rule is the hard gate. Raised as a CodeRabbit review finding on the release split.",
+      from: { path: "^src" },
+      to: {
+        path: "node_modules/yaml/",
+        dependencyTypes: ["import"],
+        dependencyTypesNot: ["type-only"],
+      },
+    },
   ],
   options: {
     // Deliberately no `includeOnly` -- an earlier `includeOnly: "^src"` here silently excluded

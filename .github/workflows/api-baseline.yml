@@ -1,0 +1,74 @@
+name: API baseline
+
+# Keeps .repo-contract/api-contract/baseline.* in sync with each release,
+# automatically, so it is no longer a manual post-release step (it was:
+# "after a release ships, run `npm run contract:baseline` and commit").
+#
+# Triggers only on release-please's own Release PR (its branch bumps
+# package.json, which is exactly the precondition `runUpdateBaseline` requires --
+# it refuses unless package.json's version is strictly greater than the current
+# baseline's). The regenerated baseline is committed straight onto that PR
+# branch, so it lands atomically with the version bump and CHANGELOG entry --
+# no direct push to protected `main`, no follow-up PR.
+#
+# RELEASING.md documents `npm run contract:baseline` as the manual backstop if
+# this job is ever disabled.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+# Serialize runs for the same Release PR branch: this job pushes a commit back
+# onto that branch, and two overlapping runs (a fast `synchronize` after the
+# push, say) would race to regenerate and push the baseline. `cancel-in-progress`
+# is deliberately false -- a run must not be interrupted mid-`git push`.
+concurrency:
+  group: api-baseline-${{ github.head_ref || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  update-baseline:
+    # release-please's default branch name for a target branch of `main`.
+    if: github.head_ref == 'release-please--branches--main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run contract:baseline
+
+      # A GITHUB_TOKEN push does not itself start another workflow run, which is
+      # fine here: the regenerated baseline is byte-identical to what the
+      # `api-contract` check would compare against, so its verdict on the PR is
+      # unchanged, and the Release PR is maintainer-merged regardless.
+      - name: Commit the regenerated baseline
+        env:
+          # Passed through the environment rather than interpolated straight into
+          # `run` -- a branch ref is attacker-influenced input and must never be
+          # spliced into the shell command text.
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if git diff --quiet -- .repo-contract/api-contract; then
+            echo "Baseline already current; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .repo-contract/api-contract
+          git commit -m "chore: sync api-contract baseline for release"
+          git push origin HEAD:"$HEAD_REF"

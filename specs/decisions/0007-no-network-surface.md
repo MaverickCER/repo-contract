@@ -36,10 +36,12 @@ tooling by dynamic path, read arbitrary files) this guarantee does not apply to.
 - `createRequire` (from either `node:module` or `module`) -- the mechanism ESM code would use to
   synthesize a `require()` and load a network module by a computed string, bypassing a plain
   specifier check. `src/` has never used `require`/`createRequire` anywhere.
-- The global `fetch`/`WebSocket` -- both real, import-free network capability in this package's
-  supported Node runtime (`engines.node >=20`). Browser-only globals (`XMLHttpRequest`,
-  `EventSource`, `navigator.sendBeacon`) are deliberately excluded: this package has no browser
-  build target, so those APIs cannot exist in the runtime this guarantee is about.
+- The globals `fetch`/`WebSocket`/`EventSource` -- all real, import-free network capability in this
+  package's supported Node runtime (`engines.node >=20`). `EventSource` is a Node global (added
+  behind `--experimental-eventsource` in Node 22.3, exposed by default on newer lines, undici-backed)
+  and is banned for the same reason as `fetch`/`WebSocket`. Genuinely browser-only globals
+  (`XMLHttpRequest`, `navigator.sendBeacon`) stay excluded: this package has no browser build
+  target, so those APIs cannot exist in the runtime this guarantee is about.
 - Every published preset's spawned command (`run`'s first argument) must be one of a small,
   explicit, hand-maintained allowlist of the real tools this repository's presets already spawn
   (`ALLOWED_PRESET_COMMANDS`) -- closing the "shell out to curl instead of importing an HTTP
