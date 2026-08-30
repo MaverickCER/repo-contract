@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process"
+import { spawn, spawnSync } from "node:child_process"
 import { getEventListeners } from "node:events"
 import { existsSync, readFileSync, rmSync } from "node:fs"
 import os from "node:os"
@@ -520,7 +520,8 @@ describe("runChecks", () => {
           })
         })
 
-        const isAlive = (pid: number): boolean => {
+        // Cheap probe: does *any* process hold this pid right now.
+        const pidResolves = (pid: number): boolean => {
           try {
             process.kill(pid, 0)
             return true
@@ -528,18 +529,30 @@ describe("runChecks", () => {
             return false
           }
         }
-        // A generous deadline: under heavy concurrent load (e.g. this whole
-        // suite running alongside Stryker's own worker processes as part of
-        // the self-hosting `npm run contract`), the killed-fixture process
-        // may simply not get scheduled promptly enough to react to SIGINT and
-        // run its own cleanup -- that's real contention, not a logic bug in
-        // killTree, so the fix is patience here, not a tighter deadline.
+        // `pidResolves` alone is not enough for the final assertion: under the heavy concurrent
+        // load this suite runs at on CI (macOS runners especially) a pid is recycled within
+        // seconds, so once the fixture's grandchild is gone its pid can already belong to an
+        // unrelated process. Only a *genuine* surviving grandchild -- whose argv still carries the
+        // unique per-run `pidFilePath` -- is a killTree failure. `ps -ww` (no command-column
+        // truncation, honoured by both BSD/macOS and GNU ps) is POSIX; this test skips on Windows.
+        const ourGrandchildIsAlive = (pid: number): boolean => {
+          if (!pidResolves(pid)) return false
+          const probe = spawnSync("ps", ["-ww", "-p", String(pid), "-o", "args="], {
+            encoding: "utf8",
+          })
+          return probe.status === 0 && probe.stdout.includes(pidFilePath)
+        }
+        // A generous deadline: under heavy concurrent load (e.g. this whole suite running alongside
+        // Stryker's own worker processes as part of the self-hosting `npm run contract`), the
+        // host fixture's own SIGKILL-escalation timer (spawn-check.ts's killWithEscalation) may not
+        // get scheduled promptly -- that's real contention, not a logic bug in killTree, so the fix
+        // is patience here, not a tighter deadline.
         const deadline = Date.now() + 15000
-        while (isAlive(grandchildPid) && Date.now() < deadline) {
+        while (pidResolves(grandchildPid) && Date.now() < deadline) {
           await new Promise((resolve) => setTimeout(resolve, 50))
         }
 
-        expect(isAlive(grandchildPid)).toBe(false)
+        expect(ourGrandchildIsAlive(grandchildPid)).toBe(false)
         expect(exitCode).not.toBe(0)
       } finally {
         rmSync(pidFilePath, { force: true })
