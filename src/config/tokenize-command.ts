@@ -160,6 +160,15 @@ export function tokenizeRunString(run: string, checkId: string): readonly string
       continue
     }
 
+    // An unquoted backslash before a newline is a shell line-continuation --
+    // repo-contract never interprets one, and consuming the escape would splice
+    // a literal newline into an argv token, exactly what an unquoted bare
+    // newline is rejected for below.
+    const nextChar = run[i + 1]
+    if (char === "\\" && (nextChar === "\n" || nextChar === "\r")) {
+      rejectUnquotedOperator(nextChar, run, i + 1, checkId)
+    }
+
     const escape = consumeEscape(run, i, null)
     if (escape !== undefined) {
       current += escape.value

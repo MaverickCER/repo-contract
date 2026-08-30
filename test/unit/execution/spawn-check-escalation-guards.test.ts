@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type * as ProcessTreeModule from "../../../src/execution/process-tree.js"
 import type { ActiveCheckHandle } from "../../../src/execution/spawn-check.js"
-import { spawnCheck } from "../../../src/execution/spawn-check.js"
+import { SIGKILL_GRACE_PERIOD_MS, spawnCheck } from "../../../src/execution/spawn-check.js"
 import type { CheckDefinition, PolicyResult } from "../../../src/types.js"
 
 // File-scoped: spies on killTree while preserving its real behavior
@@ -30,7 +30,7 @@ async function waitUntil(predicate: () => boolean, deadlineMs = 5000): Promise<v
   }
 }
 
-const GRACE_PERIOD_MS = 2000
+const GRACE_PERIOD_MS = SIGKILL_GRACE_PERIOD_MS
 
 describe.skipIf(process.platform === "win32")("spawnCheck -- SIGKILL escalation guards", () => {
   afterEach(() => {

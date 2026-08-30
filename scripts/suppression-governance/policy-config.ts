@@ -58,8 +58,8 @@ export type SuppressionPolicy =
 
 /**
  * `default` is this domain's fallback policy for any rule with no exact or pattern match in
- * `rules` (see checks/suppression-governance.ts's `resolveRequirement` for the full exact >
- * pattern > domain-default > global-default precedence). Omit `default` to fall through to
+ * `rules` (see scripts/suppression-governance/resolve-policy.ts's `resolveRequirement` for the full
+ * exact > pattern > domain-default > global-default precedence). Omit `default` to fall through to
  * `GLOBAL_DEFAULT_POLICY` instead.
  */
 export interface SuppressionDomainPolicy {
@@ -120,6 +120,11 @@ export const suppressionPolicy: SuppressionPolicyConfig = {
     },
     rules: {
       "@ts-ignore": {
+        mode: "forbidden",
+      },
+      // Whole-file type-checking opt-out -- strictly broader than `@ts-ignore`,
+      // which is already forbidden, so this is too.
+      "@ts-nocheck": {
         mode: "forbidden",
       },
       "@ts-expect-error": {

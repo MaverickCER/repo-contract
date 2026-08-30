@@ -100,15 +100,21 @@ describe("killTree", () => {
     expect(isAlive(grandchildPid)).toBe(false)
   })
 
-  it("refuses pid 0, negative, and non-integer pids without ever calling process.kill -- 0 would signal the host's own group", () => {
-    const killSpy = vi.spyOn(process, "kill")
-    for (const bad of [0, -1, -12345, 1.5, Number.NaN]) {
-      expect(() => {
-        killTree(bad, "SIGTERM")
-      }).not.toThrow()
-    }
-    expect(killSpy).not.toHaveBeenCalled()
-    vi.restoreAllMocks()
+  describe("invalid pid guard", () => {
+    // In an afterEach so the spy is restored even if an assertion above throws.
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it("refuses pid 0, negative, and non-integer pids without ever calling process.kill -- 0 would signal the host's own group", () => {
+      const killSpy = vi.spyOn(process, "kill")
+      for (const bad of [0, -1, -12345, 1.5, Number.NaN]) {
+        expect(() => {
+          killTree(bad, "SIGTERM")
+        }).not.toThrow()
+      }
+      expect(killSpy).not.toHaveBeenCalled()
+    })
   })
 
   it("is a no-op, not a throw, for a PID that has already exited", async () => {

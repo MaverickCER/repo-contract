@@ -35,6 +35,15 @@ describe("checkTerminatedAbnormally", () => {
     ).toContain("SIGKILL")
   })
 
+  it("falls back to 'unknown' when a signaled result carries no signal", () => {
+    const result = checkTerminatedAbnormally(
+      fakeCheckEvidence({ status: "signaled", signal: null }),
+      "T",
+    )
+    expect(result?.outcome).toBe("fail")
+    expect(result?.rationale).toContain("signal unknown")
+  })
+
   it("reports a non-ENOENT spawn failure (e.g. EACCES) with the underlying error", () => {
     const result = checkTerminatedAbnormally(
       fakeCheckEvidence({
@@ -47,6 +56,15 @@ describe("checkTerminatedAbnormally", () => {
     )
     expect(result?.outcome).toBe("fail")
     expect(result?.rationale).toContain("EACCES")
+  })
+
+  it("uses the default spawn-failure message when a spawn_error carries no spawnError text", () => {
+    const result = checkTerminatedAbnormally(
+      fakeCheckEvidence({ status: "spawn_error", exitCode: null }),
+      "tool",
+    )
+    expect(result?.outcome).toBe("fail")
+    expect(result?.rationale).toContain("the process failed to spawn")
   })
 
   it("appends whatever partial output the tool produced before termination", () => {

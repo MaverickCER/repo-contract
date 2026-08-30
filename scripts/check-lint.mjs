@@ -23,8 +23,12 @@ function runJsonTool(command, args) {
     const child = spawn(command, args, { stdio: ["ignore", "pipe", "inherit"] })
 
     let stdout = ""
+    // Decode once on the stream, not per-chunk: a multi-byte UTF-8 sequence
+    // split across two `data` chunks would otherwise be mangled by each
+    // `chunk.toString()`.
+    child.stdout.setEncoding("utf8")
     child.stdout.on("data", (chunk) => {
-      stdout += chunk.toString("utf8")
+      stdout += chunk
     })
 
     child.once("error", (error) => {

@@ -1,6 +1,7 @@
 import type { CheckDefinitionConfig } from "../types.js"
 import { exitCodeFailRationale } from "./shared/exit-code-fail-rationale.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
+import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 interface LicenseeEntry {
   readonly name: string
@@ -26,6 +27,9 @@ export const license: CheckDefinitionConfig = {
   policy: ({ result }) => {
     const missing = checkDependencyInstalled(result, "licensee")
     if (missing) return missing
+
+    const terminated = checkTerminatedAbnormally(result, "licensee")
+    if (terminated) return terminated
 
     const trimmed = result.stdout.trim()
 

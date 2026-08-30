@@ -41,6 +41,13 @@ function memberArbitrary(id: string): fc.Arbitrary<NormalizedMember> {
     canonicalReference: fc.constant(id),
     scopedName: fc.constant(id),
     kind: fc.constantFrom("Function", "Property", "Variable", "EnumMember", "TypeAlias"),
+    // A small `name`/`parent` domain so distinct ids collide into shared overload
+    // groups, and `overloadIndex` optional so members both with and without
+    // overload metadata are generated -- exercising `classifyOverloadable`'s
+    // grouping pass as well as the plain positional path.
+    name: fc.constantFrom("f", "g"),
+    parentCanonicalReference: fc.constantFrom("!pkg", "!pkg#Cls:class"),
+    overloadIndex: fc.option(fc.integer({ min: 1, max: 3 }), { nil: undefined }),
     isTopLevelExport: fc.boolean(),
     releaseTag: fc.constantFrom<ReleaseTagLevel>("public", "beta", "alpha", "internal"),
     isDeprecated: fc.boolean(),

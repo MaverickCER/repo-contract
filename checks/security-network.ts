@@ -17,6 +17,15 @@ interface EvaluateSecurityNetworkPolicyInput {
 export function evaluateSecurityNetworkPolicy({
   evidence,
 }: EvaluateSecurityNetworkPolicyInput): PolicyResult {
+  if (evidence.filesScanned === 0) {
+    return {
+      outcome: "fail",
+      rationale:
+        "security-network scan reported zero files scanned under src/ -- a clean result from an " +
+        "empty scan is not evidence of a network-free surface. Check the scan's file discovery.",
+    }
+  }
+
   if (evidence.findings.length === 0) {
     return {
       outcome: "pass",

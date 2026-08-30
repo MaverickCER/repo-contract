@@ -112,7 +112,18 @@ describe("runUpdateBaseline", () => {
       path.join(root, ".repo-contract/api-contract/baseline.meta.json"),
       "utf8",
     )
-    await expect(runUpdateBaseline(root)).rejects.toThrow()
+
+    // API Extractor may either throw or return a clean `status: "failed"` here,
+    // depending on how badly the entry point is malformed (and its own version).
+    // Both are acceptable; the invariant under test is that no baseline is written.
+    const outcome = await runUpdateBaseline(root).then(
+      (result) => ({ threw: false as const, result }),
+      (error: unknown) => ({ threw: true as const, error }),
+    )
+    if (!outcome.threw) {
+      expect(outcome.result.status).toBe("failed")
+    }
+
     const after = await readFile(
       path.join(root, ".repo-contract/api-contract/baseline.meta.json"),
       "utf8",

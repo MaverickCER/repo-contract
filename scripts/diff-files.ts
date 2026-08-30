@@ -143,6 +143,17 @@ export async function listChangedFiles(
   const nameStatusLines = nameStatusOut.split("\n").filter((l) => l.length > 0)
   const numstatLines = numstatOut.split("\n").filter((l) => l.length > 0)
 
+  // The two invocations render the same underlying tree diff and must list the
+  // same files in the same order (see this module's doc comment). If their line
+  // counts disagree, index-zipping below would silently pair the wrong rows --
+  // fail loudly instead of defaulting the unmatched files to zero line counts.
+  if (nameStatusLines.length !== numstatLines.length) {
+    throw new Error(
+      `git diff --name-status (${String(nameStatusLines.length)} lines) and --numstat ` +
+        `(${String(numstatLines.length)} lines) disagree for range ${range} -- cannot align them by index.`,
+    )
+  }
+
   const files: RawDiffFile[] = []
   for (const [index, line] of nameStatusLines.entries()) {
     const parsed = parseNameStatusLine(line)

@@ -35,7 +35,11 @@ import { runRepoContract } from "../../../src/run-repo-contract.js"
  * remains the only runtime gate on disable-comments.json.
  */
 
-const ajv = new Ajv({ strict: false })
+// A fresh Ajv per compilation: Ajv refuses to compile two schemas that share a
+// `$id` on one instance, and several tests here compile the same schema.
+function compileSchema(schema: object) {
+  return new Ajv({ strict: false }).compile(schema)
+}
 
 function loadSchema(name: string): object {
   return JSON.parse(
@@ -71,7 +75,7 @@ describe("Evidence/Verdict runtime conformance to the published JSON Schema", ()
       },
     })
 
-    const validate = ajv.compile(loadSchema("evidence.schema.json"))
+    const validate = compileSchema(loadSchema("evidence.schema.json"))
     const valid = validate(evidence)
 
     expect(valid, JSON.stringify(validate.errors, null, 2)).toBe(true)
@@ -90,7 +94,7 @@ describe("Evidence/Verdict runtime conformance to the published JSON Schema", ()
       },
     })
 
-    const validate = ajv.compile(loadSchema("verdict.schema.json"))
+    const validate = compileSchema(loadSchema("verdict.schema.json"))
     const valid = validate(verdict)
 
     expect(valid, JSON.stringify(validate.errors, null, 2)).toBe(true)
@@ -111,10 +115,9 @@ describe("Evidence/Verdict runtime conformance to the published JSON Schema", ()
     // the scenario VERSIONING.md's "Additive fields... are a compatible change" promise covers.
     const evidenceWithNewField = { ...evidence, aFutureField: "added in a later minor version" }
 
-    // A fresh Ajv instance, not the shared `ajv` above -- it already compiled and cached
-    // evidence.schema.json under its own $id in an earlier test in this file, and Ajv rejects
-    // compiling the same $id twice on one instance.
-    const validate = new Ajv({ strict: false }).compile(loadSchema("evidence.schema.json"))
+    // `compileSchema` builds a fresh Ajv -- another test in this file already
+    // compiled evidence.schema.json, and Ajv rejects the same $id twice per instance.
+    const validate = compileSchema(loadSchema("evidence.schema.json"))
     const valid = validate(evidenceWithNewField)
 
     expect(valid, JSON.stringify(validate.errors, null, 2)).toBe(true)
@@ -127,7 +130,7 @@ describe("disable-comments.json conformance to its internal, generated JSON Sche
       readFileSync(new URL("../../../disable-comments.json", import.meta.url), "utf8"),
     ) as unknown
 
-    const validate = ajv.compile(loadInternalSchema("disable-comments.schema.json"))
+    const validate = compileSchema(loadInternalSchema("disable-comments.schema.json"))
     const valid = validate(registry)
 
     expect(valid, JSON.stringify(validate.errors, null, 2)).toBe(true)
@@ -179,9 +182,7 @@ describe("disable-comments.json conformance to its internal, generated JSON Sche
   ] as const)(
     "the generated schema and registry.ts's validator agree that a record is invalid when %s",
     (_description, invalidRecord) => {
-      const validate = new Ajv({ strict: false }).compile(
-        loadInternalSchema("disable-comments.schema.json"),
-      )
+      const validate = compileSchema(loadInternalSchema("disable-comments.schema.json"))
       expect(validate([invalidRecord])).toBe(false)
 
       const result = validateSuppressionRegistry([invalidRecord])

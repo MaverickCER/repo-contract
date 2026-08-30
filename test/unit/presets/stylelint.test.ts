@@ -40,6 +40,21 @@ describe("stylelint preset", () => {
     })
   })
 
+  it("appends stylelint's printed output to the parse-failure rationale when it wrote to stderr", async () => {
+    const result = await stylelint().policy(
+      fakeContext(
+        fakeCheckEvidence({
+          exitCode: 2,
+          stderr: "Error: No configuration provided for stylelint\n",
+          output: { format: "json", success: false, error: "Unexpected end of JSON input" },
+        }),
+      ),
+    )
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("stylelint printed:")
+    expect(result.rationale).toContain("No configuration provided for stylelint")
+  })
+
   it("passes when there are 0 warnings across all files", async () => {
     const result = await stylelint().policy(
       fakeContext(

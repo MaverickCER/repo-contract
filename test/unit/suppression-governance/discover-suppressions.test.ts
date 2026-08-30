@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
@@ -6,6 +6,7 @@ import {
   discoverSuppressions,
   discoverSuppressionsInFile,
 } from "../../../scripts/suppression-governance/discover-suppressions.js"
+import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 
 describe("discoverSuppressionsInFile", () => {
   it("finds nothing in a file with no suppression comments", () => {
@@ -178,7 +179,7 @@ describe("discoverSuppressions", () => {
   })
 
   afterEach(async () => {
-    await rm(root, { recursive: true, force: true })
+    await removeTempDir(root)
   })
 
   it("reads and scans every given file, resolved against root, in order", async () => {

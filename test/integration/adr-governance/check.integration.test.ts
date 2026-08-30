@@ -28,6 +28,10 @@ beforeEach(async () => {
   git("init", "-q")
   git("config", "user.email", "test@example.com")
   git("config", "user.name", "Test")
+  // Isolate from a contributor's global config: signed commits would prompt/fail
+  // in a scratch repo, and an inherited hooksPath could run unrelated hooks.
+  git("config", "commit.gpgsign", "false")
+  git("config", "core.hooksPath", "")
   await mkdir(path.join(root, "src/execution"), { recursive: true })
   await mkdir(path.join(root, "src/policy"), { recursive: true })
   await mkdir(path.join(root, "specs/decisions"), { recursive: true })
@@ -110,6 +114,18 @@ describe("runAdrGovernanceCheck -- full real path", () => {
     },
     30_000,
   )
+
+  it("does not accept a near-miss like 'ADR 00012' as a reference to ADR 0001", async () => {
+    git("checkout", "-q", "-b", "feature")
+    await writeFile(path.join(root, "src/execution/spawn-check.ts"), "// change\n", "utf8")
+    commitAll("refactor(execution): touch spawn-check\n\nSee ADR 00012 for the reasoning.")
+
+    const evidence = await runAdrGovernanceCheck(root, "main")
+
+    expect(evidence.referencedAdrNumbers).not.toContain("0001")
+    expect(evidence.resolvedAdrNumbers).not.toContain("0001")
+    expect(evidence.satisfied).toBe(false)
+  }, 30_000)
 
   it("is unsatisfied when a commit references a number with no corresponding ADR file -- proving cross-validation, not just regex-shape", async () => {
     git("checkout", "-q", "-b", "feature")

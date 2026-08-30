@@ -61,6 +61,10 @@ beforeEach(async () => {
   git("init", "-q")
   git("config", "user.email", "test@example.com")
   git("config", "user.name", "Test")
+  // Isolate from a contributor's global config: a global `commit.gpgsign=true`
+  // would make `commitAll` prompt for a passphrase / fail in this scratch repo.
+  git("config", "commit.gpgsign", "false")
+  git("config", "core.hooksPath", "")
 })
 
 afterEach(async () => {
@@ -251,9 +255,9 @@ export function m(): void {}
     await writeFixtureSource(root, multiExportSource, "fixture-pkg", "0.1.0")
 
     const expectedIds = [
-      "fixture-pkg!a:function(1)",
-      "fixture-pkg!b:function(1)",
-      "fixture-pkg!m:function(1)",
+      "fixture-pkg!a:function(1)#export-added",
+      "fixture-pkg!b:function(1)#export-added",
+      "fixture-pkg!m:function(1)#export-added",
     ]
 
     // Two genuinely independent calls over the identical on-disk inputs -- "across independent

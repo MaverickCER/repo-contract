@@ -130,6 +130,7 @@ export class PolicyReadFailedParseValueError extends RepoContractError {
     constructor(checkId: string, property: string, cause: unknown);
     readonly checkId: string;
     readonly code = "REPO_CONTRACT_POLICY_READ_FAILED_PARSE_VALUE";
+    readonly property: string;
 }
 
 // @public
@@ -137,6 +138,7 @@ export class PolicyReadUnrequestedOutputError extends RepoContractError {
     constructor(checkId: string, property: string, cause: unknown);
     readonly checkId: string;
     readonly code = "REPO_CONTRACT_POLICY_READ_UNREQUESTED_OUTPUT";
+    readonly property: string;
 }
 
 // @public

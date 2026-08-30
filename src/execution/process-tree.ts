@@ -40,12 +40,14 @@ function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
  * walks the system process table for descendants of `pid` regardless of how
  * it was spawned.
  *
- * Never throws: a process that has already exited (POSIX `ESRCH`, or
- * `taskkill`'s "not found" case) is a no-op, not an error -- by the time
- * cleanup runs, the process may well have already exited on its own.
- * Permission errors (POSIX `EPERM`) are swallowed the same way -- a failed
- * best-effort cleanup should never crash the run; the check's own evidence
- * will still reflect however the process eventually did exit.
+ * Swallows the expected best-effort-cleanup failures, but not every failure: a
+ * process that has already exited (POSIX `ESRCH`, or `taskkill`'s "not found"
+ * case) is a no-op, and a POSIX `EPERM` permission error is swallowed the same
+ * way -- by the time cleanup runs the process may well have exited on its own,
+ * and a failed cleanup should not crash the run. Any *other* failure is
+ * rethrown: an unexpected POSIX errno, or (on Windows) a JS-level spawn failure
+ * of `taskkill` itself (`result.error`, e.g. the tool missing from PATH), which
+ * would otherwise silently leave an orphaned process tree behind.
  *
  * On Windows this always runs `taskkill` with `/f` regardless of which `signal` was requested --
  * not a partial implementation of POSIX's cooperative-SIGTERM-then-SIGKILL escalation, but a

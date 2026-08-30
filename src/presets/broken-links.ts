@@ -1,5 +1,6 @@
 import type { CheckDefinitionConfig } from "../types.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
+import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /** linkinator's own `--format json` contract -- not published as a TypeScript type by the tool. */
 interface LinkinatorLink {
@@ -45,6 +46,9 @@ export function brokenLinks(options: BrokenLinksOptions = {}): CheckDefinitionCo
     policy: ({ result }) => {
       const missing = checkDependencyInstalled(result, "linkinator")
       if (missing) return missing
+
+      const terminated = checkTerminatedAbnormally(result, "linkinator")
+      if (terminated) return terminated
 
       if (!result.output?.success) {
         return { outcome: "fail", rationale: "linkinator output could not be parsed as JSON." }

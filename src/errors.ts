@@ -177,6 +177,8 @@ export class PolicyReadUnrequestedOutputError extends RepoContractError {
   readonly code = "REPO_CONTRACT_POLICY_READ_UNREQUESTED_OUTPUT"
   /** The id of the check whose policy read `result.output` without requesting a format. */
   readonly checkId: string
+  /** The `result.output` property the policy read (`success` | `value` | `error` | `format`). */
+  readonly property: string
 
   constructor(checkId: string, property: string, cause: unknown) {
     super(
@@ -189,6 +191,7 @@ export class PolicyReadUnrequestedOutputError extends RepoContractError {
     )
     this.name = "PolicyReadUnrequestedOutputError"
     this.checkId = checkId
+    this.property = property
   }
 }
 
@@ -215,6 +218,8 @@ export class PolicyReadFailedParseValueError extends RepoContractError {
   readonly code = "REPO_CONTRACT_POLICY_READ_FAILED_PARSE_VALUE"
   /** The id of the check whose policy read `result.output.value` after a failed parse. */
   readonly checkId: string
+  /** The `result.output.value` property the policy read. */
+  readonly property: string
 
   constructor(checkId: string, property: string, cause: unknown) {
     super(
@@ -225,5 +230,6 @@ export class PolicyReadFailedParseValueError extends RepoContractError {
     )
     this.name = "PolicyReadFailedParseValueError"
     this.checkId = checkId
+    this.property = property
   }
 }

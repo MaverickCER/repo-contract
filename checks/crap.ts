@@ -22,7 +22,7 @@ export interface CrapReport {
 // own hardcoded default (30 as of @danibram/crap4ts's current release), which
 // this repository has no control over and no visibility into if it ever
 // changes across a dependency bump.
-const CRAP_THRESHOLD = 30
+export const CRAP_THRESHOLD = 30
 
 // An independent ceiling on each function's raw cyclomatic complexity,
 // enforced by this policy alongside the CRAP threshold above. It exists
@@ -36,7 +36,7 @@ const CRAP_THRESHOLD = 30
 // crap4ts is not asked to enforce this (it has no raw-complexity fail flag) --
 // the policy owns the number, the same "this repo owns the number, never the
 // tool's echo" stance it already takes for CRAP_THRESHOLD vs report.threshold.
-const MAX_COMPLEXITY = 20
+export const MAX_COMPLEXITY = 20
 
 /**
  * The CRAP check's full interpretation logic, factored out so test/unit/crap/policy.test.ts can

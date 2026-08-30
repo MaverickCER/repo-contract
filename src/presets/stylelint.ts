@@ -62,7 +62,23 @@ export function stylelint(options: StylelintOptions = {}): CheckDefinitionConfig
         }
       }
 
-      const results = result.output.value as readonly StylelintResult[]
+      // Valid JSON of an unexpected shape (a stylelint formatter change, a
+      // primitive, an entry without a `warnings` array) must fail cleanly, not
+      // throw a TypeError out of the `flatMap` below.
+      const value: unknown = result.output.value
+      if (
+        !Array.isArray(value) ||
+        !value.every(
+          (entry): entry is StylelintResult =>
+            typeof entry === "object" &&
+            entry !== null &&
+            Array.isArray((entry as { warnings?: unknown }).warnings),
+        )
+      ) {
+        return { outcome: "fail", rationale: "stylelint output could not be parsed as JSON." }
+      }
+
+      const results: readonly StylelintResult[] = value
 
       const render = (file: StylelintResult, warning: StylelintWarning): string =>
         `${file.source ?? "<unknown file>"}:${String(warning.line)}:${String(warning.column)} [${warning.rule}]: ${warning.text}`

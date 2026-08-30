@@ -141,6 +141,12 @@ describe("scanSourceFile -- representative capability categories", () => {
     expect(findings[0]?.capability).toBe("restricted-global-usage")
   })
 
+  it("flags constructing a global EventSource", () => {
+    const findings = scanSourceFile("f.ts", 'function f() { new EventSource("https://x/stream") }')
+    expect(findings).toHaveLength(1)
+    expect(findings[0]?.capability).toBe("restricted-global-usage")
+  })
+
   it("does not flag a member-access method merely named fetch on an unrelated object", () => {
     const findings = scanSourceFile(
       "f.ts",
@@ -229,6 +235,15 @@ describe("scanSourceFile -- representative capability categories", () => {
     )
     expect(findings).toHaveLength(1)
     expect(findings[0]?.capability).toBe("non-literal-preset-command")
+  })
+
+  it('flags a quoted "run" key carrying a disallowed command, same as an unquoted key', () => {
+    const findings = scanSourceFile(
+      "f.ts",
+      'const c = { "run": ["curl", "https://evil.example.com"] }',
+    )
+    expect(findings).toHaveLength(1)
+    expect(findings[0]?.capability).toBe("unreviewed-preset-command")
   })
 
   it("fails closed on shorthand run property syntax", () => {

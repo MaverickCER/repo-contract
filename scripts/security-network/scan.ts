@@ -299,9 +299,11 @@ export function scanSourceFile(
       )
     } else if (
       ts.isPropertyAssignment(node) &&
-      ts.isIdentifier(node.name) &&
+      (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)) &&
       node.name.text === "run"
     ) {
+      // `run:` and `"run":` are the same key -- a quoted property name must not
+      // slip a preset command past the allowlist check.
       checkRunProperty(node.initializer)
     } else if (ts.isShorthandPropertyAssignment(node) && node.name.text === "run") {
       addFinding(

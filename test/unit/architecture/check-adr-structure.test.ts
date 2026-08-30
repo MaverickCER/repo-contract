@@ -150,6 +150,50 @@ describe("checkAdrStructure -- true positive / true negative", () => {
     expect(result).toEqual({ ok: true, filesScanned: 1, violations: [] })
   })
 
+  it("does not accept a level-three heading or a superset title in place of the required level-two heading", async () => {
+    const body = [
+      "# 0001: A fixture decision",
+      "",
+      "### Status\n\nnested too deep.",
+      "## Statuses\n\nwrong title.",
+      "## Context\n\nsome text.",
+      "## Decision\n\nsome text.",
+      "## Consequences\n\nsome text.",
+      "## Alternatives considered\n\nsome text.",
+    ].join("\n\n")
+    await writeFile(
+      path.join(root, "specs", "decisions", "0001-near-miss-headings.md"),
+      body,
+      "utf8",
+    )
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.violations).toContainEqual(
+      expect.stringContaining(
+        "0001-near-miss-headings.md is missing required heading(s): ## Status",
+      ),
+    )
+  })
+
+  it("flags an empty or hyphen-only title segment in the filename", async () => {
+    await writeFile(
+      path.join(root, "specs", "decisions", "0001--.md"),
+      ALL_HEADINGS.map((h) => `${h}\n\nx.`).join("\n\n"),
+      "utf8",
+    )
+
+    const result = checkAdrStructure(root)
+
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.violations).toContainEqual(
+      expect.stringContaining(
+        "0001--.md does not match the required NNNN-kebab-title.md filename shape",
+      ),
+    )
+  })
+
   it("does not flag an extra heading beyond the required five", async () => {
     await writeAdr("0001", "with-extra-section", [...ALL_HEADINGS, "## Related"])
 

@@ -135,7 +135,14 @@ export async function runSuppressionGovernanceCheck(
   const serialized = serializeRegistry(records.map(toPersistedRecord))
   const currentContent = await readFile(registryPath, "utf8").catch(() => undefined)
   if (currentContent !== serialized) {
-    await writeFile(registryPath, serialized, "utf8")
+    try {
+      await writeFile(registryPath, serialized, "utf8")
+    } catch (error) {
+      return {
+        ok: false,
+        error: `Writing the suppression registry failed: ${(error as Error).message}`,
+      }
+    }
   }
 
   return {

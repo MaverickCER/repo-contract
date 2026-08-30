@@ -165,7 +165,14 @@ export async function readBaseline(root: string): Promise<Baseline | undefined> 
   const metaText = await readFileAtHead(root, BASELINE_META)
   if (metaText === undefined) return undefined
 
-  const meta: unknown = JSON.parse(metaText)
+  let meta: unknown
+  try {
+    meta = JSON.parse(metaText)
+  } catch {
+    throw new Error(
+      "baseline.meta.json is not valid JSON (a truncated or interrupted write?). Regenerate it with `npm run contract:baseline`.",
+    )
+  }
   assertValidBaselineMeta(meta)
   const apiJsonText = await readFileAtHead(root, BASELINE_API_JSON)
   const dtsText = await readFileAtHead(root, BASELINE_DTS)

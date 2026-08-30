@@ -88,6 +88,28 @@ describe("validateRepoContractConfig", () => {
     }).toThrow(/check definition must be an object/)
   })
 
+  it("rejects an integer-like check id that Object.keys would reorder ahead of other checks", () => {
+    expect(() => {
+      validateRepoContractConfig(malformed({ checks: { "2": { run: "x", policy: okPolicy } } }))
+    }).toThrow(InvalidCheckConfigError)
+    expect(() => {
+      validateRepoContractConfig(malformed({ checks: { "0": { run: "x", policy: okPolicy } } }))
+    }).toThrow(/integer-like/)
+  })
+
+  it("accepts a check id that merely contains digits or has a leading zero", () => {
+    expect(() => {
+      validateRepoContractConfig(
+        malformed({
+          checks: {
+            "007": { run: "x", policy: okPolicy },
+            "test-2": { run: "x", policy: okPolicy },
+          },
+        }),
+      )
+    }).not.toThrow()
+  })
+
   it("rejects shell: true with an empty run string", () => {
     expect(() => {
       validateRepoContractConfig(configWith({ run: "   ", shell: true, policy: okPolicy }))

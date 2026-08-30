@@ -53,7 +53,7 @@ const IMPACT_RANK: Record<ContractImpact, number> = {
  * @param kind - The category of change being recorded.
  * @param compatibility - Whether this change is compatible, breaking, or could not be safely classified.
  * @param explanation - Human-readable description of what changed.
- * @param idSuffix - Appended to `member.canonicalReference` to keep the change's `id` unique, e.g. distinguishing one parameter among several.
+ * @param idSuffix - Appended after the kind to keep the change's `id` unique, e.g. distinguishing one parameter among several.
  */
 function push(
   changes: ApiContractChange[],
@@ -64,7 +64,10 @@ function push(
   idSuffix = "",
 ): void {
   changes.push({
-    id: `${member.canonicalReference}${idSuffix}`,
+    // `kind` is part of the id: one member can emit several genuinely distinct
+    // changes at once (e.g. a release-tag change *and* a property-type change),
+    // and keying only on `canonicalReference` collided them into one id.
+    id: `${member.canonicalReference}#${kind}${idSuffix}`,
     path: member.scopedName,
     kind,
     compatibility,

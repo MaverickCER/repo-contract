@@ -11,7 +11,7 @@ describe("requireParsedOutput", () => {
     })
   })
 
-  it("fails with the given rationale when output.success is false, ignoring output.error", () => {
+  it("appends output.error to the given rationale when output.success is false", () => {
     const output: ParsedOutput<unknown> = {
       format: "json",
       success: false,
@@ -20,7 +20,10 @@ describe("requireParsedOutput", () => {
     const result = requireParsedOutput(output, "X did not produce parseable output.")
     expect(result).toEqual({
       ok: false,
-      result: { outcome: "fail", rationale: "X did not produce parseable output." },
+      result: {
+        outcome: "fail",
+        rationale: "X did not produce parseable output. Unexpected token in JSON",
+      },
     })
   })
 

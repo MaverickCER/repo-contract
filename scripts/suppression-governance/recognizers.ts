@@ -67,7 +67,9 @@ export const eslintRecognizer: SuppressionRecognizer = (canonicalContent) => {
 // be immediately followed by whitespace or a colon (a trailing human-readable reason, or the
 // error-code-attaching convention `@ts-expect-error:TS2345` that tsc itself honors by prefix match
 // alone -- this recognizer must accept everything tsc does, or a real suppression goes ungoverned).
-const TYPESCRIPT_DIRECTIVE = /^@ts-(ignore|expect-error)(?:[\s:]|$)/
+// `@ts-nocheck` disables type-checking for a whole file -- the broadest TS suppression there is, so
+// it is governed here alongside the line-scoped `@ts-ignore`/`@ts-expect-error`.
+const TYPESCRIPT_DIRECTIVE = /^@ts-(ignore|expect-error|nocheck)(?:[\s:]|$)/
 
 /**
  * TypeScript's own `@ts-ignore`/`@ts-expect-error` suppression comments. These are directives, not

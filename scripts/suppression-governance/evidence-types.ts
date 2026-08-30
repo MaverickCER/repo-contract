@@ -129,9 +129,10 @@ export type VerificationMethod = (typeof VERIFICATION_METHODS)[number]
  * `rule` is a "policy-addressable suppression identifier," not always a literal static-analysis
  * rule id: for `domain: "eslint"` it genuinely is a rule id
  * (`security/detect-object-injection`); for `domain: "typescript"`, `@ts-ignore`/
- * `@ts-expect-error` are directives rather than parameterized rules, but are still modeled as
- * `rule: ["@ts-ignore"]`/`["@ts-expect-error"]` so the same exact/pattern/domain/global policy
- * mechanism (scripts/suppression-governance/resolve-policy.ts's `resolveRequirement`) applies uniformly across
+ * `@ts-expect-error`/`@ts-nocheck` are directives rather than parameterized rules, but are still
+ * modeled as `rule: ["@ts-ignore"]`/`["@ts-expect-error"]`/`["@ts-nocheck"]` so the same
+ * exact/pattern/domain/global policy mechanism
+ * (scripts/suppression-governance/resolve-policy.ts's `resolveRequirement`) applies uniformly across
  * every domain.
  *
  * `justification`/`alternatives`/`remediation` are three fixed, named prose fields -- deliberately

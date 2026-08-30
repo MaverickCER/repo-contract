@@ -78,14 +78,18 @@ export const RESTRICTED_NAMED_IMPORTS = [
 /**
  * Global, import-free network capability available in this package's
  * supported Node runtime (engines.node >=20 -- `fetch` has been a stable
- * global since Node 18, `WebSocket` since Node 22). Browser-only globals
- * (`XMLHttpRequest`, `EventSource`, `navigator.sendBeacon`) are
- * deliberately excluded: this package has no browser build target (tsup
- * builds only for `target: "node20"`; package.json has no `browser` field),
- * so those APIs cannot exist in the runtime this guarantee is about --
- * banning them would be theatrical, not defensive.
+ * global since Node 18, `WebSocket` since Node 22, and `EventSource` is a
+ * Node global too: added behind `--experimental-eventsource` in Node 22.3
+ * and exposed by default on the newer lines this repository's own toolchain
+ * runs on. It is real, undici-backed network capability in the runtime this
+ * guarantee is about, so it belongs here alongside `fetch`/`WebSocket`).
+ * Genuinely browser-only globals (`XMLHttpRequest`, `navigator.sendBeacon`)
+ * stay excluded: this package has no browser build target (tsup builds only
+ * for `target: "node20"`; package.json has no `browser` field), so those
+ * APIs cannot exist in the runtime this guarantee is about -- banning them
+ * would be theatrical, not defensive.
  */
-export const NETWORK_GLOBALS = ["fetch", "WebSocket"]
+export const NETWORK_GLOBALS = ["fetch", "WebSocket", "EventSource"]
 
 /**
  * For every command a published preset is allowed to spawn: a direct link

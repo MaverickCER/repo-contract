@@ -33,7 +33,10 @@ export function reportCoverage() {
   }
 
   const summary = JSON.parse(summaryText)
-  const total = summary.total
+  // A malformed summary with no `total` still gets reported metric-by-metric as
+  // "missing or invalid" below -- this script only ever *fails* on the summary
+  // file being absent, never on its contents.
+  const total = summary.total ?? {}
 
   const lines = []
 

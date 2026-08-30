@@ -50,14 +50,26 @@ export const securitySecrets: CheckDefinitionConfig = {
 
     const results: readonly SecretlintResult[] = parsed.value
 
-    const findings = results.flatMap((file: SecretlintResult) =>
-      file.messages.map((message: SecretlintMessage) => ({
-        file: file.filePath,
+    const findings = results.flatMap((file: unknown) => {
+      // A single malformed array element (not an object, or missing its
+      // `messages` array) must not throw `.map` out of the policy -- skip it,
+      // exactly as the top-level non-array guard fails cleanly.
+      if (
+        typeof file !== "object" ||
+        file === null ||
+        !Array.isArray((file as { messages?: unknown }).messages)
+      ) {
+        return []
+      }
+
+      const typedFile = file as SecretlintResult
+      return typedFile.messages.map((message: SecretlintMessage) => ({
+        file: typedFile.filePath,
         line: message.line,
         column: message.column,
         ruleId: message.ruleId,
-      })),
-    )
+      }))
+    })
 
     if (findings.length === 0) {
       return { outcome: "pass", rationale: "Secretlint found 0 potential secrets." }

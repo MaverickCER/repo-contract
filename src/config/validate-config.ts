@@ -69,6 +69,19 @@ export function validateRepoContractConfig(config: RepoContractConfig): void {
  * @param check - the check definition to validate.
  */
 function validateCheckDefinition(checkId: string, check: unknown): void {
+  // An integer-like key ("0", "42", ...) is enumerated by `Object.keys` in
+  // ascending numeric order ahead of every other key, regardless of insertion
+  // order -- so `validateDependencyGraph`'s `ids`/`indexById` (and the runtime
+  // scheduler) would see a different order than the source declares, silently
+  // breaking the "declaration order is the required topological order" contract.
+  if (/^(?:0|[1-9]\d*)$/.test(checkId)) {
+    throw new InvalidCheckConfigError(
+      checkId,
+      "check id must not be an integer-like string -- JavaScript would reorder it ahead of every " +
+        "other key and break the declaration-order-is-topological-order contract.",
+    )
+  }
+
   if (check === null || typeof check !== "object") {
     throw new InvalidCheckConfigError(checkId, "check definition must be an object.")
   }

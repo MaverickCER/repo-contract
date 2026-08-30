@@ -116,11 +116,14 @@ describe("runWithConcurrency", () => {
     const onUnhandled = (reason: unknown): void => void unhandled.push(reason)
     process.on("unhandledRejection", onUnhandled)
     try {
-      // item 2 rejects immediately; item 7's worker rejects only after a
-      // tick, i.e. after Promise.all would already have rejected. With the
-      // old code that late rejection had no handler.
+      // Concurrency 8 so every item is genuinely in flight at once: item 2
+      // rejects immediately, and item 7's worker -- already running -- rejects
+      // only after a tick, i.e. after Promise.all would already have rejected.
+      // With concurrency 2 the pool would stop pulling work after item 2 and
+      // item 7 would never start, making this vacuous. With the old code that
+      // late rejection had no handler.
       await expect(
-        runWithConcurrency([1, 2, 3, 4, 5, 6, 7, 8], 2, async (item) => {
+        runWithConcurrency([1, 2, 3, 4, 5, 6, 7, 8], 8, async (item) => {
           if (item === 2) throw new Error("first")
           if (item === 7) {
             await Promise.resolve()

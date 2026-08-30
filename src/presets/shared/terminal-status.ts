@@ -60,5 +60,11 @@ export function checkTerminatedAbnormally(
         outcome: "fail",
         rationale: `${toolName} could not be started: ${result.spawnError ?? "the process failed to spawn"}.`,
       }
+    default: {
+      // A newly added `CheckStatus` must be classified here deliberately, not
+      // silently fall through the switch and be read by callers as "proceed".
+      const unhandled: never = result.status
+      throw new Error(`checkTerminatedAbnormally: unhandled check status ${String(unhandled)}`)
+    }
   }
 }

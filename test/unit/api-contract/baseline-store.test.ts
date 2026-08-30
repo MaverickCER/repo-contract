@@ -45,6 +45,10 @@ beforeEach(async () => {
   git("init", "-q")
   git("config", "user.email", "test@example.com")
   git("config", "user.name", "Test")
+  // Isolate from a contributor's global config: signed commits would prompt/fail
+  // in a scratch repo, and an inherited hooksPath could run unrelated hooks.
+  git("config", "commit.gpgsign", "false")
+  git("config", "core.hooksPath", "")
 })
 
 afterEach(async () => {
