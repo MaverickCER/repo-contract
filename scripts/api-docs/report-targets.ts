@@ -48,7 +48,7 @@ export interface GeneratedApiReport {
  * into `reportFolder`. The Doc Model JSON and `.d.ts` rollup API Extractor also always produces
  * are written to a throwaway scratch directory and discarded -- this feature only needs the
  * human-readable report, never the machine-readable ones the internal api-contract check already
- * owns (see specs/decisions/0008-api-contract-compatibility-gate.md).
+ * owns (see specs/decisions/0009-conventional-commits-versioning-and-local-gates.md).
  * @param root - Absolute path to the repository root; must contain a built `dist/` and `tsconfig.json`.
  * @param reportFolder - Absolute path to write each target's report into. Pass the committed
  *   `docs/api-report/` to regenerate it in place, or a scratch directory to inspect fresh output

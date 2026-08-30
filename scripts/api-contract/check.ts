@@ -284,7 +284,7 @@ export async function runApiContractCheck(
 
     const summary = summarizeChanges(diff, impact, false)
 
-    // Versioning is Conventional-Commits-driven (ADR 0008): the required level must be met by
+    // Versioning is Conventional-Commits-driven (ADR 0009): the required level must be met by
     // what the branch's commits -- plus the PR title, under a squash merge -- actually declare.
     const prTitle = parsePrTitleArg()
     const commitMessages = await readBranchCommits(root, "origin/main", prTitle)

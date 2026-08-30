@@ -169,7 +169,7 @@ export function evaluateSuppressionGovernancePolicy(
   }
 }
 
-// See specs/decisions/0007-suppression-governance.md for why suppression discovery (finding
+// See specs/decisions/0006-suppression-governance.md for why suppression discovery (finding
 // eslint-disable/@ts-ignore/etc. comments and their source ranges) is owned entirely by
 // scripts/suppression-governance/check.ts -- this policy only ever reads that script's already-
 // synchronized evidence and applies suppressionPolicy to it.

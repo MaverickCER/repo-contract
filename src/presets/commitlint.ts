@@ -12,6 +12,31 @@ interface CommitlintOptions {
 }
 
 /**
+ * The git commands a contributor runs to fix commit messages already on their branch. Appended
+ * to every failure rationale so the fix is in the error itself, not a doc they have to go find.
+ * @param from - the ref the rebase is based on (commitlint's own `--from`).
+ * @returns the remediation block, leading with a blank line.
+ */
+function remediation(from: string): string {
+  return [
+    "",
+    "Rewrite the offending commit message(s) already on this branch:",
+    "",
+    `  git rebase -i ${from}`,
+    "",
+    "In the editor, for each commit flagged above change `pick` to:",
+    "  - `reword` to keep the commit but fix its message (a valid Conventional Commit:",
+    "    `type(scope): subject`, lowercase type, no trailing period), or",
+    "  - `squash` / `fixup` to fold it into the commit before it, or",
+    "  - `drop` to remove the commit entirely.",
+    "",
+    "Then, if the branch is already pushed:",
+    "",
+    "  git push --force-with-lease",
+  ].join("\n")
+}
+
+/**
  * Commit-message governance via commitlint, using whatever commitlint
  * config the consumer's own repository already has (commitlint ships no
  * rules of its own -- e.g. `@commitlint/config-conventional`). Exit-code
@@ -43,7 +68,9 @@ export function commitlint(options: CommitlintOptions = {}): CheckDefinitionConf
 
       return {
         outcome: "fail",
-        rationale: exitCodeFailRationale(result, "commitlint reported commit message violations"),
+        rationale:
+          exitCodeFailRationale(result, "commitlint reported commit message violations") +
+          `\n${remediation(from)}`,
       }
     },
   }

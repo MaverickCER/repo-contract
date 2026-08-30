@@ -260,7 +260,7 @@ The enforcement mechanism itself cannot be used as evidence that its modificatio
 
 ## 11. Concurrency and orchestration review
 
-[ADR 0012](specs/decisions/0012-contract-orchestration-races-are-fixed-with-dependson-not-retries.md) documents an actual escaped defect: a check passed every time it ran alone and failed only as part of the full concurrent contract because it read a file a sibling check wrote, with no declared ordering between them.
+[ADR 0002](specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md) documents an actual escaped defect: a check passed every time it ran alone and failed only as part of the full concurrent contract because it read a file a sibling check wrote, with no declared ordering between them.
 
 For any PR that adds or changes a check, a script shared by two or more checks, or anything under `repo-contract.config.ts`'s `checks` record, determine:
 

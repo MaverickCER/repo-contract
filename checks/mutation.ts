@@ -52,7 +52,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 // but the registry cross-check below -- requiring every Stryker-domain
 // record to also carry justification/alternatives/remediation -- is what
 // this policy actually relies on. See
-// specs/decisions/0007-suppression-governance.md. An Ignored
+// specs/decisions/0006-suppression-governance.md. An Ignored
 // mutant with any statusReason other than this one or STATIC_IGNORE_REASON
 // (e.g. a `mutator.excludedMutations` exclusion) bypasses both gates
 // entirely and is treated as unjustified.
@@ -133,7 +133,7 @@ interface StrykerReport {
 // rather than a logic bug. Letting `mutation` run last, only once every
 // non-isolated check has settled, removes that contention; it says nothing
 // about needing any other check's evidence (see
-// specs/decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md
+// specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md
 // -- a second isolated check, e.g. `api-docs`, is free to run concurrently
 // with this one; only non-isolated checks are guaranteed to have already
 // finished -- against another isolated check, e.g. `api-docs`, the guarantee is actually stronger:
@@ -145,7 +145,7 @@ interface StrykerReport {
 // evidence (`dependencies["suppression-governance"]` below) to verify every
 // Stryker-domain suppression in the registry before trusting any
 // comment-ignored mutant (see
-// specs/decisions/0007-suppression-governance.md).
+// specs/decisions/0006-suppression-governance.md).
 export const mutation: CheckDefinitionConfig = {
   run: ["node", "scripts/run-mutation.mjs"],
   isolated: true,
@@ -262,7 +262,7 @@ export const mutation: CheckDefinitionConfig = {
     // subsequent lines/mutants until a matching `Stryker restore`, while
     // `disable-comments.json` only records the directive's own line -- so
     // there is no reliable line-based way to attribute one mutant to one
-    // record. See specs/decisions/0007-suppression-governance.md.
+    // record. See specs/decisions/0006-suppression-governance.md.
     const strykerSuppressionGateFailure:
       { header: string; details: readonly string[] } | undefined =
       justifiedIgnored.length === 0

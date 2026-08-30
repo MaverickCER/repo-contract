@@ -12,7 +12,7 @@
 //     its own bin. Held on the `7` major rather than latest -- linkinator 8
 //     raises its own engines requirement to Node `>=22`, incompatible with
 //     this repository's own `>=20.0.0` floor
-//     (specs/decisions/0009-self-hosting-tool-and-dependency-choices.md); `7.6.1` targets
+//     (specs/decisions/0008-self-hosting-tool-and-dependency-choices.md); `7.6.1` targets
 //     `>=20`, comfortably inside that floor. Scoped to this repository's
 //     actual documentation locations (root-level, specs/, .changeset/,
 //     .github/) rather than a blanket "**/*.md" -- linkinator has no .gitignore

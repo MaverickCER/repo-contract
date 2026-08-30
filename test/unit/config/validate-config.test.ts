@@ -336,7 +336,7 @@ describe("validateRepoContractConfig", () => {
     // A former "cycle" is no longer expressible at all: declaration order is the required
     // topological order, so whichever of "a"/"b" is declared first already has a forward
     // reference the moment it names the other -- there's no cycle left to trace once every edge
-    // must point backward (see DependencyDeclaredLaterError, ADR 0003).
+    // must point backward (see DependencyDeclaredLaterError, ADR 0002).
     try {
       validateRepoContractConfig(
         malformed({
@@ -418,7 +418,7 @@ describe("validateRepoContractConfig", () => {
     // other check could conflict with "b"'s explicit dependsOn: ["a"] (a real mutual cycle). Under
     // the new positional model, isolated "a" (declared first) only implicitly depends on checks
     // declared *before* it -- none here -- so there is no implicit edge for "b"'s real, backward
-    // dependsOn to conflict with. See ADR 0003.
+    // dependsOn to conflict with. See ADR 0002.
     expect(() => {
       validateRepoContractConfig(
         malformed({

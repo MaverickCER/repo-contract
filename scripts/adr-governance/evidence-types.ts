@@ -3,7 +3,7 @@
  * `output: { format: "json" }` to parse) and consumed by the policy in checks/adr-governance.ts.
  * Internal, unpublished tooling contract -- never imported by anything outside
  * scripts/adr-governance/ and its tests. See
- * specs/decisions/0008-api-contract-compatibility-gate.md for the full reasoning.
+ * specs/decisions/0009-conventional-commits-versioning-and-local-gates.md for the full reasoning.
  */
 
 /**

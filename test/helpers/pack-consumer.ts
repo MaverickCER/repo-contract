@@ -9,7 +9,7 @@ import { packTarball, runNpm } from "../../scripts/npm-pack.mjs"
  * Shared by every "install the real packed tarball into a fresh consumer project" E2E test --
  * originally `test/e2e/consumer-install.test.ts` alone, now also
  * `consumer-install-bun.test.ts`/`consumer-install-deno.test.ts` (see
- * specs/decisions/0011-bun-and-deno-runtime-support.md). Each of those files only differs in which
+ * specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md). Each of those files only differs in which
  * runtime binary it hands the installed fixture's scripts to; the pack/install/cleanup mechanics
  * that get a real `npm install`-able tarball on disk are identical and worth keeping in one place.
  */
@@ -74,7 +74,7 @@ export function removeConsumerFixture(consumerDir: string | undefined): void {
 /**
  * Whether a runtime's own binary is resolvable on `PATH` at all -- distinct from `distIsBuilt`,
  * this is what lets the Bun/Deno E2E suites skip cleanly on a machine (or, deliberately, most CI
- * jobs -- see specs/decisions/0011-bun-and-deno-runtime-support.md) that never installed those
+ * jobs -- see specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md) that never installed those
  * runtimes, rather than failing with a confusing spawn error.
  * @param command - The runtime's executable name, e.g. `"bun"` or `"deno"`.
  * @returns Whether invoking `<command> --version` succeeded.

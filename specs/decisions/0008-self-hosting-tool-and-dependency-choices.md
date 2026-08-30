@@ -1,4 +1,4 @@
-# 0009: Self-hosting tool and dependency choices
+# 0008: Self-hosting tool and dependency choices
 
 ## Status
 
@@ -23,6 +23,19 @@ cases before trusting it. The youth of the tool is a real, accepted risk, mitiga
 independent verification; a fallback tool and, failing that, a fully-specified hand-rolled
 alternative are both documented as an escape hatch if it ever becomes an issue.
 
+The `crap` check's policy (`checks/crap.ts`) gates on **two** numbers this repository owns
+outright, not just one: the CRAP score (`CRAP_THRESHOLD`, 30) _and_ an independent raw
+cyclomatic-complexity ceiling (`MAX_COMPLEXITY`, 20 — ESLint's own default). The second exists
+because CRAP is `complexity² · (1 − coverage)³ + complexity`, which collapses to plain
+`complexity` as coverage approaches 100%; at this repository's coverage floor
+(`scripts/coverage-thresholds.mjs`) the CRAP score alone therefore stops meaningfully
+constraining a well-tested but deeply-branchy function — one such function sat at cyclomatic
+30 / 100% covered / CRAP 30, passing the CRAP gate with zero downward pressure. crap4ts is not
+asked to enforce the ceiling (it has no raw-complexity fail flag); the policy reads the
+per-function `complexity` field already in crap4ts's JSON report and compares it itself, the
+same "this repo owns the number, never the tool's echoed `report.threshold`" stance it already
+takes for the CRAP score.
+
 **Secret scanning** uses a pure-Node, npm-installable tool rather than a more established
 Go-binary-distributed alternative — purely because this repository's own acceptance bar is a clean
 checkout satisfying its complete self-assurance suite via package installation alone, with no
@@ -38,7 +51,8 @@ only the close event reliably survives.
 **An optional YAML output format** is loaded via a dynamic import only when a check actually
 requests it, declared as an optional peer dependency rather than a hard one — the large majority of
 consumers who only ever use JSON or plain text never install it and never pay for it, keeping the
-Windows-command-resolution dependency (see the adjacent command-execution ADR) the package's only
+Windows-command-resolution dependency (see
+[ADR 0003](0003-cross-platform-command-execution-and-process-cleanup.md)) the package's only
 hard runtime dependency.
 
 **Published JSON Schema generation** targets a dedicated, non-generic source file rather than the

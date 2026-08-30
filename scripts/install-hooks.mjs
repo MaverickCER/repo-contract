@@ -5,7 +5,7 @@
 //
 // Run from `prepare`, so a plain `npm install` / `npm ci` in a fresh clone is all
 // it takes -- no extra dependency, no separate setup step (see
-// specs/decisions/0015-local-commit-and-push-gates.md and ADR 0009's
+// specs/decisions/0009-conventional-commits-versioning-and-local-gates.md and ADR 0008's
 // "package install only" bar).
 //
 // Idempotent and deliberately unobtrusive, for BOTH settings:

@@ -60,7 +60,7 @@ export type TestCategoryBoundariesEvidence = ScanEvidence
  * tool-infrastructure failure, never conflated with "the scan ran and found violations." Checks
  * only mechanical shape (filename, duplicate numbers, required headings) -- never whether an ADR's
  * actual reasoning holds up, and never git history (a numbering gap is accepted by design). See
- * specs/decisions/0008-api-contract-compatibility-gate.md.
+ * specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
  */
 export type AdrStructureEvidence = ScanEvidence
 

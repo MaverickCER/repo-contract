@@ -7,7 +7,7 @@ import path from "node:path"
  * decision, not inherited from eslint.config.js/.gitignore/.jscpd.json -- each of those excludes
  * things for its own, differently-scoped reason, and treating their union as "the" source
  * universe would be an implicit, undocumented dependency on three unrelated tools staying in
- * sync. See specs/decisions/0007-suppression-governance.md.
+ * sync. See specs/decisions/0006-suppression-governance.md.
  */
 export const EXCLUDED_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
   "node_modules", // third-party code, never this repository's own source

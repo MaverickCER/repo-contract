@@ -1,4 +1,4 @@
-# 0005: The public surface stays deliberately narrow — no CLI, an Experimental preset catalog
+# 0004: The public surface stays deliberately narrow — no CLI, an Experimental preset catalog
 
 ## Status
 
@@ -51,7 +51,8 @@ describe what a run actually did, not just what configured it.
   run, closing the gap between "the package that validates itself" and "the package another
   repository would actually install."
 - The published preset surface currently has no automated backward-compatibility protection of its
-  own — the compatibility-gate mechanism (see the adjacent API-contract ADR) covers only the root
+  own — the compatibility-gate mechanism (see
+  [ADR 0009](0009-conventional-commits-versioning-and-local-gates.md)) covers only the root
   export's entry point. The Experimental classification is the interim mitigation for that gap, not
   a permanent answer.
 

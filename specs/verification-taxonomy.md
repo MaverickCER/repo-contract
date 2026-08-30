@@ -233,7 +233,7 @@ changed (see "Coverage" below) — its evidence shape and the `coverage` check's
 - **Establishes**: is every commit on `origin/main..HEAD` a valid Conventional Commit? Since
   Conventional Commits are the sole versioning input (release-please derives the bump + changelog
   from them, and `api-contract` gates on the bump they declare — see
-  specs/decisions/0008-api-contract-compatibility-gate.md), a malformed message is a real defect,
+  specs/decisions/0009-conventional-commits-versioning-and-local-gates.md), a malformed message is a real defect,
   not a style nit.
 - **Does not establish**: whether the subject actually describes the user-visible impact
   (human-review concern), or whether the declared bump is _sufficient_ for the API change — that
@@ -254,7 +254,7 @@ changed (see "Coverage" below) — its evidence shape and the `coverage` check's
 ### Suppression governance — `suppression-governance`
 
 - **Establishes**: a materially different semantic question from every static-analysis category above
-  (see specs/decisions/0007-suppression-governance.md) — is every ESLint/TypeScript/etc. suppression
+  (see specs/decisions/0006-suppression-governance.md) — is every ESLint/TypeScript/etc. suppression
   comment in the repository centrally inventoried in `disable-comments.json`, and does each one carry
   enough named justification to satisfy a repository-owned, per-domain/per-rule policy? Inline disable
   comments remain allowed; what this check guarantees is that none of them can silently bypass a
@@ -272,9 +272,9 @@ changed (see "Coverage" below) — its evidence shape and the `coverage` check's
   global default requiring `justification`/`alternatives`/`remediation`/`category`/`verificationMethod`.
   This replaces an earlier numeric "N justification entries required" design, dropped because a plain
   count is trivially satisfied by generating N generic-sounding entries without doing any of the
-  underlying work the count was meant to prove happened (see ADR 0007's "not a numeric threshold"
+  underlying work the count was meant to prove happened (see ADR 0006's "not a numeric threshold"
   section). `category`/`verificationMethod` (see
-  [ADR 0007](decisions/0007-suppression-governance.md)) are hand-authored
+  [ADR 0006](decisions/0006-suppression-governance.md)) are hand-authored
   the same way as `justification`/`alternatives`/`remediation`, but are closed enumerations rather than
   free prose, letting a reviewer or report triage a suppression's kind and evidentiary basis without
   reading the full prose.
@@ -301,13 +301,13 @@ changed (see "Coverage" below) — its evidence shape and the `coverage` check's
   summary of how many suppressions are tracked/new/moved/removed.
 - **CI**: part of `npm run contract`. `mutation` declares a genuine `dependsOn: ["suppression-governance"]`
   -- its policy reads this check's evidence to verify every Stryker-domain suppression before trusting
-  a comment-ignored mutant (ADR 0007); `mutation`'s separate need to run alone, last, is expressed by
-  `isolated` (ADR 0003), not `dependsOn`.
+  a comment-ignored mutant (ADR 0006); `mutation`'s separate need to run alone, last, is expressed by
+  `isolated` (ADR 0002), not `dependsOn`.
 
 ### Security — no network — `security-network`
 
 - **Establishes**: that the package's entire shipped surface (`src/**/*.ts` -- see
-  [ADR 0013](decisions/0013-no-network-surface.md)) contains no network-capable import, no
+  [ADR 0007](decisions/0007-no-network-surface.md)) contains no network-capable import, no
   network-capable global usage, and no preset spawning a command outside a small, reviewed
   allowlist. The second of two independent layers enforcing this invariant -- the first is an
   ESLint rule (`eslint.config.js`) scoped to the same surface. Both cover the same core imports/
@@ -315,7 +315,7 @@ changed (see "Coverage" below) — its evidence shape and the `coverage` check's
   be silenced by an `eslint-disable` comment or a weakened lint config.
 - **Does not establish**: that a dependency's own internal code never makes a network call, or that
   a consumer's own configured checks/presets never do (that's the tool's entire purpose -- execute
-  what the repository's own configuration says; see ADR 0013's Decision section for the exact
+  what the repository's own configuration says; see ADR 0007's Decision section for the exact
   boundary, including why `linkinator`, an allowlisted preset command, legitimately does make HTTP
   requests on a consumer's own explicit behalf).
 - **Files executed**: none -- a static AST scan (TypeScript compiler API, the same approach
@@ -385,7 +385,11 @@ coverage/unit/coverage-final.json   coverage/integration/...        coverage/pro
   only.
 - **`crap` check** consumes the _identical_ canonical aggregate artifact
   (`coverage/aggregate/coverage-final.json`), `dependsOn: ["coverage"]` — never a second,
-  independently-computed coverage map.
+  independently-computed coverage map. Its policy gates on two repo-owned numbers: the CRAP
+  score (≤ 30) and an independent raw cyclomatic-complexity ceiling (≤ 20), the latter because
+  CRAP collapses toward plain complexity at this repository's coverage floor and stops
+  constraining a well-tested but deeply-branchy function on its own — see
+  [ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md).
 
 ### Coverage-contribution matrix
 
@@ -428,7 +432,7 @@ prior check's evidence (`coverage` needs the three test-* categories' artifact f
 needs `suppression-governance`'s registry evidence, see `repo-contract.config.ts`'s own header
 comment) — never to turn `repo-contract.config.ts` into a second, hidden orchestration engine.
 `mutation`'s separate need to run last, only once every non-isolated check has settled, is
-scheduling-only, expressed via `isolated` rather than `dependsOn` (ADR 0003). npm/CI runs verification; repo-contract
+scheduling-only, expressed via `isolated` rather than `dependsOn` (ADR 0002). npm/CI runs verification; repo-contract
 observes and evaluates
 it.
 
@@ -445,7 +449,7 @@ integration principle involved," with two genuine not-applicable exceptions note
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Contract testing (Pact-style)          | No independent network consumers to model; already covered by API compatibility. The one real gap — runtime `Evidence`/`Verdict` never validated against the _published_ `schemas/*.schema.json` — is closed by ajv-based schema-conformance tests (`test/unit/schema/schema-conformance.test.ts`) inside the existing **Golden/snapshot contracts** category, kept as an explicitly distinct question even though co-located: "did the public contract change?" (API compatibility, static types) vs. "does runtime output conform to the declared contract?" (schema conformance, real values).                                                                                                                                                                             |
 | Security testing                       | `security-deps`/`security-secrets` and ESLint's `no-eval`/`no-implied-eval`/`no-new-func` already exist. New value: a narrowly-scoped property test on the tokenizer proving exactly "malformed input cannot produce unintended argument-boundary splitting" — never a "secure against injection" claim, penetration-test coverage, or vulnerability-free claim.                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ~~Accessibility testing~~ (superseded) | Rejected at the time this table was first written, when no UI/DOM/browser surface existed in this package. Superseded once `docs/` (a real landing page with DOM/browser surface) was added: this repository now runs a real `accessibility` check (`pa11y` against `docs/index.html`, driving an actual headless-Chromium accessibility tree — see [ADR 0009](decisions/0009-self-hosting-tool-and-dependency-choices.md)'s "Accessibility testing" section for why `pa11y` specifically, and the verification matrix above's category list, which this file's "remaining existing categories" note in the Verification matrix section covers). Kept as a struck-through row, not deleted, so the original applicability reasoning and its later reversal both stay visible. |
+| ~~Accessibility testing~~ (superseded) | Rejected at the time this table was first written, when no UI/DOM/browser surface existed in this package. Superseded once `docs/` (a real landing page with DOM/browser surface) was added: this repository now runs a real `accessibility` check (`pa11y` against `docs/index.html`, driving an actual headless-Chromium accessibility tree — see [ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md)'s "Accessibility testing" section for why `pa11y` specifically, and the verification matrix above's category list, which this file's "remaining existing categories" note in the Verification matrix section covers). Kept as a struck-through row, not deleted, so the original applicability reasoning and its later reversal both stay visible. |
 | Fuzz testing                           | Scoped rejection specific to this repository (not a universal equivalence claim): no native/memory-unsafe parsing boundary exists, and the parsers are already exception-safe by design, so a dedicated coverage-guided fuzzing harness isn't justified at the current risk profile. Property-based generation already demonstrates the relevant integration principle. Revisit if a binary-format parser or native binding is ever added.                                                                                                                                                                                                                                                                                                                                    |
 | Concurrency/race-condition testing     | Single-threaded Node event loop — no shared-memory data races, only async-ordering bugs, exactly what generated-input property tests over `concurrency-pool.ts`/`dependency-scheduler.ts` catch.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Resilience/fault-injection testing     | Already the default style of this repo's unit tests (real timeouts, real SIGTERM, real ENOENT — see `spawn-check.test.ts`, `process-tree.test.ts`, `abort-signals.test.ts`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |

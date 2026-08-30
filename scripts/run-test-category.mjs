@@ -3,7 +3,7 @@
 // test:<category> scripts, repo-contract.config.ts's test-<category> checks,
 // and scripts/run-coverage.mjs all invoke this one script rather than each
 // separately re-encoding the same `vitest run --config ...` invocation --
-// see specs/decisions/0006-independent-verification-boundaries-coverage-is-a-union.md for why
+// see specs/decisions/0005-independent-verification-boundaries-coverage-is-a-union.md for why
 // that duplication was a real defect, not a stylistic one.
 //
 // Usage: node scripts/run-test-category.mjs <unit|integration|property|e2e> [--coverage] [--reporter=json]

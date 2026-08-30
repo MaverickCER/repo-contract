@@ -1,6 +1,6 @@
 /**
  * Derives the SemVer bump a set of Conventional Commit messages declares. This must agree with
- * release-please's own bump logic (it is the tool that actually applies the version) -- ADR 0008
+ * release-please's own bump logic (it is the tool that actually applies the version) -- ADR 0009
  * makes that a stated invariant and `test/unit/api-contract/conventional-commits.test.ts` pins it
  * against the Conventional Commits spec's own worked examples. Hand-rolled rather than pulling in
  * `conventional-commits-parser`, for the same reason `semver.ts` is hand-rolled: the surface used

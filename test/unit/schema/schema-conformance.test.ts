@@ -25,7 +25,7 @@ import { runRepoContract } from "../../../src/run-repo-contract.js"
  * The disable-comments.json describe block below extends this same idea to
  * scripts/suppression-governance/disable-comments.schema.json -- generated
  * the same way, but deliberately NOT under schemas/ (see
- * specs/decisions/0007-suppression-governance.md and the new
+ * specs/decisions/0006-suppression-governance.md and the new
  * category/verificationMethod ADR: this schema describes an internal,
  * unpublished self-assurance registry, not a consumer-facing contract).
  * `loadInternalSchema` below reads it from its own location rather than

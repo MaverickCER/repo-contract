@@ -50,7 +50,7 @@ const config = {
     "!src/execution/spawn-check.ts",
     "!src/execution/dependency-scheduler.ts",
     // The preset catalog (`repo-contract/presets`, a separate opt-in entry
-    // point -- see specs/decisions/0005-public-surface-stays-narrow-no-cli-experimental-presets.md)
+    // point -- see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)
     // is thin adapter glue: a `run` command plus a policy that dispatches to
     // the shared helpers in src/presets/shared/. Those helpers carry their
     // own dedicated unit tests, every preset's policy branches are unit-

@@ -40,7 +40,7 @@ the package reaches 1.0 — see [Pre-1.0 status](#pre-10-status) below):
 
 **`repo-contract/presets`** (the whole subpath, including every preset it exports) —
 a new pre-1.0 surface shipped before a real feedback cycle, per this section's own stated
-convention (see [ADR 0005](specs/decisions/0005-public-surface-stays-narrow-no-cli-experimental-presets.md)). An Experimental
+convention (see [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)). An Experimental
 surface may change shape, including in a breaking way, in a minor or patch release without that
 being a semver violation — this applies to a preset's TypeScript signature and to its runtime
 behavior:
@@ -82,7 +82,7 @@ Never covered by semver, may change at any time without notice:
 `Evidence` and `Verdict` are each independently versioned via their own `version` field
 (`Evidence.version` is currently `1`; `Verdict.version` is currently `2`, having bumped from `1`
 when `checks[id]` changed from `{ passed, reason? }` to a structured `PolicyResult` — see
-[ADR 0002](specs/decisions/0002-policyresult-is-a-structured-plain-json-contract.md)), separate from this package's own
+[ADR 0001](specs/decisions/0001-execution-and-policy-are-a-strict-sequential-contract.md)), separate from this package's own
 semver and from each other. This matters once repo-contract's output is used as a
 CI-interoperability artifact whose consumer (a dashboard, a stored baseline, a separate tool) may
 outlive the package version that produced it:

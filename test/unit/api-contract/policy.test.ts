@@ -10,7 +10,7 @@ import type {
  * Policy tests provide only synthetic `ApiContractEvidence` -- never touching TypeScript, API
  * Extractor, Git, or the filesystem -- and verify exclusively the policy's own outcome/rationale
  * logic, per the project's check/policy testing split. Versioning is Conventional-Commits-driven
- * (ADR 0008), so the `commits` sub-evidence is what the gate actually compares against.
+ * (ADR 0009), so the `commits` sub-evidence is what the gate actually compares against.
  */
 
 function snapshot(overrides: Partial<ApiContractSnapshot> = {}): ApiContractSnapshot {

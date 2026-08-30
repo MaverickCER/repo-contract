@@ -44,9 +44,25 @@ describe("commitlint preset", () => {
     const result = await commitlint().policy(
       fakeContext(fakeCheckEvidence({ exitCode: 1, stdout: "", stderr: "" })),
     )
-    expect(result).toEqual({
-      outcome: "fail",
-      rationale: "commitlint reported commit message violations (exit code 1).",
-    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain(
+      "commitlint reported commit message violations (exit code 1).",
+    )
+  })
+
+  it("appends the git commands to fix the offending commits, based on --from", async () => {
+    const result = await commitlint({ from: "v1.2.3" }).policy(
+      fakeContext(fakeCheckEvidence({ exitCode: 1, stdout: "subject may not be empty" })),
+    )
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("git rebase -i v1.2.3")
+    expect(result.rationale).toContain("reword")
+    expect(result.rationale).toContain("git push --force-with-lease")
+  })
+
+  it("does not add remediation guidance to a passing result", async () => {
+    const result = await commitlint().policy(fakeContext(fakeCheckEvidence({ exitCode: 0 })))
+    expect(result.outcome).toBe("pass")
+    expect(result.rationale).not.toContain("git rebase")
   })
 })

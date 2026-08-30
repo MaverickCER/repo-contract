@@ -1,4 +1,4 @@
-# 0006: Verification categories get independent execution boundaries; coverage is a union
+# 0005: Verification categories get independent execution boundaries; coverage is a union
 
 ## Status
 

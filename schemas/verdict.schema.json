@@ -33,7 +33,7 @@
         "passed",
         "checks"
       ],
-      "description": "Versioned, immutable aggregate result of evaluating every configured check's policy against its evidence -- each check's own `PolicyResult`, verbatim, keyed by check id. `passed` is `true` only if every check's `outcome` is `\"pass\"` or `\"warn\"` -- `\"fail\"` is the only outcome that fails the run; one failing check never collapses into a single generic message, every check remains individually inspectable under `checks`. Versioned independently of `Evidence` (see VERSIONING.md's schema-versioning policy) -- `version: 2` reflects `checks[id]` changing shape from `{ passed, reason? }` to a full `PolicyResult` (`{ outcome, rationale }`); see ADR 0002."
+      "description": "Versioned, immutable aggregate result of evaluating every configured check's policy against its evidence -- each check's own `PolicyResult`, verbatim, keyed by check id. `passed` is `true` only if every check's `outcome` is `\"pass\"` or `\"warn\"` -- `\"fail\"` is the only outcome that fails the run; one failing check never collapses into a single generic message, every check remains individually inspectable under `checks`. Versioned independently of `Evidence` (see VERSIONING.md's schema-versioning policy) -- `version: 2` reflects `checks[id]` changing shape from `{ passed, reason? }` to a full `PolicyResult` (`{ outcome, rationale }`); see ADR 0001."
     },
     "PolicyResult": {
       "type": "object",

@@ -7,7 +7,7 @@
 // accessibility tree, not static markup analysis -- so contrast, focus
 // order, and ARIA issues are caught the same way a real browser would
 // surface them, confirmed by a real run against this page (see
-// specs/decisions/0009-self-hosting-tool-and-dependency-choices.md).
+// specs/decisions/0008-self-hosting-tool-and-dependency-choices.md).
 //
 // Tests docs/index.html directly via a file:// URL -- this page has no
 // build step (unlike dist/), so nothing needs to run first.

@@ -1,4 +1,4 @@
-# 0013: The "no network calls" guarantee is mechanically enforced, in two independent layers
+# 0007: The "no network calls" guarantee is mechanically enforced, in two independent layers
 
 ## Status
 

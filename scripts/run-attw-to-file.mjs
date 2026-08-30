@@ -19,7 +19,7 @@
 // tarball this script immediately deletes again. Run as one reader among many concurrently
 // scheduled after the build barrier (repo-contract.config.ts), that mid-run `dist/` delete+rebuild
 // races every other concurrently-running reader that reads `dist/` (`test-e2e`'s own
-// `npm pack --ignore-scripts` chief among them) -- the same shared-mutable-state race ADR 0012
+// `npm pack --ignore-scripts` chief among them) -- the same shared-mutable-state race ADR 0002
 // documents, just via a dependency's own internal side effect rather than this repository's code.
 // Packing here instead, exactly like `test/helpers/pack-consumer.ts` already does for the same
 // reason, removes the shared-state write entirely rather than trying to schedule around it.

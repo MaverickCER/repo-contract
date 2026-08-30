@@ -1,7 +1,7 @@
 /**
  * Shapes shared between scripts/security-network/scan.ts (discovers
  * prohibited network capability in src/**\/*.ts) and its policy layer
- * (checks/security-network.ts). See specs/decisions/0013-no-network-surface.md
+ * (checks/security-network.ts). See specs/decisions/0007-no-network-surface.md
  * for the full rationale.
  */
 

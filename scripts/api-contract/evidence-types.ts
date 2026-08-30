@@ -5,7 +5,7 @@
  * scripts/api-contract/ and its tests -- so it's kept as a rich, explicit discriminated-union
  * domain model rather than a compressed generic shape: the extra verbosity buys compiler-enforced
  * exhaustiveness as the classifier grows. See
- * specs/decisions/0008-api-contract-compatibility-gate.md for the full reasoning.
+ * specs/decisions/0009-conventional-commits-versioning-and-local-gates.md for the full reasoning.
  */
 
 /** Aggregate fact about the public contract delta between baseline and current. "unknown" means the delta could not be safely classified -- never silently downgraded to "compatible" or "unchanged". */
@@ -80,7 +80,7 @@ export interface ApiContractSnapshot {
  * What the branch's Conventional Commits (and, in CI, the PR title) declare about the release
  * bump -- and whether that clears the minimum the public-API diff requires. `satisfied` is
  * `null` when there is nothing to compare against: `impact === "unknown"` (no `requiredLevel`)
- * or the initial-baseline run. See specs/decisions/0008-api-contract-compatibility-gate.md.
+ * or the initial-baseline run. See specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
  */
 export interface CommitAnalysisEvidence {
   /** Number of commit messages considered (branch commits, plus the PR title when supplied). */

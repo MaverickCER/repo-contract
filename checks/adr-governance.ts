@@ -102,7 +102,7 @@ export function evaluateAdrGovernancePolicy({
         `of the ${String(determinant.commitsScanned)} commit message(s) on this branch references an ` +
         `existing ADR:`,
       ...determinant.governedFilesTouched.map((path) => `- ${path}`),
-      'Add or amend an ADR under specs/decisions/, or reference one (e.g. "ADR 0003") in a commit message on this branch.',
+      'Add or amend an ADR under specs/decisions/, or reference one (e.g. "ADR 0002") in a commit message on this branch.',
     ].join("\n"),
   }
 }
@@ -110,7 +110,7 @@ export function evaluateAdrGovernancePolicy({
 // Architectural-change traceability: a PR touching the execution or policy engine must either
 // engage the ADR set directly or reference an existing ADR from one of its commit messages; a
 // typo'd or nonexistent ADR number never satisfies this. See
-// specs/decisions/0008-api-contract-compatibility-gate.md.
+// specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
 export const adrGovernance: CheckDefinitionConfig = {
   run: ["tsx", "scripts/adr-governance/check.ts", "--base=origin/main"],
   output: { format: "json" },

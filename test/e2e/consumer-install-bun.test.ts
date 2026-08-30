@@ -11,7 +11,7 @@ import {
 
 /**
  * Bun counterpart to consumer-install.test.ts -- see
- * specs/decisions/0011-bun-and-deno-runtime-support.md. Proves the real packed tarball resolves
+ * specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md. Proves the real packed tarball resolves
  * and runs under Bun with no non-default permissions, covering both entry points (`import` and
  * `require`) and the `./presets` subpath export -- the compatibility surface most likely to differ
  * across runtimes, since it depends on each runtime's own module resolution and CJS interop rather

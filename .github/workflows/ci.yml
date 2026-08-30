@@ -87,7 +87,7 @@ jobs:
       - run: npm run size
 
   # Bun and Deno actually consuming the real, packed tarball -- see
-  # specs/decisions/0011-bun-and-deno-runtime-support.md. One OS, one Node
+  # specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md. One OS, one Node
   # version: Bun/Deno compatibility doesn't depend on which Node version or
   # OS also happens to be on the runner (neither runtime invokes Node's own
   # binary), so it isn't re-run across `verify`'s full matrix above. The
@@ -244,7 +244,7 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
 
   # Belt-and-suspenders for the squash-merge case (see
-  # specs/decisions/0008-api-contract-compatibility-gate.md): the merge-commit /
+  # specs/decisions/0009-conventional-commits-versioning-and-local-gates.md): the merge-commit /
   # rebase policy keeps every commit conforming, but if a squash ever slips
   # through, the PR title was still a valid Conventional Commit.
   pr-title:

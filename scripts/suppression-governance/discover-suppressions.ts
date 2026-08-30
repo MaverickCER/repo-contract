@@ -36,7 +36,7 @@ function languageVariantFor(file: string): ts.LanguageVariant {
  * Scans one file's full text for every comment token -- using the TypeScript compiler's own
  * scanner rather than a hand-rolled comment parser or shelling out to ESLint itself (this check
  * must be able to audit suppressions that caused ESLint to be bypassed, so it can't depend on
- * ESLint running successfully; see specs/decisions/0007-suppression-governance.md) -- and returns
+ * ESLint running successfully; see specs/decisions/0006-suppression-governance.md) -- and returns
  * every one a recognizer (recognizers.ts) classifies as a suppression directive.
  *
  * A bare `scanner.scan()` loop doesn't, by itself, know how to resume scanning a template literal

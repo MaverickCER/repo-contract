@@ -74,7 +74,7 @@ describe("evaluateAdrGovernancePolicy", () => {
     })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain(
-      'Add or amend an ADR under specs/decisions/, or reference one (e.g. "ADR 0003") in a commit message on this branch.',
+      'Add or amend an ADR under specs/decisions/, or reference one (e.g. "ADR 0002") in a commit message on this branch.',
     )
   })
 })

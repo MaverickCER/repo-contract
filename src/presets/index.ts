@@ -2,7 +2,7 @@
  * Curated, growing catalog of preset checks for tools common across
  * TypeScript/JavaScript repositories -- each preset encodes how to execute
  * and interpret a common tool, never a repository's definition of quality
- * (see specs/decisions/0005-public-surface-stays-narrow-no-cli-experimental-presets.md). Import a preset,
+ * (see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). Import a preset,
  * spread it into your own `checks` record, and override whatever you need
  * -- most often `policy`; a factory preset's options are the preferred way
  * to change what it executes, a direct `run` override is an escape hatch.

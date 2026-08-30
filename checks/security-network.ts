@@ -9,7 +9,7 @@ interface EvaluateSecurityNetworkPolicyInput {
 /**
  * Fails whenever scripts/security-network/scan.ts found any prohibited (or unverifiable) network
  * capability in src/**\/*.ts -- passes only when the whole scanned surface is clean. See
- * specs/decisions/0013-no-network-surface.md.
+ * specs/decisions/0007-no-network-surface.md.
  * @param root0 - the policy input.
  * @param root0.evidence - the security-network check's evidence to evaluate.
  * @returns the pass/fail outcome and its rationale.
@@ -43,7 +43,7 @@ export function evaluateSecurityNetworkPolicy({
 }
 
 // Second, independent layer of the "no network calls" invariant -- see eslint.config.js's own doc
-// comment on the first (ESLint) layer, and specs/decisions/0013-no-network-surface.md for the full
+// comment on the first (ESLint) layer, and specs/decisions/0007-no-network-surface.md for the full
 // threat model. This check's own script (scripts/security-network/scan.ts) never invokes ESLint,
 // so a silently weakened/removed ESLint rule or a suppressed violation still fails here.
 export const securityNetwork: CheckDefinitionConfig = {

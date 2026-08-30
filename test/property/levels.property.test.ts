@@ -5,7 +5,7 @@ import type { RequiredReleaseLevel } from "../../scripts/api-contract/evidence-t
 
 /**
  * Property-based tests for levels.ts's SemVer bump-magnitude arithmetic (extracted from the
- * deleted changeset-manager.ts when versioning moved to Conventional Commits -- ADR 0008):
+ * deleted changeset-manager.ts when versioning moved to Conventional Commits -- ADR 0009):
  * `maxLevel` (a commutative, idempotent max over none < patch < minor < major, with `undefined`
  * as the identity) and `rankAtLeast` (the gate's "declared >= required" comparison).
  */

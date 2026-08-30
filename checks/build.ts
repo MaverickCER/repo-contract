@@ -8,7 +8,7 @@ import type { CheckDefinitionConfig } from "../src/types.js"
  * than a side effect with no verdict of its own. Declared `isolated: true` and positioned right
  * after every file-writing check in repo-contract.config.ts's own `checks` object: an isolated
  * check is a full scheduling barrier at its own declared position (see
- * specs/decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md), so this automatically waits for
+ * specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md), so this automatically waits for
  * every writer to finish and every read/report-only check declared after it automatically waits
  * for this to finish -- zero per-check `dependsOn` wiring needed on either side.
  */

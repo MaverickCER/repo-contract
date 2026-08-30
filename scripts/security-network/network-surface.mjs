@@ -13,7 +13,7 @@
 // directory are repository-internal tooling, never shipped, and
 // legitimately may need things this list forbids (e.g. this very script
 // spawns tsx via child_process, and scripts/api-contract's tooling reads
-// files by dynamic path) -- see specs/decisions/0013-no-network-surface.md
+// files by dynamic path) -- see specs/decisions/0007-no-network-surface.md
 // for the full threat model and why it stops at this boundary.
 
 /**
@@ -98,7 +98,7 @@ export const NETWORK_GLOBALS = ["fetch", "WebSocket"]
  * the binary level), but a concrete question that command's own
  * documentation actually answers. This is the record CODE_REVIEW.md's
  * Security-boundary review section points reviewers at when this list
- * changes. See specs/decisions/0013-no-network-surface.md's Decision
+ * changes. See specs/decisions/0007-no-network-surface.md's Decision
  * section for the full reasoning on what this list does and doesn't
  * establish.
  */

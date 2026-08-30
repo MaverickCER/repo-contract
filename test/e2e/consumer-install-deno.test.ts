@@ -11,7 +11,7 @@ import {
 
 /**
  * Deno counterpart to consumer-install.test.ts -- see
- * specs/decisions/0011-bun-and-deno-runtime-support.md. Proves the real packed tarball resolves
+ * specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md. Proves the real packed tarball resolves
  * (via Deno's "bring your own node_modules" support -- no import map or npm: specifier needed,
  * since the consumer fixture has a real package.json + node_modules from a real `npm install`) and
  * runs under Deno's permission model, covering both entry points and the `./presets` subpath

@@ -73,7 +73,7 @@ export const TARGETS = [
     outputFile: "scripts/suppression-governance/disable-comments.schema.json",
     // Deliberately NOT under the maverickcer.github.io/repo-contract/schema/ namespace the two
     // targets above use: disable-comments.json is this repository's own internal self-assurance
-    // registry (see specs/decisions/0007-suppression-governance.md), not part of the published
+    // registry (see specs/decisions/0006-suppression-governance.md), not part of the published
     // package surface (schemas/ is inside package.json's `files` and its `exports["./schema/*"]`;
     // this file deliberately lives outside that directory so it never ships to a consumer or gets
     // promoted to VERSIONING.md's Stable tier). The $id below reflects that non-published status
@@ -82,7 +82,7 @@ export const TARGETS = [
     title: "repo-contract Disable Comments",
     description:
       "Machine-readable schema for this repository's own disable-comments.json suppression- " +
-      "governance registry (see specs/decisions/0007-suppression-governance.md) -- internal " +
+      "governance registry (see specs/decisions/0006-suppression-governance.md) -- internal " +
       "self-assurance tooling, never part of the published package surface. Generated from " +
       "scripts/suppression-governance/evidence-types.ts's DisableCommentRegistry type -- never " +
       "hand-authored.",

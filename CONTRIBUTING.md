@@ -27,7 +27,7 @@ package supports Node `>=20` and CI proves that independently.
 
 Hooks are installed by `npm install`; opt out with `git config --unset core.hooksPath`
 (and `commit.template`). See
-[ADR 0015](specs/decisions/0015-local-commit-and-push-gates.md).
+[ADR 0009](specs/decisions/0009-conventional-commits-versioning-and-local-gates.md).
 
 ## Commits and versioning
 
@@ -54,7 +54,7 @@ npm run adr:new "the decision, stated as a sentence"
 
 That scaffolds the next-numbered file with the required sections; fill them in, using the
 neighbouring ADRs as a guide for depth. Touching `src/execution/` or `src/policy/`? Either
-add an ADR or reference an existing one (`ADR 0003`) in a commit message — `adr-governance`
+add an ADR or reference an existing one (`ADR 0002`) in a commit message — `adr-governance`
 enforces it.
 
 ## Releasing

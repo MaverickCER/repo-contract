@@ -70,7 +70,7 @@ export function runApiExtractor(options: RunExtractorOptions): RunExtractorResul
       // items out of the Doc Model at extraction time, before model-normalizer.ts's own
       // --release-tag threshold ever sees them -- silently defeating the "single, testable,
       // parameterized concern in one place" this feature deliberately keeps in model-normalizer.ts
-      // (see specs/decisions/0008-api-contract-compatibility-gate.md). Trimming nothing here means
+      // (see specs/decisions/0009-conventional-commits-versioning-and-local-gates.md). Trimming nothing here means
       // .api.json always retains every release tier;
       // model-normalizer.ts remains the sole filtering point.
       releaseTagsToTrim: [],

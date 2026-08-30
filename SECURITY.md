@@ -26,7 +26,7 @@ the most security-sensitive part of the package.
   invoked at all. On Windows, resolving a `.cmd`/`.bat` shim — how essentially every npm-installed
   CLI is actually invoked there (e.g. `node_modules/.bin/eslint.cmd`) — unavoidably routes through
   `cmd.exe`; this is a Windows/PATHEXT constraint that `cross-spawn` (see
-  [ADR 0004](specs/decisions/0004-cross-platform-command-execution-and-process-cleanup.md)) exists
+  [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md)) exists
   specifically to handle correctly, not something repo-contract can opt out of while still
   resolving those shims. On that path, injection safety comes from `cross-spawn`'s own argument
   escaping for `cmd.exe`'s parsing rules, not from the absence of a shell. Independently of
@@ -96,7 +96,7 @@ the most security-sensitive part of the package.
   suppressed violation still fails the build. This governs repo-contract's own code; it does not,
   and cannot, prevent a command _you_ configure from making network calls, or a preset's spawned
   external tool (e.g. `brokenLinks`'s `linkinator`) from doing so on your explicit behalf — see
-  [ADR 0013](specs/decisions/0013-no-network-surface.md) for the full threat model, exactly what's
+  [ADR 0007](specs/decisions/0007-no-network-surface.md) for the full threat model, exactly what's
   covered, and what's deliberately excluded.
 
 ## Application responsibilities

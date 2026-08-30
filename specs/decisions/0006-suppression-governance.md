@@ -1,4 +1,4 @@
-# 0007: Suppression governance — centrally-inventoried, policy-gated disable comments
+# 0006: Suppression governance — centrally-inventoried, policy-gated disable comments
 
 ## Status
 

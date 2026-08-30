@@ -7,7 +7,7 @@
  * Each check's own `run`/`policy` lives in its own file under checks/, or --
  * for the checks a published preset now covers, see the note further down
  * -- in src/presets/. This file owns only the dependency graph between them, and their
- * declaration order (see specs/decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md):
+ * declaration order (see specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md):
  * declaration order is the required topological order, and drives real scheduling, not just
  * documentation -- a `dependsOn` id must be declared earlier than the check declaring it, and an
  * `isolated` check is a full barrier at its own declared position.
@@ -53,7 +53,7 @@
  * - `mutation` depends on `suppression-governance` -- its own policy reads
  *   that check's evidence to verify every Stryker-domain suppression in the
  *   registry before trusting a comment-ignored mutant (see
- *   specs/decisions/0007-suppression-governance.md).
+ *   specs/decisions/0006-suppression-governance.md).
  *   Separately, `mutation` is also `isolated: true` (declared in its own
  *   check file, checks/mutation.ts, not here -- unlike `dependsOn` it names
  *   no other check, so it needs no assembly-time context): Stryker spawns
@@ -63,7 +63,7 @@
  *   run-checks.test.ts's SIGINT-cleanup test, caused by resource contention
  *   rather than a logic bug. `isolated` is pure scheduling, not a data
  *   dependency on any other check's evidence -- see
- *   specs/decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md. `mutation` is declared near the
+ *   specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md. `mutation` is declared near the
  *   end of the readers so its barrier blocks as little as possible.
  *
  * `coverage`, `crap`, and `mutation` therefore attach their `dependsOn`
@@ -75,7 +75,7 @@
  * NOT defined under checks/ -- they're consumed directly from
  * `src/presets/`, the same published preset catalog an outside consumer
  * would import via `repo-contract/presets` (see
- * specs/decisions/0005-public-surface-stays-narrow-no-cli-experimental-presets.md). This repository dogfoods
+ * specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). This repository dogfoods
  * its own public presets rather than maintaining a parallel private copy;
  * where a value needs to differ from a preset's generic default
  * (`dead-code`'s exempt list, `duplication`'s scanned path), it's supplied
@@ -155,7 +155,7 @@ export default defineRepoContract({
     // file as a side effect of running. With no ordering between them, the
     // two race on that file concurrently -- confirmed: passed every time run
     // in isolation, failed when run concurrently with a stale registry (see
-    // specs/decisions/0012-contract-orchestration-races-are-fixed-with-dependson-not-retries.md).
+    // specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md).
     // This dependsOn makes the registry write settle first, always, instead
     // of by scheduling luck -- the same fix already applied for `mutation`
     // below, which reads this same check's evidence for the same reason.
@@ -213,7 +213,7 @@ export default defineRepoContract({
     "adr-governance": adrGovernance,
     // Conventional Commits are the sole versioning input (release-please derives the bump +
     // changelog from them); commitlint enforces the format across `origin/main..HEAD`. See
-    // specs/decisions/0008-api-contract-compatibility-gate.md. A pure reader -- it runs the
+    // specs/decisions/0009-conventional-commits-versioning-and-local-gates.md. A pure reader -- it runs the
     // `commitlint` binary against git history and touches nothing.
     commitlint: commitlint(),
     "security-network": securityNetwork,

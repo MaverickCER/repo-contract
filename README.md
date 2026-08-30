@@ -98,14 +98,14 @@ npm install --save-dev yaml
 
 repo-contract spawns processes and reads `process.env` — it is server/CLI-only by design, not an isomorphic/browser package.
 
-| Environment                                | Supported                                                                                                                                                                            |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Node.js `>=20.0.0` (macOS, Linux, Windows) | Yes                                                                                                                                                                                  |
-| Bun (latest release)                       | Yes — tested in CI against the real published package shape. No non-default permissions needed.                                                                                      |
-| Deno (latest release)                      | Yes — tested in CI against the real published package shape. Requires `--allow-read --allow-run --allow-env` (see [ADR 0011](specs/decisions/0011-bun-and-deno-runtime-support.md)). |
-| Browser                                    | No — this package executes local processes                                                                                                                                           |
+| Environment                                | Supported                                                                                                                                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Node.js `>=20.0.0` (macOS, Linux, Windows) | Yes                                                                                                                                                                                                          |
+| Bun (latest release)                       | Yes — tested in CI against the real published package shape. No non-default permissions needed.                                                                                                              |
+| Deno (latest release)                      | Yes — tested in CI against the real published package shape. Requires `--allow-read --allow-run --allow-env` (see [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md)). |
+| Browser                                    | No — this package executes local processes                                                                                                                                                                   |
 
-See [ADR 0011](specs/decisions/0011-bun-and-deno-runtime-support.md) for what "tested" covers here and why.
+See [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md) for what "tested" covers here and why.
 
 ### Accessibility
 
@@ -890,7 +890,7 @@ It only does what your configuration tells it to do: execute the commands you de
 
 This makes it suitable for locked-down enterprise environments where tools such as `npx` or network access may be unavailable.
 
-The "no network calls" guarantee is mechanically enforced, not merely documented: an ESLint rule and an independent, ESLint-free repository check both reject network-capable imports, globals, and unreviewed spawned commands anywhere in the shipped surface. See [SECURITY.md](SECURITY.md) for the full threat model and [ADR 0013](specs/decisions/0013-no-network-surface.md) for what's covered, what's deliberately excluded, and why.
+The "no network calls" guarantee is mechanically enforced, not merely documented: an ESLint rule and an independent, ESLint-free repository check both reject network-capable imports, globals, and unreviewed spawned commands anywhere in the shipped surface. See [SECURITY.md](SECURITY.md) for the full threat model and [ADR 0007](specs/decisions/0007-no-network-surface.md) for what's covered, what's deliberately excluded, and why.
 
 ## Security model
 

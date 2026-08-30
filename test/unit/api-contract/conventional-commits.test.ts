@@ -7,7 +7,7 @@ import {
 /**
  * Pins scripts/api-contract/conventional-commits.ts against the Conventional Commits 1.0.0
  * spec's own worked examples -- the api-contract gate's required-vs-declared comparison is only
- * as trustworthy as this bump derivation, and ADR 0008 makes "agrees with release-please's bump
+ * as trustworthy as this bump derivation, and ADR 0009 makes "agrees with release-please's bump
  * logic" a stated invariant.
  */
 

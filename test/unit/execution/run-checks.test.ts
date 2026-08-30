@@ -272,7 +272,7 @@ describe("runChecks", () => {
     )
     // fastSolo, declared after slowSolo, waits for it to fully complete before starting: an
     // isolated check is a full barrier at its own declared position, waiting for *every* check
-    // declared earlier -- isolated or not (see ADR 0003). Two isolated checks are therefore always
+    // declared earlier -- isolated or not (see ADR 0002). Two isolated checks are therefore always
     // sequential relative to each other now, unlike the old position-independent model where
     // neither waited for the other.
     expect(new Date(byId.fastSolo!.startedAt).getTime()).toBeGreaterThanOrEqual(

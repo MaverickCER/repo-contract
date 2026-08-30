@@ -24,7 +24,7 @@ function formatFinding(finding: Pa11yFinding): string {
 // Runs pa11y (WCAG2AA, its default standard) against docs/index.html via a
 // real headless-Chromium accessibility tree, not static markup analysis --
 // see scripts/check-accessibility.mjs's own doc comment and
-// specs/decisions/0009-self-hosting-tool-and-dependency-choices.md for why
+// specs/decisions/0008-self-hosting-tool-and-dependency-choices.md for why
 // this tool was chosen. "error"-type findings fail; "warning" surfaces as
 // warn (never blocks); "notice" is too noisy relative to its actionability
 // to gate on and is dropped from the rationale entirely.

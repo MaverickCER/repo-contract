@@ -49,7 +49,7 @@ export default tseslint.config(
       // depends on.
       ".repo-contract",
       // A static, zero-logic legacy-module-resolution compatibility shim
-      // (see specs/decisions/0005-public-surface-stays-narrow-no-cli-experimental-presets.md,
+      // (see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md,
       // which documents the `./presets` subpath export this shim supports) --
       // not TypeScript/source in any sense `boundaries`'s element model
       // applies to, and never hand-edited beyond its initial creation.
@@ -588,7 +588,7 @@ export default tseslint.config(
     // repo-contract check (see checks/security-network.ts) that does not
     // invoke ESLint and therefore still catches a violation even if this
     // configuration were ever silently weakened or an eslint-disable
-    // comment suppressed it -- see specs/decisions/0013-no-network-surface.md
+    // comment suppressed it -- see specs/decisions/0007-no-network-surface.md
     // for the full threat model and rationale. Deliberately does NOT add a
     // suppression-governance policy override for these two rule names: the
     // "eslint" domain's existing default policy already requires

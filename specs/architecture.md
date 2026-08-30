@@ -49,7 +49,7 @@ package deliberately keeps them from collapsing into one:
 `rationale`, nothing else) — never an `Error`, a class instance, or a tool-specific report shape
 — so it can be persisted, transmitted between processes, aggregated across the parallel checks
 described above, and consumed directly by a human or an AI without any package-specific
-deserialization step. See [ADR 0002](decisions/0002-policyresult-is-a-structured-plain-json-contract.md) for the full
+deserialization step. See [ADR 0001](decisions/0001-execution-and-policy-are-a-strict-sequential-contract.md) for the full
 reasoning, including why `outcome`/`rationale` replaced an earlier `true | string` return type.
 
 ## Module boundaries
@@ -89,10 +89,10 @@ Nothing outside `src/index.ts`'s explicit re-export list is part of the public A
 of whether a given file happens to `export` a symbol — `src/index.ts` is a curated barrel, not
 an automatic one. `src/presets/index.ts` is a second, independent curated barrel of the same
 kind, published under its own `./presets` subpath (see
-[ADR 0005](decisions/0005-public-surface-stays-narrow-no-cli-experimental-presets.md)) — presets are never re-exported from the
+[ADR 0004](decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)) — presets are never re-exported from the
 root barrel, and the root barrel is never re-exported from presets; each stays curated on its
 own terms. `scripts/schema-types.ts` exists solely as a target for
-`ts-json-schema-generator` (see [ADR 0009](decisions/0009-self-hosting-tool-and-dependency-choices.md));
+`ts-json-schema-generator` (see [ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md));
 it is not part of the runtime.
 
 ## Execution and policy evaluation are strictly phased
@@ -133,7 +133,7 @@ and rejected specifically because it would break this guarantee — see
 Declaration order in the `checks` object is the required topological order, not cosmetic: a check
 runs concurrently with whatever's declared around it (launched in declaration order, bounded by
 `concurrency`) except where `dependsOn` or `isolated` says otherwise. See
-[ADR 0003](decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md) for the full
+[ADR 0002](decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md) for the full
 reasoning.
 
 ## Check dependencies (`dependsOn`)
@@ -153,7 +153,7 @@ fully-disconnected graph (the default — no check declares either) takes the sa
 `runWithConcurrency` path as before this feature existed. A dependent's policy reads its
 dependencies' evidence via `ctx.dependencies` — a convenience view derived from the
 already-assembled `Evidence`, not new persisted data. See
-[ADR 0003](decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md) for the full
+[ADR 0002](decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md) for the full
 reasoning, including why this required no changes to policy evaluation itself.
 
 ## Check isolation (`isolated`)
@@ -176,7 +176,7 @@ declared after another isolated barrier. A common use of this positional barrier
 file-writing check first, then one `isolated: true` "build" check, then every read/report-only
 check — the readers wait for the build with zero per-check `dependsOn` wiring, purely from where
 they're declared. See
-[ADR 0003](decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md).
+[ADR 0002](decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md).
 
 ## Status classification
 
@@ -233,7 +233,7 @@ This was not a hypothetical: it was caught during implementation against `secret
 whose `bin/secretlint.js` calls `console.log(largeJsonString)` immediately followed by
 `process.exit(exitStatus)` with no flush wait, which reliably truncated captured stdout at
 ~64KB. `"close"` fires only after every stdio stream has ended and still carries the same
-`(code, signal)` pair `"exit"` does. See [ADR 0009](decisions/0009-self-hosting-tool-and-dependency-choices.md).
+`(code, signal)` pair `"exit"` does. See [ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md).
 
 ## The `run` tokenizer
 
@@ -242,7 +242,7 @@ Quoting (`'...'`/`"..."`) groups whitespace into one token; `\` escapes the next
 Unquoted occurrences of true shell/multi-command operators (`;`, `&`, `|`, backtick, `$(`, `<`,
 `>`, newline) are rejected as a configuration error. Glob characters (`*`, `?`, `~`, `[`, `]`,
 `{`, `}`) and a bare `$` are deliberately _not_ rejected — see
-[ADR 0004](decisions/0004-cross-platform-command-execution-and-process-cleanup.md) for why an earlier, broader
+[ADR 0003](decisions/0003-cross-platform-command-execution-and-process-cleanup.md) for why an earlier, broader
 rejection list was wrong.
 
 ## Process-tree cleanup
@@ -254,7 +254,7 @@ affect the directly spawned process. On POSIX, this sends the signal to the whol
 via the negative-pid convention (the process is spawned with `detached: true` specifically to
 become a process-group leader). On Windows, process groups don't work the same way, so this
 shells out to `taskkill /pid <pid> /t /f` instead — the same technique the `tree-kill` package
-uses internally. See [ADR 0004](decisions/0004-cross-platform-command-execution-and-process-cleanup.md).
+uses internally. See [ADR 0003](decisions/0003-cross-platform-command-execution-and-process-cleanup.md).
 
 ## Type inference boundary
 
@@ -269,7 +269,7 @@ formats with no schema knowledge either way. The genuinely valuable part of the 
 `evidence.checks`/`verdict.checks` keyed and typed per configured check id, so
 `evidence.checks.mutation` autocompletes and `evidence.checks.doesNotExist` is a compile error —
 is unaffected, since it doesn't depend on per-check generic parameters. See
-[ADR 0002](decisions/0002-policyresult-is-a-structured-plain-json-contract.md).
+[ADR 0001](decisions/0001-execution-and-policy-are-a-strict-sequential-contract.md).
 
 ## Self-hosting
 
@@ -279,9 +279,9 @@ itself — one check per verification category in
 policy; `repo-contract.config.ts`'s own `checks` record is the authoritative, current list of check
 ids (an enumeration here would only drift out of sync as checks are added or renamed). See
 `CONTRIBUTING.md` for how to run it,
-[ADR 0009](decisions/0009-self-hosting-tool-and-dependency-choices.md)
+[ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md)
 for how the CRAP and secret-scanning tools specifically were selected, and
-[ADR 0006](decisions/0006-independent-verification-boundaries-coverage-is-a-union.md) for how the Vitest-based categories'
+[ADR 0005](decisions/0005-independent-verification-boundaries-coverage-is-a-union.md) for how the Vitest-based categories'
 independent execution boundaries and aggregate coverage are structured.
 
 `specs/verification-taxonomy.md` is the canonical reference for _what each verification category

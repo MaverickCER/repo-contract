@@ -12,7 +12,7 @@
 // approach scripts/suppression-governance/discover-suppressions.ts already
 // uses, for the identical reason: a suppression-governance-style guarantee
 // must survive its own primary enforcement mechanism being silently
-// weakened or bypassed). See specs/decisions/0013-no-network-surface.md.
+// weakened or bypassed). See specs/decisions/0007-no-network-surface.md.
 
 import { readFile } from "node:fs/promises"
 import path from "node:path"
@@ -66,7 +66,7 @@ function lineAndColumn(
 /**
  * Walks one already-parsed source file's AST, looking for every prohibited
  * (or unverifiable) network capability this module's own doc comment and
- * specs/decisions/0013-no-network-surface.md describe. Never executes
+ * specs/decisions/0007-no-network-surface.md describe. Never executes
  * anything it finds -- this is pure static analysis over the parsed syntax
  * tree, the same "prefer AST-based analysis over fragile regular
  * expressions" approach discover-suppressions.ts already uses.

@@ -1,7 +1,7 @@
 /**
  * SemVer bump-magnitude arithmetic over `RequiredReleaseLevel`. Extracted from the deleted
  * `changeset-manager.ts` (its `LEVEL_RANK` / `maxLevel`) when versioning moved from Changesets
- * to Conventional Commits -- see specs/decisions/0008-api-contract-compatibility-gate.md.
+ * to Conventional Commits -- see specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
  */
 
 import type { RequiredReleaseLevel } from "./evidence-types.js"

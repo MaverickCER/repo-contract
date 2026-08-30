@@ -3,7 +3,7 @@
  * (scripts/suppression-governance/*.ts, which discovers suppression comments and synchronizes
  * disable-comments.json) and its policy layer (checks/suppression-governance.ts, which evaluates
  * the synchronized registry against suppressionPolicy). See
- * specs/decisions/0007-suppression-governance.md for the full rationale.
+ * specs/decisions/0006-suppression-governance.md for the full rationale.
  */
 
 /**
@@ -32,7 +32,7 @@ export const SUPPRESSION_CATEGORIES = [
  * starts with `category: ""`, same as those three. This field is hand-authored the same way -- a
  * human/AI classifies it after the fact; nothing ever infers it from the comment's own text (see
  * `reason`'s doc comment below for why that would defeat this whole registry's purpose -- ADR
- * 0007's rejection of a mechanically-satisfiable model applies identically here).
+ * 0006's rejection of a mechanically-satisfiable model applies identically here).
  *
  * Boundary tests, since several of these are easy to conflate:
  *

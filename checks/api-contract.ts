@@ -62,7 +62,7 @@ function getApiContractDeterminant(evidence: ApiContractEvidence): ApiContractDe
       .filter((change) => change.compatibility === "breaking")
       .map((change) => change.path),
     // Informational only -- never affects impact/requiredLevel/minimumRequiredVersion
-    // (ADR 0008) -- surfaced regardless of outcome.
+    // (ADR 0009) -- surfaced regardless of outcome.
     lowerTierLine:
       evidence.lowerTierDiff.length > 0
         ? `${String(evidence.lowerTierDiff.length)} non-public change(s) also detected (informational only).`
@@ -71,14 +71,14 @@ function getApiContractDeterminant(evidence: ApiContractEvidence): ApiContractDe
 }
 
 /**
- * Versioning is Conventional-Commits-driven (ADR 0008): release-please derives the version from
+ * Versioning is Conventional-Commits-driven (ADR 0009): release-please derives the version from
  * the commit types, so this check can and does **gate** -- it fails a PR whose commits declare a
  * smaller bump than the public-API diff requires (a breaking API change committed as `fix:`,
  * etc.). It also fails on an internal schema-version literal that changed shape without its own
  * version marker being bumped, and warns (rather than gating) when the contract delta could not
  * be classified deterministically -- that case still needs a human to confirm the declared bump.
  * It cannot catch a behavioral breaking change with an unchanged type signature; that remains a
- * human-review concern (see ADR 0008's stated limitation).
+ * human-review concern (see ADR 0009's stated limitation).
  * @param root0 - the policy input.
  * @param root0.evidence - the api-contract check's evidence to evaluate.
  * @returns the pass/warn/fail outcome and its rationale.
@@ -148,7 +148,7 @@ export function evaluateApiContractPolicy({
 }
 
 // API Extractor is kept entirely internal to scripts/api-contract/ -- see
-// specs/decisions/0008-api-contract-compatibility-gate.md.
+// specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
 // check.ts owns contract extraction/diffing/impact/minimum-level derivation and
 // compares the required level against what the branch's Conventional Commits
 // (and, in CI, the PR title) declare; the policy above only interprets its

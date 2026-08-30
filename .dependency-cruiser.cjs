@@ -96,7 +96,7 @@ module.exports = {
       to: {
         dependencyTypes: ["npm-no-pkg", "npm-unknown"],
         // `yaml` is deliberately declared in BOTH peerDependencies (the real, optional runtime
-        // dependency -- see specs/decisions/0009-self-hosting-tool-and-dependency-choices.md) and
+        // dependency -- see specs/decisions/0008-self-hosting-tool-and-dependency-choices.md) and
         // devDependencies (so this repository's own tests/scripts can use it locally). Confirmed
         // via `depcruise --output-type json`: dependency-cruiser's own dependencyTypes array for
         // src/parsing/parse-yaml.ts's `import("yaml")` includes npm-peer AND npm-dev alongside

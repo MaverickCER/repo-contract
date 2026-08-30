@@ -2,7 +2,7 @@
  * Reads the commit messages on the current branch (`base..HEAD`). Shared by the `api-contract`
  * gate (which infers the declared SemVer bump from them) and `adr-governance` (which scans them
  * for `ADR NNNN` references) now that versioning is Conventional-Commits-driven -- see
- * specs/decisions/0008-api-contract-compatibility-gate.md.
+ * specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
  */
 
 import { runGit } from "./diff-files.js"

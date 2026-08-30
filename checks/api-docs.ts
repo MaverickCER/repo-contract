@@ -61,7 +61,7 @@ export function evaluateApiDocsPolicy({ evidence }: EvaluateApiDocsPolicyInput):
 // that every symbol in it carries real TSDoc -- the same "presence, not correctness" scope the
 // `docs` check already applies to markdown structure/links.
 //
-// `isolated: true` (see specs/decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md)
+// `isolated: true` (see specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md)
 // is pure scheduling, not a data dependency: this check's own `generateApiReports`
 // (report-targets.ts) runs API Extractor twice against the same real, on-disk
 // dist/.dts/index.d.ts/dist/.dts/presets/index.d.ts -- and test/unit/api-docs/check.test.ts,
@@ -77,7 +77,7 @@ export function evaluateApiDocsPolicy({ evidence }: EvaluateApiDocsPolicyInput):
 // non-isolated check, and -- like any two isolated checks in the same run -- are always sequential
 // relative to each other (an isolated check is a full barrier at its own declared position, so it
 // waits on every earlier check, isolated or not; see
-// specs/decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md), never concurrent
+// specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md), never concurrent
 // with one another.
 export const apiDocs: CheckDefinitionConfig = {
   run: ["tsx", "scripts/api-docs/check.ts"],

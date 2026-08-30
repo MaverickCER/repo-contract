@@ -27,6 +27,39 @@ function consumeEscape(
   return { value: escaped, next: i + 2 }
 }
 
+// Single-character shell/multi-command operators rejected outright when they
+// appear unquoted. A literal newline (`\n`/`\r`) and the two-character `$(`
+// are handled separately in `rejectUnquotedOperator` -- every entry here is
+// exactly one character, matched by a single Set lookup rather than a chain
+// of per-character `if`s.
+const UNQUOTED_SHELL_OPERATORS: ReadonlySet<string> = new Set([";", "&", "|", "`", "<", ">"])
+
+/**
+ * Throws `InvalidCheckConfigError` when the unquoted character `char` at `run[i]` is a
+ * shell/multi-command operator repo-contract never interprets (`;`, `&`, `|`, a backtick, `<`, `>`,
+ * `$(`, or a literal newline). Returns normally when `char` is legitimate literal argv content --
+ * glob characters and a bare `$` deliberately included (see `tokenizeRunString`'s doc comment).
+ * @param char - the character under the cursor, already known defined by the caller.
+ * @param run - the full command string, needed only to look one character ahead for `$(`.
+ * @param i - the index of `char` within `run`.
+ * @param checkId - identifies which check's `run` was invalid, used in the thrown error message.
+ */
+function rejectUnquotedOperator(char: string, run: string, i: number, checkId: string): void {
+  const reject = (operator: string): never => {
+    throw new InvalidCheckConfigError(
+      checkId,
+      `run string contains an unquoted "${operator}" -- repo-contract never invokes a shell for ` +
+        `string-form "run", so shell operators are not interpreted. Use "run: [...]" (array ` +
+        `form) to pass "${operator}" as a literal argument, or set "shell: true" to opt into ` +
+        `real shell execution.`,
+    )
+  }
+
+  if (char === "\n" || char === "\r") reject("newline")
+  if (UNQUOTED_SHELL_OPERATORS.has(char)) reject(char)
+  if (char === "$" && run[i + 1] === "(") reject("$(")
+}
+
 /**
  * Splits a `run` string into argv (executable + arguments) without invoking
  * a shell -- no shell operator is ever executed, no glob is ever expanded by
@@ -64,16 +97,6 @@ export function tokenizeRunString(run: string, checkId: string): readonly string
   let hasCurrent = false
   let quote: "'" | '"' | null = null
   let i = 0
-
-  const rejectOperator = (operator: string): never => {
-    throw new InvalidCheckConfigError(
-      checkId,
-      `run string contains an unquoted "${operator}" -- repo-contract never invokes a shell for ` +
-        `string-form "run", so shell operators are not interpreted. Use "run: [...]" (array ` +
-        `form) to pass "${operator}" as a literal argument, or set "shell: true" to opt into ` +
-        `real shell execution.`,
-    )
-  }
 
   // Loosening the `i < run.length` bound to `i <= run.length` is
   // behaviorally invisible: the one extra iteration it would permit reads
@@ -155,14 +178,7 @@ export function tokenizeRunString(run: string, checkId: string): readonly string
       continue
     }
 
-    if (char === "\n" || char === "\r") rejectOperator("newline")
-    if (char === ";") rejectOperator(";")
-    if (char === "&") rejectOperator("&")
-    if (char === "|") rejectOperator("|")
-    if (char === "`") rejectOperator("`")
-    if (char === "<") rejectOperator("<")
-    if (char === ">") rejectOperator(">")
-    if (char === "$" && run[i + 1] === "(") rejectOperator("$(")
+    rejectUnquotedOperator(char, run, i, checkId)
 
     current += char
     hasCurrent = true

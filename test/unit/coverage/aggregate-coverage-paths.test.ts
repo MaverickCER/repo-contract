@@ -10,7 +10,7 @@ import { crap } from "../../../checks/crap.js"
  * Proves the shared-path contract for both consumers of the aggregate coverage artifact: the
  * writer (aggregateCoverage()) and the reader (the `crap` check's own `run` command) must agree on
  * the exact same path, imported from one shared module rather than each restating its own literal
- * -- see specs/decisions/0006-independent-verification-boundaries-coverage-is-a-union.md.
+ * -- see specs/decisions/0005-independent-verification-boundaries-coverage-is-a-union.md.
  */
 
 let root: string
