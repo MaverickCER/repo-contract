@@ -66,10 +66,23 @@ export function checkAdrStructure(root = DEFAULT_ROOT) {
 
     for (const file of files) {
       const text = readFileSync(path.join(decisionsDir, file), "utf8")
-      // Match a heading only when it is its own complete line -- `text.includes("## Status")`
-      // also accepts `### Status`, a mention in prose, or an occurrence inside a code fence.
-      const lines = new Set(text.split(/\r?\n/))
-      const missing = REQUIRED_HEADINGS.filter((heading) => !lines.has(heading))
+      // Only headings that appear as real Markdown structure count -- a required heading that
+      // shows up solely inside a fenced code block (an ADR quoting the `adr:new` template, say)
+      // does not satisfy the requirement. Track fence state line by line and ignore fenced lines;
+      // keep the loose `.includes` test for parity with the previous whole-file check.
+      const headingsFound = new Set()
+      let inFence = false
+      for (const line of text.split(/\r?\n/)) {
+        if (/^\s*(```|~~~)/.test(line)) {
+          inFence = !inFence
+          continue
+        }
+        if (inFence) continue
+        for (const heading of REQUIRED_HEADINGS) {
+          if (line.includes(heading)) headingsFound.add(heading)
+        }
+      }
+      const missing = REQUIRED_HEADINGS.filter((heading) => !headingsFound.has(heading))
       if (missing.length > 0) {
         violations.push(`${file} is missing required heading(s): ${missing.join(", ")}`)
       }

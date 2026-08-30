@@ -104,31 +104,50 @@ describe("checkAdrStructure -- true positive / true negative", () => {
     )
   })
 
-  it("flags a required heading present only at the wrong level or inside prose, not as its own line", async () => {
-    await writeFile(
-      path.join(root, "specs", "decisions", "0001-shallow-headings.md"),
-      [
-        "# 0001: x",
-        "",
-        "### Status", // a level-3 heading, not `## Status`
-        "",
-        "This section discusses `## Context` and `## Decision` handling.", // mentioned in prose
-        "",
-        "## Consequences",
-        "",
-        "## Alternatives considered",
-      ].join("\n"),
-      "utf8",
-    )
+  it("does not count a required heading that appears only inside a fenced code block", async () => {
+    const body = [
+      "# 0001: A fixture decision",
+      "",
+      "## Status\n\naccepted.",
+      "## Context\n\nsome text.",
+      "## Decision\n\nsome text.",
+      "## Consequences\n\nsome text.",
+      "Here is the template we started from:",
+      "",
+      "```markdown",
+      "## Alternatives considered",
+      "",
+      "- none",
+      "```",
+    ].join("\n\n")
+    await writeFile(path.join(root, "specs", "decisions", "0001-fenced-heading.md"), body, "utf8")
 
     const result = checkAdrStructure(root)
 
     expect(result.ok).toBe(true)
     expect(result.ok && result.violations).toContainEqual(
       expect.stringContaining(
-        "0001-shallow-headings.md is missing required heading(s): ## Status, ## Context, ## Decision",
+        "0001-fenced-heading.md is missing required heading(s): ## Alternatives considered",
       ),
     )
+  })
+
+  it("still passes when real headings coexist with a fenced code block that repeats them", async () => {
+    const body = [
+      "# 0001: A fixture decision",
+      "",
+      ...ALL_HEADINGS.map((h) => `${h}\n\nsome text.`),
+      "For reference, the scaffold looks like:",
+      "",
+      "```markdown",
+      ...ALL_HEADINGS,
+      "```",
+    ].join("\n\n")
+    await writeFile(path.join(root, "specs", "decisions", "0001-fenced-and-real.md"), body, "utf8")
+
+    const result = checkAdrStructure(root)
+
+    expect(result).toEqual({ ok: true, filesScanned: 1, violations: [] })
   })
 
   it("does not flag an extra heading beyond the required five", async () => {
