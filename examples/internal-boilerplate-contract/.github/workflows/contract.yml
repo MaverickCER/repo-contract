@@ -1,0 +1,33 @@
+# Reusable workflow: an organization calls this from every project of this type,
+# so CI runs the exact same contract as local development (`npm run contract`).
+#
+# This file is illustrative here -- GitHub only executes workflows from a
+# repository's own root .github/workflows/ directory. In a real organization it
+# lives in the published `internal-boilerplate-contract` repository.
+#
+# Production organizations should pin third-party actions to a full commit SHA
+# per their supply-chain policy.
+name: Contract
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          # The exported configs are TypeScript (eslint.config.ts, prettier.config.ts).
+          # Prettier loads a .ts config only on a Node with native type stripping, so
+          # this package requires Node >= 24 (see its package.json "engines").
+          node-version: 24.x
+          cache: npm
+      - run: npm ci
+      - run: npm run contract
