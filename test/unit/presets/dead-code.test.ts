@@ -3,6 +3,12 @@ import { deadCode } from "../../../src/presets/dead-code.js"
 import { enoentEvidence, fakeContext, fakeCheckEvidence } from "./fixtures.js"
 import type { CheckDefinitionConfig } from "../../../src/types.js"
 
+/**
+ * Fixtures model knip's `json` reporter as of knip 6: `{ issues: KnipIssue[] }`, one entry per
+ * file, each with an array per issue category. (knip 5 additionally had a top-level
+ * `files: string[]`; knip 6 folds unused files into `issues[].files`.)
+ */
+
 /** The args a real spawn would carry for this check -- `run[0]` is the command, the rest is `args`. */
 function argsFor(check: CheckDefinitionConfig): readonly string[] {
   const run = check.run
@@ -53,13 +59,13 @@ describe("deadCode preset", () => {
     })
   })
 
-  it("fails when report.issues is not an array, even if report.files is", async () => {
+  it("fails when report.issues is not an array", async () => {
     const check = deadCode()
     const result = await check.policy(
       fakeContext(
         fakeCheckEvidence({
           args: argsFor(check),
-          output: { format: "json", success: true, value: { issues: "not-an-array", files: [] } },
+          output: { format: "json", success: true, value: { issues: "not-an-array" } },
         }),
       ),
     )
@@ -69,53 +75,57 @@ describe("deadCode preset", () => {
     })
   })
 
-  it("fails when report.files is not an array, even if report.issues is", async () => {
+  it("passes when there are 0 issues", async () => {
     const check = deadCode()
     const result = await check.policy(
       fakeContext(
         fakeCheckEvidence({
           args: argsFor(check),
-          output: { format: "json", success: true, value: { issues: [], files: "not-an-array" } },
-        }),
-      ),
-    )
-    expect(result).toEqual({
-      outcome: "fail",
-      rationale: "Knip produced invalid JSON report data.",
-    })
-  })
-
-  it("passes when there are 0 issues and 0 unused files", async () => {
-    const check = deadCode()
-    const result = await check.policy(
-      fakeContext(
-        fakeCheckEvidence({
-          args: argsFor(check),
-          output: { format: "json", success: true, value: { issues: [], files: [] } },
+          output: { format: "json", success: true, value: { issues: [] } },
         }),
       ),
     )
     expect(result).toEqual({ outcome: "pass", rationale: "Knip reported 0 issues." })
   })
 
-  it("fails and lists every issue category (including location) plus unused files, joined by newline", async () => {
+  it("passes when an issue entry exists for a file but every category is empty", async () => {
+    const check = deadCode()
+    const result = await check.policy(
+      fakeContext(
+        fakeCheckEvidence({
+          args: argsFor(check),
+          output: {
+            format: "json",
+            success: true,
+            value: { issues: [{ file: "src/a.ts", exports: [], types: [] }] },
+          },
+        }),
+      ),
+    )
+    expect(result).toEqual({ outcome: "pass", rationale: "Knip reported 0 issues." })
+  })
+
+  it("fails and lists every issue category (with location), joined by newline", async () => {
     const check = deadCode()
     const report = {
       issues: [
         {
           file: "src/a.ts",
           dependencies: [{ name: "left-pad", line: 1, col: 1 }],
+          optionalPeerDependencies: [{ name: "opt-peer" }],
           unlisted: [{ name: "unlisted-pkg" }],
           unresolved: [{ name: "./missing" }],
           exports: [{ name: "unused", line: 5 }],
+          nsExports: [{ name: "ns.unused" }],
           types: [{ name: "UnusedType" }],
-          binaries: [{ name: "unused-bin" }],
-          duplicates: [{ name: "dup-export" }],
-          cycles: [{ name: "cycle" }],
-          files: [{ name: "internally-flagged-file" }],
+          nsTypes: [{ name: "ns.UnusedType" }],
+          enumMembers: [{ name: "Enum.MEMBER" }],
+          binaries: [{ name: "some-bin" }],
+          duplicates: [[{ name: "DupA" }, { name: "DupB" }]],
+          cycles: [[{ name: "a.ts" }, { name: "b.ts" }]],
+          files: [{ name: "src/a.ts" }],
         },
       ],
-      files: ["src/orphan.ts"],
     }
     const result = await check.policy(
       fakeContext(
@@ -129,15 +139,18 @@ describe("deadCode preset", () => {
     expect(result.outcome).toBe("fail")
     const lines = [
       "src/a.ts:1:1 — unused dependency: left-pad",
+      "src/a.ts — unused optional peer dependency: opt-peer",
       "src/a.ts — unlisted dependency: unlisted-pkg",
       "src/a.ts — unresolved import: ./missing",
       "src/a.ts:5:1 — unused export: unused",
+      "src/a.ts — unused export (namespace): ns.unused",
       "src/a.ts — unused type: UnusedType",
-      "src/a.ts — unused binary: unused-bin",
-      "src/a.ts — duplicate export: dup-export",
-      "src/a.ts — circular dependency: cycle",
-      "src/a.ts — unused file: internally-flagged-file",
-      "src/orphan.ts — unused file",
+      "src/a.ts — unused type (namespace): ns.UnusedType",
+      "src/a.ts — unused enum member: Enum.MEMBER",
+      "src/a.ts — unlisted binary: some-bin",
+      "src/a.ts — duplicate export: DupA, DupB",
+      "src/a.ts — circular dependency: a.ts, b.ts",
+      "src/a.ts — unused file: src/a.ts",
     ]
     expect(result.rationale).toBe(
       [`Knip reported ${String(lines.length)} issue(s):`, ...lines.map((line) => `- ${line}`)].join(
@@ -150,7 +163,6 @@ describe("deadCode preset", () => {
     const check = deadCode()
     const report = {
       issues: [{ file: "src/a.ts", dependencies: [{ name: "left-pad", line: 7 }] }],
-      files: [],
     }
     const result = await check.policy(
       fakeContext(
@@ -167,7 +179,6 @@ describe("deadCode preset", () => {
     const check = deadCode()
     const report = {
       issues: [{ file: "package.json", devDependencies: [{ name: "oxlint" }] }],
-      files: [],
     }
     const result = await check.policy(
       fakeContext(
@@ -186,7 +197,6 @@ describe("deadCode preset", () => {
     const check = deadCode({ exemptUnusedDevDependencies: ["oxlint"] })
     const report = {
       issues: [{ file: "package.json", devDependencies: [{ name: "oxlint" }] }],
-      files: [],
     }
     const result = await check.policy(
       fakeContext(
@@ -204,7 +214,6 @@ describe("deadCode preset", () => {
     const check = deadCode({ exemptUnusedDevDependencies: ["oxlint"] })
     const report = {
       issues: [{ file: "package.json", devDependencies: [{ name: "oxlint" }] }],
-      files: [],
     }
     const result = await check.policy(
       fakeContext(
@@ -224,7 +233,6 @@ describe("deadCode preset", () => {
     const check = deadCode()
     const report = {
       issues: [{ file: "package.json", devDependencies: [{ name: "sneaky" }] }],
-      files: [],
     }
     const result = await check.policy(
       fakeContext(
@@ -243,7 +251,6 @@ describe("deadCode preset", () => {
     const check = deadCode({ exemptUnusedDevDependencies: ["oxlint"] })
     const report = {
       issues: [{ file: "package.json", devDependencies: [{ name: "oxlint" }] }],
-      files: [],
     }
     const result = await check.policy(
       fakeContext(
@@ -269,7 +276,6 @@ describe("deadCode preset", () => {
       // ever replaced by a non-empty default, this exact name would start
       // passing as exempt.
       issues: [{ file: "package.json", devDependencies: [{ name: "Stryker was here" }] }],
-      files: [],
     }
     const result = await check.policy(
       fakeContext(
@@ -288,7 +294,6 @@ describe("deadCode preset", () => {
     const check = deadCode()
     const report = {
       issues: [{ file: "package.json", devDependencies: [{ name: "oxlint" }] }],
-      files: [],
     }
     const result = await check.policy(
       fakeContext(

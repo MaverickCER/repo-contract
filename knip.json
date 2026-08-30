@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
     "src/index.ts",
     "src/presets/index.ts",
@@ -31,6 +31,8 @@
     "secretlint",
     "tsx"
   ],
+  "ignoreBinaries": ["run.mjs", "run.cjs", "run-presets.mjs"],
+  "ignoreExportsUsedInFile": { "interface": true, "type": true },
   "vitest": {
     "config": [
       "vitest.config.ts",

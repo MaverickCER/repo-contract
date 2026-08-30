@@ -8,13 +8,13 @@
 //     reports/markdownlint.json instead, read back here after it runs -- the
 //     same file-based pattern as the mutation/size/duplication checks.
 //   - linkinator: broken-link detection across the same Markdown surface
-//     (`--markdown`), a pinned devDependency (see package.json) invoked via
-//     its own bin. Held on the `7` major rather than latest -- linkinator 8
-//     raises its own engines requirement to Node `>=22`, incompatible with
-//     this repository's own `>=20.0.0` floor
-//     (specs/decisions/0008-self-hosting-tool-and-dependency-choices.md); `7.6.1` targets
-//     `>=20`, comfortably inside that floor. Scoped to this repository's
-//     actual documentation locations (root-level, specs/, .changeset/,
+//     (`--markdown`), a devDependency (see package.json) invoked via its own
+//     bin. linkinator 8 requires Node `>=22`; that's fine -- the verification
+//     toolchain already runs only on the modern Node line (`.nvmrc`, and
+//     `.github/workflows/ci.yml`'s own note), well above the published
+//     package's `engines.node >=20` consumer floor, which the `published-floor`
+//     job proves independently with no dev dependencies installed. Scoped to
+//     this repository's actual documentation locations (root-level, specs/,
 //     .github/) rather than a blanket "**/*.md" -- linkinator has no .gitignore
 //     awareness of its own and would otherwise crawl every vendored README
 //     under node_modules. `--retry` lets it back off and retry on HTTP 429

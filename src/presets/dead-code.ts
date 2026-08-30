@@ -5,8 +5,11 @@ import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 /**
  * Knip does not expose the serialized JSON reporter result as a public
  * TypeScript type, so the local evidence type below intentionally models
- * that JSON contract. The policy reports the actual issue category and name
- * instead of only returning an issue count.
+ * that JSON contract. This targets knip's `json` reporter as of knip 6:
+ * `{ issues: KnipIssue[] }`, one entry per file, each carrying an array per
+ * issue category (`knip 5` additionally had a top-level `files: string[]` for
+ * unused files; knip 6 folds those into `issues[].files`). The policy reports
+ * the actual issue category and name instead of only returning a count.
  */
 interface KnipIssueEntry {
   readonly name: string
@@ -15,23 +18,29 @@ interface KnipIssueEntry {
   readonly pos?: number
 }
 
+/** `duplicates`/`cycles` group several symbols together; every other category is a flat entry. */
+type KnipCategory = readonly (KnipIssueEntry | readonly KnipIssueEntry[])[]
+
 interface KnipIssue {
   readonly file: string
-  readonly dependencies?: readonly KnipIssueEntry[]
-  readonly devDependencies?: readonly KnipIssueEntry[]
-  readonly unlisted?: readonly KnipIssueEntry[]
-  readonly unresolved?: readonly KnipIssueEntry[]
-  readonly exports?: readonly KnipIssueEntry[]
-  readonly types?: readonly KnipIssueEntry[]
-  readonly binaries?: readonly KnipIssueEntry[]
-  readonly duplicates?: readonly KnipIssueEntry[]
-  readonly cycles?: readonly KnipIssueEntry[]
-  readonly files?: readonly KnipIssueEntry[]
+  readonly dependencies?: KnipCategory
+  readonly devDependencies?: KnipCategory
+  readonly optionalPeerDependencies?: KnipCategory
+  readonly unlisted?: KnipCategory
+  readonly unresolved?: KnipCategory
+  readonly exports?: KnipCategory
+  readonly types?: KnipCategory
+  readonly nsExports?: KnipCategory
+  readonly nsTypes?: KnipCategory
+  readonly enumMembers?: KnipCategory
+  readonly binaries?: KnipCategory
+  readonly duplicates?: KnipCategory
+  readonly cycles?: KnipCategory
+  readonly files?: KnipCategory
 }
 
 interface KnipReport {
   readonly issues: readonly KnipIssue[]
-  readonly files: readonly string[]
 }
 
 /** Options accepted by {@link deadCode}. */
@@ -87,6 +96,28 @@ function readReporterOptions(args: readonly string[]): DeadCodeOptions | undefin
 }
 
 /**
+ * Renders one category entry as `{ name, location }`. `duplicates`/`cycles` entries are a
+ * group of symbols (knip pushes `symbols.map(...)`); every other category is a flat entry.
+ * @param entry - a single `KnipIssueEntry`, or a `duplicates`/`cycles` group of them.
+ * @returns the joined symbol name(s) and a `:line:col` suffix (empty for a group or a
+ *   location-less entry).
+ */
+function formatEntry(entry: KnipIssueEntry | readonly KnipIssueEntry[]): {
+  readonly name: string
+  readonly location: string
+} {
+  if (Array.isArray(entry)) {
+    const group = entry as readonly KnipIssueEntry[]
+    return { name: group.map((member) => member.name).join(", "), location: "" }
+  }
+
+  const single = entry as KnipIssueEntry
+  const location =
+    typeof single.line === "number" ? `:${String(single.line)}:${String(single.col ?? 1)}` : ""
+  return { name: single.name, location }
+}
+
+/**
  * Dead/unused-code detection via knip.
  * @param options - configuration for this check; see {@link DeadCodeOptions}.
  * @returns the configured check.
@@ -116,16 +147,15 @@ export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
 
       const report = result.output.value as KnipReport
 
-      if (!Array.isArray(report.issues) || !Array.isArray(report.files)) {
+      if (!Array.isArray(report.issues)) {
         return { outcome: "fail", rationale: "Knip produced invalid JSON report data." }
       }
 
       // Re-annotated rather than used directly: `Array.isArray` narrows its
       // argument to `any[]` regardless of the checked value's declared type (a
-      // long-standing TypeScript limitation), so `report.issues`/`report.files`
-      // would otherwise silently lose their element types below.
+      // long-standing TypeScript limitation), so `report.issues` would
+      // otherwise silently lose its element type below.
       const issues: readonly KnipIssue[] = report.issues
-      const files: readonly string[] = report.files
 
       const exemptDevDependencies = new Set(
         readReporterOptions(result.args)?.exemptUnusedDevDependencies ?? [],
@@ -136,37 +166,34 @@ export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
       for (const issue of issues) {
         const addEntries = (
           label: string,
-          entries: readonly KnipIssueEntry[] | undefined,
+          entries: KnipCategory | undefined,
           ignored: ReadonlySet<string> = new Set(),
         ): void => {
           for (const entry of entries ?? []) {
-            if (ignored.has(entry.name)) {
+            const { name, location } = formatEntry(entry)
+
+            if (ignored.has(name)) {
               continue
             }
 
-            const location =
-              typeof entry.line === "number"
-                ? `:${String(entry.line)}:${String(entry.col ?? 1)}`
-                : ""
-
-            details.push(`${issue.file}${location} — ${label}: ${entry.name}`)
+            details.push(`${issue.file}${location} — ${label}: ${name}`)
           }
         }
 
         addEntries("unused dependency", issue.dependencies)
         addEntries("unused devDependency", issue.devDependencies, exemptDevDependencies)
+        addEntries("unused optional peer dependency", issue.optionalPeerDependencies)
         addEntries("unlisted dependency", issue.unlisted)
         addEntries("unresolved import", issue.unresolved)
         addEntries("unused export", issue.exports)
+        addEntries("unused export (namespace)", issue.nsExports)
         addEntries("unused type", issue.types)
-        addEntries("unused binary", issue.binaries)
+        addEntries("unused type (namespace)", issue.nsTypes)
+        addEntries("unused enum member", issue.enumMembers)
+        addEntries("unlisted binary", issue.binaries)
         addEntries("duplicate export", issue.duplicates)
         addEntries("circular dependency", issue.cycles)
         addEntries("unused file", issue.files)
-      }
-
-      for (const file of files) {
-        details.push(`${file} — unused file`)
       }
 
       if (details.length === 0) {
