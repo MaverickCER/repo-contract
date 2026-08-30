@@ -36,9 +36,15 @@ describe("detectSchemaVersionDrift -- property-based", () => {
     fc.assert(
       fc.property(
         literalArbitrary,
-        literalArbitrary,
+        fc.boolean(),
         modeArbitrary,
-        (literalBefore, literalAfter, mode) => {
+        (literalBefore, versionLiteralChanged, mode) => {
+          // Derived, not independently sampled: two random literals are almost
+          // never equal, so an independent `literalAfter` left the drift-positive
+          // branch (`literal unchanged` + `sibling changed`) essentially
+          // unreachable across 200 runs. The boolean forces ~50% of runs through
+          // it. The `/* v2 */` suffix cannot collide with either literal shape.
+          const literalAfter = versionLiteralChanged ? `${literalBefore} /* v2 */` : literalBefore
           const interfaceRef = "!pkg#Evidence:interface"
           const interfaceMember = member({
             canonicalReference: interfaceRef,
@@ -102,7 +108,7 @@ describe("detectSchemaVersionDrift -- property-based", () => {
           ])
 
           const drift = detectSchemaVersionDrift(baseline, current)
-          const expectDrift = mode !== "same" && literalBefore === literalAfter
+          const expectDrift = mode !== "same" && !versionLiteralChanged
 
           if (expectDrift) {
             expect(drift).toHaveLength(1)

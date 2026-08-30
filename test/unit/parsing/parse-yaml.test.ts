@@ -27,7 +27,8 @@ describe("parseYaml", () => {
     }
   })
 
-  it("parses an empty string as a null/undefined document without throwing", async () => {
-    await expect(parseYaml("", "check-id")).resolves.toMatchObject({ format: "yaml" })
+  it("parses an empty string as a successful null document without throwing", async () => {
+    const result = await parseYaml("", "check-id")
+    expect(result).toEqual({ format: "yaml", success: true, value: null })
   })
 })

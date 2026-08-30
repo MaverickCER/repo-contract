@@ -82,7 +82,7 @@ describe("buildEvidence", () => {
     expect(evidence.checks.mutation?.stdout).toBe("not json")
   })
 
-  it("does not attempt to parse output for a spawn_error check even if a format was requested", async () => {
+  it("still parses stdout for a spawn_error check when a format was requested (empty stdout -> a clean parse failure), and preserves spawnError", async () => {
     const check: CheckDefinition = {
       run: "definitely-not-a-real-binary",
       output: { format: "json" },
@@ -98,9 +98,11 @@ describe("buildEvidence", () => {
 
     const { evidence } = await buildEvidence(results, new Date(0), new Date(1000))
 
-    // Parsing an empty string as JSON is itself a well-formed failure (not
-    // a crash) -- the important assertion is that spawnError is preserved
-    // and the pipeline doesn't throw for this combination.
+    // buildEvidence parses whenever a `format` was requested -- it never
+    // branches on `status`. For a spawn_error the stdout is empty, so the
+    // parse is a well-formed failure (`success: false`), not a crash; the
+    // pipeline still doesn't throw, and spawnError is carried through
+    // untouched alongside the parsed result.
     expect(evidence.checks.broken?.spawnError).toBe("spawn ENOENT")
     expect(evidence.checks.broken?.output?.success).toBe(false)
   })

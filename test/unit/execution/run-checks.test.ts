@@ -74,26 +74,17 @@ describe("runChecks", () => {
   })
 
   it("respects the configured concurrency limit across the whole fan-out", async () => {
-    let inFlight = 0
-    let maxInFlight = 0
     const checks: CheckSchema = Object.fromEntries(
       Array.from({ length: 6 }, (_, i) => [
         `c${String(i)}`,
-        {
-          run: [process.execPath, "-e", "setTimeout(() => {}, 50)"],
-          policy: (): PolicyResult => {
-            inFlight += 1
-            maxInFlight = Math.max(maxInFlight, inFlight)
-            inFlight -= 1
-            return { outcome: "pass", rationale: "ok" }
-          },
-        },
+        { run: [process.execPath, "-e", "setTimeout(() => {}, 50)"], policy: okPolicy },
       ]),
     )
-    // We can't observe cross-process concurrency directly from evidence, so
-    // this test checks the fan-out completes correctly under a real
-    // concurrency cap rather than re-measuring process-level parallelism
-    // (already covered by concurrency-pool.test.ts).
+    // Process-level parallelism is measured directly in concurrency-pool.test.ts;
+    // policies run in their own strictly-phased stage (ADR 0001), never
+    // concurrently with execution, so a counter in the policy callback would
+    // only ever see 1. This test's job is that the whole fan-out still
+    // completes correctly under a real concurrency cap.
     const results = await runChecks(checks, 2, undefined)
     expect(results).toHaveLength(6)
     expect(results.every(([, , evidence]) => evidence.status === "completed")).toBe(true)
