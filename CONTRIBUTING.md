@@ -66,3 +66,12 @@ enforces it.
 ## Releasing
 
 Maintainer release and publishing steps are in [`RELEASING.md`](RELEASING.md).
+
+Releases are cut by [release-please](https://github.com/googleapis/release-please): merging
+to `main` maintains a "Release PR" that bumps the version and `CHANGELOG.md`, and merging
+_that_ PR tags the release and publishes to npm over OIDC. Two caveats apply until the
+automated flow has run once — the npm package must be published manually the first time
+(npm cannot register a trusted publisher for a package that does not exist), and the first
+Release PR is opened by hand if _"Allow GitHub Actions to create and approve pull
+requests"_ is off. Both are written up in
+[`RELEASING.md`](RELEASING.md#first-release-bootstrap).
