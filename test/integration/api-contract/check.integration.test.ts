@@ -11,11 +11,16 @@ import { removeTempDir } from "../../helpers/remove-temp-dir.js"
  * The complete real path: source -> API Extractor -> API JSON -> historical comparison (from a
  * real git repo's HEAD) -> evidence -> Conventional-Commits bump comparison. No subprocess is
  * spawned -- `runApiContractCheck` is called in-process against a scratch fixture repository, per
- * the project's real-behavior-over-mocking house style. The scratch repo has no `origin/main`, so
- * `commits` always reports 0 analyzed / `declaredLevel: "none"` (see scripts/git-commits.ts).
+ * the project's real-behavior-over-mocking house style. The scratch repo has no `origin/main` and
+ * `PR_TITLE` is cleared below, so `commits` reports 0 analyzed / `declaredLevel: "none"` (see
+ * scripts/git-commits.ts and check.ts's `parsePrTitleArg`) -- otherwise CI's own `contract` job,
+ * which exports `PR_TITLE` to the whole process, would leak the real PR title into these
+ * fixture-repo runs and, whenever that title is a conventional `feat:`/`fix:`/`!` commit, break
+ * every assertion here that expects the scratch repo to declare nothing.
  */
 
 let root: string
+let savedPrTitle: string | undefined
 
 function git(...args: string[]): string {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" })
@@ -50,6 +55,8 @@ export {}
 `
 
 beforeEach(async () => {
+  savedPrTitle = process.env.PR_TITLE
+  delete process.env.PR_TITLE
   root = await mkdtemp(path.join(os.tmpdir(), "repo-contract-check-integration-"))
   git("init", "-q")
   git("config", "user.email", "test@example.com")
@@ -57,6 +64,8 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
+  if (savedPrTitle === undefined) delete process.env.PR_TITLE
+  else process.env.PR_TITLE = savedPrTitle
   await removeTempDir(root)
 })
 
