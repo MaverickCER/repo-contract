@@ -340,7 +340,7 @@ is documented under "Coverage architecture" below; API compatibility's commit-ba
   `github.event.*` / `github.head_ref` used directly in `run:`). This is a mature external analyzer
   integrated into the evidence/verdict model rather than a reimplemented workflow scanner -- the
   general pattern ADR 0010
-  (`decisions/0010-review-driven-contracts-and-shared-internal-system-contracts`) describes for
+  (`decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md`) describes for
   adopting an established capability (the tool itself is a local choice, not fixed by that ADR).
   actionlint performs the analysis; this check only decides how its findings participate in the
   verdict.
