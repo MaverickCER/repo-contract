@@ -1,0 +1,23 @@
+{
+  // The organization's baseline TypeScript configuration.
+  //
+  // Consumers EXTEND it, they do not copy it:
+  //   { "extends": "internal-boilerplate-contract/tsconfig", "include": ["src"] }
+  //
+  // Inheriting rather than copying is the point — the baseline can then evolve in
+  // one place. There is deliberately no "include": choosing what to compile is the
+  // consuming project's decision.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}

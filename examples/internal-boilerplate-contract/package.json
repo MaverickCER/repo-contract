@@ -1,0 +1,31 @@
+{
+  "name": "internal-boilerplate-contract",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Example: an organization's engineering standard for a project type, built on repo-contract.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "internal-boilerplate-contract": "./bin/contract.mjs"
+  },
+  "exports": {
+    "./eslint": "./eslint.config.ts",
+    "./prettier": "./prettier.config.ts",
+    "./tsconfig": "./tsconfig.json"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^20.19.43",
+    "eslint": "^10.9.0",
+    "globals": "^17.11.0",
+    "jiti": "^2.7.0",
+    "prettier": "^3.9.6",
+    "repo-contract": "file:../..",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.68.0"
+  }
+}
