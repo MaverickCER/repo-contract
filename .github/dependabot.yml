@@ -23,19 +23,17 @@ updates:
     labels:
       - dependencies
     groups:
-      # One PR per week for the whole dev/verification toolchain.
+      # One PR per week for the whole dev/verification toolchain -- minor, patch,
+      # AND major. None of it reaches consumers, so a batched bump is fine; a
+      # major that actually breaks the build shows up as a red PR, not a silent
+      # merge. Production deps are deliberately left out of every group (there is
+      # one, `cross-spawn`) so each gets its own reviewable PR.
       dev-dependencies:
         dependency-type: development
         update-types:
           - minor
           - patch
-      # Production deps are few and consumer-facing -- keep them ungrouped so
-      # each gets its own reviewable PR, including majors.
-      production-dependencies:
-        dependency-type: production
-        update-types:
-          - minor
-          - patch
+          - major
 
   - package-ecosystem: github-actions
     directory: "/"
