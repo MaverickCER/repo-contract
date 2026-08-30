@@ -41,6 +41,15 @@ GEMINI.md
 # Stryker's own scratch workspace
 .stryker-tmp
 
+# examples/ is a self-contained npm workspace (see examples/README.md) that is
+# installed and run on its own, never by this repo. Its install output and its
+# regenerated lockfile are local-only -- the root `/dist` entry above is
+# root-anchored and does not cover a nested examples/**/dist.
+examples/**/node_modules
+examples/**/dist
+examples/**/*.tsbuildinfo
+examples/package-lock.json
+
 # Ephemeral, fully re-derivable from dist/ on every `npm run contract` run --
 # .repo-contract/api-contract/baseline.* is the only committed state.
 .repo-contract/api-contract/current.api.md
