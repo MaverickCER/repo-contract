@@ -10,7 +10,9 @@ export declare function runNpm(
   options?: { readonly cwd?: string },
 ): {
   readonly status: number | null
-  readonly stdout: string
-  readonly stderr: string
+  // `null` when the child process never started (cross-spawn/spawnSync returns
+  // `stdout`/`stderr` as `null` in that case, alongside `error`).
+  readonly stdout: string | null
+  readonly stderr: string | null
   readonly error?: Error
 }

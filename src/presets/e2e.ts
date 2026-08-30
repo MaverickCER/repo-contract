@@ -104,7 +104,10 @@ export const e2e: CheckDefinitionConfig = {
     const report = value as PlaywrightReport
     const stats = report.stats
 
-    if (!stats) {
+    if (!stats || typeof stats.unexpected !== "number" || typeof stats.flaky !== "number") {
+      // The outcome checks below compare `unexpected`/`flaky` numerically -- a
+      // missing or non-numeric counter must fail cleanly, not slip through every
+      // comparison as `false`.
       return { outcome: "fail", rationale: "Playwright produced invalid JSON report data." }
     }
 

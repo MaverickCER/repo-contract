@@ -18,6 +18,14 @@ describe("evaluateSecurityNetworkPolicy", () => {
     expect(result.rationale).toContain("39 file(s)")
   })
 
+  it("fails when zero files were scanned, even with no findings", () => {
+    const result = evaluateSecurityNetworkPolicy({
+      evidence: evidence({ filesScanned: 0 }),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("zero files scanned")
+  })
+
   it("fails and lists every finding by file, location, and capability", () => {
     const result = evaluateSecurityNetworkPolicy({
       evidence: evidence({

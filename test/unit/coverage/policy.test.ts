@@ -52,8 +52,10 @@ describe("evaluateCoveragePolicy", () => {
 
   it("reports every threshold metric's actual percentage in a passing rationale", () => {
     const result = evaluateCoveragePolicy({ evidence: summary() })
-    for (const metric of Object.keys(COVERAGE_THRESHOLDS)) {
-      expect(result.rationale).toContain(metric)
+    for (const [metric, threshold] of Object.entries(COVERAGE_THRESHOLDS)) {
+      // `summary()` sets each metric's pct to its own threshold, so that exact
+      // `metric: N%` pair must appear -- not just the bare metric name.
+      expect(result.rationale).toContain(`${metric}: ${String(threshold)}%`)
     }
   })
 })

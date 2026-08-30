@@ -87,6 +87,14 @@ async function loadHistory() {
       return []
     }
 
-    throw error
+    // A corrupt or non-array history.json is a disposable local scratch log
+    // (see MAX_HISTORY_ENTRIES's note) -- reset it and carry on rather than
+    // crashing the run before its summary and exit code are emitted.
+    console.warn(
+      `[run-contract] ${path.relative(root, historyPath)} was unreadable ` +
+        `(${error instanceof Error ? error.message : String(error)}); resetting it.`,
+    )
+    await writeFile(historyPath, "[]\n", "utf8")
+    return []
   }
 }

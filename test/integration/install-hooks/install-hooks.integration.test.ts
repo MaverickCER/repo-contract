@@ -19,12 +19,20 @@ const SCRIPT = path.join(
 
 let dir: string
 
+// `GIT_CEILING_DIRECTORIES` stops git's repository discovery from walking out of
+// the throwaway dir into whatever ancestor repo the OS temp dir may live under --
+// otherwise `git config --local` (here and in the script) could read an
+// unrelated repo's config and the "outside a git checkout" case would be bogus.
+function gitEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  return { ...process.env, GIT_CEILING_DIRECTORIES: dir, ...extra }
+}
+
 function runScript(env: NodeJS.ProcessEnv = {}) {
   return spawnSync(process.execPath, [SCRIPT], {
     cwd: dir,
     encoding: "utf8",
     // Drop an inherited CI var so the default case isn't accidentally skipped.
-    env: { ...process.env, CI: undefined, ...env },
+    env: gitEnv({ CI: undefined, ...env }),
   })
 }
 
@@ -32,6 +40,7 @@ function gitConfig(key: string): string {
   const result = spawnSync("git", ["config", "--local", "--get", key], {
     cwd: dir,
     encoding: "utf8",
+    env: gitEnv(),
   })
   return result.status === 0 ? result.stdout.trim() : ""
 }
@@ -56,7 +65,7 @@ afterEach(() => {
 
 describe("install-hooks in a git checkout", () => {
   beforeEach(() => {
-    execFileSync("git", ["init", "-q"], { cwd: dir })
+    execFileSync("git", ["init", "-q"], { cwd: dir, env: gitEnv() })
   })
 
   it("points core.hooksPath at .githooks", () => {

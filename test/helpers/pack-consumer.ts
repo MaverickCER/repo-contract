@@ -68,7 +68,13 @@ export function removeConsumerFixture(consumerDir: string | undefined): void {
   // suite's `afterAll` still runs with `consumerDir` never assigned -- cleanup shouldn't then
   // throw a second, less informative error on top of the real failure.
   if (consumerDir === undefined) return
-  rmSync(consumerDir, { recursive: true, force: true })
+  try {
+    // Same Windows EBUSY/EPERM tolerance as remove-temp-dir.ts -- see its doc
+    // comment. A throwaway fixture the OS reaps anyway must not fail the run.
+    rmSync(consumerDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
+  } catch {
+    // Best-effort cleanup.
+  }
 }
 
 /**

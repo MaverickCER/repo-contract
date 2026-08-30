@@ -215,7 +215,11 @@ function buildMember(item: ApiItem, threshold: ReleaseTagLevel): NormalizedMembe
  * Kinds with no meaningful contract signature of their own -- pure structural containers that
  * exist to hold other items, not declarations a consumer could depend on directly.
  */
-const CONTAINER_ONLY_KINDS = new Set(["Model", "Package", "EntryPoint"])
+const CONTAINER_ONLY_KINDS = new Set<ApiItemKind>([
+  ApiItemKind.Model,
+  ApiItemKind.Package,
+  ApiItemKind.EntryPoint,
+])
 
 /**
  * @param pkg - The API package (from a loaded `.api.json` Doc Model) to walk.

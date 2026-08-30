@@ -39,6 +39,12 @@ interface DuplicationOptions {
   readonly path?: string
 }
 
+// Kept in lockstep with the `--output reports/jscpd` argument below. Both are
+// relative and resolve against the *host* process's cwd, not the check's own
+// `cwd` option: jscpd writes here and this policy's `readFile` reads from here,
+// so a check configured with a different `cwd` would look in the wrong place.
+// This preset does not expose an output-path option -- a consumer needing one
+// runs jscpd via a custom `run`/`policy` instead.
 const REPORT_PATH = "reports/jscpd/jscpd-report.json"
 
 // jscpd's JSON reporter writes its report to disk -- it never prints JSON to
@@ -90,7 +96,14 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
       const report = value as JscpdReport
       const total = report.statistics?.total
 
-      if (!Array.isArray(report.duplicates) || !total) {
+      if (
+        !Array.isArray(report.duplicates) ||
+        !total ||
+        typeof total.percentage !== "number" ||
+        !Number.isFinite(total.percentage)
+      ) {
+        // `total.percentage` feeds `.toFixed(2)` below -- a missing or non-finite
+        // value would throw or render "NaN" instead of failing cleanly.
         return { outcome: "fail", rationale: "jscpd produced invalid JSON report data." }
       }
 

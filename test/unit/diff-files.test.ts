@@ -21,6 +21,12 @@ beforeEach(async () => {
   git("init", "-q")
   git("config", "user.email", "test@example.com")
   git("config", "user.name", "Test")
+  // Isolate from a contributor's global config: a global `commit.gpgsign=true`
+  // would make `commitAll` prompt/fail here, and an inherited `core.hooksPath`
+  // could run unrelated hooks. `listChangedFiles` already passes its own
+  // `-c core.quotePath=false`/`-M`, so those stay untouched.
+  git("config", "commit.gpgsign", "false")
+  git("config", "core.hooksPath", "")
 })
 
 afterEach(async () => {

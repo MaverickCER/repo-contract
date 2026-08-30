@@ -207,7 +207,13 @@ describe("validateSuppressionRegistry", () => {
   })
 
   it("rebuilds records as fresh objects, ignoring extraneous keys on the parsed input", () => {
-    const tampered = { ...record(), extraneous: "should not survive", __proto__: { evil: true } }
+    // `__proto__` via JSON.parse is a real own enumerable key (an object-literal
+    // `__proto__:` would instead be the prototype-setter and prove nothing).
+    const tampered = {
+      ...record(),
+      extraneous: "should not survive",
+      ...(JSON.parse('{"__proto__":{"evil":true}}') as object),
+    }
     const result = validateSuppressionRegistry([tampered])
 
     expect(result.ok).toBe(true)

@@ -124,15 +124,25 @@ describe("buildEvidence", () => {
   })
 
   it("returns entries in the same order as the input results, paired with check + evidence", async () => {
+    const checkC: CheckDefinition = { run: "echo c", policy: okPolicy }
     const checkA: CheckDefinition = { run: "echo a", policy: okPolicy }
-    const results: readonly CheckExecutionEntry[] = [["a", checkA, rawEvidence()]]
+    const checkB: CheckDefinition = { run: "echo b", policy: okPolicy }
+    // Deliberately not alphabetical, and each with distinguishable evidence, so
+    // an accidental re-sort or key-insertion-order dependence would be caught.
+    const results: readonly CheckExecutionEntry[] = [
+      ["c", checkC, rawEvidence({ stdout: "c-out" })],
+      ["a", checkA, rawEvidence({ stdout: "a-out" })],
+      ["b", checkB, rawEvidence({ stdout: "b-out" })],
+    ]
 
     const { entries } = await buildEvidence(results, new Date(0), new Date(1000))
 
-    expect(entries).toHaveLength(1)
-    expect(entries[0]?.[0]).toBe("a")
-    expect(entries[0]?.[1]).toBe(checkA)
-    expect(entries[0]?.[2].stdout).toBe("hi")
+    expect(entries).toHaveLength(3)
+    expect(entries.map((entry) => entry[0])).toEqual(["c", "a", "b"])
+    expect(entries[0]?.[1]).toBe(checkC)
+    expect(entries[1]?.[1]).toBe(checkA)
+    expect(entries[2]?.[1]).toBe(checkB)
+    expect(entries.map((entry) => entry[2].stdout)).toEqual(["c-out", "a-out", "b-out"])
   })
 
   it("handles zero checks", async () => {

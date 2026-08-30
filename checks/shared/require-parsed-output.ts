@@ -26,7 +26,10 @@ export function requireParsedOutput<T>(
   rationale: string,
 ): RequiredParsedOutput<T> {
   if (!output?.success) {
-    return { ok: false, result: { outcome: "fail", rationale } }
+    // Surface the underlying parse error (when there is one) to every consumer:
+    // the caller's rationale says which check failed, `output.error` says why.
+    const detailed = output?.error ? `${rationale} ${output.error}` : rationale
+    return { ok: false, result: { outcome: "fail", rationale: detailed } }
   }
   return { ok: true, value: output.value as T }
 }

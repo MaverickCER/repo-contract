@@ -78,6 +78,10 @@ describe("eslintRecognizer", () => {
   it("does not recognize unrelated text", () => {
     expect(eslintRecognizer("just a normal comment")).toBeUndefined()
   })
+
+  it("returns undefined for a separator-only rule list that parses to no rules", () => {
+    expect(eslintRecognizer("eslint-disable-next-line ,")).toBeUndefined()
+  })
 })
 
 describe("typescriptRecognizer", () => {
@@ -94,6 +98,14 @@ describe("typescriptRecognizer", () => {
       domain: "typescript",
       rule: ["@ts-expect-error"],
       reason: "legacy API",
+    })
+  })
+
+  it("recognizes @ts-nocheck", () => {
+    expect(typescriptRecognizer("@ts-nocheck")).toEqual({
+      domain: "typescript",
+      rule: ["@ts-nocheck"],
+      reason: "",
     })
   })
 

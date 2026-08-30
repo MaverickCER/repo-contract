@@ -48,7 +48,10 @@ export function evaluateVitestJsonPolicy(output: ParsedOutput<unknown> | undefin
   }
 
   const failures = report.testResults.flatMap((suite: VitestJsonTestSuite): string[] =>
-    suite.assertionResults
+    // A suite missing `assertionResults` entirely (a partial/older reporter
+    // shape) must not throw out of the policy -- treat it as contributing no
+    // failure detail lines.
+    (suite.assertionResults ?? [])
       .filter((test: VitestJsonAssertion) => test.status === "failed")
       .map((test: VitestJsonAssertion) => {
         const location = test.location

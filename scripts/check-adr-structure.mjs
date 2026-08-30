@@ -30,7 +30,10 @@ const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 // A single flat character class (never a repeated group) -- avoids the nested-quantifier shape
 // that trips security/detect-unsafe-regex, the same fix this repository's own suppression
 // governance ADR documents choosing over a suppression when a real code-level fix is available.
-const FILENAME_PATTERN = /^(\d{4})-[a-z0-9-]+\.md$/
+// The title segment must open with a real letter/digit -- `[a-z0-9-]+` alone
+// accepts empty-or-hyphen-only titles like `0001--.md`. A fixed leading atom
+// before the flat class keeps this free of the nested-quantifier shape.
+const FILENAME_PATTERN = /^(\d{4})-[a-z0-9][a-z0-9-]*\.md$/
 const REQUIRED_HEADINGS = [
   "## Status",
   "## Context",
@@ -68,8 +71,9 @@ export function checkAdrStructure(root = DEFAULT_ROOT) {
       const text = readFileSync(path.join(decisionsDir, file), "utf8")
       // Only headings that appear as real Markdown structure count -- a required heading that
       // shows up solely inside a fenced code block (an ADR quoting the `adr:new` template, say)
-      // does not satisfy the requirement. Track fence state line by line and ignore fenced lines;
-      // keep the loose `.includes` test for parity with the previous whole-file check.
+      // does not satisfy the requirement. Track fence state line by line and ignore fenced lines.
+      // The line must be an actual level-two ATX heading whose title matches exactly -- a
+      // substring test also accepted `### Status`, `## Statuses`, or the phrase mid-sentence.
       const headingsFound = new Set()
       let inFence = false
       for (const line of text.split(/\r?\n/)) {
@@ -78,9 +82,10 @@ export function checkAdrStructure(root = DEFAULT_ROOT) {
           continue
         }
         if (inFence) continue
-        for (const heading of REQUIRED_HEADINGS) {
-          if (line.includes(heading)) headingsFound.add(heading)
-        }
+        const headingMatch = /^(#{1,6})\s+(.+?)\s*$/.exec(line)
+        if (!headingMatch || headingMatch[1].length !== 2) continue
+        const heading = `## ${headingMatch[2]}`
+        if (REQUIRED_HEADINGS.includes(heading)) headingsFound.add(heading)
       }
       const missing = REQUIRED_HEADINGS.filter((heading) => !headingsFound.has(heading))
       if (missing.length > 0) {

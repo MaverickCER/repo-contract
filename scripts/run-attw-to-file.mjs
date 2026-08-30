@@ -24,7 +24,7 @@
 // Packing here instead, exactly like `test/helpers/pack-consumer.ts` already does for the same
 // reason, removes the shared-state write entirely rather than trying to schedule around it.
 
-import { execFileSync } from "node:child_process"
+import { sync as spawnSync } from "cross-spawn"
 import { closeSync, mkdirSync, mkdtempSync, openSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -42,6 +42,7 @@ try {
   const { tarballPath } = packTarball(packDir)
 
   const fd = openSync("reports/arethetypeswrong.json", "w")
+  let result
   try {
     // `--exclude-entrypoints ./schema`: the `./schema` export is a bare
     // `*.schema.json` file, not a code/types entrypoint. attw's `node10`
@@ -52,18 +53,28 @@ try {
     // fully evaluated. This is the consumer-supplied `run` override the preset
     // itself documents (src/presets/arethetypeswrong.ts) rather than guessing
     // a generic exclusion.
-    execFileSync("attw", [tarballPath, "--format", "json", "--exclude-entrypoints", "./schema"], {
-      stdio: ["ignore", fd, "inherit"],
-    })
-    process.exitCode = 0
-  } catch (error) {
-    // attw exits non-zero when it finds packaging problems -- that's
-    // substantive evidence for the check's own policy to interpret, not an
-    // infrastructure failure of this wrapper script itself.
-    process.exitCode = typeof error.status === "number" ? error.status : 1
+    //
+    // cross-spawn (not execFileSync) so the Windows `attw.cmd` shim runs at
+    // all -- since CVE-2024-27980's mitigation, Node refuses to exec a
+    // `.cmd`/`.bat` without `shell: true` (see scripts/npm-pack.mjs's note #2).
+    result = spawnSync(
+      "attw",
+      [tarballPath, "--format", "json", "--exclude-entrypoints", "./schema"],
+      { stdio: ["ignore", fd, "inherit"] },
+    )
   } finally {
     closeSync(fd)
   }
+
+  if (result.error) {
+    // attw couldn't be spawned at all -- a real infrastructure failure of this
+    // wrapper, distinct from attw running and reporting packaging problems.
+    throw result.error
+  }
+
+  // attw exits non-zero when it finds packaging problems -- that's substantive
+  // evidence for the check's own policy to interpret, passed through verbatim.
+  process.exitCode = typeof result.status === "number" ? result.status : 1
 } finally {
   rmSync(packDir, { recursive: true, force: true })
 }

@@ -176,10 +176,13 @@ export async function runPolicies(
   const thrown: (
     PolicyThrewError | PolicyReadUnrequestedOutputError | PolicyReadFailedParseValueError
   )[] = []
-  const checkResults: (readonly [string, PolicyResult])[] = []
+  // Indexed by each entry's position, not appended on promise resolution: the
+  // policies run concurrently and settle in arbitrary order, but `Verdict.checks`
+  // must follow declaration order, consistently with `Evidence.checks`.
+  const checkResults: (readonly [string, PolicyResult] | undefined)[] = []
 
   await Promise.all(
-    entries.map(async ([checkId, check, checkEvidence]) => {
+    entries.map(async ([checkId, check, checkEvidence], entryIndex) => {
       // Derived on the fly from data that already exists (this check's own
       // dependsOn plus the already-fully-assembled evidence.checks) --
       // never persisted, so Evidence's own shape/schema doesn't grow. `{}`
@@ -223,7 +226,7 @@ export async function runPolicies(
         thrown.push(wrapPolicyFailure(checkId, checkEvidence.output, error))
         return
       }
-      checkResults.push([checkId, outcome])
+      checkResults[entryIndex] = [checkId, outcome]
     }),
   )
 
@@ -246,8 +249,14 @@ export async function runPolicies(
     )
   }
 
-  const checks = Object.fromEntries(checkResults)
-  const passed = checkResults.every(([, result]) => result.outcome !== "fail")
+  // Every slot is filled by now: any policy that threw took the early-return
+  // path above, and `thrown.length` being 0 here means none did. The filter
+  // narrows the type (and keeps declaration order) for the two readers below.
+  const orderedResults = checkResults.filter(
+    (entry): entry is readonly [string, PolicyResult] => entry !== undefined,
+  )
+  const checks = Object.fromEntries(orderedResults)
+  const passed = orderedResults.every(([, result]) => result.outcome !== "fail")
 
   return { version: 2, passed, checks }
 }

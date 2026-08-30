@@ -307,7 +307,9 @@ export const mutation: CheckDefinitionConfig = {
     const detected = killed.length + runtimeErrors.length + compileErrors.length
     const applicableMutants = mutants.length - justifiedIgnored.length - staticIgnored.length
 
-    const score = applicableMutants === 0 ? 100 : (detected / applicableMutants) * 100 // Killed, RuntimeError, and CompileError are all accepted: a mutant a
+    const score = applicableMutants === 0 ? 100 : (detected / applicableMutants) * 100
+
+    // Killed, RuntimeError, and CompileError are all accepted: a mutant a
     // test suite could not even execute cleanly is not evidence of a test
     // gap the way a Survived mutant is. Timeout, NoCoverage, Survived, and
     // unjustified Ignored mutants each fail the check outright, and so does

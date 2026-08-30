@@ -428,9 +428,9 @@ describe("classifyContractChanges", () => {
 
     const { changes } = classify([removed], [addedM, addedA])
     expect(changes.map((c) => c.id)).toEqual([
-      addedA.canonicalReference,
-      addedM.canonicalReference,
-      removed.canonicalReference,
+      `${addedA.canonicalReference}#export-added`,
+      `${addedM.canonicalReference}#export-added`,
+      `${removed.canonicalReference}#export-removed`,
     ])
   })
 })

@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { evaluateCrapPolicy } from "../../../checks/crap.js"
+import { CRAP_THRESHOLD, MAX_COMPLEXITY, evaluateCrapPolicy } from "../../../checks/crap.js"
 import type { CrapFunction, CrapReport } from "../../../checks/crap.js"
-
-// Mirrors checks/crap.ts's own CRAP_THRESHOLD (30) and MAX_COMPLEXITY (20) -- neither is imported
-// (they aren't exported), so this pins the same boundary values the policy actually enforces. If
-// either ever changes, the boundary tests below must change with it, which is the point: they'd
-// otherwise silently test the wrong number.
-const CRAP_THRESHOLD = 30
-const MAX_COMPLEXITY = 20
 
 function fn(overrides: Partial<CrapFunction> = {}): CrapFunction {
   return {

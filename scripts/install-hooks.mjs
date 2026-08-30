@@ -33,7 +33,17 @@ function gitConfigGet(key) {
 }
 
 function gitConfigSet(key, value) {
-  execFileSync("git", ["config", "--local", key, value])
+  try {
+    execFileSync("git", ["config", "--local", key, value])
+    return true
+  } catch (error) {
+    // `prepare` must never fail a plain `npm install` -- if git is somehow
+    // unavailable here despite `.git` existing, warn and move on.
+    console.warn(
+      `[install-hooks] could not set ${key} (${error instanceof Error ? error.message : String(error)}); skipping.`,
+    )
+    return false
+  }
 }
 
 /**
@@ -50,8 +60,7 @@ function wire(key, value, hint) {
     console.warn(`[install-hooks] ${key} is set to '${current}'; leaving it. ${hint}`)
     return `${key} left as contributor's own`
   }
-  gitConfigSet(key, value)
-  return `${key} = ${value}`
+  return gitConfigSet(key, value) ? `${key} = ${value}` : `${key} could not be set`
 }
 
 if (process.env.CI) {

@@ -84,7 +84,10 @@ function checkConfigIncludes(root) {
     }
 
     for (const pattern of patterns) {
-      if (!pattern.startsWith(`${dir}/`)) {
+      // A `..` segment lets a pattern that *starts* with `${dir}/` still climb
+      // back out (`test/unit/../integration/**`), so reject traversal outright.
+      const escapesViaTraversal = pattern.split("/").includes("..")
+      if (escapesViaTraversal || !pattern.startsWith(`${dir}/`)) {
         violations.push(
           `vitest.${name}.config.ts's "include" pattern "${pattern}" does not stay within ${dir}/`,
         )

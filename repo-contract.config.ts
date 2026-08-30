@@ -32,6 +32,8 @@
  *    suppression-governance's/api-contract's/api-docs's/schema's own generated output
  *    (`.prettierignore`/each ESLint `files` glob excludes every one of them by path or extension),
  *    and `schema` only ever reads its own TypeScript source types, never another writer's output.
+ *    `lint` and `format` do rewrite the same files as each other, though, so `format` carries an
+ *    explicit `dependsOn: ["lint"]` -- phase co-location alone does not serialize two writers.
  * 2. **`build`** (`isolated: true`) -- verifies the writers' output still compiles (now including
  *    whatever `lint --fix`/`format --write` just rewrote, not just the original four writers'
  *    output). Because it's declared right after every writer and is itself a scheduling barrier, it
@@ -133,8 +135,11 @@ export default defineRepoContract({
     // Rewrites the whole source tree in place (`prettier --write .`) -- same reasoning as `lint`
     // above. `.prettierignore` already excludes every other writer's own generated output
     // (schemas/*.schema.json, disable-comments.json, .repo-contract, docs/api-report), so
-    // co-locating it here introduces no new race against those.
-    format,
+    // co-locating it here introduces no new race against those. `dependsOn: ["lint"]` because
+    // `lint` and `format` are the only two writers that rewrite the *same* files (`src/**`):
+    // co-location in this phase keeps readers off that content but does not serialize the two
+    // writers against each other, so an explicit edge does.
+    format: { ...format, dependsOn: ["lint"] },
     // Regenerates schemas/*.schema.json and disable-comments.schema.json from their source types
     // -- a writer `test-unit` (test/unit/schema/schema-conformance.test.ts parses the generated
     // files) and `security-secrets` (scans them for secrets) both read. Declared here, not among

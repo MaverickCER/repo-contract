@@ -87,6 +87,10 @@ describe("tokenizeRunString", () => {
     // A lone carriage return (no accompanying \n) exercises the "\r" branch
     // of the newline check independently of the "\n" branch above.
     { label: "newline", input: "echo a\recho b" },
+    // A backslash before a newline is a shell line-continuation: rejected too,
+    // rather than consumed as an escape that would splice a literal newline in.
+    { label: "newline", input: "echo a\\\necho b" },
+    { label: "newline", input: "echo a\\\recho b" },
   ]
 
   it.each(operatorCases)(

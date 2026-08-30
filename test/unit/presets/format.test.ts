@@ -23,10 +23,17 @@ describe("format preset", () => {
 
   it("fails with joined stdout/stderr when exitCode is non-zero and output was produced", async () => {
     const result = await format.policy(
-      fakeContext(fakeCheckEvidence({ exitCode: 1, stdout: "src/a.ts\n", stderr: "" })),
+      fakeContext(
+        fakeCheckEvidence({
+          exitCode: 1,
+          stdout: "src/a.ts\n",
+          stderr: "[warn] Code style issues found in src/b.ts\n",
+        }),
+      ),
     )
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("src/a.ts")
+    expect(result.rationale).toContain("src/b.ts")
   })
 
   it("falls back to an exit-code-only message when non-zero with no output", async () => {
