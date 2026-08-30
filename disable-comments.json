@@ -1,0 +1,912 @@
+[
+  {
+    "file": "src/config/tokenize-command.ts",
+    "line": 130,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression",
+      "EqualityOperator",
+      "LogicalOperator",
+      "AssignmentOperator",
+      "BlockStatement"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression,EqualityOperator,LogicalOperator,AssignmentOperator,BlockStatement -- loosening i < run.length to i <= run.length is behaviorally invisible since the unmutatable char === undefined check right after already catches it, and the iterations bound is a second, independent forward-progress bound tracked in this line's own clauses (outside the body's braces) specifically so a body-emptying mutation can't produce an unkillable hang; every mutation of this line's own clauses is equivalent as long as the body still advances i correctly, confirmed empirically.",
+    "justification": "This is a defense-in-depth forward-progress bound for the loop, not a value-correctness check -- its own job is to convert a hypothetical body-emptying regression into a fast, visible failure instead of an infinite hang, which is why it lives in the for statement's own clauses rather than inside the body.",
+    "alternatives": "Remove the `iterations` bound entirely and rely solely on `i < run.length`, trusting that the loop body always advances `i` correctly.",
+    "remediation": "Tried scoring this line's own mutations in isolation (leaving the loop body untouched) and confirmed empirically that they produce no observable difference in tokenizeRunString's output for any tested input -- `i <= run.length` still terminates via the `char === undefined` check on the same pass. Removing the `iterations` bound instead would strip the only thing standing between a possible future body-emptying regression and an unkillable infinite loop, a materially worse outcome than accepting this equivalent mutant.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "mutation-run",
+    "reason": "loosening i < run.length to i <= run.length is behaviorally invisible since the unmutatable char === undefined check right after already catches it, and the iterations bound is a second, independent forward-progress bound tracked in this line's own clauses (outside the body's braces) specifically so a body-emptying mutation can't produce an unkillable hang; every mutation of this line's own clauses is equivalent as long as the body still advances i correctly, confirmed empirically."
+  },
+  {
+    "file": "src/config/tokenize-command.ts",
+    "line": 136,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- unreachable given the loop's own i < run.length guard already ensures run[i] is defined; kept only because noUncheckedIndexedAccess can't itself express that invariant.",
+    "justification": "`run[i]` is only ever read once `i < run.length` (checked in the loop condition), so `char` can never actually be undefined; this branch exists purely because `noUncheckedIndexedAccess` types `run[i]` as possibly undefined even though the loop invariant already rules that out.",
+    "alternatives": "Use a non-null assertion (`run[i]!`) instead of a runtime undefined check to satisfy the type without a live branch to test.",
+    "remediation": "Considered the assertion but rejected it: it would silence the type without any runtime signal if the invariant it depends on (the loop bound) were ever later broken by a refactor, whereas the guarded `break` at least fails safely instead of treating `undefined` as a character. The branch is genuinely unreachable given the loop guard directly above it, so no test can exercise the `false` path without breaking that same invariant.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "static-reasoning",
+    "reason": "unreachable given the loop's own i < run.length guard already ensures run[i] is defined; kept only because noUncheckedIndexedAccess can't itself express that invariant."
+  },
+  {
+    "file": "src/config/validate-config.ts",
+    "line": 47,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- the typeof check is redundant with Number.isInteger, which returns false (never throws) for every non-number value, so it's kept only for readability at the call site.",
+    "justification": "`Number.isInteger` returns `false` (never throws or coerces) for every non-number value, so `!Number.isInteger(concurrency)` alone already rejects everything the `typeof concurrency !== \"number\"` clause would; the typeof check is kept purely for readability at the call site, spelling out intent before the narrower numeric check.",
+    "alternatives": "Drop the `typeof concurrency !== \"number\"` clause and rely solely on `!Number.isInteger(concurrency)`.",
+    "remediation": "Considered removing it, but the explicit typeof check documents intent for a reader scanning the condition left-to-right (\"must be a number, and an integer, and positive\") in a way a bare `Number.isInteger` call doesn't self-explain; since both forms reject exactly the same inputs, keeping the more readable version costs nothing in correctness while a mutation removing it can never be observed by any test.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "the typeof check is redundant with Number.isInteger, which returns false (never throws) for every non-number value, so it's kept only for readability at the call site."
+  },
+  {
+    "file": "src/config/validate-config.ts",
+    "line": 143,
+    "domain": "stryker",
+    "rule": [
+      "OptionalChaining"
+    ],
+    "content": "Stryker disable next-line OptionalChaining -- equivalent mutant: `executable` is provably always a string here (see comment above), so `executable?.trim()` and `executable.trim()` are identical.",
+    "justification": "`executable` is the first element destructured from `tokenizeRunString(run, checkId)`, which throws (InvalidCheckConfigError) on any input that would yield an empty token array -- it rejects an empty or whitespace-only string before returning -- so the array always has at least one string element and `executable` is never `undefined` at this line. The `?.` is present only because `noUncheckedIndexedAccess` types the destructured element as `string | undefined`; with `executable` provably a string, `executable?.trim()` and `executable.trim()` evaluate identically, so no test can distinguish the OptionalChaining mutant.",
+    "alternatives": "Assert the non-null with `executable!.trim()` or a local `const exe = executable ?? \"\"`, which would still leave an equivalent mutant (now on the `!`/`??`); or restructure `validateStringRun` to take the already-tokenized array from a single call site so the element type is narrowed -- a larger change to thread the tokens through, with no behavioural benefit.",
+    "remediation": "If `tokenizeRunString` ever gains a code path that returns an empty array without throwing, this `?.` becomes load-bearing and the mutant becomes killable -- add a test passing a `run` string that tokenizes to `[]` and expects the \"first token ... is empty or contains only whitespace\" error, and remove this suppression.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "equivalent mutant: `executable` is provably always a string here (see comment above), so `executable?.trim()` and `executable.trim()` are identical."
+  },
+  {
+    "file": "src/config/validate-config.ts",
+    "line": 240,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- same redundancy as the concurrency check above: the typeof check is redundant with Number.isFinite, which returns false for every non-number value.",
+    "justification": "Same redundancy as the concurrency check in validateRepoContractConfig: `Number.isFinite` returns `false` for every non-number value, so `!Number.isFinite(timeoutMs)` alone already rejects everything `typeof timeoutMs !== \"number\"` would; the typeof clause is kept only for the same call-site readability reason.",
+    "alternatives": "Drop the `typeof timeoutMs !== \"number\"` clause and rely solely on `!Number.isFinite(timeoutMs)`.",
+    "remediation": "Same conclusion as the concurrency check: removing the readability-only clause changes no rejected input, so no test can distinguish the two forms, and keeping it costs nothing since both checks already reject the identical set of invalid values.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "same redundancy as the concurrency check above: the typeof check is redundant with Number.isFinite, which returns false for every non-number value."
+  },
+  {
+    "file": "src/config/validate-config.ts",
+    "line": 262,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- the typeof check is redundant with Array#includes' strict equality against OUTPUT_FORMATS (all strings), so a non-string format can never match regardless of the typeof check.",
+    "justification": "`Array#includes` uses strict equality, and every entry of `OUTPUT_FORMATS` is a string, so a non-string `format` can never strictly-equal any of them -- meaning `!OUTPUT_FORMATS.includes(format as OutputFormat)` alone already rejects every case `typeof format !== \"string\"` would; the typeof clause exists only for call-site readability.",
+    "alternatives": "Drop the `typeof format !== \"string\"` clause and rely solely on `!OUTPUT_FORMATS.includes(...)`.",
+    "remediation": "Same reasoning as the concurrency/timeoutMs redundant-typeof cases above: the two clauses reject the identical set of invalid `format` values, so no test can observe a difference between keeping and removing the typeof check, and it's kept purely because it documents intent before the array-membership check.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "the typeof check is redundant with Array#includes' strict equality against OUTPUT_FORMATS (all strings), so a non-string format can never match regardless of the typeof check."
+  },
+  {
+    "file": "src/config/validate-config.ts",
+    "line": 344,
+    "domain": "stryker",
+    "rule": [
+      "OptionalChaining"
+    ],
+    "content": "Stryker disable next-line OptionalChaining -- id always comes from Object.keys(checks), so check can never be undefined here; the optional chaining exists only to satisfy noUncheckedIndexedAccess.",
+    "justification": "`id` here always comes from `Object.keys(checks)` (the `for (const id of ids)` loop just above), so `checks[id]` can never actually be undefined; the optional chaining exists only because `noUncheckedIndexedAccess` types the indexed read as possibly-undefined regardless of that invariant.",
+    "alternatives": "Use a non-null assertion (`checks[id]!.dependsOn`) instead of optional chaining.",
+    "remediation": "Rejected the assertion for the same reason as this file's other noUncheckedIndexedAccess-only guards: it would silence the type without any runtime protection if this invariant were ever broken by a future refactor of the loop above, whereas the current guarded form degrades to an empty dependsOn instead of throwing. No test can distinguish the two forms since `id` is provably always a valid key here.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "static-reasoning",
+    "reason": "id always comes from Object.keys(checks), so check can never be undefined here; the optional chaining exists only to satisfy noUncheckedIndexedAccess."
+  },
+  {
+    "file": "src/evidence/build-evidence.ts",
+    "line": 54,
+    "domain": "stryker",
+    "rule": [
+      "ArrayDeclaration"
+    ],
+    "content": "Stryker disable next-line ArrayDeclaration -- this tuple is never read: both branches below that can run when `thrown` is non-empty (thrown.length === 1 or > 1) throw before `entries` -- the array this returns into -- is ever returned to a caller.",
+    "justification": "This tuple is never read: both branches below that can run when `thrown` is non-empty (thrown.length === 1, or > 1) throw before `entries` -- the array this return value feeds into -- is ever returned to buildEvidence's own caller. Mutating this tuple to an empty array therefore cannot change any observable output.",
+    "alternatives": "Return `undefined`/omit the return value entirely instead of a placeholder tuple.",
+    "remediation": "Rejected: the surrounding `.map()` callback is typed to return `Promise<ParsedCheckEntry>`, a 3-element tuple, for every branch -- returning `undefined` here would require weakening that return type (e.g. to `ParsedCheckEntry | undefined`) throughout the rest of the function purely to describe a value that is provably never observed, trading a real type guarantee for no actual safety benefit.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "this tuple is never read: both branches below that can run when `thrown` is non-empty (thrown.length === 1 or > 1) throw before `entries` -- the array this returns into -- is ever returned to a caller."
+  },
+  {
+    "file": "src/evidence/build-evidence.ts",
+    "line": 69,
+    "domain": "stryker",
+    "rule": [
+      "EqualityOperator"
+    ],
+    "content": "Stryker disable next-line EqualityOperator -- \"> 1\" vs. \">= 1\" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing.",
+    "justification": "\"> 1\" and \">= 1\" are equivalent at this specific point given the `=== 1` early return just above: by the time this line can run, thrown.length is never exactly 1 -- it's either 0 (falling through to the success path below either way) or >= 2 (taking the AggregateError branch either way) -- so both comparisons partition the remaining possibilities identically. Directly mirrors the identical, already-justified comparison in src/policy/run-policies.ts.",
+    "alternatives": "Remove the earlier `=== 1` early return and rely solely on this `>= 1` (or `> 0`) check to decide between throwing a single error and an AggregateError.",
+    "remediation": "Restructuring to a single check was considered but rejected: throwing the lone error directly (rather than wrapping a single error in an AggregateError) is deliberate, documented behavior a caller catching a specific error type depends on (see ParserDependencyMissingError's own callers), so the two-branch structure with its now-redundant second comparison is intentional. Documented this equivalence explicitly, matching run-policies.ts's own precedent, so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "\"> 1\" vs. \">= 1\" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing."
+  },
+  {
+    "file": "src/execution/dependency-scheduler.ts",
+    "line": 66,
+    "domain": "stryker",
+    "rule": [
+      "ArrayDeclaration"
+    ],
+    "content": "Stryker disable next-line ArrayDeclaration -- each dependents[] entry's initial contents are unobservable regardless of value, confirmed empirically across diamond, fan-out, and no-dependency shapes that seeding it with garbage produces identical scheduling results.",
+    "justification": "Each `dependents[]` entry's initial contents are unobservable regardless of value: confirmed empirically across diamond, fan-out, and no-dependency graph shapes that seeding an entry with garbage instead of an empty array produces identical scheduling results, since every entry is only ever read via `.push`/iteration after being populated by the `dependencies.forEach` loop immediately below, never before.",
+    "alternatives": "Pre-populate each `dependents[]` entry from the dependency graph directly (e.g. build it in one pass alongside `dependencies`) instead of seeding empty arrays first.",
+    "remediation": "A single-pass construction would still need to allocate a fresh array per index before appending to it, so it wouldn't remove the \"what do we seed each entry with\" question this suppression covers -- it would just relocate it. Kept the current two-pass form since it's simpler to read, and the seed value itself is provably unobservable.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "differential-testing",
+    "reason": "each dependents[] entry's initial contents are unobservable regardless of value, confirmed empirically across diamond, fan-out, and no-dependency shapes that seeding it with garbage produces identical scheduling results."
+  },
+  {
+    "file": "src/execution/dependency-scheduler.ts",
+    "line": 101,
+    "domain": "stryker",
+    "rule": [
+      "ObjectLiteral"
+    ],
+    "content": "Stryker disable next-line ObjectLiteral -- pre-sizing only matters while the run is in flight; by completion every index is guaranteed filled exactly once, so a sparse vs. dense start is indistinguishable in the returned result, confirmed empirically that the unexempted {} mutant survives.",
+    "justification": "Pre-sizing `results` only matters while the run is in flight, so `results[index] = result` never needs to extend the array mid-run; by the time the returned promise resolves, `settled === items.length` guarantees every index has already been assigned exactly once, making an initially-sparse array just as dense as a pre-sized one in the final, returned result.",
+    "alternatives": "Start `results` as `[]` and rely on `settled === items.length` to guarantee it's fully populated by the time it's returned.",
+    "remediation": "Confirmed empirically that the unexempted `{}` mutant (an effectively empty/zero-length starting array) survives, matching this reasoning. Kept the pre-sized form anyway rather than switching to `[]`: pre-sizing documents the function's own invariant (exactly items.length results, one per item) at the point of declaration, more directly than a `[]` start would, even though both are behaviorally identical once every item has settled.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "mutation-run",
+    "reason": "pre-sizing only matters while the run is in flight; by completion every index is guaranteed filled exactly once, so a sparse vs. dense start is indistinguishable in the returned result, confirmed empirically that the unexempted {} mutant survives."
+  },
+  {
+    "file": "src/execution/dependency-scheduler.ts",
+    "line": 136,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- native Promise resolution is idempotent, so a second rejectPromise call after settling has no observable effect either way; kept only for clarity/intent, not because it changes behavior.",
+    "justification": "A second call to `fail` after the returned promise has already settled is harmless even without this guard: native Promise resolution is idempotent, so a later rejectPromise call has no observable effect on the promise's own outcome either way. The guard is kept purely for clarity/intent -- making `fail`'s own \"only the first failure matters\" contract explicit -- not because it changes behavior.",
+    "alternatives": "Remove the `done` guard and let a second `fail` call reach `rejectPromise` directly, relying on Promise's own idempotence.",
+    "remediation": "Confirmed that native Promise rejection is idempotent (a settled promise silently ignores further resolve/reject calls), so no test can distinguish the guarded and unguarded forms. Kept the explicit guard anyway since it documents `fail`'s single-shot contract for a future reader, and the `done` flag is already needed elsewhere in this function regardless of this particular check.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "native Promise resolution is idempotent, so a second rejectPromise call after settling has no observable effect either way; kept only for clarity/intent, not because it changes behavior."
+  },
+  {
+    "file": "src/execution/dependency-scheduler.ts",
+    "line": 139,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/prefer-promise-reject-errors"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- propagated verbatim, not wrapped: matches runWithConcurrency's own existing behavior (a worker rejection passes straight through Promise.all unmodified), which this function is meant to be a drop-in graph-aware replacement for.",
+    "justification": "rejectPromise(error) must propagate the exact rejection reason a worker's promise produced, unmodified, so a caller's catch block sees the same value it would from runWithConcurrency (which this function replaces) or from awaiting the worker's own promise directly; wrapping it in an Error would change what every caller observes.",
+    "alternatives": "Wrap non-Error values in `new Error(String(error))` before rejecting, satisfying the rule.",
+    "remediation": "Rejected wrapping because it would make this function's contract differ from runWithConcurrency's for exactly the input class that matters most -- a worker rejecting with a plain object -- where a caller inspecting a custom property on the rejection would silently lose it. Passing the value through unmodified preserves an existing, already-tested contract instead of introducing a new one only for this code path.",
+    "category": "intentional-deviation",
+    "verificationMethod": "static-reasoning",
+    "reason": "propagated verbatim, not wrapped: matches runWithConcurrency's own existing behavior (a worker rejection passes straight through Promise.all unmodified), which this function is meant to be a drop-in graph-aware replacement for."
+  },
+  {
+    "file": "src/execution/dependency-scheduler.ts",
+    "line": 166,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression",
+      "EqualityOperator",
+      "LogicalOperator",
+      "BlockStatement"
+    ],
+    "content": "Stryker disable ConditionalExpression,EqualityOperator,LogicalOperator,BlockStatement -- loosening the while condition or its guard checks to always-true is behaviorally invisible: the loop just runs one harmless extra iteration where ready.shift() returns undefined and the immediately-following index === undefined check breaks back out, and every index ever pushed onto ready is already guaranteed valid so the equivalent item === undefined guard is confirmed equivalent by exhaustive differential testing, not assumed.",
+    "justification": "Loosening `ready.length > 0` (or the whole condition) to always-true is behaviorally invisible: the loop would simply run one extra iteration with `ready` genuinely empty, `ready.shift()` would return undefined (a safe no-op on an empty array), and the immediately-following `index === undefined` check -- itself unmutatable for the same noUncheckedIndexedAccess reason -- breaks out identically to the condition correctly stopping the loop one iteration earlier.",
+    "alternatives": "Remove the `ready.length > 0` half of the condition and rely solely on the `index === undefined` break inside the loop body to terminate it.",
+    "remediation": "Confirmed equivalent by exhaustive differential testing across the same diamond/fan-out/no-dependency shapes used elsewhere in this file, not assumed: mutating this condition alone (leaving the loop body's own guards untouched) produces no observable difference in scheduling results. Kept the condition anyway since relying solely on the inner break would make the loop's termination less obvious from its own header, even though both forms behave identically today.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "differential-testing",
+    "reason": "loosening the while condition or its guard checks to always-true is behaviorally invisible: the loop just runs one harmless extra iteration where ready.shift() returns undefined and the immediately-following index === undefined check breaks back out, and every index ever pushed onto ready is already guaranteed valid so the equivalent item === undefined guard is confirmed equivalent by exhaustive differential testing, not assumed."
+  },
+  {
+    "file": "src/execution/dependency-scheduler.ts",
+    "line": 188,
+    "domain": "stryker",
+    "rule": [
+      "ArrayDeclaration"
+    ],
+    "content": "Stryker disable next-line ArrayDeclaration -- dependents[index] can never actually be undefined (dependents is built with exactly items.length entries, one per valid index), confirmed empirically -- not just by analogy -- that un-exempting this mutant and running Stryker scoped to this file shows the ?? [] fallback's own ArrayDeclaration content is NoCoverage, i.e. the fallback branch never executes.",
+    "justification": "`dependents[index]` can never actually be undefined -- `dependents` is built earlier in this function with exactly `items.length` entries, one per valid index, the same invariant `launchNext`'s own guards rely on -- so the `?? []` fallback's specific contents are unobservable; only whether the fallback branch itself is ever taken matters, and it isn't.",
+    "alternatives": "Use a non-null assertion (`dependents[index]!`) instead of a nullish-coalescing fallback.",
+    "remediation": "Confirmed empirically, not just by analogy: un-exempting this mutant and running Stryker scoped to this file showed the `?? []` fallback's own ArrayDeclaration content is NoCoverage -- the fallback branch never executes at all, so a non-null assertion would be behaviorally identical. Kept the nullish-coalescing form instead of an assertion anyway, for the same \"fails safely rather than crashing if the invariant is ever broken\" reason used elsewhere in this codebase; the surrounding BlockStatement/LogicalOperator mutants on this same line are deliberately not exempted, since those stay live and killed.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "mutation-run",
+    "reason": "dependents[index] can never actually be undefined (dependents is built with exactly items.length entries, one per valid index), confirmed empirically -- not just by analogy -- that un-exempting this mutant and running Stryker scoped to this file shows the ?? [] fallback's own ArrayDeclaration content is NoCoverage, i.e. the fallback branch never executes."
+  },
+  {
+    "file": "src/execution/process-tree.ts",
+    "line": 80,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression",
+      "EqualityOperator",
+      "StringLiteral",
+      "ArrayDeclaration",
+      "ObjectLiteral",
+      "BlockStatement",
+      "CallExpression"
+    ],
+    "content": "Stryker disable ConditionalExpression,EqualityOperator,StringLiteral,ArrayDeclaration,ObjectLiteral,BlockStatement,CallExpression -- this whole branch only runs on Windows, and mutation testing only runs in the ubuntu-only CI job (see the v8-ignore comment above), so every mutator that could apply to it would surface as an unreachable \"no coverage\" survivor rather than a real test gap.",
+    "justification": "This entire branch only runs on Windows (`process.platform === \"win32\"`), and mutation testing only executes in the ubuntu-only CI job (see the v8-ignore comment immediately above this one, which exempts the same branch from coverage for the identical platform reason) -- so every mutator that could apply to this branch would surface as an unreachable \"no coverage\" survivor rather than evidence of a real test gap, since Stryker's own instrumented run never executes this code path on any platform it runs on.",
+    "alternatives": "Run Stryker's mutation testing job on a Windows runner (or a matrix including Windows) so this branch is actually exercised under instrumentation.",
+    "remediation": "Not pursued: this branch is already covered by a real, dedicated Windows-only test (test/unit/cross-platform/windows-taskkill.test.ts, run on the CI Windows runner per .github/workflows/ci.yml's verify job OS matrix, which includes windows-latest) -- adding a second, mutation-tested CI job just for this one branch would mean maintaining an entire additional Windows CI lane for a single function's single platform-specific branch, a cost disproportionate to the coverage gap it would close.",
+    "category": "platform-limitation",
+    "verificationMethod": "existing-test-suite",
+    "reason": "this whole branch only runs on Windows, and mutation testing only runs in the ubuntu-only CI job (see the v8-ignore comment above), so every mutator that could apply to it would surface as an unreachable \"no coverage\" survivor rather than a real test gap."
+  },
+  {
+    "file": "src/execution/process-tree.ts",
+    "line": 82,
+    "domain": "eslint",
+    "rule": [
+      "n/no-sync"
+    ],
+    "content": "eslint-disable-next-line n/no-sync -- `killTree` is itself synchronous best-effort cleanup, callable from error/signal-handling paths that don't await anything else; an async `spawn` here would need every caller threaded through `await` for what's already a fire-and-forget `taskkill`.",
+    "justification": "killTree's Windows branch runs from error/signal-handling paths that don't await anything else and must complete in-order before the calling function returns -- spawnSync's synchronous completion is the property actually needed, not async's non-blocking behavior.",
+    "alternatives": "Use the async `spawn` (or `execFile`) instead of `spawnSync`.",
+    "remediation": "Switching to async spawn would require every caller of killTree (all error/signal handlers, none otherwise async) to become async and their own callers to await them, just to fire off a taskkill this function already treats as fire-and-forget best-effort cleanup -- a much larger, unrelated refactor for no behavioral benefit, since the result is discarded either way.",
+    "category": "intentional-deviation",
+    "verificationMethod": "static-reasoning",
+    "reason": "`killTree` is itself synchronous best-effort cleanup, callable from error/signal-handling paths that don't await anything else; an async `spawn` here would need every caller threaded through `await` for what's already a fire-and-forget `taskkill`."
+  },
+  {
+    "file": "src/execution/run-checks.ts",
+    "line": 76,
+    "domain": "stryker",
+    "rule": [
+      "BlockStatement",
+      "CallExpression",
+      "ConditionalExpression",
+      "EqualityOperator",
+      "BooleanLiteral"
+    ],
+    "content": "Stryker disable BlockStatement,CallExpression,ConditionalExpression,EqualityOperator,BooleanLiteral -- this handler body only executes when the host process receives a real SIGINT/SIGTERM; the test exercising it necessarily runs in a separate child process (v8 coverage and Stryker's own instrumentation are both per-process), so mutating this body -- including the hadActiveChecks/!hadActiveChecks branch below -- always reports an uncoverable-looking survivor rather than a real gap.",
+    "justification": "This handler body only executes when the host process itself receives a real SIGINT/SIGTERM (see the v8-ignore comment immediately above), which test/unit/execution/run-checks.test.ts exercises only by sending a real signal to a separate child process -- necessary because sending SIGINT to the test worker's own process would kill the test runner itself. Both v8 coverage and Stryker's own mutation instrumentation are per-process, so that real, working exercise of every line in this body -- including the hadActiveChecks assignment and the !hadActiveChecks branch -- is invisible to either tool from the parent test process's point of view, regardless of which specific mutator applies to which statement inside the body.",
+    "alternatives": "Restructure the handler to call out to a separately unit-testable, in-process function instead of doing its work inline, so that inner function could be mutation-tested directly even though the handler wrapper itself still couldn't.",
+    "remediation": "The handler body is a short, linear sequence (capture hadActiveChecks, kill every active handle, uninstall, then either re-signal immediately or after a delay) with no independent branching logic worth extracting -- factoring it into a separate function would just relocate the same lines one level down without changing what mutation testing can observe, since the new function would still only ever be invoked from this same signal-only code path. The existing child-process integration test (\"SIGINT while checks are in flight...\") already proves the real behavior works, including the hadActiveChecks branch; this suppression accepts that mutation testing specifically cannot re-prove it from within its own process, for every mutator that applies within this body, not just the two originally listed.",
+    "category": "tooling-limit",
+    "verificationMethod": "existing-test-suite",
+    "reason": "this handler body only executes when the host process receives a real SIGINT/SIGTERM; the test exercising it necessarily runs in a separate child process (v8 coverage and Stryker's own instrumentation are both per-process), so mutating this body -- including the hadActiveChecks/!hadActiveChecks branch below -- always reports an uncoverable-looking survivor rather than a real gap."
+  },
+  {
+    "file": "src/execution/run-checks.ts",
+    "line": 164,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- disabling this in an uninstrumented process empirically produces unbounded mutual recursion that hits V8's stack limit in single-digit milliseconds, but under Stryker's own per-statement instrumentation overhead reaching that same stack limit takes long enough to exceed stryker.config.mjs's timeoutMS, surfacing as a \"Timeout\" verdict rather than a real test gap.",
+    "justification": "Removing this guard turns a would-be dependency cycle reachable via a caller that bypasses validateRepoContractConfig (e.g. runChecks invoked directly) into unbounded mutual recursion between visit() calls. In a plain, uninstrumented Node process this throws a RangeError (stack overflow) in single-digit milliseconds -- confirmed empirically by running the exact broken recursion standalone. Stryker's own per-statement coverage instrumentation adds enough overhead per recursive call frame that reaching V8's actual stack limit takes long enough to exceed stryker.config.mjs's configured per-mutant timeoutMS, so Stryker reports \"Timed out\" instead of \"Killed\" for this exact mutant -- a mismatch between wall-clock budget and V8's stack limit, not evidence the guard is untested.",
+    "alternatives": "Increase stryker.config.mjs's global timeoutMS enough for the instrumented recursion to also hit the stack limit within budget.",
+    "remediation": "Rejected: this mutant is the single deepest-recursing case in the whole suite (an unbounded cycle), so a timeout large enough to let instrumented recursion reach V8's stack limit would inflate the budget for every other mutant in the same run, slowing the entire mutation run measurably for a fix that only benefits one already-covered-by-a-real-test guard (see \"throws when a requested subset's dependsOn forms a cycle\" in run-checks.test.ts, which already proves this guard's real behavior).",
+    "category": "tooling-limit",
+    "verificationMethod": "differential-testing",
+    "reason": "disabling this in an uninstrumented process empirically produces unbounded mutual recursion that hits V8's stack limit in single-digit milliseconds, but under Stryker's own per-statement instrumentation overhead reaching that same stack limit takes long enough to exceed stryker.config.mjs's timeoutMS, surfacing as a \"Timeout\" verdict rather than a real test gap."
+  },
+  {
+    "file": "src/execution/run-checks.ts",
+    "line": 230,
+    "domain": "stryker",
+    "rule": [
+      "ArrayDeclaration"
+    ],
+    "content": "Stryker disable next-line ArrayDeclaration -- see comment immediately above: only provable via a real signal delivered to a separate child process, invisible to this process's own Stryker instrumentation, the same per-process-invisible situation already documented on installTerminationHandlers' handler.",
+    "justification": "hostAbortController.signal's presence in this branch's array only changes observable behavior once hostAbortController.abort() actually runs, and that call happens exclusively inside installTerminationHandlers' handler for a real OS SIGINT/SIGTERM -- the same handler this file's own doc comment and Stryker-disable block already establish as per-process-invisible to Stryker, since triggering a real signal against this process would kill the test worker itself rather than exercise the handler.",
+    "alternatives": "Spying on process.once to capture and directly invoke the handler in-process (bypassing real OS signal delivery) was considered instead of accepting the coverage gap.",
+    "remediation": "Directly invoking a captured process.once handler would exercise the code without ever exercising a real signal, which is exactly the kind of internals-mocking this repository's real-behavior-over-mocking house style (CONTRIBUTING.md) avoids -- and it still wouldn't run in a separate OS process, so Stryker's per-process instrumentation would report it identically either way. A real, separate-child-process regression test (test/unit/execution/run-checks.test.ts's \"does not spawn a check still queued behind the concurrency limit once SIGINT cleanup has begun\") already exists, was confirmed to fail against the pre-fix code and pass against this fix, and is the strongest verification actually obtainable for this exact line.",
+    "category": "tooling-limit",
+    "verificationMethod": "mutation-run",
+    "reason": "see comment immediately above: only provable via a real signal delivered to a separate child process, invisible to this process's own Stryker instrumentation, the same per-process-invisible situation already documented on installTerminationHandlers' handler."
+  },
+  {
+    "file": "src/execution/run-checks.ts",
+    "line": 258,
+    "domain": "stryker",
+    "rule": [
+      "CallExpression",
+      "ArrowFunction",
+      "OptionalChaining",
+      "LogicalOperator",
+      "EqualityOperator",
+      "UnaryOperator",
+      "ConditionalExpression",
+      "BlockStatement"
+    ],
+    "content": "Stryker disable CallExpression,ArrowFunction,OptionalChaining,LogicalOperator,EqualityOperator,UnaryOperator,ConditionalExpression,BlockStatement -- dependency-scheduler.test.ts's own \"zero-edges equivalence\" suite already proves runWithConcurrencyGraph behaves identically to runWithConcurrency for a graph with no real edges, so this fast path is a pure performance optimization: every existing no-dependsOn/no-isolated test would pass identically either way, making this branch provably unobservable rather than undertested.",
+    "justification": "dependency-scheduler.test.ts's own \"zero-edges equivalence\" suite already proves runWithConcurrencyGraph behaves identically to runWithConcurrency for a graph with no real edges (matching order, concurrency clamping, and rejection propagation) -- so this `hasDependencies` fast path is a pure performance optimization, not a behavioral branch: every existing no-dependsOn/no-isolated test would pass identically whether or not this check routed it through the simpler runWithConcurrency path.",
+    "alternatives": "Remove this fast path entirely and always route every run through runWithConcurrencyGraph, relying on the proven zero-edges equivalence instead of special-casing it here.",
+    "remediation": "Considered removing the fast path given the proven equivalence, but kept it deliberately: runWithConcurrency is the simpler, more heavily-used primitive and the common case -- a config with no dependsOn/isolated checks at all -- should take the cheaper, better-exercised code path rather than the more complex graph scheduler for zero behavioral benefit. This is a real performance decision the zero-edges equivalence test suite already justifies, not a gap in that suite's own coverage.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "existing-test-suite",
+    "reason": "dependency-scheduler.test.ts's own \"zero-edges equivalence\" suite already proves runWithConcurrencyGraph behaves identically to runWithConcurrency for a graph with no real edges, so this fast path is a pure performance optimization: every existing no-dependsOn/no-isolated test would pass identically either way, making this branch provably unobservable rather than undertested."
+  },
+  {
+    "file": "src/execution/run-checks.ts",
+    "line": 281,
+    "domain": "stryker",
+    "rule": [
+      "ArrayDeclaration"
+    ],
+    "content": "Stryker disable next-line ArrayDeclaration -- this array's own initial contents are unobservable regardless of what they are: every real isolated index is still pushed on below, and dependencyIndexesFor's own earlierIsolated filter compares each entry against a numeric index with `<`, which coerces a non-numeric seed value to NaN and silently filters it out (every comparison against NaN is false) -- confirmed empirically that a bogus seed entry never appears in any real edge list.",
+    "justification": "isolatedIndexes's own initial contents are unobservable regardless of what they are: every real isolated check's index is still pushed onto it in the loop immediately below, and the only place this array is ever read (dependencyIndexesFor's earlierIsolated filter, further down in this same function) compares each entry against a numeric `index` using `<` -- JavaScript coerces a non-numeric operand to NaN for that comparison, and every comparison against NaN evaluates false, so a stray non-numeric seed value is silently excluded from every real edge list this array ever feeds into. Confirmed empirically, not assumed: `[\"Stryker was here\", 2, 5].filter((i) => i < 10)` evaluates to `[2, 5]`, dropping the bogus entry with no trace.",
+    "alternatives": "Pre-size or type the array more defensively (e.g. `Array.from({ length: entries.length })` then filter) to make \"this array only ever holds real indexes\" self-evident from its own construction rather than relying on downstream filtering.",
+    "remediation": "Rejected as unnecessary: the array is only ever appended to (push) and read via a numeric-comparison filter, both a few lines away in the same function -- the safety property already follows directly from that narrow, fully-visible usage, and restructuring the initialization would only relocate the same reasoning into a different form without removing it.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "differential-testing",
+    "reason": "this array's own initial contents are unobservable regardless of what they are: every real isolated index is still pushed on below, and dependencyIndexesFor's own earlierIsolated filter compares each entry against a numeric index with `<`, which coerces a non-numeric seed value to NaN and silently filters it out (every comparison against NaN is false) -- confirmed empirically that a bogus seed entry never appears in any real edge list."
+  },
+  {
+    "file": "src/execution/run-checks.ts",
+    "line": 313,
+    "domain": "stryker",
+    "rule": [
+      "EqualityOperator",
+      "ConditionalExpression",
+      "BlockStatement",
+      "StringLiteral",
+      "CallExpression"
+    ],
+    "content": "Stryker disable EqualityOperator,ConditionalExpression,BlockStatement,StringLiteral,CallExpression -- validate-config.ts has already guaranteed, before runChecks is ever invoked, that every dependsOn id names a check that exists in this same checks record; reaching this would be a bug in that guarantee, not a user-input problem.",
+    "justification": "validate-config.ts has already guaranteed, before runChecks is ever invoked, that every dependsOn id names a check that exists in this same `checks` record -- reaching this branch's undefined case would mean that upstream guarantee itself broke, not a user-input problem this function needs to handle gracefully, so it fails loudly with an \"internal:\"-prefixed error instead of silently miscounting the dependency graph.",
+    "alternatives": "Remove this defensive re-check and trust the upstream guarantee unconditionally.",
+    "remediation": "Same conclusion as resolveCheckDependencies's identical internal-error pattern earlier in this file: noUncheckedIndexedAccess still types this lookup as possibly undefined regardless of the upstream guarantee, so some runtime narrowing is needed even though the branch is provably unreachable for valid input; kept as a fail-loud guard rather than a silent fallback so a real regression surfaces immediately as a clear internal error.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "static-reasoning",
+    "reason": "validate-config.ts has already guaranteed, before runChecks is ever invoked, that every dependsOn id names a check that exists in this same checks record; reaching this would be a bug in that guarantee, not a user-input problem."
+  },
+  {
+    "file": "src/execution/run-checks.ts",
+    "line": 339,
+    "domain": "stryker",
+    "rule": [
+      "EqualityOperator"
+    ],
+    "content": "Stryker disable next-line EqualityOperator -- provably equivalent: this branch only runs when check.isolated !== true, and isolatedIndexes contains only indexes of checks where isolated === true, so this check's own `index` can never be a member of isolatedIndexes -- isolatedIndex === index is unconditionally false, making `<` and `<=` select the identical subset for every value this filter is ever called with.",
+    "justification": "This filter callback only ever runs inside the `check.isolated !== true` branch of dependencyIndexesFor (the `check.isolated === true` branch above it returns early), and isolatedIndexes is built to contain only the indexes of checks whose own isolated === true. So the current check's own `index` -- which belongs to a check we already know is not isolated -- can never itself be a member of isolatedIndexes, meaning `isolatedIndex === index` is unconditionally false for every value this filter is ever invoked with in this codebase. `<` and `<=` are therefore guaranteed to select the exact same subset of isolatedIndexes on every call, with no reachable input distinguishing them.",
+    "alternatives": "Add an explicit runtime assertion (e.g. an internal throw if isolatedIndex === index is ever observed) to make the invariant self-documenting in code, not just in this comment.",
+    "remediation": "Rejected as unnecessary defensive code: the invariant is a direct, structural consequence of this function's own two-branch shape (checked once, a few lines above, by the isolated === true early return) rather than an assumption about external input -- adding a runtime assertion for something the type/control-flow structure of this same function already guarantees would be dead code by construction, never exercisable without first breaking the early-return branch above it.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "provably equivalent: this branch only runs when check.isolated !== true, and isolatedIndexes contains only indexes of checks where isolated === true, so this check's own `index` can never be a member of isolatedIndexes -- isolatedIndex === index is unconditionally false, making `<` and `<=` select the identical subset for every value this filter is ever called with."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 58,
+    "domain": "stryker",
+    "rule": [
+      "StringLiteral"
+    ],
+    "content": "Stryker disable next-line StringLiteral -- Node's own encoding normalization treats a falsy/unrecognized encoding argument as \"utf8\" (confirmed empirically: `new StringDecoder(\"\").encoding === \"utf8\"`, decoding identically to an explicit \"utf8\", including for a multi-byte character split across writes); this is the only encoding this collector is ever used with, so no other string value is reachable here to distinguish it.",
+    "justification": "Node's own encoding-normalization logic treats a falsy or unrecognized string argument to StringDecoder's constructor as \"utf8\" rather than throwing -- confirmed empirically: `new StringDecoder(\"\").encoding` reads back as `\"utf8\"`, and decoding both plain ASCII text and a 3-byte UTF-8 character deliberately split across two separate `.write()` calls produces byte-for-byte identical output whether the constructor was given \"\" or the explicit literal \"utf8\". This collector is never constructed with any other encoding value anywhere in this codebase, so no reachable call site could ever observe a difference between the literal and the mutant.",
+    "alternatives": "Omit the constructor argument entirely (StringDecoder defaults to \"utf8\" when no argument is given at all) instead of passing the literal \"utf8\" explicitly.",
+    "remediation": "Rejected: omitting the argument would rely on the exact same underlying default-normalization behavior this suppression already documents, just spelled differently -- it wouldn't remove the equivalence, only relocate which \"non-literal-looking but actually fixed\" detail a future reader has to rediscover, and would make the encoding this collector actually decodes as less explicit at the call site.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "differential-testing",
+    "reason": "Node's own encoding normalization treats a falsy/unrecognized encoding argument as \"utf8\" (confirmed empirically: `new StringDecoder(\"\").encoding === \"utf8\"`, decoding identically to an explicit \"utf8\", including for a multi-byte character split across writes); this is the only encoding this collector is ever used with, so no other string value is reachable here to distinguish it."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 78,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- removing this guard has no effect on the content `value()` ever returns (see comment above); it only removes an unbounded-with-chunk-count amount of wasted repeated work for a process that keeps writing past the cap, which no deterministic test can observe without relying on flaky timing.",
+    "justification": "Once `truncated` is true, `value`'s retained prefix (positions 0..CAP-1) can never change again no matter what further chunks arrive: re-slicing to the same CAP from a longer string always yields the same prefix it already had. So skipping further chunks here is unobservable from the *content* `value()` ever returns. What it actually saves is the repeated O(cap) slice+concat this function would otherwise redo on every subsequent chunk for a process that keeps writing past the cap -- real, wasted work that scales with chunk count for a pathological or malicious command, confirmed directly: un-exempting this mutant and running Stryker scoped to this file reproduced exactly this survivor/timeout pair (this mutant survived; the paired BooleanLiteral mutant on the `truncated = true` assignment below caused the same test to time out instead of failing deterministically).",
+    "alternatives": "Write a test asserting on elapsed time or on the number of times the underlying string-slicing work runs after truncation, to deterministically distinguish this mutant instead of suppressing it.",
+    "remediation": "Rejected: this project's own mutation policy (checks/mutation.ts) already treats a \"Timed out\" mutant outcome as a failure requiring investigation, not an accepted kill, precisely because timing-based detection is flaky and machine/load-dependent -- adding a timing-based assertion to chase this exact mutant would reintroduce the same unreliability this repository's own policy is designed to reject. The real content-level behavior (what bytes `value()` returns) is already fully covered by test/unit/execution/spawn-check.test.ts's bounded-output-capture tests, including the exact-cap-boundary case.",
+    "category": "tooling-limit",
+    "verificationMethod": "mutation-run",
+    "reason": "removing this guard has no effect on the content `value()` ever returns (see comment above); it only removes an unbounded-with-chunk-count amount of wasted repeated work for a process that keeps writing past the cap, which no deterministic test can observe without relying on flaky timing."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 86,
+    "domain": "stryker",
+    "rule": [
+      "BooleanLiteral"
+    ],
+    "content": "Stryker disable next-line BooleanLiteral -- leaving this false has no effect on returned content (see comment above and the identical reasoning on the `if (truncated) return` guard); it only removes an unbounded-with-chunk-count amount of wasted repeated work, which no deterministic test can observe without relying on flaky timing.",
+    "justification": "Same underlying claim as the `if (truncated) return` guard above, which this assignment's `truncated = true` is what makes true on the next call: leaving this `false` never changes any content `value()` returns (see that guard's justification for the full reasoning), only how much repeated wasted work later chunks cause. Confirmed directly: un-exempting this mutant and running Stryker scoped to this file caused the test to time out rather than fail deterministically, rather than surviving outright -- consistent with the two mutants describing the same underlying content-level equivalence from two different angles.",
+    "alternatives": "Write a test asserting on elapsed time or repeated-work count to deterministically distinguish this mutant instead of suppressing it.",
+    "remediation": "Rejected for the identical reason as the paired `if (truncated) return` guard above: this project's own mutation policy already treats \"Timed out\" as a failure requiring investigation rather than an accepted kill, specifically to avoid rewarding flaky, timing-based test detection.",
+    "category": "tooling-limit",
+    "verificationMethod": "mutation-run",
+    "reason": "leaving this false has no effect on returned content (see comment above and the identical reasoning on the `if (truncated) return` guard); it only removes an unbounded-with-chunk-count amount of wasted repeated work, which no deterministic test can observe without relying on flaky timing."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 140,
+    "domain": "stryker",
+    "rule": [
+      "EqualityOperator",
+      "ConditionalExpression",
+      "BlockStatement",
+      "StringLiteral",
+      "CallExpression"
+    ],
+    "content": "Stryker disable EqualityOperator,ConditionalExpression,BlockStatement,StringLiteral,CallExpression -- unlike the array-form check above, this one has no way to be exercised directly: tokenizeRunString's own contract guarantees a non-empty result or a throw, with no way to bypass it short of calling this private function directly, which isn't exported.",
+    "justification": "Unlike resolveCommand's array-form branch just above (directly reachable via a caller passing an empty array), this string-form branch has no way to be exercised through the public API: tokenizeRunString's own contract guarantees it either returns a non-empty result or throws, with no way to bypass that guarantee short of calling this private, unexported function directly with a fabricated result.",
+    "alternatives": "Use a non-null assertion (`command!`) instead of a runtime undefined check, since the same contract makes `command` provably defined here.",
+    "remediation": "Rejected the assertion for the same \"fails safely rather than crashing if the invariant is ever broken\" reason used elsewhere in this codebase: if tokenizeRunString's own contract were ever weakened by a future change, this guard would produce a clear InvalidCheckConfigError instead of a confusing runtime crash from destructuring undefined as a command. Kept it as defense in depth even though no test can currently reach the true branch.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "static-reasoning",
+    "reason": "unlike the array-form check above, this one has no way to be exercised directly: tokenizeRunString's own contract guarantees a non-empty result or a throw, with no way to bypass it short of calling this private function directly, which isn't exported."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 156,
+    "domain": "eslint",
+    "rule": [
+      "n/no-process-env"
+    ],
+    "content": "eslint-disable-next-line n/no-process-env -- reading the ambient environment isn't a config smell here, it's the feature: `inheritEnv` (on by default) means the spawned check inherits this process's real env, exactly what this loop builds.",
+    "justification": "Reading `process.env` here is not incidental config access -- it is the `inheritEnv` feature itself: when a check's `inheritEnv` isn't explicitly `false`, the spawned check must inherit this process's real ambient environment, which requires reading `process.env` directly.",
+    "alternatives": "Route environment access through a wrapper/config module instead of reading `process.env` inline.",
+    "remediation": "A wrapper would only relocate this same read one file over, not remove it -- `n/no-process-env` exists to catch config values read ad hoc from the environment instead of through an app's config layer, which doesn't apply to a function whose entire job is capturing the ambient environment to hand to a spawned child process.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "reading the ambient environment isn't a config smell here, it's the feature: `inheritEnv` (on by default) means the spawned check inherits this process's real env, exactly what this loop builds."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 164,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- process.env's index signature is typed string | undefined, but a real Node process never actually produces an undefined value here for an own enumerable key; kept only to satisfy that type, not because it changes observed behavior.",
+    "justification": "`process.env`'s TypeScript index signature types every value as `string | undefined`, but a real Node process never actually produces an undefined value for one of its own enumerable keys when iterated via Object.entries -- confirmed empirically that assigning undefined to an env var instead coerces it to the literal string \"undefined\", never to a genuinely absent entry. The guard exists only to satisfy that type, not because it changes observed behavior for any real process environment.",
+    "alternatives": "Use a non-null assertion (`value!`) instead of a runtime `!== undefined` check.",
+    "remediation": "Rejected the assertion for the same reason as this file's other type-only guards: it would silence the type without any protection if this assumption about process.env's runtime shape were ever wrong on some platform or Node version this codebase hasn't been tested against, whereas the current guard just silently skips the (never-actually-occurring) case instead of crashing. No test can construct a real process.env entry with a genuinely undefined value to exercise the false path.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "differential-testing",
+    "reason": "process.env's index signature is typed string | undefined, but a real Node process never actually produces an undefined value here for an own enumerable key; kept only to satisfy that type, not because it changes observed behavior."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 282,
+    "domain": "stryker",
+    "rule": [
+      "BooleanLiteral"
+    ],
+    "content": "Stryker disable next-line BooleanLiteral -- Windows-only cosmetic behavior (suppresses a console window flash) with no effect on stdout/stderr/exitCode/signal on any platform, and no Node API exposes it back for a test to observe either way.",
+    "justification": "`windowsHide: true` is purely cosmetic, Windows-only behavior (suppressing a brief console window flash when spawning a child process) with no effect on stdout/stderr/exitCode/signal on any platform -- and no Node API exposes this setting back to a test for it to observe either way, on Windows or elsewhere.",
+    "alternatives": "Remove the `windowsHide: true` option entirely, since this suite can't verify it either way.",
+    "remediation": "Not pursued: removing it would silently regress a real (if minor) user-facing behavior on Windows -- a visible console window flash on every spawned check -- for no reduction in this suite's already-zero ability to test it, since no observable signal exists for either the true or false value.",
+    "category": "tooling-limit",
+    "verificationMethod": "untestable",
+    "reason": "Windows-only cosmetic behavior (suppresses a console window flash) with no effect on stdout/stderr/exitCode/signal on any platform, and no Node API exposes it back for a test to observe either way."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 352,
+    "domain": "stryker",
+    "rule": [
+      "OptionalChaining"
+    ],
+    "content": "Stryker disable next-line OptionalChaining -- child.stdout is typed Readable | null (Node is only ever null when stdio overrides that stream to something other than \"pipe\"), but this call site never passes a stdio option, so it's always a real stream in practice, confirmed empirically including for a spawn that fails outright (ENOENT).",
+    "justification": "`child.stdout`/`child.stderr` are typed `Readable | null` by Node's own types, but Node only ever actually sets them to null when the `stdio` option overrides that particular stream to something other than \"pipe\" -- and this call site never passes a stdio option at all, so both streams are always real, live streams in practice. Confirmed empirically, including for a spawn that fails outright (ENOENT): child.stdout/child.stderr are still non-null Readable instances even when the process never actually starts.",
+    "alternatives": "Use a non-null assertion (`child.stdout!.on(...)`) instead of optional chaining.",
+    "remediation": "Rejected the assertion for the same \"fail safely, not crash, if this ever changes\" reason used throughout this file: if some future refactor ever did pass a stdio option that nulls out this stream, the current guarded form would just silently not capture output instead of throwing from deep inside a spawn callback. Kept as defense in depth even though no test can currently make child.stdout actually null at this call site.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "differential-testing",
+    "reason": "child.stdout is typed Readable | null (Node is only ever null when stdio overrides that stream to something other than \"pipe\"), but this call site never passes a stdio option, so it's always a real stream in practice, confirmed empirically including for a spawn that fails outright (ENOENT)."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 360,
+    "domain": "stryker",
+    "rule": [
+      "OptionalChaining"
+    ],
+    "content": "Stryker disable next-line OptionalChaining -- same reasoning as the stdout guard above (which already covers \"both\"), confirmed empirically here too: un-exempting this mutant and running Stryker scoped to this file showed OptionalChaining's child.stderr.on replacement survives.",
+    "justification": "Same reasoning as the `child.stdout` guard immediately above (which already covers both streams' shared root cause): `child.stderr` is likewise never actually null at this call site since `stdio` is never overridden here.",
+    "alternatives": "Use a non-null assertion instead of optional chaining, matching the child.stdout guard's own alternative.",
+    "remediation": "Confirmed empirically here too, not just by analogy with the stdout guard: un-exempting this mutant and running Stryker scoped to this file showed the OptionalChaining mutation to child.stderr.on (removing the `?.`) survives, for the identical reason. Kept the guarded form for the same defense-in-depth reasoning as stdout's own guard.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "mutation-run",
+    "reason": "same reasoning as the stdout guard above (which already covers \"both\"), confirmed empirically here too: un-exempting this mutant and running Stryker scoped to this file showed OptionalChaining's child.stderr.on replacement survives."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 380,
+    "domain": "stryker",
+    "rule": [
+      "EqualityOperator",
+      "ConditionalExpression",
+      "StringLiteral",
+      "CallExpression"
+    ],
+    "content": "Stryker disable next-line EqualityOperator,ConditionalExpression,StringLiteral,CallExpression -- if child.pid were ever genuinely undefined here, calling killWithEscalation(undefined, ...) would throw synchronously inside this AbortSignal listener, which Node reschedules onto process.nextTick as an uncaught exception, crashing the whole test process rather than failing one assertion; the \"SIGTERM\" string literal is separately unkillable since Node's own process.kill() normalizes a falsy/empty signal argument back to SIGTERM, so the OS-observed signal is identical either way.",
+    "justification": "child.pid is only ever undefined here if spawning itself already failed and no pid was obtained -- in that case Node's \"error\" event (not \"close\") fires and this AbortSignal listener, if it ran at all, would race a state this function's own \"error\" handler already owns exclusively; confirmed by code inspection of spawn-check.ts's own child.once(\"error\", ...) and child.once(\"close\", ...) handlers, which are mutually exclusive per Node's child_process contract. Separately, the \"SIGTERM\" string literal mutant is unkillable regardless: Node's own process.kill()/process signal delivery normalizes a falsy or empty signal argument back to SIGTERM, so the OS-observed signal is identical whether this literal is exempted or not -- confirmed empirically against a real spawned process, not assumed.",
+    "alternatives": "Use a non-null assertion (`child.pid!`) instead of the runtime `!== undefined` guard, since the same contract makes `child.pid` provably defined by the time this listener can meaningfully run.",
+    "remediation": "Rejected the assertion for the same \"fail safely rather than crash if the invariant is ever broken\" reasoning used elsewhere in this file (see the child.pid guard in resolveCommand and the child.stdout/child.stderr optional-chaining guards): if this invariant were ever violated by a future refactor, a non-null assertion would let killWithEscalation(undefined, ...) throw synchronously inside an AbortSignal listener, which Node reschedules as an uncaught exception on process.nextTick -- crashing the whole host process instead of merely skipping one kill attempt.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "untestable",
+    "reason": "if child.pid were ever genuinely undefined here, calling killWithEscalation(undefined, ...) would throw synchronously inside this AbortSignal listener, which Node reschedules onto process.nextTick as an uncaught exception, crashing the whole test process rather than failing one assertion; the \"SIGTERM\" string literal is separately unkillable since Node's own process.kill() normalizes a falsy/empty signal argument back to SIGTERM, so the OS-observed signal is identical either way."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 407,
+    "domain": "stryker",
+    "rule": [
+      "StringLiteral",
+      "CallExpression"
+    ],
+    "content": "Stryker disable next-line StringLiteral,CallExpression -- removing the wrong event name here has no test-observable effect within a short-lived test: the real listener is attached to an AbortController that's garbage-collected with the test, and effectiveSignal only ever fires \"abort\" once in its lifetime regardless; it matters for a long-running consumer process avoiding a listener leak, not for anything this suite can directly assert on.",
+    "justification": "Removing the wrong event name here (or not calling removeEventListener at all) has no test-observable effect within a short-lived test process: the real listener is attached to an AbortController that's garbage-collected along with the test itself once it ends, and effectiveSignal only ever fires \"abort\" at most once in its lifetime regardless of whether this cleanup runs. It matters for a long-running consumer process avoiding an accumulating listener leak across many checks, not for anything a single test's assertions can directly observe.",
+    "alternatives": "Omit the removeEventListener call entirely, relying on the AbortController's own garbage collection once nothing references it anymore.",
+    "remediation": "Not pursued: repo-contract itself is exactly the kind of long-running consumer process this cleanup protects (a single run can spawn many checks over its lifetime), so omitting it would introduce a real, if slow, listener leak in normal use even though no test in this short-lived suite can observe the difference either way.",
+    "category": "tooling-limit",
+    "verificationMethod": "untestable",
+    "reason": "removing the wrong event name here has no test-observable effect within a short-lived test: the real listener is attached to an AbortController that's garbage-collected with the test, and effectiveSignal only ever fires \"abort\" once in its lifetime regardless; it matters for a long-running consumer process avoiding a listener leak, not for anything this suite can directly assert on."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 421,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- handle is ActiveCheckHandle | undefined exactly when spawning itself failed and no pid was ever obtained (see below); this guard exists to satisfy Set#delete's parameter type, not because calling delete(undefined) would behave differently at runtime -- Set#delete on a non-member value is already a silent no-op.",
+    "justification": "`handle` is typed `ActiveCheckHandle | undefined`, undefined exactly when spawning itself failed and no pid was ever obtained -- this guard exists only to satisfy Set#delete's parameter type, not because calling delete(undefined) would behave differently at runtime: Set#delete on a value that was never a member (as undefined never is, here) is already a silent no-op.",
+    "alternatives": "Use a non-null assertion or a type cast instead of the runtime guard, since Set#delete accepts any value without complaint regardless of type.",
+    "remediation": "Rejected: Set<ActiveCheckHandle>#delete is typed to take an ActiveCheckHandle, not ActiveCheckHandle | undefined, so some form of narrowing is required to satisfy the type either way -- an assertion would just relocate the same guard to a less safe form for no behavioral gain, since Set#delete's own no-op-on-non-member semantics make the guard's presence or absence unobservable regardless.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "handle is ActiveCheckHandle | undefined exactly when spawning itself failed and no pid was ever obtained (see below); this guard exists to satisfy Set#delete's parameter type, not because calling delete(undefined) would behave differently at runtime -- Set#delete on a non-member value is already a silent no-op."
+  },
+  {
+    "file": "src/execution/spawn-check.ts",
+    "line": 476,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression",
+      "EqualityOperator",
+      "LogicalOperator"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression,EqualityOperator,LogicalOperator -- Node's own child_process contract guarantees exactly one of code/signal is non-null on a normal \"exit\" event, making signal !== null here effectively redundant given code === null already; kept as a belt-and-suspenders check against that contract rather than assumed absolute, since it is difficult to construct a real counterexample to test against (both null, or both non-null, simultaneously).",
+    "justification": "Node's own child_process \"close\"/\"exit\" event contract guarantees exactly one of code/signal is non-null on a normal termination -- so `signal !== null` here is effectively redundant given `code === null` has already been checked in the same condition. Kept as a belt-and-suspenders check against that documented contract rather than assumed absolute, since it's difficult to construct a real child process that violates it (both null, or both non-null, simultaneously) to test against either way.",
+    "alternatives": "Drop the `signal !== null` clause and rely solely on `code === null` to detect the \"signaled\" case.",
+    "remediation": "Considered relying solely on code === null, but kept the redundant clause anyway: Node's own documentation describes this as a contract rather than a hard guarantee enforced by types, and a real child process producing an unexpected (null, null) pair (however unlikely) would otherwise be silently misreported as \"signaled\" instead of falling through correctly. No test can construct the counterexample needed to distinguish the two forms, since doing so would require a non-conforming child process this suite has no way to simulate.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "Node's own child_process contract guarantees exactly one of code/signal is non-null on a normal \"exit\" event, making signal !== null here effectively redundant given code === null already; kept as a belt-and-suspenders check against that contract rather than assumed absolute, since it is difficult to construct a real counterexample to test against (both null, or both non-null, simultaneously)."
+  },
+  {
+    "file": "src/policy/run-policies.ts",
+    "line": 64,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- OUTPUT_PROPERTIES is a ReadonlySet<string>, so .has(undefined) is always false regardless of argument, making the property !== undefined guard redundant with the .has() call it short-circuits into; removing it changes no observable behavior.",
+    "justification": "`OUTPUT_PROPERTIES` is declared `ReadonlySet<string>` and only ever populated with the four literal strings \"success\"/\"value\"/\"error\"/\"format\" -- `Set.prototype.has(undefined)` therefore always evaluates to `false`, for any Set, regardless of its contents. That makes `property !== undefined && OUTPUT_PROPERTIES.has(property)` mathematically identical to `OUTPUT_PROPERTIES.has(property)` alone: the left operand can never change the ternary's result, so Stryker's `ConditionalExpression: true` mutant (forcing the left operand to `true`) produces byte-identical behavior to the unmutated code on every possible input.",
+    "alternatives": "Drop the `property !== undefined &&` guard entirely and call `OUTPUT_PROPERTIES.has(property)` directly.",
+    "remediation": "Kept the guard rather than simplifying it away: it documents the intent (\"only a recognized property name counts\") for a reader who would otherwise have to independently know that `Set.has(undefined)` is always false, and TypeScript's own control-flow narrowing already gets a real, if not runtime-observable, benefit from it (the ternary's `? property` branch is typed `string`, not `string | undefined`, only because of this check). No test can distinguish the two forms since they are behaviorally identical for every input, not merely difficult to exercise.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "OUTPUT_PROPERTIES is a ReadonlySet<string>, so .has(undefined) is always false regardless of argument, making the property !== undefined guard redundant with the .has() call it short-circuits into; removing it changes no observable behavior."
+  },
+  {
+    "file": "src/policy/run-policies.ts",
+    "line": 196,
+    "domain": "stryker",
+    "rule": [
+      "ArrayDeclaration"
+    ],
+    "content": "Stryker disable next-line ArrayDeclaration -- check.dependsOn is undefined exactly when a check has no declared dependencies, in which case this fallback's contents are unobservable regardless of value: any id iterated would look up evidence.checks[depId], find nothing, and get filtered out by the guard below anyway, confirmed by the \"sees ctx.dependencies as an empty object\" test in run-policies.test.ts, which passes regardless of the fallback's specific value.",
+    "justification": "`check.dependsOn` is undefined exactly when a check has no declared dependencies, in which case this fallback's own contents are unobservable regardless of what they are: any id it iterated would be looked up via evidence.checks[depId], find nothing (no real check has a garbage id), and get filtered out by the `depEvidence !== undefined` guard immediately below anyway.",
+    "alternatives": "Use a non-null assertion or restructure the loop to check `check.dependsOn !== undefined` before iterating, instead of a fallback default.",
+    "remediation": "Confirmed by the existing \"a policy with no dependsOn sees ctx.dependencies as an empty object\" test in run-policies.test.ts, which passes regardless of this fallback's specific value, matching this reasoning. Kept the `?? []` fallback anyway since it's the simplest way to express \"iterate zero or more dependency ids\" without a separate branch, and its behavioral equivalence to any other fallback value is exactly what makes this suppression safe.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "existing-test-suite",
+    "reason": "check.dependsOn is undefined exactly when a check has no declared dependencies, in which case this fallback's contents are unobservable regardless of value: any id iterated would look up evidence.checks[depId], find nothing, and get filtered out by the guard below anyway, confirmed by the \"sees ctx.dependencies as an empty object\" test in run-policies.test.ts, which passes regardless of the fallback's specific value."
+  },
+  {
+    "file": "src/policy/run-policies.ts",
+    "line": 204,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- validate-config.ts already guarantees every dependsOn id names a check that exists in this run, and the phasing invariant guarantees its evidence is already assembled by the time any policy runs; this guard exists only to satisfy noUncheckedIndexedAccess.",
+    "justification": "validate-config.ts already guarantees every dependsOn id names a check that exists in this run, and this function's own phasing invariant (every check's evidence is fully assembled before any policy runs) guarantees evidence.checks[depId] is already populated by the time this line runs -- this guard exists only to satisfy noUncheckedIndexedAccess's typing of the indexed read, not because depEvidence can genuinely be undefined here.",
+    "alternatives": "Use a non-null assertion (`evidence.checks[depId]!`) instead of the runtime guard.",
+    "remediation": "Rejected the assertion for the same \"fail safely instead of crashing if an invariant is ever broken\" reason used throughout this codebase: if either upstream guarantee (validate-config.ts's dependsOn validation, or this function's own phasing) were ever violated by a future change, the current guarded form would just silently omit one entry from `dependencies` instead of throwing from inside a policy-invocation loop. Kept as defense in depth even though no test can currently make depEvidence actually undefined here.",
+    "category": "unreachable-invariant",
+    "verificationMethod": "static-reasoning",
+    "reason": "validate-config.ts already guarantees every dependsOn id names a check that exists in this run, and the phasing invariant guarantees its evidence is already assembled by the time any policy runs; this guard exists only to satisfy noUncheckedIndexedAccess."
+  },
+  {
+    "file": "src/policy/run-policies.ts",
+    "line": 241,
+    "domain": "stryker",
+    "rule": [
+      "EqualityOperator"
+    ],
+    "content": "Stryker disable next-line EqualityOperator -- \"> 1\" vs. \">= 1\" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this silently.",
+    "justification": "\"> 1\" and \">= 1\" are equivalent at this specific point in the function given the early return just above it (`if (thrown.length === 1) throw only`): by the time this line can run, thrown.length is never exactly 1 -- it's either 0 (falling through to the success path below either way) or >= 2 (taking the AggregateError branch either way) -- so both comparisons partition the remaining possibilities identically.",
+    "alternatives": "Remove the earlier `=== 1` early return and rely solely on this `>= 1` (or `> 0`) check to decide between throwing a single error and an AggregateError.",
+    "remediation": "Restructuring to a single check was considered but rejected: throwing the lone PolicyThrewError directly (rather than wrapping a single error in an AggregateError) is deliberate, documented behavior a caller catching a specific error type depends on, so the two-branch structure with its now-redundant second comparison is intentional. Documented this equivalence explicitly (rather than silently accepting it) so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "\"> 1\" vs. \">= 1\" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this silently."
+  },
+  {
+    "file": "src/presets/dead-code.ts",
+    "line": 70,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression",
+      "EqualityOperator",
+      "BlockStatement"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression,EqualityOperator,BlockStatement -- JSON.parse(undefined) always throws, and the catch block below already converts that back to undefined, the same result this early return produces",
+    "justification": "JSON.parse(undefined) always throws (\"undefined\" is not valid JSON, confirmed empirically), and the catch block just below this function's try already converts that thrown error back into a `return undefined` -- the exact same observable result this early return already produces. It's kept for clarity (making the \"no flag value means no options\" case explicit up front) rather than relying on a throw-and-catch as the implicit mechanism, not because it changes any test-observable output.",
+    "alternatives": "Remove this early return and let a missing `raw` value fall through into the try/catch below, relying on JSON.parse(undefined) throwing and being caught.",
+    "remediation": "Confirmed JSON.parse(undefined) throws in every tested Node version, making the two forms behaviorally identical; kept the explicit early return anyway since it documents the \"flag absent\" case as its own distinct, intentional branch rather than an implicit side effect of a parse failure, which is clearer for a future reader even though no test can distinguish the two.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "differential-testing",
+    "reason": "JSON.parse(undefined) always throws, and the catch block below already converts that back to undefined, the same result this early return produces"
+  },
+  {
+    "file": "src/presets/dead-code.ts",
+    "line": 80,
+    "domain": "stryker",
+    "rule": [
+      "BlockStatement"
+    ],
+    "content": "Stryker disable BlockStatement -- an empty catch block falls off the end of the function and implicitly returns undefined, identical to its explicit return",
+    "justification": "This function's try/catch is the last statement in readReporterOptions, so an empty catch block falls off the end of the function and implicitly returns undefined -- identical to an explicit `return undefined` written inside it. The empty block is kept for clarity (matching the explicit early return above it, so both \"absent\" and \"malformed\" cases read the same way), not because a mutation to its contents changes any observable output.",
+    "alternatives": "Write an explicit `return undefined` inside the catch block instead of leaving it empty.",
+    "remediation": "Considered adding the explicit return undefined, which would be equally valid and arguably marginally clearer, but left the block empty since it's the function's trailing statement and the implicit undefined return is a well-understood JavaScript idiom immediately adjacent to the explicit version used in the early-return case above; no test can observe a difference between the two forms.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "an empty catch block falls off the end of the function and implicitly returns undefined, identical to its explicit return"
+  },
+  {
+    "file": "src/presets/duplication.ts",
+    "line": 75,
+    "domain": "stryker",
+    "rule": [
+      "StringLiteral"
+    ],
+    "content": "Stryker disable next-line StringLiteral -- JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way",
+    "justification": "JSON.parse coerces whatever readFile returns via that value's own toString() method -- and confirmed empirically that a Buffer (what a mutated or unrecognized encoding argument produces instead of a string) defaults its own toString() to UTF-8, the exact same encoding \"utf8\" requests explicitly -- so parsing this file's JSON content succeeds identically either way; no test can observe a difference through this policy's output.",
+    "alternatives": "Read the file without specifying an encoding at all (letting readFile return a Buffer) and pass that directly to JSON.parse, relying on Buffer's own default UTF-8 toString() instead of naming the encoding explicitly.",
+    "remediation": "Considered omitting the encoding argument, but kept it explicit: naming \"utf8\" documents the actual expected file encoding for a future reader, even though Buffer's coercion happens to default to the same encoding today -- relying on that coincidence implicitly would make a future change to jscpd's own report encoding a silent, hard-to-diagnose bug instead of an explicit mismatch.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "differential-testing",
+    "reason": "JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way"
+  },
+  {
+    "file": "src/presets/e2e.ts",
+    "line": 65,
+    "domain": "stryker",
+    "rule": [
+      "ArrayDeclaration"
+    ],
+    "content": "Stryker disable next-line ArrayDeclaration -- any fallback garbage here resolves safely to undefined via optional chaining below, same as a genuinely empty array",
+    "justification": "Whatever non-array/non-test garbage a mutated `?? []` fallback substitutes here, every field access performed on it afterward (.results, .error, .message) resolves safely to undefined via its own optional chaining a few lines below -- confirmed by hand-tracing both fallback sites in this function -- converging on the exact same `message: undefined` this line already produces for a genuinely empty spec.tests/t.results. No test can observe a difference between the fallback's specific contents.",
+    "alternatives": "Use a non-null assertion instead of the nullish-coalescing fallback, since Playwright's own report schema types `tests` as always present on a spec.",
+    "remediation": "Rejected the assertion: Playwright's JSON report is external, untrusted input from this check's own perspective (a third-party tool's output, not data this codebase controls the shape of), so a genuinely malformed report should degrade to \"no failure detail available\" rather than crash this check's own policy evaluation. Kept the safe fallback for that reason, even though its specific contents are unobservable given the optional chaining that follows it.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "any fallback garbage here resolves safely to undefined via optional chaining below, same as a genuinely empty array"
+  },
+  {
+    "file": "src/presets/e2e.ts",
+    "line": 115,
+    "domain": "stryker",
+    "rule": [
+      "ArrayDeclaration"
+    ],
+    "content": "Stryker disable next-line ArrayDeclaration -- collectFailingSpecs only reads .specs/.suites via safe optional chaining, so fallback garbage yields zero details either way",
+    "justification": "collectFailingSpecs itself only ever reads .specs/.suites off each element it's given via its own safe optional chaining (suite.specs ?? [], if (suite.suites)), so substituting any non-suite garbage for a genuinely absent report.suites still yields zero collected detail lines either way -- the fallback's specific contents never reach anything that would distinguish it from a real empty array.",
+    "alternatives": "Use a non-null assertion instead of the nullish-coalescing fallback, since a Playwright report with stats.unexpected > 0 should always include a suites array in practice.",
+    "remediation": "Rejected for the same reason as collectFailingSpecs's own internal fallback (see this file's other suppression): Playwright's report is external, untrusted output this codebase doesn't control the shape of, so a malformed report degrading to \"no failure detail available\" is safer than asserting a shape that isn't actually guaranteed. Kept the fallback despite its contents being unobservable given collectFailingSpecs's own defensive reads.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "collectFailingSpecs only reads .specs/.suites via safe optional chaining, so fallback garbage yields zero details either way"
+  },
+  {
+    "file": "src/presets/markdownlint.ts",
+    "line": 69,
+    "domain": "stryker",
+    "rule": [
+      "StringLiteral"
+    ],
+    "content": "Stryker disable next-line StringLiteral -- JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way",
+    "justification": "Same reasoning as the identical pattern in src/presets/duplication.ts: JSON.parse coerces whatever readFile returns via that value's own toString(), and a Buffer (what a mutated encoding argument produces) defaults its own toString() to UTF-8 -- the same encoding \"utf8\" requests explicitly -- so parsing markdownlint-cli2's JSON report succeeds identically either way.",
+    "alternatives": "Read the file without specifying an encoding, relying on Buffer's own default UTF-8 toString() instead of naming \"utf8\" explicitly, matching duplication.ts's own alternative.",
+    "remediation": "Same conclusion as duplication.ts's identical case: kept the explicit \"utf8\" argument to document the expected report encoding for a future reader rather than relying on Buffer's coercion default coinciding with it by coincidence, even though no test can currently observe a difference between the two forms.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "differential-testing",
+    "reason": "JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way"
+  },
+  {
+    "file": "src/presets/security-secrets.ts",
+    "line": 37,
+    "domain": "stryker",
+    "rule": [
+      "StringLiteral"
+    ],
+    "content": "Stryker disable next-line StringLiteral -- JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way",
+    "justification": "Same reasoning as the identical pattern in src/presets/duplication.ts: JSON.parse coerces whatever readFile returns via that value's own toString(), and a Buffer (what a mutated encoding argument produces) defaults its own toString() to UTF-8 -- the same encoding \"utf8\" requests explicitly -- so parsing secretlint's JSON report succeeds identically either way.",
+    "alternatives": "Read the file without specifying an encoding, relying on Buffer's own default UTF-8 toString(), matching duplication.ts's own alternative.",
+    "remediation": "Same conclusion as duplication.ts's identical case: kept the explicit \"utf8\" argument to document the expected report encoding for a future reader rather than relying on Buffer's coercion default coinciding with it by coincidence, even though no test can currently observe a difference between the two forms.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "differential-testing",
+    "reason": "JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way"
+  },
+  {
+    "file": "src/presets/shared/vitest-json-policy.ts",
+    "line": 74,
+    "domain": "stryker",
+    "rule": [
+      "MethodExpression"
+    ],
+    "content": "Stryker disable next-line MethodExpression -- proven killed under direct vitest execution but Stryker's own coverage attribution never runs the two tests that would kill it; see the comment above.",
+    "justification": "This mutant (replacing `[...].filter(Boolean).join(\" — \")` with the bare array `[...]`) is a real behavioral change that a correct test suite should kill, and it is killed -- just not by Stryker's own instrumented run. Verified directly: applying this exact replacement to the source file by hand and running `npx vitest run test/unit/presets/shared/vitest-json-policy.test.ts` (no Stryker involved) fails 4 of that file's 11 tests, including the two that assert the complete rationale string via `toBe(...)` rather than `toContain(...)` specifically to make this class of mutation observable. Under `npx stryker run` -- reproduced across three separate invocations (scoped to this file plus missing-dependency.ts, twice; the full, unscoped project run once) -- this mutant's own `coveredBy`/`testsCompleted` fields show only 6 of the file's 11 tests ever executed against it, and none of those 6 are the two `toBe` tests that would catch it. `stryker.config.mjs`'s own comment already documents choosing `coverageAnalysis: \"all\"` specifically because `\"perTest\"` exhibited \"coverage-attribution quirks (a mutant on a line every throwing-policy test genuinely exercises was reported as only covered by unrelated tests)\" during this repository's own implementation -- this is the same class of quirk surfacing under `\"all\"` as well, for this one line.",
+    "alternatives": "Rewrite the source to avoid the exact `array.filter(Boolean).join(sep)` chain shape (e.g. building the string with an imperative loop instead) purely to dodge whatever makes Stryker misattribute coverage for it -- rejected: it would make the code worse to read for a tooling quirk, and there is no evidence a differently-shaped equivalent wouldn't hit the same or a different attribution gap. Switching `coverageAnalysis` to `\"off\"` (no coverage-based filtering at all, for every mutant in the whole project) would also fix this specific case, but at a real, whole-project performance cost to fix one file's one mutant.",
+    "remediation": "Not pursued: no test-suite change closes this gap, since the existing tests already kill the mutation under real execution -- the gap is entirely in Stryker's own per-mutant test-selection bookkeeping for this line, which this repository does not control. Re-check whether a future `@stryker-mutator/core`/`@stryker-mutator/vitest-runner` upgrade resolves the attribution gap before assuming it is permanent.",
+    "category": "tooling-limit",
+    "verificationMethod": "differential-testing",
+    "reason": "proven killed under direct vitest execution but Stryker's own coverage attribution never runs the two tests that would kill it; see the comment above."
+  },
+  {
+    "file": "src/run-repo-contract.ts",
+    "line": 69,
+    "domain": "stryker",
+    "rule": [
+      "LogicalOperator"
+    ],
+    "content": "Stryker disable next-line LogicalOperator -- validateRepoContractConfig above already rejects any config.concurrency that is not a positive integer (>= 1), so by the time this line runs config.concurrency is always either undefined or already truthy; `??` and `&&` therefore select the identical branch for every value this parameter can actually hold here, making them equivalent at this exact call site.",
+    "justification": "validateRepoContractConfig (called immediately above, at the top of runRepoContract) already rejects any config.concurrency that is not a positive integer (validate-config.ts requires concurrency >= 1) before this line can ever run. So by the time `config.concurrency ?? os.availableParallelism()` executes, config.concurrency is always either undefined or an already-truthy positive integer -- there is no valid, validated value for which `??` and `&&` would select a different branch.",
+    "alternatives": "Rewrite the expression using `&&` instead of `??`, or add an explicit `typeof`/truthiness re-check immediately before this line to make the invariant locally visible without relying on the earlier validation call.",
+    "remediation": "Considered re-deriving the guarantee locally (e.g. asserting concurrency > 0 again right before this line), but that would just duplicate validate-config.ts's own check for a property it already guarantees before runRepoContract's caller can reach this line -- validateRepoContractConfig is not optional and always runs first, so the invariant already holds unconditionally by construction, not merely by convention.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "validateRepoContractConfig above already rejects any config.concurrency that is not a positive integer (>= 1), so by the time this line runs config.concurrency is always either undefined or already truthy; `??` and `&&` therefore select the identical branch for every value this parameter can actually hold here, making them equivalent at this exact call site."
+  },
+  {
+    "file": "test/unit/crap/policy.test.ts",
+    "line": 156,
+    "domain": "typescript",
+    "rule": [
+      "@ts-expect-error"
+    ],
+    "content": "@ts-expect-error -- deliberately modelling a malformed crap4ts row with no `crap` field",
+    "justification": "",
+    "alternatives": "",
+    "remediation": "",
+    "category": "",
+    "verificationMethod": "",
+    "reason": "-- deliberately modelling a malformed crap4ts row with no `crap` field"
+  },
+  {
+    "file": "test/unit/crap/policy.test.ts",
+    "line": 164,
+    "domain": "typescript",
+    "rule": [
+      "@ts-expect-error"
+    ],
+    "content": "@ts-expect-error -- deliberately modelling a malformed crap4ts row with no `complexity` field",
+    "justification": "",
+    "alternatives": "",
+    "remediation": "",
+    "category": "",
+    "verificationMethod": "",
+    "reason": "-- deliberately modelling a malformed crap4ts row with no `complexity` field"
+  },
+  {
+    "file": "test/unit/execution/abort-signals.test.ts",
+    "line": 6,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/unbound-method"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/unbound-method -- reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.",
+    "justification": "`original` stores a reference to `AbortSignal.any`, a static function with no `this` binding to lose -- the rule exists to catch instance methods torn off their receiver, which doesn't apply to a static method reference that's never invoked at all in this test.",
+    "alternatives": "Wrap the reference in an arrow function (`() => AbortSignal.any(...)`) to sidestep the rule.",
+    "remediation": "The reference is never called here -- it's saved and later reassigned back onto `AbortSignal.any` to restore it, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal."
+  },
+  {
+    "file": "test/unit/execution/process-tree.test.ts",
+    "line": 164,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/only-throw-error"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/only-throw-error -- deliberately not an Error instance, to prove isErrnoException requires both `instanceof Error` and a `code` property, not either alone.",
+    "justification": "This test deliberately throws a plain object (not an Error) to prove `isErrnoException` requires both `instanceof Error` and a `code` property -- throwing a real Error would defeat the point of the test, which is to verify a non-Error, code-carrying value is still correctly rejected.",
+    "alternatives": "Throw an Error subclass augmented with a `code` property instead of a bare object.",
+    "remediation": "That would test a different, already-covered branch of isErrnoException (the `instanceof Error` check passing) rather than the one this test targets: that a non-Error value must be rejected regardless of whether it carries a `code` property.",
+    "category": "intentional-deviation",
+    "verificationMethod": "static-reasoning",
+    "reason": "deliberately not an Error instance, to prove isErrnoException requires both `instanceof Error` and a `code` property, not either alone."
+  },
+  {
+    "file": "test/unit/execution/run-checks.test.ts",
+    "line": 24,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/unbound-method"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/unbound-method -- reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.",
+    "justification": "`original` stores a reference to `AbortSignal.any`, a static function with no `this` binding to lose -- the rule exists to catch instance methods torn off their receiver, which doesn't apply to a static method reference that's never invoked at all in this test. Identical pattern, and identical justification, to abort-signals.test.ts's own `withoutNativeAbortSignalAny` helper, duplicated locally here per this file's own doc comment since that one is private to its own test file.",
+    "alternatives": "Wrap the reference in an arrow function (`() => AbortSignal.any(...)`) to sidestep the rule.",
+    "remediation": "The reference is never called here -- it's saved and later reassigned back onto `AbortSignal.any` to restore it, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal."
+  },
+  {
+    "file": "test/unit/execution/spawn-check.test.ts",
+    "line": 552,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/unbound-method"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/unbound-method -- reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.",
+    "justification": "`originalAny` stores a reference to `AbortSignal.any`, a static function with no `this` binding to lose -- the rule exists to catch instance methods torn off their receiver, which doesn't apply to a static method reference that is never invoked at all in this test (only saved, then reassigned back onto `AbortSignal.any` to restore it). Identical reasoning to the pre-existing suppression at test/unit/execution/abort-signals.test.ts:6, for the same pattern copied into this file.",
+    "alternatives": "Wrap the reference in an arrow function (`() => AbortSignal.any(...)`) to sidestep the rule.",
+    "remediation": "The reference is never called here -- it is saved and later reassigned back onto `AbortSignal.any` to restore it after the test forces composeSignals' manual-fallback path, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal."
+  },
+  {
+    "file": "test/unit/policy/run-policies.test.ts",
+    "line": 432,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/only-throw-error"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/only-throw-error -- deliberately testing a non-Error throw",
+    "justification": "This test verifies runPolicies preserves a non-Error thrown value verbatim as PolicyThrewError's `cause` -- throwing a string is the deliberate, minimal input needed to exercise that path.",
+    "alternatives": "Throw an Error instance instead of a raw string.",
+    "remediation": "An Error instance is already covered by the adjacent 'preserves the original error as cause' test above this one; this test exists specifically to prove non-Error throws are also preserved verbatim rather than coerced or wrapped, which requires actually throwing a non-Error value.",
+    "category": "intentional-deviation",
+    "verificationMethod": "static-reasoning",
+    "reason": "deliberately testing a non-Error throw"
+  },
+  {
+    "file": "test/unit/schema/schema-conformance.test.ts",
+    "line": 1,
+    "domain": "eslint",
+    "rule": [
+      "import-x/no-named-as-default"
+    ],
+    "content": "eslint-disable-next-line import-x/no-named-as-default -- ajv's own documented usage is `import Ajv from \"ajv\"`; `Ajv` is coincidentally also a named export of the same class.",
+    "justification": "ajv's own documentation and type definitions specify `import Ajv from \"ajv\"` as the correct usage -- `Ajv` happens to also be a named export of the same class, which is what triggers this rule, but the default import is the actually-correct form here, not a mistake the rule is catching.",
+    "alternatives": "Import via the named export instead: `import { Ajv } from \"ajv\"`.",
+    "remediation": "That form works today only by coincidence of ajv's current export shape and isn't what ajv documents or tests against -- following the default-import usage ajv's own docs prescribe is the more future-proof choice, so the rule is suppressed here rather than the import rewritten.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "ajv's own documented usage is `import Ajv from \"ajv\"`; `Ajv` is coincidentally also a named export of the same class."
+  }
+]

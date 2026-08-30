@@ -1,0 +1,253 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maverickcer.github.io/repo-contract/schema/evidence.schema.json",
+  "title": "repo-contract Evidence",
+  "description": "Machine-readable record of what happened when a repo-contract configuration was executed -- one entry per configured check, describing the command run, its exit status, captured output, and (if requested) parsed output. Says nothing about whether the result was acceptable -- see the paired Verdict schema for that. Generated from src/types.ts's Evidence type -- never hand-authored.",
+  "$ref": "#/definitions/EvidenceSchemaSource",
+  "definitions": {
+    "EvidenceSchemaSource": {
+      "$ref": "#/definitions/Evidence"
+    },
+    "Evidence": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "const": 1,
+          "description": "Schema version of this shape; see VERSIONING.md."
+        },
+        "startedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp of when the run began."
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp of when the last check finished."
+        },
+        "durationMs": {
+          "type": "number",
+          "description": "Wall-clock time for the run as a whole, in milliseconds."
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/CheckEvidence"
+          },
+          "description": "Each configured check's own evidence, keyed by check id."
+        }
+      },
+      "required": [
+        "version",
+        "startedAt",
+        "completedAt",
+        "durationMs",
+        "checks"
+      ],
+      "description": "Versioned, immutable record of one complete `runRepoContract` execution -- every configured check's evidence, plus timing for the run as a whole. Says nothing about whether any of it was acceptable; see `Verdict`. Additive fields are a compatible change; changing or removing an existing field requires bumping this version number (see VERSIONING.md)."
+    },
+    "CheckEvidence": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "The executable that was actually spawned (after tokenization, if `run` was a string)."
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The arguments passed to `command`, exactly as spawned."
+        },
+        "startedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp of when the process was spawned."
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp of when the process reached its terminal state."
+        },
+        "durationMs": {
+          "type": "number",
+          "description": "Wall-clock time from spawn to termination, in milliseconds."
+        },
+        "exitCode": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "`null` when the process never exited normally -- see `signal` and `status`."
+        },
+        "signal": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/global.NodeJS.Signals"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The signal that terminated the process, if any. `null` for a normal exit or a spawn failure."
+        },
+        "stdout": {
+          "type": "string",
+          "description": "The process's raw standard output, captured verbatim up to an internal size cap (10 MiB); content beyond the cap is replaced with a truncation marker."
+        },
+        "stderr": {
+          "type": "string",
+          "description": "The process's raw standard error, captured verbatim up to an internal size cap (10 MiB); content beyond the cap is replaced with a truncation marker."
+        },
+        "status": {
+          "$ref": "#/definitions/CheckStatus",
+          "description": "Why the process reached its terminal state; see `CheckStatus`."
+        },
+        "spawnError": {
+          "type": "string",
+          "description": "Populated only for `status === \"spawn_error\"` -- the underlying Node error message (e.g. \"spawn foo ENOENT\"). Never populated for any other status."
+        },
+        "spawnErrorCode": {
+          "type": "string",
+          "description": "Populated only for `status === \"spawn_error\"` -- the underlying Node `ErrnoException`'s structured `.code` (e.g. `\"ENOENT\"`, `\"EACCES\"`), when Node provides one. Never populated for any other status. Distinguishes \"the executable does not exist\" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message."
+        },
+        "output": {
+          "$ref": "#/definitions/ParsedOutput%3Cunknown%3E",
+          "description": "The parsed interpretation of `stdout`, present only if this check's config requested a `format`."
+        }
+      },
+      "required": [
+        "command",
+        "args",
+        "startedAt",
+        "completedAt",
+        "durationMs",
+        "exitCode",
+        "signal",
+        "stdout",
+        "stderr",
+        "status"
+      ],
+      "description": "What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n\n`output.value` is typed `unknown` for every format, including `\"text\"` (even though `parseText` always produces a `string` at runtime) -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"yaml\"` where no schema knowledge exists either way."
+    },
+    "global.NodeJS.Signals": {
+      "type": "string",
+      "enum": [
+        "SIGABRT",
+        "SIGALRM",
+        "SIGBUS",
+        "SIGCHLD",
+        "SIGCONT",
+        "SIGFPE",
+        "SIGHUP",
+        "SIGILL",
+        "SIGINT",
+        "SIGIO",
+        "SIGIOT",
+        "SIGKILL",
+        "SIGPIPE",
+        "SIGPOLL",
+        "SIGPROF",
+        "SIGPWR",
+        "SIGQUIT",
+        "SIGSEGV",
+        "SIGSTKFLT",
+        "SIGSTOP",
+        "SIGSYS",
+        "SIGTERM",
+        "SIGTRAP",
+        "SIGTSTP",
+        "SIGTTIN",
+        "SIGTTOU",
+        "SIGUNUSED",
+        "SIGURG",
+        "SIGUSR1",
+        "SIGUSR2",
+        "SIGVTALRM",
+        "SIGWINCH",
+        "SIGXCPU",
+        "SIGXFSZ",
+        "SIGBREAK",
+        "SIGLOST",
+        "SIGINFO"
+      ]
+    },
+    "CheckStatus": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "timed_out",
+        "signaled",
+        "host_terminated",
+        "spawn_error",
+        "aborted"
+      ],
+      "description": "Why a check's process ended up in its terminal state. `\"completed\"` means the process ran to exit on its own -- the exit code may still be non-zero, and that is for the check's policy to interpret, never this package. The other five values all mean the process did not exit on its own; repo-contract terminated it, or it was terminated for a reason repo-contract can observe but did not cause.\n\n`\"signaled\"` specifically means a signal repo-contract did *not* itself request -- an externally-caused termination. A check killed because the *host* process running repo-contract received its own SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler cleanup) is instead `\"host_terminated\"`: repo-contract did request that signal, just not via `options.signal` or `timeoutMs` (see `\"aborted\"`/`\"timed_out\"`), so it must not be conflated with an externally-caused `\"signaled\"`."
+    },
+    "ParsedOutput<unknown>": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ParsedOutputSuccess%3Cunknown%3E"
+        },
+        {
+          "$ref": "#/definitions/ParsedOutputFailure"
+        }
+      ],
+      "description": "The result of a check's requested output-format parse: either a successful `ParsedOutputSuccess`, or a `ParsedOutputFailure`."
+    },
+    "ParsedOutputSuccess<unknown>": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "$ref": "#/definitions/OutputFormat",
+          "description": "The format that was requested and successfully parsed."
+        },
+        "success": {
+          "type": "boolean",
+          "const": true,
+          "description": "Always `true`."
+        },
+        "value": {
+          "description": "The parsed value."
+        }
+      },
+      "required": [
+        "format",
+        "success",
+        "value"
+      ],
+      "description": "A requested parse of a check's stdout succeeded."
+    },
+    "OutputFormat": {
+      "type": "string",
+      "enum": [
+        "json",
+        "yaml",
+        "text"
+      ],
+      "description": "Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only."
+    },
+    "ParsedOutputFailure": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "$ref": "#/definitions/OutputFormat",
+          "description": "The format that was requested (and failed to parse)."
+        },
+        "success": {
+          "type": "boolean",
+          "const": false,
+          "description": "Always `false`."
+        },
+        "error": {
+          "type": "string",
+          "description": "The parse error's message."
+        }
+      },
+      "required": [
+        "format",
+        "success",
+        "error"
+      ],
+      "description": "A requested parse of a check's stdout failed. The raw stdout on the parent `CheckEvidence` is preserved unchanged -- a parse failure is never silently reinterpreted or discarded."
+    }
+  }
+}
