@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/maverickcer/repo-contract/internal/disable-comments.schema.json",
+  "title": "repo-contract Disable Comments",
+  "description": "Machine-readable schema for this repository's own disable-comments.json suppression- governance registry (see specs/decisions/0006-suppression-governance.md) -- internal self-assurance tooling, never part of the published package surface. Generated from scripts/suppression-governance/evidence-types.ts's DisableCommentRegistry type -- never hand-authored.",
+  "$ref": "#/definitions/DisableCommentRegistry",
+  "definitions": {
+    "DisableCommentRegistry": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/DisableCommentRecord"
+      },
+      "description": "The on-disk shape of disable-comments.json itself -- a plain array of records, in `sortRecords`'s deterministic order."
+    },
+    "DisableCommentRecord": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rule": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1
+        },
+        "justification": {
+          "type": "string"
+        },
+        "alternatives": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/definitions/SuppressionCategory"
+        },
+        "verificationMethod": {
+          "$ref": "#/definitions/VerificationMethod"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "line",
+        "domain",
+        "rule",
+        "content",
+        "justification",
+        "alternatives",
+        "remediation",
+        "category",
+        "verificationMethod",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "One row of disable-comments.json. Identity is `(file, line, domain, rule, content)` -- there is no separate id field; see synchronize.ts for how that identity is used to preserve `justification`/`alternatives`/`remediation`/`category`/`verificationMethod` across reruns, including across an unambiguous line move. `category`/`verificationMethod` are deliberately excluded from identity: they are classification metadata about a discovered suppression, not part of what makes the suppression itself unique, and folding them into identity would make editing a record's classification unmatchable against its own source comment on the next run -- silently wiping its `justification`/`alternatives`/`remediation` as a spurious removed+new pair.\n\n`rule` is a \"policy-addressable suppression identifier,\" not always a literal static-analysis rule id: for `domain: \"eslint\"` it genuinely is a rule id (`security/detect-object-injection`); for `domain: \"typescript\"`, `@ts-ignore`/ `@ts-expect-error` are directives rather than parameterized rules, but are still modeled as `rule: [\"@ts-ignore\"]`/`[\"@ts-expect-error\"]` so the same exact/pattern/domain/global policy mechanism (scripts/suppression-governance/resolve-policy.ts's `resolveRequirement`) applies uniformly across every domain.\n\n`justification`/`alternatives`/`remediation` are three fixed, named prose fields -- deliberately not a count of arbitrary free-form entries (the earlier design this replaced): a numeric \"N details required\" threshold is trivially gameable by generating N generic-sounding filler entries without ever doing the underlying work. Naming exactly what must be explained (`justification`: why this is the best option; `alternatives`: what other approach was considered; `remediation`: what was actually attempted, and why it didn't remove the need for the suppression) doesn't make low-effort filler impossible, but it does make each field individually reviewable against a specific question, rather than an undifferentiated count. The check never invents these -- a fresh record always starts with all three as empty strings; a developer/AI fills them in by hand after a record is auto-created (see scripts/suppression-governance/policy-config.ts's doc comment for exactly how).\n\n`category`/`verificationMethod` are two more hand-authored fields, filled in the same way and at the same time as the three above -- but unlike those three, they are *closed enumerations* rather than free prose, so a reviewer or report can triage a suppression's kind and evidentiary basis without reading three paragraphs. See `SUPPRESSION_CATEGORIES`/`VERIFICATION_METHODS` above for their full semantics.\n\n`reason` is a sixth, differently-sourced field: unlike the five above, it is never hand-authored. Every recognizer (recognizers.ts) derives it mechanically from the directive comment's own content -- whatever text remains once the disable-domain keywords and the rule list are stripped out -- so it is always freshly recomputed from current source on every run, even for an otherwise-unchanged \"existing\" record (see synchronize.ts). A domain's policy opts into requiring it via `SuppressionRequirement`'s `\"reason\"` (policy-config.ts); today only `stryker` does."
+    },
+    "SuppressionCategory": {
+      "type": "string",
+      "enum": [
+        "",
+        "equivalent-mutant",
+        "unreachable-invariant",
+        "platform-limitation",
+        "tooling-limit",
+        "rule-not-applicable",
+        "intentional-deviation"
+      ],
+      "description": "What kind of suppression a `DisableCommentRecord` is. `\"\"` is a deliberate member, not an omission -- it is the \"not yet classified\" sentinel every other hand-authored field (`justification`/`alternatives`/`remediation`) already uses: a freshly auto-created record starts with `category: \"\"`, same as those three. This field is hand-authored the same way -- a human/AI classifies it after the fact; nothing ever infers it from the comment's own text (see `reason`'s doc comment below for why that would defeat this whole registry's purpose -- ADR 0006's rejection of a mechanically-satisfiable model applies identically here).\n\nBoundary tests, since several of these are easy to conflate:\n\n- `\"equivalent-mutant\"` vs. `\"tooling-limit\"`: `equivalent-mutant` asserts no observable   behavioral difference exists at all. `tooling-limit` asserts a difference *does* exist but   this specific tool can't observe it. If a record's own prose admits a real production   consequence (a resource leak, unbounded growth) that just isn't visible to this test suite,   it is never `equivalent-mutant` -- it's `tooling-limit`.\n- `\"tooling-limit\"` vs. `\"platform-limitation\"`: both describe a real behavior mutation-testing   can't verify, but for different reasons. `platform-limitation` means the mutated behavior is   not exercised at all by the mutation run substantiating this record (defined against that   run, not against \"CI\" specifically, so the category's meaning doesn't depend on today's CI   topology -- e.g. a Windows-only branch, when the mutation run happened on Linux).   `tooling-limit` means the behavior is exercised, but the mutation tool's own mechanics   (per-process instrumentation overhead vs. a timeout budget, a signal handler only observable   in a separate process, no API exposing a value back to any test) can't meaningfully observe   the mutation's effect. The distinction matters for remediation: a `platform-limitation` could   in principle be closed by running mutation testing on the missing platform; a `tooling-limit`   is an inherent limit of comment-based mutation testing that no CI change fixes.\n- `\"rule-not-applicable\"` vs. `\"intentional-deviation\"`: would complying with the suppressed   rule change runtime behavior the author considers worse? If yes, it's `intentional-deviation`   (the rule's concern is real and understood, but the discouraged thing is deliberate because the   alternative is documented-worse). If complying would be a pure no-op refactor because the   rule's underlying premise is simply false for this code, it's `rule-not-applicable`.\n\nNo validation ties a `category` to a `domain` (e.g. `equivalent-mutant` is not restricted to `domain: \"stryker\"`) -- deliberately out of scope; a domain/category compatibility matrix would be a new class of rule with its own gaming surface and no current need."
+    },
+    "VerificationMethod": {
+      "type": "string",
+      "enum": [
+        "",
+        "mutation-run",
+        "existing-test-suite",
+        "differential-testing",
+        "static-reasoning",
+        "untestable"
+      ],
+      "description": "How a suppression's claim was substantiated. `\"\"` is the same deliberate \"not yet classified\" sentinel `SuppressionCategory` uses, hand-authored the same way, never inferred from comment text.\n\nThis field means \"the strongest evidence actually obtained for the specific claim this record makes,\" not \"the only verification that was ever performed on this code.\" Several real records legitimately have more than one kind of evidence (e.g. a static-invariant argument plus a scoped Stryker run) -- record the strongest one actually obtained, using this precedence: `\"mutation-run\" > \"existing-test-suite\" > \"differential-testing\" > \"static-reasoning\" > \"untestable\"`.\n\nAnti-gaming rule, applying to every member equally: a verification method must describe evidence that actually substantiates *this specific record's* claim -- never merely evidence that exists somewhere in the same file, test suite, or CI run. A record must not be `\"mutation-run\"` just because a Stryker run happened nearby in the same file for a *different* mutant; equally, it must not be `\"existing-test-suite\"` just because some passing test exists for the same module without that test actually covering the suppressed behavior. The same applies to `\"differential-testing\"`.\n\n- `\"mutation-run\"` -- verified by literally un-exempting the mutant and running Stryker scoped   to the file, observing the survivor (or `NoCoverage`) result directly.\n- `\"existing-test-suite\"` -- an already-existing, already-passing test elsewhere independently   proves the claim.\n- `\"differential-testing\"` -- verified by actually *executing* multiple real input shapes and   comparing outputs. Hand-tracing without execution does not count -- that's `\"static-reasoning\"`.\n- `\"static-reasoning\"` -- a logical/structural argument alone (type-level guarantees, call-graph   analysis, a documented language/API contract), nothing run empirically.\n- `\"untestable\"` -- deliberately not verified empirically because doing so would be   unsafe/impossible (e.g. would crash the test process from inside an event-listener exception;   no API exposes the value to any test). **Not** an escape hatch: it must never mean   \"verification would have been inconvenient,\" \"verification wasn't attempted,\" or \"the author   was unsure\" -- those are not valid uses of this member."
+    }
+  }
+}

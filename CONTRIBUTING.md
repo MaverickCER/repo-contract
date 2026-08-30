@@ -25,9 +25,15 @@ package supports Node `>=20` and CI proves that independently.
 5. Push — the `pre-push` hook runs the full `npm run contract`. Open a pull request; CI
    re-runs everything across the OS and Node matrix.
 
-Hooks are installed by `npm install`; opt out with `git config --unset core.hooksPath`
-(and `commit.template`). See
-[ADR 0009](specs/decisions/0009-conventional-commits-versioning-and-local-gates.md).
+`npm install` wires two local git settings — the hooks and the commit-message template.
+Opt out of either:
+
+```bash
+git config --unset core.hooksPath
+git config --unset commit.template
+```
+
+See [ADR 0009](specs/decisions/0009-conventional-commits-versioning-and-local-gates.md).
 
 ## Commits and versioning
 
