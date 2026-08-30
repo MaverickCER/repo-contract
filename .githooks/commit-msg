@@ -1,8 +1,0 @@
-#!/bin/sh
-# repo-contract commit-message gate -- runs commitlint against the message being
-# committed (Conventional Commits, per commitlint.config.mjs). The full commit
-# range is re-checked by the `commitlint` self-hosting check on pre-push and in
-# CI. Bypass a work-in-progress checkpoint with `git commit --no-verify`.
-# See CONTRIBUTING.md and specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
-set -eu
-npx --no-install commitlint --edit "$1"
