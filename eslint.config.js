@@ -906,6 +906,22 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     },
   },
+  {
+    // Preventive, across every type-aware layer: a `switch` over a union or
+    // enum must handle every member or carry a `default`. Without it, adding a
+    // member to `CheckStatus` / `OutputFormat` / a release-tag union leaves
+    // existing switches silently falling through (the regression in
+    // src/presets/shared/terminal-status.ts this was added for). Rules-only
+    // block -- `languageOptions`/plugins are merged in from the type-aware
+    // blocks above that already match these same globs.
+    files: ["src/**/*.ts", "checks/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"],
+    rules: {
+      "@typescript-eslint/switch-exhaustiveness-check": [
+        "error",
+        { considerDefaultExhaustiveForUnions: true },
+      ],
+    },
+  },
   // Last on purpose -- turns off every core/stylistic rule that would
   // otherwise fight Prettier's own formatting decisions.
   eslintConfigPrettier,

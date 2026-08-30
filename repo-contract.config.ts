@@ -95,6 +95,7 @@ import { build } from "./checks/build.js"
 import { coverage } from "./checks/coverage.js"
 import { crap } from "./checks/crap.js"
 import { docs } from "./checks/docs.js"
+import { githubActions } from "./checks/github-actions.js"
 import { lint } from "./checks/lint.js"
 import { mutation } from "./checks/mutation.js"
 import { schema } from "./checks/schema.js"
@@ -168,6 +169,10 @@ export default defineRepoContract({
     "test-integration": { ...testIntegration, dependsOn: ["suppression-governance"] },
     "test-property": testProperty,
     architecture,
+    // GitHub Actions correctness + security via actionlint (see checks/github-actions.ts). A pure
+    // reader -- lints `.github/workflows/*` and touches nothing; needs no build, declared here only
+    // to keep it in the concurrently-scheduled reader phase.
+    "github-actions": githubActions,
     coverage: { ...coverage, dependsOn: ["test-unit", "test-integration", "test-property"] },
     crap: { ...crap, dependsOn: ["coverage"] },
     "test-e2e": testE2e,

@@ -27,15 +27,20 @@ export function evaluateVitestJsonPolicy(output: ParsedOutput<unknown> | undefin
     return { outcome: "fail", rationale: "Vitest output could not be parsed as JSON." }
   }
 
-  const report = output.value as VitestJsonReport
-
   // `output.value` is `unknown` -- valid JSON that isn't Vitest's reporter
-  // shape (a wrapper that printed `{}`, a config dump, a future schema
-  // change) must produce a fail verdict, not a TypeError out of the policy
-  // that `runPolicies` rethrows as `PolicyThrewError` and rejects the whole
-  // `runRepoContract()` promise with. `numFailedTests`/`numFailedTestSuites`
-  // being `undefined` (not `0`) already falls through the pass branch below,
-  // so `testResults` must be guarded before it is walked.
+  // shape (`null`, a primitive, a wrapper that printed `{}`, a config dump, a
+  // future schema change) must produce a fail verdict, not a TypeError out of
+  // the policy that `runPolicies` rethrows as `PolicyThrewError` and rejects the
+  // whole `runRepoContract()` promise with. `numFailedTests`/
+  // `numFailedTestSuites` being `undefined` (not `0`) already falls through the
+  // pass branch below, so `testResults` must be guarded before it is walked.
+  const value: unknown = output.value
+  if (typeof value !== "object" || value === null) {
+    return { outcome: "fail", rationale: "Vitest produced invalid JSON report data." }
+  }
+
+  const report = value as VitestJsonReport
+
   if (!Array.isArray(report.testResults)) {
     return { outcome: "fail", rationale: "Vitest produced invalid JSON report data." }
   }
@@ -47,10 +52,11 @@ export function evaluateVitestJsonPolicy(output: ParsedOutput<unknown> | undefin
     }
   }
 
-  const failures = report.testResults.flatMap((suite: VitestJsonTestSuite): string[] =>
-    // A suite missing `assertionResults` entirely (a partial/older reporter
-    // shape) must not throw out of the policy -- treat it as contributing no
-    // failure detail lines.
+  // `Partial<>` because the elements are untrusted parsed JSON, not a guaranteed
+  // `JsonTestResult` -- a suite missing `assertionResults` entirely (a partial or
+  // older reporter shape) must not throw out of the policy, just contribute no
+  // failure detail lines.
+  const failures = report.testResults.flatMap((suite: Partial<VitestJsonTestSuite>): string[] =>
     (suite.assertionResults ?? [])
       .filter((test: VitestJsonAssertion) => test.status === "failed")
       .map((test: VitestJsonAssertion) => {

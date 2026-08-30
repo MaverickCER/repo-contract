@@ -249,12 +249,11 @@ export async function runPolicies(
     )
   }
 
-  // Every slot is filled by now: any policy that threw took the early-return
-  // path above, and `thrown.length` being 0 here means none did. The filter
-  // narrows the type (and keeps declaration order) for the two readers below.
-  const orderedResults = checkResults.filter(
-    (entry): entry is readonly [string, PolicyResult] => entry !== undefined,
-  )
+  // Every slot is filled and in declaration order by now: a policy that threw
+  // took the early-return path above, so `thrown.length === 0` here means every
+  // `entries.map` callback assigned its `checkResults[entryIndex]`. The cast
+  // just drops the `| undefined` the sparse-write type carries.
+  const orderedResults = checkResults as readonly (readonly [string, PolicyResult])[]
   const checks = Object.fromEntries(orderedResults)
   const passed = orderedResults.every(([, result]) => result.outcome !== "fail")
 

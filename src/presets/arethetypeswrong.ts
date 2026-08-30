@@ -47,11 +47,27 @@ function formatProblem(problem: AttwProblem): string {
  * interpretation logic without re-deriving it. repo-contract's own
  * `repo-contract.config.ts` does exactly this once it has more than one real
  * entrypoint (see that file's `arethetypeswrong` override).
+ * Accepts `unknown` and validates the shape itself: its inputs are always
+ * untrusted parsed JSON (a tool's stdout, a report file), and valid JSON of an
+ * unexpected shape must produce a clean fail verdict here rather than a
+ * `TypeError` in the caller.
  * @param report - the parsed attw JSON report to evaluate.
  * @returns the pass/fail outcome and its rationale.
  */
-export function evaluateAttwReport(report: AttwReport): PolicyResult {
-  const problems = Object.values(report.problems ?? {}).flat()
+export function evaluateAttwReport(report: unknown): PolicyResult {
+  if (typeof report !== "object" || report === null) {
+    return {
+      outcome: "fail",
+      rationale: "@arethetypeswrong/cli produced invalid JSON report data.",
+    }
+  }
+
+  const rawProblems = (report as { problems?: unknown }).problems
+  const problemGroups =
+    typeof rawProblems === "object" && rawProblems !== null ? Object.values(rawProblems) : []
+  const problems = problemGroups
+    .flat()
+    .filter((problem): problem is AttwProblem => typeof problem === "object" && problem !== null)
 
   if (problems.length === 0) {
     return {
@@ -95,6 +111,6 @@ export const arethetypeswrong: CheckDefinitionConfig = {
       }
     }
 
-    return evaluateAttwReport(result.output.value as AttwReport)
+    return evaluateAttwReport(result.output.value)
   },
 }

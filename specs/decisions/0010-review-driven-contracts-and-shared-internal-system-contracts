@@ -1,0 +1,438 @@
+# 0010: Review-driven contract evolution and consumer-owned shared contracts
+
+## Status
+
+Accepted. Establishes independent review as a feedback mechanism for continuously improving mechanical enforcement, and establishes a recommended architecture for consumers that operate multiple related repositories: shared, consumer-owned contract packages for requirements that span those repositories.
+
+`repo-contract` provides the contract execution, evidence, policy, and composition mechanisms. It does not define or own an organization's shared system requirements. Consumers remain responsible for determining which requirements are common to their systems and, where appropriate, maintaining an `internal-system-contracts` package that expresses those requirements once for reuse.
+
+## Context
+
+A repository's contract suite can only enforce properties that have been deliberately specified and implemented. A passing contract therefore means that the repository satisfies its known mechanical requirements; it cannot establish that every possible defect class has already been discovered.
+
+Independent review provides an important source of evidence about those unknown classes. Code review, static analysis, security analysis, testing, audits, and other review mechanisms can identify defects that the current contract suite does not detect.
+
+Those findings should not automatically become new rules. Some are false positives, subjective recommendations, isolated implementation concerns, test-maintenance issues, or properties already enforced elsewhere.
+
+The useful question is:
+
+> **Does the finding expose a repeatable error class that materially affects the system and can be mechanically prevented or detected?**
+
+When the answer is yes, fixing only the individual occurrence leaves the underlying weakness in place. The review finding should instead feed back into the contract architecture.
+
+The intended feedback loop is:
+
+```text
+independent review
+        |
+        v
+observed finding
+        |
+        v
+identify underlying error class
+        |
+        +--> false positive / subjective
+        |       |
+        |       +--> review only
+        |
+        +--> already enforced
+        |       |
+        |       +--> strengthen evidence/tests if necessary
+        |
+        +--> existing contract gap
+        |       |
+        |       +--> strengthen existing contract
+        |
+        +--> new repository-specific capability
+        |       |
+        |       +--> add local contract
+        |
+        +--> mature external capability
+        |       |
+        |       +--> integrate appropriate tool
+        |
+        +--> common requirement across repositories
+                |
+                +--> promote into consumer-owned shared contracts
+```
+
+This prevents two opposite failures.
+
+The first is under-enforcement: repeatedly discovering the same defect class during review without ever adding a mechanism that prevents recurrence.
+
+The second is over-enforcement: turning every review comment into a bespoke rule, producing brittle checks that encode subjective preferences or duplicate capabilities already provided elsewhere.
+
+The architecture must therefore distinguish between a **finding** and a **contract**. A finding is evidence that something happened. A contract is an explicit, repeatable property that a system has decided to enforce.
+
+There is also a cross-repository dimension to this problem.
+
+Organizations and development teams commonly maintain multiple related repositories. Those repositories may share important requirements around security, CI/CD, dependency management, release processes, documentation, testing, accessibility, or other system-level properties.
+
+If each repository independently implements the same requirement, improvements remain fragmented. A weakness discovered in one repository can therefore remain present in another repository simply because the second repository never received the lesson.
+
+A consumer-owned `internal-system-contracts` package provides a natural architecture for avoiding that duplication.
+
+This is not a package supplied by `repo-contract`. It is a recommended consumer architecture:
+
+```text
+        consumer organization
+                |
+                v
+            repo-contract
+                |
+                v
+      internal-system-contracts
+                |
+                v
+          system boilerplate
+                |
+  +-------------+-------------+
+  |             |             |
+  v             v             v
+system A      system B      system C
+```
+
+The shared package expresses requirements that are intentionally common across the consumer's repositories. Each repository then composes those shared contracts with its own local requirements.
+
+`repo-contract` is the mechanism that allows both forms of contract to participate in the same execution and evidence model.
+
+### Boilerplate and shared contracts form a continuous quality boundary
+
+Boilerplate and shared contracts solve different problems and are most effective when used together.
+
+Boilerplate defines the expected starting state of a new system. It establishes the initial repository structure, configuration, tooling, documentation, workflows, and other conventions that a project should inherit when it is created.
+
+A shared `internal-system-contracts` layer defines the expected continuing state of systems that share those conventions. It verifies that repositories remain within the engineering requirements established for that family of systems as they evolve.
+
+This distinction is particularly important because boilerplate creates correlated failure modes.
+
+When multiple repositories are created from the same boilerplate, a weakness in that boilerplate can be reproduced across every repository that inherits it. Fixing the original repository does not necessarily protect the other repositories, and fixing the boilerplate does not necessarily repair repositories that were already created from an earlier version.
+
+Boilerplate answers:
+
+> **"How should this project start?"**
+
+Shared contracts answer:
+
+> **"What must this project continue to satisfy?"**
+
+Together they create a stronger system than either provides independently.
+
+If a review identifies a failure mode in one repository and the failure is attributable to a shared configuration, workflow, architectural convention, or other common pattern, the finding should be evaluated as a potential family-wide contract requirement.
+
+The resulting progression can be:
+
+```text
+shared boilerplate
+       |
+       v
+common configuration
+       |
+       v
+failure discovered in one repository
+       |
+       v
+identify shared failure class
+       |
+       v
+internal-system-contracts
+       |
+       +-------------------+
+       |                   |
+       v                   v
+existing repositories    future repositories
+       |                   |
+       v                   v
+continuously enforced    boilerplate + contract
+```
+
+This also provides a mechanism for addressing the versioning gap between boilerplate releases. A repository created from an older boilerplate version can still receive newly discovered engineering protections through the shared contract, without requiring the entire repository to be regenerated from newer boilerplate.
+
+Conversely, changes to boilerplate can establish improved defaults for future repositories while the shared contract prevents those repositories from regressing after creation.
+
+The two mechanisms should therefore be treated as complementary rather than interchangeable:
+
+* **Boilerplate provides defaults and establishes conventions.**
+* **Shared contracts enforce durable requirements.**
+* **Independent review discovers weaknesses in both.**
+* **Contract evolution converts meaningful discoveries into permanent controls.**
+
+## Decision
+
+**Independent review is a permanent input into contract evolution.**
+
+Review findings are evaluated for their underlying failure class rather than handled only as isolated defects.
+
+For each meaningful finding, the consumer should determine:
+
+* what class of error the finding represents;
+* whether that class is already covered;
+* whether the existing contract is insufficient;
+* whether the class is objectively and repeatedly detectable;
+* whether detection belongs in tests, static analysis, a contract, or an existing external capability;
+* whether the requirement is specific to one repository or common across multiple repositories.
+
+A finding does not become a contract merely because a reviewer reported it.
+
+**Contracts are created around failure classes, not individual findings.**
+
+When multiple manifestations of the same underlying weakness exist, they should normally result in one coherent contract rather than multiple narrowly targeted rules.
+
+For example, if several components incorrectly assume that external structured output has a particular shape, the architectural response should be a general output-validation boundary rather than a separate rule for every affected component.
+
+Likewise, if multiple consumers interpret process output before establishing that the process terminated normally, the response should strengthen the shared process-result contract rather than add independent checks to each consumer.
+
+This keeps the contract system focused on durable engineering properties.
+
+**Existing capabilities are preferred when they already provide the required enforcement.**
+
+Consumers should not reimplement mature analysis merely to keep every check internally authored.
+
+When an established tool provides reliable detection for a desired capability, the appropriate architecture is to integrate that capability into the contract execution model. The external tool performs its specialized analysis; the contract system captures its evidence and determines how that evidence participates in the repository verdict.
+
+The particular implementation is intentionally outside this ADR. Tool selection can change without changing the architectural decision.
+
+**Repository-specific requirements remain local.**
+
+A repository should own requirements that depend on its own:
+
+* architecture;
+* public API;
+* domain behavior;
+* repository structure;
+* deployment model;
+* release model;
+* local governance;
+* contributor workflow;
+* repository-specific security requirements.
+
+Those requirements belong in that repository's contract configuration or its local contract implementation.
+
+**Consumers maintaining multiple related repositories should consider a shared `internal-system-contracts` layer.**
+
+When multiple repositories have the same objectively enforceable requirement, consumers should prefer maintaining that requirement once in a shared contract package rather than independently reproducing it.
+
+The shared package should be owned and versioned by the consumer organization or system group that owns the common requirements.
+
+Its purpose is to provide reusable contract capabilities such as:
+
+```text
+internal-system-contracts
+        |
+        +--> common security requirements
+        |
+        +--> common CI requirements
+        |
+        +--> common dependency requirements
+        |
+        +--> common release requirements
+        |
+        +--> common repository governance
+        |
+        +--> other demonstrated system-wide requirements
+```
+
+The actual contents are determined by the consumer. `repo-contract` does not prescribe which requirements belong there.
+
+**Shared contracts should describe requirements, not implementation details.**
+
+A consumer-owned shared contract should express the property that all applicable repositories must satisfy rather than coupling the requirement to a particular implementation.
+
+For example, the contract may express:
+
+> Supported automation workflows must satisfy the organization's correctness and security requirements.
+
+It should avoid making the organization's architectural requirement equivalent to one particular analyzer or command.
+
+This allows the consumer to replace an analyzer, combine multiple analyzers, or implement additional analysis without changing the requirement represented by the shared contract.
+
+**Shared contracts should be composed with local contracts rather than replace them.**
+
+A consuming repository's effective contract should be conceptually:
+
+```text
+consumer shared contracts
+          +
+repository-specific contracts
+          |
+          v
+     repository gate
+```
+
+The shared layer establishes common requirements. The repository adds requirements specific to itself.
+
+A repository may impose stricter requirements than the shared baseline.
+
+**Promotion from local to shared should be evidence-driven.**
+
+A newly discovered capability does not need to begin life in a shared package.
+
+The preferred progression is:
+
+```text
+review finding
+      |
+      v
+local understanding
+      |
+      v
+local enforcement
+      |
+      v
+demonstrated applicability to other repositories
+      |
+      v
+generalize
+      |
+      v
+consumer-owned internal-system-contracts
+      |
+      v
+shared adoption
+```
+
+This allows the implementation to evolve against a concrete problem before being generalized.
+
+A capability may be promoted immediately when its cross-repository applicability is already clear or when the severity of the failure makes waiting inappropriate.
+
+**Evidence is the bridge between analysis and policy.**
+
+External tools, consumer-owned shared contracts, and repository-specific contracts should participate in the same evidence and verdict model where practical.
+
+The architectural boundary is:
+
+```text
+analysis
+   |
+   v
+evidence
+   |
+   v
+policy
+   |
+   v
+repository verdict
+```
+
+This keeps individual analysis implementations replaceable while preserving a stable contract interface.
+
+**The contract architecture is expected to improve continuously.**
+
+The desired progression is not:
+
+```text
+contract suite
+    |
+    v
+complete
+```
+
+but:
+
+```text
+contract suite
+    |
+    v
+independent review
+    |
+    v
+new evidence
+    |
+    v
+failure-class analysis
+    |
+    v
+stronger enforcement
+    |
+    +--> local contract
+    |
+    +--> external capability
+    |
+    +--> consumer shared contract
+    |
+    v
+next review
+```
+
+The contract system therefore becomes an accumulating body of engineering knowledge.
+
+`repo-contract` should support this evolution without requiring consumers to place their shared requirements inside `repo-contract` itself.
+
+## Consequences
+
+Review findings become useful beyond the individual change in which they were discovered. A meaningful finding can result in a permanent control that prevents the same error class from recurring.
+
+The contract suite becomes a continuously evolving engineering boundary rather than a static checklist. New failure classes may result in new checks, stronger existing checks, or adoption of established analysis capabilities. This increases the maintenance and execution cost of the contract suite, so each addition should provide a meaningful reduction in engineering risk.
+
+Consumers operating multiple related repositories gain a mechanism for propagating engineering improvements without duplicating their implementation. A requirement added to a consumer-owned `internal-system-contracts` package can protect every repository that consumes that version of the shared contracts.
+
+Shared contracts also introduce versioned coupling between repositories. A change to a shared requirement can cause multiple repositories to fail their gates simultaneously. Shared contract releases therefore require the same compatibility discipline expected of any other shared dependency.
+
+The shared contract layer creates a quality floor, not necessarily a uniform implementation. Repositories remain free to implement stricter local requirements, and shared contracts should avoid imposing implementation details where the underlying requirement can be expressed independently.
+
+Boilerplate and shared contracts provide complementary forms of consistency. Boilerplate reduces divergence when a project is created; shared contracts reduce divergence after creation. A defect discovered in a common boilerplate configuration can therefore be corrected in the source template while also becoming a shared contract requirement, protecting existing repositories that inherited the earlier configuration.
+
+This creates a path for engineering improvements to move in both directions: boilerplate establishes improved defaults for future repositories, while shared contracts can enforce newly discovered requirements across existing repositories.
+
+Independent review remains necessary because contracts can only enforce properties that have been identified and encoded. A passing contract suite does not establish that the repository is free of undiscovered defects or that human judgment is unnecessary.
+
+The approach also creates an explicit feedback obligation. When a significant review repeatedly identifies a mechanically detectable failure class, maintainers should consider whether the contract suite should be strengthened rather than treating each occurrence as an isolated defect.
+
+Not every finding should become a contract. False positives, subjective recommendations, one-off implementation details, and concerns better handled through human review remain outside the mechanical contract boundary.
+
+Consumer-owned shared contracts may differ between organizations. This is intentional. `repo-contract` supplies the execution and evidence architecture; the consumer owns the engineering requirements and determines which requirements are sufficiently common to share.
+
+External analysis capabilities remain replaceable. A contract should depend on the capability and resulting evidence rather than unnecessarily coupling the requirement to a particular analyzer or implementation.
+
+The resulting system establishes a continuous quality loop:
+
+```text
+boilerplate
+    |
+    v
+repository
+    |
+    v
+independent review
+    |
+    v
+failure discovered
+    |
+    v
+contract strengthened
+    |
+    +----------------------+
+    |                      |
+    v                      v
+local contract       shared contract
+                           |
+                           v
+                    related repositories
+                           |
+                           v
+                    future boilerplate
+```
+
+The long-term consequence is that engineering quality becomes an accumulating property of the repository ecosystem. A lesson learned in one system can become an enforceable requirement for the systems that share its architectural foundation, while boilerplate ensures that future systems begin from the improved baseline.
+
+## Alternatives considered
+
+**Treating the existing contract suite as complete.** Rejected: a contract system cannot enforce failure classes that have not yet been identified or specified. Independent review provides an important mechanism for discovering those gaps.
+
+**Adding every review finding as a new contract.** Rejected: individual findings may be false positives, subjective recommendations, one-off implementation details, or problems better handled by tests or existing tooling. Contracts should represent durable failure classes.
+
+**Creating a new check for every occurrence of a failure class.** Rejected: this duplicates policy and produces a brittle collection of narrowly scoped rules. Related failures should be represented by the smallest coherent contract.
+
+**Reimplementing mature external analysis.** Rejected: specialized analysis is often substantially broader and better maintained than a bespoke implementation would be. The contract system should consume mature capabilities where appropriate rather than duplicate them.
+
+**Putting consumer-specific system requirements into `repo-contract`.** Rejected: `repo-contract` is the enforcement mechanism, not the policy owner. Different consumers may have different system requirements, and those requirements should remain owned by the systems that define them.
+
+**Making every repository independently implement common requirements.** Rejected: duplicated implementations diverge, fixes are repeatedly rediscovered, and improvements made in one repository do not automatically protect other repositories.
+
+**Creating a shared contract package for every repository.** Rejected: a shared layer is useful only when requirements genuinely cross repository boundaries. A repository with no meaningful common requirements should not introduce unnecessary organizational coupling.
+
+**Making the shared contract package a generic utility library.** Rejected: common helpers do not constitute shared policy. The shared layer should contain enforceable requirements rather than becoming an arbitrary collection of reusable code.
+
+**Requiring a capability to be shared before enforcing it locally.** Rejected: a new failure class should be addressed where it is discovered. Generalization can occur once its applicability and appropriate abstraction are understood.
+
+**Waiting for multiple repositories to experience the same failure before sharing the contract.** Rejected: multiple incidents provide strong evidence for commonality, but a single severe or clearly cross-system failure can justify shared enforcement immediately.

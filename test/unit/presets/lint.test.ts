@@ -53,6 +53,20 @@ describe("lint preset", () => {
     })
   })
 
+  it.each([
+    ["a non-array value", 42],
+    ["an array element that is null", [null]],
+    ["an array element with no messages array", [{ filePath: "a.ts" }]],
+  ])("fails with the parse-failure rationale (never throws) for %s", async (_label, value) => {
+    const result = await lint().policy(
+      fakeContext(fakeCheckEvidence({ output: { format: "json", success: true, value } })),
+    )
+    expect(result).toEqual({
+      outcome: "fail",
+      rationale: "ESLint output could not be parsed as JSON.",
+    })
+  })
+
   it("fails and lists errors (with exact header, joined by newline), ignoring warnings", async () => {
     const result = await lint().policy(
       fakeContext(

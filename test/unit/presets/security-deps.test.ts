@@ -53,6 +53,23 @@ describe("securityDeps preset", () => {
     })
   })
 
+  it.each([
+    ["null", null],
+    ["a primitive", 42],
+    ["a string", "nope"],
+  ])(
+    "fails with the invalid-report-data rationale (never throws) when the parsed value is %s",
+    async (_label, value) => {
+      const result = await securityDeps.policy(
+        fakeContext(fakeCheckEvidence({ output: { format: "json", success: true, value } })),
+      )
+      expect(result).toEqual({
+        outcome: "fail",
+        rationale: "npm audit produced invalid JSON report data.",
+      })
+    },
+  )
+
   it("passes with the exact rationale when every severity count is 0", async () => {
     const result = await securityDeps.policy(
       fakeContext(

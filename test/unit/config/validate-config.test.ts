@@ -88,27 +88,29 @@ describe("validateRepoContractConfig", () => {
     }).toThrow(/check definition must be an object/)
   })
 
-  it("rejects an integer-like check id that Object.keys would reorder ahead of other checks", () => {
-    expect(() => {
-      validateRepoContractConfig(malformed({ checks: { "2": { run: "x", policy: okPolicy } } }))
-    }).toThrow(InvalidCheckConfigError)
-    expect(() => {
-      validateRepoContractConfig(malformed({ checks: { "0": { run: "x", policy: okPolicy } } }))
-    }).toThrow(/integer-like/)
-  })
+  it.each(["0", "2", "42", "100"])(
+    "rejects the integer-like check id %j with a message naming the reordering contract",
+    (id) => {
+      try {
+        validateRepoContractConfig(malformed({ checks: { [id]: { run: "x", policy: okPolicy } } }))
+        expect.unreachable("expected an integer-like check id to be rejected")
+      } catch (error) {
+        expect(error).toBeInstanceOf(InvalidCheckConfigError)
+        const message = (error as Error).message
+        expect(message).toContain("integer-like")
+        expect(message).toContain("declaration-order-is-topological-order")
+      }
+    },
+  )
 
-  it("accepts a check id that merely contains digits or has a leading zero", () => {
-    expect(() => {
-      validateRepoContractConfig(
-        malformed({
-          checks: {
-            "007": { run: "x", policy: okPolicy },
-            "test-2": { run: "x", policy: okPolicy },
-          },
-        }),
-      )
-    }).not.toThrow()
-  })
+  it.each(["007", "test-2", "1x", "2fa-check", "v1", "step0a"])(
+    "accepts the non-integer-like check id %j",
+    (id) => {
+      expect(() => {
+        validateRepoContractConfig(malformed({ checks: { [id]: { run: "x", policy: okPolicy } } }))
+      }).not.toThrow()
+    },
+  )
 
   it("rejects shell: true with an empty run string", () => {
     expect(() => {

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { defineRepoContract, runRepoContract } from "../../../src/index.js"
 import * as presets from "../../../src/presets/index.js"
-import type { CheckDefinitionConfig } from "../../../src/types.js"
+import type { CheckDefinitionConfig, CheckStatus, PolicyResult } from "../../../src/types.js"
+import { fakeCheckEvidence, fakeContext } from "./fixtures.js"
 
 /**
  * A smoke test of the presets barrel itself -- every other test file in
@@ -111,6 +112,101 @@ describe("presets barrel (src/presets/index.ts)", () => {
       expect(verdict.checks.missing.rationale).toContain(`\`${packageName}\``)
     },
   )
+
+  // --- Robustness: no preset policy may ever throw ---
+  //
+  // A policy that throws is rethrown by run-policies.ts as `PolicyThrewError`
+  // and rejects the whole `runRepoContract()` promise -- one preset choking on
+  // an unexpected tool-output shape (or an abnormal process termination) takes
+  // the entire contract run down with it. Every preset must instead classify
+  // that as a clean `fail` verdict. These tables drive both checks over every
+  // preset the barrel exports, so a new preset is covered the moment it is
+  // added to the maps above.
+  const ALL_PRESETS: readonly { name: string; config: CheckDefinitionConfig }[] = [
+    ...Object.entries(plainObjectPresets).map(([name, config]) => ({ name, config })),
+    ...Object.entries(factoryPresets).map(([name, factory]) => ({ name, config: factory() })),
+  ]
+
+  function expectWellFormedFail(result: PolicyResult): void {
+    expect(["pass", "warn", "fail"]).toContain(result.outcome)
+    expect(typeof result.rationale).toBe("string")
+    expect(result.rationale.length).toBeGreaterThan(0)
+  }
+
+  const ABNORMAL_STATUSES: readonly CheckStatus[] = [
+    "timed_out",
+    "aborted",
+    "host_terminated",
+    "signaled",
+    "spawn_error",
+  ]
+
+  describe.each(ALL_PRESETS)("$name preset -- abnormal process termination", ({ config }) => {
+    it.each(ABNORMAL_STATUSES)(
+      "reports %s as a termination failure, never a fabricated tool verdict or a throw",
+      async (status) => {
+        const result = await config.policy(
+          fakeContext(
+            fakeCheckEvidence({ status, exitCode: null, signal: null, stdout: "", stderr: "" }),
+          ),
+        )
+        expect(result.outcome).toBe("fail")
+        // The rationale must name the termination cause, not interpret absent
+        // output as a tool verdict ("could not be parsed as JSON", etc.).
+        expect(result.rationale).toMatch(/did not finish|was terminated|could not be started/i)
+      },
+    )
+  })
+
+  const ADVERSARIAL_JSON: readonly { label: string; value: unknown }[] = [
+    { label: "null", value: null },
+    { label: "a number", value: 42 },
+    { label: "a string", value: "unexpected" },
+    { label: "a boolean", value: true },
+    { label: "an empty array", value: [] },
+    { label: "an array containing null", value: [null] },
+    { label: "an array of empty objects", value: [{}] },
+    { label: "an empty object", value: {} },
+    { label: "an object with unexpected keys", value: { totally: "different" } },
+  ]
+
+  const JSON_OUTPUT_PRESETS = ALL_PRESETS.filter(({ config }) => config.output?.format === "json")
+
+  describe.each(JSON_OUTPUT_PRESETS)("$name preset -- adversarial parsed output", ({ config }) => {
+    it.each(ADVERSARIAL_JSON)(
+      "returns a well-formed PolicyResult (never throws) when output.value is $label",
+      async ({ value }) => {
+        const result = await config.policy(
+          fakeContext(
+            fakeCheckEvidence({
+              exitCode: 0,
+              output: { format: "json", success: true, value },
+            }),
+          ),
+        )
+        expectWellFormedFail(result)
+      },
+    )
+
+    it("fails cleanly (never throws) when the requested parse itself failed", async () => {
+      const result = await config.policy(
+        fakeContext(
+          fakeCheckEvidence({
+            exitCode: 1,
+            output: { format: "json", success: false, error: "Unexpected end of JSON input" },
+          }),
+        ),
+      )
+      expect(result.outcome).toBe("fail")
+    })
+
+    it("fails cleanly (never throws) when output is absent despite requesting a format", async () => {
+      const result = await config.policy(
+        fakeContext(fakeCheckEvidence({ exitCode: 0, output: undefined })),
+      )
+      expect(result.outcome).toBe("fail")
+    })
+  })
 
   it("securityDeps has no missing-dependency check -- it shells out to npm itself, which cannot be missing in this environment", async () => {
     const config = defineRepoContract({

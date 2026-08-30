@@ -10,6 +10,9 @@ export const EXEMPT_UNUSED_DEV_DEPENDENCIES = [
   // Spawned by name by the `commitlint` preset and the .githooks/commit-msg
   // hook -- nothing imports it, so knip can't see it.
   "@commitlint/cli",
+  // Resolved via `require.resolve()` (not a static import) in
+  // scripts/github-actions/lint.mjs, which knip may not trace.
+  "github-actionlint",
   "licensee",
   "linkinator",
   "oxlint",
