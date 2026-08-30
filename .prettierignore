@@ -1,6 +1,11 @@
 dist
 coverage
 node_modules
+# POSIX shell hook scripts -- Prettier has no shell parser.
+.githooks
+# Git commit message template (wired by scripts/install-hooks.mjs) -- plain
+# text with `#` comment lines, not a format Prettier parses.
+.gitmessage
 schemas/*.schema.json
 scripts/suppression-governance/disable-comments.schema.json
 disable-comments.json

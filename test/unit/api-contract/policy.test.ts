@@ -3,12 +3,14 @@ import { evaluateApiContractPolicy } from "../../../checks/api-contract.js"
 import type {
   ApiContractEvidence,
   ApiContractSnapshot,
+  CommitAnalysisEvidence,
 } from "../../../scripts/api-contract/evidence-types.js"
 
 /**
  * Policy tests provide only synthetic `ApiContractEvidence` -- never touching TypeScript, API
- * Extractor, or the filesystem -- and verify exclusively the policy's own outcome/rationale logic,
- * per the project's check/policy testing split.
+ * Extractor, Git, or the filesystem -- and verify exclusively the policy's own outcome/rationale
+ * logic, per the project's check/policy testing split. Versioning is Conventional-Commits-driven
+ * (ADR 0008), so the `commits` sub-evidence is what the gate actually compares against.
  */
 
 function snapshot(overrides: Partial<ApiContractSnapshot> = {}): ApiContractSnapshot {
@@ -17,6 +19,16 @@ function snapshot(overrides: Partial<ApiContractSnapshot> = {}): ApiContractSnap
     apiExtractorVersion: "7.0.0",
     apiJsonSchemaVersion: 1011,
     apiJsonHash: "hash",
+    ...overrides,
+  }
+}
+
+function commits(overrides: Partial<CommitAnalysisEvidence> = {}): CommitAnalysisEvidence {
+  return {
+    analyzed: 1,
+    prTitleConsidered: false,
+    declaredLevel: "none",
+    satisfied: true,
     ...overrides,
   }
 }
@@ -34,7 +46,7 @@ function evidence(overrides: Partial<ApiContractEvidence> = {}): ApiContractEvid
     baselineVersion: "1.4.2",
     currentVersion: "1.4.2",
     summary: "No public API changes detected.",
-    changeset: { action: "none", generatedSectionUpdated: false },
+    commits: commits(),
     ...overrides,
   }
 }
@@ -48,48 +60,68 @@ describe("evaluateApiContractPolicy", () => {
     )
   })
 
-  it("passes (advisory) on a compatible contract change and reports the changeset was created", () => {
+  it("passes on a compatible change whose commits declare a sufficient bump, reporting the minimum version and the release-level comparison", () => {
     const result = evaluateApiContractPolicy({
       evidence: evidence({
         impact: "compatible",
         requiredLevel: "minor",
         minimumRequiredVersion: "1.5.0",
         summary: "1 public contract change(s) detected:\n- Added getUsers.",
-        changeset: {
-          action: "created",
-          path: ".changeset/api-contract.md",
-          requiredReleaseLevel: "minor",
-          effectiveReleaseLevel: "minor",
-          generatedSectionUpdated: true,
-        },
+        commits: commits({ declaredLevel: "minor", satisfied: true }),
       }),
     })
     expect(result.outcome).toBe("pass")
-    expect(result.rationale).toContain("Changeset created: .changeset/api-contract.md")
-    expect(result.rationale).toContain("1.5.0")
+    expect(result.rationale).toContain("Minimum required version if released now: 1.5.0.")
+    expect(result.rationale).toContain("declare `minor`; the API diff requires `minor`.")
   })
 
-  it("passes (advisory, never fails) on a breaking contract change and reports the changeset update, including human vs. effective level", () => {
+  it("passes on a breaking change when the commits declare `major`", () => {
     const result = evaluateApiContractPolicy({
       evidence: evidence({
         impact: "breaking",
         requiredLevel: "major",
         minimumRequiredVersion: "2.0.0",
         summary: "1 public contract change(s) detected:\n- Removed getUserByEmail.",
-        changeset: {
-          action: "updated",
-          path: ".changeset/some-human-changeset.md",
-          humanReleaseLevel: "minor",
-          requiredReleaseLevel: "major",
-          effectiveReleaseLevel: "major",
-          generatedSectionUpdated: true,
-        },
+        diff: [
+          {
+            id: "pkg#getUserByEmail:function",
+            path: "getUserByEmail",
+            kind: "export-removed",
+            compatibility: "breaking",
+            explanation: "Removed getUserByEmail.",
+          },
+        ],
+        commits: commits({ declaredLevel: "major", satisfied: true }),
       }),
     })
     expect(result.outcome).toBe("pass")
-    expect(result.rationale).toContain("Changeset updated: .changeset/some-human-changeset.md")
-    expect(result.rationale).toContain("Human release level: minor")
-    expect(result.rationale).toContain("Effective release level: major")
+    expect(result.rationale).toContain("declare `major`; the API diff requires `major`.")
+  })
+
+  it("fails when the commits under-declare the bump the API diff requires, naming the breaking change and what to add", () => {
+    const result = evaluateApiContractPolicy({
+      evidence: evidence({
+        impact: "breaking",
+        requiredLevel: "major",
+        minimumRequiredVersion: "2.0.0",
+        summary: "1 public contract change(s) detected:\n- Removed getUserByEmail.",
+        diff: [
+          {
+            id: "pkg#getUserByEmail:function",
+            path: "getUserByEmail",
+            kind: "export-removed",
+            compatibility: "breaking",
+            explanation: "Removed getUserByEmail.",
+          },
+        ],
+        commits: commits({ declaredLevel: "patch", satisfied: false }),
+      }),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale.startsWith("Contract impact:")).toBe(true)
+    expect(result.rationale).toContain("Breaking public-API change(s): `getUserByEmail`.")
+    expect(result.rationale).toContain("do not declare a `major` release")
+    expect(result.rationale).toContain("`BREAKING CHANGE:` footer")
   })
 
   it("warns (never fails) when impact is unknown, and never invents a minimum version", () => {
@@ -100,20 +132,22 @@ describe("evaluateApiContractPolicy", () => {
         minimumRequiredVersion: undefined,
         summary:
           "The public contract changed, but one or more changes could not be classified deterministically:\n- ?",
-        changeset: { action: "none", generatedSectionUpdated: false },
+        commits: commits({ declaredLevel: "patch", satisfied: null }),
       }),
     })
     expect(result.outcome).toBe("warn")
     expect(result.rationale.startsWith("Contract impact:")).toBe(true)
-    expect(result.rationale).toContain("Manual review")
+    expect(result.rationale).toContain("could not be deterministically classified")
+    expect(result.rationale).toContain("Manually confirm")
   })
 
-  it("fails on a schema-version-literal-stale finding regardless of overall impact or changeset action", () => {
+  it("fails on a schema-version-literal-stale finding regardless of overall impact", () => {
     const result = evaluateApiContractPolicy({
       evidence: evidence({
         impact: "breaking",
         requiredLevel: "major",
         minimumRequiredVersion: "2.0.0",
+        commits: commits({ declaredLevel: "major", satisfied: true }),
         diff: [
           {
             id: "ref#schema-version-literal",
@@ -127,6 +161,7 @@ describe("evaluateApiContractPolicy", () => {
     })
     expect(result.outcome).toBe("fail")
     expect(result.rationale.startsWith("Contract impact:")).toBe(true)
+    expect(result.rationale).toContain("Internal schema-version consistency violation(s):")
     expect(result.rationale).toContain(
       "Evidence changed shape but its `version` literal is still 1",
     )
@@ -134,24 +169,16 @@ describe("evaluateApiContractPolicy", () => {
 
   it("never produces a generic 'version check failed' rationale", () => {
     for (const impact of ["unchanged", "compatible", "breaking", "unknown"] as const) {
-      const result = evaluateApiContractPolicy({ evidence: evidence({ impact }) })
+      const result = evaluateApiContractPolicy({
+        evidence: evidence({
+          impact,
+          ...(impact === "unknown"
+            ? { requiredLevel: undefined, minimumRequiredVersion: undefined }
+            : {}),
+        }),
+      })
       expect(result.rationale.toLowerCase().startsWith("version check failed")).toBe(false)
     }
-  })
-
-  it("reports a removed (stale, cleaned-up) changeset on an unchanged contract", () => {
-    const result = evaluateApiContractPolicy({
-      evidence: evidence({
-        changeset: {
-          action: "removed",
-          path: ".changeset/api-contract.md",
-          generatedSectionUpdated: true,
-        },
-      }),
-    })
-    expect(result.outcome).toBe("pass")
-    expect(result.rationale).toContain("Stale changeset removed")
-    expect(result.rationale).toContain(".changeset/api-contract.md")
   })
 
   it("surfaces non-public (lower-tier) changes as informational-only in the rationale", () => {
@@ -180,7 +207,7 @@ describe("evaluateApiContractPolicy", () => {
         minimumRequiredVersion: undefined,
         summary:
           "The public contract changed, but one or more changes could not be classified deterministically:\n- ?",
-        changeset: { action: "none", generatedSectionUpdated: false },
+        commits: commits({ declaredLevel: "patch", satisfied: null }),
         lowerTierDiff: [
           {
             id: "!pkg#InternalHelper:function",
@@ -204,11 +231,25 @@ describe("evaluateApiContractPolicy", () => {
         baselineVersion: undefined,
         requiredLevel: "none",
         minimumRequiredVersion: "0.1.0",
+        commits: commits({ satisfied: null }),
         summary:
           "No historical public API contract exists. This run establishes the initial contract baseline; v0.1.0 is recommended as the initial package version.",
       }),
     })
     expect(result.outcome).toBe("pass")
     expect(result.rationale).toContain("No historical public API contract exists.")
+  })
+
+  it("counts the PR title in the release-level line when it was considered", () => {
+    const result = evaluateApiContractPolicy({
+      evidence: evidence({
+        impact: "compatible",
+        requiredLevel: "minor",
+        minimumRequiredVersion: "1.5.0",
+        commits: commits({ analyzed: 3, prTitleConsidered: true, declaredLevel: "minor" }),
+      }),
+    })
+    expect(result.outcome).toBe("pass")
+    expect(result.rationale).toContain("3 message(s) incl. the PR title declare `minor`")
   })
 })

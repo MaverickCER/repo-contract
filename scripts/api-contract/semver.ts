@@ -4,7 +4,7 @@ import type { RequiredReleaseLevel } from "./evidence-types.js"
  * Hand-rolled `X.Y.Z` parsing rather than a new `semver` dependency -- the parsing this feature
  * needs is trivial (no ranges, no prerelease negotiation), and this repo prefers minimal
  * dependencies. This is the one and only version-comparison implementation in the feature;
- * check.ts, policy.ts, update-baseline.ts, and changeset-manager.ts all import from here.
+ * check.ts, policy.ts, and update-baseline.ts all import from here.
  */
 interface Version {
   readonly major: number

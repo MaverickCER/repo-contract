@@ -21,7 +21,10 @@
     "url": "git+https://github.com/maverickcer/repo-contract.git"
   },
   "license": "MIT",
-  "author": "MaverickCER",
+  "author": {
+    "name": "MaverickCER",
+    "url": "https://github.com/maverickcer"
+  },
   "sideEffects": false,
   "type": "module",
   "exports": {
@@ -53,6 +56,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
+    "CHANGELOG.md",
     "dist",
     "presets",
     "schemas",
@@ -60,13 +64,14 @@
   ],
   "scripts": {
     "accessibility": "npm run contract -- accessibility",
+    "adr:new": "node scripts/adr-new.mjs",
     "adr-governance": "npm run contract -- adr-governance",
     "api-contract": "npm run contract -- api-contract",
     "api-docs": "npm run contract -- api-docs",
     "api-docs:generate": "npm run build && tsx scripts/api-docs/generate.ts",
     "arethetypeswrong": "npm run contract -- arethetypeswrong",
     "build": "npm run clean && tsup && tsc -p tsconfig.build.json && node scripts/emit-dts-shims.mjs",
-    "changeset-docs": "npm run contract -- changeset-docs",
+    "check": "node scripts/check.mjs",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "precontract": "npm run build",
     "contract": "tsx scripts/run-contract.mjs",
@@ -82,11 +87,11 @@
     "license": "npm run contract -- license",
     "lint": "npm run contract -- lint",
     "mutation": "npm run contract -- mutation",
-    "precommit": "npm run contract",
-    "prepare": "npm run build",
+    "precommit": "npm run contract -- format lint typecheck schema dead-code architecture adr-governance suppression-governance security-network duplication",
+    "prepare": "npm run build && node scripts/install-hooks.mjs",
     "prepublishOnly": "npm run contract",
+    "prepush": "npm run contract",
     "publint": "npm run contract -- publint",
-    "release": "changeset publish",
     "schema": "npm run contract -- schema",
     "security:deps": "npm run contract -- security-deps",
     "security:network": "npm run contract -- security-network",
@@ -104,8 +109,7 @@
     "test:unit": "node scripts/run-test-category.mjs unit",
     "test:watch": "vitest",
     "typecheck": "npm run contract -- typecheck",
-    "verify": "npm run contract",
-    "version": "changeset version"
+    "verify": "npm run contract"
   },
   "overrides": {
     "esbuild": "^0.28.1",
@@ -116,7 +120,8 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
-    "@changesets/cli": "^2.31.1",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
     "@danibram/crap4ts": "^0.6.0",
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^10.0.1",

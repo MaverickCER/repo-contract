@@ -43,6 +43,15 @@ try {
 
   const fd = openSync("reports/arethetypeswrong.json", "w")
   try {
+    // `--exclude-entrypoints ./schema`: the `./schema` export is a bare
+    // `*.schema.json` file, not a code/types entrypoint. attw's `node10`
+    // resolution mode flags it (a raw JSON subpath export has no
+    // node10-visible path) -- a real limitation of that legacy resolver, not a
+    // packaging defect, and irrelevant to a JSON asset. Excluding it here is
+    // deliberate; every actual code entrypoint (`.`, `./presets`) is still
+    // fully evaluated. This is the consumer-supplied `run` override the preset
+    // itself documents (src/presets/arethetypeswrong.ts) rather than guessing
+    // a generic exclusion.
     execFileSync("attw", [tarballPath, "--format", "json", "--exclude-entrypoints", "./schema"], {
       stdio: ["ignore", fd, "inherit"],
     })

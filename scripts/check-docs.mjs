@@ -29,14 +29,13 @@ import spawn from "cross-spawn"
 import { readdir, readFile, rm } from "node:fs/promises"
 
 const MARKDOWNLINT_REPORT_PATH = "reports/markdownlint.json"
-const DOCS_GLOBS = ["*.md", "specs/**/*.md", ".changeset/**/*.md", ".github/**/*.md"]
+const DOCS_GLOBS = ["*.md", "specs/**/*.md", ".github/**/*.md"]
 
 // linkinator's own CLI hard-fails -- writing a plain-text warning to stdout instead of its
-// documented JSON report -- whenever any glob argument it's given matches zero files (e.g. no
-// changesets currently pending, so ".changeset/**/*.md" matches nothing). Pre-checking each
-// pattern here and dropping the ones with no real match avoids ever triggering that failure mode,
-// rather than pattern-matching its specific error text (a tool-implementation detail this script
-// shouldn't depend on).
+// documented JSON report -- whenever any glob argument it's given matches zero files. Pre-checking
+// each pattern here and dropping the ones with no real match avoids ever triggering that failure
+// mode, rather than pattern-matching its specific error text (a tool-implementation detail this
+// script shouldn't depend on).
 /**
  * @param pattern - One of DOCS_GLOBS's own two shapes: `"*.md"` (root directory only) or `"<dir>/**\/*.md"` (recursive within `<dir>`).
  * @returns Whether `pattern` matches at least one real `.md` file on disk.
@@ -102,7 +101,17 @@ async function runMarkdownlint() {
 // (and, before the repo even exists remotely, moot), not a link-integrity
 // one, so this URL shape is exempted from the live crawl rather than kept
 // permanently red.
-const LINKINATOR_SKIP_PATTERNS = ["security/advisories/new"]
+//
+// CHANGELOG.md (managed by release-please) links each release heading at
+// github.com/maverickcer/repo-contract/compare/v<prev>...v<next> and
+// .../releases/tag/v<x.y.z>. The `v<next>` tag is created only when the
+// Release PR merges -- so while that PR's own CI runs, the newest link 404s
+// transiently even though it is correct by construction. Exempt the repo's
+// own version URLs rather than let a mid-release CI go red.
+const LINKINATOR_SKIP_PATTERNS = [
+  "security/advisories/new",
+  "github\\.com/maverickcer/repo-contract/(compare|releases/tag)/",
+]
 
 async function runLinkinator() {
   const matches = await Promise.all(DOCS_GLOBS.map((pattern) => globHasMatch(pattern)))

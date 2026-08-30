@@ -1,7 +1,7 @@
 // Entry point for the "suppression-governance" self-hosting check, invoked via
 // `run: ["tsx", "scripts/suppression-governance/check.ts"]` in repo-contract.config.ts. Prints
 // ONLY the JSON evidence to stdout (for `output: { format: "json" }` to parse) -- mirrors
-// scripts/changeset-docs/check.ts's/scripts/api-contract/check.ts's own stdout contract.
+// scripts/api-contract/check.ts's own stdout contract.
 //
 // Report-only, like architecture.ts/dead-code.ts: a forbidden or under-justified suppression this
 // run *discovers* never fails this script's own exit code -- that judgment belongs entirely to
@@ -109,7 +109,7 @@ export function toPersistedRecord(record: SynchronizedRecord): DisableCommentRec
  * The check's full logic, factored out of the bottom-of-file script invocation so
  * test/integration/suppression-governance can exercise the complete real path (file discovery ->
  * registry load -> synchronization -> write) in-process against a scratch fixture directory,
- * without spawning a subprocess -- matching scripts/changeset-docs/check.ts's own testing
+ * without spawning a subprocess -- matching scripts/api-contract/check.ts's own testing
  * convention.
  * @param root - Absolute path to the repository being checked.
  * @returns The evidence for `output: { format: "json" }`.

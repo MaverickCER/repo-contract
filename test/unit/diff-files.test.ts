@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process"
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { mkdtemp, rm, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
@@ -107,19 +107,5 @@ describe("listChangedFiles", () => {
 
     const files = await listChangedFiles(root, "base")
     expect(files.map((f) => f.path)).toEqual(["café-señor.txt"])
-  })
-
-  it("excludes .changeset/** from the results", async () => {
-    await writeFile(path.join(root, "a.txt"), "content\n", "utf8")
-    commitAll("base")
-    git("branch", "base")
-
-    await mkdir(path.join(root, ".changeset"), { recursive: true })
-    await writeFile(path.join(root, ".changeset", "repo-contract.md"), "---\n---\n\nnote\n", "utf8")
-    await writeFile(path.join(root, "src.txt"), "real change\n", "utf8")
-    commitAll("touch changeset and src")
-
-    const files = await listChangedFiles(root, "base")
-    expect(files.map((f) => f.path)).toEqual(["src.txt"])
   })
 })

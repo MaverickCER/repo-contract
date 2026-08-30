@@ -3,9 +3,9 @@
 // check itself only ever bootstraps the very first one; see check.ts). Regenerates the current
 // contract and overwrites the baseline in the working tree for a human to review and commit.
 //
-// Intended lifecycle: change public API -> `npm run contract` maintains a changeset -> PR merges
-// -> a later "Version Packages" PR (Changesets) bumps package.json/CHANGELOG.md and releases ->
-// `npm run contract:baseline` -> commit the new baseline.
+// Intended lifecycle: change public API in a commit that declares the right bump (`api-contract`
+// gates this) -> PR merges -> release-please's Release PR bumps package.json/CHANGELOG.md and
+// the release publishes -> `npm run contract:baseline` -> commit the new baseline.
 
 import { readFile } from "node:fs/promises"
 import { pathToFileURL } from "node:url"
@@ -47,7 +47,7 @@ export async function runUpdateBaseline(root: string): Promise<UpdateBaselineOut
         message:
           `Refusing to update the baseline: package.json declares version ${packageJson.version}, which is not ` +
           `strictly greater than the existing baseline's version ${existingBaseline.meta.packageVersion}. ` +
-          "Bump package.json (typically via the Changesets release flow) before running this again.",
+          "Bump package.json (normally via release-please's Release PR) before running this again.",
       }
     }
   }

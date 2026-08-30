@@ -76,21 +76,21 @@ export interface ApiContractSnapshot {
   readonly apiReportPath?: string
 }
 
-export type ChangesetReleaseLevel = "patch" | "minor" | "major"
-
 /**
- * What the check did (or didn't do) to a Changesets file this run, and why. `"removed"`: a revert
- * left nothing of value -- no human prose, no recoverable human-declared level -- in a file the
- * machine had previously written into, so the whole file was deleted rather than left behind as an
- * empty changeset that would still count toward a release bump at `changeset version` time.
+ * What the branch's Conventional Commits (and, in CI, the PR title) declare about the release
+ * bump -- and whether that clears the minimum the public-API diff requires. `satisfied` is
+ * `null` when there is nothing to compare against: `impact === "unknown"` (no `requiredLevel`)
+ * or the initial-baseline run. See specs/decisions/0008-api-contract-compatibility-gate.md.
  */
-export interface ChangesetEvidence {
-  readonly action: "none" | "created" | "updated" | "unchanged" | "removed"
-  readonly path?: string
-  readonly humanReleaseLevel?: ChangesetReleaseLevel
-  readonly requiredReleaseLevel?: ChangesetReleaseLevel
-  readonly effectiveReleaseLevel?: ChangesetReleaseLevel
-  readonly generatedSectionUpdated: boolean
+export interface CommitAnalysisEvidence {
+  /** Number of commit messages considered (branch commits, plus the PR title when supplied). */
+  readonly analyzed: number
+  /** Whether a CI-supplied PR title was among the messages considered. */
+  readonly prTitleConsidered: boolean
+  /** The largest bump the considered messages declare. */
+  readonly declaredLevel: RequiredReleaseLevel
+  /** `declaredLevel >= requiredLevel`; `null` when there is no `requiredLevel` to check against. */
+  readonly satisfied: boolean | null
 }
 
 /**
@@ -127,5 +127,5 @@ export interface ApiContractEvidence {
   readonly currentVersion: string
   /** Deterministic, generated from `diff`/`impact`/`initialBaseline` -- never hand-authored per scenario. */
   readonly summary: string
-  readonly changeset: ChangesetEvidence
+  readonly commits: CommitAnalysisEvidence
 }

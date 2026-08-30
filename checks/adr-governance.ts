@@ -17,13 +17,12 @@ type AdrGovernanceDeterminant =
       readonly kind: "referenced"
       readonly baseRef: string
       readonly resolvedAdrNumbers: readonly string[]
-      readonly changesetPath: string
     }
   | {
       readonly kind: "unsatisfied"
       readonly baseRef: string
       readonly governedFilesTouched: readonly string[]
-      readonly changesetPath: string | undefined
+      readonly commitsScanned: number
     }
 
 /**
@@ -42,26 +41,26 @@ function getAdrGovernanceDeterminant(evidence: AdrGovernanceEvidence): AdrGovern
       adrFilesTouched: evidence.adrFilesTouched,
     }
   }
-  if (evidence.satisfied && evidence.changesetPath) {
+  if (evidence.satisfied) {
     return {
       kind: "referenced",
       baseRef: evidence.baseRef,
       resolvedAdrNumbers: evidence.resolvedAdrNumbers,
-      changesetPath: evidence.changesetPath,
     }
   }
   return {
     kind: "unsatisfied",
     baseRef: evidence.baseRef,
     governedFilesTouched: evidence.governedFilesTouched,
-    changesetPath: evidence.changesetPath,
+    commitsScanned: evidence.commitsScanned,
   }
 }
 
 /**
  * Fails whenever a PR changes `src/execution/**`/`src/policy/**` without either touching
- * `specs/decisions/**` itself or referencing a real, existing ADR from its own changeset file --
- * the one thing this check exists to guarantee. Passes trivially when nothing governed changed.
+ * `specs/decisions/**` itself or referencing a real, existing ADR from one of the branch's
+ * commit messages -- the one thing this check exists to guarantee. Passes trivially when nothing
+ * governed changed.
  * @param root0 - the policy input.
  * @param root0.evidence - the adr-governance check's evidence to evaluate.
  * @returns the pass/fail outcome and its rationale.
@@ -91,7 +90,7 @@ export function evaluateAdrGovernancePolicy({
   if (determinant.kind === "referenced") {
     return {
       outcome: "pass",
-      rationale: `Governed files changed, but ${determinant.changesetPath} references existing ADR(s): ${determinant.resolvedAdrNumbers.join(", ")}.`,
+      rationale: `Governed files changed, but a commit message references existing ADR(s): ${determinant.resolvedAdrNumbers.join(", ")}.`,
     }
   }
 
@@ -99,20 +98,19 @@ export function evaluateAdrGovernancePolicy({
     outcome: "fail",
     rationale: [
       `${String(determinant.governedFilesTouched.length)} file(s) under src/execution/ or src/policy/ ` +
-        `changed relative to ${determinant.baseRef}, but no specs/decisions/ file was touched and no ` +
-        `changeset entry references an existing ADR` +
-        (determinant.changesetPath ? ` in ${determinant.changesetPath}` : "") +
-        `:`,
+        `changed relative to ${determinant.baseRef}, but no specs/decisions/ file was touched and none ` +
+        `of the ${String(determinant.commitsScanned)} commit message(s) on this branch references an ` +
+        `existing ADR:`,
       ...determinant.governedFilesTouched.map((path) => `- ${path}`),
-      'Add or amend an ADR under specs/decisions/, or reference one (e.g. "ADR 0003") in your changeset file.',
+      'Add or amend an ADR under specs/decisions/, or reference one (e.g. "ADR 0003") in a commit message on this branch.',
     ].join("\n"),
   }
 }
 
-// Architectural-change traceability, deliberately distinct from changeset-docs's "is every changed
-// file described" -- see specs/decisions/0010-changeset-adr-and-pr-documentation-discipline.md. A PR
-// touching the execution or policy engine must either engage the ADR set directly or reference an
-// existing one from its own changeset entry; a typo'd or nonexistent ADR number never satisfies this.
+// Architectural-change traceability: a PR touching the execution or policy engine must either
+// engage the ADR set directly or reference an existing ADR from one of its commit messages; a
+// typo'd or nonexistent ADR number never satisfies this. See
+// specs/decisions/0008-api-contract-compatibility-gate.md.
 export const adrGovernance: CheckDefinitionConfig = {
   run: ["tsx", "scripts/adr-governance/check.ts", "--base=origin/main"],
   output: { format: "json" },

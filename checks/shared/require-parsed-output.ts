@@ -10,7 +10,7 @@ type RequiredParsedOutput<T> =
  * `ParsedOutput.success`), otherwise hand back `value` narrowed to `T`. Lives under `checks/`, not
  * `src/presets/shared/` (where it originally lived): every one of its real consumers is a
  * `checks/*.ts` file (`accessibility`, `adr-governance`, `api-contract`, `api-docs`,
- * `architecture`, `changeset-docs`, `coverage`, `crap`, `docs`, `lint`, `security-network`,
+ * `architecture`, `coverage`, `crap`, `docs`, `lint`, `security-network`,
  * `suppression-governance`), and none is a published preset -- unlike its former siblings
  * (`exit-code-fail-rationale.ts`, `missing-dependency.ts`, `read-json-report.ts`,
  * `error-warning-pass-policy.ts`, `vitest-json-policy.ts`), which all have real preset consumers

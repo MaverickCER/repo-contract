@@ -2,13 +2,13 @@
 
 ## 1. Purpose and scope
 
-`repo-contract` mechanically enforces most of what it can: 29 checks, 100% mutation score on `src/`, dependency-cruiser and `eslint-plugin-boundaries` on architecture, `api-contract` on public API compatibility, `suppression-governance` on justified suppressions, and `security-network` on network-free source. This document is not a restatement of any of that. It exists for the residual risk left over once every mechanical check has passed — the properties that require understanding _intent_, not just running a tool. See [`specs/verification-taxonomy.md`](specs/verification-taxonomy.md) for what's mechanically established; this document is about everything that isn't.
+`repo-contract` mechanically enforces most of what it can: a full contract of checks covering tests, coverage, mutation testing, architecture (dependency-cruiser and `eslint-plugin-boundaries`), public API compatibility (`api-contract`), justified suppressions (`suppression-governance`), and network-free source (`security-network`), among others. [`repo-contract.config.ts`](repo-contract.config.ts) is the authoritative list of checks and [`specs/verification-taxonomy.md`](specs/verification-taxonomy.md) describes what each one establishes. This document is not a restatement of any of that. It exists for the residual risk left over once every mechanical check has passed — the properties that require understanding _intent_, not just running a tool.
 
 The repository has exactly one owner (see [CODEOWNERS]). This methodology is written for that reality: a single person applying deliberate review discipline to every PR, including their own, rather than a large team splitting responsibilities. Where this document says "the reviewer," read it as whoever is evaluating whether a PR is ready to merge.
 
 > Automation verifies what can be verified mechanically. Code review verifies the residual properties that require understanding intent, security boundaries, architectural correctness, concurrency safety, test effectiveness, semantic contract correctness, lifecycle integrity, and repository-wide impact.
 
-This document does not replace `npm run contract`, and `npm run contract` passing does not establish everything described here. Sections 2–17 define the residual review methodology. Section 18 defines an AI review gate that can perform this methodology against a specific PR or diff and return a binary result.
+This document does not replace `npm run contract`, and `npm run contract` passing does not establish everything described here. Sections 2–35 define the residual review methodology. Section 36 defines an AI review gate that can perform this methodology against a specific PR or diff and return a binary result.
 
 ## 2. What Code Owner approval means
 
@@ -20,23 +20,28 @@ The review process should not duplicate mechanical verification. Where `npm run 
 
 Before reviewing anything manually, know what `npm run contract` already guarantees, so review effort goes to what's left rather than what's redundant:
 
-| Already mechanically enforced                                                             | Not enforced — requires semantic review                                                                            |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Type correctness, lint, formatting                                                        | Whether the types/lint rules chosen still express the right constraint                                             |
-| Unit/integration/property/e2e tests pass                                                  | Whether those tests express the intended contract, or merely happen to pass                                        |
-| Mutation score on `src/**` (100%, no unjustified survivors)                               | Test effectiveness on `checks/**`/`scripts/**` — mutation testing does not cover them                              |
-| Dependency-graph layering (`architecture` check)                                          | Whether a new dependency _direction_ that violates no existing rule is still sound                                 |
-| Public API structural compatibility (`api-contract`)                                      | Whether unchanged type signatures still hide a semantic/behavioral change                                          |
-| Every suppression has non-empty justification fields (`suppression-governance`)           | Whether that justification is actually _correct_, not merely present                                               |
-| No network-capable import/global/unreviewed preset command in `src/` (`security-network`) | Whether a newly allowlisted preset command is actually safe to add                                                 |
-| Dependency vulnerabilities and license compliance (`security-deps`, `license`)            | Whether a new dependency is actually necessary and what capability it adds                                         |
-| Every changed file has a description (`changeset-docs`)                                   | Whether that description — and any other documentation touched — is still _accurate_ and resistant to future drift |
-| `src/execution`/`src/policy` changes reference an ADR (`adr-governance`)                  | Whether the ADR's reasoning actually holds up                                                                      |
-| Dead-code detection (`dead-code`)                                                         | Whether newly introduced behavioral paths are meaningful and reachable according to the intended state model       |
+| Already mechanically enforced                                                                              | Not enforced — requires semantic review                                                                                      |
+| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Type correctness, lint, formatting                                                                         | Whether the types/lint rules chosen still express the right constraint                                                       |
+| Unit/integration/property/e2e tests pass                                                                   | Whether those tests express the intended contract, or merely happen to pass                                                  |
+| Mutation score on `src/**` (100%, no unjustified survivors)                                                | Test effectiveness on `checks/**`/`scripts/**` — mutation testing does not cover them                                        |
+| Dependency-graph layering (`architecture` check)                                                           | Whether a new dependency _direction_ that violates no existing rule is still sound                                           |
+| Public API structural compatibility (`api-contract`)                                                       | Whether unchanged type signatures still hide a semantic/behavioral change                                                    |
+| Every suppression has non-empty justification fields (`suppression-governance`)                            | Whether that justification is actually _correct_, not merely present                                                         |
+| No network-capable import/global/unreviewed preset command in `src/` (`security-network`)                  | Whether a newly allowlisted preset command is actually safe to add                                                           |
+| Dependency vulnerabilities and license compliance (`security-deps`, `license`)                             | Whether a new dependency is actually necessary and what capability it adds                                                   |
+| Commit messages are Conventional and declare a bump ≥ the API diff requires (`commitlint`, `api-contract`) | Whether the subject actually communicates the user-visible impact, and whether any documentation touched is still _accurate_ |
+| `src/execution`/`src/policy` changes reference an ADR in a commit (`adr-governance`)                       | Whether the ADR's reasoning actually holds up                                                                                |
+| Dead-code detection (`dead-code`)                                                                          | Whether newly introduced behavioral paths are meaningful and reachable according to the intended state model                 |
 
 Do not manually recompute anything in the left column. If a check in the left column is green, trust it. The rest of this document is about the right column.
 
 ## 4. Minimal review required for every PR
+
+This list is the Code Owner's per-PR checklist. It is deliberately not reproduced in the
+pull request template — the template asks a contributor only for what they can attest to
+(`npm run contract` passing, Conventional Commits); the residual-risk evaluation below is
+the reviewer's responsibility, whoever is merging.
 
 At minimum, every PR must be evaluated for:
 

@@ -7,8 +7,8 @@ import type { DisableCommentRecord } from "../../../scripts/suppression-governan
 
 /**
  * The complete real path: a real scratch directory, real files on disk, real registry reads/
- * writes -- no subprocess spawned for the check itself, matching
- * test/integration/changeset-docs/check.integration.test.ts's own in-process convention.
+ * writes -- no subprocess spawned for the check itself, per the project's
+ * real-behavior-over-mocking house style.
  */
 
 let root: string

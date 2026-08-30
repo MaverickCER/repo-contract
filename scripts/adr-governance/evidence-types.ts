@@ -1,8 +1,9 @@
 /**
  * Evidence shape printed to stdout by check.ts (as JSON, for repo-contract.config.ts's
- * `output: { format: "json" }` to parse) and consumed by policy.ts. Internal, unpublished tooling
- * contract -- never imported by anything outside scripts/adr-governance/ and its tests. See
- * specs/decisions/0010-changeset-adr-and-pr-documentation-discipline.md for the full reasoning.
+ * `output: { format: "json" }` to parse) and consumed by the policy in checks/adr-governance.ts.
+ * Internal, unpublished tooling contract -- never imported by anything outside
+ * scripts/adr-governance/ and its tests. See
+ * specs/decisions/0008-api-contract-compatibility-gate.md for the full reasoning.
  */
 
 /**
@@ -17,10 +18,10 @@ export interface AdrGovernanceEvidence {
   readonly governedFilesTouched: readonly string[]
   /** Files changed relative to `baseRef` under `specs/decisions/`, in any way (add/edit/rename). */
   readonly adrFilesTouched: readonly string[]
-  /** The changeset file this run located and read, if any. */
-  readonly changesetPath: string | undefined
+  /** How many commit messages on `baseRef..HEAD` were scanned for `ADR NNNN` references. */
+  readonly commitsScanned: number
   /**
-   * Every syntactically valid `ADR NNNN`-shaped reference found in the changeset file's body,
+   * Every syntactically valid `ADR NNNN`-shaped reference found in the branch's commit messages,
    * regardless of whether the number resolves to a real file -- kept for rationale/debuggability,
    * not itself the gate.
    */

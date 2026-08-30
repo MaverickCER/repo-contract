@@ -7,9 +7,9 @@ import { runAdrGovernanceCheck } from "../../../scripts/adr-governance/check.js"
 
 /**
  * The complete real path: a real scratch git repository, a real `git diff` against a real base
- * branch, a real `specs/decisions/` directory to resolve references against, through to evidence --
- * no subprocess spawned for the check itself, matching
- * test/integration/changeset-docs/check.integration.test.ts's own in-process convention.
+ * branch, real commit messages scanned for `ADR NNNN` references, a real `specs/decisions/`
+ * directory to resolve them against, through to evidence -- no subprocess spawned for the check
+ * itself, per the project's real-behavior-over-mocking house style.
  */
 
 let root: string
@@ -31,7 +31,6 @@ beforeEach(async () => {
   await mkdir(path.join(root, "src/execution"), { recursive: true })
   await mkdir(path.join(root, "src/policy"), { recursive: true })
   await mkdir(path.join(root, "specs/decisions"), { recursive: true })
-  await mkdir(path.join(root, ".changeset"), { recursive: true })
   await writeFile(
     path.join(root, "specs/decisions/0001-fixture-decision.md"),
     "# 0001: A fixture decision\n",
@@ -52,7 +51,7 @@ afterEach(async () => {
 })
 
 describe("runAdrGovernanceCheck -- full real path", () => {
-  it("is unsatisfied when a governed file changes with no ADR touched and no changeset reference", async () => {
+  it("is unsatisfied when a governed file changes with no ADR touched and no commit-message reference", async () => {
     git("checkout", "-q", "-b", "feature")
     await writeFile(path.join(root, "src/execution/spawn-check.ts"), "// change\n", "utf8")
     commitAll("touch execution engine")
@@ -82,16 +81,11 @@ describe("runAdrGovernanceCheck -- full real path", () => {
   }, 30_000)
 
   it.each(["ADR 0001", "ADR-0001", "adr0001"])(
-    "is satisfied by a valid changeset reference in the form %j, resolved against a real ADR file",
+    "is satisfied by a valid commit-message reference in the form %j, resolved against a real ADR file",
     async (reference) => {
       git("checkout", "-q", "-b", "feature")
       await writeFile(path.join(root, "src/execution/spawn-check.ts"), "// change\n", "utf8")
-      await writeFile(
-        path.join(root, ".changeset/fixture.md"),
-        `---\n"pkg": patch\n---\n\nSee ${reference} for the reasoning.\n`,
-        "utf8",
-      )
-      commitAll("touch execution engine and reference an ADR")
+      commitAll(`refactor(execution): touch spawn-check\n\nSee ${reference} for the reasoning.`)
 
       const evidence = await runAdrGovernanceCheck(root, "main")
 
@@ -102,15 +96,10 @@ describe("runAdrGovernanceCheck -- full real path", () => {
     30_000,
   )
 
-  it("is unsatisfied when the changeset references a number with no corresponding ADR file -- proving cross-validation, not just regex-shape", async () => {
+  it("is unsatisfied when a commit references a number with no corresponding ADR file -- proving cross-validation, not just regex-shape", async () => {
     git("checkout", "-q", "-b", "feature")
     await writeFile(path.join(root, "src/execution/spawn-check.ts"), "// change\n", "utf8")
-    await writeFile(
-      path.join(root, ".changeset/fixture.md"),
-      '---\n"pkg": patch\n---\n\nSee ADR 9999 for the reasoning.\n',
-      "utf8",
-    )
-    commitAll("touch execution engine and reference a nonexistent ADR")
+    commitAll("refactor(execution): touch spawn-check\n\nSee ADR 9999 for the reasoning.")
 
     const evidence = await runAdrGovernanceCheck(root, "main")
 

@@ -11,7 +11,7 @@ const execFileAsync = promisify(execFile)
  * git computes one underlying tree diff for a given range/flags and renders it two ways, so the
  * per-file ordering is identical between the two invocations.
  */
-export interface RawDiffFile {
+interface RawDiffFile {
   readonly path: string
   readonly changeKind: "added" | "modified" | "deleted" | "renamed"
   readonly renamedFrom?: string
@@ -112,14 +112,13 @@ function toCount(raw: string | undefined): number {
 }
 
 /**
- * Lists every file changed between `base` and `HEAD`, excluding `.changeset/**` (this check's own
- * output, never something it documents itself). Returns an empty list -- never throws -- when `base`
- * doesn't resolve (no `origin/main` fetched locally, or this being a repository's very first commit),
- * mirroring baseline-store.ts's own "no prior state is a legitimate condition, not an error"
- * philosophy.
+ * Lists every file changed between `base` and `HEAD`. Returns an empty list -- never throws --
+ * when `base` doesn't resolve (no `origin/main` fetched locally, or this being a repository's very
+ * first commit), mirroring baseline-store.ts's own "no prior state is a legitimate condition, not
+ * an error" philosophy.
  * @param root - Absolute path to the repository to diff.
  * @param base - Ref to diff against, e.g. `origin/main`.
- * @returns Every changed file's path, change kind, and line counts, excluding `.changeset/**`.
+ * @returns Every changed file's path, change kind, and line counts.
  */
 export async function listChangedFiles(
   root: string,
@@ -128,10 +127,9 @@ export async function listChangedFiles(
   const range = `${base}...HEAD`
   // `-c core.quotePath=false` stops git octal-escaping non-ASCII bytes in
   // pathnames (its default), so a path like `src/café.ts` comes back as
-  // itself rather than `"src/caf\303\251.ts"` -- which would never match a
-  // real filename in the `.changeset/` filter below or in table-manager's
-  // reconciliation. (Paths containing a literal tab, newline, or `"` are
-  // still quoted by git and remain a known edge case for source trees.)
+  // itself rather than `"src/caf\303\251.ts"`. (Paths containing a literal
+  // tab, newline, or `"` are still quoted by git and remain a known edge
+  // case for source trees.)
   const nameStatusOut = await runGit(
     ["-c", "core.quotePath=false", "diff", "--name-status", "-M", range],
     root,
@@ -156,5 +154,5 @@ export async function listChangedFiles(
     files.push({ ...parsed, ...counts })
   }
 
-  return files.filter((f) => !f.path.startsWith(".changeset/"))
+  return files
 }

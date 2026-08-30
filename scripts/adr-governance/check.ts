@@ -1,14 +1,12 @@
 // Entry point for the "adr-governance" self-hosting check, invoked via
 // `run: ["tsx", "scripts/adr-governance/check.ts", "--base=origin/main"]` in repo-contract.config.ts.
-// Prints ONLY the JSON evidence to stdout (for `output: { format: "json" }` to parse) -- mirrors
-// scripts/changeset-docs/check.ts's own stdout contract.
+// Prints ONLY the JSON evidence to stdout (for `output: { format: "json" }` to parse).
 
-import { readdir, readFile } from "node:fs/promises"
+import { readdir } from "node:fs/promises"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import { locateTargetFileName } from "../changeset-file-locator.js"
-import { CHANGESET_DIR } from "../contracts.js"
 import { listChangedFiles } from "../diff-files.js"
+import { readBranchCommits } from "../git-commits.js"
 import type { AdrGovernanceEvidence } from "./evidence-types.js"
 
 const GOVERNED_PATH_PREFIXES = ["src/execution/", "src/policy/"]
@@ -25,7 +23,7 @@ function parseBaseArg(): string {
 
 /**
  * Every syntactically valid `ADR NNNN` reference found anywhere in `text`, deduplicated.
- * @param text - The changeset file's raw content to scan.
+ * @param text - The concatenated commit messages to scan.
  * @returns Each captured 4-digit number, as a string, in first-seen order.
  */
 function findReferencedAdrNumbers(text: string): string[] {
@@ -58,9 +56,8 @@ async function resolveAdrNumbers(root: string, numbers: readonly string[]): Prom
 /**
  * The check's full logic, factored out of the bottom-of-file script invocation so
  * `test/integration/adr-governance/check.integration.test.ts` can exercise the complete real path
- * (git diff -> changeset lookup -> ADR resolution -> evidence) in-process against a scratch fixture
- * repository, without spawning a subprocess -- matching scripts/changeset-docs/check.ts's own
- * testing convention.
+ * (git diff -> commit-message scan -> ADR resolution -> evidence) in-process against a scratch
+ * fixture repository, without spawning a subprocess.
  * @param root - Absolute path to the repository being checked.
  * @param baseRef - Git ref to diff against, e.g. `origin/main`.
  * @returns The evidence for `output: { format: "json" }`.
@@ -86,25 +83,22 @@ export async function runAdrGovernanceCheck(
       baseRef,
       governedFilesTouched,
       adrFilesTouched,
-      changesetPath: undefined,
+      commitsScanned: 0,
       referencedAdrNumbers: [],
       resolvedAdrNumbers: [],
       satisfied: true,
     }
   }
 
-  const changesetFileName = await locateTargetFileName(root)
-  const changesetPath = path.join(CHANGESET_DIR, changesetFileName)
-  const content = await readFile(path.join(root, changesetPath), "utf8").catch(() => undefined)
-
-  const referencedAdrNumbers = content ? findReferencedAdrNumbers(content) : []
+  const commitMessages = await readBranchCommits(root, baseRef)
+  const referencedAdrNumbers = findReferencedAdrNumbers(commitMessages.join("\n\n"))
   const resolvedAdrNumbers = await resolveAdrNumbers(root, referencedAdrNumbers)
 
   return {
     baseRef,
     governedFilesTouched,
     adrFilesTouched,
-    changesetPath: content === undefined ? undefined : changesetPath,
+    commitsScanned: commitMessages.length,
     referencedAdrNumbers,
     resolvedAdrNumbers,
     satisfied: resolvedAdrNumbers.length > 0,

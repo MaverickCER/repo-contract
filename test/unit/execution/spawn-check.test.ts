@@ -119,6 +119,26 @@ describe("spawnCheck -- environment", () => {
       delete process.env.SPAWN_CHECK_TEST_OVERLAY
     }
   })
+
+  it("never copies an env value into any evidence field on a spawn failure (SECURITY.md: errors carry only ids and field names)", async () => {
+    // The env is passed to the child, never read back into a message, code,
+    // or evidence field by repo-contract itself. A spawn that fails outright
+    // (ENOENT) is the one path that forwards a Node-produced string
+    // (`error.message`) verbatim -- that string names the command, never the
+    // environment -- so it's the sharpest place to assert the boundary holds.
+    const secret = "s3cr3t-token-should-never-surface-a1b2c3"
+    const check: CheckDefinition = {
+      run: ["definitely-not-a-real-binary-xyz-env-leak"],
+      inheritEnv: false,
+      env: { SUPER_SECRET_TOKEN: secret },
+      policy: okPolicy,
+    }
+    const evidence = await spawnCheck("id", check, undefined, new Set())
+    expect(evidence.status).toBe("spawn_error")
+    expect(JSON.stringify(evidence)).not.toContain(secret)
+    expect(evidence.spawnError ?? "").not.toContain(secret)
+    expect(evidence.command).not.toContain(secret)
+  })
 })
 
 describe("spawnCheck -- already-aborted runSignal", () => {

@@ -1,7 +1,7 @@
 // Entry point for the "api-docs" self-hosting check, invoked via
 // `run: ["tsx", "scripts/api-docs/check.ts"]` in repo-contract.config.ts.
 // Prints ONLY the JSON evidence to stdout (for `output: { format: "json" }` to parse) -- mirrors
-// scripts/changeset-docs/check.ts's own stdout contract.
+// scripts/api-contract/check.ts's own stdout contract.
 
 import { mkdtemp, readFile, rm } from "node:fs/promises"
 import os from "node:os"
@@ -37,7 +37,7 @@ function findUndocumentedMarkers(content: string): string[] {
 /**
  * The check's full logic, factored out of the bottom-of-file script invocation so
  * `test/unit/api-docs/check.test.ts` can exercise it in-process against the real repository files,
- * without spawning a subprocess -- matching scripts/changeset-docs/check.ts's own testing
+ * without spawning a subprocess -- matching scripts/api-contract/check.ts's own testing
  * convention.
  * @param root - Absolute path to the repository being checked; must contain a built `dist/`.
  * @returns The evidence for `output: { format: "json" }`: for every public entry point, whether

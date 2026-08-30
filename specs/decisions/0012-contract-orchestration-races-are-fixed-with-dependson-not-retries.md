@@ -68,16 +68,13 @@ is fast). A future check or test that reads a file another check writes must dec
 of `dependsOn` — this failure mode (pass in isolation, fail in full concurrent `npm run contract`)
 is the signal to look for.
 
-Applying that signal proactively (not waiting for another empirical failure) surfaced a second,
-structurally identical case: `scripts/api-contract/changeset-manager.ts` and
-`scripts/changeset-docs/table-manager.ts` both read-modify-write the same `.changeset/*.md` file
-(each owns its own marked section; `table-manager.ts`'s own doc comment already names the shared
-file explicitly), with no `dependsOn` between `api-contract` and `changeset-docs` either. Same
-defect shape, same fix: `changeset-docs` now `dependsOn: ["api-contract"]`. Not empirically
-reproduced here (this repository has no git history/base branch yet for either check's real diff
-logic to run against), unlike the suppression-governance case above, which was reproduced directly;
-this one is fixed on code-inspection evidence alone (both modules' own doc comments confirm the
-shared file and the read-whole-file/write-whole-file pattern).
+Applying that signal proactively (not waiting for another empirical failure) once surfaced a
+second, structurally identical case: `api-contract` and the then-existing `changeset-docs` check
+both read-modify-wrote the same `.changeset/*.md` file, and were serialized with a
+`dependsOn: ["api-contract"]`. That instance is now moot — [ADR 0008](0008-api-contract-compatibility-gate.md)
+removed Changesets, and with it the shared file, the `changeset-docs` check, and
+`api-contract`'s file-writing (it is now a pure gate). The general principle stands: a future
+check or test that reads a file another check writes must declare the same kind of `dependsOn`.
 
 ## Alternatives considered
 

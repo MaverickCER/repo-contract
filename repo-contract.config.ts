@@ -15,14 +15,11 @@
  * The `checks` object below is organized in three declaration-order phases, relying on that
  * barrier semantics rather than per-check `dependsOn` wiring wherever possible:
  *
- * 1. **Writers** -- `suppression-governance`, `api-contract`, `api-docs`, `changeset-docs`, `lint`,
+ * 1. **Writers** -- `suppression-governance`, `api-contract`, `api-docs`, `lint`,
  *    `format`, `schema` -- every check that writes to a file other checks (or a human) later reads.
- *    Declared first so nothing reads their output before it's written. `changeset-docs` still needs
- *    its own explicit `dependsOn: ["api-contract"]`: both mechanisms independently maintain their
- *    own marker-delimited section inside the same shared `.changeset/*.md` file (see
- *    scripts/changeset-file-locator.ts's own doc comment), a real read-modify-write race between
- *    two *writers* that mere declaration order can't resolve on its own (see ADR 0012) -- one must
- *    genuinely wait for the other's write to settle, not just be scheduled after it starts.
+ *    Declared first so nothing reads their output before it's written. `api-contract` only ever
+ *    writes on the one-time baseline bootstrap (see scripts/api-contract/check.ts); it is
+ *    otherwise a pure reader, and its position here is conservative.
  *    `lint` (`eslint --fix`/`oxlint --fix`) and `format` (`prettier --write .`) both rewrite the
  *    whole source tree in place, and `schema` regenerates `schemas/*.schema.json` plus
  *    `scripts/suppression-governance/disable-comments.schema.json` from their source types -- all
@@ -93,7 +90,6 @@ import { apiContract } from "./checks/api-contract.js"
 import { apiDocs } from "./checks/api-docs.js"
 import { architecture } from "./checks/architecture.js"
 import { build } from "./checks/build.js"
-import { changesetDocs } from "./checks/changeset-docs.js"
 import { coverage } from "./checks/coverage.js"
 import { crap } from "./checks/crap.js"
 import { docs } from "./checks/docs.js"
@@ -112,6 +108,7 @@ import { defineRepoContract } from "./src/index.js"
 import type { AttwReport } from "./src/presets/arethetypeswrong.js"
 import { evaluateAttwReport } from "./src/presets/arethetypeswrong.js"
 import {
+  commitlint,
   deadCode,
   duplication,
   format,
@@ -128,22 +125,6 @@ export default defineRepoContract({
     "suppression-governance": suppressionGovernance,
     "api-contract": apiContract,
     "api-docs": apiDocs,
-    // scripts/changeset-docs/table-manager.ts's own doc comment already
-    // documents that it "owns a second, independently-delimited generated
-    // section within the same changeset file
-    // scripts/api-contract/changeset-manager.ts may also be maintaining" --
-    // both read the whole file, replace only their own marked section, and
-    // write the whole file back. That's safe across repeated *sequential*
-    // runs (each is independently idempotent), but not across two
-    // *concurrent* runs: whichever writes last does so from a read that
-    // predates the other's write, silently reverting it -- the same
-    // shared-mutable-file race already found and fixed for
-    // suppression-governance/test-integration (see specs/decisions/0012-
-    // contract-orchestration-races-are-fixed-with-dependson-not-retries.md).
-    // This dependsOn makes the two run sequentially instead, by
-    // construction; the direction (api-contract first) is arbitrary --
-    // either order is safe -- but some order is required.
-    "changeset-docs": { ...changesetDocs, dependsOn: ["api-contract"] },
     // Rewrites the whole source tree in place (`eslint --fix`/`oxlint --fix`) -- a writer, not a
     // reader, for the same reason format/schema below are: a reader that concurrently lints or
     // reads the same files it's rewriting must never race that rewrite. See module doc comment.
@@ -230,6 +211,11 @@ export default defineRepoContract({
     "security-secrets": securitySecrets,
     "dead-code": deadCode({ exemptUnusedDevDependencies: EXEMPT_UNUSED_DEV_DEPENDENCIES }),
     "adr-governance": adrGovernance,
+    // Conventional Commits are the sole versioning input (release-please derives the bump +
+    // changelog from them); commitlint enforces the format across `origin/main..HEAD`. See
+    // specs/decisions/0008-api-contract-compatibility-gate.md. A pure reader -- it runs the
+    // `commitlint` binary against git history and touches nothing.
+    commitlint: commitlint(),
     "security-network": securityNetwork,
     // Declared last among the readers so its own scheduling barrier (see checks/mutation.ts and
     // this file's own doc comment) blocks as little else as possible.

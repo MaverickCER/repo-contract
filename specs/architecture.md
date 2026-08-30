@@ -278,7 +278,7 @@ itself — one check per verification category in
 [specs/verification-taxonomy.md](verification-taxonomy.md), each a real command with a real
 policy; `repo-contract.config.ts`'s own `checks` record is the authoritative, current list of check
 ids (an enumeration here would only drift out of sync as checks are added or renamed). See
-`CONTRIBUTING.md`'s "Development setup" section for how to run it,
+`CONTRIBUTING.md` for how to run it,
 [ADR 0009](decisions/0009-self-hosting-tool-and-dependency-choices.md)
 for how the CRAP and secret-scanning tools specifically were selected, and
 [ADR 0006](decisions/0006-independent-verification-boundaries-coverage-is-a-union.md) for how the Vitest-based categories'

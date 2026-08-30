@@ -21,8 +21,8 @@ jobs:
   # 20, so `npm ci` there now warns EBADENGINE and some tools refuse to run.
   # The published package still supports Node >=20 -- that's proven
   # independently by `published-floor` below, against the packed artifact,
-  # with none of this toolchain installed. See CONTRIBUTING.md's "Node.js
-  # note". The OS axis (windows/macos) is what's genuinely new for this
+  # with none of this toolchain installed. Local dev uses the same modern line
+  # (.nvmrc). The OS axis (windows/macos) is what's genuinely new for this
   # package vs. env-cap/data-cap, which never spawn processes.
   verify:
     runs-on: ${{ matrix.os }}
@@ -122,8 +122,8 @@ jobs:
   verify-current:
     runs-on: ubuntu-latest
     # Deliberate canary, not a required gate: this job tracks the newest Node
-    # line ahead of the verification toolchain's own line (24.x above; see
-    # CONTRIBUTING.md's "Node.js note"), specifically so a real incompatibility
+    # line ahead of the verification toolchain's own line (24.x above, the
+    # .nvmrc line), specifically so a real incompatibility
     # is visible before that version is adopted -- but a brand-new Node
     # line failing here is frequently an upstream toolchain gap (a
     # devDependency not yet supporting it) rather than a defect in this
@@ -210,22 +210,22 @@ jobs:
   # one establishes. Doesn't
   # need the full OS matrix (mutation testing dominates runtime, and the
   # checks it runs are already covered per-OS by `verify` above) -- one
-  # Node version on the verification-toolchain line (>= the
+  # Node version on the verification-toolchain line (the .nvmrc line, >= the
   # >=22.0.0 that @stryker-mutator/core itself requires), a
   # local-development-and-CI requirement distinct from the published
-  # package's own engines.node >=20.0.0 floor (proven by `published-floor`)
-  # -- see CONTRIBUTING.md's "Node.js note".
+  # package's own engines.node >=20.0.0 floor (proven by `published-floor`).
   contract:
     needs: verify
     runs-on: ubuntu-latest
     steps:
       # fetch-depth: 0 (full history, all branches -- see release.yml's own
-      # identical setting) is required here, not optional: changeset-docs and
-      # adr-governance both diff against `origin/main` (scripts/diff-files.ts),
-      # which the default single-commit shallow checkout leaves unresolvable
-      # on a pull_request build and identical-to-HEAD on a push-to-main build
-      # -- either way landing both checks on their vacuous "nothing changed"
-      # pass path instead of actually evaluating this run's diff.
+      # identical setting) is required here, not optional: adr-governance,
+      # api-contract, and commitlint all read `origin/main..HEAD`
+      # (scripts/git-commits.ts / scripts/diff-files.ts), which the default
+      # single-commit shallow checkout leaves unresolvable on a pull_request
+      # build and identical-to-HEAD on a push-to-main build -- either way
+      # landing the checks on a vacuous "nothing changed" pass path instead of
+      # actually evaluating this run's commits.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
@@ -238,3 +238,21 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run contract
+        # Under a squash merge the PR title becomes the sole commit on main, so
+        # api-contract must count it toward the declared release bump too.
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+
+  # Belt-and-suspenders for the squash-merge case (see
+  # specs/decisions/0008-api-contract-compatibility-gate.md): the merge-commit /
+  # rebase policy keeps every commit conforming, but if a squash ever slips
+  # through, the PR title was still a valid Conventional Commit.
+  pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

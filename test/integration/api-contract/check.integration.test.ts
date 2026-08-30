@@ -8,9 +8,10 @@ import { writeFixtureSource } from "../../helpers/api-contract/build-fixture-pac
 
 /**
  * The complete real path: source -> API Extractor -> API JSON -> historical comparison (from a
- * real git repo's HEAD) -> evidence -> (changeset maintenance). No subprocess is spawned --
- * `runApiContractCheck` is called in-process against a scratch fixture repository, per the
- * project's real-behavior-over-mocking house style.
+ * real git repo's HEAD) -> evidence -> Conventional-Commits bump comparison. No subprocess is
+ * spawned -- `runApiContractCheck` is called in-process against a scratch fixture repository, per
+ * the project's real-behavior-over-mocking house style. The scratch repo has no `origin/main`, so
+ * `commits` always reports 0 analyzed / `declaredLevel: "none"` (see scripts/git-commits.ts).
  */
 
 let root: string
@@ -68,7 +69,12 @@ describe("runApiContractCheck -- full real path", () => {
     expect(evidence.impact).toBe("unchanged")
     expect(evidence.diff).toEqual([])
     expect(evidence.minimumRequiredVersion).toBe("0.1.0")
-    expect(evidence.changeset).toEqual({ action: "none", generatedSectionUpdated: false })
+    expect(evidence.commits).toEqual({
+      analyzed: 0,
+      prTitleConsidered: false,
+      declaredLevel: "none",
+      satisfied: null,
+    })
 
     const baselineMeta = JSON.parse(
       await readFile(path.join(root, ".repo-contract/api-contract/baseline.meta.json"), "utf8"),
@@ -90,7 +96,7 @@ describe("runApiContractCheck -- full real path", () => {
     expect(JSON.stringify(first)).toBe(JSON.stringify(second))
   }, 30_000)
 
-  it("detects a compatible addition, computes a minor minimum version, and creates a changeset", async () => {
+  it("detects a compatible addition, computes a minor minimum version, and flags that the branch commits don't declare it", async () => {
     await writeFixtureSource(root, V1_SOURCE, "fixture-pkg", "0.1.0")
     await runApiContractCheck(root, "public")
     commitAll("establish baseline")
@@ -101,11 +107,8 @@ describe("runApiContractCheck -- full real path", () => {
     expect(evidence.impact).toBe("compatible")
     expect(evidence.requiredLevel).toBe("minor")
     expect(evidence.minimumRequiredVersion).toBe("0.2.0")
-    expect(evidence.changeset.action).toBe("created")
-
-    const changesetContent = await readFile(path.join(root, evidence.changeset.path ?? ""), "utf8")
-    expect(changesetContent).toContain('"fixture-pkg": minor')
-    expect(changesetContent).toContain("getUserById")
+    expect(evidence.commits.declaredLevel).toBe("none")
+    expect(evidence.commits.satisfied).toBe(false)
 
     // The baseline itself must remain exactly as committed -- only npm run contract:baseline
     // (update-baseline.ts) is allowed to change it, never the check. (current.* is expected to
@@ -115,18 +118,17 @@ describe("runApiContractCheck -- full real path", () => {
     expect(status.trim()).toBe("")
   }, 30_000)
 
-  it("is idempotent: rerunning after a compatible addition with no further changes updates nothing further", async () => {
+  it("is deterministic: rerunning after a compatible addition with no further changes produces identical evidence", async () => {
     await writeFixtureSource(root, V1_SOURCE, "fixture-pkg", "0.1.0")
     await runApiContractCheck(root, "public")
     commitAll("establish baseline")
 
     await writeFixtureSource(root, V1_PLUS_COMPATIBLE_SOURCE, "fixture-pkg", "0.1.0")
     const first = await runApiContractCheck(root, "public")
-    expect(first.changeset.action).toBe("created")
-
     const second = await runApiContractCheck(root, "public")
-    expect(second.changeset.action).toBe("unchanged")
-    expect(second.changeset.generatedSectionUpdated).toBe(false)
+
+    expect(first.impact).toBe("compatible")
+    expect(JSON.stringify(first)).toBe(JSON.stringify(second))
   }, 30_000)
 
   it("detects a breaking removal and computes a major minimum version", async () => {
@@ -141,8 +143,8 @@ describe("runApiContractCheck -- full real path", () => {
     expect(evidence.requiredLevel).toBe("major")
     expect(evidence.minimumRequiredVersion).toBe("1.0.0")
     expect(evidence.diff.some((c) => c.kind === "export-removed")).toBe(true)
-    expect(evidence.changeset.action).toBe("created")
-    expect(evidence.changeset.requiredReleaseLevel).toBe("major")
+    expect(evidence.commits.declaredLevel).toBe("none")
+    expect(evidence.commits.satisfied).toBe(false)
   }, 30_000)
 
   it("never touches the committed baseline when a later run's analysis fails", async () => {
@@ -174,26 +176,25 @@ describe("runApiContractCheck -- full real path", () => {
     expect(status.trim()).toBe("")
   }, 30_000)
 
-  it("cleans up a stale changeset when the contract is reverted back to the baseline within the same PR", async () => {
+  it("reports an unchanged contract when a change is reverted back to the baseline within the same PR", async () => {
     await writeFixtureSource(root, V1_SOURCE, "fixture-pkg", "0.1.0")
     await runApiContractCheck(root, "public")
     commitAll("establish baseline")
 
     await writeFixtureSource(root, V1_PLUS_COMPATIBLE_SOURCE, "fixture-pkg", "0.1.0")
     const withChange = await runApiContractCheck(root, "public")
-    expect(withChange.changeset.action).toBe("created")
+    expect(withChange.impact).toBe("compatible")
 
     await writeFixtureSource(root, V1_SOURCE, "fixture-pkg", "0.1.0")
     const reverted = await runApiContractCheck(root, "public")
 
     expect(reverted.impact).toBe("unchanged")
-    expect(reverted.changeset.action).toBe("removed")
-    await expect(
-      readFile(path.join(root, withChange.changeset.path ?? ""), "utf8"),
-    ).rejects.toThrow()
+    expect(reverted.diff).toEqual([])
+    expect(reverted.requiredLevel).toBe("none")
+    expect(reverted.commits.satisfied).toBe(true)
   }, 30_000)
 
-  it("surfaces an @internal-only change as informational lowerTierDiff without affecting impact/version or creating a changeset", async () => {
+  it("surfaces an @internal-only change as informational lowerTierDiff without affecting impact/version", async () => {
     const V1_WITH_INTERNAL = `
 /** @public */
 export function getUsers(): string[] {
@@ -216,7 +217,12 @@ export function _internalHelper(): void {}
     expect(evidence.diff).toEqual([])
     expect(evidence.lowerTierDiff.length).toBeGreaterThan(0)
     expect(evidence.lowerTierDiff.some((c) => c.path.includes("_internalHelper"))).toBe(true)
-    expect(evidence.changeset).toEqual({ action: "none", generatedSectionUpdated: false })
+    expect(evidence.commits).toEqual({
+      analyzed: 0,
+      prTitleConsidered: false,
+      declaredLevel: "none",
+      satisfied: true,
+    })
   }, 30_000)
 
   it("keeps the diff stably ordered across independent runs over the same inputs", async () => {

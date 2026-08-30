@@ -7,6 +7,9 @@
 // scripts/coverage-thresholds.mjs).
 export const EXEMPT_UNUSED_DEV_DEPENDENCIES = [
   "@arethetypeswrong/cli",
+  // Spawned by name by the `commitlint` preset and the .githooks/commit-msg
+  // hook -- nothing imports it, so knip can't see it.
+  "@commitlint/cli",
   "licensee",
   "linkinator",
   "oxlint",

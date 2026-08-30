@@ -9,9 +9,10 @@ application that configures it, and why those boundaries exist. See the README's
 ## Reporting a vulnerability
 
 Report privately via a
-[GitHub security advisory](https://github.com/maverickcer/repo-contract/security/advisories/new),
-or via the contact information on the npm package page. Please do not open a public issue for a
-suspected vulnerability before it has been triaged.
+[GitHub security advisory](https://github.com/maverickcer/repo-contract/security/advisories/new).
+If that form is unavailable to you, open a public issue that says only "requesting a private
+security contact" with no details, and a maintainer will follow up. Please do not disclose the
+substance of a suspected vulnerability in a public issue before it has been triaged.
 
 ## Runtime security model
 
@@ -71,6 +72,14 @@ the most security-sensitive part of the package.
   anywhere itself (see [No package-owned persistence](#application-responsibilities) below), but
   if _you_ log, store, or transmit evidence, you are responsible for whatever your checks
   printed.
+  - **Worst-case memory is bounded but not small.** The `Evidence` object retains every check's
+    captured output for the whole run, so peak retained output is roughly
+    `checks × 2 × 10 MiB` (stdout + stderr per check). A 30-check run whose commands all flood
+    their output can therefore hold ~600 MiB of strings before truncation caps each stream.
+    Checks that legitimately produce large structured output should write it to a file
+    (`--output report.json`) and keep stdout small — every preset in this package that emits
+    bulk data already does. `history.json`-style local logging is the consumer's own code; cap
+    it yourself.
 - **Parsing failures never execute anything.** `output: { format: "json" | "yaml" }` only ever
   calls `JSON.parse`/a YAML parser on captured text — a malformed or even maliciously-crafted
   string cannot cause repo-contract to execute code, only to fail to parse
@@ -105,19 +114,19 @@ particular:
   values, keep that in mind before persisting or transmitting the resulting evidence.
 - **You own environment scoping.** `inheritEnv`/`env` are the tools; deciding what a given check
   actually needs is a per-repository judgment call repo-contract does not make for you.
-  Concretely, for this repository's own release job: `.github/workflows/release.yml`'s `release`
-  job grants `id-token: write` (npm OIDC trusted publishing) and receives `GITHUB_TOKEN`; its
-  `prepublishOnly` hook (`package.json`) re-runs the full `npm run contract` at `npm publish` time,
-  and no check in `repo-contract.config.ts` sets `inheritEnv: false`/`env`, so every third-party CLI
-  that run spawns (eslint, stryker, `npm audit`, ...) inherits those credentials in its environment.
-  This repository has reviewed and accepted that exposure rather than left it unexamined: the
-  spawned tools are the same pinned, already-vetted devDependencies used throughout local
-  development (not arbitrary or untrusted code), and a separate, non-privileged `verify` job in the
-  same workflow runs the identical contract first, with no credentials in scope, so the credentialed
-  re-run is a fast confirmation in the ordinary case rather than the primary place a real failure
-  surfaces while those credentials are live. A repository with a lower risk tolerance should instead
-  set `inheritEnv: false` plus an explicit, minimal `env` on every check reachable from a
-  credentialed CI job.
+  Concretely, for this repository's own release pipeline: `.github/workflows/release.yml` runs
+  release-please to maintain a Release PR, and only when that PR merges does it run a
+  credential-free `verify` job (`contents: read` only — the full `npm run contract`) followed by
+  a `publish` job that grants `id-token: write` for npm OIDC trusted publishing. The `publish`
+  job runs `npm publish --ignore-scripts` — it deliberately does **not** re-run the contract via
+  `prepublishOnly`, precisely because no check in `repo-contract.config.ts` sets
+  `inheritEnv: false`, so a spawned third-party CLI (eslint, Stryker, `npm audit`, ...) would
+  otherwise see the OIDC `id-token` request env vars that job holds. The credential-free `verify`
+  job runs the byte-identical contract first; `publish` only ships the artifact it blessed. (A
+  manual `npm publish` from a developer machine still runs `prepublishOnly` — that path has no
+  credentials to protect.) A repository that keeps `prepublishOnly` in its own credentialed
+  publish step should set `inheritEnv: false` plus an explicit, minimal `env` on every check
+  reachable from that job.
 
 ## Supported versions
 

@@ -7,7 +7,7 @@ function evidence(overrides: Partial<AdrGovernanceEvidence> = {}): AdrGovernance
     baseRef: "origin/main",
     governedFilesTouched: [],
     adrFilesTouched: [],
-    changesetPath: undefined,
+    commitsScanned: 0,
     referencedAdrNumbers: [],
     resolvedAdrNumbers: [],
     satisfied: true,
@@ -35,19 +35,18 @@ describe("evaluateAdrGovernancePolicy", () => {
     expect(result.rationale).toContain("- specs/decisions/0022-new-decision.md")
   })
 
-  it("passes when a changeset entry references an existing ADR", () => {
+  it("passes when a commit message references an existing ADR", () => {
     const result = evaluateAdrGovernancePolicy({
       evidence: evidence({
         governedFilesTouched: ["src/policy/run-policies.ts"],
         satisfied: true,
-        changesetPath: ".changeset/repo-contract.md",
+        commitsScanned: 2,
+        referencedAdrNumbers: ["0003"],
         resolvedAdrNumbers: ["0003"],
       }),
     })
     expect(result.outcome).toBe("pass")
-    expect(result.rationale).toContain(
-      ".changeset/repo-contract.md references existing ADR(s): 0003",
-    )
+    expect(result.rationale).toContain("a commit message references existing ADR(s): 0003")
   })
 
   it("fails and lists the governed files when nothing satisfies the check", () => {
@@ -55,28 +54,27 @@ describe("evaluateAdrGovernancePolicy", () => {
       evidence: evidence({
         governedFilesTouched: ["src/execution/spawn-check.ts", "src/policy/run-policies.ts"],
         satisfied: false,
-        changesetPath: ".changeset/repo-contract.md",
+        commitsScanned: 3,
       }),
     })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("2 file(s) under src/execution/ or src/policy/")
-    expect(result.rationale).toContain("in .changeset/repo-contract.md")
+    expect(result.rationale).toContain("none of the 3 commit message(s)")
     expect(result.rationale).toContain("- src/execution/spawn-check.ts")
     expect(result.rationale).toContain("- src/policy/run-policies.ts")
   })
 
-  it("fails without naming a changeset file when none was found", () => {
+  it("fails with commit-message guidance when nothing references an ADR", () => {
     const result = evaluateAdrGovernancePolicy({
       evidence: evidence({
         governedFilesTouched: ["src/policy/run-policies.ts"],
         satisfied: false,
-        changesetPath: undefined,
+        commitsScanned: 1,
       }),
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).not.toContain(" in undefined")
     expect(result.rationale).toContain(
-      'Add or amend an ADR under specs/decisions/, or reference one (e.g. "ADR 0003") in your changeset file.',
+      'Add or amend an ADR under specs/decisions/, or reference one (e.g. "ADR 0003") in a commit message on this branch.',
     )
   })
 })

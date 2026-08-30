@@ -1,0 +1,7 @@
+#!/bin/sh
+# repo-contract full pre-push gate -- the same self-assurance suite CI runs
+# (`npm run contract`, ~5-6 min). Bypass a draft / work-in-progress push with
+# `git push --no-verify`; CI still enforces the full suite on the PR.
+# See CONTRIBUTING.md and specs/decisions/0015-local-commit-and-push-gates.md.
+set -eu
+npm run contract

@@ -1,4 +1,7 @@
-import type { ApiContractEvidence } from "../scripts/api-contract/evidence-types.js"
+import type {
+  ApiContractEvidence,
+  RequiredReleaseLevel,
+} from "../scripts/api-contract/evidence-types.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 
@@ -12,44 +15,32 @@ interface ApiContractDeterminant {
   readonly impactUnknown: boolean
   readonly currentVersion: string
   readonly minimumVersionLine: string | undefined
-  readonly changesetLine: string
+  readonly requiredLevel: RequiredReleaseLevel | undefined
+  readonly declaredLevel: RequiredReleaseLevel
+  readonly commitsSatisfied: boolean | null
+  readonly commitsLine: string
+  readonly breakingChangePaths: readonly string[]
   readonly lowerTierLine: string | undefined
 }
 
-// Exhaustive over ChangesetEvidence["action"] with no fallback branch --
-// noImplicitReturns then makes a future action variant a compile error here
-// instead of a silently-blank rationale line, per ADR 0008's "removed" variant.
 /**
- * Renders the changeset action recorded in `evidence` as a single human-readable rationale line.
- * @param evidence - the api-contract check's evidence, whose `changeset.action` selects the wording.
- * @returns the rendered rationale line for the changeset action taken.
+ * Renders what the branch's commits declare vs. what the API diff requires, as one rationale line.
+ * @param evidence - the api-contract check's evidence.
+ * @returns the rendered "declared X / required Y" line.
  */
-function formatChangesetLine(evidence: ApiContractEvidence): string {
-  const changeset = evidence.changeset
-  switch (changeset.action) {
-    case "none":
-      return "No changeset action was needed."
-    case "created":
-      return `Changeset created: ${changeset.path ?? "(unknown path)"} (release level: ${changeset.effectiveReleaseLevel ?? changeset.requiredReleaseLevel ?? "unknown"}).`
-    case "updated": {
-      const human = changeset.humanReleaseLevel
-      const effective = changeset.effectiveReleaseLevel
-      const levels = human
-        ? ` Human release level: ${human}. Effective release level: ${effective ?? human}.`
-        : ""
-      return `Changeset updated: ${changeset.path ?? "(unknown path)"}.${levels}`
-    }
-    case "unchanged":
-      return `Changeset already up to date: ${changeset.path ?? "(unknown path)"}.`
-    case "removed":
-      return `Stale changeset removed: ${changeset.path ?? "(unknown path)"}.`
-  }
+function formatCommitsLine(evidence: ApiContractEvidence): string {
+  const { declaredLevel, analyzed, prTitleConsidered } = evidence.commits
+  const required = evidence.requiredLevel ?? "unknown"
+  const scope = prTitleConsidered
+    ? `${String(analyzed)} message(s) incl. the PR title`
+    : `${String(analyzed)} branch commit(s)`
+  return `Release level: ${scope} declare \`${declaredLevel}\`; the API diff requires \`${required}\`.`
 }
 
 /**
- * Reduces the raw api-contract evidence down to the fields the policy below actually branches on.
+ * Reduces the raw api-contract evidence down to the fields the policy below branches on.
  * @param evidence - the api-contract check's evidence to summarize.
- * @returns the determinant fields (summary, stale-literal explanations, impact, version lines) the policy evaluates.
+ * @returns the determinant fields the policy evaluates.
  */
 function getApiContractDeterminant(evidence: ApiContractEvidence): ApiContractDeterminant {
   return {
@@ -63,7 +54,13 @@ function getApiContractDeterminant(evidence: ApiContractEvidence): ApiContractDe
       evidence.minimumRequiredVersion !== undefined
         ? `Minimum required version if released now: ${evidence.minimumRequiredVersion}.`
         : undefined,
-    changesetLine: formatChangesetLine(evidence),
+    requiredLevel: evidence.requiredLevel,
+    declaredLevel: evidence.commits.declaredLevel,
+    commitsSatisfied: evidence.commits.satisfied,
+    commitsLine: formatCommitsLine(evidence),
+    breakingChangePaths: evidence.diff
+      .filter((change) => change.compatibility === "breaking")
+      .map((change) => change.path),
     // Informational only -- never affects impact/requiredLevel/minimumRequiredVersion
     // (ADR 0008) -- surfaced regardless of outcome.
     lowerTierLine:
@@ -74,15 +71,14 @@ function getApiContractDeterminant(evidence: ApiContractEvidence): ApiContractDe
 }
 
 /**
- * Under this repository's real release workflow (Changesets), `package.json`'s version stays at
- * the last-released value throughout normal development -- comparing it against
- * `evidence.minimumRequiredVersion` during a feature PR would spuriously fail almost every time,
- * since the version genuinely isn't meant to move until a separate, later "Version Packages" PR
- * bumps it. So this policy is advisory (pass/warn, reporting what the check did to a Changesets
- * file) rather than gating on that comparison -- with exactly one exception: a
- * `schema-version-literal-stale` finding is a genuine internal defect (a schema's shape changed
- * without its own version literal being bumped, per VERSIONING.md's own policy), not a
- * "not released yet" false positive, and always fails.
+ * Versioning is Conventional-Commits-driven (ADR 0008): release-please derives the version from
+ * the commit types, so this check can and does **gate** -- it fails a PR whose commits declare a
+ * smaller bump than the public-API diff requires (a breaking API change committed as `fix:`,
+ * etc.). It also fails on an internal schema-version literal that changed shape without its own
+ * version marker being bumped, and warns (rather than gating) when the contract delta could not
+ * be classified deterministically -- that case still needs a human to confirm the declared bump.
+ * It cannot catch a behavioral breaking change with an unchanged type signature; that remains a
+ * human-review concern (see ADR 0008's stated limitation).
  * @param root0 - the policy input.
  * @param root0.evidence - the api-contract check's evidence to evaluate.
  * @returns the pass/warn/fail outcome and its rationale.
@@ -105,6 +101,26 @@ export function evaluateApiContractPolicy({
     }
   }
 
+  if (determinant.commitsSatisfied === false) {
+    const breaking = determinant.breakingChangePaths
+    return {
+      outcome: "fail",
+      rationale: [
+        `Contract impact: ${determinant.summary}`,
+        "",
+        determinant.commitsLine,
+        ...(breaking.length > 0
+          ? ["", `Breaking public-API change(s): ${breaking.map((p) => `\`${p}\``).join(", ")}.`]
+          : []),
+        "",
+        `The commits on this branch do not declare a \`${determinant.requiredLevel ?? "?"}\` ` +
+          `release. Add \`!\` after the type (e.g. \`feat!:\`) or a \`BREAKING CHANGE:\` footer ` +
+          `to the commit that makes this change, so release-please bumps the version correctly.`,
+        ...(determinant.lowerTierLine ? ["", determinant.lowerTierLine] : []),
+      ].join("\n"),
+    }
+  }
+
   if (determinant.impactUnknown) {
     return {
       outcome: "warn",
@@ -112,8 +128,8 @@ export function evaluateApiContractPolicy({
         `Contract impact: ${determinant.summary}`,
         "",
         `The public contract could not be deterministically classified, so no minimum required ` +
-          `version can be established. package.json currently declares ${determinant.currentVersion}. ` +
-          "Manual review -- and, if appropriate, a hand-authored changeset -- is required.",
+          `level can be established. The branch's commits declare \`${determinant.declaredLevel}\`. ` +
+          `Manually confirm that is an appropriate bump for this change.`,
         ...(determinant.lowerTierLine ? ["", determinant.lowerTierLine] : []),
       ].join("\n"),
     }
@@ -125,7 +141,7 @@ export function evaluateApiContractPolicy({
       `Contract impact: ${determinant.summary}`,
       "",
       ...(determinant.minimumVersionLine ? [determinant.minimumVersionLine] : []),
-      determinant.changesetLine,
+      determinant.commitsLine,
       ...(determinant.lowerTierLine ? ["", determinant.lowerTierLine] : []),
     ].join("\n"),
   }
@@ -133,9 +149,10 @@ export function evaluateApiContractPolicy({
 
 // API Extractor is kept entirely internal to scripts/api-contract/ -- see
 // specs/decisions/0008-api-contract-compatibility-gate.md.
-// check.ts owns contract extraction/diffing/impact/minimum version and
-// changeset maintenance; the policy above only interprets its evidence,
-// never inspects TypeScript/API Extractor/source/Git itself.
+// check.ts owns contract extraction/diffing/impact/minimum-level derivation and
+// compares the required level against what the branch's Conventional Commits
+// (and, in CI, the PR title) declare; the policy above only interprets its
+// evidence, never inspects TypeScript/API Extractor/source/Git itself.
 export const apiContract: CheckDefinitionConfig = {
   run: ["tsx", "scripts/api-contract/check.ts", "--release-tag=public"],
   output: { format: "json" },

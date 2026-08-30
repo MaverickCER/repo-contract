@@ -24,9 +24,11 @@ import {
   sha256,
   writeBaselineFiles,
 } from "./baseline-store.js"
-import { applyChangeset } from "./changeset-manager.js"
 import type { AssignabilityQuery, ResolveAssignability } from "./compatibility-classifier.js"
 import { classifyContractChanges } from "./compatibility-classifier.js"
+import { declaredLevelFromCommits } from "./conventional-commits.js"
+import { rankAtLeast } from "./levels.js"
+import { readBranchCommits } from "../git-commits.js"
 import type {
   ApiContractEvidence,
   ApiContractSnapshot,
@@ -57,6 +59,18 @@ function parseReleaseTagArg(): ReleaseTagLevel {
   const arg = process.argv.find((a) => a.startsWith("--release-tag="))
   const value = arg?.slice("--release-tag=".length)
   return value === "beta" || value === "alpha" ? value : "public"
+}
+
+/**
+ * The PR title, when running in CI on a pull request -- from `--pr-title=<title>` or the
+ * `PR_TITLE` env var (either may be set by `.github/workflows/ci.yml`). Under a squash merge
+ * the PR title becomes the sole commit on `main`, so it must count toward the declared bump.
+ * @returns the PR title, or `undefined` when not supplied (the local / merge-commit case).
+ */
+function parsePrTitleArg(): string | undefined {
+  const arg = process.argv.find((a) => a.startsWith("--pr-title="))
+  const value = arg?.slice("--pr-title=".length) ?? process.env.PR_TITLE
+  return value !== undefined && value.trim().length > 0 ? value : undefined
 }
 
 /**
@@ -114,7 +128,8 @@ async function loadPackageFromText(text: string) {
  * (already built) and a `tsconfig.json`, matching this repository's own layout convention.
  * @param root - Path to the package's project folder; must contain `dist/index.d.ts` and `tsconfig.json`.
  * @param releaseTag - The minimum release tag (`public`/`beta`/`alpha`) to include in the comparison.
- * @returns The complete evidence for this run -- snapshots, diff, impact, required level, and changeset outcome.
+ * @returns The complete evidence for this run -- snapshots, diff, impact, required level, and the
+ *   level the branch's commits declare vs. that requirement.
  */
 export async function runApiContractCheck(
   root: string,
@@ -163,7 +178,7 @@ export async function runApiContractCheck(
       minimumRequiredVersion: "0.1.0",
       currentVersion: packageJson.version,
       summary: summarizeChanges([], "unchanged", true),
-      changeset: { action: "none", generatedSectionUpdated: false },
+      commits: { analyzed: 0, prTitleConsidered: false, declaredLevel: "none", satisfied: null },
     }
 
     await writeBaselineFiles(root, {
@@ -269,16 +284,17 @@ export async function runApiContractCheck(
 
     const summary = summarizeChanges(diff, impact, false)
 
-    const changeset = await applyChangeset({
-      root,
-      packageName: packageJson.name,
-      impact,
-      requiredLevel,
-      diff,
-      lowerTierDiff,
-      summary,
-      apiJsonHash: currentSnapshot.apiJsonHash,
-    })
+    // Versioning is Conventional-Commits-driven (ADR 0008): the required level must be met by
+    // what the branch's commits -- plus the PR title, under a squash merge -- actually declare.
+    const prTitle = parsePrTitleArg()
+    const commitMessages = await readBranchCommits(root, "origin/main", prTitle)
+    const declaredLevel = declaredLevelFromCommits(commitMessages)
+    const commits = {
+      analyzed: commitMessages.length,
+      prTitleConsidered: prTitle !== undefined,
+      declaredLevel,
+      satisfied: requiredLevel === undefined ? null : rankAtLeast(declaredLevel, requiredLevel),
+    }
 
     evidence = {
       initialBaseline: false,
@@ -297,7 +313,7 @@ export async function runApiContractCheck(
       baselineVersion: baseline.meta.packageVersion,
       currentVersion: packageJson.version,
       summary,
-      changeset,
+      commits,
     }
   }
 

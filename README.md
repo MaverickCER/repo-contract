@@ -86,6 +86,8 @@ npm install --save-dev repo-contract
 
 Requires Node.js `>=20.0.0`.
 
+While repo-contract is pre-1.0, pin a tilde range (`"repo-contract": "~0.1.0"`): a `0.x` **minor** bump can carry a breaking change to the Stable tier (see [VERSIONING.md](VERSIONING.md)), so read the [CHANGELOG](CHANGELOG.md)'s breaking-changes notes on every minor upgrade, not just majors.
+
 `yaml` is an optional peer dependency, needed only if a check requests `output: { format: "yaml" }`:
 
 ```sh
@@ -104,6 +106,10 @@ repo-contract spawns processes and reads `process.env` — it is server/CLI-only
 | Browser                                    | No — this package executes local processes                                                                                                                                           |
 
 See [ADR 0011](specs/decisions/0011-bun-and-deno-runtime-support.md) for what "tested" covers here and why.
+
+### Accessibility
+
+repo-contract has no user interface. It produces machine-readable `Evidence`/`Verdict` objects and typed errors; any rendering — a terminal summary, a CI annotation, a dashboard — is the consumer's surface, and WCAG / accessibility conformance applies there, not here.
 
 ## Quick start
 
@@ -948,7 +954,7 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, the release process, and how this repository's own `repo-contract.config.ts` uses the package to validate itself.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and how this repository's own `repo-contract.config.ts` uses the package to validate itself, and [RELEASING.md](RELEASING.md) for the release process.
 
 ## License
 

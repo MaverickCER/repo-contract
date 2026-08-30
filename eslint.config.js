@@ -118,7 +118,7 @@ export default tseslint.config(
         // src/index.ts.
         { type: "presets", pattern: "src/presets" },
         // checks/ (including checks/shared/), scripts/ (including its
-        // api-contract/architecture/changeset-docs subdirectories), and
+        // api-contract/architecture/adr-governance subdirectories), and
         // eslint-rules/ are each one architectural unit -- none needs a
         // finer internal boundary than "the whole tree participates in the
         // policies below".
@@ -370,7 +370,13 @@ export default tseslint.config(
   {
     // Plain ESM scripts import-x can resolve with plain Node resolution --
     // no TS build to defer to, so `import-x/named` stays on here.
-    files: ["scripts/**/*.mjs", "eslint-rules/**/*.mjs", "stryker.config.mjs", "eslint.config.js"],
+    files: [
+      "scripts/**/*.mjs",
+      "eslint-rules/**/*.mjs",
+      "stryker.config.mjs",
+      "commitlint.config.mjs",
+      "eslint.config.js",
+    ],
     plugins: { "import-x": importXPlugin },
     rules: {
       ...importXConfigs.recommended.rules,
@@ -486,7 +492,7 @@ export default tseslint.config(
     // scripts/run-mutation.mjs and scripts/run-test-category.mjs propagate
     // a spawned child's real exit code from inside its `"exit"` event
     // callback -- not something `throw` can do from there.
-    files: ["scripts/**/*.mjs", "test/**/*.ts"],
+    files: ["scripts/**/*.mjs", "scripts/**/*.ts", "test/**/*.ts"],
     plugins: { n },
     rules: {
       "n/no-sync": "off",
@@ -548,7 +554,7 @@ export default tseslint.config(
     // caller-supplied root threaded through internal function calls --
     // never from network/request input, which is the actual vulnerability
     // this rule exists to catch. These are one-shot local tooling scripts
-    // (build the package, generate a schema, diff a changeset directory),
+    // (build the package, generate a schema, diff against a base branch),
     // not a service accepting untrusted filenames.
     files: ["scripts/**/*.ts", "scripts/**/*.mjs", "eslint-rules/**/*.mjs"],
     plugins: { "secure-coding": secureCoding, security },
@@ -742,7 +748,6 @@ export default tseslint.config(
       "scripts/api-contract/update-baseline.ts",
       "scripts/api-docs/check.ts",
       "scripts/api-docs/generate.ts",
-      "scripts/changeset-docs/check.ts",
       "scripts/security-network/scan.ts",
       "scripts/suppression-governance/check.ts",
     ],
@@ -832,11 +837,18 @@ export default tseslint.config(
     },
   },
   {
-    // stryker.config.mjs and eslint.config.js are root-level, plain-ESM
-    // config files with the exact same linting needs as scripts/**/*.mjs
-    // below (no type-aware rules, just recommended JS rules against
-    // Node/ESM), so they share this block rather than getting one each.
-    files: ["scripts/**/*.mjs", "eslint-rules/**/*.mjs", "stryker.config.mjs", "eslint.config.js"],
+    // stryker.config.mjs, commitlint.config.mjs and eslint.config.js are
+    // root-level, plain-ESM config files with the exact same linting needs
+    // as scripts/**/*.mjs below (no type-aware rules, just recommended JS
+    // rules against Node/ESM), so they share this block rather than getting
+    // one each.
+    files: [
+      "scripts/**/*.mjs",
+      "eslint-rules/**/*.mjs",
+      "stryker.config.mjs",
+      "commitlint.config.mjs",
+      "eslint.config.js",
+    ],
     extends: [js.configs.recommended],
     languageOptions: {
       parserOptions: { sourceType: "module" },

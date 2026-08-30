@@ -1,0 +1,73 @@
+name: Bug report
+description: Something in repo-contract behaves differently than documented.
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: skim the
+        [README](https://github.com/maverickcer/repo-contract#readme) and the
+        [API report](https://github.com/maverickcer/repo-contract/blob/main/docs/api-report/repo-contract.api.md),
+        and search existing issues. For a usage question rather than a bug, open a
+        [Discussion](https://github.com/maverickcer/repo-contract/discussions) instead. For a
+        security vulnerability, follow
+        [SECURITY.md](https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md) — do
+        not file it here.
+
+  - type: input
+    id: version
+    attributes:
+      label: repo-contract version
+      placeholder: e.g. 0.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Node.js
+        - Bun
+        - Deno
+    validations:
+      required: true
+
+  - type: input
+    id: runtime-version
+    attributes:
+      label: Runtime version and OS
+      description: See the README's runtime support matrix for what is tested.
+      placeholder: e.g. Node.js 20.11.0 on Windows 11 / macOS 14 / Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: >
+        The smallest `repo-contract.config.ts` (or `runRepoContract` call) that shows the
+        problem. A repro is the single biggest lever on how fast this gets fixed.
+      render: ts
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected, and where the docs led you to expect it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: >
+        What happened instead. Include the relevant `Evidence`/`Verdict` fields, error
+        `code`/`message`, or console output — trim anything sensitive first.
+    validations:
+      required: true

@@ -83,19 +83,19 @@ Performance tests, Golden/snapshot contracts, Git/repository guardrails, Release
 preserved unchanged and not repeated here — see the repo-contract checks list in
 `repo-contract.config.ts` for those.
 
-| Verification                 | Semantic question                                                                                           | Tool                                                            | Execution boundary                                                            | Coverage                                                      | Evidence                               | repo-contract check      |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------- | ------------------------ |
-| Unit                         | Does isolated behavior satisfy its examples/contracts?                                                      | Vitest                                                          | `test/unit/**`                                                                | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-unit`              |
-| Integration                  | Do internal components compose correctly?                                                                   | Vitest                                                          | `test/integration/**`                                                         | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-integration`       |
-| Property (incl. model-based) | Do generalized invariants hold over generated inputs?                                                       | Vitest + fast-check                                             | `test/property/**`                                                            | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-property`          |
-| E2E / package-acceptance     | Does the built package work as a consumer would use it?                                                     | Vitest + real subprocesses, against `dist/`                     | `test/e2e/**`                                                                 | No                                                            | JSON (Vitest `--reporter=json`)        | `test-e2e`               |
-| Architecture                 | Does the production dependency graph obey architectural constraints?                                        | dependency-cruiser                                              | `src/**/*.ts` module graph (+ each Vitest config's own boundary)              | No                                                            | JSON (`ArchitectureEvidence`)          | `architecture`           |
-| Coverage                     | What proportion of the canonical source surface is exercised by the contributing test categories, in union? | istanbul-lib-coverage (merge) + `@vitest/coverage-v8`           | aggregate (reads only prior categories' artifacts)                            | N/A — this _is_ the measurement                               | JSON (`coverage-summary.json` total)   | `coverage`               |
-| Mutation                     | Do tests detect injected behavioral changes?                                                                | Stryker (running the fast Vitest suite per mutant)              | `src/**/*.ts` mutated, `vitest.config.ts`'s dev-aggregate suite as the oracle | No — a separate quality signal, not ordinary runtime coverage | JSON (Stryker's `json` reporter)       | `mutation`               |
-| API compatibility            | Did the public API change?                                                                                  | API Extractor + `scripts/api-contract/`                         | package API surface (`src/index.ts`'s curated barrel vs. committed baseline)  | No                                                            | JSON (`ApiContractEvidence`)           | `api-contract`           |
-| Changeset documentation      | Is every file this PR changed accounted for with a human-readable description?                              | `scripts/changeset-docs/`                                       | files changed relative to `--base` (default `origin/main`)                    | No                                                            | JSON (`ChangesetDocsEvidence`)         | `changeset-docs`         |
-| Suppression governance       | Is every static-analysis suppression directive centrally inventoried and justified against policy?          | TypeScript compiler scanner + `scripts/suppression-governance/` | governed source files (`find-source-files.ts`)                                | No                                                            | JSON (`SuppressionGovernanceEvidence`) | `suppression-governance` |
-| Security -- no network       | Does the shipped surface (src/**) avoid network-capable imports, globals, and unreviewed spawned commands?  | TypeScript compiler scanner + `scripts/security-network/`       | `src/**/*.ts`                                                                 | No                                                            | JSON (`NetworkScanEvidence`)           | `security-network`       |
+| Verification                 | Semantic question                                                                                           | Tool                                                            | Execution boundary                                                                                                    | Coverage                                                      | Evidence                               | repo-contract check      |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------- | ------------------------ |
+| Unit                         | Does isolated behavior satisfy its examples/contracts?                                                      | Vitest                                                          | `test/unit/**`                                                                                                        | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-unit`              |
+| Integration                  | Do internal components compose correctly?                                                                   | Vitest                                                          | `test/integration/**`                                                                                                 | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-integration`       |
+| Property (incl. model-based) | Do generalized invariants hold over generated inputs?                                                       | Vitest + fast-check                                             | `test/property/**`                                                                                                    | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-property`          |
+| E2E / package-acceptance     | Does the built package work as a consumer would use it?                                                     | Vitest + real subprocesses, against `dist/`                     | `test/e2e/**`                                                                                                         | No                                                            | JSON (Vitest `--reporter=json`)        | `test-e2e`               |
+| Architecture                 | Does the production dependency graph obey architectural constraints?                                        | dependency-cruiser                                              | `src/**/*.ts` module graph (+ each Vitest config's own boundary)                                                      | No                                                            | JSON (`ArchitectureEvidence`)          | `architecture`           |
+| Coverage                     | What proportion of the canonical source surface is exercised by the contributing test categories, in union? | istanbul-lib-coverage (merge) + `@vitest/coverage-v8`           | aggregate (reads only prior categories' artifacts)                                                                    | N/A — this _is_ the measurement                               | JSON (`coverage-summary.json` total)   | `coverage`               |
+| Mutation                     | Do tests detect injected behavioral changes?                                                                | Stryker (running the fast Vitest suite per mutant)              | `src/**/*.ts` mutated, `vitest.config.ts`'s dev-aggregate suite as the oracle                                         | No — a separate quality signal, not ordinary runtime coverage | JSON (Stryker's `json` reporter)       | `mutation`               |
+| API compatibility            | Do the branch's commits declare a SemVer bump ≥ what the public-API change requires?                        | API Extractor + `scripts/api-contract/`                         | package API surface (`src/index.ts`'s curated barrel vs. committed baseline), and `origin/main..HEAD` commit messages | No                                                            | JSON (`ApiContractEvidence`)           | `api-contract`           |
+| Commit-message format        | Is every commit on the branch a valid Conventional Commit?                                                  | commitlint + `@commitlint/config-conventional`                  | `origin/main..HEAD`                                                                                                   | No                                                            | exit code                              | `commitlint`             |
+| Suppression governance       | Is every static-analysis suppression directive centrally inventoried and justified against policy?          | TypeScript compiler scanner + `scripts/suppression-governance/` | governed source files (`find-source-files.ts`)                                                                        | No                                                            | JSON (`SuppressionGovernanceEvidence`) | `suppression-governance` |
+| Security -- no network       | Does the shipped surface (src/**) avoid network-capable imports, globals, and unreviewed spawned commands?  | TypeScript compiler scanner + `scripts/security-network/`       | `src/**/*.ts`                                                                                                         | No                                                            | JSON (`NetworkScanEvidence`)           | `security-network`       |
 
 Every row above with its own `###` section below is detailed there, including the exact command to
 run it alone (`npm run test:unit`, etc. — see "Execution layers"). Coverage, Mutation, and API compatibility keep
@@ -228,32 +228,28 @@ changed (see "Coverage" below) — its evidence shape and the `coverage` check's
   warns on warn/info-only dependency-graph findings; passes otherwise.
 - **CI**: its own explicit step, early in the `verify` job (cheap, no build required).
 
-### Changeset documentation — `changeset-docs`
+### Commit-message format — `commitlint`
 
-- **Establishes**: a deliberately different semantic question from API compatibility's "did the
-  public API change" (see specs/decisions/0010-changeset-adr-and-pr-documentation-discipline.md) — is every file this
-  PR changed, relative to its base branch, accounted for with a human-readable description? The check
-  maintains a `### Changed Files` section inside the same `.changeset/*.md` file `api-contract` may
-  also be maintaining (the two agree on which single file via the shared
-  `scripts/changeset-file-locator.ts`), one row per changed file, reconciled every run: a row's
-  description is preserved verbatim across runs as long as its file is still part of the diff
-  (including across a detected rename), added fresh (as a placeholder) for a newly-changed file, and
-  dropped entirely once its file is no longer part of the diff.
-- **Does not establish**: anything about SemVer or release level -- this check has no opinion on
-  release level whatsoever and never touches the frontmatter level api-contract or a human owns; it
-  also does not establish anything about the _correctness_ of a description, only its presence.
-- **Files executed**: none in the runtime sense -- `git diff --name-status`/`--numstat` against
-  `--base` (default `origin/main`), text-level reconciliation of one Markdown file.
-- **Run alone**: `tsx scripts/changeset-docs/check.ts --base=origin/main`.
-- **Coverage contribution**: no -- no test execution, nothing to instrument.
-- **Evidence**: `ChangesetDocsEvidence` (`scripts/changeset-docs/evidence-types.ts`) -- `rows`, each
-  with its description (`undefined` while still a placeholder), and `allDescribed`, the single fact
-  the policy gates on.
-- **Policy**: `evaluateChangesetDocsPolicy` -- fails listing exactly which file paths still carry the
-  placeholder description; passes otherwise (including trivially when nothing changed relative to the
-  base).
-- **CI**: part of `npm run contract`, alongside `api-contract`; a direct push to `main` (post-merge)
-  trivially yields zero changed files against itself, so no `pull_request`-only conditional is needed.
+- **Establishes**: is every commit on `origin/main..HEAD` a valid Conventional Commit? Since
+  Conventional Commits are the sole versioning input (release-please derives the bump + changelog
+  from them, and `api-contract` gates on the bump they declare — see
+  specs/decisions/0008-api-contract-compatibility-gate.md), a malformed message is a real defect,
+  not a style nit.
+- **Does not establish**: whether the subject actually describes the user-visible impact
+  (human-review concern), or whether the declared bump is _sufficient_ for the API change — that
+  is `api-contract`'s job.
+- **Files executed**: none in the runtime sense — `commitlint --from origin/main --to HEAD`
+  reads git history.
+- **Run alone**: `npm run contract -- commitlint`.
+- **Coverage contribution**: no — no test execution, nothing to instrument.
+- **Evidence**: exit code only (commitlint has no stable JSON output; the `commitlint` preset
+  reads its plain-text report the same way the `format`/`typecheck` presets do).
+- **Policy**: `commitlint()` preset — passes on exit 0, fails on a non-zero exit with the tool's
+  own report as the rationale.
+- **CI**: part of `npm run contract` in the `contract` job (which checks out with
+  `fetch-depth: 0` so `origin/main` resolves); a direct push to `main` post-merge yields an empty
+  range and passes trivially. The PR title is also linted by a separate GitHub Action
+  (`pr-title` job) as a squash-merge safeguard.
 
 ### Suppression governance — `suppression-governance`
 
@@ -263,7 +259,7 @@ changed (see "Coverage" below) — its evidence shape and the `coverage` check's
   enough named justification to satisfy a repository-owned, per-domain/per-rule policy? Inline disable
   comments remain allowed; what this check guarantees is that none of them can silently bypass a
   guardrail without leaving a durable, reviewable, policy-gated record. Two strictly separated layers,
-  the same split as `architecture`/`changeset-docs`: `scripts/suppression-governance/` discovers
+  the same split as `architecture`: `scripts/suppression-governance/` discovers
   suppression comments (via the TypeScript compiler's own scanner, not by shelling out to ESLint — this
   check must be able to audit a suppression that caused ESLint itself to be bypassed) and synchronizes
   the registry (new suppressions get empty `justification`/`alternatives`/`remediation`/`category`/

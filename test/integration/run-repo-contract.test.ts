@@ -152,6 +152,33 @@ describe("runRepoContract", () => {
     ).rejects.toThrow(PolicyThrewError)
   })
 
+  it("a check's env value never surfaces in the thrown PolicyThrewError's own message (SECURITY.md)", async () => {
+    const secret = "env-secret-must-not-leak-9f8e7d"
+    let thrown: unknown
+    try {
+      await runRepoContract({
+        checks: {
+          broken: {
+            run: [node, "-e", "process.exit(0)"],
+            inheritEnv: false,
+            env: { DEPLOY_TOKEN: secret },
+            policy: () => {
+              throw new Error("policy bug")
+            },
+          },
+        },
+      })
+    } catch (error) {
+      thrown = error
+    }
+    expect(thrown).toBeInstanceOf(PolicyThrewError)
+    // The message repo-contract authors carries only the check id and fixed
+    // text. (`cause` deliberately preserves the original throw verbatim for
+    // the consumer -- that is not a leak of anything repo-contract added.)
+    expect((thrown as PolicyThrewError).message).not.toContain(secret)
+    expect((thrown as PolicyThrewError).message).toContain("broken")
+  })
+
   it("respects an explicit concurrency setting", async () => {
     const { verdict } = await runRepoContract({
       checks: {

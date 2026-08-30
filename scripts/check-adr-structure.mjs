@@ -2,7 +2,8 @@
 // structurally well-formed as it grows -- never executes anything, only reads the filesystem and
 // each file's own text.
 //
-// Three checks, matching CONTRIBUTING.md's "Adding an Architecture Decision Record" section:
+// Three checks, matching what `npm run adr:new` (scripts/adr-new.mjs) scaffolds and
+// CONTRIBUTING.md's "Architecture Decision Records" section describes:
 //   1. Every file's name matches NNNN-kebab-title.md.
 //   2. No two files share the same NNNN number.
 //   3. Every file contains the five required section headings.
@@ -11,10 +12,9 @@
 // to detect stale prose, counts, or paths inside an ADR's own body -- that's not mechanically
 // checkable, and is exactly why this repository's own documentation-vs-enforcement audit required
 // a human-driven pass rather than a tool run. It also evaluates the *current* specs/decisions/
-// tree only, never git history -- a numbering gap is accepted by design (CONTRIBUTING.md's own
-// numbering rule anticipates a number being reserved and then abandoned without a file ever
-// existing for it), never treated as a violation. See
-// specs/decisions/0010-changeset-adr-and-pr-documentation-discipline.md.
+// tree only, never git history -- a numbering gap is accepted by design (scripts/adr-new.mjs
+// takes highest-existing + 1, so a number reserved and then abandoned without a file ever
+// existing for it leaves a permanent gap), never treated as a violation.
 //
 // Invoked by scripts/check-architecture.mjs as a third, clearly separate section of the
 // `architecture` check's evidence -- not because ADR structure is architecture in the
