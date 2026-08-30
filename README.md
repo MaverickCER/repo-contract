@@ -876,6 +876,12 @@ Point a `precommit`, `prepublishOnly`, or CI job at the same command to enforce 
 
 This repository uses its own `repo-contract.config.ts` to validate itself. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Example: layered organizational governance
+
+repo-contract is the mechanism, not the policy owner. An organization can express its engineering standard for a project type **once** -- as an internal contract package that wraps repo-contract and owns the executors -- and start every project of that type from a matching boilerplate that extends the shared configuration rather than redefining it.
+
+[`examples/`](examples/README.md) is a minimal, runnable end-to-end wiring of that model: an `internal-boilerplate-contract` package (three read-only checks, exported ESLint/Prettier/TypeScript baselines, a reusable CI workflow) and a trivial `boilerplate` that consumes it. See the [walkthrough](examples/README.md) and [ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md) for the architecture.
+
 ## Enterprise / locked-down environments
 
 The package's entire shipped surface (`src/**` -- the programmatic API and every published preset) has:
