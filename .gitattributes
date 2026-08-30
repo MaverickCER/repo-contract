@@ -1,0 +1,18 @@
+# Normalize every text file to LF in the repository and on checkout, on
+# every platform. Without this, a Windows checkout (core.autocrlf=true by
+# default on the GitHub windows-latest runner) rewrites every file to CRLF,
+# and `prettier --check .` -- whose .prettierrc.json pins `endOfLine: "lf"`
+# -- then flags all ~300 files and fails `verify (windows-latest)`. Keeping
+# the normalization here rather than in CI also gives Windows contributors
+# the same LF working tree the check expects.
+* text=auto eol=lf
+
+# Machine-generated snapshots that are compared byte-for-byte against a
+# fresh regeneration -- API Extractor (docs/api-report, via scripts/api-docs)
+# and the api-contract baseline (.repo-contract, via
+# scripts/api-contract/baseline-store.ts) both emit CRLF unconditionally, so
+# git must leave their line endings untouched or every regeneration diff
+# breaks. Mirrors these paths' existing .prettierignore / eslint ignore
+# entries.
+/.repo-contract/**  -text
+/docs/api-report/**  -text
