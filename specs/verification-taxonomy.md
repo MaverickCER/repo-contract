@@ -96,6 +96,7 @@ preserved unchanged and not repeated here — see the repo-contract checks list 
 | Commit-message format        | Is every commit on the branch a valid Conventional Commit?                                                  | commitlint + `@commitlint/config-conventional`                  | `origin/main..HEAD`                                                                                                   | No                                                            | exit code                              | `commitlint`             |
 | Suppression governance       | Is every static-analysis suppression directive centrally inventoried and justified against policy?          | TypeScript compiler scanner + `scripts/suppression-governance/` | governed source files (`find-source-files.ts`)                                                                        | No                                                            | JSON (`SuppressionGovernanceEvidence`) | `suppression-governance` |
 | Security -- no network       | Does the shipped surface (src/**) avoid network-capable imports, globals, and unreviewed spawned commands?  | TypeScript compiler scanner + `scripts/security-network/`       | `src/**/*.ts`                                                                                                         | No                                                            | JSON (`NetworkScanEvidence`)           | `security-network`       |
+| GitHub Actions               | Are this repository's own workflow files free of correctness and script-injection defects?                  | actionlint (via the `github-actionlint` npm wrapper)            | `.github/workflows/*.{yml,yaml}`                                                                                      | No                                                            | JSON (`GitHubActionsEvidence`)         | `github-actions`         |
 
 Rows with their own `###` section below are detailed there, including the exact command to run
 each alone (`npm run test:unit`, etc. — see "Execution layers"). Mutation, Coverage, and API
@@ -330,6 +331,35 @@ is documented under "Coverage architecture" below; API compatibility's commit-ba
 - **Policy**: `evaluateSecurityNetworkPolicy` -- passes only when `findings` is empty; fails
   otherwise, listing every finding's location and explanation.
 - **CI**: part of `npm run contract`. No `dependsOn` -- independent of every other check.
+
+### GitHub Actions — `github-actions`
+
+- **Establishes**: that this repository's own workflow files (`.github/workflows/*.{yml,yaml}`)
+  pass [actionlint](https://github.com/rhysd/actionlint) -- workflow syntax and semantics, expression
+  and `if:` correctness, `shellcheck` of `run:` blocks, and script-injection patterns (untrusted
+  `github.event.*` / `github.head_ref` used directly in `run:`). This is a mature external analyzer
+  integrated into the evidence/verdict model rather than a reimplemented workflow scanner -- the
+  general pattern ADR 0010
+  (`decisions/0010-review-driven-contracts-and-shared-internal-system-contracts`) describes for
+  adopting an established capability (the tool itself is a local choice, not fixed by that ADR).
+  actionlint performs the analysis; this check only decides how its findings participate in the
+  verdict.
+- **Does not establish**: that a workflow's _intent_ is correct, that a third-party action is
+  trustworthy, or the deeper security posture a dedicated security analyzer (e.g. `zizmor`) would
+  add. A repository-specific workflow requirement that actionlint does not cover (a
+  concurrency-group policy, say) would be its own explicit `repo-contract` rule, not part of this
+  check.
+- **Files executed**: none of this repository's code -- `actionlint` (a Go binary the
+  `github-actionlint` devDependency resolves and caches on first use, keeping the toolchain
+  `npm install`-only) statically analyzes the workflow YAML.
+- **Run alone**: `node scripts/github-actions/lint.mjs` (prints the JSON evidence).
+- **Coverage contribution**: no -- external static analysis, none of this package's code runs.
+- **Evidence**: `GitHubActionsEvidence` (`scripts/github-actions/evidence-types.ts`) -- `ok`
+  (whether actionlint ran at all), how many workflow files were scanned, and every finding
+  (`file`, `line`, `column`, `kind`, `message`).
+- **Policy**: `evaluateGitHubActionsPolicy` -- fails on any actionlint tool-infrastructure failure
+  or any finding; passes when the scan ran clean (or there are no workflow files).
+- **CI**: part of `npm run contract`. A pure reader -- no `dependsOn`, needs no build.
 
 ## Coverage
 

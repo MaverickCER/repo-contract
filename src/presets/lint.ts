@@ -89,15 +89,23 @@ export function lint(options: LintOptions = {}): CheckDefinitionConfig {
       }
 
       // Valid JSON of an unexpected shape (an ESLint formatter change, a
-      // primitive, a leading non-JSON line that still parses) must fail cleanly,
-      // not throw a TypeError out of `renderMessages` -- matching the other JSON
+      // primitive, an entry without a `messages` array) must fail cleanly, not
+      // throw a TypeError out of `renderMessages` -- matching the other JSON
       // presets' guards.
       const value: unknown = result.output.value
-      if (!Array.isArray(value)) {
+      if (
+        !Array.isArray(value) ||
+        !value.every(
+          (file): file is EslintResult =>
+            typeof file === "object" &&
+            file !== null &&
+            Array.isArray((file as { messages?: unknown }).messages),
+        )
+      ) {
         return { outcome: "fail", rationale: "ESLint output could not be parsed as JSON." }
       }
 
-      const results = value as readonly EslintResult[]
+      const results: readonly EslintResult[] = value
 
       const errorDetails = renderMessages(results, 2)
       const warningDetails = renderMessages(results, 1)

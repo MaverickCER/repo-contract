@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { arethetypeswrong } from "../../../src/presets/arethetypeswrong.js"
+import { arethetypeswrong, evaluateAttwReport } from "../../../src/presets/arethetypeswrong.js"
 import { enoentEvidence, fakeContext, fakeCheckEvidence } from "./fixtures.js"
 
 describe("arethetypeswrong preset", () => {
@@ -117,6 +117,38 @@ describe("arethetypeswrong preset", () => {
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toBe(
       "@arethetypeswrong/cli found 1 packaged type-resolution problem(s):\n- Bare",
+    )
+  })
+})
+
+describe("evaluateAttwReport", () => {
+  it.each([
+    ["null", null],
+    ["a primitive", 42],
+    ["a string", "nope"],
+  ])("fails with the invalid-report-data rationale (never throws) for %s", (_label, report) => {
+    expect(evaluateAttwReport(report)).toEqual({
+      outcome: "fail",
+      rationale: "@arethetypeswrong/cli produced invalid JSON report data.",
+    })
+  })
+
+  it("treats an object with no `problems` key as 0 problems", () => {
+    expect(evaluateAttwReport({})).toEqual({
+      outcome: "pass",
+      rationale: "@arethetypeswrong/cli found 0 packaged type-resolution problem(s).",
+    })
+  })
+
+  it("treats a non-object `problems` value as 0 problems rather than throwing", () => {
+    expect(evaluateAttwReport({ problems: "unexpected" }).outcome).toBe("pass")
+  })
+
+  it("skips non-object entries within a problem group", () => {
+    const result = evaluateAttwReport({ problems: { FalseCJS: [null, { kind: "FalseCJS" }] } })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toBe(
+      "@arethetypeswrong/cli found 1 packaged type-resolution problem(s):\n- FalseCJS",
     )
   })
 })

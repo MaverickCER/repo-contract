@@ -52,7 +52,15 @@ export const securityDeps: CheckDefinitionConfig = {
       return { outcome: "fail", rationale: "npm audit output could not be parsed as JSON." }
     }
 
-    const report = result.output.value as NpmAuditReport
+    // `output.success` only means `JSON.parse` didn't throw -- valid JSON of an
+    // unexpected shape (`null`, a primitive) must fail cleanly, not throw
+    // `.metadata` out of the policy.
+    const value: unknown = result.output.value
+    if (typeof value !== "object" || value === null) {
+      return { outcome: "fail", rationale: "npm audit produced invalid JSON report data." }
+    }
+
+    const report = value as NpmAuditReport
     const vulnerabilities = report.metadata?.vulnerabilities
 
     if (!vulnerabilities) {

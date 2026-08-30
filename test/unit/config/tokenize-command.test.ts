@@ -87,10 +87,6 @@ describe("tokenizeRunString", () => {
     // A lone carriage return (no accompanying \n) exercises the "\r" branch
     // of the newline check independently of the "\n" branch above.
     { label: "newline", input: "echo a\recho b" },
-    // A backslash before a newline is a shell line-continuation: rejected too,
-    // rather than consumed as an escape that would splice a literal newline in.
-    { label: "newline", input: "echo a\\\necho b" },
-    { label: "newline", input: "echo a\\\recho b" },
   ]
 
   it.each(operatorCases)(
@@ -105,6 +101,43 @@ describe("tokenizeRunString", () => {
       }
     },
   )
+
+  // Distinct from a bare unquoted newline: a backslash *before* the newline
+  // would be consumed as an escape (splicing a literal newline into the token
+  // and skipping the bare-newline rejection) if it weren't caught first, so it
+  // gets its own line-continuation-specific message.
+  it.each([
+    { label: "LF", input: "echo a\\\necho b" },
+    { label: "CR", input: "echo a\\\recho b" },
+  ])(
+    "rejects an unquoted backslash-$label line continuation with a distinct message",
+    ({ input }) => {
+      try {
+        tokenizeRunString(input, "check-id")
+        expect.unreachable(`expected tokenizeRunString to throw for: ${JSON.stringify(input)}`)
+      } catch (error) {
+        expect(error).toBeInstanceOf(InvalidCheckConfigError)
+        expect((error as InvalidCheckConfigError).checkId).toBe("check-id")
+        const message = (error as Error).message
+        // One assertion per concatenated fragment of the message, so a mutant that
+        // blanks any one of them is caught.
+        expect(message).toContain("unquoted line continuation (a backslash before a newline)")
+        expect(message).toContain('repo-contract never invokes a shell for string-form "run"')
+        expect(message).toContain('set "shell: true" to opt into real shell execution')
+        expect(message).not.toContain('unquoted "newline"')
+      }
+    },
+  )
+
+  it("rejects a bare unquoted newline with the newline message, not the line-continuation one", () => {
+    try {
+      tokenizeRunString("echo a\necho b", "check-id")
+      expect.unreachable("expected tokenizeRunString to throw")
+    } catch (error) {
+      expect((error as Error).message).toContain('unquoted "newline"')
+      expect((error as Error).message).not.toContain("line continuation")
+    }
+  })
 
   it("includes the checkId and a corrective suggestion in the rejection message", () => {
     try {

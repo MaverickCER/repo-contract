@@ -82,9 +82,12 @@ export function checkAdrStructure(root = DEFAULT_ROOT) {
           continue
         }
         if (inFence) continue
-        const headingMatch = /^(#{1,6})\s+(.+?)\s*$/.exec(line)
+        // `[ \t]+` then `\S.*` -- disjoint leading classes and no trailing quantifier, so there is
+        // no cross-quantifier backtracking (a lazy `.+?` before `\s*$` is the ReDoS-prone shape).
+        // The captured title keeps any trailing whitespace; `.trim()` below drops it.
+        const headingMatch = /^(#{1,6})[ \t]+(\S.*)$/.exec(line)
         if (!headingMatch || headingMatch[1].length !== 2) continue
-        const heading = `## ${headingMatch[2]}`
+        const heading = `## ${headingMatch[2].trim()}`
         if (REQUIRED_HEADINGS.includes(heading)) headingsFound.add(heading)
       }
       const missing = REQUIRED_HEADINGS.filter((heading) => !headingsFound.has(heading))
