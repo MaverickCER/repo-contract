@@ -1,0 +1,43 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/index.ts",
+    "src/presets/index.ts",
+    "scripts/*.mjs",
+    "scripts/schema-types.ts",
+    "scripts/api-contract/check.ts",
+    "scripts/api-contract/update-baseline.ts",
+    "scripts/api-docs/check.ts",
+    "repo-contract.config.ts",
+    "test/unit/execution/fixtures/sigint-cleanup.ts",
+    "test/unit/execution/fixtures/sigint-cleanup-queued.ts"
+  ],
+  "project": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "!test/unit/architecture/fixtures/**",
+    "!test/unit/security-network/fixtures/**",
+    "scripts/**/*.{mjs,ts}",
+    "checks/**/*.ts"
+  ],
+  "ignoreDependencies": [
+    "@danibram/crap4ts",
+    "@secretlint/secretlint-rule-preset-recommend",
+    "@types/shell-quote",
+    "jscpd",
+    "markdownlint-cli2",
+    "markdownlint-cli2-formatter-json",
+    "prettier",
+    "secretlint",
+    "tsx"
+  ],
+  "vitest": {
+    "config": [
+      "vitest.config.ts",
+      "vitest.unit.config.ts",
+      "vitest.integration.config.ts",
+      "vitest.property.config.ts",
+      "vitest.e2e.config.ts"
+    ]
+  }
+}

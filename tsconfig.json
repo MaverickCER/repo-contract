@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    // "DOM" is included only for ambient standard-API types (AbortSignal/
+    // AbortController) that the execution engine relies on -- Node implements
+    // these natively too; this is a type-only addition and never implies a
+    // runtime browser/DOM dependency. This package is Node-only by nature (it
+    // spawns child processes), so nothing here is meant to run in a browser.
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "noImplicitReturns": true,
+    // Load-bearing throughout the execution/parsing/policy layers -- argv
+    // arrays, matched-group arrays from regexes, and Record lookups are
+    // frequently genuinely absent (an empty argv, no capture group, an
+    // unconfigured check id), and this codebase's defensive runtime checks
+    // for that must be checked by the compiler too, not just trusted.
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "types": ["node"],
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src", "test", "scripts", "checks", "repo-contract.config.ts"],
+  "exclude": ["test/e2e/*/fixtures/**"]
+}
