@@ -1,15 +1,11 @@
 # repo-contract
 
-<!--
-[![CI](https://github.com/maverickcer/repo-contract/actions/workflows/ci.yml/badge.svg)](https://github.com/maverickcer/repo-contract/actions/workflows/ci.yml)
+[![CI](https://github.com/MaverickCER/repo-contract/actions/workflows/ci.yml/badge.svg)](https://github.com/MaverickCER/repo-contract/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
 [![License](https://img.shields.io/npm/l/repo-contract.svg)](LICENSE)
-[![Coverage](https://img.shields.io/badge/coverage-pending-lightgrey)]()
-[![Bundle size](https://img.shields.io/badge/gzip-%3C8KB-brightgreen)]()
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)]()
-[![Node](https://img.shields.io/node/v/repo-contract.svg)]()
-TODO(readme-badges): uncomment once the first version is published to npm and CI is live.
--->
+[![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25-brightgreen)](scripts/coverage-thresholds.mjs)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](tsconfig.json)
+[![Node](https://img.shields.io/node/v/repo-contract.svg)](package.json)
 
 **Turn your repository's engineering standards into enforceable contracts.**
 
