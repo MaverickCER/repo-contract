@@ -1,15 +1,12 @@
 import { defineConfig } from "tsup"
 
-// minifyWhitespace only -- strips comments/whitespace but leaves every
-// identifier intact, so dist/index.js stack traces still read like the
-// source. `dts: false` because declarations (with working declaration maps)
-// are emitted separately by `tsc -p tsconfig.build.json` and shimmed into
-// place by scripts/emit-dts-shims.mjs -- tsup's own dts pipeline can't
-// produce declaration maps.
-const esbuildOptions = (options: { minifyWhitespace?: boolean }): void => {
-  options.minifyWhitespace = true
-}
-
+// The bundle ships unminified -- esbuild's default pretty-printed output, with
+// real line breaks and indentation -- so the published dist/ reads like the
+// source and static analysers (Socket's `minifiedFile` alert, etc.) don't flag
+// it. `dts: false` because declarations (with working declaration maps) are
+// emitted separately by `tsc -p tsconfig.build.json` and shimmed into place by
+// scripts/emit-dts-shims.mjs -- tsup's own dts pipeline can't produce
+// declaration maps.
 export default defineConfig({
   name: "index",
   entry: { index: "src/index.ts", presets: "src/presets/index.ts" },
@@ -22,7 +19,6 @@ export default defineConfig({
   dts: false,
   sourcemap: true,
   treeshake: true,
-  esbuildOptions,
   // cross-spawn is the package's one runtime dependency -- bundle only our
   // own source and let npm resolve it normally, rather than inlining a copy.
   // yaml is an optional peerDependency, dynamically imported only when a
