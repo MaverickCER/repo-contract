@@ -4,12 +4,18 @@ name: API baseline
 # automatically, so it is no longer a manual post-release step (it was:
 # "after a release ships, run `npm run contract:baseline` and commit").
 #
-# Triggers only on release-please's own Release PR (its branch bumps
-# package.json, which is exactly the precondition `runUpdateBaseline` requires --
-# it refuses unless package.json's version is strictly greater than the current
-# baseline's). The regenerated baseline is committed straight onto that PR
-# branch, so it lands atomically with the version bump and CHANGELOG entry --
-# no direct push to protected `main`, no follow-up PR.
+# Runs only on release-please's own Release PR branch (which bumps package.json).
+# The regenerated baseline is committed straight onto that PR branch, so it lands
+# atomically with the version bump and CHANGELOG entry -- no direct push to
+# protected `main`, no follow-up PR.
+#
+# The job re-fires on every `synchronize` of that PR: its own baseline commit,
+# and every time release-please refreshes the PR because another change merged to
+# `main` while it sat open. That is fine -- `npm run contract:baseline` is
+# idempotent: it exits 0 and writes nothing once the baseline already carries
+# package.json's version and its contents match (it still re-writes if an
+# API-changing commit landed on the branch at the same version). See
+# scripts/api-contract/update-baseline.ts for the full outcome matrix.
 #
 # RELEASING.md documents `npm run contract:baseline` as the manual backstop if
 # this job is ever disabled.
@@ -54,12 +60,13 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+      # Idempotent: a no-op (exit 0, no file writes) once the baseline already
+      # carries package.json's version. See update-baseline.ts.
       - run: npm run contract:baseline
 
-      # A GITHUB_TOKEN push does not itself start another workflow run, which is
-      # fine here: the regenerated baseline is byte-identical to what the
-      # `api-contract` check would compare against, so its verdict on the PR is
-      # unchanged, and the Release PR is maintainer-merged regardless.
+      # When contract:baseline was a no-op the working tree is clean and the
+      # `git diff --quiet` guard below exits before committing -- so this job's
+      # own push (or any later re-run) never turns into a red check.
       - name: Commit the regenerated baseline
         env:
           # Passed through the environment rather than interpolated straight into
