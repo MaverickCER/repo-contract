@@ -27,6 +27,7 @@
 
 import spawn from "cross-spawn"
 import { mkdir, readdir, readFile, rm } from "node:fs/promises"
+import { pathToFileURL } from "node:url"
 
 const MARKDOWNLINT_REPORT_PATH = "reports/markdownlint.json"
 const REPORTS_DIR = "reports"
@@ -114,13 +115,18 @@ async function runMarkdownlint() {
 // transiently even though it is correct by construction. Exempt only this
 // repo's own version URLs rather than let a mid-release CI go red -- a
 // compare/tag link under any other owner (a fork, a typo) is still crawled.
-// The owner is matched case-insensitively via an inline `(?i:...)` group
-// because linkinator applies each `--skip` value as a bare `new RegExp(x)`
-// with no flags, while release-please writes GitHub's canonical `MaverickCER`
-// casing and package.json's own URLs use `maverickcer`.
-const LINKINATOR_SKIP_PATTERNS = [
+//
+// linkinator applies each `--skip` value as a bare `new RegExp(x)` (no flags,
+// unanchored, tested against the full href), so the pattern anchors the scheme
+// and host itself -- otherwise `https://evil.example/?x=github.com/maverickcer/
+// repo-contract/compare/` or `https://notgithub.com/maverickcer/...` would also
+// be skipped. The owner is spelled with per-letter `[Xx]` classes rather than
+// an inline `(?i:...)` group: release-please writes GitHub's canonical
+// `MaverickCER` casing while package.json's own URLs use `maverickcer`, and the
+// case-expanded form needs no modern-regex-engine support.
+export const LINKINATOR_SKIP_PATTERNS = [
   "security/advisories/new",
-  "github\\.com/(?i:maverickcer)/repo-contract/(compare|releases/tag)/",
+  "^https?://github\\.com/[Mm][Aa][Vv][Ee][Rr][Ii][Cc][Kk][Cc][Ee][Rr]/repo-contract/(compare|releases/tag)/",
 ]
 
 async function runLinkinator() {
@@ -151,8 +157,14 @@ async function runLinkinator() {
   }
 }
 
-const [markdownlint, linkinator] = await Promise.all([runMarkdownlint(), runLinkinator()])
+// Run the two tools only when invoked as a script (`node scripts/check-docs.mjs`,
+// as repo-contract.config.ts's `docs` check does) -- not when imported, so
+// test/unit/docs/ can pull in LINKINATOR_SKIP_PATTERNS without spawning
+// markdownlint + a live linkinator crawl.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const [markdownlint, linkinator] = await Promise.all([runMarkdownlint(), runLinkinator()])
 
-process.stdout.write(JSON.stringify({ markdownlint, linkinator }))
+  process.stdout.write(JSON.stringify({ markdownlint, linkinator }))
 
-process.exitCode = markdownlint.ok && linkinator.ok ? 0 : 1
+  process.exitCode = markdownlint.ok && linkinator.ok ? 0 : 1
+}
