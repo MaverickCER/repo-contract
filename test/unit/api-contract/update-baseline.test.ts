@@ -50,19 +50,20 @@ describe("runUpdateBaseline", () => {
     expect(meta.packageVersion).toBe("0.1.0")
   }, 30_000)
 
-  it("refuses when package.json's version has not been bumped past the existing baseline", async () => {
+  it("reports 'current' (a no-op, not an error) when the baseline already carries package.json's version", async () => {
     await writeFixtureSource(root, SOURCE, "fixture-pkg", "0.1.0")
     await runApiContractCheck(root, "public")
     commitAll("establish baseline")
 
-    // No version bump -- still 0.1.0.
+    // No version bump -- still 0.1.0. This is the shape every re-run of the
+    // api-baseline workflow after the first sees, so it must not fail.
     const before = await readFile(
       path.join(root, ".repo-contract/api-contract/baseline.meta.json"),
       "utf8",
     )
     const outcome = await runUpdateBaseline(root)
 
-    expect(outcome.status).toBe("refused")
+    expect(outcome.status).toBe("current")
     expect(outcome.message).toContain("0.1.0")
     const after = await readFile(
       path.join(root, ".repo-contract/api-contract/baseline.meta.json"),
@@ -71,14 +72,26 @@ describe("runUpdateBaseline", () => {
     expect(after).toBe(before)
   }, 30_000)
 
-  it("refuses when package.json's version is equal to (not strictly greater than) the existing baseline", async () => {
+  it("refuses when package.json's version is older than the baseline's (regenerating would roll it backwards)", async () => {
     await writeFixtureSource(root, SOURCE, "fixture-pkg", "1.0.0")
     await runApiContractCheck(root, "public")
     commitAll("establish baseline")
 
-    await writeFixtureSource(root, SOURCE, "fixture-pkg", "1.0.0")
+    await writeFixtureSource(root, SOURCE, "fixture-pkg", "0.9.0")
+    const before = await readFile(
+      path.join(root, ".repo-contract/api-contract/baseline.meta.json"),
+      "utf8",
+    )
+
     const outcome = await runUpdateBaseline(root)
+
     expect(outcome.status).toBe("refused")
+    expect(outcome.message).toContain("older")
+    const after = await readFile(
+      path.join(root, ".repo-contract/api-contract/baseline.meta.json"),
+      "utf8",
+    )
+    expect(after).toBe(before)
   }, 30_000)
 
   it("succeeds once package.json's version is strictly greater than the existing baseline, and updates it", async () => {
