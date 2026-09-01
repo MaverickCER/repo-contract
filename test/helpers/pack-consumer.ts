@@ -42,7 +42,7 @@ export function createConsumerFixture(tmpDirPrefix: string): ConsumerFixture {
   const consumerDir = mkdtempSync(path.join(tmpdir(), tmpDirPrefix))
 
   // packTarball() packs `packageRoot` into `consumerDir` with `--ignore-scripts` (so `npm pack`
-  // never triggers this package's own `prepare`/`npm run build`) and parses `npm pack --json`
+  // stays side-effect-free -- `dist/` is expected already built) and parses `npm pack --json`
   // tolerantly -- see scripts/npm-pack.mjs for why a bare `JSON.parse` was fragile, and why `npm`
   // needs platform-aware resolution here (this suite runs on windows-latest in CI).
   const { tarballPath } = packTarball(consumerDir, { cwd: packageRoot })

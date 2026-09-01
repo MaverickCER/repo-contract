@@ -12,17 +12,18 @@
 // scripts/check-docs.mjs) -- this repository's own CI runs on Windows too.
 //
 // Packs the tarball itself (`npm pack --ignore-scripts`) and hands attw the resulting .tgz path,
-// rather than using attw's own `--pack .` mode: attw's `--pack` runs a plain `npm pack` internally
+// rather than using attw's own `--pack .` mode. attw's `--pack` runs a plain `npm pack` internally
 // with no `--ignore-scripts` (confirmed: node_modules/@arethetypeswrong/cli/dist/index.js's own
-// pack call), which triggers this package's own `prepare` lifecycle script (`npm run build`) --
-// starting with `npm run clean`, which deletes `dist/` -- for the sole purpose of producing a
-// tarball this script immediately deletes again. Run as one reader among many concurrently
-// scheduled after the build barrier (repo-contract.config.ts), that mid-run `dist/` delete+rebuild
-// races every other concurrently-running reader that reads `dist/` (`test-e2e`'s own
-// `npm pack --ignore-scripts` chief among them) -- the same shared-mutable-state race ADR 0002
-// documents, just via a dependency's own internal side effect rather than this repository's code.
-// Packing here instead, exactly like `test/helpers/pack-consumer.ts` already does for the same
-// reason, removes the shared-state write entirely rather than trying to schedule around it.
+// pack call); `--ignore-scripts` here keeps that pack from running any future pack/prepare
+// lifecycle script this package might grow -- the sort that starts with `npm run clean` deleting
+// `dist/` for the sole purpose of producing a tarball this script immediately deletes again. Run
+// as one reader among many concurrently scheduled after the build barrier
+// (repo-contract.config.ts), a mid-run `dist/` delete+rebuild would race every other
+// concurrently-running reader of `dist/` (`test-e2e`'s own `npm pack --ignore-scripts` chief among
+// them) -- the shared-mutable-state race ADR 0002 documents. Packing here explicitly, exactly like
+// `test/helpers/pack-consumer.ts` already does, keeps behavior identical across the two and
+// independent of attw's internal pack. (The published package currently has no `prepare` or other
+// install lifecycle script; `dist/` is built by the barrier or an explicit `npm run build`.)
 
 import { sync as spawnSync } from "cross-spawn"
 import { closeSync, mkdirSync, mkdtempSync, openSync, rmSync } from "node:fs"
