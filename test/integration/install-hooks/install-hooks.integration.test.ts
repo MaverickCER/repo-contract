@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 /**
- * Real-path coverage for scripts/install-hooks.mjs: it runs from `prepare`, so
- * a wrong branch here means every fresh clone either silently fails to wire the
- * hooks or clobbers a contributor's own `core.hooksPath`. Each case runs the
- * actual script against a throwaway `git init` directory.
+ * Real-path coverage for scripts/install-hooks.mjs: it runs from `npm run setup`
+ * in a fresh clone, so a wrong branch here means setup either silently fails to
+ * wire the hooks or clobbers a contributor's own `core.hooksPath`. Each case runs
+ * the actual script against a throwaway `git init` directory.
  */
 
 const SCRIPT = path.join(
