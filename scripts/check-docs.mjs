@@ -108,14 +108,18 @@ async function runMarkdownlint() {
 // permanently red.
 //
 // CHANGELOG.md (managed by release-please) links each release heading at
-// github.com/maverickcer/repo-contract/compare/v<prev>...v<next> and
-// .../releases/tag/v<x.y.z>. The `v<next>` tag is created only when the
-// Release PR merges -- so while that PR's own CI runs, the newest link 404s
+// github.com/<owner>/repo-contract/compare/<prev>...<next> and
+// .../releases/tag/<tag>. The `<next>` tag is created only when the Release
+// PR merges -- so while that PR's own CI runs, the newest link 404s
 // transiently even though it is correct by construction. Exempt the repo's
-// own version URLs rather than let a mid-release CI go red.
+// own version URLs rather than let a mid-release CI go red. The owner segment
+// is matched as `[^/]+` (not a literal `maverickcer`) because release-please
+// writes GitHub's canonical repo casing -- `MaverickCER` -- and linkinator's
+// `--skip` regex is case-sensitive; a literal lowercase owner silently fails
+// to match and the release CI goes red anyway.
 const LINKINATOR_SKIP_PATTERNS = [
   "security/advisories/new",
-  "github\\.com/maverickcer/repo-contract/(compare|releases/tag)/",
+  "github\\.com/[^/]+/repo-contract/(compare|releases/tag)/",
 ]
 
 async function runLinkinator() {
