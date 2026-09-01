@@ -12,9 +12,10 @@ name: API baseline
 # The job re-fires on every `synchronize` of that PR: its own baseline commit,
 # and every time release-please refreshes the PR because another change merged to
 # `main` while it sat open. That is fine -- `npm run contract:baseline` is
-# idempotent (reports "current", exits 0, writes nothing once the baseline
-# already carries package.json's version), so every run after the first is a
-# clean no-op rather than a red check.
+# idempotent: it exits 0 and writes nothing once the baseline already carries
+# package.json's version and its contents match (it still re-writes if an
+# API-changing commit landed on the branch at the same version). See
+# scripts/api-contract/update-baseline.ts for the full outcome matrix.
 #
 # RELEASING.md documents `npm run contract:baseline` as the manual backstop if
 # this job is ever disabled.

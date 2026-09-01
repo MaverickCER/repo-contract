@@ -18,13 +18,18 @@ merge as the version bump. If that job is ever disabled, run `npm run contract:b
 after the release and commit the result — that is the only other way the baseline is
 updated.
 
-`runUpdateBaseline` writes only when `package.json`'s version is **strictly greater** than the
-baseline's. When they already match it reports `current` and exits 0 (a no-op), so the job
-stays green across every re-run of the same Release PR — its own baseline commit, or
-release-please refreshing the PR after a later merge. It exits non-zero only when
-`package.json` is _older_ than the baseline (a would-be regression). All three paths are
-covered by `test/unit/api-contract/update-baseline.test.ts` (`reports 'current' …`,
-`refuses when … older`, `succeeds once … strictly greater`); that suite is the standing
+`runUpdateBaseline` has four outcomes — only the first two exit 0:
+
+| outcome   | when                                                                                                                                                            | writes? |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `updated` | no baseline yet; **or** `package.json`'s version is strictly greater than the baseline's; **or** the version is unchanged but the public API contents differ    | yes     |
+| `current` | the baseline already carries `package.json`'s version **and** its contents match                                                                                | no      |
+| `refused` | `package.json`'s version is unparseable; **or** older than the baseline's (a would-be regression); **or** the committed baseline records an unparseable version | no      |
+| `failed`  | API Extractor reported errors                                                                                                                                   | no      |
+
+`current` is what every re-run of the same Release PR sees (the job's own baseline commit,
+release-please refreshing the PR after a later merge), so the job stays green. Every branch is
+covered by `test/unit/api-contract/update-baseline.test.ts`; that suite is the standing
 verification for this job's guardrail, so no manual dry run is needed before a release.
 
 ## One-time setup
