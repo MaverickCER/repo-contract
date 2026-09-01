@@ -32,8 +32,12 @@ permissions:
 
 jobs:
   update-baseline:
-    # release-please's default branch name for a target branch of `main`.
-    if: github.head_ref == 'release-please--branches--main'
+    # release-please's Release PR branch. With a manifest release (a `packages`
+    # entry in release-please-config.json) the branch carries a component
+    # suffix -- `release-please--branches--main--components--repo-contract` --
+    # rather than the bare `release-please--branches--main`. Match the prefix so
+    # this keeps working whichever form release-please uses.
+    if: startsWith(github.head_ref, 'release-please--branches--main')
     runs-on: ubuntu-latest
     permissions:
       contents: write
