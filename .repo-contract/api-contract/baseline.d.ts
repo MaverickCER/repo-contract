@@ -15,7 +15,7 @@ export declare interface CheckDefinition extends CheckDefinitionConfig {
      * declared *earlier* than the check declaring `dependsOn` on it (a
      * forward reference throws `DependencyDeclaredLaterError`; a cycle is
      * consequently impossible, since no edge can ever point forward). See
-     * specs/decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md.
+     * specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md.
      */
     readonly dependsOn?: readonly string[];
 }
@@ -68,7 +68,7 @@ export declare interface CheckDefinitionConfig {
      * to `false` -- unaffected, fully-parallel scheduling in declaration order, unchanged. Two
      * isolated checks are always sequential relative to each other (whichever is declared second
      * waits for the first, as one of the "every check declared earlier" it's barred behind). See
-     * specs/decisions/0003-dependson-and-isolated-are-two-scheduling-primitives.md.
+     * specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md.
      */
     readonly isolated?: boolean;
     /** Decides whether this check's evidence is acceptable, once its process has finished running. */
@@ -561,7 +561,7 @@ export declare type ValidatedCheckSchema<T> = {
  * Versioned independently of `Evidence` (see VERSIONING.md's
  * schema-versioning policy) -- `version: 2` reflects `checks[id]` changing
  * shape from `{ passed, reason? }` to a full `PolicyResult`
- * (`{ outcome, rationale }`); see ADR 0002.
+ * (`{ outcome, rationale }`); see ADR 0001.
  */
 export declare interface Verdict<TChecks extends CheckSchema = CheckSchema> {
     /** Schema version of this shape; see VERSIONING.md. */
