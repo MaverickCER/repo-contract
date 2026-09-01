@@ -8,7 +8,7 @@ changeset/ADR/PR documentation discipline, one on Keep a Changelog generation. I
 `scripts/install-hooks.mjs`, the `commitlint` self-hosting check, `release-please-config.json` /
 `.release-please-manifest.json`, `.github/workflows/release.yml`, `scripts/api-contract/*.ts`
 (now a **gate**), `scripts/adr-governance/*.ts` (now scans commit messages), and `package.json`
-(`prepare`, `precommit`, `prepush`).
+(`setup`, `precommit`, `prepush`).
 
 ## Context
 
@@ -94,14 +94,18 @@ install step) is a poor fit.
   re-staged; files that were not staged are left untouched.
 - **`.githooks/pre-push`** runs the full `npm run contract` (the `prepush` script) and blocks
   the push.
-- **Installation is a side effect of `npm install`.** `prepare` runs
-  `scripts/install-hooks.mjs`, which points `core.hooksPath` at `.githooks` and
+- **Installation is one explicit command: `npm run setup`.** That script builds `dist/` and
+  runs `scripts/install-hooks.mjs`, which points `core.hooksPath` at `.githooks` and
   `commit.template` at an absolute path to `.gitmessage` (absolute because git resolves
-  `commit.template` relative to the cwd of `git commit`, not the repo root). No new dependency;
-  the hook scripts are committed, POSIX `sh`, and run on macOS, Linux, and Git-for-Windows
-  alike. `install-hooks.mjs` no-ops when `CI` is set (so release-please-action's own commits in
-  CI are never intercepted), no-ops outside a git checkout (tarball installs), and never
-  overwrites a `core.hooksPath` a contributor set themselves.
+  `commit.template` relative to the cwd of `git commit`, not the repo root). It is a plain npm
+  script, **not** an npm lifecycle hook (`prepare` / `postinstall` / …): the published package
+  ships with no install scripts at all, so a consumer's `npm install` never executes any of this
+  repository's code, and static supply-chain analysers (Socket's `installScripts` alert, etc.)
+  have nothing to flag. The one-command cost after `npm install` in a fresh clone is the price;
+  CONTRIBUTING documents it. No new dependency; the hook scripts are committed, POSIX `sh`, and
+  run on macOS, Linux, and Git-for-Windows alike. `install-hooks.mjs` still no-ops when `CI` is
+  set (so release-please-action's own commits in CI are never intercepted), no-ops outside a git
+  checkout, and never overwrites a `core.hooksPath` a contributor set themselves.
 - **The hooks are advisory.** `git commit --no-verify` / `git push --no-verify` bypass them by
   design, for genuine work-in-progress checkpoints. CI remains the authoritative gate — the PR
   template already states that "`npm run contract` passing is necessary but not sufficient."
@@ -130,9 +134,12 @@ install step) is a poor fit.
   than _content_ — deliberate, and the thing the earlier documentation-discipline ADR was
   written to avoid. The trade the project is making: one enforced commit convention buys away
   one authoring step and makes the SemVer floor a real gate.
-- A fresh `npm install` / `npm ci` now also writes two local git config values
-  (`core.hooksPath`, `commit.template`). Both are documented in CONTRIBUTING, honor a value a
-  contributor set themselves, and are reversible with `git config --unset <key>`.
+- A fresh clone runs `npm install` then `npm run setup`; `setup` writes two local git config
+  values (`core.hooksPath`, `commit.template`). Both are documented in CONTRIBUTING, honor a
+  value a contributor set themselves, and are reversible with `git config --unset <key>`.
+- The published tarball's `package.json` has **no** `prepare` (or any other install-lifecycle)
+  script. `.github/workflows/release.yml`'s `publish` job therefore builds `dist/` with an
+  explicit `npm run build` step rather than relying on `npm ci` firing `prepare`.
 - Every commit now runs ~15–20 s of checks; every push now runs the full ~5–6 min suite.
   `--no-verify` is the escape hatch for a deliberate WIP commit or a push to a draft PR; that is
   expected, not a workaround.
@@ -165,6 +172,15 @@ install step) is a poor fit.
   against [ADR 0008](0008-self-hosting-tool-and-dependency-choices.md)'s "package install only"
   bar. `.githooks/` + `core.hooksPath` needs neither — `core.hooksPath` is the same mechanism
   `husky` itself uses under the hood.
+- **Wiring the hooks from a `prepare` lifecycle script** (the original design). Rejected: it put
+  a `prepare` entry in the _published_ `package.json`, which every supply-chain scanner reads as
+  an install script (Socket scored the package down for it) even though npm no longer runs
+  `prepare` for registry installs. An explicit `npm run setup` is one extra command in a fresh
+  clone — a contributor-only cost — and keeps the published package free of install scripts,
+  which is the stronger position under both ADR 0008's bar and SECURITY.md.
+- **Stripping the dev-only scripts from the tarball at pack time** (a `prepack`/`postpack` pair,
+  or a `clean-publish` tool). Rejected: it keeps a fragile mutate-then-restore step in the
+  release path for no gain over simply not having the script.
 - **Full `npm run contract` on pre-commit** (as literally requested at first). Rejected: ~5–6
   min per commit, network-dependent, and would push contributors to `--no-verify` as a habit —
   defeating the gate it is meant to be.

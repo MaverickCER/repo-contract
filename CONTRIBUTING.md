@@ -6,11 +6,14 @@
 git clone https://github.com/maverickcer/repo-contract.git
 cd repo-contract
 npm install
+npm run setup
 ```
 
-`npm install` also builds the package and wires the git hooks and commit-message
-template — there is nothing else to run. Use Node 24 locally (`.nvmrc`); the published
-package supports Node `>=20` and CI proves that independently.
+`npm run setup` builds the package and wires the git hooks and commit-message template.
+It is a plain script, not an npm lifecycle hook — the published package ships with no
+install scripts at all (see [ADR 0009](specs/decisions/0009-conventional-commits-versioning-and-local-gates.md)),
+so this one command after `npm install` is the whole setup. Use Node 24 locally
+(`.nvmrc`); the published package supports Node `>=20` and CI proves that independently.
 
 ## Making a change
 
@@ -25,7 +28,7 @@ package supports Node `>=20` and CI proves that independently.
 5. Push — the `pre-push` hook runs the full `npm run contract`. Open a pull request; CI
    re-runs everything across the OS and Node matrix.
 
-`npm install` wires two local git settings — the hooks and the commit-message template.
+`npm run setup` wires two local git settings — the hooks and the commit-message template.
 Opt out of either:
 
 ```bash

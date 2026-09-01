@@ -3,15 +3,17 @@
 //   - commit.template -> <repo root>/.gitmessage (Conventional Commits cheat sheet
 //     shown in the editor on every `git commit`)
 //
-// Run from `prepare`, so a plain `npm install` / `npm ci` in a fresh clone is all
-// it takes -- no extra dependency, no separate setup step (see
-// specs/decisions/0009-conventional-commits-versioning-and-local-gates.md and ADR 0008's
-// "package install only" bar).
+// Run from the `setup` npm script (`npm run setup`, one command after
+// `npm install` in a fresh clone -- see
+// specs/decisions/0009-conventional-commits-versioning-and-local-gates.md). It is
+// deliberately NOT an npm lifecycle hook (`prepare` etc.): the published package
+// ships with no install scripts at all, so consumers' `npm install` never runs
+// this.
 //
 // Idempotent and deliberately unobtrusive, for BOTH settings:
 //   - no-op when CI is set: the release workflow's own bots (release-please,
 //     api-baseline) commit and push and must not be intercepted or reconfigured.
-//   - no-op outside a git checkout (installed as a tarball dependency, etc.).
+//   - no-op outside a git checkout (run from an unpacked tarball, etc.).
 //   - never overrides a value a contributor set themselves.
 //
 // Reverting: `git config --unset core.hooksPath` and, if desired,
@@ -37,8 +39,8 @@ function gitConfigSet(key, value) {
     execFileSync("git", ["config", "--local", key, value])
     return true
   } catch (error) {
-    // `prepare` must never fail a plain `npm install` -- if git is somehow
-    // unavailable here despite `.git` existing, warn and move on.
+    // `npm run setup` must never hard-fail -- if git is somehow unavailable
+    // here despite `.git` existing, warn and move on.
     console.warn(
       `[install-hooks] could not set ${key} (${error instanceof Error ? error.message : String(error)}); skipping.`,
     )
@@ -77,8 +79,8 @@ if (!existsSync(".git")) {
 // `commit.template` is resolved by git relative to the cwd of `git commit`, not
 // the repo root -- so a relative value breaks when committing from a
 // subdirectory. Store an absolute path. It lands only in per-clone .git/config,
-// which is never committed, so machine-specificity is fine. `prepare` runs this
-// script from the repo root; resolve against that.
+// which is never committed, so machine-specificity is fine. `npm run setup` runs
+// this script from the repo root; resolve against that.
 const repoRoot = process.cwd()
 const commitTemplate = path.join(repoRoot, ".gitmessage")
 
