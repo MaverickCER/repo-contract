@@ -112,9 +112,11 @@ export function runNpm(args, options = {}) {
 
 /**
  * Runs a real `npm pack` into `destinationDir` and returns where the tarball landed.
- * `--ignore-scripts` so packing never triggers this package's own `prepare` (`npm run build`),
- * whose output would otherwise corrupt `--json` and whose `dist/` delete+rebuild would race every
- * concurrent reader (see scripts/run-attw-to-file.mjs's own note).
+ * `--ignore-scripts` so packing stays side-effect-free and deterministic: it must never run a
+ * build (whose stdout would corrupt `--json`, and whose `dist/` delete+rebuild would race every
+ * concurrent reader -- see scripts/run-attw-to-file.mjs's own note). `dist/` is expected to be
+ * already built by the time this runs (the build barrier in repo-contract.config.ts / an explicit
+ * `npm run build`); the published package has no `prepare` or other install lifecycle script.
  * @param destinationDir - Directory the `.tgz` is written into (must already exist).
  * @param options - Optional `cwd` for the `npm pack` invocation (defaults to the current directory).
  * @returns The tarball's `filename` and its full `tarballPath` inside `destinationDir`.

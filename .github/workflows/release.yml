@@ -89,6 +89,11 @@ jobs:
 
       - run: npm ci
 
+      # Build the artifact explicitly -- the package has no `prepare` (or any
+      # other install) lifecycle script, so `npm ci` above does not produce
+      # `dist/`. `npm publish --ignore-scripts` below won't build it either.
+      - run: npm run build
+
       # OIDC trusted publishing requires a current npm CLI -- don't rely on
       # whatever version happens to be bundled.
       - run: npm install -g npm@latest

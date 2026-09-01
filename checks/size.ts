@@ -23,6 +23,9 @@ interface SizeBudget {
 // branch) doesn't trip CI, tight enough that an inlined dependency still
 // does. Bump these deliberately when a real capability addition grows the
 // bundle; `npm run size` prints the current figure against the budget.
+// (The budgets stepped up once already, 10->13 KB / 7->9 KB, when
+// tsup.config.ts stopped stripping whitespace so the published dist/ ships
+// unminified -- gzip absorbs most of that but not all.)
 // CJS runs a few hundred bytes larger than ESM at the same source (esbuild's
 // interop wrappers -- `__toCommonJS`, a getter per named export), so the two
 // formats share one budget sized for the larger.
@@ -34,12 +37,12 @@ export const SIZE_BUDGETS: readonly SizeBudget[] = [
   // Both `.` entrypoint formats: ESM and CJS share one budget sized for the
   // larger (CJS -- see the comment above). Without the ESM entry a regression
   // in `dist/index.js` alone was undetectable by this check.
-  { label: "index (esm)", file: "dist/index.js", maxGzipBytes: 10 * 1024 },
-  { label: "index (cjs)", file: "dist/index.cjs", maxGzipBytes: 10 * 1024 },
+  { label: "index (esm)", file: "dist/index.js", maxGzipBytes: 13 * 1024 },
+  { label: "index (cjs)", file: "dist/index.cjs", maxGzipBytes: 13 * 1024 },
   // `./presets` is an equally published `exports` entrypoint (package.json) --
   // without its own budget a regression here was undetectable by this check.
-  { label: "presets (esm)", file: "dist/presets.js", maxGzipBytes: 7 * 1024 },
-  { label: "presets (cjs)", file: "dist/presets.cjs", maxGzipBytes: 7 * 1024 },
+  { label: "presets (esm)", file: "dist/presets.js", maxGzipBytes: 9 * 1024 },
+  { label: "presets (cjs)", file: "dist/presets.cjs", maxGzipBytes: 9 * 1024 },
 ]
 
 export interface SizeReportEntry {
