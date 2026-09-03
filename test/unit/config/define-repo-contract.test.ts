@@ -1,12 +1,18 @@
 import { describe, expect, expectTypeOf, it } from "vitest"
 import { defineRepoContract } from "../../../src/config/define-repo-contract.js"
 import type { PolicyResult } from "../../../src/types.js"
+import { testEnv } from "../../helpers/test-env.js"
+import { testSpawn } from "../../helpers/test-spawn.js"
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
 
 describe("defineRepoContract", () => {
   it("returns the config unchanged (identity function, no validation, no cloning)", () => {
-    const config = { checks: { tests: { run: "npm test", policy: okPolicy } } }
+    const config = {
+      checks: { tests: { run: "npm test", policy: okPolicy } },
+      spawn: testSpawn,
+      env: testEnv,
+    }
     expect(defineRepoContract(config)).toBe(config)
   })
 
@@ -53,6 +59,8 @@ describe("defineRepoContract", () => {
             },
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
     })
 
@@ -70,6 +78,8 @@ describe("defineRepoContract", () => {
             },
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
     })
 
@@ -87,6 +97,8 @@ describe("defineRepoContract", () => {
             },
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
     })
 
@@ -113,6 +125,8 @@ describe("defineRepoContract", () => {
             },
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
     })
 
@@ -131,6 +145,8 @@ describe("defineRepoContract", () => {
             },
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
     })
 
@@ -147,6 +163,8 @@ describe("defineRepoContract", () => {
             },
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
     })
 
@@ -157,6 +175,8 @@ describe("defineRepoContract", () => {
           jsonCheck: { run: "echo '{}'", output: { format: "json" }, policy: okPolicy },
           noOutputCheck: { run: "echo hi", policy: okPolicy },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
       expectTypeOf(config.checks).toHaveProperty("textCheck")
       expectTypeOf(config.checks).toHaveProperty("jsonCheck")

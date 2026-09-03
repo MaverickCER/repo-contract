@@ -1,6 +1,7 @@
 import * as os from "node:os"
 import { validateRepoContractConfig } from "./config/validate-config.js"
 import { buildEvidence } from "./evidence/build-evidence.js"
+import type { ExecutionCapability } from "./execution/spawn-check.js"
 import { runChecks } from "./execution/run-checks.js"
 import { runPolicies } from "./policy/run-policies.js"
 import type {
@@ -70,7 +71,17 @@ async function runRepoContractAfterValidation<const TChecks extends CheckSchema>
   const concurrency = config.concurrency ?? os.availableParallelism()
   const startedAt = new Date()
 
-  const results = await runChecks(config.checks, concurrency, options)
+  // Resolved once, here, and threaded through by reference -- see
+  // ExecutionCapability's own doc comment on why `env` specifically must
+  // not be copied (a live `process.env` reference needs to stay live).
+  const execution: ExecutionCapability = {
+    spawn: config.spawn,
+    killProcessTree: config.killProcessTree,
+    env: config.env,
+    shell: config.shell ?? false,
+  }
+
+  const results = await runChecks(config.checks, concurrency, execution, options)
   const completedAt = new Date()
 
   const { evidence, entries } = await buildEvidence(results, startedAt, completedAt)

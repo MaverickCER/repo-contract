@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 import { defineRepoContract, runRepoContract } from "../../../src/index.js"
 import * as presets from "../../../src/presets/index.js"
 import type { CheckDefinitionConfig, CheckStatus, PolicyResult } from "../../../src/types.js"
+import { testEnv } from "../../helpers/test-env.js"
+import { testSpawn } from "../../helpers/test-spawn.js"
 import { fakeCheckEvidence, fakeContext } from "./fixtures.js"
 
 /**
@@ -72,6 +74,8 @@ describe("presets barrel (src/presets/index.ts)", () => {
               : { outcome: "fail", rationale: "overridden policy: expected exit 0" },
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     const { verdict } = await runRepoContract(config)
@@ -103,6 +107,8 @@ describe("presets barrel (src/presets/index.ts)", () => {
         checks: {
           missing: { ...preset, run: ["definitely-not-a-real-binary-repo-contract-preset-test"] },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
 
       const { verdict } = await runRepoContract(config)
@@ -216,6 +222,8 @@ describe("presets barrel (src/presets/index.ts)", () => {
           run: ["definitely-not-a-real-binary-repo-contract-preset-test"],
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     const { verdict } = await runRepoContract(config)

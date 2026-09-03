@@ -6,11 +6,15 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 import { runChecks, SELF_TERMINATE_DELAY_MS } from "../../../src/execution/run-checks.js"
+import type { ExecutionCapability } from "../../../src/execution/spawn-check.js"
 import { SIGKILL_GRACE_PERIOD_MS } from "../../../src/execution/spawn-check.js"
 import type { CheckSchema, PolicyResult } from "../../../src/types.js"
+import { testEnv } from "../../helpers/test-env.js"
+import { testSpawn } from "../../helpers/test-spawn.js"
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
 const here = path.dirname(fileURLToPath(import.meta.url))
+const execution: ExecutionCapability = { spawn: testSpawn, env: testEnv, shell: false }
 
 // The host-process SIGINT/SIGTERM cleanup path can only be exercised by sending
 // a real signal to a real child process. Windows has no POSIX signal delivery:
@@ -34,7 +38,7 @@ async function withoutNativeAbortSignalAny(run: () => Promise<void>): Promise<vo
 
 describe("runChecks", () => {
   it("returns an empty array for zero checks", async () => {
-    const results = await runChecks({}, 4, undefined)
+    const results = await runChecks({}, 4, execution, undefined)
     expect(results).toEqual([])
   })
 
@@ -42,7 +46,7 @@ describe("runChecks", () => {
     const checks: CheckSchema = {
       a: { run: [process.execPath, "-e", "process.stdout.write('a')"], policy: okPolicy },
     }
-    const results = await runChecks(checks, 4, undefined)
+    const results = await runChecks(checks, 4, execution, undefined)
     expect(results).toHaveLength(1)
     expect(results[0]?.[0]).toBe("a")
     expect(results[0]?.[2].stdout).toBe("a")
@@ -55,7 +59,7 @@ describe("runChecks", () => {
         { run: [process.execPath, "-e", `process.stdout.write("${String(i)}")`], policy: okPolicy },
       ]),
     )
-    const results = await runChecks(checks, 4, undefined)
+    const results = await runChecks(checks, 4, execution, undefined)
     expect(results.map(([checkId]) => checkId).sort()).toEqual(
       Array.from({ length: 8 }, (_, i) => `check-${String(i)}`).sort(),
     )
@@ -66,7 +70,7 @@ describe("runChecks", () => {
       ok: { run: [process.execPath, "-e", "process.stdout.write('fine')"], policy: okPolicy },
       broken: { run: ["definitely-not-a-real-binary-xyz"], policy: okPolicy },
     }
-    const results = await runChecks(checks, 4, undefined)
+    const results = await runChecks(checks, 4, execution, undefined)
     const byId = Object.fromEntries(results.map(([checkId, , evidence]) => [checkId, evidence]))
     expect(byId.ok?.status).toBe("completed")
     expect(byId.ok?.stdout).toBe("fine")
@@ -85,7 +89,7 @@ describe("runChecks", () => {
     // concurrently with execution, so a counter in the policy callback would
     // only ever see 1. This test's job is that the whole fan-out still
     // completes correctly under a real concurrency cap.
-    const results = await runChecks(checks, 2, undefined)
+    const results = await runChecks(checks, 2, execution, undefined)
     expect(results).toHaveLength(6)
     expect(results.every(([, , evidence]) => evidence.status === "completed")).toBe(true)
   })
@@ -102,7 +106,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const results = await runChecks(checks, 4, undefined)
+    const results = await runChecks(checks, 4, execution, undefined)
     const byId = Object.fromEntries(results.map(([checkId, , evidence]) => [checkId, evidence]))
 
     expect(byId.a?.stdout).toBe("a")
@@ -135,7 +139,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const results = await runChecks(checks, 4, undefined)
+    const results = await runChecks(checks, 4, execution, undefined)
     const byId = Object.fromEntries(results.map(([checkId, , evidence]) => [checkId, evidence]))
 
     const dStart = new Date(byId.d!.startedAt).getTime()
@@ -176,7 +180,7 @@ describe("runChecks", () => {
         ]),
       ),
     }
-    const results = await runChecks(checks, 2, undefined)
+    const results = await runChecks(checks, 2, execution, undefined)
     expect(results).toHaveLength(5)
     expect(results.every(([, , evidence]) => evidence.status === "completed")).toBe(true)
   })
@@ -197,7 +201,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const results = await runChecks(checks, 4, undefined)
+    const results = await runChecks(checks, 4, execution, undefined)
     const byId = Object.fromEntries(results.map(([checkId, , evidence]) => [checkId, evidence]))
 
     expect(byId.solo?.stdout).toBe("solo")
@@ -222,7 +226,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const results = await runChecks(checks, 4, undefined)
+    const results = await runChecks(checks, 4, execution, undefined)
     const byId = Object.fromEntries(results.map(([checkId, , evidence]) => [checkId, evidence]))
 
     // b must have started before a completed -- proves the isolated
@@ -251,7 +255,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const results = await runChecks(checks, 4, undefined)
+    const results = await runChecks(checks, 4, execution, undefined)
     const byId = Object.fromEntries(results.map(([checkId, , evidence]) => [checkId, evidence]))
 
     // Both isolated checks wait for the earlier-declared plain check "a".
@@ -283,7 +287,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const results = await runChecks(checks, 4, undefined)
+    const results = await runChecks(checks, 4, execution, undefined)
     const byId = Object.fromEntries(results.map(([checkId, , evidence]) => [checkId, evidence]))
 
     // "reader" is a plain (non-isolated) check declared *after* the isolated "barrier" -- it must
@@ -308,7 +312,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const results = await runChecks(checks, 4, { checks: ["solo"] })
+    const results = await runChecks(checks, 4, execution, { checks: ["solo"] })
     expect(results.map(([checkId]) => checkId)).toEqual(["solo"])
   })
 
@@ -322,7 +326,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const promise = runChecks(checks, 4, { signal: controller.signal })
+    const promise = runChecks(checks, 4, execution, { signal: controller.signal })
     setTimeout(() => {
       controller.abort("cancelled")
     }, 100)
@@ -352,7 +356,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const promise = runChecks(checks, 1, { signal: controller.signal })
+    const promise = runChecks(checks, 1, execution, { signal: controller.signal })
     setTimeout(() => {
       controller.abort("cancelled")
     }, 100)
@@ -377,7 +381,7 @@ describe("runChecks", () => {
       const checks: CheckSchema = {
         a: { run: [process.execPath, "-e", "process.exit(0)"], policy: okPolicy },
       }
-      await runChecks(checks, 4, { signal: controller.signal })
+      await runChecks(checks, 4, execution, { signal: controller.signal })
 
       // composeSignals' manual fallback attaches its own "abort" listener to every input signal,
       // including this externally-supplied one -- runChecks must remove it once the run
@@ -394,7 +398,7 @@ describe("runChecks", () => {
     const checks: CheckSchema = {
       a: { run: [process.execPath, "-e", "setTimeout(() => {}, 100)"], policy: okPolicy },
     }
-    const promise = runChecks(checks, 4, undefined)
+    const promise = runChecks(checks, 4, execution, undefined)
 
     // Poll briefly rather than asserting immediately -- the handler is
     // installed synchronously before the check's process spawns, but we
@@ -425,7 +429,7 @@ describe("runChecks", () => {
         policy: okPolicy,
       },
     }
-    const results = await runChecks(checks, 4, { checks: ["b"] })
+    const results = await runChecks(checks, 4, execution, { checks: ["b"] })
     expect(results.map(([checkId]) => checkId).sort()).toEqual(["a", "b"])
   })
 
@@ -438,7 +442,7 @@ describe("runChecks", () => {
       b: { run: [process.execPath, "-e", ""], dependsOn: ["shared"], policy: okPolicy },
       c: { run: [process.execPath, "-e", ""], dependsOn: ["shared"], policy: okPolicy },
     }
-    const results = await runChecks(checks, 4, { checks: ["b", "c"] })
+    const results = await runChecks(checks, 4, execution, { checks: ["b", "c"] })
     expect(results.map(([checkId]) => checkId).sort()).toEqual(["b", "c", "shared"])
   })
 
@@ -446,7 +450,7 @@ describe("runChecks", () => {
     const checks: CheckSchema = {
       a: { run: [process.execPath, "-e", ""], policy: okPolicy },
     }
-    await expect(runChecks(checks, 4, { checks: ["nonexistent"] })).rejects.toThrow(
+    await expect(runChecks(checks, 4, execution, { checks: ["nonexistent"] })).rejects.toThrow(
       /options\.checks names "nonexistent"/,
     )
   })
@@ -463,7 +467,7 @@ describe("runChecks", () => {
       a: { run: [process.execPath, "-e", ""], dependsOn: ["b"], policy: okPolicy },
       b: { run: [process.execPath, "-e", ""], dependsOn: ["a"], policy: okPolicy },
     }
-    await expect(runChecks(checks, 4, { checks: ["a"] })).rejects.toThrow(
+    await expect(runChecks(checks, 4, execution, { checks: ["a"] })).rejects.toThrow(
       /stalled before starting -- the dependency graph passed in is not acyclic/,
     )
   })

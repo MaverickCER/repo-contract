@@ -8,6 +8,8 @@ import {
 } from "../../../scripts/suppression-governance/evidence-types.js"
 import { validateSuppressionRegistry } from "../../../scripts/suppression-governance/registry.js"
 import { runRepoContract } from "../../../src/run-repo-contract.js"
+import { testEnv } from "../../helpers/test-env.js"
+import { testSpawn } from "../../helpers/test-spawn.js"
 
 /**
  * Golden/snapshot contracts, extended: schemas/evidence.schema.json and
@@ -73,6 +75,8 @@ describe("Evidence/Verdict runtime conformance to the published JSON Schema", ()
           }),
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     const validate = compileSchema(loadSchema("evidence.schema.json"))
@@ -92,6 +96,8 @@ describe("Evidence/Verdict runtime conformance to the published JSON Schema", ()
           }),
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     const validate = compileSchema(loadSchema("verdict.schema.json"))
@@ -108,6 +114,8 @@ describe("Evidence/Verdict runtime conformance to the published JSON Schema", ()
           policy: () => ({ outcome: "pass", rationale: "ok" }),
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     // Simulates a consumer, pinned to today's schema, validating evidence produced by a future
