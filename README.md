@@ -6,6 +6,7 @@
 [![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25-brightgreen)](scripts/coverage-thresholds.mjs)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](tsconfig.json)
 [![Node](https://img.shields.io/node/v/repo-contract.svg)](package.json)
+[![Socket Badge](https://badge.socket.dev/npm/package/repo-contract/latest)](https://badge.socket.dev/npm/package/repo-contract/latest)
 
 **Turn your repository's engineering standards into enforceable contracts.**
 
