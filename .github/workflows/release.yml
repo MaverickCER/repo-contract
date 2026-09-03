@@ -3,6 +3,17 @@ name: Release
 on:
   push:
     branches: [main]
+  # Manual recovery path: re-run verify+publish against an already-tagged
+  # release without cutting a new release-please cycle. Needed because a
+  # `gh run rerun` of a failed `publish` job replays that run's *original*
+  # workflow YAML, frozen at trigger time -- it can never pick up a fix to
+  # this file, only a brand new push-triggered run can. See RELEASING.md's
+  # "Recovering when the automated publish job fails".
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to (re)publish, e.g. repo-contract-v0.3.1"
+        required: true
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -15,6 +26,10 @@ jobs:
   # release and creates a GitHub Release, and `release_created` becomes true --
   # which is the only thing that triggers the verify + publish jobs below.
   release-please:
+    # Skipped on workflow_dispatch (the manual recovery path above) -- that
+    # trigger exists to re-publish an already-tagged release, never to open
+    # or update the Release PR.
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -41,13 +56,14 @@ jobs:
   # `publish` ships is the one this job already blessed.
   verify:
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    if: always() && (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.release-please.outputs.tag_name }}
           fetch-depth: 0
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -67,7 +83,7 @@ jobs:
 
   publish:
     needs: [release-please, verify]
-    if: needs.release-please.outputs.release_created == 'true'
+    if: always() && needs.verify.result == 'success' && (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -79,7 +95,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.release-please.outputs.tag_name }}
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -107,4 +123,13 @@ jobs:
       # credential-free `verify` job is the gate; this step just publishes the
       # artifact it already blessed. A manual `npm publish` from a laptop still
       # runs `prepublishOnly` normally (that path has no `--ignore-scripts`).
-      - run: npm publish --ignore-scripts
+      # `--provenance` is explicit here (not left to .npmrc's `provenance=true`
+      # alone) -- it's what actually drives npm's OIDC trusted-publishing
+      # token exchange; without it npm has been observed to skip OIDC
+      # entirely and fall straight through to expecting a classic login.
+      - run: npm publish --ignore-scripts --provenance
+        env:
+          # Verbose only on the manual recovery path -- this is where OIDC
+          # auth failures actually need debugging; the normal automated path
+          # stays quiet.
+          NPM_CONFIG_LOGLEVEL: ${{ github.event_name == 'workflow_dispatch' && 'verbose' || 'notice' }}
