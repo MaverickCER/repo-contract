@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process"
+import type { SyncSpawner } from "../types.js"
 
 /**
  * Whether a check's process should be spawned with `detached: true`. On
@@ -34,11 +34,20 @@ function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
  *
  * On POSIX, sends `signal` to the whole process group via the negative-pid
  * convention (requires the process to have been spawned with
- * `detached: true`, see `shouldSpawnDetached`). On Windows, process groups
+ * `detached: true`, see `shouldSpawnDetached`) -- no process spawning
+ * required, a single syscall via `process.kill`. On Windows, process groups
  * don't work the same way, so this shells out to `taskkill /pid <pid> /t
  * /f` -- the same technique the `tree-kill` package uses internally -- which
  * walks the system process table for descendants of `pid` regardless of how
- * it was spawned.
+ * it was spawned; that requires a synchronous spawn, which -- like every
+ * other process-spawning capability in this package -- is a trusted
+ * capability the caller supplies (`killProcessTree`, threaded from
+ * `RepoContractConfig.killProcessTree`), never imported internally (see
+ * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
+ * When `killProcessTree` is omitted on Windows, this function is a
+ * documented no-op -- the caller (`spawn-check.ts`) falls back to
+ * terminating just the tracked child process handle directly, which needs
+ * no spawn at all.
  *
  * Swallows the expected best-effort-cleanup failures, but not every failure: a
  * process that has already exited (POSIX `ESRCH`, or `taskkill`'s "not found"
@@ -57,8 +66,9 @@ function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
  * more-cooperative alternative to fall back to here the way there is on POSIX.
  * @param pid - the pid of the tree's root process (the process group id on POSIX, since it was spawned detached)
  * @param signal - the POSIX signal to send (on Windows, ignored -- see doc comment above)
+ * @param killProcessTree - the consumer-supplied synchronous spawner used only on Windows; a no-op there when omitted (see doc comment above)
  */
-export function killTree(pid: number, signal: NodeJS.Signals): void {
+export function killTree(pid: number, signal: NodeJS.Signals, killProcessTree?: SyncSpawner): void {
   // `process.kill(-pid, ...)` signals a process *group*, and `-0` coerces to
   // `0`, which POSIX interprets as "every process in the caller's own group"
   // -- i.e. this would signal the repo-contract host itself. `taskkill /pid
@@ -81,8 +91,14 @@ export function killTree(pid: number, signal: NodeJS.Signals): void {
    * platform than the one that runs Stryker. */
   // Stryker disable ConditionalExpression,EqualityOperator,StringLiteral,ArrayDeclaration,ObjectLiteral,BlockStatement,CallExpression -- this whole branch only runs on Windows, and mutation testing only runs in the ubuntu-only CI job (see the v8-ignore comment above), so every mutator that could apply to it would surface as an unreachable "no coverage" survivor rather than a real test gap.
   if (process.platform === "win32") {
-    // eslint-disable-next-line n/no-sync -- `killTree` is itself synchronous best-effort cleanup, callable from error/signal-handling paths that don't await anything else; an async `spawn` here would need every caller threaded through `await` for what's already a fire-and-forget `taskkill`.
-    const result = spawnSync("taskkill", ["/pid", String(pid), "/t", "/f"], { stdio: "ignore" })
+    // No consumer-supplied synchronous spawner: taskkill can't run at all, so whole-tree cleanup
+    // is skipped here -- spawn-check.ts's own caller falls back to killing just the tracked child
+    // process handle directly (no spawn needed for that), so a check is still terminated even
+    // though its descendants may survive. See killProcessTree's own doc comment.
+    if (killProcessTree === undefined) return
+    const result = killProcessTree("taskkill", ["/pid", String(pid), "/t", "/f"], {
+      stdio: "ignore",
+    })
     // `result.error` is a JS-level spawn failure (e.g. ENOENT if `taskkill.exe` itself is
     // missing from PATH, or EPERM from a policy blocking process creation) -- distinct from
     // `result.status`, taskkill's own process-table-dependent exit code for "pid not found" vs.

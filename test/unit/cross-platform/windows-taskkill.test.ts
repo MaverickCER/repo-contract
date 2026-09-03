@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process"
+import { spawn, spawnSync } from "node:child_process"
 import { describe, expect, it } from "vitest"
 import { killTree } from "../../../src/execution/process-tree.js"
 
@@ -33,7 +33,7 @@ describe.skipIf(process.platform !== "win32")("killTree on Windows", () => {
     })
     await new Promise((resolve) => setTimeout(resolve, 200))
 
-    killTree(child.pid!, "SIGTERM")
+    killTree(child.pid!, "SIGTERM", spawnSync)
 
     const isAlive = (pid: number): boolean => {
       try {
@@ -52,6 +52,15 @@ describe.skipIf(process.platform !== "win32")("killTree on Windows", () => {
   })
 
   it("is a no-op, not a throw, for a PID taskkill cannot find", () => {
+    expect(() => {
+      killTree(999_999_999, "SIGTERM", spawnSync)
+    }).not.toThrow()
+  })
+
+  it("is a no-op (no taskkill attempted) when no killProcessTree capability is supplied", () => {
+    // See RepoContractConfig.killProcessTree's own doc comment: omitting it is a documented,
+    // valid choice, not a bug -- spawn-check.ts's own caller falls back to killing just the
+    // tracked child process handle directly in that case.
     expect(() => {
       killTree(999_999_999, "SIGTERM")
     }).not.toThrow()

@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type * as ProcessTreeModule from "../../../src/execution/process-tree.js"
-import type { ActiveCheckHandle } from "../../../src/execution/spawn-check.js"
+import type { ActiveCheckHandle, ExecutionCapability } from "../../../src/execution/spawn-check.js"
 import { SIGKILL_GRACE_PERIOD_MS, spawnCheck } from "../../../src/execution/spawn-check.js"
 import type { CheckDefinition, PolicyResult } from "../../../src/types.js"
+import { testEnv } from "../../helpers/test-env.js"
+import { testSpawn } from "../../helpers/test-spawn.js"
 
 // File-scoped: spies on killTree while preserving its real behavior
 // (`vi.fn(actual.killTree)` forwards every call through), isolated here away
@@ -31,6 +33,7 @@ async function waitUntil(predicate: () => boolean, deadlineMs = 5000): Promise<v
 }
 
 const GRACE_PERIOD_MS = SIGKILL_GRACE_PERIOD_MS
+const execution: ExecutionCapability = { spawn: testSpawn, env: testEnv, shell: false }
 
 describe.skipIf(process.platform === "win32")("spawnCheck -- SIGKILL escalation guards", () => {
   afterEach(() => {
@@ -45,7 +48,7 @@ describe.skipIf(process.platform === "win32")("spawnCheck -- SIGKILL escalation 
       run: [process.execPath, "-e", "setTimeout(() => {}, 30000)"],
       policy: okPolicy,
     }
-    const promise = spawnCheck("id", check, undefined, activeHandles)
+    const promise = spawnCheck("id", check, undefined, activeHandles, execution)
     await waitUntil(() => activeHandles.size === 1)
     const [handle] = activeHandles
     expect(handle).toBeDefined()
@@ -72,7 +75,7 @@ describe.skipIf(process.platform === "win32")("spawnCheck -- SIGKILL escalation 
       run: [process.execPath, "-e", "setTimeout(() => {}, 30000)"],
       policy: okPolicy,
     }
-    const promise = spawnCheck("id", check, undefined, activeHandles)
+    const promise = spawnCheck("id", check, undefined, activeHandles, execution)
     await waitUntil(() => activeHandles.size === 1)
     const [handle] = activeHandles
     expect(handle).toBeDefined()

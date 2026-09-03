@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { runRepoContract } from "../../src/run-repo-contract.js"
 import type { RepoContractConfig } from "../../src/types.js"
+import { testEnv } from "../helpers/test-env.js"
+import { testSpawn } from "../helpers/test-spawn.js"
 
 const node = process.execPath
 
@@ -37,7 +39,11 @@ describe("runRepoContract -- bounded memory under many chatty checks", () => {
     }
 
     const rssBefore = process.memoryUsage().rss
-    const { evidence, verdict } = await runRepoContract({ checks })
+    const { evidence, verdict } = await runRepoContract({
+      checks,
+      spawn: testSpawn,
+      env: testEnv,
+    })
     const rssAfter = process.memoryUsage().rss
 
     expect(verdict.passed).toBe(true)

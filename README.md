@@ -92,7 +92,7 @@ npm install --save-dev yaml
 
 ### Runtime support matrix
 
-repo-contract spawns processes and reads `process.env` — it is server/CLI-only by design, not an isomorphic/browser package.
+repo-contract's checks run as spawned processes and read the ambient environment — but repo-contract never imports a process-spawning implementation or reads `process.env` itself (see [Supplying `spawn`/`env`](#supplying-spawnenv) below); it is server/CLI-only by design regardless, not an isomorphic/browser package, since the capability a consumer supplies is itself always a real Node-only spawning mechanism.
 
 | Environment                                | Supported                                                                                                                                                                                                    |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -113,9 +113,14 @@ Define your repository's standards as checks:
 
 ```ts
 // repo-contract.config.ts
+import { spawn } from "node:child_process"
 import { defineRepoContract } from "repo-contract"
 
 export default defineRepoContract({
+  // repo-contract never spawns a process or reads process.env itself -- see
+  // "Supplying spawn/env" below for why, and what to pass on Windows.
+  spawn,
+  env: process.env,
   checks: {
     tests: {
       run: "npm test",
@@ -178,6 +183,49 @@ process.exitCode = verdict.passed ? 0 : 1
 `runRepoContract()` never calls `process.exit()` itself. Your integration decides what to do with the result.
 
 There is no CLI, no config-file discovery magic, and no hidden state.
+
+### Supplying `spawn`/`env`
+
+`spawn` and `env` are required fields on the config — repo-contract never imports a process-spawning implementation or reads `process.env` internally (see [ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)). You supply both, as trusted capabilities repo-contract calls with a resolved command/argv/options — it does not inspect, wrap, or sanitize them.
+
+**macOS/Linux** — plain `node:child_process` is enough:
+
+```ts
+import { spawn } from "node:child_process"
+
+export default defineRepoContract({
+  spawn,
+  env: process.env,
+  checks: {/* ... */},
+})
+```
+
+**Windows** — most npm-installed CLI tools (`eslint`, `prettier`, `tsc`, …) resolve to `.cmd` shims, and plain `node:child_process.spawn` refuses to run those at all without `shell: true` (Node's own CVE-2024-27980 mitigation). Install [`cross-spawn`](https://www.npmjs.com/package/cross-spawn) and pass it instead — it resolves `.cmd`/`.bat` shims and quotes arguments safely for `cmd.exe`, **without** turning on shell metacharacter interpretation:
+
+```ts
+import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
+
+export default defineRepoContract({
+  spawn: crossSpawn,
+  env: process.env,
+  // Optional: lets a timed-out/aborted/Ctrl+C-killed check's full process
+  // tree (not just its immediate process) get cleaned up on Windows too.
+  killProcessTree: crossSpawnSync,
+  checks: {/* ... */},
+})
+```
+
+**`cross-spawn` does not mean "shell execution."** These are two independent choices:
+
+| `Spawner` choice | `shell` option    | Result                                                                                                                               |
+| ---------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| native `spawn`   | `false` (default) | argv-only, no shell interpretation                                                                                                   |
+| `cross-spawn`    | `false` (default) | Windows `.cmd`/`.bat` resolution + safe `cmd.exe` quoting, still argv-only                                                           |
+| either           | `true`            | shell metacharacters (`&&`, `\|`, …) interpreted — a per-check or global opt-in, see [`shell`](docs/api-report/repo-contract.api.md) |
+
+Passing `cross-spawn` fixes Windows command resolution; it does not by itself enable shell metacharacter interpretation. `check.shell` (or the config-level `shell` default) is the separate, explicit opt-in for that — see `SECURITY.md` before enabling it.
+
+`repo-contract` doesn't ship a ready-made spawner of its own, on purpose (see ADR 0011's Alternatives) — the two snippets above are the whole integration.
 
 ## The model
 
@@ -641,10 +689,13 @@ It does **not** encode your repository's definition of quality.
 Import a preset, spread it into your own `checks` record, and override whatever you need — most often `policy`:
 
 ```ts
+import { spawn } from "node:child_process"
 import { defineRepoContract } from "repo-contract"
 import { format, typecheck, license } from "repo-contract/presets"
 
 export default defineRepoContract({
+  spawn,
+  env: process.env,
   checks: {
     format,
     typecheck: {
@@ -662,10 +713,13 @@ export default defineRepoContract({
 Some presets are factories because they expose options that change what gets executed:
 
 ```ts
+import { spawn } from "node:child_process"
 import { defineRepoContract } from "repo-contract"
 import { lint, deadCode } from "repo-contract/presets"
 
 export default defineRepoContract({
+  spawn,
+  env: process.env,
   checks: {
     lint: lint({ path: "src" }),
     deadCode: deadCode({
