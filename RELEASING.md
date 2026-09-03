@@ -53,13 +53,26 @@ verification for this job's guardrail, so no manual dry run is needed before a r
   package that does not exist yet, so this cannot be done "before the first release".
   Bootstrap it once, then the workflow's `id-token: write` permission plus the registration
   is the entire trust relationship from the next version on — no `NPM_TOKEN` ever exists:
-  1. Publish the first version manually, once, from a maintainer machine:
-     `npm login` (as `maverickcer`), then `npm publish --ignore-scripts --provenance=false`
-     on the release commit. `--provenance=false` is required — the `.npmrc` sets
-     `provenance=true`, which only works inside the OIDC workflow.
+  1. Publish the first version manually, once, from a maintainer machine, on the release
+     commit: `npm login` (as `maverickcer`), then `npm run build` (explicitly — this step
+     is not optional; see the warning below), then
+     `npm publish --ignore-scripts --provenance=false`. `--provenance=false` is required —
+     the `.npmrc` sets `provenance=true`, which only works inside the OIDC workflow.
   2. On [npmjs.com](https://www.npmjs.com) → the `repo-contract` package → **Settings →
      Trusted Publisher → GitHub Actions**: organization/user `MaverickCER`, repository
      `repo-contract`, workflow `release.yml`.
+
+  > **Never run `npm publish --ignore-scripts` without an immediately preceding
+  > `npm run build`.** `--ignore-scripts` skips every lifecycle script, including
+  > `prepublishOnly` (which normally builds and runs the full contract for you) — so with
+  > a stale or absent `dist/`, npm happily packs and publishes whatever `dist/*.js` happens
+  > to exist while silently omitting `dist/*.d.ts` / `dist/*.d.cts` / `dist/.dts/**`.
+  > Declarations live under a dot-directory tsup doesn't produce; only the `tsc` and
+  > shim-emitting steps inside `npm run build` do. That is exactly what happened to the
+  > versions published this way before this note existed — the tarball shipped JS with no
+  > types at all. `--ignore-scripts` is safe **only** immediately after a fresh
+  > `npm run build`, which is why it's spelled out explicitly in step 1 above rather than
+  > left implicit.
 
 ### Branch protection on `main`
 
@@ -69,14 +82,34 @@ entirely on these settings, which live in the repo config, not the tree — set 
 - **Require a pull request before merging**, with **at least 1 approving review** and
   **Require review from Code Owners** (CODEOWNERS is `* @maverickcer`).
 - **Require status checks to pass before merging**, and mark these required:
-  `verify` (each OS), `contract`, `pr-title`. (`published-floor` / `runtime-compat` /
-  `verify-current` are informational — do not mark them required; `verify-current` is
-  `continue-on-error` by design.)
+  `verify` (each OS), `lint`, `contract`, `pr-title`. (`published-floor` /
+  `runtime-compat` / `verify-current` are informational — do not mark them required;
+  `verify-current` is `continue-on-error` by design.)
 - **Require branches to be up to date before merging.**
 - **Do not allow bypassing the above** (applies to admins too).
 - Release authority is the `release.yml` workflow plus the npm trusted-publisher
   registration above — no human holds a publish token. A merged PR cannot publish; only
   merging release-please's own Release PR can.
+
+## Recovering when the automated `publish` job fails
+
+If `release.yml`'s `publish` job fails with `npm error code ENEEDAUTH` /
+`need auth You need to authorize this machine using npm login`, npm rejected the OIDC
+token — almost always because the **npm trusted publishing** registration (One-time
+setup, above) was never completed for this exact repo/workflow, so npm falls back to
+expecting a classic auth token that doesn't exist in this workflow. The `verify` job
+having already passed means the tag and build are sound; nothing about the code needs
+fixing. To recover:
+
+1. Complete (or re-check) the trusted-publisher registration in **One-time setup** above.
+2. Re-run just the failed job — `gh run rerun <run-id> --failed` — rather than cutting a
+   new release; the same tagged commit publishes once the registration takes effect.
+
+If you need the release out before registration is sorted, publish that one version
+manually instead, on the tagged release commit: `npm login`, then plain `npm publish`
+(**no** `--ignore-scripts`) so `prepublishOnly` runs the full build and contract for you
+automatically — this is the safe path for a laptop publish (see the warning under
+**One-time setup** above for why `--ignore-scripts` on its own is not).
 
 ## First-release bootstrap
 
