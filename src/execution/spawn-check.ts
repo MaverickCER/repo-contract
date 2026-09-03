@@ -1,10 +1,28 @@
-import crossSpawn from "cross-spawn"
 import { StringDecoder } from "node:string_decoder"
 import { tokenizeRunString } from "../config/tokenize-command.js"
 import { InvalidCheckConfigError } from "../errors.js"
-import type { CheckDefinition, CheckEvidence, CheckStatus } from "../types.js"
+import type { CheckDefinition, CheckEvidence, CheckStatus, Spawner, SyncSpawner } from "../types.js"
 import { composeSignals } from "./abort-signals.js"
 import { killTree, shouldSpawnDetached } from "./process-tree.js"
+
+/**
+ * The trusted execution capabilities a run supplies once (see
+ * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
+ * and every spawned check draws from -- `spawn`/`env` verbatim from
+ * `RepoContractConfig`, `shell` already resolved to its effective global
+ * default (`config.shell ?? false`). Internal only: not exported from
+ * `src/types.ts` or `src/index.ts`. Grouped into one object, rather than
+ * threaded as independent parameters through `run-repo-contract.ts` ->
+ * `run-checks.ts` -> `spawn-check.ts`, purely to keep related
+ * execution-capability concerns from drifting into unrelated positional
+ * parameters as more get added later.
+ */
+export interface ExecutionCapability {
+  readonly spawn: Spawner
+  readonly env: NodeJS.ProcessEnv
+  readonly shell: boolean
+  readonly killProcessTree?: SyncSpawner
+}
 
 // A configured check's command is repository-controlled, not attacker-input
 // in the usual sense, but its OUTPUT is whatever that command chooses to
@@ -101,11 +119,13 @@ export interface ActiveCheckHandle {
  *
  * @param checkId - the check's id, used only to attach context to a thrown `InvalidCheckConfigError`
  * @param check - the check definition whose `run` (and `shell`) determines the command and args to execute
+ * @param effectiveShell - this check's resolved shell mode (`check.shell ?? execution.shell`), matching validate-config.ts's own `check.shell ?? globalShell` precedence
  * @returns the resolved `command` and `args` to spawn, with `args` empty when `run` is a shell string
  */
 function resolveCommand(
   checkId: string,
   check: CheckDefinition,
+  effectiveShell: boolean,
 ): { command: string; args: readonly string[] } {
   const run = check.run
   // `typeof run === "string"` narrows this two-member union reliably;
@@ -123,11 +143,11 @@ function resolveCommand(
     }
     return { command, args }
   }
-  if (check.shell === true) {
-    // Passed to the platform shell as a single command line; cross-spawn's
-    // own `shell` option handles the platform-specific invocation. There is
-    // no meaningful separate argv to report, so the whole string is
-    // recorded as `command` with empty `args`.
+  if (effectiveShell) {
+    // Passed to the platform shell as a single command line; the supplied
+    // `Spawner`'s own `shell` option handles the platform-specific
+    // invocation. There is no meaningful separate argv to report, so the
+    // whole string is recorded as `command` with empty `args`.
     return { command: run, args: [] }
   }
   const [command, ...args] = tokenizeRunString(run, checkId)
@@ -147,21 +167,24 @@ function resolveCommand(
 
 /**
  *
- * @param check - the check definition; unless `inheritEnv` is explicitly `false`, this process's own env is inherited and then overlaid with `check.env`
+ * @param check - the check definition; unless `inheritEnv` is explicitly `false`, `ambientEnv` is inherited and then overlaid with `check.env`
+ * @param ambientEnv - the run's supplied `execution.env` (typically the consumer's own `process.env`, passed through by reference -- see `ExecutionCapability`'s doc comment for why this must not be a copy) -- repo-contract never reads `process.env` itself (see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
  * @returns the environment variables to pass to the spawned process
  */
-function buildEnv(check: CheckDefinition): Record<string, string> {
+function buildEnv(check: CheckDefinition, ambientEnv: NodeJS.ProcessEnv): Record<string, string> {
   const base: Record<string, string> = {}
   if (check.inheritEnv !== false) {
-    // eslint-disable-next-line n/no-process-env -- reading the ambient environment isn't a config smell here, it's the feature: `inheritEnv` (on by default) means the spawned check inherits this process's real env, exactly what this loop builds.
-    for (const [key, value] of Object.entries(process.env)) {
-      // `process.env`'s index signature is typed `string | undefined`, but
-      // a real Node process never actually produces an `undefined` value
-      // here for an own enumerable key -- assigning `undefined` to an env
-      // var coerces it to the literal string `"undefined"` (confirmed
-      // empirically). Kept only to satisfy that type, not because it
-      // changes observed behavior.
-      // Stryker disable next-line ConditionalExpression -- process.env's index signature is typed string | undefined, but a real Node process never actually produces an undefined value here for an own enumerable key; kept only to satisfy that type, not because it changes observed behavior.
+    for (const [key, value] of Object.entries(ambientEnv)) {
+      // `NodeJS.ProcessEnv`'s index signature is typed `string | undefined`. For the real
+      // `process.env`, a value is never actually `undefined` for an own enumerable key --
+      // assigning `undefined` to an env var coerces it to the literal string `"undefined"`. But
+      // `ambientEnv` here is `execution.env`, a consumer-supplied `RepoContractConfig.env` value,
+      // not necessarily `process.env` itself -- a consumer can (and validate-config.ts's own
+      // per-value check explicitly allows) pass a plain object literal with a real `undefined`
+      // value, e.g. `env: { KEY: undefined }`, which has none of `process.env`'s coercion
+      // behavior. This guard is live, observable behavior for that case, not dead code kept only
+      // to satisfy the type -- see spawn-check.test.ts's "omits an env entry whose value is
+      // undefined" test.
       if (value !== undefined) base[key] = value
     }
   }
@@ -231,6 +254,7 @@ function terminalEvidence(
  * @param check - the check definition to run (command, timeout, env, cwd, shell, etc.)
  * @param runSignal - the whole run's abort signal, if any; already-aborted before this is called means the check never spawns
  * @param activeHandles - the shared registry this check's kill handle is added to while running, so a host-process SIGINT/SIGTERM can terminate it
+ * @param execution - the run's trusted execution capabilities (`spawn`, `env`, resolved global `shell` default) -- see `ExecutionCapability`
  * @returns a fully-formed `CheckEvidence` reflecting however the process ended; this function itself never rejects
  */
 export async function spawnCheck(
@@ -238,15 +262,17 @@ export async function spawnCheck(
   check: CheckDefinition,
   runSignal: AbortSignal | undefined,
   activeHandles: Set<ActiveCheckHandle>,
+  execution: ExecutionCapability,
 ): Promise<CheckEvidence> {
   const startedAt = new Date()
-  const { command, args } = resolveCommand(checkId, check)
+  const effectiveShell = check.shell ?? execution.shell
+  const { command, args } = resolveCommand(checkId, check, effectiveShell)
 
   if (runSignal?.aborted === true) {
     return terminalEvidence(command, args, startedAt, "aborted", null, null)
   }
 
-  const env = buildEnv(check)
+  const env = buildEnv(check, execution.env)
 
   let terminationReason: "aborted" | "timed_out" | null = null
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined
@@ -271,10 +297,10 @@ export async function spawnCheck(
   )
 
   return new Promise<CheckEvidence>((resolve) => {
-    const child = crossSpawn(command, args, {
+    const child = execution.spawn(command, args, {
       cwd: check.cwd,
       env,
-      shell: check.shell === true,
+      shell: effectiveShell,
       detached: shouldSpawnDetached(),
       // Windows-only cosmetic behavior (suppresses a console window flash)
       // with no effect on stdout/stderr/exitCode/signal on any platform, and
@@ -298,12 +324,26 @@ export async function spawnCheck(
      * `ActiveCheckHandle.kill`, a `process.once(signal, ...)` handler in
      * run-checks.ts, and an exception escaping either of those crashes the
      * whole host process instead of merely failing this one check's cleanup.
+     *
+     * On Windows without `execution.killProcessTree` supplied, `killTree`
+     * above is a documented no-op (see its own doc comment) -- falls back to
+     * killing just this check's own tracked `child` handle directly (a plain
+     * method call, no spawn required), so the check itself is still
+     * terminated even though any descendants it spawned internally may
+     * survive. Harmless to attempt unconditionally on every other path too
+     * (POSIX, or Windows with the capability supplied): `child.kill()` on an
+     * already-terminated process is a no-op, never a throw.
      * @param pid - the root pid of the process tree to kill
      * @param signal - the signal to send
      */
     const bestEffortKillTree = (pid: number, signal: NodeJS.Signals): void => {
       try {
-        killTree(pid, signal)
+        killTree(pid, signal, execution.killProcessTree)
+      } catch {
+        // best-effort; see doc comment above
+      }
+      try {
+        child.kill(signal)
       } catch {
         // best-effort; see doc comment above
       }

@@ -19,10 +19,13 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 
 // Node built-ins only (see this file's header) -- must NOT import scripts/npm-pack.mjs, which pulls
-// in the `cross-spawn` runtime dependency at module load. The `published-floor` job runs this
-// against a bare checkout with no `node_modules`, so that import throws ERR_MODULE_NOT_FOUND before
-// `main()` ever runs. This job is Linux-only, so the Windows `npm.cmd` hazard that motivates
-// npm-pack.mjs's `cross-spawn` use does not apply -- a plain `spawnSync("npm", ...)` is fine here.
+// in `cross-spawn` (a devDependency of this repository's own tooling, not a runtime dependency of
+// the published package -- see
+// specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
+// at module load. The `published-floor` job runs this against a bare checkout with no
+// `node_modules` at all, so that import throws ERR_MODULE_NOT_FOUND before `main()` ever runs. This
+// job is Linux-only, so the Windows `npm.cmd` hazard that motivates npm-pack.mjs's `cross-spawn` use
+// does not apply -- a plain `spawnSync("npm", ...)` is fine here.
 const NPM_COMMAND = "npm"
 
 /** The consumer contract, asserted from OUTSIDE the package -- literal names, no repo introspection. */
@@ -31,6 +34,11 @@ const SHARED_PROBE_BODY = `
   if (typeof runRepoContract !== "function") throw new Error("runRepoContract is not a function");
 
   const config = defineRepoContract({
+    // repo-contract never spawns a process or reads process.env itself -- the consumer supplies
+    // both. Node built-ins only (see this file's header), so plain node:child_process.spawn, not
+    // cross-spawn.
+    spawn,
+    env: process.env,
     checks: {
       // A guaranteed-clean no-op check: spawns this same node with an empty program, so there is
       // no external tool, no filesystem write, and nothing that could conflict on any platform.
@@ -61,6 +69,7 @@ const ESM_PROBE = `
 import { defineRepoContract, runRepoContract } from "repo-contract";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
 
 const require = createRequire(import.meta.url);
 ${SHARED_PROBE_BODY}
@@ -70,6 +79,7 @@ console.log("SMOKE_ESM_OK");
 const CJS_PROBE = `
 const { defineRepoContract, runRepoContract } = require("repo-contract");
 const { readFileSync } = require("node:fs");
+const { spawn } = require("node:child_process");
 
 (async () => {
 ${SHARED_PROBE_BODY}

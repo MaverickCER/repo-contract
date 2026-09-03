@@ -28,6 +28,7 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
   it("imports defineRepoContract and runRepoContract from the installed package", () => {
     const script = `
       import { defineRepoContract, runRepoContract } from "repo-contract";
+      import { spawn } from "node:child_process";
 
       const config = defineRepoContract({
         checks: {
@@ -39,6 +40,8 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
                 : { outcome: "fail", rationale: "expected exit code 0" },
           },
         },
+        spawn,
+        env: process.env,
       });
 
       const { evidence, verdict } = await runRepoContract(config);
@@ -73,6 +76,7 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
     // exercised end-to-end.
     const script = `
       const { defineRepoContract, runRepoContract } = require("repo-contract");
+      const { spawn } = require("node:child_process");
 
       const config = defineRepoContract({
         checks: {
@@ -84,6 +88,8 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
                 : { outcome: "fail", rationale: "expected exit code 0" },
           },
         },
+        spawn,
+        env: process.env,
       });
 
       runRepoContract(config).then(({ evidence, verdict }) => {
@@ -112,6 +118,7 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
     const script = `
       import { defineRepoContract, runRepoContract } from "repo-contract";
       import { format } from "repo-contract/presets";
+      import { spawn } from "node:child_process";
 
       const config = defineRepoContract({
         checks: {
@@ -123,6 +130,8 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
             run: [process.execPath, "-e", "process.exit(0)"],
           },
         },
+        spawn,
+        env: process.env,
       });
 
       const { verdict } = await runRepoContract(config);
@@ -148,6 +157,7 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
     const script = `
       const { defineRepoContract, runRepoContract } = require("repo-contract");
       const { format } = require("repo-contract/presets");
+      const { spawn } = require("node:child_process");
 
       const config = defineRepoContract({
         checks: {
@@ -156,6 +166,8 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
             run: [process.execPath, "-e", "process.exit(0)"],
           },
         },
+        spawn,
+        env: process.env,
       });
 
       runRepoContract(config).then(({ verdict }) => {

@@ -10,6 +10,7 @@
 // SIGINT before it can finish) -- so the spawned check process instead
 // writes its own pid to the file path given as argv[2], a side channel the
 // test can poll independently of runChecks' own return value.
+import { spawn } from "node:child_process"
 import { runChecks } from "../../../../src/execution/run-checks.js"
 import type { PolicyResult } from "../../../../src/types.js"
 
@@ -27,7 +28,7 @@ const check = {
   policy: (): PolicyResult => ({ outcome: "pass", rationale: "ok" }),
 }
 
-runChecks({ longRunning: check }, 1, undefined)
+runChecks({ longRunning: check }, 1, { spawn, env: process.env, shell: false }, undefined)
   .then(() => {
     process.stdout.write("DONE\n")
   })

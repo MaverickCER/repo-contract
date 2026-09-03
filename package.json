@@ -87,8 +87,8 @@
     "license": "npm run contract -- license",
     "lint": "npm run contract -- lint",
     "mutation": "npm run contract -- mutation",
-    "precommit": "npm run contract -- format lint typecheck schema dead-code architecture adr-governance suppression-governance security-network duplication",
-    "prepublishOnly": "npm run contract",
+    "precommit": "npm run contract -- format lint typecheck schema dead-code architecture adr-governance suppression-governance security-network duplication && npm run verify-no-ambient-capabilities",
+    "prepublishOnly": "npm run contract && npm run verify-no-ambient-capabilities",
     "prepush": "npm run contract",
     "publint": "npm run contract -- publint",
     "schema": "npm run contract -- schema",
@@ -109,14 +109,12 @@
     "test:unit": "node scripts/run-test-category.mjs unit",
     "test:watch": "vitest --watch",
     "typecheck": "npm run contract -- typecheck",
-    "verify": "npm run contract"
+    "verify": "npm run contract",
+    "verify-no-ambient-capabilities": "node scripts/verify-no-ambient-capabilities.mjs"
   },
   "overrides": {
     "esbuild": "^0.28.1",
     "qs": "^6.15.2"
-  },
-  "dependencies": {
-    "cross-spawn": "^7.0.6"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
@@ -138,6 +136,7 @@
     "@types/shell-quote": "^1.7.5",
     "@vitest/coverage-v8": "^4.1.11",
     "ajv": "^8.20.0",
+    "cross-spawn": "^7.0.6",
     "dependency-cruiser": "^18.2.0",
     "eslint": "^10.8.0",
     "eslint-config-prettier": "10.1.8",

@@ -11,10 +11,21 @@
  * this type must satisfy. See ../README.md and
  * ../../specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md.
  */
+import { spawn } from "node:child_process"
 import { defineRepoContract } from "repo-contract"
 import { format, lint, typecheck } from "repo-contract/presets"
 
 export default defineRepoContract({
+  // repo-contract never spawns a process or reads process.env itself -- the
+  // consumer supplies both (see repo-contract's own
+  // specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
+  // Plain node:child_process.spawn is enough for this example's three
+  // read-only checks; an organization whose consuming repos run on Windows
+  // and spawn npm-installed `.cmd` shims would swap in `cross-spawn` here
+  // instead (cross-spawn is a spawn implementation choice, not the same
+  // thing as `shell: true`).
+  spawn,
+  env: process.env,
   checks: {
     // The `format` preset ships `prettier --write .`, which fixes files in place
     // and therefore can never fail on unformatted input. An organizational
