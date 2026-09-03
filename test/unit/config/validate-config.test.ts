@@ -5,9 +5,22 @@ import {
   InvalidCheckConfigError,
   InvalidRepoContractConfigError,
 } from "../../../src/errors.js"
-import type { PolicyResult, RepoContractConfig } from "../../../src/types.js"
+import type { PolicyResult, RepoContractConfig, Spawner } from "../../../src/types.js"
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
+
+// `spawn`/`env` are required RepoContractConfig fields (see
+// specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
+// validated *before* validateRepoContractConfig ever reaches per-check or
+// dependency-graph validation -- every test below that isn't itself testing
+// spawn/env/concurrency/checks-shape rejection needs a valid stand-in for
+// both so it still reaches the validation logic it actually means to
+// exercise. Neither is ever called by validateRepoContractConfig itself
+// (it only checks their shape), so a throwing stub is fine for `okSpawn`.
+const okSpawn: Spawner = () => {
+  throw new Error("okSpawn should never actually be invoked by validateRepoContractConfig.")
+}
+const okEnv: NodeJS.ProcessEnv = {}
 
 /** Casts a deliberately-malformed plain object into `RepoContractConfig` for a validation test -- `validateRepoContractConfig` exists precisely to catch shapes the type system alone can't rule out (plain JS callers, widened/cast values). */
 function malformed(value: unknown): RepoContractConfig {
@@ -17,13 +30,17 @@ function malformed(value: unknown): RepoContractConfig {
 describe("validateRepoContractConfig", () => {
   it("accepts a config with zero checks", () => {
     expect(() => {
-      validateRepoContractConfig({ checks: {} })
+      validateRepoContractConfig({ checks: {}, spawn: okSpawn, env: okEnv })
     }).not.toThrow()
   })
 
   it("accepts a config with one check", () => {
     expect(() => {
-      validateRepoContractConfig({ checks: { tests: { run: "npm test", policy: okPolicy } } })
+      validateRepoContractConfig({
+        checks: { tests: { run: "npm test", policy: okPolicy } },
+        spawn: okSpawn,
+        env: okEnv,
+      })
     }).not.toThrow()
   })
 
@@ -35,13 +52,141 @@ describe("validateRepoContractConfig", () => {
           b: { run: ["echo", "b"], policy: okPolicy },
           c: { run: "echo c", shell: true, policy: okPolicy },
         },
+        spawn: okSpawn,
+        env: okEnv,
       })
     }).not.toThrow()
   })
 
   it("accepts a positive integer concurrency", () => {
     expect(() => {
-      validateRepoContractConfig({ checks: {}, concurrency: 4 })
+      validateRepoContractConfig({ checks: {}, concurrency: 4, spawn: okSpawn, env: okEnv })
+    }).not.toThrow()
+  })
+
+  it("accepts a missing spawn/env with an invalid concurrency still rejected on concurrency first", () => {
+    // Deliberately omits spawn/env: concurrency is validated before either, so this still exercises
+    // the concurrency rejection path, not a spurious "spawn must be a function".
+    expect(() => {
+      validateRepoContractConfig(malformed({ checks: {}, concurrency: 0 }))
+    }).toThrow(/concurrency must be a positive integer/)
+  })
+
+  it("rejects a missing spawn", () => {
+    expect(() => {
+      validateRepoContractConfig(malformed({ checks: {}, env: okEnv }))
+    }).toThrow(/spawn must be a function/)
+  })
+
+  it.each([5, "spawn", null, {}])("rejects a non-function spawn: %s", (spawn) => {
+    expect(() => {
+      validateRepoContractConfig(malformed({ checks: {}, spawn, env: okEnv }))
+    }).toThrow(/spawn must be a function/)
+  })
+
+  it("rejects a missing env", () => {
+    expect(() => {
+      validateRepoContractConfig(malformed({ checks: {}, spawn: okSpawn }))
+    }).toThrow(/env must be an object mapping variable name to value/)
+  })
+
+  it.each([5, "env", null, []])("rejects a non-object env: %s", (env) => {
+    expect(() => {
+      validateRepoContractConfig(malformed({ checks: {}, spawn: okSpawn, env }))
+    }).toThrow(/env must be an object mapping variable name to value/)
+  })
+
+  it("accepts a config-level env with values", () => {
+    expect(() => {
+      validateRepoContractConfig(
+        malformed({ checks: {}, spawn: okSpawn, env: { PATH: "/usr/bin" } }),
+      )
+    }).not.toThrow()
+  })
+
+  it("accepts a config-level env value that is explicitly undefined -- NodeJS.ProcessEnv's own contract, unlike check.env's string-only Record", () => {
+    expect(() => {
+      validateRepoContractConfig(
+        malformed({ checks: {}, spawn: okSpawn, env: { PATH: "/usr/bin", UNSET: undefined } }),
+      )
+    }).not.toThrow()
+  })
+
+  it.each([5, true, null, {}, []])(
+    "rejects a config-level env value that is neither a string nor undefined: %s",
+    (value) => {
+      expect(() => {
+        validateRepoContractConfig(malformed({ checks: {}, spawn: okSpawn, env: { BAD: value } }))
+      }).toThrow('env["BAD"] must be a string or undefined.')
+    },
+  )
+
+  it.each([true, false])("accepts a boolean config-level shell: %s", (shell) => {
+    expect(() => {
+      validateRepoContractConfig(malformed({ checks: {}, spawn: okSpawn, env: okEnv, shell }))
+    }).not.toThrow()
+  })
+
+  it("rejects a non-boolean config-level shell", () => {
+    expect(() => {
+      validateRepoContractConfig(
+        malformed({ checks: {}, spawn: okSpawn, env: okEnv, shell: "yes" }),
+      )
+    }).toThrow(/shell must be a boolean/)
+  })
+
+  it("accepts a missing killProcessTree (optional)", () => {
+    expect(() => {
+      validateRepoContractConfig(malformed({ checks: {}, spawn: okSpawn, env: okEnv }))
+    }).not.toThrow()
+  })
+
+  it("accepts a function killProcessTree", () => {
+    expect(() => {
+      validateRepoContractConfig(
+        malformed({ checks: {}, spawn: okSpawn, env: okEnv, killProcessTree: okSpawn }),
+      )
+    }).not.toThrow()
+  })
+
+  it.each([5, "taskkill", null, {}])(
+    "rejects a non-function killProcessTree: %s",
+    (killProcessTree) => {
+      expect(() => {
+        validateRepoContractConfig(
+          malformed({ checks: {}, spawn: okSpawn, env: okEnv, killProcessTree }),
+        )
+      }).toThrow(/killProcessTree must be a function/)
+    },
+  )
+
+  it("a check's own shell: false overrides a config-level shell: true", () => {
+    // Precedence is check.shell ?? config.shell ?? false -- an explicit false at the check level
+    // must win over a true global default, not just widen it. Exercised here via run-string
+    // tokenization: shell: true would accept an unquoted shell operator, shell: false must still
+    // reject it even with the global default set to true.
+    expect(() => {
+      validateRepoContractConfig(
+        malformed({
+          checks: { a: { run: "echo a && echo b", shell: false, policy: okPolicy } },
+          spawn: okSpawn,
+          env: okEnv,
+          shell: true,
+        }),
+      )
+    }).toThrow(/shell operator/)
+  })
+
+  it("a check with no shell of its own inherits a config-level shell: true", () => {
+    expect(() => {
+      validateRepoContractConfig(
+        malformed({
+          checks: { a: { run: "echo a && echo b", policy: okPolicy } },
+          spawn: okSpawn,
+          env: okEnv,
+          shell: true,
+        }),
+      )
     }).not.toThrow()
   })
 
@@ -76,7 +221,7 @@ describe("validateRepoContractConfig", () => {
   })
 
   function configWith(check: unknown): RepoContractConfig {
-    return malformed({ checks: { x: check } })
+    return malformed({ checks: { x: check }, spawn: okSpawn, env: okEnv })
   }
 
   it("rejects a check definition that is not an object", () => {
@@ -92,7 +237,13 @@ describe("validateRepoContractConfig", () => {
     "rejects the integer-like check id %j with a message naming the reordering contract",
     (id) => {
       try {
-        validateRepoContractConfig(malformed({ checks: { [id]: { run: "x", policy: okPolicy } } }))
+        validateRepoContractConfig(
+          malformed({
+            checks: { [id]: { run: "x", policy: okPolicy } },
+            spawn: okSpawn,
+            env: okEnv,
+          }),
+        )
         expect.unreachable("expected an integer-like check id to be rejected")
       } catch (error) {
         expect(error).toBeInstanceOf(InvalidCheckConfigError)
@@ -107,7 +258,13 @@ describe("validateRepoContractConfig", () => {
     "accepts the non-integer-like check id %j",
     (id) => {
       expect(() => {
-        validateRepoContractConfig(malformed({ checks: { [id]: { run: "x", policy: okPolicy } } }))
+        validateRepoContractConfig(
+          malformed({
+            checks: { [id]: { run: "x", policy: okPolicy } },
+            spawn: okSpawn,
+            env: okEnv,
+          }),
+        )
       }).not.toThrow()
     },
   )
@@ -300,6 +457,8 @@ describe("validateRepoContractConfig", () => {
             a: { run: "echo a", policy: okPolicy },
             b: { run: "echo b", dependsOn: ["a"], policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
     }).not.toThrow()
@@ -315,6 +474,8 @@ describe("validateRepoContractConfig", () => {
             c: { run: "echo c", dependsOn: ["a"], policy: okPolicy },
             d: { run: "echo d", dependsOn: ["b", "c"], policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
     }).not.toThrow()
@@ -345,6 +506,8 @@ describe("validateRepoContractConfig", () => {
       validateRepoContractConfig(
         malformed({
           checks: { a: { run: "echo a", dependsOn: ["does-not-exist"], policy: okPolicy } },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
       expect.unreachable("expected validateRepoContractConfig to throw")
@@ -368,6 +531,8 @@ describe("validateRepoContractConfig", () => {
             a: { run: "echo a", dependsOn: ["b"], policy: okPolicy },
             b: { run: "echo b", dependsOn: ["a"], policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
       expect.unreachable("expected validateRepoContractConfig to throw")
@@ -388,6 +553,8 @@ describe("validateRepoContractConfig", () => {
             b: { run: "echo b", dependsOn: ["c"], policy: okPolicy },
             c: { run: "echo c", dependsOn: ["a"], policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
       expect.unreachable("expected validateRepoContractConfig to throw")
@@ -408,6 +575,8 @@ describe("validateRepoContractConfig", () => {
             a: { run: "echo a", dependsOn: ["b"], policy: okPolicy },
             b: { run: "echo b", policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
       expect.unreachable("expected validateRepoContractConfig to throw")
@@ -450,6 +619,8 @@ describe("validateRepoContractConfig", () => {
             a: { run: "echo a", isolated: true, policy: okPolicy },
             b: { run: "echo b", dependsOn: ["a"], policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
     }).not.toThrow()
@@ -464,6 +635,8 @@ describe("validateRepoContractConfig", () => {
             b: { run: "echo b", policy: okPolicy },
             c: { run: "echo c", isolated: true, policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
     }).not.toThrow()
@@ -478,6 +651,8 @@ describe("validateRepoContractConfig", () => {
             b: { run: "echo b", isolated: true, policy: okPolicy },
             c: { run: "echo c", policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
     }).not.toThrow()
@@ -491,6 +666,8 @@ describe("validateRepoContractConfig", () => {
             a: { run: "echo a", isolated: true, policy: okPolicy },
             b: { run: "echo b", isolated: true, dependsOn: ["a"], policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
     }).not.toThrow()
@@ -504,6 +681,8 @@ describe("validateRepoContractConfig", () => {
             a: { run: "echo a", isolated: true, dependsOn: ["b"], policy: okPolicy },
             b: { run: "echo b", isolated: true, dependsOn: ["a"], policy: okPolicy },
           },
+          spawn: okSpawn,
+          env: okEnv,
         }),
       )
       expect.unreachable("expected validateRepoContractConfig to throw")
@@ -530,7 +709,11 @@ describe("validateRepoContractConfig", () => {
   it("includes the offending checkId in the thrown error, prefixed identically to InvalidCheckConfigError's own message format", () => {
     try {
       validateRepoContractConfig(
-        malformed({ checks: { "my-check": { run: 5, policy: okPolicy } } }),
+        malformed({
+          checks: { "my-check": { run: 5, policy: okPolicy } },
+          spawn: okSpawn,
+          env: okEnv,
+        }),
       )
       expect.unreachable("expected validateRepoContractConfig to throw")
     } catch (error) {

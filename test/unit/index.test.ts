@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 import * as repoContract from "../../src/index.js"
+import { testEnv } from "../helpers/test-env.js"
+import { testSpawn } from "../helpers/test-spawn.js"
 
 /**
  * A smoke test of the package's public barrel itself -- every other test
@@ -42,6 +44,8 @@ describe("public API barrel (src/index.ts)", () => {
               : { outcome: "fail", rationale: "expected exit code 0" },
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     const { evidence, verdict } = await repoContract.runRepoContract(config)

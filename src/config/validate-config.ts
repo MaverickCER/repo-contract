@@ -30,7 +30,10 @@ export function validateRepoContractConfig(config: RepoContractConfig): void {
     throw new InvalidRepoContractConfigError("config must be an object.")
   }
 
-  const { checks, concurrency } = untrusted as Record<string, unknown>
+  const { checks, concurrency, spawn, env, shell, killProcessTree } = untrusted as Record<
+    string,
+    unknown
+  >
 
   if (checks === null || typeof checks !== "object" || Array.isArray(checks)) {
     throw new InvalidRepoContractConfigError(
@@ -52,11 +55,60 @@ export function validateRepoContractConfig(config: RepoContractConfig): void {
     }
   }
 
+  // repo-contract never imports a process-spawning implementation itself (see
+  // specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
+  // -- `spawn` is a required, consumer-supplied capability, not an optional
+  // field with an internal fallback, so its absence is a config error same
+  // as any other missing required field.
+  if (typeof spawn !== "function") {
+    throw new InvalidRepoContractConfigError("spawn must be a function.")
+  }
+
+  // Same rationale as `spawn` above, for `process.env` -- `env` is required, not defaulted to
+  // `{}` internally, since a silent empty environment would break `PATH` resolution for most
+  // real check commands. Delegated to its own function, mirroring validateEnv's per-check
+  // counterpart below, so this function's own complexity stays flat regardless of how much a
+  // single field's validation requires.
+  validateConfigEnv(env)
+
+  if (shell !== undefined && typeof shell !== "boolean") {
+    throw new InvalidRepoContractConfigError("shell must be a boolean when provided.")
+  }
+  const globalShell = shell === true
+
+  // Optional, unlike spawn/env: omitting it is a documented, valid choice (Windows falls back to
+  // killing only a timed-out/aborted check's immediate process, not its full descendant tree) --
+  // see killProcessTree's own doc comment on RepoContractConfig.
+  if (killProcessTree !== undefined && typeof killProcessTree !== "function") {
+    throw new InvalidRepoContractConfigError("killProcessTree must be a function when provided.")
+  }
+
   for (const [checkId, check] of Object.entries(checks)) {
-    validateCheckDefinition(checkId, check)
+    validateCheckDefinition(checkId, check, globalShell)
   }
 
   validateDependencyGraph(checks as Record<string, { dependsOn?: readonly string[] }>)
+}
+
+/**
+ * Validates that `env` (`RepoContractConfig.env`, required) is an object whose every value is a
+ * string or `undefined` -- `NodeJS.ProcessEnv`'s own contract, distinct from `validateEnv` below,
+ * which validates the per-check `env` field against a stricter string-only `Record<string, string>`.
+ * `undefined` is accepted here (not just tolerated) because it's a legitimate value `buildEnv`
+ * itself filters out, not a type escape hatch.
+ * @param env - the config's raw `env` field to validate.
+ */
+function validateConfigEnv(env: unknown): void {
+  if (env === null || typeof env !== "object" || Array.isArray(env)) {
+    throw new InvalidRepoContractConfigError(
+      "env must be an object mapping variable name to value.",
+    )
+  }
+  for (const [key, value] of Object.entries(env as Record<string, unknown>)) {
+    if (typeof value !== "string" && value !== undefined) {
+      throw new InvalidRepoContractConfigError(`env["${key}"] must be a string or undefined.`)
+    }
+  }
 }
 
 /**
@@ -67,8 +119,9 @@ export function validateRepoContractConfig(config: RepoContractConfig): void {
  * regardless of how many fields exist to check.
  * @param checkId - identifies which check is being validated, used in thrown error messages.
  * @param check - the check definition to validate.
+ * @param globalShell - the run-wide `shell` default (`config.shell ?? false`, already validated), used when this check doesn't set its own `shell`.
  */
-function validateCheckDefinition(checkId: string, check: unknown): void {
+function validateCheckDefinition(checkId: string, check: unknown, globalShell: boolean): void {
   // An integer-like key ("0", "42", ...) is enumerated by `Object.keys` in
   // ascending numeric order ahead of every other key, regardless of insertion
   // order -- so `validateDependencyGraph`'s `ids`/`indexById` (and the runtime
@@ -87,7 +140,7 @@ function validateCheckDefinition(checkId: string, check: unknown): void {
   }
 
   const fields = check as Record<string, unknown>
-  const usesShell = validateShell(checkId, fields.shell)
+  const usesShell = validateShell(checkId, fields.shell, globalShell)
   validateRun(checkId, fields.run, usesShell)
   validateCwd(checkId, fields.cwd)
   validateEnv(checkId, fields.env)
@@ -100,16 +153,18 @@ function validateCheckDefinition(checkId: string, check: unknown): void {
 }
 
 /**
- * Returns whether `shell: true` was set, having already validated `shell`'s own type.
+ * Returns this check's effective shell mode (`check.shell ?? globalShell`), having already
+ * validated `shell`'s own type.
  * @param checkId - identifies which check is being validated, used in thrown error messages.
  * @param shell - the check's raw `shell` field to validate.
- * @returns `true` if `shell` was set to `true`, `false` otherwise (including when omitted).
+ * @param globalShell - the run-wide `shell` default, used when this check's own `shell` is omitted.
+ * @returns this check's effective shell mode -- `shell` itself when set, `globalShell` otherwise.
  */
-function validateShell(checkId: string, shell: unknown): boolean {
+function validateShell(checkId: string, shell: unknown, globalShell: boolean): boolean {
   if (shell !== undefined && typeof shell !== "boolean") {
     throw new InvalidCheckConfigError(checkId, "shell must be a boolean when provided.")
   }
-  return shell === true
+  return typeof shell === "boolean" ? shell : globalShell
 }
 
 /**

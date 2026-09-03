@@ -39,6 +39,8 @@ export type {
   PolicyResult,
   RepoContractConfig,
   RunRepoContractOptions,
+  Spawner,
+  SyncSpawner,
   ValidatedCheckSchema,
   Verdict,
 } from "./types.js"

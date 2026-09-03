@@ -4,6 +4,11 @@
 
 ```ts
 
+import type { ChildProcess } from 'node:child_process';
+import type { SpawnOptions } from 'node:child_process';
+import type { SpawnSyncOptions } from 'node:child_process';
+import type { SpawnSyncReturns } from 'node:child_process';
+
 // @public
 export interface CheckDefinition extends CheckDefinitionConfig {
     readonly dependsOn?: readonly string[];
@@ -156,6 +161,10 @@ export class PolicyThrewError extends RepoContractError {
 export interface RepoContractConfig<TChecks extends CheckSchema = CheckSchema> {
     readonly checks: TChecks;
     readonly concurrency?: number;
+    readonly env: NodeJS.ProcessEnv;
+    readonly killProcessTree?: SyncSpawner;
+    readonly shell?: boolean;
+    readonly spawn: Spawner;
 }
 
 // @public
@@ -174,6 +183,12 @@ export interface RunRepoContractOptions {
     readonly checks?: string[];
     readonly signal?: AbortSignal;
 }
+
+// @public
+export type Spawner = (command: string, args: readonly string[], options: SpawnOptions) => ChildProcess;
+
+// @public
+export type SyncSpawner = (command: string, args: readonly string[], options: SpawnSyncOptions) => SpawnSyncReturns<Buffer | string>;
 
 // @public
 export class UnknownCheckIdError extends RepoContractError {

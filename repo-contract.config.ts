@@ -86,6 +86,7 @@
  * this repository's multiple entrypoints trigger a real upstream attw bug
  * no `run`-spread override alone could work around.
  */
+import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
 import { accessibility } from "./checks/accessibility.js"
 import { adrGovernance } from "./checks/adr-governance.js"
 import { apiContract } from "./checks/api-contract.js"
@@ -124,6 +125,20 @@ import {
 } from "./src/presets/index.js"
 
 export default defineRepoContract({
+  // repo-contract's own checks are exactly the kind of npm-installed CLI
+  // tools (eslint, tsc, vitest, prettier, ...) that resolve to `.cmd` shims
+  // on Windows -- cross-spawn is the right choice *here*, as a devDependency
+  // of this repository's own self-hosting tooling, even though the
+  // published library no longer carries it as a runtime dependency of its
+  // own. See specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md.
+  spawn: crossSpawn,
+  // eslint-disable-next-line n/no-process-env -- this is the top-level self-hosting config, not published library code (see package.json's "files"); supplying the real ambient environment to repo-contract's own checks is exactly what this repository, as a consumer, is supposed to do.
+  env: process.env,
+  // Windows-only: lets a timed-out/aborted/host-SIGINT-killed check's full process tree (not just
+  // its immediate process) actually get cleaned up on the windows-latest CI runner -- see
+  // RepoContractConfig.killProcessTree's own doc comment. cross-spawn's own `sync` export matches
+  // node:child_process.spawnSync's shape.
+  killProcessTree: crossSpawnSync,
   checks: {
     // -- Writers --
     "suppression-governance": suppressionGovernance,

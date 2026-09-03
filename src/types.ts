@@ -5,6 +5,13 @@
  * `runRepoContract` returns both together.
  */
 
+import type {
+  ChildProcess,
+  SpawnOptions,
+  SpawnSyncOptions,
+  SpawnSyncReturns,
+} from "node:child_process"
+
 /** Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only. */
 export type OutputFormat = "json" | "yaml" | "text"
 
@@ -215,9 +222,11 @@ export interface CheckDefinitionConfig {
   readonly run: string | readonly string[]
   /**
    * Opt into real shell execution instead of the safe argv-only default.
-   * When `true`, `run` must be a `string` and is passed to the platform
-   * shell as-is (via cross-spawn's own `shell` option) -- shell metacharacter
-   * rejection does not apply. See SECURITY.md before enabling this.
+   * When `true` (or left unset with `RepoContractConfig.shell: true` as the
+   * run-wide default -- see that field), `run` must be a `string` and is
+   * passed to the platform shell as-is (via the supplied `Spawner`'s own
+   * `shell` option) -- shell metacharacter rejection does not apply. See
+   * SECURITY.md before enabling this.
    */
   readonly shell?: boolean
   /** Working directory for the spawned process. Defaults to the current process's `cwd`. */
@@ -302,12 +311,86 @@ export type ValidatedCheckSchema<T> = {
     : never
 }
 
+/**
+ * Spawns a child process, given a resolved command, argv, and options --
+ * modeled directly on `node:child_process`'s own `spawn(command, args,
+ * options)` signature so both `node:child_process.spawn` and cross-spawn's
+ * exported `spawn` are valid, drop-in values with no adapter code required
+ * (see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
+ * repo-contract treats whatever function is supplied as a trusted
+ * capability: it calls it with a resolved command/argv/options and does not
+ * inspect, wrap, or sanitize it -- the security properties of the spawned
+ * process are entirely the supplied function's own.
+ */
+export type Spawner = (
+  command: string,
+  args: readonly string[],
+  options: SpawnOptions,
+) => ChildProcess
+
+/**
+ * Synchronously spawns a child process and waits for it to exit -- modeled directly on
+ * `node:child_process`'s own `spawnSync(command, args, options)` signature, the same
+ * drop-in-compatibility approach as `Spawner`. Used only for `RepoContractConfig.killProcessTree`
+ * (Windows process-tree cleanup via `taskkill`, which fundamentally needs to run synchronously from
+ * a signal-handling context that cannot `await` anything else -- see
+ * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
+ * `node:child_process.spawnSync` and cross-spawn's exported `sync` are both valid, drop-in values.
+ */
+export type SyncSpawner = (
+  command: string,
+  args: readonly string[],
+  options: SpawnSyncOptions,
+) => SpawnSyncReturns<Buffer | string>
+
 /** Top-level configuration passed to `defineRepoContract`/`runRepoContract`. */
 export interface RepoContractConfig<TChecks extends CheckSchema = CheckSchema> {
   /** Every check to run, keyed by check id. */
   readonly checks: TChecks
   /** Maximum number of checks to execute concurrently. Defaults to `os.availableParallelism()`. Must be a positive integer. */
   readonly concurrency?: number
+  /**
+   * The trusted capability repo-contract calls to spawn every check's
+   * process -- e.g. `child_process.spawn` (from `"node:child_process"`) or
+   * cross-spawn's exported `spawn`. Required: repo-contract never imports a
+   * process-spawning implementation itself (see ADR 0011 above `Spawner`).
+   * `child_process.spawn` alone does not resolve Windows `.cmd`/`.bat`
+   * shims (most npm-installed CLI tools on Windows) without `shell: true`;
+   * pass cross-spawn instead for that correctness without enabling shell
+   * metacharacter interpretation -- cross-spawn is a spawn implementation
+   * choice, not a `shell: true` equivalent. See `shell` below.
+   */
+  readonly spawn: Spawner
+  /**
+   * The ambient environment repo-contract treats as inheritable by each
+   * check whose `inheritEnv` is not `false` (the default) -- typically
+   * `process.env`, passed straight through by reference (never copied
+   * internally) so a consumer that mutates `process.env` mid-run still sees
+   * that reflected in later-spawned checks, exactly as if repo-contract had
+   * read `process.env` itself. Required: repo-contract never reads
+   * `process.env` internally (see ADR 0011 above `Spawner`). Typed as
+   * `NodeJS.ProcessEnv` so `env: process.env` needs no casting.
+   */
+  readonly env: NodeJS.ProcessEnv
+  /**
+   * Global default for every check's own `shell` when that check doesn't
+   * set one itself (`check.shell ?? shell ?? false`). Defaults to `false`,
+   * the safe argv-only mode -- unrelated to which `spawn` is supplied; see
+   * `spawn`'s own doc comment for that distinction.
+   */
+  readonly shell?: boolean
+  /**
+   * The trusted capability repo-contract calls, on Windows only, to forcibly terminate a check's
+   * entire process tree (not just its immediate process) on a timeout, an aborted run, or a
+   * host-process SIGINT/SIGTERM -- e.g. `child_process.spawnSync` (from `"node:child_process"`) or
+   * cross-spawn's exported `sync`. Optional, unlike `spawn`/`env`: when omitted, Windows cleanup
+   * falls back to terminating only the check's own immediate process (not any subprocess it spawned
+   * internally) -- correct for the common case, but a check that spawns its own descendants (e.g.
+   * `npm test` spawning the real test runner) may leave them running. POSIX cleanup never needs
+   * this at all (`process.kill(-pid, signal)` reaches the whole process group directly, no spawning
+   * required) -- see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md.
+   */
+  readonly killProcessTree?: SyncSpawner
 }
 
 /** Optional per-run controls for `runRepoContract`. */
