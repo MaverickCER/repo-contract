@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process"
+import type { SpawnSyncReturns } from "node:child_process"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { killTree, shouldSpawnDetached } from "../../../src/execution/process-tree.js"
 
@@ -134,6 +135,44 @@ describe("killTree", () => {
   // cross-user permissions -- the one narrow, justified mock in this suite,
   // isolated to exactly this error-classification behavior rather than
   // mocking child_process itself.
+  // Forces the win32 branch via withPlatform so this suite can verify the JS-level
+  // killProcessTree call-through contract on any OS -- the real taskkill behavior itself is
+  // exercised only on a real Windows runner, by test/unit/cross-platform/windows-taskkill.test.ts.
+  describe("killProcessTree capability (forced win32)", () => {
+    it("is a documented no-op -- never throws, never calls anything -- when killProcessTree is omitted", () => {
+      withPlatform("win32", () => {
+        expect(() => {
+          killTree(12345, "SIGTERM")
+        }).not.toThrow()
+      })
+    })
+
+    it("calls the supplied killProcessTree with taskkill's command/args and reads its .error", () => {
+      withPlatform("win32", () => {
+        const calls: { command: string; args: readonly string[] }[] = []
+        const fakeKillProcessTree = (command: string, args: readonly string[]) => {
+          calls.push({ command, args })
+          return { error: undefined } as SpawnSyncReturns<Buffer>
+        }
+
+        killTree(12345, "SIGTERM", fakeKillProcessTree)
+
+        expect(calls).toEqual([{ command: "taskkill", args: ["/pid", "12345", "/t", "/f"] }])
+      })
+    })
+
+    it("rethrows killProcessTree's own result.error (a JS-level spawn failure)", () => {
+      withPlatform("win32", () => {
+        const spawnFailure = new Error("taskkill ENOENT")
+        const failingKillProcessTree = () => ({ error: spawnFailure }) as SpawnSyncReturns<Buffer>
+
+        expect(() => {
+          killTree(12345, "SIGTERM", failingKillProcessTree)
+        }).toThrow(spawnFailure)
+      })
+    })
+  })
+
   describe.skipIf(process.platform === "win32")(
     "process.kill error classification (mocked -- EPERM is not reproducible in CI)",
     () => {

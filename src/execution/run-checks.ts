@@ -8,7 +8,7 @@ import type {
 import { composeSignals } from "./abort-signals.js"
 import { runWithConcurrency } from "./concurrency-pool.js"
 import { runWithConcurrencyGraph } from "./dependency-scheduler.js"
-import type { ActiveCheckHandle } from "./spawn-check.js"
+import type { ActiveCheckHandle, ExecutionCapability } from "./spawn-check.js"
 import { SIGKILL_GRACE_PERIOD_MS, spawnCheck } from "./spawn-check.js"
 
 /**
@@ -192,12 +192,14 @@ function resolveCheckDependencies(
  * simply absent from the result, not present with some placeholder value.
  * @param checks - the full set of configured checks, keyed by id
  * @param concurrency - the maximum number of checks to run in parallel at once
+ * @param execution - the run's trusted execution capabilities (`spawn`, `env`, resolved global `shell` default), forwarded to every `spawnCheck` call
  * @param options - run options; `options.checks` restricts execution to those ids (plus their dependencies), `options.signal` cancels the whole run
  * @returns each executed check's id, definition, and raw evidence, one entry per resolved check regardless of whether it actually spawned
  */
 export async function runChecks(
   checks: CheckSchema,
   concurrency: number,
+  execution: ExecutionCapability,
   options?: RunRepoContractOptions,
 ): Promise<readonly CheckExecutionEntry[]> {
   const entries = options?.checks
@@ -235,7 +237,7 @@ export async function runChecks(
     string,
     CheckDefinition,
   ]): Promise<CheckExecutionEntry> => {
-    const evidence = await spawnCheck(checkId, check, runSignal, activeHandles)
+    const evidence = await spawnCheck(checkId, check, runSignal, activeHandles, execution)
     return [checkId, check, evidence]
   }
 

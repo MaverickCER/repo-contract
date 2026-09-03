@@ -9,12 +9,18 @@ import {
 } from "../../src/errors.js"
 import { runRepoContract } from "../../src/run-repo-contract.js"
 import type { RepoContractConfig } from "../../src/types.js"
+import { testEnv } from "../helpers/test-env.js"
+import { testSpawn } from "../helpers/test-spawn.js"
 
 const node = process.execPath
 
 describe("runRepoContract", () => {
   it("handles zero checks -- passed is vacuously true, evidence.checks is empty", async () => {
-    const { evidence, verdict } = await runRepoContract({ checks: {} })
+    const { evidence, verdict } = await runRepoContract({
+      checks: {},
+      spawn: testSpawn,
+      env: testEnv,
+    })
     expect(verdict.passed).toBe(true)
     expect(verdict.checks).toEqual({})
     expect(evidence.checks).toEqual({})
@@ -33,6 +39,8 @@ describe("runRepoContract", () => {
               : { outcome: "fail", rationale: "expected exit code 0" },
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(evidence.checks.tests.exitCode).toBe(0)
@@ -68,6 +76,8 @@ describe("runRepoContract", () => {
               : { outcome: "fail", rationale: "wrong stdout" },
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(verdict.passed).toBe(false)
@@ -95,6 +105,8 @@ describe("runRepoContract", () => {
               : { outcome: "fail", rationale: "wrong" },
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(evidence.checks.broken.status).toBe("spawn_error")
@@ -120,6 +132,8 @@ describe("runRepoContract", () => {
           },
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(verdict.checks.mutation).toEqual({
@@ -129,7 +143,18 @@ describe("runRepoContract", () => {
   })
 
   it("throws InvalidRepoContractConfigError synchronously for a malformed config, before anything spawns", () => {
-    const malformed = { checks: null } as unknown as RepoContractConfig
+    // spawn/env are deliberately included and valid here, even though this test's own point is
+    // checks: null: this assertion only checks the error *class* (both the checks-shape and
+    // spawn/env checks throw the same InvalidRepoContractConfigError class), so without a valid
+    // spawn/env, a config with checks:null but missing spawn would ALSO throw
+    // InvalidRepoContractConfigError -- for "spawn must be a function" -- which would still satisfy
+    // this class-only assertion for the wrong reason, masking a real regression in the checks:null
+    // check specifically.
+    const malformed = {
+      checks: null,
+      spawn: testSpawn,
+      env: testEnv,
+    } as unknown as RepoContractConfig
     // A genuine synchronous throw -- `runRepoContract` is not `async`, so a config problem throws
     // to this non-awaiting caller directly, before any Promise is even created (see
     // runRepoContract's own doc comment). `expect(() => ...).toThrow(...)`, not
@@ -148,6 +173,8 @@ describe("runRepoContract", () => {
             },
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       }),
     ).rejects.toThrow(PolicyThrewError)
   })
@@ -167,6 +194,8 @@ describe("runRepoContract", () => {
             },
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
     } catch (error) {
       thrown = error
@@ -192,8 +221,32 @@ describe("runRepoContract", () => {
         },
       },
       concurrency: 1,
+      spawn: testSpawn,
+      env: testEnv,
     })
     expect(verdict.passed).toBe(true)
+  })
+
+  it("a config-level shell: true actually reaches the spawned process, not just validation -- a check with no shell of its own still gets real shell interpretation", async () => {
+    // Regression coverage for run-repo-contract.ts's `execution.shell = config.shell ?? false`:
+    // this can only be distinguished from a config.shell that's silently dropped by observing real
+    // shell-operator behavior (`&&`) at actual spawn time, through the full public pipeline -- a
+    // validate-config.ts-level test alone only proves the *value* is accepted, not that it's wired
+    // through to execution.
+    const { evidence } = await runRepoContract({
+      checks: {
+        // No shell of its own: relies entirely on the config-level default reaching spawnCheck.
+        both: {
+          run: `${node} -e "process.stdout.write('a')" && ${node} -e "process.stdout.write('b')"`,
+          policy: () => ({ outcome: "pass", rationale: "ok" }),
+        },
+      },
+      shell: true,
+      spawn: testSpawn,
+      env: testEnv,
+    })
+
+    expect(evidence.checks.both.stdout).toBe("ab")
   })
 
   it("propagates a run-level AbortSignal through the whole pipeline -- an aborted check still gets a verdict entry", async () => {
@@ -211,6 +264,8 @@ describe("runRepoContract", () => {
                 : { outcome: "fail", rationale: "did not complete" },
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       },
       { signal: controller.signal },
     )
@@ -247,6 +302,8 @@ describe("runRepoContract", () => {
               policy: () => ({ outcome: "pass", rationale: "ok" }),
             },
           },
+          spawn: testSpawn,
+          env: testEnv,
         }),
       ).toThrow(DependencyDeclaredLaterError)
       expect(existsSync(markerPath)).toBe(false)
@@ -273,6 +330,8 @@ describe("runRepoContract", () => {
           },
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(verdict.checks.integration).toEqual({
@@ -302,6 +361,8 @@ describe("runRepoContract", () => {
           },
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(verdict.checks.mutation).toEqual({
@@ -318,6 +379,8 @@ describe("runRepoContract", () => {
           policy: () => ({ outcome: "fail", rationale: "exit code was non-zero" }),
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(evidence.checks.tests.exitCode).toBe(1)
@@ -342,6 +405,8 @@ describe("runRepoContract", () => {
           }),
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(verdict.checks.lint.outcome).toBe("fail")
@@ -363,6 +428,8 @@ describe("runRepoContract", () => {
           }),
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(verdict.passed).toBe(true)
@@ -377,6 +444,8 @@ describe("runRepoContract", () => {
           policy: () => ({ outcome: "warn", rationale: "2 low-severity findings, non-blocking" }),
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     const roundTripped = JSON.parse(JSON.stringify(verdict)) as typeof verdict
@@ -399,6 +468,8 @@ describe("runRepoContract", () => {
           policy: () => ({ outcome: "fail", rationale: "c failed" }),
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     expect(verdict.checks.a).toEqual({ outcome: "pass", rationale: "a passed" })
@@ -437,6 +508,8 @@ describe("runRepoContract", () => {
             policy: () => ({ outcome: "fail", rationale: "should never even matter" }),
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       })
 
       expect(verdict.passed).toBe(false)
@@ -469,6 +542,8 @@ describe("runRepoContract", () => {
           policy: () => ({ outcome: "fail", rationale: "should never even matter" }),
         },
       },
+      spawn: testSpawn,
+      env: testEnv,
     })
 
     const configuredIds = ["completed", "timedOut", "brokenSpawn"]
@@ -493,6 +568,8 @@ describe("runRepoContract", () => {
             policy: () => ({ outcome: "pass", rationale: "ok" }),
           },
         },
+        spawn: testSpawn,
+        env: testEnv,
       },
       { signal: controller.signal },
     )

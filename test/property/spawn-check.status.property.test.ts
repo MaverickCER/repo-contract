@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
+import type { ExecutionCapability } from "../../src/execution/spawn-check.js"
 import { spawnCheck } from "../../src/execution/spawn-check.js"
 import type { CheckDefinition, PolicyResult } from "../../src/types.js"
+import { testEnv } from "../helpers/test-env.js"
+import { testSpawn } from "../helpers/test-spawn.js"
 
 /**
  * Model-based test (an explicit predictive model checked against the real system, rather than a
@@ -22,6 +25,7 @@ import type { CheckDefinition, PolicyResult } from "../../src/types.js"
  */
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
+const execution: ExecutionCapability = { spawn: testSpawn, env: testEnv, shell: false }
 
 const SCENARIOS = [
   { abortDelayMs: 30, timeoutMs: 300, expectedStatus: "aborted" },
@@ -46,7 +50,7 @@ describe("spawnCheck -- CheckStatus priority (model-based)", () => {
       }
 
       try {
-        const evidence = await spawnCheck("id", check, controller.signal, new Set())
+        const evidence = await spawnCheck("id", check, controller.signal, new Set(), execution)
         expect(evidence.status).toBe(scenario.expectedStatus)
       } finally {
         clearTimeout(abortTimer)

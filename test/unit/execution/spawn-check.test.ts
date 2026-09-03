@@ -1,10 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { InvalidCheckConfigError } from "../../../src/errors.js"
-import type { ActiveCheckHandle } from "../../../src/execution/spawn-check.js"
+import type { ActiveCheckHandle, ExecutionCapability } from "../../../src/execution/spawn-check.js"
 import { spawnCheck } from "../../../src/execution/spawn-check.js"
 import type { CheckDefinition, PolicyResult } from "../../../src/types.js"
+import { testEnv } from "../../helpers/test-env.js"
+import { testSpawn } from "../../helpers/test-spawn.js"
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
+
+/** The default execution capability for every spawnCheck() call in this file that isn't itself testing shell/env/spawn precedence -- matches today's implicit defaults (shell: false). */
+const execution: ExecutionCapability = { spawn: testSpawn, env: testEnv, shell: false }
 
 /** Polls `predicate` until it's true or `deadlineMs` elapses, then throws. Used to observe `activeHandles` mid-flight, before a still-running spawnCheck() promise has settled. */
 async function waitUntil(predicate: () => boolean, deadlineMs = 5000): Promise<void> {
@@ -23,7 +28,7 @@ describe("spawnCheck -- command resolution", () => {
       run: [process.execPath, "-e", "process.stdout.write('ok')"],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.command).toBe(process.execPath)
     expect(evidence.args).toEqual(["-e", "process.stdout.write('ok')"])
     expect(evidence.stdout).toBe("ok")
@@ -31,7 +36,7 @@ describe("spawnCheck -- command resolution", () => {
 
   it("string-form run without shell is tokenized into a multi-character command, not destructured character by character", async () => {
     const check: CheckDefinition = { run: "node --version", policy: okPolicy }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.command).toBe("node")
     expect(evidence.args).toEqual(["--version"])
   })
@@ -39,7 +44,7 @@ describe("spawnCheck -- command resolution", () => {
   it("rejects an empty run array with InvalidCheckConfigError", async () => {
     const check = { run: [], policy: okPolicy } as unknown as CheckDefinition
     try {
-      await spawnCheck("id", check, undefined, new Set())
+      await spawnCheck("id", check, undefined, new Set(), execution)
       expect.unreachable("expected spawnCheck to reject")
     } catch (error) {
       expect(error).toBeInstanceOf(InvalidCheckConfigError)
@@ -53,7 +58,7 @@ describe("spawnCheck -- command resolution", () => {
       shell: true,
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.command).toBe("echo shell-marker-a && echo shell-marker-b")
     expect(evidence.args).toEqual([])
     expect(evidence.status).toBe("completed")
@@ -74,7 +79,7 @@ describe("spawnCheck -- environment", () => {
         ],
         policy: okPolicy,
       }
-      const evidence = await spawnCheck("id", check, undefined, new Set())
+      const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
       expect(evidence.stdout).toBe("inherited-value")
     } finally {
       delete process.env.SPAWN_CHECK_TEST_INHERITED
@@ -94,7 +99,7 @@ describe("spawnCheck -- environment", () => {
         env: { SPAWN_CHECK_TEST_OWN: "own-value" },
         policy: okPolicy,
       }
-      const evidence = await spawnCheck("id", check, undefined, new Set())
+      const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
       expect(evidence.stdout).toBe("<unset>/own-value")
     } finally {
       delete process.env.SPAWN_CHECK_TEST_INHERITED
@@ -113,7 +118,7 @@ describe("spawnCheck -- environment", () => {
         env: { SPAWN_CHECK_TEST_OVERLAY: "overlaid-value" },
         policy: okPolicy,
       }
-      const evidence = await spawnCheck("id", check, undefined, new Set())
+      const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
       expect(evidence.stdout).toBe("overlaid-value")
     } finally {
       delete process.env.SPAWN_CHECK_TEST_OVERLAY
@@ -133,7 +138,7 @@ describe("spawnCheck -- environment", () => {
       env: { SUPER_SECRET_TOKEN: secret },
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.status).toBe("spawn_error")
     expect(JSON.stringify(evidence)).not.toContain(secret)
     expect(evidence.spawnError ?? "").not.toContain(secret)
@@ -149,7 +154,7 @@ describe("spawnCheck -- already-aborted runSignal", () => {
       run: [process.execPath, "-e", "process.stdout.write('should not run')"],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, controller.signal, new Set())
+    const evidence = await spawnCheck("id", check, controller.signal, new Set(), execution)
     expect(evidence.status).toBe("aborted")
     expect(evidence.exitCode).toBeNull()
     expect(evidence.signal).toBeNull()
@@ -174,7 +179,7 @@ describe("spawnCheck -- timeoutMs firing with no runSignal at all", () => {
       timeoutMs: 100,
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.status).toBe("timed_out")
   })
 
@@ -186,7 +191,7 @@ describe("spawnCheck -- timeoutMs firing with no runSignal at all", () => {
       timeoutMs: 5_000_000_000,
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.status).toBe("completed")
     expect(evidence.stdout).toBe("done")
   })
@@ -198,7 +203,7 @@ describe("spawnCheck -- terminalEvidence timing", () => {
       run: [process.execPath, "-e", "process.stdout.write('x')"],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.durationMs).toBeGreaterThanOrEqual(0)
     expect(evidence.durationMs).toBeLessThan(10_000)
   })
@@ -210,7 +215,7 @@ describe("spawnCheck -- spawn_error evidence", () => {
       run: ["definitely-not-a-real-binary-xyz-spawn-check"],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.status).toBe("spawn_error")
     expect(typeof evidence.spawnError).toBe("string")
     expect(evidence.spawnErrorCode).toBe("ENOENT")
@@ -221,7 +226,7 @@ describe("spawnCheck -- spawn_error evidence", () => {
       run: [process.execPath, "-e", "process.stdout.write('ok')"],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect("spawnError" in evidence).toBe(false)
     expect("spawnErrorCode" in evidence).toBe(false)
   })
@@ -233,7 +238,7 @@ describe("spawnCheck -- stderr capture", () => {
       run: [process.execPath, "-e", "process.stderr.write('err-output')"],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.stderr).toBe("err-output")
     expect(evidence.stdout).toBe("")
   })
@@ -253,7 +258,7 @@ describe("spawnCheck -- bounded output capture", () => {
       run: [process.execPath, "-e", `process.stdout.write('a'.repeat(${String(OVERAGE_BYTES)}))`],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.stdout.length).toBeGreaterThan(CAP_BYTES)
     expect(evidence.stdout.length).toBeLessThan(CAP_BYTES + 100)
     expect(evidence.stdout).toContain("...[output truncated at")
@@ -268,7 +273,7 @@ describe("spawnCheck -- bounded output capture", () => {
       run: [process.execPath, "-e", `process.stdout.write('a'.repeat(${String(CAP_BYTES)}))`],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.stdout).toBe("a".repeat(CAP_BYTES))
     expect(evidence.stdout).not.toContain("truncated")
   })
@@ -278,7 +283,7 @@ describe("spawnCheck -- bounded output capture", () => {
       run: [process.execPath, "-e", `process.stdout.write('a'.repeat(${String(CAP_BYTES + 1)}))`],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.stdout).toContain("...[output truncated at")
   })
 
@@ -291,7 +296,7 @@ describe("spawnCheck -- bounded output capture", () => {
       ],
       policy: okPolicy,
     }
-    const evidence = await spawnCheck("id", check, undefined, new Set())
+    const evidence = await spawnCheck("id", check, undefined, new Set(), execution)
     expect(evidence.stderr.length).toBeGreaterThan(CAP_BYTES)
     expect(evidence.stderr.length).toBeLessThan(CAP_BYTES + 100)
     expect(evidence.stderr).toContain("...[output truncated at")
@@ -315,7 +320,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
         run: ["definitely-not-a-real-binary-xyz-spawn-check"],
         policy: okPolicy,
       }
-      const promise = spawnCheck("id", check, undefined, activeHandles)
+      const promise = spawnCheck("id", check, undefined, activeHandles, execution)
 
       // Checked synchronously, before any "error"/"close" event has had a
       // chance to fire: a real ENOENT spawn never assigns child.pid at all
@@ -334,7 +339,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
       run: [process.execPath, "-e", "process.stdout.write('done')"],
       policy: okPolicy,
     }
-    const promise = spawnCheck("id", check, undefined, activeHandles)
+    const promise = spawnCheck("id", check, undefined, activeHandles, execution)
 
     await waitUntil(() => activeHandles.size === 1)
 
@@ -351,7 +356,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
         run: [process.execPath, "-e", "setTimeout(() => {}, 30000)"],
         policy: okPolicy,
       }
-      const promise = spawnCheck("id", check, undefined, activeHandles)
+      const promise = spawnCheck("id", check, undefined, activeHandles, execution)
 
       await waitUntil(() => activeHandles.size === 1)
       const [handle] = activeHandles
@@ -386,7 +391,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
         run: [process.execPath, "-e", "setTimeout(() => {}, 30000)"],
         policy: okPolicy,
       }
-      const promise = spawnCheck("id", check, controller.signal, activeHandles)
+      const promise = spawnCheck("id", check, controller.signal, activeHandles, execution)
 
       await waitUntil(() => activeHandles.size === 1)
       const [handle] = activeHandles
@@ -424,7 +429,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
         ],
         policy: okPolicy,
       }
-      const promise = spawnCheck("id", check, undefined, activeHandles)
+      const promise = spawnCheck("id", check, undefined, activeHandles, execution)
 
       await waitUntil(() => existsSync(readyFile))
       rmSync(readyFile, { force: true })
@@ -474,7 +479,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
         ],
         policy: okPolicy,
       }
-      const promise = spawnCheck("id", check, undefined, activeHandles)
+      const promise = spawnCheck("id", check, undefined, activeHandles, execution)
 
       await waitUntil(() => existsSync(readyFile))
       const childPid = Number(readFileSync(readyFile, "utf8"))
@@ -505,7 +510,7 @@ describe("spawnCheck -- cleanup clears the pending timeout", () => {
       timeoutMs: 30000,
       policy: okPolicy,
     }
-    await spawnCheck("id", check, undefined, new Set())
+    await spawnCheck("id", check, undefined, new Set(), execution)
     // Exactly twice, not merely "at least once": cleanup() clears both
     // `timeoutHandle` (real, since timeoutMs is set) and `escalationHandle`
     // (undefined here, since no kill was ever issued) independently. A
@@ -528,7 +533,7 @@ describe("spawnCheck -- cleanup clears the pending timeout", () => {
       timeoutMs: 30000,
       policy: okPolicy,
     }
-    await spawnCheck("id", check, undefined, new Set())
+    await spawnCheck("id", check, undefined, new Set(), execution)
     // Same reasoning as "on normal completion" above -- see that test.
     expect(clearTimeoutSpy).toHaveBeenCalledTimes(2)
   })
@@ -560,7 +565,7 @@ describe("spawnCheck -- disposes its composed abort signal", () => {
         run: [process.execPath, "-e", "process.stdout.write('ok')"],
         policy: okPolicy,
       }
-      await spawnCheck("id", check, controller.signal, new Set())
+      await spawnCheck("id", check, controller.signal, new Set(), execution)
       // The manual fallback's dispose removes exactly the one "abort"
       // listener composeSignals added to runSignal -- if spawn-check.ts's
       // own disposeEffectiveSignal() call were ever deleted, this listener

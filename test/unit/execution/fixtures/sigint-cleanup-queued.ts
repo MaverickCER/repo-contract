@@ -7,6 +7,7 @@
 // sigint-cleanup.ts's single check. `second` writes a marker file (argv[3]) the instant it spawns
 // -- proving, if that file exists once this process has exited, that `second` was launched despite
 // the host process having already begun SIGINT cleanup with only `first` in flight.
+import { spawn } from "node:child_process"
 import { runChecks } from "../../../../src/execution/run-checks.js"
 import type { PolicyResult } from "../../../../src/types.js"
 
@@ -34,7 +35,7 @@ const second = {
   policy: (): PolicyResult => ({ outcome: "pass", rationale: "ok" }),
 }
 
-runChecks({ first, second }, 1, undefined)
+runChecks({ first, second }, 1, { spawn, env: process.env, shell: false }, undefined)
   .then(() => {
     process.stdout.write("DONE\n")
   })

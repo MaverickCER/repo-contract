@@ -1,5 +1,20 @@
 [
   {
+    "file": "repo-contract.config.ts",
+    "line": 135,
+    "domain": "eslint",
+    "rule": [
+      "n/no-process-env"
+    ],
+    "content": "eslint-disable-next-line n/no-process-env -- this is the top-level self-hosting config, not published library code (see package.json's \"files\"); supplying the real ambient environment to repo-contract's own checks is exactly what this repository, as a consumer, is supposed to do.",
+    "justification": "This is repo-contract's own top-level self-hosting config (repo-contract.config.ts), not published library code -- src/ never reads process.env itself (see specs/decisions/0011), and RepoContractConfig.env is a required, consumer-supplied field. Here, repo-contract is the consumer of its own library, and supplying the real ambient environment to its own checks is exactly the responsibility ADR 0011 places on a consumer, not a config smell.",
+    "alternatives": "Route environment access through a wrapper/config module instead of reading process.env inline.",
+    "remediation": "A wrapper would only relocate this same read one file over, not remove it -- n/no-process-env exists to catch config values read ad hoc instead of through an app's config layer, which doesn't apply to a top-level consumer script whose entire job is supplying the ambient environment to the library it configures.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "this is the top-level self-hosting config, not published library code (see package.json's \"files\"); supplying the real ambient environment to repo-contract's own checks is exactly what this repository, as a consumer, is supposed to do."
+  },
+  {
     "file": "src/config/tokenize-command.ts",
     "line": 130,
     "domain": "stryker",
@@ -35,7 +50,7 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 47,
+    "line": 50,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression"
@@ -50,7 +65,7 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 156,
+    "line": 192,
     "domain": "stryker",
     "rule": [
       "OptionalChaining"
@@ -65,7 +80,7 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 253,
+    "line": 289,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression"
@@ -80,7 +95,7 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 275,
+    "line": 311,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression"
@@ -95,7 +110,7 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 357,
+    "line": 393,
     "domain": "stryker",
     "rule": [
       "OptionalChaining"
@@ -233,7 +248,7 @@
   },
   {
     "file": "src/execution/process-tree.ts",
-    "line": 82,
+    "line": 92,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression",
@@ -251,21 +266,6 @@
     "category": "platform-limitation",
     "verificationMethod": "existing-test-suite",
     "reason": "this whole branch only runs on Windows, and mutation testing only runs in the ubuntu-only CI job (see the v8-ignore comment above), so every mutator that could apply to it would surface as an unreachable \"no coverage\" survivor rather than a real test gap."
-  },
-  {
-    "file": "src/execution/process-tree.ts",
-    "line": 84,
-    "domain": "eslint",
-    "rule": [
-      "n/no-sync"
-    ],
-    "content": "eslint-disable-next-line n/no-sync -- `killTree` is itself synchronous best-effort cleanup, callable from error/signal-handling paths that don't await anything else; an async `spawn` here would need every caller threaded through `await` for what's already a fire-and-forget `taskkill`.",
-    "justification": "killTree's Windows branch runs from error/signal-handling paths that don't await anything else and must complete in-order before the calling function returns -- spawnSync's synchronous completion is the property actually needed, not async's non-blocking behavior.",
-    "alternatives": "Use the async `spawn` (or `execFile`) instead of `spawnSync`.",
-    "remediation": "Switching to async spawn would require every caller of killTree (all error/signal handlers, none otherwise async) to become async and their own callers to await them, just to fire off a taskkill this function already treats as fire-and-forget best-effort cleanup -- a much larger, unrelated refactor for no behavioral benefit, since the result is discarded either way.",
-    "category": "intentional-deviation",
-    "verificationMethod": "static-reasoning",
-    "reason": "`killTree` is itself synchronous best-effort cleanup, callable from error/signal-handling paths that don't await anything else; an async `spawn` here would need every caller threaded through `await` for what's already a fire-and-forget `taskkill`."
   },
   {
     "file": "src/execution/run-checks.ts",
@@ -303,7 +303,7 @@
   },
   {
     "file": "src/execution/run-checks.ts",
-    "line": 230,
+    "line": 232,
     "domain": "stryker",
     "rule": [
       "ArrayDeclaration"
@@ -318,7 +318,7 @@
   },
   {
     "file": "src/execution/run-checks.ts",
-    "line": 258,
+    "line": 260,
     "domain": "stryker",
     "rule": [
       "CallExpression",
@@ -340,7 +340,7 @@
   },
   {
     "file": "src/execution/run-checks.ts",
-    "line": 281,
+    "line": 283,
     "domain": "stryker",
     "rule": [
       "ArrayDeclaration"
@@ -355,7 +355,7 @@
   },
   {
     "file": "src/execution/run-checks.ts",
-    "line": 313,
+    "line": 315,
     "domain": "stryker",
     "rule": [
       "EqualityOperator",
@@ -374,7 +374,7 @@
   },
   {
     "file": "src/execution/run-checks.ts",
-    "line": 339,
+    "line": 341,
     "domain": "stryker",
     "rule": [
       "EqualityOperator"
@@ -389,7 +389,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 58,
+    "line": 76,
     "domain": "stryker",
     "rule": [
       "StringLiteral"
@@ -404,7 +404,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 78,
+    "line": 96,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression"
@@ -419,7 +419,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 86,
+    "line": 104,
     "domain": "stryker",
     "rule": [
       "BooleanLiteral"
@@ -434,7 +434,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 140,
+    "line": 160,
     "domain": "stryker",
     "rule": [
       "EqualityOperator",
@@ -453,37 +453,22 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 156,
-    "domain": "eslint",
-    "rule": [
-      "n/no-process-env"
-    ],
-    "content": "eslint-disable-next-line n/no-process-env -- reading the ambient environment isn't a config smell here, it's the feature: `inheritEnv` (on by default) means the spawned check inherits this process's real env, exactly what this loop builds.",
-    "justification": "Reading `process.env` here is not incidental config access -- it is the `inheritEnv` feature itself: when a check's `inheritEnv` isn't explicitly `false`, the spawned check must inherit this process's real ambient environment, which requires reading `process.env` directly.",
-    "alternatives": "Route environment access through a wrapper/config module instead of reading `process.env` inline.",
-    "remediation": "A wrapper would only relocate this same read one file over, not remove it -- `n/no-process-env` exists to catch config values read ad hoc from the environment instead of through an app's config layer, which doesn't apply to a function whose entire job is capturing the ambient environment to hand to a spawned child process.",
-    "category": "rule-not-applicable",
-    "verificationMethod": "static-reasoning",
-    "reason": "reading the ambient environment isn't a config smell here, it's the feature: `inheritEnv` (on by default) means the spawned check inherits this process's real env, exactly what this loop builds."
-  },
-  {
-    "file": "src/execution/spawn-check.ts",
-    "line": 164,
+    "line": 184,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression"
     ],
-    "content": "Stryker disable next-line ConditionalExpression -- process.env's index signature is typed string | undefined, but a real Node process never actually produces an undefined value here for an own enumerable key; kept only to satisfy that type, not because it changes observed behavior.",
-    "justification": "`process.env`'s TypeScript index signature types every value as `string | undefined`, but a real Node process never actually produces an undefined value for one of its own enumerable keys when iterated via Object.entries -- confirmed empirically that assigning undefined to an env var instead coerces it to the literal string \"undefined\", never to a genuinely absent entry. The guard exists only to satisfy that type, not because it changes observed behavior for any real process environment.",
-    "alternatives": "Use a non-null assertion (`value!`) instead of a runtime `!== undefined` check.",
-    "remediation": "Rejected the assertion for the same reason as this file's other type-only guards: it would silence the type without any protection if this assumption about process.env's runtime shape were ever wrong on some platform or Node version this codebase hasn't been tested against, whereas the current guard just silently skips the (never-actually-occurring) case instead of crashing. No test can construct a real process.env entry with a genuinely undefined value to exercise the false path.",
+    "content": "Stryker disable next-line ConditionalExpression -- NodeJS.ProcessEnv's index signature is typed string | undefined, but a real environment map never actually produces an undefined value here for an own enumerable key; kept only to satisfy that type, not because it changes observed behavior.",
+    "justification": "NodeJS.ProcessEnv's TypeScript index signature types every value as string | undefined, but a real environment map (process.env, or any consumer-supplied RepoContractConfig.env) never actually produces an undefined value for an own enumerable key when iterated via Object.entries -- confirmed empirically that assigning undefined to an env var instead coerces it to the literal string \"undefined\", never to a genuinely absent entry. The guard exists only to satisfy that type, not because it changes observed behavior for any real environment map.",
+    "alternatives": "Use a non-null assertion (value!) instead of a runtime !== undefined check.",
+    "remediation": "Rejected the assertion for the same reason as this file's other type-only guards: it would silence the type without any protection if this assumption about NodeJS.ProcessEnv's runtime shape were ever wrong for some consumer-supplied env value this codebase hasn't been tested against, whereas the current guard just silently skips the (never-actually-occurring) case instead of crashing. No test can construct a real env entry with a genuinely undefined value to exercise the false path.",
     "category": "unreachable-invariant",
     "verificationMethod": "differential-testing",
-    "reason": "process.env's index signature is typed string | undefined, but a real Node process never actually produces an undefined value here for an own enumerable key; kept only to satisfy that type, not because it changes observed behavior."
+    "reason": "NodeJS.ProcessEnv's index signature is typed string | undefined, but a real environment map never actually produces an undefined value here for an own enumerable key; kept only to satisfy that type, not because it changes observed behavior."
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 282,
+    "line": 305,
     "domain": "stryker",
     "rule": [
       "BooleanLiteral"
@@ -498,7 +483,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 352,
+    "line": 389,
     "domain": "stryker",
     "rule": [
       "OptionalChaining"
@@ -513,7 +498,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 360,
+    "line": 397,
     "domain": "stryker",
     "rule": [
       "OptionalChaining"
@@ -528,7 +513,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 380,
+    "line": 417,
     "domain": "stryker",
     "rule": [
       "EqualityOperator",
@@ -546,7 +531,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 407,
+    "line": 444,
     "domain": "stryker",
     "rule": [
       "StringLiteral",
@@ -562,7 +547,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 421,
+    "line": 458,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression"
@@ -577,7 +562,7 @@
   },
   {
     "file": "src/execution/spawn-check.ts",
-    "line": 476,
+    "line": 513,
     "domain": "stryker",
     "rule": [
       "ConditionalExpression",
@@ -776,7 +761,7 @@
   },
   {
     "file": "src/run-repo-contract.ts",
-    "line": 69,
+    "line": 70,
     "domain": "stryker",
     "rule": [
       "LogicalOperator"
@@ -836,7 +821,7 @@
   },
   {
     "file": "test/unit/execution/process-tree.test.ts",
-    "line": 170,
+    "line": 209,
     "domain": "eslint",
     "rule": [
       "@typescript-eslint/only-throw-error"
@@ -851,7 +836,7 @@
   },
   {
     "file": "test/unit/execution/run-checks.test.ts",
-    "line": 24,
+    "line": 28,
     "domain": "eslint",
     "rule": [
       "@typescript-eslint/unbound-method"
@@ -866,7 +851,7 @@
   },
   {
     "file": "test/unit/execution/spawn-check.test.ts",
-    "line": 552,
+    "line": 557,
     "domain": "eslint",
     "rule": [
       "@typescript-eslint/unbound-method"
