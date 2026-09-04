@@ -67,3 +67,18 @@ export function rejectingSchema(error: Error): StandardSchemaV1 {
     },
   }
 }
+
+/**
+ * A *callable* schema -- `typeof schema === "function"`, with `"~standard"` attached as a property
+ * on the function itself, mirroring ArkType's own `Type` values (themselves callable functions).
+ * Proves `output.schema` accepts a function, not just a plain object.
+ */
+export function callableSchema<T>(): StandardSchemaV1<T, T> {
+  const schema = ((value: T) => value) as StandardSchemaV1<T, T> & ((value: T) => T)
+  ;(schema as { "~standard": StandardSchemaV1.Props<T, T> })["~standard"] = {
+    version: 1,
+    vendor: "fixture-callable",
+    validate: (value) => ({ value: value as T }),
+  }
+  return schema
+}

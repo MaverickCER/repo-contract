@@ -204,14 +204,15 @@ export namespace StandardSchemaV1 {
         readonly message: string;
         readonly path?: readonly (PropertyKey | PathSegment)[] | undefined;
     }
+    export interface Options {
+        readonly libraryOptions?: Record<string, unknown> | undefined;
+    }
     export interface PathSegment {
         readonly key: PropertyKey;
     }
     export interface Props<Input = unknown, Output = Input> {
         readonly types?: Types<Input, Output> | undefined;
-        readonly validate: (value: unknown, options?: {
-            readonly libraryOptions?: Record<string, unknown>;
-        }) => Result<Output> | Promise<Result<Output>>;
+        readonly validate: (value: unknown, options?: Options) => Result<Output> | Promise<Result<Output>>;
         readonly vendor: string;
         readonly version: 1;
     }

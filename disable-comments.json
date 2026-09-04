@@ -110,7 +110,22 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 459,
+    "line": 359,
+    "domain": "eslint",
+    "rule": [
+      "secure-coding/no-improper-type-validation"
+    ],
+    "content": "eslint-disable-next-line secure-coding/no-improper-type-validation -- `null` is already excluded by the preceding `schema === null` short-circuit, and an array slipping past this check (typeof [] === \"object\") is still correctly rejected by the \"~standard\" property check just below, since no array has one -- the class of bug this rule guards against (silently treating null/an array as a valid object) can't actually happen here.",
+    "justification": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code path: null is already excluded by the preceding `schema === null` short-circuit before this typeof check ever runs, and an array that slips past it (typeof [] === \"object\") is still correctly rejected two lines later when it has no \"~standard\" property, so the bug class this rule guards against cannot actually reach a caller undetected.",
+    "alternatives": "Rewriting to the rule's own suggested null/array-safe form (value != null && typeof value === \"object\" && !Array.isArray(value)) was already tried and rejected for the sibling case in format-schema-issues.ts, where it was itself flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition; here the null check is already redundant with the preceding `schema === null` branch, and adding an explicit !Array.isArray(schema) would only duplicate the \"~standard\" property check that already rejects arrays two lines below for the same reason.",
+    "remediation": "None needed: the preceding short-circuit already rules out null, and the very next check in this same function already rejects any object (including an array) that lacks a \"~standard\" property, so no runtime gap exists for this rule to actually be guarding.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "`null` is already excluded by the preceding `schema === null` short-circuit, and an array slipping past this check (typeof [] === \"object\") is still correctly rejected by the \"~standard\" property check just below, since no array has one -- the class of bug this rule guards against (silently treating null/an array as a valid object) can't actually happen here."
+  },
+  {
+    "file": "src/config/validate-config.ts",
+    "line": 466,
     "domain": "stryker",
     "rule": [
       "OptionalChaining"
@@ -564,7 +579,22 @@
   },
   {
     "file": "src/parsing/format-schema-issues.ts",
-    "line": 41,
+    "line": 42,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- equivalent mutant: `path.length === 0` falling through to `path.map(...).join(\"\")` on an empty array also produces `\"\"`, identical to this early return, for every possible input -- no test could ever distinguish them.",
+    "justification": "Mutating `path.length === 0` to `false` (for a defined, empty `path`) makes execution fall through to `path.map(formatIssue-mapper).join(\"\")` instead of returning `\"\"` directly -- but `Array.prototype.map` and `Array.prototype.join` both operate per-element, so mapping and joining an empty array always produces `\"\"` regardless of what the mapping function does, for every possible input. The two branches are provably observationally identical, not merely untested.",
+    "alternatives": "No test can distinguish the two branches by `formatPath`'s return value, since both produce the exact same output for every input -- there is no alternative test to write here, unlike a genuine coverage gap.",
+    "remediation": "None needed: removing the early return entirely (relying only on the fall-through) would be behaviorally identical and was considered, but keeping the explicit `path.length === 0` check documents the intent (short-circuit an empty path before the per-segment mapping/formatting logic) even though it is not behaviorally load-bearing.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "equivalent mutant: `path.length === 0` falling through to `path.map(...).join(\"\")` on an empty array also produces `\"\"`, identical to this early return, for every possible input -- no test could ever distinguish them."
+  },
+  {
+    "file": "src/parsing/format-schema-issues.ts",
+    "line": 47,
     "domain": "eslint",
     "rule": [
       "secure-coding/no-improper-type-validation"

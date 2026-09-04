@@ -30,10 +30,16 @@ export declare namespace StandardSchemaV1 {
     /** Validates unknown input values. */
     readonly validate: (
       value: unknown,
-      options?: { readonly libraryOptions?: Record<string, unknown> },
+      options?: Options,
     ) => Result<Output> | Promise<Result<Output>>
     /** Inferred types associated with the schema. */
     readonly types?: Types<Input, Output> | undefined
+  }
+
+  /** Options passable to `validate`. */
+  export interface Options {
+    /** Explicit support for additional vendor-specific parameters, if needed. */
+    readonly libraryOptions?: Record<string, unknown> | undefined
   }
 
   /** The result interface of the validate function. */

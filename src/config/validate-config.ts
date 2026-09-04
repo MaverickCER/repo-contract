@@ -345,15 +345,22 @@ function validateOutput(checkId: string, output: unknown): void {
  * field) is not part of the contract this function can or should enforce. Never calls `validate`
  * itself -- that only happens once a check's stdout actually parses (see `parseOutput`); this
  * function's whole job is structural, not behavioral.
+ *
+ * Accepts a callable `schema` (`typeof schema === "function"`), not just a plain object -- ArkType's
+ * `Type` values are themselves callable functions with `"~standard"` attached as a property, exactly
+ * as valid a Standard Schema-compliant value as a plain object one (e.g. Zod's), since `["~standard"]`
+ * property access works identically on either. Rejecting callable schemas outright would incorrectly
+ * reject a real, popular Standard Schema implementation.
  * @param checkId - identifies which check is being validated, used in thrown error messages.
  * @param schema - the check's raw `output.schema` field to validate.
  */
 function validateOutputSchema(checkId: string, schema: unknown): void {
   if (schema === undefined) return
-  if (schema === null || typeof schema !== "object") {
+  // eslint-disable-next-line secure-coding/no-improper-type-validation -- `null` is already excluded by the preceding `schema === null` short-circuit, and an array slipping past this check (typeof [] === "object") is still correctly rejected by the "~standard" property check just below, since no array has one -- the class of bug this rule guards against (silently treating null/an array as a valid object) can't actually happen here.
+  if (schema === null || (typeof schema !== "object" && typeof schema !== "function")) {
     throw new InvalidCheckConfigError(
       checkId,
-      "output.schema must be a Standard Schema-compliant object when provided (see https://standardschema.dev).",
+      "output.schema must be a Standard Schema-compliant object or function when provided (see https://standardschema.dev).",
     )
   }
 
