@@ -518,12 +518,24 @@ export function classifyContractChanges(
           `Added enum member ${currentMember.scopedName}.`,
         )
       } else if (currentMember.propertyTypeExcerptText !== undefined) {
+        // A required property added to a container (interface/class/namespace member, etc.)
+        // that itself has no baseline counterpart cannot break an existing consumer -- nobody
+        // could have implemented or matched against a shape that did not exist in the baseline
+        // contract at all. Only a required property added to an *already-existing* container is
+        // a real breaking change (an existing consumer's own conforming object literal/class no
+        // longer satisfies the type). Without this check, every new interface/namespace with two
+        // or more required members would be misclassified as breaking on its very first release,
+        // even though the whole container -- reported separately as its own compatible
+        // `export-added` -- is new.
+        const parentIsAlsoNew =
+          currentMember.parentCanonicalReference !== undefined &&
+          !baseline.has(currentMember.parentCanonicalReference)
         push(
           changes,
           currentMember,
           "property-added",
-          currentMember.isOptional ? "compatible" : "breaking",
-          `Added ${currentMember.isOptional ? "optional" : "required"} property ${currentMember.scopedName}.`,
+          currentMember.isOptional || parentIsAlsoNew ? "compatible" : "breaking",
+          `Added ${currentMember.isOptional ? "optional" : "required"} property ${currentMember.scopedName}${parentIsAlsoNew ? " (on a newly-added container, so not itself breaking)" : ""}.`,
         )
       } else {
         push(
