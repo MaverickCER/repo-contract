@@ -8,6 +8,7 @@ import {
   PolicyReadUnrequestedOutputError,
   PolicyThrewError,
   RepoContractError,
+  StandardSchemaValidateThrewError,
   UnknownCheckIdError,
 } from "../../src/errors.js"
 
@@ -22,6 +23,7 @@ describe("error hierarchy", () => {
       new PolicyReadFailedParseValueError("check-id", "score", new TypeError("boom")),
       new UnknownCheckIdError("check-id"),
       new DependencyDeclaredLaterError("check-id", "dep-id"),
+      new StandardSchemaValidateThrewError("check-id", new Error("boom")),
     ]
     for (const error of errors) {
       expect(error).toBeInstanceOf(RepoContractError)
@@ -46,6 +48,9 @@ describe("error hierarchy", () => {
     expect(new DependencyDeclaredLaterError("id", "dep-id").code).toBe(
       "REPO_CONTRACT_DEPENDENCY_DECLARED_LATER",
     )
+    expect(new StandardSchemaValidateThrewError("id", undefined).code).toBe(
+      "REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW",
+    )
   })
 
   it("codes are unique across the whole hierarchy", () => {
@@ -58,6 +63,7 @@ describe("error hierarchy", () => {
       new PolicyReadFailedParseValueError("id", "score", undefined).code,
       new UnknownCheckIdError("id").code,
       new DependencyDeclaredLaterError("id", "dep-id").code,
+      new StandardSchemaValidateThrewError("id", undefined).code,
     ]
     expect(new Set(codes).size).toBe(codes.length)
   })
@@ -78,6 +84,9 @@ describe("error hierarchy", () => {
     expect(new UnknownCheckIdError("id").name).toBe("UnknownCheckIdError")
     expect(new DependencyDeclaredLaterError("id", "dep-id").name).toBe(
       "DependencyDeclaredLaterError",
+    )
+    expect(new StandardSchemaValidateThrewError("id", undefined).name).toBe(
+      "StandardSchemaValidateThrewError",
     )
   })
 
@@ -143,6 +152,27 @@ describe("error hierarchy", () => {
       const error = new PolicyThrewError("mutation", new Error("boom"))
       expect(error.message).toBe(
         'Policy for check "mutation" threw instead of returning a PolicyResult',
+      )
+    })
+  })
+
+  describe("StandardSchemaValidateThrewError", () => {
+    it("carries checkId and preserves the original thrown value verbatim as cause", () => {
+      const cause = new Error("boom")
+      const error = new StandardSchemaValidateThrewError("lint", cause)
+      expect(error.checkId).toBe("lint")
+      expect(error.cause).toBe(cause)
+    })
+
+    it("preserves a non-Error thrown value as cause without wrapping it", () => {
+      const error = new StandardSchemaValidateThrewError("lint", "a string throw")
+      expect(error.cause).toBe("a string throw")
+    })
+
+    it("message is exact and identifies which check's schema failed", () => {
+      const error = new StandardSchemaValidateThrewError("lint", new Error("boom"))
+      expect(error.message).toBe(
+        'Check "lint"\'s output.schema["~standard"].validate() threw instead of returning a Result',
       )
     })
   })

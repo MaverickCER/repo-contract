@@ -194,6 +194,54 @@ describe("classifyContractChanges", () => {
     })
   })
 
+  it("classifies a required property added to a brand-new container as compatible, not breaking", () => {
+    // The container itself (e.g. an interface) has no baseline counterpart either -- nobody could
+    // have implemented or matched against a shape that did not exist in the baseline contract at
+    // all, so a required member on it can never break an existing consumer, unlike the identical
+    // shape added to an *already-existing* container (the next test).
+    const newContainer = member({
+      canonicalReference: "!pkg#NewThing:interface",
+      kind: "Interface",
+    })
+    const requiredOnNewContainer = member({
+      canonicalReference: "!pkg#NewThing.value:member",
+      isTopLevelExport: false,
+      kind: "PropertySignature",
+      isOptional: false,
+      isReadonly: false,
+      propertyTypeExcerptText: "string",
+      parentCanonicalReference: newContainer.canonicalReference,
+    })
+
+    const { changes } = classify([], [newContainer, requiredOnNewContainer])
+    const propertyChange = changes.find((c) => c.kind === "property-added")
+    expect(propertyChange).toMatchObject({ compatibility: "compatible" })
+  })
+
+  it("still classifies a required property added to an already-existing container as breaking", () => {
+    const existingContainer = member({
+      canonicalReference: "!pkg#ExistingThing:interface",
+      kind: "Interface",
+    })
+    const requiredOnExistingContainer = member({
+      canonicalReference: "!pkg#ExistingThing.value:member",
+      isTopLevelExport: false,
+      kind: "PropertySignature",
+      isOptional: false,
+      isReadonly: false,
+      propertyTypeExcerptText: "string",
+      parentCanonicalReference: existingContainer.canonicalReference,
+    })
+
+    // existingContainer is present on *both* sides -- only its new member is actually being added.
+    const { changes } = classify(
+      [existingContainer],
+      [existingContainer, requiredOnExistingContainer],
+    )
+    expect(changes).toHaveLength(1)
+    expect(changes[0]).toMatchObject({ kind: "property-added", compatibility: "breaking" })
+  })
+
   it("classifies a readonly-ness change on a property", () => {
     const mutable = member({
       canonicalReference: "!pkg#Config.value:member",

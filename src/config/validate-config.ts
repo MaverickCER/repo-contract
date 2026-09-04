@@ -321,7 +321,7 @@ function validateOutput(checkId: string, output: unknown): void {
   if (output === null || typeof output !== "object") {
     throw new InvalidCheckConfigError(checkId, "output must be an object when provided.")
   }
-  const { format } = output as Record<string, unknown>
+  const { format, schema } = output as Record<string, unknown>
   // `typeof format !== "string"` is behaviorally redundant with the clause
   // after it: `Array#includes` uses strict equality, so a non-string
   // `format` can never match an entry of `OUTPUT_FORMATS` (all strings),
@@ -332,6 +332,60 @@ function validateOutput(checkId: string, output: unknown): void {
     throw new InvalidCheckConfigError(
       checkId,
       `output.format must be one of ${OUTPUT_FORMATS.map((f) => `"${f}"`).join(", ")}.`,
+    )
+  }
+  validateOutputSchema(checkId, schema)
+}
+
+/**
+ * Validates that `schema`, when provided, is at least *plausibly* a `StandardSchemaV1`-compliant
+ * object (https://standardschema.dev) -- checks only the three fields every
+ * `StandardSchemaV1.Props` object must have (`version`, `vendor`, `validate`), since `schema` is
+ * an opaque, consumer-supplied object and anything else in its shape (e.g. the optional `types`
+ * field) is not part of the contract this function can or should enforce. Never calls `validate`
+ * itself -- that only happens once a check's stdout actually parses (see `parseOutput`); this
+ * function's whole job is structural, not behavioral.
+ *
+ * Accepts a callable `schema` (`typeof schema === "function"`), not just a plain object -- ArkType's
+ * `Type` values are themselves callable functions with `"~standard"` attached as a property, exactly
+ * as valid a Standard Schema-compliant value as a plain object one (e.g. Zod's), since `["~standard"]`
+ * property access works identically on either. Rejecting callable schemas outright would incorrectly
+ * reject a real, popular Standard Schema implementation.
+ * @param checkId - identifies which check is being validated, used in thrown error messages.
+ * @param schema - the check's raw `output.schema` field to validate.
+ */
+function validateOutputSchema(checkId: string, schema: unknown): void {
+  if (schema === undefined) return
+  // eslint-disable-next-line secure-coding/no-improper-type-validation -- `null` is already excluded by the preceding `schema === null` short-circuit, and an array slipping past this check (typeof [] === "object") is still correctly rejected by the "~standard" property check just below, since no array has one -- the class of bug this rule guards against (silently treating null/an array as a valid object) can't actually happen here.
+  if (schema === null || (typeof schema !== "object" && typeof schema !== "function")) {
+    throw new InvalidCheckConfigError(
+      checkId,
+      "output.schema must be a Standard Schema-compliant object or function when provided (see https://standardschema.dev).",
+    )
+  }
+
+  const standard = (schema as Record<PropertyKey, unknown>)["~standard"]
+  if (standard === null || typeof standard !== "object") {
+    throw new InvalidCheckConfigError(
+      checkId,
+      'output.schema must have a "~standard" property (see https://standardschema.dev).',
+    )
+  }
+
+  const { version, vendor, validate } = standard as Record<string, unknown>
+  if (version !== 1) {
+    throw new InvalidCheckConfigError(checkId, 'output.schema["~standard"].version must be 1.')
+  }
+  if (typeof vendor !== "string") {
+    throw new InvalidCheckConfigError(
+      checkId,
+      'output.schema["~standard"].vendor must be a string.',
+    )
+  }
+  if (typeof validate !== "function") {
+    throw new InvalidCheckConfigError(
+      checkId,
+      'output.schema["~standard"].validate must be a function.',
     )
   }
 }

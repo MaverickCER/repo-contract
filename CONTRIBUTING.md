@@ -25,8 +25,10 @@ so this one command after `npm install` is the whole setup. Use Node 24 locally
 4. Commit. Your editor opens with a Conventional Commits cheat sheet; `commitlint` (a
    `commit-msg` hook) rejects a message that doesn't conform. `--no-verify` skips a hook
    for a work-in-progress checkpoint.
-5. Push — the `pre-push` hook runs the full `npm run contract`. Open a pull request; CI
-   re-runs everything across the OS and Node matrix.
+5. Push — the `pre-push` hook runs the full `npm run contract`, then (if the
+   [CodeRabbit CLI](https://docs.coderabbit.ai/cli) is installed) a local `coderabbit review
+--agent` pass -- assistive, local-only, and never part of `npm run contract` itself, so it never
+   runs in CI. Open a pull request; CI re-runs the contract across the OS and Node matrix.
 
 `npm run setup` wires two local git settings — the hooks and the commit-message template.
 Opt out of either:

@@ -22,6 +22,7 @@ export interface CheckDefinitionConfig {
     readonly isolated?: boolean;
     readonly output?: {
         readonly format: OutputFormat;
+        readonly schema?: StandardSchemaV1;
     };
     readonly policy: Policy;
     readonly run: string | readonly string[];
@@ -186,6 +187,52 @@ export interface RunRepoContractOptions {
 
 // @public
 export type Spawner = (command: string, args: readonly string[], options: SpawnOptions) => ChildProcess;
+
+// @public
+export interface StandardSchemaV1<Input = unknown, Output = Input> {
+    readonly "~standard": StandardSchemaV1.Props<Input, Output>;
+}
+
+// @public
+export namespace StandardSchemaV1 {
+    export interface FailureResult {
+        readonly issues: readonly Issue[];
+    }
+    export type InferInput<Schema extends StandardSchemaV1> = NonNullable<Schema["~standard"]["types"]>["input"];
+    export type InferOutput<Schema extends StandardSchemaV1> = NonNullable<Schema["~standard"]["types"]>["output"];
+    export interface Issue {
+        readonly message: string;
+        readonly path?: readonly (PropertyKey | PathSegment)[] | undefined;
+    }
+    export interface Options {
+        readonly libraryOptions?: Record<string, unknown> | undefined;
+    }
+    export interface PathSegment {
+        readonly key: PropertyKey;
+    }
+    export interface Props<Input = unknown, Output = Input> {
+        readonly types?: Types<Input, Output> | undefined;
+        readonly validate: (value: unknown, options?: Options) => Result<Output> | Promise<Result<Output>>;
+        readonly vendor: string;
+        readonly version: 1;
+    }
+    export type Result<Output> = SuccessResult<Output> | FailureResult;
+    export interface SuccessResult<Output> {
+        readonly issues?: undefined;
+        readonly value: Output;
+    }
+    export interface Types<Input = unknown, Output = Input> {
+        readonly input: Input;
+        readonly output: Output;
+    }
+}
+
+// @public
+export class StandardSchemaValidateThrewError extends RepoContractError {
+    constructor(checkId: string, cause: unknown);
+    readonly checkId: string;
+    readonly code = "REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW";
+}
 
 // @public
 export type SyncSpawner = (command: string, args: readonly string[], options: SpawnSyncOptions) => SpawnSyncReturns<Buffer | string>;

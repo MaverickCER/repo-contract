@@ -122,6 +122,32 @@ export class ParserDependencyMissingError extends RepoContractError {
 type OutputFormatForError = "yaml"
 
 /**
+ * A check's `output.schema["~standard"].validate()` threw synchronously, or returned a `Promise`
+ * that rejected, instead of returning a `Result`. This is a bug in the consumer-supplied schema
+ * object, not malformed check output -- the same distinction `PolicyThrewError` below draws for a
+ * throwing policy: a schema *returning* failure `issues` becomes an ordinary
+ * `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON/YAML parse failure), but
+ * a schema *throwing* means the validator itself is broken, so it propagates as a rejected
+ * `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim
+ * via the native `Error` `cause` chain.
+ */
+export class StandardSchemaValidateThrewError extends RepoContractError {
+  /** Always `"REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW"`. */
+  readonly code = "REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW"
+  /** The id of the check whose `output.schema` threw during validation. */
+  readonly checkId: string
+
+  constructor(checkId: string, cause: unknown) {
+    super(
+      `Check "${checkId}"'s output.schema["~standard"].validate() threw instead of returning a Result`,
+      { cause },
+    )
+    this.name = "StandardSchemaValidateThrewError"
+    this.checkId = checkId
+  }
+}
+
+/**
  * A check's `policy` function threw synchronously, or returned a `Promise`
  * that later rejected. Both failure modes are wrapped identically. The
  * original thrown/rejected value is preserved verbatim via the native

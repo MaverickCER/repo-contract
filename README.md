@@ -529,6 +529,50 @@ Provides trimmed text passthrough and always succeeds.
 
 The sibling mistake -- reading `result.output.value` when the format _was_ requested but the parse itself failed (`result.output.success === false`, so `result.output` has `error`, not `value`) -- similarly rejects with [`PolicyReadFailedParseValueError`](docs/api-report/repo-contract.api.md) instead of a generic `PolicyThrewError`. Check `result.output.success` before reading `.value` to handle a parse failure explicitly rather than hitting either error.
 
+#### Validating parsed output with a schema
+
+`output.schema` accepts any object implementing [Standard Schema](https://standardschema.dev) --
+Zod, Valibot, ArkType, and others already do. repo-contract does not install or depend on any of
+them; it hand-vendors the (pure-type, zero-runtime-code) `StandardSchemaV1` interface itself (see
+[ADR 0012](specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md)). Bring whichever schema
+library your own repo already uses -- `npm install zod` (or `valibot`, or `arktype`) is your call,
+not repo-contract's. The smallest possible example, using a hand-written object satisfying the
+interface directly rather than any particular library:
+
+```ts
+output: {
+  format: "json",
+  schema: {
+    "~standard": {
+      version: 1,
+      vendor: "example",
+      validate: (value) => {
+        const errorCount =
+          value !== null && typeof value === "object"
+            ? (value as { errorCount?: unknown }).errorCount
+            : undefined
+        return typeof errorCount === "number"
+          ? { value: { errorCount } }
+          : { issues: [{ message: "errorCount must be a number", path: ["errorCount"] }] }
+      },
+    },
+  },
+}
+```
+
+A successful validation _replaces_ `result.output.value` with the schema's own (possibly
+transformed or coerced) output -- one of the most useful aspects of Standard Schema, not just a
+boolean check: a schema can normalize, default, or reshape its input, and the policy receives that
+result, not the raw parsed value. A failing validation becomes a normal `ParsedOutputFailure` --
+indistinguishable in shape from a malformed-JSON parse failure, joining every issue's own path and
+message into `result.output.error` (e.g. `Schema validation failed: errorCount: errorCount must be
+a number`). `result.output.value`'s declared TypeScript type stays `unknown` regardless -- narrow
+or cast it yourself, same as without a schema.
+
+`schema["~standard"].validate()` itself throwing or rejecting (rather than returning a `Result`) is
+different from a failed validation -- it means the schema is broken, not the check's output, so it
+rejects `runRepoContract()` with `StandardSchemaValidateThrewError` instead of becoming evidence.
+
 ### `dependsOn`
 
 By default, every check runs independently and in parallel.
@@ -1000,6 +1044,8 @@ It is the contract working correctly.
 A **policy throwing** is different. A synchronous throw or rejected promise from policy code indicates a bug in the policy itself and causes `runRepoContract()` to reject with `PolicyThrewError`, or an `AggregateError` when multiple policies throw.
 
 Two specific mistakes get their own error instead of a plain `PolicyThrewError`, both naming the check: reading `result.output.value` (or `.success`/`.error`/`.format`) on a check that never configured `output` throws `PolicyReadUnrequestedOutputError`, telling you to add `output: { format: "json" }` (or `"yaml"`/`"text"`); reading `result.output.value` on a check whose requested parse actually failed throws `PolicyReadFailedParseValueError`, telling you to check `result.output.success` first -- see [`output`](#output).
+
+A **schema throwing** (`output.schema["~standard"].validate()` itself throwing or rejecting, rather than returning a `Result` -- see [Validating parsed output with a schema](#validating-parsed-output-with-a-schema)) is treated the same as a throwing policy: `StandardSchemaValidateThrewError`, or an `AggregateError` when multiple checks' schemas throw in the same run. A schema _returning_ failure `issues`, by contrast, is not an error at all -- it becomes an ordinary parser-error-shaped `result.output`, exactly like the **Parser errors** case above.
 
 ## Status and versioning
 

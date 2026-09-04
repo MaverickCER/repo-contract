@@ -111,7 +111,7 @@
         },
         "output": {
           "$ref": "#/definitions/ParsedOutput%3Cunknown%3E",
-          "description": "The parsed interpretation of `stdout`, present only if this check's config requested a `format`."
+          "description": "The parsed interpretation of `stdout`, present only if this check's config requested a `format`. If that config also supplied `output.schema`, a successful parse is additionally validated (and possibly transformed) by that schema before landing here -- see this interface's own doc comment above and `CheckDefinitionConfig.output.schema`."
         }
       },
       "required": [
@@ -126,7 +126,7 @@
         "stderr",
         "status"
       ],
-      "description": "What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n\n`output.value` is typed `unknown` for every format, including `\"text\"` (even though `parseText` always produces a `string` at runtime) -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"yaml\"` where no schema knowledge exists either way."
+      "description": "What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n\n`output.value` is the value produced by the configured `format` parser, optionally validated and (if a schema transforms/coerces it) replaced by `output.schema` (see `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a check's config supplies a schema. It is typed `unknown` for every format regardless, including `\"text\"` (even though `parseText` always produces a `string` at runtime) and regardless of whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own inferred output type) through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package is attempting to close: a schema still gives its own author real compile-time input/output typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"yaml\"` with no schema supplied."
     },
     "global.NodeJS.Signals": {
       "type": "string",
