@@ -6,7 +6,7 @@ import {
   InvalidRepoContractConfigError,
 } from "../../../src/errors.js"
 import type { PolicyResult, RepoContractConfig, Spawner } from "../../../src/types.js"
-import { successSchema } from "../standard-schema/fixtures.js"
+import { callableSchema, successSchema } from "../standard-schema/fixtures.js"
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
 
@@ -457,6 +457,18 @@ describe("validateRepoContractConfig", () => {
       }).not.toThrow()
     })
 
+    it("accepts a callable Standard Schema-compliant schema (e.g. ArkType's Type)", () => {
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({
+            run: "echo a",
+            output: { format: "json", schema: callableSchema() },
+            policy: okPolicy,
+          }),
+        )
+      }).not.toThrow()
+    })
+
     it("accepts an omitted schema", () => {
       expect(() => {
         validateRepoContractConfig(
@@ -465,12 +477,24 @@ describe("validateRepoContractConfig", () => {
       }).not.toThrow()
     })
 
-    it("rejects a non-object schema", () => {
+    it("rejects a non-object, non-function schema", () => {
       expect(() => {
         validateRepoContractConfig(
           configWith({
             run: "echo a",
             output: { format: "json", schema: "not an object" },
+            policy: okPolicy,
+          }),
+        )
+      }).toThrow(/output\.schema must be a Standard Schema-compliant object/)
+    })
+
+    it("rejects a null schema", () => {
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({
+            run: "echo a",
+            output: { format: "json", schema: null },
             policy: okPolicy,
           }),
         )
@@ -483,6 +507,21 @@ describe("validateRepoContractConfig", () => {
           configWith({
             run: "echo a",
             output: { format: "json", schema: {} },
+            policy: okPolicy,
+          }),
+        )
+      }).toThrow(/must have a "~standard" property/)
+    })
+
+    it('rejects a schema whose "~standard" property is explicitly null', () => {
+      // Distinct from the "no ~standard property at all" case above: `typeof null === "object"`
+      // is JavaScript's own well-known quirk, so `standard === null` must be checked as its own
+      // clause -- `typeof standard !== "object"` alone would not catch a null `~standard`.
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({
+            run: "echo a",
+            output: { format: "json", schema: { "~standard": null } },
             policy: okPolicy,
           }),
         )

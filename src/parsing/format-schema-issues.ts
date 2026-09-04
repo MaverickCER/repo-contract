@@ -34,6 +34,12 @@ function formatIssue(issue: StandardSchemaV1.Issue): string {
 function formatPath(
   path: readonly (PropertyKey | StandardSchemaV1.PathSegment)[] | undefined,
 ): string {
+  // Equivalent mutant: mutating `path.length === 0` to `false` makes an empty (but defined) `path`
+  // fall through to `path.map(...).join("")` below instead of returning `""` here directly -- but
+  // mapping and joining an empty array always produces `""` regardless of the mapping function, so
+  // both branches are observably identical for every possible input; no test could ever distinguish
+  // them by `formatPath`'s return value.
+  // Stryker disable next-line ConditionalExpression -- equivalent mutant: `path.length === 0` falling through to `path.map(...).join("")` on an empty array also produces `""`, identical to this early return, for every possible input -- no test could ever distinguish them.
   if (path === undefined || path.length === 0) return ""
 
   return path

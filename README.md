@@ -547,7 +547,10 @@ output: {
       version: 1,
       vendor: "example",
       validate: (value) => {
-        const errorCount = (value as { errorCount?: unknown }).errorCount
+        const errorCount =
+          value !== null && typeof value === "object"
+            ? (value as { errorCount?: unknown }).errorCount
+            : undefined
         return typeof errorCount === "number"
           ? { value: { errorCount } }
           : { issues: [{ message: "errorCount must be a number", path: ["errorCount"] }] }
