@@ -81,11 +81,20 @@ export function removeConsumerFixture(consumerDir: string | undefined): void {
  * Whether a runtime's own binary is resolvable on `PATH` at all -- distinct from `distIsBuilt`,
  * this is what lets the Bun/Deno E2E suites skip cleanly on a machine (or, deliberately, most CI
  * jobs -- see specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md) that never installed those
- * runtimes, rather than failing with a confusing spawn error.
+ * runtimes, rather than failing with a confusing spawn error. This runs at module load time (the
+ * describe.skipIf condition), outside any test body, so a `spawnSync` that throws synchronously
+ * instead of returning `{ error }` -- observed under heavy fork-level resource contention (this
+ * repository's own `npm run contract` running all ~30 checks, including Stryker's own subprocess
+ * fan-out, concurrently) -- must not crash the whole suite file. Treat that the same as "runtime
+ * unavailable": skip, don't fail.
  * @param command - The runtime's executable name, e.g. `"bun"` or `"deno"`.
  * @returns Whether invoking `<command> --version` succeeded.
  */
 export function isRuntimeAvailable(command: string): boolean {
-  const result = spawnSync(command, ["--version"], { encoding: "utf8" })
-  return result.error === undefined && result.status === 0
+  try {
+    const result = spawnSync(command, ["--version"], { encoding: "utf8" })
+    return result.error === undefined && result.status === 0
+  } catch {
+    return false
+  }
 }
