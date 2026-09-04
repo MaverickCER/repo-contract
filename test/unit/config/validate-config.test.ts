@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { validateRepoContractConfig } from "../../../src/config/validate-config.js"
 import {
   DependencyDeclaredLaterError,
@@ -6,6 +6,7 @@ import {
   InvalidRepoContractConfigError,
 } from "../../../src/errors.js"
 import type { PolicyResult, RepoContractConfig, Spawner } from "../../../src/types.js"
+import { successSchema } from "../standard-schema/fixtures.js"
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
 
@@ -441,6 +442,112 @@ describe("validateRepoContractConfig", () => {
         configWith({ run: "echo a", output: { format }, policy: okPolicy }),
       )
     }).not.toThrow()
+  })
+
+  describe("output.schema", () => {
+    it("accepts a well-formed Standard Schema-compliant object", () => {
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({
+            run: "echo a",
+            output: { format: "json", schema: successSchema() },
+            policy: okPolicy,
+          }),
+        )
+      }).not.toThrow()
+    })
+
+    it("accepts an omitted schema", () => {
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({ run: "echo a", output: { format: "json" }, policy: okPolicy }),
+        )
+      }).not.toThrow()
+    })
+
+    it("rejects a non-object schema", () => {
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({
+            run: "echo a",
+            output: { format: "json", schema: "not an object" },
+            policy: okPolicy,
+          }),
+        )
+      }).toThrow(/output\.schema must be a Standard Schema-compliant object/)
+    })
+
+    it('rejects a schema with no "~standard" property', () => {
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({
+            run: "echo a",
+            output: { format: "json", schema: {} },
+            policy: okPolicy,
+          }),
+        )
+      }).toThrow(/must have a "~standard" property/)
+    })
+
+    it("rejects a schema whose ~standard.version is not 1", () => {
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({
+            run: "echo a",
+            output: {
+              format: "json",
+              schema: { "~standard": { version: 2, vendor: "x", validate: () => ({ value: 1 }) } },
+            },
+            policy: okPolicy,
+          }),
+        )
+      }).toThrow(/\["~standard"\]\.version must be 1/)
+    })
+
+    it("rejects a schema whose ~standard.vendor is not a string", () => {
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({
+            run: "echo a",
+            output: {
+              format: "json",
+              schema: { "~standard": { version: 1, vendor: 123, validate: () => ({ value: 1 }) } },
+            },
+            policy: okPolicy,
+          }),
+        )
+      }).toThrow(/\["~standard"\]\.vendor must be a string/)
+    })
+
+    it("rejects a schema whose ~standard.validate is not a function", () => {
+      expect(() => {
+        validateRepoContractConfig(
+          configWith({
+            run: "echo a",
+            output: {
+              format: "json",
+              schema: { "~standard": { version: 1, vendor: "x", validate: "not a function" } },
+            },
+            policy: okPolicy,
+          }),
+        )
+      }).toThrow(/\["~standard"\]\.validate must be a function/)
+    })
+
+    it("never invokes a supplied schema's validate() during config validation", () => {
+      const validate = vi.fn()
+      validateRepoContractConfig(
+        configWith({
+          run: "echo a",
+          output: {
+            format: "json",
+            schema: { "~standard": { version: 1, vendor: "x", validate } },
+          },
+          policy: okPolicy,
+        }),
+      )
+      expect(validate).not.toHaveBeenCalled()
+    })
   })
 
   it("accepts a check with no dependsOn", () => {

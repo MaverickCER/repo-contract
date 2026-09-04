@@ -12,6 +12,8 @@ import type {
   SpawnSyncReturns,
 } from "node:child_process"
 
+import type { StandardSchemaV1 } from "./standard-schema/types.js"
+
 /** Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only. */
 export type OutputFormat = "json" | "yaml" | "text"
 
@@ -66,16 +68,21 @@ export type ParsedOutput<T> = ParsedOutputSuccess<T> | ParsedOutputFailure
  * `undefined` -- a policy narrows with `ctx.result.output?.success` (or an
  * `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.
  *
- * `output.value` is typed `unknown` for every format, including `"text"`
- * (even though `parseText` always produces a `string` at runtime) --
- * neither repo-contract nor TypeScript's generic inference can reliably
- * carry a specific check's own literal `output.format` through to that
- * same check's `policy` parameter once several checks with heterogeneous
- * formats live together in one `checks` record (a real TypeScript
- * inference limitation hit and confirmed during implementation, not a
- * hypothetical -- see specs/decisions/ for the isolated repro). A policy
- * author narrows or casts `.value` themselves, exactly as they already must
- * for `"json"`/`"yaml"` where no schema knowledge exists either way.
+ * `output.value` is the value produced by the configured `format` parser, optionally validated
+ * and (if a schema transforms/coerces it) replaced by `output.schema` (see
+ * `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a
+ * check's config supplies a schema. It is typed `unknown` for every format regardless, including
+ * `"text"` (even though `parseText` always produces a `string` at runtime) and regardless of
+ * whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can
+ * reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own
+ * inferred output type) through to that same check's `policy` parameter once several checks with
+ * heterogeneous formats live together in one `checks` record (a real TypeScript inference
+ * limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/
+ * for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package
+ * is attempting to close: a schema still gives its own author real compile-time input/output
+ * typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this
+ * shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as
+ * they already must for `"json"`/`"yaml"` with no schema supplied.
  */
 export interface CheckEvidence {
   /** The executable that was actually spawned (after tokenization, if `run` was a string). */
@@ -102,7 +109,12 @@ export interface CheckEvidence {
   readonly spawnError?: string
   /** Populated only for `status === "spawn_error"` -- the underlying Node `ErrnoException`'s structured `.code` (e.g. `"ENOENT"`, `"EACCES"`), when Node provides one. Never populated for any other status. Distinguishes "the executable does not exist" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message. */
   readonly spawnErrorCode?: string
-  /** The parsed interpretation of `stdout`, present only if this check's config requested a `format`. */
+  /**
+   * The parsed interpretation of `stdout`, present only if this check's config requested a
+   * `format`. If that config also supplied `output.schema`, a successful parse is additionally
+   * validated (and possibly transformed) by that schema before landing here -- see this
+   * interface's own doc comment above and `CheckDefinitionConfig.output.schema`.
+   */
   readonly output?: ParsedOutput<unknown>
 }
 
@@ -238,7 +250,31 @@ export interface CheckDefinitionConfig {
   /** Maximum time to let this check's process run before it is terminated and recorded with `status: "timed_out"`. No timeout by default. */
   readonly timeoutMs?: number
   /** Request that stdout be parsed as this format. Omit for no parsing -- the consumer gets raw stdout/stderr only. */
-  readonly output?: { readonly format: OutputFormat }
+  readonly output?: {
+    readonly format: OutputFormat
+    /**
+     * An optional Standard Schema-compliant validator (Zod, Valibot, ArkType, or any other
+     * implementation of https://standardschema.dev), run once the requested `format` parse
+     * itself succeeds. repo-contract never imports a schema library itself --
+     * `StandardSchemaV1` is hand-vendored (see `src/standard-schema/types.ts`) purely as a
+     * type-level contract, so accepting any consumer's own schema object costs zero new
+     * runtime or dev dependencies (see
+     * specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md). A successful
+     * `~standard.validate()` result *replaces* the parsed value on `CheckEvidence.output.value`
+     * (letting a schema transform, not just check, its input); a failing result becomes an
+     * ordinary `ParsedOutputFailure`, indistinguishable in shape from a malformed-JSON/YAML
+     * parse failure -- both are "this check's output isn't what was expected," reported as
+     * data, never a throw (see `parseOutput`). `validate()` itself throwing or rejecting is a
+     * different case -- a bug in the supplied schema, not malformed output -- and surfaces as
+     * `StandardSchemaValidateThrewError` instead (see that error's own doc comment). Like every
+     * other format's `value`, `schema`'s inferred output type is *not* threaded to
+     * `CheckEvidence.output.value`'s declared type -- it stays `unknown`, for the same
+     * heterogeneous-checks-in-one-record TypeScript inference limitation already documented on
+     * `CheckEvidence` above; a policy still narrows or casts `.value` itself, now
+     * shaped/transformed by `schema` at runtime even though the type alone doesn't say so.
+     */
+    readonly schema?: StandardSchemaV1
+  }
   /**
    * A full scheduling barrier at this check's own position in the `checks` object: it does not
    * spawn until every check declared *earlier* has reached a terminal status (nothing "currently in

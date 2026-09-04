@@ -140,6 +140,11 @@ export default tseslint.config(
         // as src/config/, so it gets the same "must not depend on the
         // layers built on top of it" policy below.
         { type: "parsing", pattern: "src/parsing" },
+        // Hand-vendored, pure-type Standard Schema interface
+        // (specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md)
+        // -- the most foundational leaf of all: zero imports of its own,
+        // consumed by src/types.ts, src/index.ts, and src/parsing.
+        { type: "standard-schema", pattern: "src/standard-schema" },
         { type: "policy", pattern: "src/policy" },
         // src/presets/ (including src/presets/shared/) is production code
         // like every other layer above, but architecturally different: it's
@@ -227,6 +232,18 @@ export default tseslint.config(
                 "src/parsing is a foundational leaf (see its element definition above) and must not depend on config, execution, evidence, or policy.",
             },
             {
+              from: { element: { type: "standard-schema" } },
+              disallow: {
+                to: {
+                  element: {
+                    types: { anyOf: ["config", "execution", "evidence", "parsing", "policy"] },
+                  },
+                },
+              },
+              message:
+                "src/standard-schema is a hand-vendored, dependency-free leaf (see its element definition above) and must not depend on config, execution, evidence, parsing, or policy.",
+            },
+            {
               from: { element: { type: "presets" } },
               disallow: {
                 to: { element: { types: { anyOf: ["execution", "evidence", "policy"] } } },
@@ -239,7 +256,15 @@ export default tseslint.config(
                 {
                   element: {
                     types: {
-                      anyOf: ["config", "execution", "evidence", "parsing", "policy", "presets"],
+                      anyOf: [
+                        "config",
+                        "execution",
+                        "evidence",
+                        "parsing",
+                        "policy",
+                        "presets",
+                        "standard-schema",
+                      ],
                     },
                   },
                 },
@@ -258,7 +283,16 @@ export default tseslint.config(
               disallow: {
                 to: {
                   element: {
-                    types: { anyOf: ["config", "execution", "evidence", "parsing", "policy"] },
+                    types: {
+                      anyOf: [
+                        "config",
+                        "execution",
+                        "evidence",
+                        "parsing",
+                        "policy",
+                        "standard-schema",
+                      ],
+                    },
                   },
                 },
               },
@@ -291,12 +325,21 @@ export default tseslint.config(
               disallow: {
                 to: {
                   element: {
-                    types: { anyOf: ["config", "execution", "evidence", "parsing", "policy"] },
+                    types: {
+                      anyOf: [
+                        "config",
+                        "execution",
+                        "evidence",
+                        "parsing",
+                        "policy",
+                        "standard-schema",
+                      ],
+                    },
                   },
                 },
               },
               message:
-                "checks/ and scripts/ must reach src/ only through src/index.ts (its curated public barrel), src/types.ts/src/errors.ts, or src/presets/ -- never an internal layer (config/execution/evidence/parsing/policy) directly (specs/architecture.md#module-boundaries).",
+                "checks/ and scripts/ must reach src/ only through src/index.ts (its curated public barrel), src/types.ts/src/errors.ts, or src/presets/ -- never an internal layer (config/execution/evidence/parsing/policy/standard-schema) directly (specs/architecture.md#module-boundaries).",
             },
           ],
         },

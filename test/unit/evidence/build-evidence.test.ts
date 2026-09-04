@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { buildEvidence } from "../../../src/evidence/build-evidence.js"
 import type { CheckExecutionEntry } from "../../../src/execution/run-checks.js"
 import type { CheckDefinition, CheckEvidence, PolicyResult } from "../../../src/types.js"
+import { transformSchema } from "../standard-schema/fixtures.js"
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
 
@@ -64,6 +65,21 @@ describe("buildEvidence", () => {
       success: true,
       value: { score: 92 },
     })
+  })
+
+  it("replaces output.value with a transforming schema's own result", async () => {
+    const check: CheckDefinition = {
+      run: "echo hi",
+      output: { format: "json", schema: transformSchema() },
+      policy: okPolicy,
+    }
+    const results: readonly CheckExecutionEntry[] = [
+      ["mutation", check, rawEvidence({ stdout: "21" })],
+    ]
+
+    const { evidence } = await buildEvidence(results, new Date(0), new Date(1000))
+
+    expect(evidence.checks.mutation?.output).toEqual({ format: "json", success: true, value: 42 })
   })
 
   it("attaches a parse failure (not a throw) for malformed requested output, preserving raw stdout", async () => {
