@@ -5,3 +5,14 @@
 # See CONTRIBUTING.md and specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
 set -eu
 npm run contract
+
+# CodeRabbit CLI local review -- deliberately NOT a repo-contract check (never runs in CI; git
+# hooks are purely local, so this step never executes there regardless): an LLM-assisted review is
+# an assistive, local-only tool, not the deterministic pass/fail evidence the self-hosting contract
+# above is built around. Self-skips (rather than failing the push) when the CLI isn't installed --
+# see https://docs.coderabbit.ai/cli -- so a contributor without it installed is unaffected.
+if command -v coderabbit >/dev/null 2>&1; then
+  coderabbit review --agent
+else
+  echo "[pre-push] coderabbit CLI not found on PATH; skipping local CodeRabbit review (see https://docs.coderabbit.ai/cli)." >&2
+fi
