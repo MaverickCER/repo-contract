@@ -404,6 +404,15 @@
                 },
                 {
                   "kind": "Content",
+                  "text": ";\n        readonly schema?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "StandardSchemaV1",
+                  "canonicalReference": "repo-contract!StandardSchemaV1:interface"
+                },
+                {
+                  "kind": "Content",
                   "text": ";\n    }"
                 },
                 {
@@ -417,7 +426,7 @@
               "name": "output",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 4
+                "endIndex": 6
               }
             },
             {
@@ -535,7 +544,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!CheckEvidence:interface",
-          "docComment": "/**\n * What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n *\n * `output.value` is typed `unknown` for every format, including `\"text\"` (even though `parseText` always produces a `string` at runtime) -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"yaml\"` where no schema knowledge exists either way.\n */\n",
+          "docComment": "/**\n * What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n *\n * `output.value` is the value produced by the configured `format` parser, optionally validated and (if a schema transforms/coerces it) replaced by `output.schema` (see `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a check's config supplies a schema. It is typed `unknown` for every format regardless, including `\"text\"` (even though `parseText` always produces a `string` at runtime) and regardless of whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own inferred output type) through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package is attempting to close: a schema still gives its own author real compile-time input/output typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"yaml\"` with no schema supplied.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -685,7 +694,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!CheckEvidence#output:member",
-              "docComment": "/**\n * The parsed interpretation of `stdout`, present only if this check's config requested a `format`.\n */\n",
+              "docComment": "/**\n * The parsed interpretation of `stdout`, present only if this check's config requested a `format`. If that config also supplied `output.schema`, a successful parse is additionally validated (and possibly transformed) by that schema before landing here -- see this interface's own doc comment above and `CheckDefinitionConfig.output.schema`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -3468,6 +3477,1046 @@
             "startIndex": 1,
             "endIndex": 5
           }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!StandardSchemaV1:interface",
+          "docComment": "/**\n * Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension (https://standardschema.dev/json-schema) is out of scope; see the ADR.\n *\n * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat interface, since repo-contract has no use for the shared base on its own -- structurally identical for any real schema object assigned to it. Re-diff against `@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface StandardSchemaV1<Input = "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": ", Output = "
+            },
+            {
+              "kind": "Content",
+              "text": "Input"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "fileUrlPath": "src/standard-schema/types.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "Input",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "typeParameterName": "Output",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              }
+            }
+          ],
+          "name": "StandardSchemaV1",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!StandardSchemaV1#\"~standard\":member",
+              "docComment": "/**\n * The Standard Schema properties.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly \"~standard\": "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "StandardSchemaV1.Props",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Props:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Input, Output>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "\"~standard\"",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Namespace",
+          "canonicalReference": "repo-contract!StandardSchemaV1:namespace",
+          "docComment": "/**\n * Namespaced members of {@link StandardSchemaV1}: `Props`, `Result`, `SuccessResult`, `FailureResult`, `Issue`, `PathSegment`, `Types`, `InferInput`, `InferOutput`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare namespace StandardSchemaV1 "
+            }
+          ],
+          "fileUrlPath": "src/standard-schema/types.ts",
+          "releaseTag": "Public",
+          "name": "StandardSchemaV1",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Interface",
+              "canonicalReference": "repo-contract!StandardSchemaV1.FailureResult:interface",
+              "docComment": "/**\n * The result interface if validation fails.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface FailureResult "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "FailureResult",
+              "preserveMemberOrder": false,
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.FailureResult#issues:member",
+                  "docComment": "/**\n * The issues of failed validation.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly issues: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "readonly "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Issue",
+                      "canonicalReference": "repo-contract!StandardSchemaV1.Issue:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "[]"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "issues",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "repo-contract!StandardSchemaV1.InferInput:type",
+              "docComment": "/**\n * Infers the input type of a Standard Schema.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type InferInput<Schema extends "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "StandardSchemaV1",
+                  "canonicalReference": "repo-contract!StandardSchemaV1:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "> = "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "NonNullable",
+                  "canonicalReference": "!NonNullable:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Schema[\"~standard\"][\"types\"]>[\"input\"]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "InferInput",
+              "typeParameters": [
+                {
+                  "typeParameterName": "Schema",
+                  "constraintTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                }
+              ],
+              "typeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "repo-contract!StandardSchemaV1.InferOutput:type",
+              "docComment": "/**\n * Infers the output type of a Standard Schema.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type InferOutput<Schema extends "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "StandardSchemaV1",
+                  "canonicalReference": "repo-contract!StandardSchemaV1:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "> = "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "NonNullable",
+                  "canonicalReference": "!NonNullable:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Schema[\"~standard\"][\"types\"]>[\"output\"]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "InferOutput",
+              "typeParameters": [
+                {
+                  "typeParameterName": "Schema",
+                  "constraintTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                }
+              ],
+              "typeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "Interface",
+              "canonicalReference": "repo-contract!StandardSchemaV1.Issue:interface",
+              "docComment": "/**\n * The issue interface of the failure output.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface Issue "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Issue",
+              "preserveMemberOrder": false,
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Issue#message:member",
+                  "docComment": "/**\n * The error message of the issue.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly message: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "string"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "message",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Issue#path:member",
+                  "docComment": "/**\n * The path of the issue, if any.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly path?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "readonly ("
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "PropertyKey",
+                      "canonicalReference": "!PropertyKey:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": " | "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "PathSegment",
+                      "canonicalReference": "repo-contract!StandardSchemaV1.PathSegment:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ")[] | undefined"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "path",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 6
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            },
+            {
+              "kind": "Interface",
+              "canonicalReference": "repo-contract!StandardSchemaV1.Options:interface",
+              "docComment": "/**\n * Options passable to `validate`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface Options "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Options",
+              "preserveMemberOrder": false,
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Options#libraryOptions:member",
+                  "docComment": "/**\n * Explicit support for additional vendor-specific parameters, if needed.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly libraryOptions?: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Record",
+                      "canonicalReference": "!Record:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<string, unknown> | undefined"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "libraryOptions",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            },
+            {
+              "kind": "Interface",
+              "canonicalReference": "repo-contract!StandardSchemaV1.PathSegment:interface",
+              "docComment": "/**\n * The path segment interface of the issue.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface PathSegment "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "PathSegment",
+              "preserveMemberOrder": false,
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.PathSegment#key:member",
+                  "docComment": "/**\n * The key representing a path segment.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly key: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "PropertyKey",
+                      "canonicalReference": "!PropertyKey:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "key",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            },
+            {
+              "kind": "Interface",
+              "canonicalReference": "repo-contract!StandardSchemaV1.Props:interface",
+              "docComment": "/**\n * The Standard Schema properties interface.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface Props<Input = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", Output = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "Input"
+                },
+                {
+                  "kind": "Content",
+                  "text": "> "
+                }
+              ],
+              "releaseTag": "Public",
+              "typeParameters": [
+                {
+                  "typeParameterName": "Input",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "typeParameterName": "Output",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "Props",
+              "preserveMemberOrder": false,
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Props#types:member",
+                  "docComment": "/**\n * Inferred types associated with the schema.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly types?: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Types",
+                      "canonicalReference": "repo-contract!StandardSchemaV1.Types:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<Input, Output> | undefined"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "types",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Props#validate:member",
+                  "docComment": "/**\n * Validates unknown input values.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly validate: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "(value: unknown, options?: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Options",
+                      "canonicalReference": "repo-contract!StandardSchemaV1.Options:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ") => "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Result",
+                      "canonicalReference": "repo-contract!StandardSchemaV1.Result:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<Output> | "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Promise",
+                      "canonicalReference": "!Promise:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<"
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Result",
+                      "canonicalReference": "repo-contract!StandardSchemaV1.Result:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<Output>>"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "validate",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 10
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Props#vendor:member",
+                  "docComment": "/**\n * The vendor name of the schema library.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly vendor: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "string"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "vendor",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Props#version:member",
+                  "docComment": "/**\n * The version number of the standard.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly version: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "1"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "version",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "repo-contract!StandardSchemaV1.Result:type",
+              "docComment": "/**\n * The result interface of the validate function.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type Result<Output> = "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SuccessResult",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.SuccessResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Output> | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "FailureResult",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.FailureResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Result",
+              "typeParameters": [
+                {
+                  "typeParameterName": "Output",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                }
+              ],
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "Interface",
+              "canonicalReference": "repo-contract!StandardSchemaV1.SuccessResult:interface",
+              "docComment": "/**\n * The result interface if validation succeeds.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface SuccessResult<Output> "
+                }
+              ],
+              "releaseTag": "Public",
+              "typeParameters": [
+                {
+                  "typeParameterName": "Output",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                }
+              ],
+              "name": "SuccessResult",
+              "preserveMemberOrder": false,
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.SuccessResult#issues:member",
+                  "docComment": "/**\n * A falsy value for `issues` indicates success.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly issues?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "undefined"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": true,
+                  "releaseTag": "Public",
+                  "name": "issues",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.SuccessResult#value:member",
+                  "docComment": "/**\n * The typed output value.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly value: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "Output"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "value",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            },
+            {
+              "kind": "Interface",
+              "canonicalReference": "repo-contract!StandardSchemaV1.Types:interface",
+              "docComment": "/**\n * The Standard Schema types interface.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface Types<Input = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", Output = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "Input"
+                },
+                {
+                  "kind": "Content",
+                  "text": "> "
+                }
+              ],
+              "releaseTag": "Public",
+              "typeParameters": [
+                {
+                  "typeParameterName": "Input",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "typeParameterName": "Output",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "Types",
+              "preserveMemberOrder": false,
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Types#input:member",
+                  "docComment": "/**\n * The input type of the schema.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly input: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "Input"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "input",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "repo-contract!StandardSchemaV1.Types#output:member",
+                  "docComment": "/**\n * The output type of the schema.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "readonly output: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "Output"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "isReadonly": true,
+                  "isOptional": false,
+                  "releaseTag": "Public",
+                  "name": "output",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            }
+          ]
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "repo-contract!StandardSchemaValidateThrewError:class",
+          "docComment": "/**\n * A check's `output.schema[\"~standard\"].validate()` threw synchronously, or returned a `Promise` that rejected, instead of returning a `Result`. This is a bug in the consumer-supplied schema object, not malformed check output -- the same distinction `PolicyThrewError` below draws for a throwing policy: a schema *returning* failure `issues` becomes an ordinary `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON/YAML parse failure), but a schema *throwing* means the validator itself is broken, so it propagates as a rejected `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim via the native `Error` `cause` chain.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare class StandardSchemaValidateThrewError extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RepoContractError",
+              "canonicalReference": "repo-contract!RepoContractError:class"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/errors.ts",
+          "releaseTag": "Public",
+          "isAbstract": false,
+          "name": "StandardSchemaValidateThrewError",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "repo-contract!StandardSchemaValidateThrewError:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `StandardSchemaValidateThrewError` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(checkId: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", cause: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "checkId",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "cause",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  },
+                  "isOptional": false
+                }
+              ]
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "repo-contract!StandardSchemaValidateThrewError#checkId:member",
+              "docComment": "/**\n * The id of the check whose `output.schema` threw during validation.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly checkId: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "checkId",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "repo-contract!StandardSchemaValidateThrewError#code:member",
+              "docComment": "/**\n * Always `\"REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly code = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "code",
+              "propertyTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "implementsTokenRanges": []
         },
         {
           "kind": "TypeAlias",

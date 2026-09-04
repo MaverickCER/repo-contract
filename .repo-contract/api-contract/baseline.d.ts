@@ -60,6 +60,28 @@ export declare interface CheckDefinitionConfig {
     /** Request that stdout be parsed as this format. Omit for no parsing -- the consumer gets raw stdout/stderr only. */
     readonly output?: {
         readonly format: OutputFormat;
+        /**
+         * An optional Standard Schema-compliant validator (Zod, Valibot, ArkType, or any other
+         * implementation of https://standardschema.dev), run once the requested `format` parse
+         * itself succeeds. repo-contract never imports a schema library itself --
+         * `StandardSchemaV1` is hand-vendored (see `src/standard-schema/types.ts`) purely as a
+         * type-level contract, so accepting any consumer's own schema object costs zero new
+         * runtime or dev dependencies (see
+         * specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md). A successful
+         * `~standard.validate()` result *replaces* the parsed value on `CheckEvidence.output.value`
+         * (letting a schema transform, not just check, its input); a failing result becomes an
+         * ordinary `ParsedOutputFailure`, indistinguishable in shape from a malformed-JSON/YAML
+         * parse failure -- both are "this check's output isn't what was expected," reported as
+         * data, never a throw (see `parseOutput`). `validate()` itself throwing or rejecting is a
+         * different case -- a bug in the supplied schema, not malformed output -- and surfaces as
+         * `StandardSchemaValidateThrewError` instead (see that error's own doc comment). Like every
+         * other format's `value`, `schema`'s inferred output type is *not* threaded to
+         * `CheckEvidence.output.value`'s declared type -- it stays `unknown`, for the same
+         * heterogeneous-checks-in-one-record TypeScript inference limitation already documented on
+         * `CheckEvidence` above; a policy still narrows or casts `.value` itself, now
+         * shaped/transformed by `schema` at runtime even though the type alone doesn't say so.
+         */
+        readonly schema?: StandardSchemaV1;
     };
     /**
      * A full scheduling barrier at this check's own position in the `checks` object: it does not
@@ -88,16 +110,21 @@ export declare interface CheckDefinitionConfig {
  * `undefined` -- a policy narrows with `ctx.result.output?.success` (or an
  * `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.
  *
- * `output.value` is typed `unknown` for every format, including `"text"`
- * (even though `parseText` always produces a `string` at runtime) --
- * neither repo-contract nor TypeScript's generic inference can reliably
- * carry a specific check's own literal `output.format` through to that
- * same check's `policy` parameter once several checks with heterogeneous
- * formats live together in one `checks` record (a real TypeScript
- * inference limitation hit and confirmed during implementation, not a
- * hypothetical -- see specs/decisions/ for the isolated repro). A policy
- * author narrows or casts `.value` themselves, exactly as they already must
- * for `"json"`/`"yaml"` where no schema knowledge exists either way.
+ * `output.value` is the value produced by the configured `format` parser, optionally validated
+ * and (if a schema transforms/coerces it) replaced by `output.schema` (see
+ * `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a
+ * check's config supplies a schema. It is typed `unknown` for every format regardless, including
+ * `"text"` (even though `parseText` always produces a `string` at runtime) and regardless of
+ * whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can
+ * reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own
+ * inferred output type) through to that same check's `policy` parameter once several checks with
+ * heterogeneous formats live together in one `checks` record (a real TypeScript inference
+ * limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/
+ * for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package
+ * is attempting to close: a schema still gives its own author real compile-time input/output
+ * typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this
+ * shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as
+ * they already must for `"json"`/`"yaml"` with no schema supplied.
  */
 export declare interface CheckEvidence {
     /** The executable that was actually spawned (after tokenization, if `run` was a string). */
@@ -124,7 +151,12 @@ export declare interface CheckEvidence {
     readonly spawnError?: string;
     /** Populated only for `status === "spawn_error"` -- the underlying Node `ErrnoException`'s structured `.code` (e.g. `"ENOENT"`, `"EACCES"`), when Node provides one. Never populated for any other status. Distinguishes "the executable does not exist" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message. */
     readonly spawnErrorCode?: string;
-    /** The parsed interpretation of `stdout`, present only if this check's config requested a `format`. */
+    /**
+     * The parsed interpretation of `stdout`, present only if this check's config requested a
+     * `format`. If that config also supplied `output.schema`, a successful parse is additionally
+     * validated (and possibly transformed) by that schema before landing here -- see this
+     * interface's own doc comment above and `CheckDefinitionConfig.output.schema`.
+     */
     readonly output?: ParsedOutput<unknown>;
 }
 
@@ -568,6 +600,101 @@ export declare interface RunRepoContractOptions {
  * process are entirely the supplied function's own.
  */
 export declare type Spawner = (command: string, args: readonly string[], options: SpawnOptions) => ChildProcess;
+
+/**
+ * Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned
+ * 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
+ * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type
+ * declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this
+ * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the
+ * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension
+ * (https://standardschema.dev/json-schema) is out of scope; see the ADR.
+ *
+ * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base
+ * (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat
+ * interface, since repo-contract has no use for the shared base on its own -- structurally
+ * identical for any real schema object assigned to it. Re-diff against
+ * `@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.
+ */
+export declare interface StandardSchemaV1<Input = unknown, Output = Input> {
+    /** The Standard Schema properties. */
+    readonly "~standard": StandardSchemaV1.Props<Input, Output>;
+}
+
+/** Namespaced members of {@link StandardSchemaV1}: `Props`, `Result`, `SuccessResult`, `FailureResult`, `Issue`, `PathSegment`, `Types`, `InferInput`, `InferOutput`. */
+export declare namespace StandardSchemaV1 {
+    /** The Standard Schema properties interface. */
+    export interface Props<Input = unknown, Output = Input> {
+        /** The version number of the standard. */
+        readonly version: 1;
+        /** The vendor name of the schema library. */
+        readonly vendor: string;
+        /** Validates unknown input values. */
+        readonly validate: (value: unknown, options?: Options) => Result<Output> | Promise<Result<Output>>;
+        /** Inferred types associated with the schema. */
+        readonly types?: Types<Input, Output> | undefined;
+    }
+    /** Options passable to `validate`. */
+    export interface Options {
+        /** Explicit support for additional vendor-specific parameters, if needed. */
+        readonly libraryOptions?: Record<string, unknown> | undefined;
+    }
+    /** The result interface of the validate function. */
+    export type Result<Output> = SuccessResult<Output> | FailureResult;
+    /** The result interface if validation succeeds. */
+    export interface SuccessResult<Output> {
+        /** The typed output value. */
+        readonly value: Output;
+        /** A falsy value for `issues` indicates success. */
+        readonly issues?: undefined;
+    }
+    /** The result interface if validation fails. */
+    export interface FailureResult {
+        /** The issues of failed validation. */
+        readonly issues: readonly Issue[];
+    }
+    /** The issue interface of the failure output. */
+    export interface Issue {
+        /** The error message of the issue. */
+        readonly message: string;
+        /** The path of the issue, if any. */
+        readonly path?: readonly (PropertyKey | PathSegment)[] | undefined;
+    }
+    /** The path segment interface of the issue. */
+    export interface PathSegment {
+        /** The key representing a path segment. */
+        readonly key: PropertyKey;
+    }
+    /** The Standard Schema types interface. */
+    export interface Types<Input = unknown, Output = Input> {
+        /** The input type of the schema. */
+        readonly input: Input;
+        /** The output type of the schema. */
+        readonly output: Output;
+    }
+    /** Infers the input type of a Standard Schema. */
+    export type InferInput<Schema extends StandardSchemaV1> = NonNullable<Schema["~standard"]["types"]>["input"];
+    /** Infers the output type of a Standard Schema. */
+    export type InferOutput<Schema extends StandardSchemaV1> = NonNullable<Schema["~standard"]["types"]>["output"];
+}
+
+/**
+ * A check's `output.schema["~standard"].validate()` threw synchronously, or returned a `Promise`
+ * that rejected, instead of returning a `Result`. This is a bug in the consumer-supplied schema
+ * object, not malformed check output -- the same distinction `PolicyThrewError` below draws for a
+ * throwing policy: a schema *returning* failure `issues` becomes an ordinary
+ * `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON/YAML parse failure), but
+ * a schema *throwing* means the validator itself is broken, so it propagates as a rejected
+ * `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim
+ * via the native `Error` `cause` chain.
+ */
+export declare class StandardSchemaValidateThrewError extends RepoContractError {
+    /** Always `"REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW"`. */
+    readonly code = "REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW";
+    /** The id of the check whose `output.schema` threw during validation. */
+    readonly checkId: string;
+    constructor(checkId: string, cause: unknown);
+}
 
 /**
  * Synchronously spawns a child process and waits for it to exit -- modeled directly on
