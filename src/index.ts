@@ -19,8 +19,11 @@ export {
   PolicyReadUnrequestedOutputError,
   PolicyThrewError,
   RepoContractError,
+  StandardSchemaValidateThrewError,
   UnknownCheckIdError,
 } from "./errors.js"
+
+export type { StandardSchemaV1 } from "./standard-schema/types.js"
 
 export type {
   CheckDefinition,
