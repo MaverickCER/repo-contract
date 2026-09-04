@@ -142,6 +142,42 @@ describe("runRepoContract", () => {
     })
   })
 
+  it("still invokes the policy, once, when output.schema fails validation -- indistinguishable from a plain parse failure by the time policy sees it", async () => {
+    let policyInvocations = 0
+    const { verdict } = await runRepoContract({
+      checks: {
+        mutation: {
+          run: [node, "-e", "process.stdout.write(JSON.stringify({score: 95}))"],
+          output: {
+            format: "json",
+            schema: {
+              "~standard": {
+                version: 1,
+                vendor: "fixture",
+                validate: () => ({ issues: [{ message: "score must be a string" }] }),
+              },
+            },
+          },
+          policy: ({ result }) => {
+            policyInvocations += 1
+            if (result.output?.success === false) {
+              return { outcome: "fail", rationale: result.output.error }
+            }
+            return { outcome: "fail", rationale: "expected a failed schema validation" }
+          },
+        },
+      },
+      spawn: testSpawn,
+      env: testEnv,
+    })
+
+    expect(policyInvocations).toBe(1)
+    expect(verdict.checks.mutation.outcome).toBe("fail")
+    expect(verdict.checks.mutation.rationale).toBe(
+      "Schema validation failed: score must be a string",
+    )
+  })
+
   it("throws InvalidRepoContractConfigError synchronously for a malformed config, before anything spawns", () => {
     // spawn/env are deliberately included and valid here, even though this test's own point is
     // checks: null: this assertion only checks the error *class* (both the checks-shape and

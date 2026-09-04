@@ -110,7 +110,7 @@
   },
   {
     "file": "src/config/validate-config.ts",
-    "line": 412,
+    "line": 459,
     "domain": "stryker",
     "rule": [
       "OptionalChaining"
@@ -125,7 +125,7 @@
   },
   {
     "file": "src/evidence/build-evidence.ts",
-    "line": 54,
+    "line": 59,
     "domain": "stryker",
     "rule": [
       "ArrayDeclaration"
@@ -140,7 +140,7 @@
   },
   {
     "file": "src/evidence/build-evidence.ts",
-    "line": 69,
+    "line": 74,
     "domain": "stryker",
     "rule": [
       "EqualityOperator"
@@ -563,6 +563,21 @@
     "reason": "Node's own child_process contract guarantees exactly one of code/signal is non-null on a normal \"exit\" event, making signal !== null here effectively redundant given code === null already; kept as a belt-and-suspenders check against that contract rather than assumed absolute, since it is difficult to construct a real counterexample to test against (both null, or both non-null, simultaneously)."
   },
   {
+    "file": "src/parsing/format-schema-issues.ts",
+    "line": 41,
+    "domain": "eslint",
+    "rule": [
+      "secure-coding/no-improper-type-validation"
+    ],
+    "content": "eslint-disable-next-line secure-coding/no-improper-type-validation -- `segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === \"object\"` can only match the `PathSegment` object form here; the null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type, so satisfying both rules at once is impossible -- the type itself is the guarantee this check would otherwise add at runtime.",
+    "justification": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code: segment's declared type (PropertyKey | StandardSchemaV1.PathSegment) can never be null or an array, only a string/number/symbol or the PathSegment object shape, so the bug class this rule guards against cannot occur here.",
+    "alternatives": "Rewriting to the rule's own suggested null/array-safe form (segment != null && typeof segment === \"object\" && !Array.isArray(segment)) was tried directly and is itself flagged by @typescript-eslint/no-unnecessary-condition as an unreachable condition given segment's declared type -- the two rules' suggested fixes are mutually exclusive here, so one must be suppressed.",
+    "remediation": "None needed: the type system already rules out the unsafe cases (null, array) this rule exists to catch, so no runtime guard adds real safety beyond what TypeScript already guarantees at every call site.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "`segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === \"object\"` can only match the `PathSegment` object form here; the null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type, so satisfying both rules at once is impossible -- the type itself is the guarantee this check would otherwise add at runtime."
+  },
+  {
     "file": "src/policy/run-policies.ts",
     "line": 64,
     "domain": "stryker",
@@ -758,6 +773,21 @@
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
     "reason": "validateRepoContractConfig above already rejects any config.concurrency that is not a positive integer (>= 1), so by the time this line runs config.concurrency is always either undefined or already truthy; `??` and `&&` therefore select the identical branch for every value this parameter can actually hold here, making them equivalent at this exact call site."
+  },
+  {
+    "file": "src/standard-schema/types.ts",
+    "line": 22,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/no-namespace"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/no-namespace -- the interface+namespace declaration-merging pattern is required here to mirror @standard-schema/spec's own published shape (StandardSchemaV1.Props/.Result/.Issue/... nested under the interface's own name) -- an ES2015 module can't merge with an interface of the same name the way a namespace does, and diverging from upstream's exact shape would defeat this file's whole purpose of being a faithful, re-diffable vendor copy (see this file's own top comment).",
+    "justification": "Preserves an exact, re-diffable structural match to @standard-schema/spec's own published dist/index.d.ts, which uses this same interface+namespace merge for StandardSchemaV1.Props/.Result/.Issue/etc. -- an ES2015-module-only alternative cannot express a member nested under the interface's own name, so a namespace here isn't a stylistic choice, it's what keeps this file diffable against upstream verbatim.",
+    "alternatives": "A separately-named type/module (e.g. StandardSchemaV1Props, StandardSchemaV1Result) instead of StandardSchemaV1.Props/StandardSchemaV1.Result would satisfy the rule, but every real Standard-Schema-compliant consumer -- and the spec itself -- references these as StandardSchemaV1.<Member>; diverging from that referencing convention would make this vendored file harder to recognize as a faithful copy and harder to re-diff against a future spec version.",
+    "remediation": "None needed: declare namespace here compiles to zero runtime code (an ambient, type-only declaration merged with the interface of the same name) -- the rule's actual concern (the runtime IIFE-style namespace object TypeScript emits for a non-declare namespace) does not apply, since nothing here is emitted at all.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "the interface+namespace declaration-merging pattern is required here to mirror @standard-schema/spec's own published shape (StandardSchemaV1.Props/.Result/.Issue/... nested under the interface's own name) -- an ES2015 module can't merge with an interface of the same name the way a namespace does, and diverging from upstream's exact shape would defeat this file's whole purpose of being a faithful, re-diffable vendor copy (see this file's own top comment)."
   },
   {
     "file": "test/unit/crap/policy.test.ts",

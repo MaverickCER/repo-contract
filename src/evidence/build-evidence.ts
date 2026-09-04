@@ -45,7 +45,12 @@ export async function buildEvidence(
     results.map(async ([checkId, check, raw]): Promise<ParsedCheckEntry> => {
       if (check.output === undefined) return [checkId, check, raw]
       try {
-        const output = await parseOutput(check.output.format, raw.stdout, checkId)
+        const output = await parseOutput(
+          check.output.format,
+          raw.stdout,
+          checkId,
+          check.output.schema,
+        )
         return [checkId, check, { ...raw, output }]
       } catch (error) {
         thrown.push(error)
