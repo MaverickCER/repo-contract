@@ -238,6 +238,51 @@ describe("validateExceptionPolicyConfig", () => {
     const config: ExceptionPolicyConfig = { g: { rules: { a: exception("justification") } } }
     expect(validateExceptionPolicyConfig(config, ["justification", "alternatives"])).toEqual([])
   })
+
+  it("rejects a non-string requirement entry even when validRequirements is omitted", () => {
+    const config = {
+      g: { rules: { a: { mode: "exception", requirements: ["justification", 123] } } },
+    } as unknown as ExceptionPolicyConfig
+    const errors = validateExceptionPolicyConfig(config)
+    expect(errors).toEqual([
+      `config.g.rules["a"].requirements contains a non-string entry (got 123).`,
+    ])
+  })
+
+  it("rejects a non-string requirement entry when validRequirements is supplied too, without also flagging it as 'not in validRequirements'", () => {
+    const config = {
+      g: { rules: { a: { mode: "exception", requirements: [null] } } },
+    } as unknown as ExceptionPolicyConfig
+    const errors = validateExceptionPolicyConfig(config, ["justification"])
+    expect(errors).toEqual([
+      `config.g.rules["a"].requirements contains a non-string entry (got null).`,
+    ])
+  })
+
+  it.each([
+    ["null", null],
+    ["a string", "not-an-object"],
+    ["an array", ["default", "rules"]],
+  ])("rejects a group whose own entry is %s, not an object", (_label, groupPolicy) => {
+    const config = { g: groupPolicy } as unknown as ExceptionPolicyConfig
+    const errors = validateExceptionPolicyConfig(config)
+    expect(errors).toEqual(["config.g must be an object."])
+  })
+
+  it.each([
+    ["null", null],
+    ["a string", "a"],
+    ["an array", ["a"]],
+  ])("rejects a group whose rules container is %s, not an object", (_label, rules) => {
+    const config = { g: { rules } } as unknown as ExceptionPolicyConfig
+    const errors = validateExceptionPolicyConfig(config)
+    expect(errors).toEqual(["config.g.rules must be an object."])
+  })
+
+  it("accepts a group with rules omitted entirely (undefined is not 'rules must be an object')", () => {
+    const config: ExceptionPolicyConfig = { g: { default: ALLOWED } }
+    expect(validateExceptionPolicyConfig(config)).toEqual([])
+  })
 })
 
 interface FixtureRecord {
