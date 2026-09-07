@@ -35,9 +35,10 @@ describe("runApiDocsCheck (real repository files)", () => {
     expect(evidence.reports.flatMap((report) => report.undocumentedMarkers)).toEqual([])
   })
 
-  it("covers both the root and presets entry points", () => {
+  it("covers the root, presets, and helpers entry points", () => {
     expect(evidence.reports.map((report) => report.reportFileName).sort()).toEqual([
       "repo-contract",
+      "repo-contract-helpers",
       "repo-contract-presets",
     ])
   })

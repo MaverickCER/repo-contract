@@ -86,6 +86,9 @@ export default tseslint.config(
       // not TypeScript/source in any sense `boundaries`'s element model
       // applies to, and never hand-edited beyond its initial creation.
       "presets/package.json",
+      // Same shim, same reasoning, for the `./helpers` subpath (see
+      // specs/decisions/0013-reusable-exception-policy-helper.md).
+      "helpers/package.json",
       // docs/ is the published static site (docs/index.html), not a
       // TypeScript/source layer this package's module-boundary model
       // (`boundaries/elements` below) covers -- its one plain-JS asset,
@@ -154,10 +157,11 @@ export default tseslint.config(
         // "presets" among the layers root-config must reach only through
         // src/index.ts.
         { type: "presets", pattern: "src/presets" },
-        // src/helpers/ -- the generic exception-policy primitive -- is
-        // registered as its own element so `boundaries/no-unknown-files`
-        // recognizes it; not yet wired into any subpath export or barrel
-        // (see this repository's own git history for when it is).
+        // src/helpers/ is a third, independent public barrel
+        // (src/helpers/index.ts), published under its own `./helpers`
+        // subpath -- same architectural shape as src/presets/ above (see
+        // specs/decisions/0013-reusable-exception-policy-helper.md), not an
+        // internal layer only reachable through src/index.ts.
         { type: "helpers", pattern: "src/helpers" },
         // checks/ (including checks/shared/), scripts/ (including its
         // api-contract/architecture/adr-governance subdirectories), and
@@ -257,6 +261,14 @@ export default tseslint.config(
                 "src/presets defines plain check configs (run + policy over already-parsed evidence) and must not depend on the runtime layers that consume them -- execution, evidence, or policy.",
             },
             {
+              from: { element: { type: "helpers" } },
+              disallow: {
+                to: { element: { types: { anyOf: ["execution", "evidence", "policy"] } } },
+              },
+              message:
+                "src/helpers is a second, independent published barrel (repo-contract/helpers) and must not depend on the runtime layers that consume checks -- execution, evidence, or policy.",
+            },
+            {
               from: [
                 {
                   element: {
@@ -268,6 +280,7 @@ export default tseslint.config(
                         "parsing",
                         "policy",
                         "presets",
+                        "helpers",
                         "standard-schema",
                       ],
                     },
@@ -323,9 +336,9 @@ export default tseslint.config(
               // Mirrors the root-config policy above ("Only src/index.ts... may be imported from
               // outside src/") and .dependency-cruiser.cjs's own
               // checks-and-scripts-must-not-import-src-internals rule: checks/ and scripts/ are
-              // equally outside src/, so they must reach it only through src/index.ts (or the two
-              // public-ish surfaces already reachable directly -- the four src-root files and
-              // src/presets/) rather than an internal layer directly.
+              // equally outside src/, so they must reach it only through src/index.ts (or the
+              // public-ish surfaces already reachable directly -- the four src-root files,
+              // src/presets/, and src/helpers/) rather than an internal layer directly.
               from: { element: { types: { anyOf: ["checks", "scripts"] } } },
               disallow: {
                 to: {
@@ -344,7 +357,7 @@ export default tseslint.config(
                 },
               },
               message:
-                "checks/ and scripts/ must reach src/ only through src/index.ts (its curated public barrel), src/types.ts/src/errors.ts, or src/presets/ -- never an internal layer (config/execution/evidence/parsing/policy/standard-schema) directly (specs/architecture.md#module-boundaries).",
+                "checks/ and scripts/ must reach src/ only through src/index.ts (its curated public barrel), src/types.ts/src/errors.ts, src/presets/, or src/helpers/ -- never an internal layer (config/execution/evidence/parsing/policy/standard-schema) directly (specs/architecture.md#module-boundaries).",
             },
           ],
         },

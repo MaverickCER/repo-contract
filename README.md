@@ -819,6 +819,44 @@ Not every test runner has a preset. Jest, Cypress, and Mocha have different repo
 
 Unlike its neighbors, `format` auto-fixes (`--write`) and therefore cannot itself fail on unformatted input — `prettier --write` reports success once it finishes rewriting files. If you want a hard gate on formatting (in CI, for example), run `prettier --check .` directly instead of this preset.
 
+## Helpers
+
+**Experimental** (see [VERSIONING.md](VERSIONING.md)): its TypeScript signature and runtime behavior may both change in a minor or patch release, the same classification `repo-contract/presets` carries.
+
+If you've ever wanted a check to permit a specific, named, justified exception to an otherwise-blocking finding — "this dependency's advisory is a known false positive," "this network capability is reviewed and accepted," "this suppression comment is adequately explained" — without hand-rolling the matching, precedence, and field-completeness logic yourself, `repo-contract/helpers` is that logic, extracted and generalized. It's the same mechanism this repository's own `suppression-governance` check uses to gate `disable-comments.json`.
+
+It decides nothing and matches nothing on its own. You supply a classification (`{ group, category }`), a policy configuration, and a way to read a field's current value off your own record shape; it resolves the strictest applicable policy and tells you which required fields (if any) are still empty:
+
+```ts
+import { evaluateExceptionRecord, resolveExceptionPolicy } from "repo-contract/helpers"
+import type { ExceptionPolicyConfig } from "repo-contract/helpers"
+
+const policy: ExceptionPolicyConfig = {
+  socket: {
+    rules: {
+      critical: { mode: "forbidden" },
+      high: { mode: "forbidden" },
+      medium: { mode: "exception", requirements: ["justification", "alternatives"] },
+    },
+  },
+}
+
+const determinant = evaluateExceptionRecord({
+  record: myFinding,
+  classifications: [{ group: "socket", category: myFinding.severity }],
+  config: policy,
+  globalDefault: { mode: "forbidden" },
+  fieldValue: (record, field) => (record as Record<string, string>)[field] ?? "",
+})
+
+// determinant.verdict: "forbidden" | "insufficient" | "permitted"
+// determinant.missing: which required fields (if any) are still empty
+```
+
+`resolveExceptionPolicy` alone answers "what policy applies to this classification" — exact match, then glob (via [minimatch](https://www.npmjs.com/package/minimatch)), then the group's own default, then your global default; a `category: "*"` classification resolves as the strictest policy across the whole group at once. `loadExceptionRegistry` reads and validates one exception-registry file's envelope (`{ "exceptions": [...] }`) from disk, handing the `exceptions` array to a [Standard Schema](https://standardschema.dev)-compliant schema you supply — a missing file is a normal, empty-registry state, never an error. `hashRequirementFields` produces a deterministic digest of a set of fields' current values, useful for binding a sign-off to the exact prose it approved (edit the prose afterward, and a hash recorded against the old content stops matching automatically).
+
+What this package deliberately does **not** do: decide what a "finding" is, match a finding to a registry record, or derive a canonical identity for either one. Those stay entirely up to you — matching a Socket.dev alert to a waiver by its own stable id looks nothing like matching a network-capability finding by `capability:file:line`, and this package has no opinion about which is right for your tool.
+
 ## Evidence
 
 See the generated [API report](docs/api-report/repo-contract.api.md) for the full field-by-field reference on `Evidence` and `CheckEvidence`.

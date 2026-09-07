@@ -83,6 +83,10 @@ src/
   presets/
     index.ts           second, independent curated barrel -- repo-contract/presets
     shared/            internal helpers shared across presets, never re-exported
+  helpers/
+    index.ts           third, independent curated barrel -- repo-contract/helpers
+    exception-policy.ts   the generic exception-policy primitive (resolve/evaluate/hash)
+    load-exception-registry.ts  reads + validates one exception registry file's envelope
 ```
 
 Nothing outside `src/index.ts`'s explicit re-export list is part of the public API, regardless
@@ -91,9 +95,14 @@ an automatic one. `src/presets/index.ts` is a second, independent curated barrel
 kind, published under its own `./presets` subpath (see
 [ADR 0004](decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)) — presets are never re-exported from the
 root barrel, and the root barrel is never re-exported from presets; each stays curated on its
-own terms. `scripts/schema-types.ts` exists solely as a target for
-`ts-json-schema-generator` (see [ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md));
-it is not part of the runtime.
+own terms. `src/helpers/index.ts` is a third such barrel, published under its own `./helpers`
+subpath (see
+[ADR 0013](decisions/0013-reusable-exception-policy-helper.md)) — a generic, reusable
+exception-policy primitive that decides nothing and matches nothing on its own; it never
+re-exports from, or is re-exported by, either of the other two barrels. `scripts/schema-types.ts`
+exists solely as a target for `ts-json-schema-generator` (see
+[ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md)); it is not part of the
+runtime.
 
 ## Execution and policy evaluation are strictly phased
 

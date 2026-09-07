@@ -38,6 +38,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./helpers": {
+      "import": {
+        "types": "./dist/helpers.d.ts",
+        "default": "./dist/helpers.js"
+      },
+      "require": {
+        "types": "./dist/helpers.d.cts",
+        "default": "./dist/helpers.cjs"
+      }
+    },
     "./package.json": "./package.json",
     "./presets": {
       "import": {
@@ -58,6 +68,7 @@
   "files": [
     "CHANGELOG.md",
     "dist",
+    "helpers",
     "presets",
     "schemas",
     "src"
