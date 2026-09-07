@@ -115,11 +115,18 @@ did **not** do.
 (`scripts/security-network/scan.ts`), its threat model, and its two-independent-layers design are
 untouched. Nothing about this amendment makes `src/` network I/O any more permissible by default.
 
-**What changed is only the shape of the reviewed exception.** Before, a genuine, reviewed
-network-capability exception was expressed as a fully-justified `disable-comments.json` entry
-against the underlying `eslint-disable` (the "Suppression governance" section above). That is now
-expressed instead as a finding-specific record in `.repo-contract/exceptions/security-network.json`,
-which is _stricter_, not looser:
+**What changed is only what the `security-network` check itself asks for.** Before, this check's
+own failure message pointed a reviewer at a fully-justified `disable-comments.json` entry (against
+the `eslint-disable` on the underlying rule) as the place a genuine, reviewed exception was
+recorded. It now points instead at a finding-specific record in
+`.repo-contract/exceptions/security-network.json`. This is an _additional, independent_ gate, not
+a replacement: an `eslint-disable` in `src/**` still produces its own `disable-comments.json`
+entry that the `suppression-governance` check independently requires be fully justified (the
+"Suppression governance" section above is unchanged), and the `security-network` layer -- which
+never reads `eslint-disable` comments at all -- _also_ requires its own registry record. A real
+waiver for an `eslint-disable`-based exception therefore satisfies both. The registry record this
+check now asks for is _stricter_ than the `disable-comments.json` entry it used to point at, not
+looser:
 
 - The waiver is bound to one exact `capability:file:line` finding -- a bare "waive this capability
   kind everywhere" record is not expressible (`scripts/security-network/registry.ts`).
