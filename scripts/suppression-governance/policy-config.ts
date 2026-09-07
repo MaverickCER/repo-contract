@@ -78,15 +78,10 @@ const BASE_EXCEPTION_REQUIREMENTS: readonly SuppressionRequirement[] = [
   "verifiedBy",
 ]
 
-/** `BASE_EXCEPTION_REQUIREMENTS` plus `"reason"` -- the `stryker` domain additionally requires the mechanically-derived reason text. */
+/** `BASE_EXCEPTION_REQUIREMENTS` plus `"reason"` -- the `stryker` domain additionally requires the mechanically-derived reason text. Derived, not re-listed, so the two can never silently diverge. */
 const STRYKER_EXCEPTION_REQUIREMENTS: readonly SuppressionRequirement[] = [
-  "justification",
-  "alternatives",
-  "remediation",
-  "category",
-  "verificationMethod",
+  ...BASE_EXCEPTION_REQUIREMENTS,
   "reason",
-  "verifiedBy",
 ]
 
 /**

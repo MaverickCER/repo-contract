@@ -115,6 +115,16 @@ const DISABLE_COMMENTS_PROPERTY_OVERRIDES = {
   // `SHA256_HEX`/`validateRecord` remain the authoritative, exact check; this only approximates it
   // the same way `file`'s own pattern above only approximates "well-formed repo-relative path".
   verifiedContentHash: { pattern: "^$|^[0-9a-f]{64}$" },
+  // `verifiedAt` deliberately has NO override here, unlike every other value-level-constrained
+  // field above: registry.ts's `isIso8601Timestamp` (scripts/shared/exception-record.ts) rejects
+  // a shaped-but-impossible calendar date (`"2026-02-29"` on a non-leap year) by hand-checking
+  // real Gregorian month lengths, not merely by regex shape -- no JSON Schema `pattern` can
+  // express "day 29 is invalid for February in this specific year." A pattern approximating only
+  // the *shape* (as `file`/`verifiedContentHash` above do for their own constraints) would make
+  // this field's schema and runtime contracts look equivalent when they are not: a value the
+  // schema accepts as `verifiedAt` can still be rejected by `validateSuppressionRegistry` at load
+  // time. `verifiedAt` therefore stays schema-unconstrained (any string) and remains a runtime-only
+  // contract, enforced exclusively by registry.ts.
 }
 
 /**
