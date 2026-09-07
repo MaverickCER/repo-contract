@@ -127,14 +127,14 @@ re-scan a package or a file to justify a coarser `mechanical` vs. `human` split 
 (along with the other four authoring fields) via `verifiedContentHash` is what makes it
 accountable rather than just recorded.
 
-**Migration.** All 64 records committed under this ADR's original (pre-amendment) model were
+**Migration.** All 68 records committed under this ADR's original (pre-amendment) model were
 backfilled with a single migration pass at the time this amendment landed: `verifiedBy:
 "@maverickcer"`, an identical `verifiedAt` (the migration date, not each record's own original
 authoring date), and `verifiedContentHash` computed from each record's own already-committed
 authoring fields. **This is explicitly a one-time baseline import, not 64 individual, independent
 fresh reviews** — a later reader must not read the identical verifier/timestamp across all 64 as
 evidence any of them were re-examined at migration time; none were. The content-binding is what
-makes the baseline meaningful going forward regardless: any of those 64 records whose prose is
+makes the baseline meaningful going forward regardless: any of those 68 records whose prose is
 edited from here on immediately loses its inherited sign-off and must be re-verified like any
 other record. Every suppression discovered _after_ this amendment starts unsigned, exactly like
 every other hand-authored field.
@@ -155,7 +155,7 @@ GitHub-enforced backing rather than resting on repo-contract's own say-so.
   introduced the suppression). Rejected — the author and the verifier being allowed to be the same
   actor with no independent check is exactly the "believe me" pattern this amendment closes; an
   automatic self-sign-off would reintroduce it structurally, just one step removed.
-- **Skipping the 64-record backfill and letting every pre-existing suppression fail until
+- **Skipping the 68-record backfill and letting every pre-existing suppression fail until
   individually re-reviewed.** Rejected as the initial migration step — it would make landing this
   amendment itself a hard blocker on a full manual audit of unrelated, already-reviewed history.
   The content-bound hash means the baseline costs nothing going forward: it is not a permanent

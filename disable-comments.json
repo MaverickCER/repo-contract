@@ -770,7 +770,10 @@
     "remediation": "None needed: the `typeof` check still documents the real intent (only trust a genuinely string-typed `.code`) even though its removal is unobservable at this exact call site, the same reasoning already justified for this same file's StringLiteral suppression two records above.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "equivalent mutant, see comment above."
+    "reason": "equivalent mutant, see comment above.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "db5ede6818b27264394827048c6166abba476a7d78547f5a957cc90896cee1e1"
   },
   {
     "file": "src/parsing/format-schema-issues.ts",
@@ -1183,7 +1186,10 @@
     "remediation": "None needed -- this is a single, narrowly-scoped test file suppression, not production code; the rule's own purpose (discouraging non-Error rejections in code this repository owns and controls) doesn't apply to a test whose entire point is exercising the malformed-input case a caller-supplied capability could realistically produce.",
     "category": "rule-not-applicable",
     "verificationMethod": "existing-test-suite",
-    "reason": "deliberate non-Error rejection, see above"
+    "reason": "deliberate non-Error rejection, see above",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "a03253cf3fc289d28f118dc6e2b3aeede11ab1202dd995e44ad7fd528fa10536"
   },
   {
     "file": "test/unit/helpers/load-exception-registry.test.ts",
@@ -1198,7 +1204,10 @@
     "remediation": "None needed -- narrowly-scoped test-only suppression, not production code.",
     "category": "rule-not-applicable",
     "verificationMethod": "mutation-run",
-    "reason": "deliberate non-Error rejection, distinguishing the code-lookup fallback from the ENOENT-string-match mutant"
+    "reason": "deliberate non-Error rejection, distinguishing the code-lookup fallback from the ENOENT-string-match mutant",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "834bcf4d50f0348d825f235a13ced309978fdb85f49ea231592e148b21d56c47"
   },
   {
     "file": "test/unit/helpers/load-exception-registry.test.ts",
@@ -1213,7 +1222,10 @@
     "remediation": "None needed -- narrowly-scoped test-only suppression, not production code.",
     "category": "rule-not-applicable",
     "verificationMethod": "mutation-run",
-    "reason": "deliberate non-Error rejection, distinguishing the String(error) fallback from the real-message mutant"
+    "reason": "deliberate non-Error rejection, distinguishing the String(error) fallback from the real-message mutant",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "df33024c0301daac042b2622059a70bf68ec9c98d7530ee1d92b01ccf3b2d04d"
   },
   {
     "file": "test/unit/policy/run-policies.test.ts",
