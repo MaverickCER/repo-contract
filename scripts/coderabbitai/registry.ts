@@ -11,9 +11,16 @@ import type { ExceptionVerification } from "../shared/exception-record.js"
  * `"tooling-limitation"` / etc., backed by `independent-human-review` -- a human's own accountable
  * judgment call, not a claim that no mechanical process exists to substantiate.
  */
-export const CODERABBIT_EXCEPTION_TYPES = EXCEPTION_TYPES.filter(
-  (type) => type !== "validated-false-positive",
-)
+/** `EXCEPTION_TYPES` minus `"validated-false-positive"` -- named so `CoderabbitExceptionRecord.exceptionType` below is statically narrowed to it, not just filtered from it at runtime (a hand-constructed record could otherwise still type-check with the excluded member, even though `validateCoderabbitExceptionRecord` would reject it before ever returning one). */
+export type CoderabbitExceptionType = Exclude<
+  (typeof EXCEPTION_TYPES)[number],
+  "validated-false-positive"
+>
+
+export const CODERABBIT_EXCEPTION_TYPES: readonly CoderabbitExceptionType[] =
+  EXCEPTION_TYPES.filter(
+    (type): type is CoderabbitExceptionType => type !== "validated-false-positive",
+  )
 
 /** One hand-maintained waiver for a CodeRabbit finding -- `.repo-contract/exceptions/coderabbit.json`'s own `exceptions` array element shape. */
 export interface CoderabbitExceptionRecord {
@@ -24,7 +31,7 @@ export interface CoderabbitExceptionRecord {
   readonly severity: "critical" | "major" | "minor" | "unknown"
   readonly justification: string
   readonly remediation: string
-  readonly exceptionType: (typeof CODERABBIT_EXCEPTION_TYPES)[number]
+  readonly exceptionType: CoderabbitExceptionType
   readonly verification?: ExceptionVerification
 }
 
@@ -166,7 +173,7 @@ function validateCoderabbitExceptionRecord(
     severity: severity as CoderabbitExceptionRecord["severity"],
     justification: justification as string,
     remediation: remediation as string,
-    exceptionType: exceptionType as (typeof CODERABBIT_EXCEPTION_TYPES)[number],
+    exceptionType: exceptionType as CoderabbitExceptionType,
     ...(validatedVerification !== undefined ? { verification: validatedVerification } : {}),
   }
 

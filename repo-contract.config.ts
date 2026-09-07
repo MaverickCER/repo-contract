@@ -257,6 +257,21 @@ export default defineRepoContract({
               "licensee found 0 production dependencies without an OSI-approved or Blue Oak Gold-rated license.",
           }
         }
+        // The preset's own failure heading has the identical --osi-only wording problem as its
+        // pass rationale above -- a failed run here would otherwise report a stricter policy
+        // ("without an OSI-approved license") than the one actually enforced (also accepting Blue
+        // Oak Gold), leaving a reader unable to tell from the rationale alone whether a listed
+        // dependency's license was rejected by both criteria or just misreported. The dynamic
+        // per-dependency detail lines that follow are untouched.
+        if (result.outcome === "fail") {
+          return {
+            ...result,
+            rationale: result.rationale.replace(
+              "without an OSI-approved license:",
+              "without an OSI-approved or Blue Oak Gold-rated license:",
+            ),
+          }
+        }
         return result
       },
     },

@@ -39,7 +39,15 @@ either way invisible to the same evidence/policy pipeline every other check part
 
 - `"reviewed"` — the CLI actually ran, on a real branch, outside CI; its findings are evaluated
   against `.repo-contract/exceptions/coderabbit.json` via the same `repo-contract/helpers`
-  exception-policy primitive `security-socket` and the suppression-governance retrofit use.
+  exception-policy primitive `security-socket` and the suppression-governance retrofit use. The
+  scope is `coderabbit review --agent --uncommitted` — this repository's own uncommitted, tracked
+  edits, i.e. a fast "review my work-in-progress before I even commit it" pass, which is what the
+  former pre-push shell step effectively was. The comprehensive review of a whole PR's committed
+  diff is CodeRabbit's own GitHub App, which posts findings directly on the PR (see
+  `"not-applicable"` below) — this local check is deliberately the narrower, faster, always-
+  terminating layer, not a duplicate of it. A `--uncommitted` run with nothing in scope emits the
+  CLI's own `"review_skipped"` terminal status, which this wrapper treats as a clean 0-findings
+  result.
 - `"not-applicable"` (`reason: "ci"`) — running in CI, where review is delegated to CodeRabbit's
   own GitHub App integration instead of this CLI. Carries `expectedProvider:
 "coderabbit-github-app"` so no future automation reading this evidence mistakes "ran in CI" for

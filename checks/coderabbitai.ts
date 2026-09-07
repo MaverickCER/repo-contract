@@ -153,10 +153,6 @@ export async function evaluateCoderabbitPolicy(
     return { outcome: "fail", rationale: `coderabbitai review failed: ${evidence.message}` }
   }
 
-  if (evidence.findings.length === 0) {
-    return { outcome: "pass", rationale: "coderabbit review --agent reported 0 findings." }
-  }
-
   const configErrors = validateExceptionPolicyConfig(
     coderabbitPolicy,
     VALID_CODERABBIT_REQUIREMENTS,
@@ -170,6 +166,10 @@ export async function evaluateCoderabbitPolicy(
     }
   }
 
+  // Loaded unconditionally, even with 0 findings this run: a record becomes stale exactly when
+  // its underlying finding disappears, and "every finding disappeared" is the single most common
+  // way that happens -- reporting stale records only in the findings.length > 0 branch below
+  // would make that exact drift signal unreachable in the most common case.
   const registry = await loadRegistry(exceptionsPath)
   if (!registry.ok) {
     return {
@@ -178,6 +178,17 @@ export async function evaluateCoderabbitPolicy(
         `${exceptionsPath} failed validation:`,
         ...registry.errors.map((e) => `- ${e}`),
       ].join("\n"),
+    }
+  }
+
+  if (evidence.findings.length === 0) {
+    const staleNote =
+      registry.records.length > 0
+        ? ` ${String(registry.records.length)} exception record(s) matched nothing this run: ${registry.records.map((r) => r.id).join(", ")}.`
+        : ""
+    return {
+      outcome: "pass",
+      rationale: `coderabbit review --agent reported 0 findings.${staleNote}`,
     }
   }
 
