@@ -12,12 +12,22 @@ import { runSecuritySocketScan } from "../../../scripts/security-socket/scan.js"
  * CLI (CI, and every contributor machine absent an explicit `socket login`, holds no Socket org
  * token), or -- if the binary genuinely isn't resolvable -- a spawn failure.
  *
- * The distinction is asserted deterministically rather than accepting either reason: when
- * `node_modules/.bin/socket` exists (the devDependency-installed case, which the repository's own
- * test scripts also prepend to `PATH`), `"cli-not-installed"` would mean a *broken* spawn
- * resolution path -- a real regression this test must catch, not mask.
+ * The distinction is asserted deterministically rather than accepting either reason: whenever a
+ * `socket` executable resolves (the devDependency `node_modules/.bin`, or anywhere on `PATH` --
+ * `runSecuritySocketScan` spawns the bare name `"socket"`, so `PATH` is what actually decides),
+ * `"cli-not-installed"` would mean a *broken* spawn resolution path -- a real regression this test
+ * must catch, not mask.
  */
-const LOCAL_SOCKET_BIN = path.join("node_modules", ".bin", "socket")
+const EXECUTABLE_NAMES =
+  process.platform === "win32" ? ["socket.cmd", "socket.exe", "socket"] : ["socket"]
+
+/** Whether a `socket` executable resolves the same way `spawnSync("socket", ...)` would: `node_modules/.bin` first, then every `PATH` entry. */
+function socketExecutableResolves(): boolean {
+  const localBin = path.join("node_modules", ".bin", "socket")
+  if (existsSync(localBin)) return true
+  const pathDirs = (process.env.PATH ?? "").split(path.delimiter).filter((dir) => dir.length > 0)
+  return pathDirs.some((dir) => EXECUTABLE_NAMES.some((name) => existsSync(path.join(dir, name))))
+}
 
 describe("runSecuritySocketScan -- real @socketsecurity/cli", () => {
   it(
@@ -32,7 +42,7 @@ describe("runSecuritySocketScan -- real @socketsecurity/cli", () => {
       // Socket org credentials (a real "failed"/"passed"/"error"), worth knowing about, not
       // silently accepting.
       expect(evidence.reason).toBe(
-        existsSync(LOCAL_SOCKET_BIN) ? "not-authenticated" : "cli-not-installed",
+        socketExecutableResolves() ? "not-authenticated" : "cli-not-installed",
       )
     },
     // `runSecuritySocketScan` calls `spawnSync` with its own 5-minute deadline; an

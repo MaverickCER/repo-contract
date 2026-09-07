@@ -102,7 +102,10 @@ function isRealCalendarDate(y: number, m: number, d: number): boolean {
  * @returns `true` if `value` is a valid ISO 8601 date/date-time.
  */
 export function isIso8601Timestamp(value: string): boolean {
-  if (!ISO_8601_SHAPE.test(value)) return false
+  // `$` in a non-`m` regex still matches *before* a single trailing newline, so `ISO_8601_SHAPE`
+  // alone would accept `"2026-01-01\n"` (which `Date.parse` then also tolerates). Reject any line
+  // terminator outright before the shape check.
+  if (/[\r\n]/.test(value) || !ISO_8601_SHAPE.test(value)) return false
   const [year, month, day] = value.slice(0, 10).split("-").map(Number) as [number, number, number]
   if (!isRealCalendarDate(year, month, day)) return false
   return !Number.isNaN(Date.parse(value))
