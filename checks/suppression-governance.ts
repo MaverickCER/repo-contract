@@ -1,3 +1,4 @@
+import { validateExceptionPolicyConfig } from "../src/helpers/index.js"
 import type { SuppressionGovernanceEvidence } from "../scripts/suppression-governance/evidence-types.js"
 import type {
   SuppressionPolicyConfig,
@@ -9,7 +10,15 @@ import { evaluateRecord, formatOffender } from "../scripts/suppression-governanc
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 
-const VALID_MODES = ["forbidden", "allowed", "exception"] as const
+/**
+ * Every field name a `SuppressionPolicy`'s `"exception"` mode may require -- passed to
+ * `validateExceptionPolicyConfig` as its `validRequirements` set so a policy naming anything
+ * outside this closed set (a typo, a field that doesn't exist on `DisableCommentRecord`) is a
+ * configuration error, not a silently-ignored no-op. Kept in sync with `SuppressionRequirement`
+ * (`scripts/suppression-governance/policy-config.ts`) by the same derivation-safety convention
+ * `evidence-types.ts`'s `SUPPRESSION_CATEGORIES`/`VERIFICATION_METHODS` already use elsewhere in
+ * this feature.
+ */
 const VALID_REQUIREMENTS: readonly SuppressionRequirement[] = [
   "justification",
   "alternatives",
@@ -18,92 +27,6 @@ const VALID_REQUIREMENTS: readonly SuppressionRequirement[] = [
   "verificationMethod",
   "reason",
 ]
-
-/**
- * Validates one `SuppressionPolicy` value's shape -- `mode` must be one of the three recognized
- * modes, and an `"exception"` mode's `requirements` must be a non-empty array drawn only from
- * `VALID_REQUIREMENTS` (an empty `requirements` array is rejected rather than silently treated as
- * equivalent to `"allowed"` -- if nothing is required, `"allowed"` is the correct, unambiguous way
- * to say so).
- * @param value - The candidate policy value to validate.
- * @param location - Where this value lives in `suppressionPolicy`, for error messages.
- * @param errors - Accumulates every configuration problem found.
- */
-function validateSuppressionPolicyValue(value: unknown, location: string, errors: string[]): void {
-  if (typeof value !== "object" || value === null) {
-    errors.push(`${location} must be an object.`)
-    return
-  }
-
-  const { mode, requirements } = value as Record<string, unknown>
-
-  if (mode === "forbidden" || mode === "allowed") return
-
-  if (mode !== "exception") {
-    errors.push(
-      `${location}.mode must be one of ${VALID_MODES.map((m) => `"${m}"`).join(", ")} (got ${JSON.stringify(mode)}).`,
-    )
-    return
-  }
-
-  if (!Array.isArray(requirements) || requirements.length === 0) {
-    errors.push(`${location}.requirements must be a non-empty array when mode is "exception".`)
-    return
-  }
-
-  for (const requirement of requirements) {
-    if (!VALID_REQUIREMENTS.includes(requirement as SuppressionRequirement)) {
-      errors.push(
-        `${location}.requirements contains an invalid entry (got ${JSON.stringify(requirement)}); ` +
-          `expected one of ${VALID_REQUIREMENTS.map((r) => `"${r}"`).join(", ")}.`,
-      )
-    }
-  }
-}
-
-/**
- * Every `SuppressionPolicy` value declared in `policyConfig` -- each domain's `default` and every
- * entry in its `rules` -- must be well-formed; this is a *configuration* bug (distinct from a
- * registry-data problem the policy evaluates records against) and is reported once, up front,
- * rather than discovered lazily per-record.
- * @param policyConfig - The suppression policy configuration to validate.
- * @returns One error message per invalid policy value found; empty if the config is valid.
- */
-function validatePolicyConfig(policyConfig: SuppressionPolicyConfig): string[] {
-  const errors: string[] = []
-
-  for (const [domain, domainPolicy] of Object.entries(policyConfig)) {
-    if (domainPolicy.default !== undefined) {
-      validateSuppressionPolicyValue(
-        domainPolicy.default,
-        `suppressionPolicy.${domain}.default`,
-        errors,
-      )
-    }
-    for (const [pattern, policy] of Object.entries(domainPolicy.rules ?? {})) {
-      // A literal "*" rules key is always a mistake, never an intentional blanket policy: Stryker's
-      // own "disable every mutator" directive is spelled "all" (see policy-config.ts's own comment
-      // on its `stryker.rules.all` entry), so "*" only ever reaches here as a glob pattern -- and
-      // resolve-policy.ts's minimatch-based pattern matching would then match "*" against every
-      // real rule name in the domain, silently forbidding (or allowing) far more than intended.
-      if (pattern === "*") {
-        errors.push(
-          `suppressionPolicy.${domain}.rules must not use the literal "*" as a key -- ` +
-            "it would glob-match every rule name in this domain via resolve-policy.ts's pattern " +
-            'matching, which is almost never the intended scope. Use "all" for Stryker\'s own ' +
-            "literal directive, or a more specific pattern.",
-        )
-      }
-      validateSuppressionPolicyValue(
-        policy,
-        `suppressionPolicy.${domain}.rules["${pattern}"]`,
-        errors,
-      )
-    }
-  }
-
-  return errors
-}
 
 interface EvaluateSuppressionGovernancePolicyInput {
   readonly evidence: SuppressionGovernanceEvidence
@@ -141,7 +64,7 @@ export function evaluateSuppressionGovernancePolicy(
     }
   }
 
-  const configErrors = validatePolicyConfig(policyConfig)
+  const configErrors = validateExceptionPolicyConfig(policyConfig, VALID_REQUIREMENTS)
   if (configErrors.length > 0) {
     return {
       outcome: "fail",
