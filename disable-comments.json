@@ -578,6 +578,66 @@
     "reason": "Node's own child_process contract guarantees exactly one of code/signal is non-null on a normal \"exit\" event, making signal !== null here effectively redundant given code === null already; kept as a belt-and-suspenders check against that contract rather than assumed absolute, since it is difficult to construct a real counterexample to test against (both null, or both non-null, simultaneously)."
   },
   {
+    "file": "src/helpers/exception-policy.ts",
+    "line": 166,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- equivalent mutant, see comment above.",
+    "justification": "By the time this filter runs, the preceding `exactMatch = rules.find(([pattern]) => pattern === category); if (exactMatch) return exactMatch[1]` has already returned for any entry whose pattern literally equals category -- so no remaining entry in rules can ever have pattern === category at this point. `pattern !== category` is therefore provably always true here, making it observationally identical to the literal `true` this mutant substitutes; no input could ever make the two branches diverge.",
+    "alternatives": "No test can distinguish the two forms by resolveExceptionPolicy's return value, since both produce the exact same glob-matching result for every possible input -- there is no alternative test to write here, unlike a genuine coverage gap.",
+    "remediation": "None needed: removing the `pattern !== category &&` guard entirely would be behaviorally identical and was considered, but keeping it documents the intent (never re-consider an already-exact-matched entry as a glob candidate) even though it is not behaviorally load-bearing at this exact call site.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "equivalent mutant, see comment above."
+  },
+  {
+    "file": "src/helpers/exception-policy.ts",
+    "line": 375,
+    "domain": "stryker",
+    "rule": [
+      "StringLiteral"
+    ],
+    "content": "Stryker disable next-line StringLiteral -- equivalent mutant, see comment above.",
+    "justification": "Node's Hash.update(data, inputEncoding) treats a falsy/empty inputEncoding identically to \"utf8\" for a string data argument -- confirmed directly: createHash(\"sha256\").update(x, \"utf8\").digest(\"hex\") === createHash(\"sha256\").update(x, \"\").digest(\"hex\") for every input tried, including multi-byte UTF-8 content. The two encodings are observationally identical at this exact call site.",
+    "alternatives": "No test can distinguish \"utf8\" from \"\" by hashRequirementFields's return value, since both produce the exact same digest for every possible input -- there is no alternative test to write here, unlike a genuine coverage gap.",
+    "remediation": "None needed: passing \"utf8\" explicitly (rather than omitting the argument) documents the intent even though Node's own default behavior already makes it redundant.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "equivalent mutant, see comment above."
+  },
+  {
+    "file": "src/helpers/load-exception-registry.ts",
+    "line": 18,
+    "domain": "eslint",
+    "rule": [
+      "secure-coding/no-improper-type-validation"
+    ],
+    "content": "eslint-disable-next-line secure-coding/no-improper-type-validation -- `segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === \"object\"` can only match the `PathSegment` object form here; the null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type, so satisfying both rules at once is impossible -- the type itself is the guarantee this check would otherwise add at runtime.",
+    "justification": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code: segment's declared type (PropertyKey | StandardSchemaV1.PathSegment) can never be null or an array, only a string/number/symbol or the PathSegment object shape, so the bug class this rule guards against cannot occur here. This is the exact same construct, with the exact same type-level guarantee, already justified for its sibling in src/parsing/format-schema-issues.ts:47 -- this file's own formatIssue is an intentionally independent, much smaller copy (src/helpers/** must not depend on src/parsing/, an internal layer of the root barrel; see specs/decisions/0013-reusable-exception-policy-helper.md) that reproduces the same path-rendering logic and therefore the same rule interaction.",
+    "alternatives": "Rewriting to the rule's own suggested null/array-safe form (segment != null && typeof segment === \"object\" && !Array.isArray(segment)) was tried directly and is itself flagged by @typescript-eslint/no-unnecessary-condition as an unreachable condition given segment's declared type -- the two rules' suggested fixes are mutually exclusive here, so one must be suppressed.",
+    "remediation": "None needed: the type system already rules out the unsafe cases (null, array) this rule exists to catch, so no runtime guard adds real safety beyond what TypeScript already guarantees at every call site.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "`segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === \"object\"` can only match the `PathSegment` object form here; the null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type, so satisfying both rules at once is impossible -- the type itself is the guarantee this check would otherwise add at runtime."
+  },
+  {
+    "file": "src/helpers/load-exception-registry.ts",
+    "line": 82,
+    "domain": "stryker",
+    "rule": [
+      "StringLiteral"
+    ],
+    "content": "Stryker disable next-line StringLiteral -- equivalent mutant, see comment above.",
+    "justification": "node:fs/promises's readFile(path, \"\") returns a raw Buffer rather than a decoded string (unlike Hash.update, an empty inputEncoding is not treated the same as \"utf8\" here) -- but this function's only use of the result is JSON.parse(raw) immediately below, and JSON.parse's own ToString coercion on a Buffer calls Buffer.prototype.toString() with no arguments, whose own default encoding is \"utf8\". Confirmed directly, including with multi-byte UTF-8 content, that JSON.parse(bufferReadWithEmptyEncoding) produces byte-identical results to JSON.parse(stringReadWithUtf8Encoding) every time.",
+    "alternatives": "No test can distinguish \"utf8\" from \"\" through this function's own return value, since both produce the exact same parsed JSON for every possible input -- there is no alternative test to write here, unlike a genuine coverage gap.",
+    "remediation": "None needed: passing \"utf8\" explicitly documents the intent (a decoded string, not a raw Buffer) even though JSON.parse's own coercion happens to make the distinction unobservable at this exact call site.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "equivalent mutant, see comment above."
+  },
+  {
     "file": "src/parsing/format-schema-issues.ts",
     "line": 42,
     "domain": "stryker",

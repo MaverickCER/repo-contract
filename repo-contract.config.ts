@@ -212,7 +212,21 @@ export default defineRepoContract({
         return parsed.ok ? evaluateAttwReport(parsed.value) : parsed.result
       },
     },
-    license,
+    // `run` override (README's "Preset options are the preferred way..., a direct run override is
+    // an escape hatch"): the published `license` preset's default `run` is `--osi`-only.
+    // `minimatch` (src/helpers/exception-policy.ts's real, first runtime `dependencies` entry --
+    // see specs/decisions/0013-reusable-exception-policy-helper.md) declares SPDX `BlueOak-1.0.0`,
+    // which `licensee`'s own OSI classification does not recognize as approved, even though it is
+    // Blue Oak Council Gold-rated (a permissive, MIT-equivalent license by design; Blue Oak
+    // deliberately did not pursue OSI approval, treating it as unnecessary bureaucracy for an
+    // already-simple, already-permissive license). `licensee` ships first-class support for
+    // exactly this distinction via `--blueoak=<rating>`, added here as an additional acceptance
+    // criterion alongside (not instead of) `--osi` -- this repository's own self-hosting config
+    // only, not a change to the published preset's default behavior for other consumers.
+    license: {
+      ...license,
+      run: ["licensee", "--production", "--osi", "--blueoak=gold", "--errors-only", "--ndjson"],
+    },
     docs,
     accessibility,
     "security-deps": securityDeps,
