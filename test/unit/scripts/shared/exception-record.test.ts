@@ -48,6 +48,11 @@ describe("isIso8601Timestamp", () => {
     expect(isIso8601Timestamp("2026-01-01Tnope")).toBe(false)
     expect(isIso8601Timestamp("")).toBe(false)
   })
+
+  it("rejects a trailing line terminator (the regex-$ leniency Date.parse also tolerates)", () => {
+    expect(isIso8601Timestamp("2026-01-01\n")).toBe(false)
+    expect(isIso8601Timestamp("2026-01-01T00:00:00.000Z\r\n")).toBe(false)
+  })
 })
 
 describe("validateCanonicalIdentity", () => {
