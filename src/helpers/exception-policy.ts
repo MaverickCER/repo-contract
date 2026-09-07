@@ -280,16 +280,38 @@ function validateExceptionPolicyValue(
     return
   }
 
-  if (validRequirements === undefined) return
-
+  // Every requirement name must be a string regardless of whether `validRequirements` was
+  // supplied -- `evaluateExceptionRecord`'s `fieldValue(record, requirement)` expects a string
+  // key, and a decoded-but-unvalidated policy (e.g. straight from untrusted JSON) could otherwise
+  // carry a number/object/null entry through to that call. `validRequirements`, when supplied,
+  // additionally narrows to a specific allowed set; when omitted, "is a string" is still checked.
   for (const requirement of requirements) {
-    if (!validRequirements.includes(requirement as string)) {
+    if (typeof requirement !== "string") {
+      errors.push(
+        `${location}.requirements contains a non-string entry (got ${JSON.stringify(requirement)}).`,
+      )
+      continue
+    }
+    if (validRequirements !== undefined && !validRequirements.includes(requirement)) {
       errors.push(
         `${location}.requirements contains an invalid entry (got ${JSON.stringify(requirement)}); ` +
           `expected one of ${validRequirements.map((r) => `"${r}"`).join(", ")}.`,
       )
     }
   }
+}
+
+/**
+ * Whether `value` is a non-null, non-array object -- the shape every group's own entry in a
+ * `ExceptionPolicyConfig`, and every group's `rules` container, is expected to be before its own
+ * fields are inspected. `config`'s declared type (`ExceptionPolicyConfig`) does not, by itself,
+ * guarantee this at runtime: this function exists to validate a config that may have been decoded
+ * from untrusted JSON and only cast to that type, not actually shaped like it.
+ * @param value - The candidate value to check.
+ * @returns `true` if `value` is a plain object.
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 /**
@@ -313,6 +335,16 @@ export function validateExceptionPolicyConfig(
   const errors: string[] = []
 
   for (const [group, groupPolicy] of Object.entries(config)) {
+    // `groupPolicy`'s declared type (`ExceptionCategoryGroup`) does not guarantee this shape at
+    // runtime -- a config decoded from untrusted JSON and merely cast to `ExceptionPolicyConfig`
+    // could carry `null`, a string, or an array here. Reject it before dereferencing `.default`/
+    // `.rules`, rather than throwing (`null.default`) or silently treating a non-object as an
+    // empty group (both real failure modes this guard closes).
+    if (!isPlainObject(groupPolicy)) {
+      errors.push(`config.${group} must be an object.`)
+      continue
+    }
+
     if (groupPolicy.default !== undefined) {
       validateExceptionPolicyValue(
         groupPolicy.default,
@@ -321,6 +353,14 @@ export function validateExceptionPolicyConfig(
         errors,
       )
     }
+
+    if (groupPolicy.rules !== undefined && !isPlainObject(groupPolicy.rules)) {
+      errors.push(`config.${group}.rules must be an object.`)
+      continue
+    }
+
+    // No cast needed here: the guard above has already narrowed `groupPolicy.rules` to
+    // `Record<string, unknown> | undefined` via `isPlainObject`'s type predicate.
     for (const [pattern, policy] of Object.entries(groupPolicy.rules ?? {})) {
       if (pattern === "*") {
         errors.push(
