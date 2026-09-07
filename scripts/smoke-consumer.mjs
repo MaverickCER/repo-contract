@@ -60,6 +60,12 @@ const SHARED_PROBE_BODY = `
   if (typeof presets.format !== "object" || presets.format === null) throw new Error("repo-contract/presets did not export the format preset");
   if (!Array.isArray(presets.format.run) || typeof presets.format.policy !== "function") throw new Error("repo-contract/presets format is not a { run, policy } check definition");
 
+  const helpers = require("repo-contract/helpers");
+  if (typeof helpers.resolveExceptionPolicy !== "function") throw new Error("repo-contract/helpers did not export resolveExceptionPolicy");
+  if (typeof helpers.hashRequirementFields !== "function") throw new Error("repo-contract/helpers did not export hashRequirementFields");
+  const resolved = helpers.resolveExceptionPolicy({ group: "g", category: "x" }, {}, { mode: "allowed" });
+  if (resolved.mode !== "allowed") throw new Error("resolveExceptionPolicy did not fall back to the supplied globalDefault");
+
   const schema = JSON.parse(readFileSync(require.resolve("repo-contract/schema"), "utf8"));
   if (typeof schema.$schema !== "string") throw new Error("schema export missing $schema");
   if (typeof schema.$id !== "string") throw new Error("schema export missing $id");
@@ -70,9 +76,19 @@ import { defineRepoContract, runRepoContract } from "repo-contract";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
+// A genuine, statically-resolved native ESM import of the ./helpers subpath -- package.json
+// declares separate "import" and "require" conditions for it, and SHARED_PROBE_BODY below only
+// ever exercises the "require" one (even from this ESM probe, via createRequire). Node resolves
+// this import at module load, before any of SHARED_PROBE_BODY's own assertions run, so a broken
+// "import" condition (e.g. pointing at a stale/missing dist/helpers.js) fails this probe outright
+// rather than silently going unexercised.
+import * as helpersEsm from "repo-contract/helpers";
 
 const require = createRequire(import.meta.url);
 ${SHARED_PROBE_BODY}
+if (typeof helpersEsm.resolveExceptionPolicy !== "function") throw new Error("repo-contract/helpers' ESM import did not export resolveExceptionPolicy");
+if (typeof helpersEsm.hashRequirementFields !== "function") throw new Error("repo-contract/helpers' ESM import did not export hashRequirementFields");
+if (Object.keys(helpersEsm).sort().join(",") !== Object.keys(helpers).sort().join(",")) throw new Error("repo-contract/helpers exports differ between its ESM import and CJS require");
 console.log("SMOKE_ESM_OK");
 `
 

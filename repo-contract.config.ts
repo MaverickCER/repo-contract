@@ -109,6 +109,7 @@ import { testProperty } from "./checks/test-property.js"
 import { testUnit } from "./checks/test-unit.js"
 import { EXEMPT_UNUSED_DEV_DEPENDENCIES } from "./scripts/lint-config.mjs"
 import { defineRepoContract } from "./src/index.js"
+import type { PolicyContext } from "./src/index.js"
 import type { AttwReport } from "./src/presets/arethetypeswrong.js"
 import { evaluateAttwReport } from "./src/presets/arethetypeswrong.js"
 import { readJsonReport } from "./src/presets/shared/read-json-report.js"
@@ -212,7 +213,51 @@ export default defineRepoContract({
         return parsed.ok ? evaluateAttwReport(parsed.value) : parsed.result
       },
     },
-    license,
+    // `run` override (README's "Preset options are the preferred way..., a direct run override is
+    // an escape hatch"): the published `license` preset's default `run` is `--osi`-only.
+    // `minimatch` (src/helpers/exception-policy.ts's real, first runtime `dependencies` entry --
+    // see specs/decisions/0013-reusable-exception-policy-helper.md) declares SPDX `BlueOak-1.0.0`,
+    // which `licensee`'s own OSI classification does not recognize as approved, even though it is
+    // Blue Oak Council Gold-rated (a permissive, MIT-equivalent license by design; Blue Oak
+    // deliberately did not pursue OSI approval, treating it as unnecessary bureaucracy for an
+    // already-simple, already-permissive license). `licensee` ships first-class support for
+    // exactly this distinction via `--blueoak=<rating>`, added here as an additional acceptance
+    // criterion alongside (not instead of) `--osi` -- this repository's own self-hosting config
+    // only, not a change to the published preset's default behavior for other consumers.
+    license: {
+      ...license,
+      run: ["licensee", "--production", "--osi", "--blueoak=gold", "--errors-only", "--ndjson"],
+      // The published preset's own pass rationale ("...non-OSI-approved license") is worded for
+      // its default --osi-only `run` -- `--blueoak=gold` above widens the acceptance criterion, so
+      // a dependency accepted via Blue Oak Gold rather than OSI approval (minimatch, per this
+      // entry's own comment above) must never be described by a rationale implying OSI was the
+      // only test applied; a reader trusting that rationale alone would wrongly conclude every
+      // production dependency is specifically OSI-approved. Wraps the preset's own policy (which
+      // still does all the real stdout parsing/interpretation) and rewrites only that one known,
+      // exact stock string -- every other outcome (fail, missing dependency, abnormal termination)
+      // passes through unchanged.
+      // Explicitly typed (rather than left for contextual inference, like every other check
+      // below) -- an untyped `async (ctx) =>` here previously widened `defineRepoContract`'s own
+      // `TChecks` inference for the *entire* `checks` object, surfacing as spurious `Type 'string'
+      // is not assignable to type 'never'` errors on unrelated `dependsOn` arrays elsewhere in this
+      // same file. `PolicyContext` is the exact type `license.policy` (imported above) itself
+      // expects.
+      policy: async (ctx: PolicyContext) => {
+        const result = await license.policy(ctx)
+        if (
+          result.outcome === "pass" &&
+          result.rationale ===
+            "licensee found 0 production dependencies with a non-OSI-approved license."
+        ) {
+          return {
+            outcome: "pass",
+            rationale:
+              "licensee found 0 production dependencies without an OSI-approved or Blue Oak Gold-rated license.",
+          }
+        }
+        return result
+      },
+    },
     docs,
     accessibility,
     "security-deps": securityDeps,

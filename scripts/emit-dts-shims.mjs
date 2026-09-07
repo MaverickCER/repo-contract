@@ -16,6 +16,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const ENTRIES = [
   { name: "index", dtsPath: "./.dts/index.js" },
   { name: "presets", dtsPath: "./.dts/presets/index.js" },
+  { name: "helpers", dtsPath: "./.dts/helpers/index.js" },
 ]
 
 for (const { name, dtsPath } of ENTRIES) {

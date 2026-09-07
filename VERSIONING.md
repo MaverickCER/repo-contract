@@ -57,6 +57,12 @@ Also unstable at v0.1.0, per the same "not yet been through a real feedback cycl
 README's and the original design notes' explicit "not yet" language for a future CLI: none
 shipped yet.
 
+**`repo-contract/helpers`** (the whole subpath) — a second Experimental surface, added after
+`repo-contract/presets`, classified the same way and for the same reason: a new pre-1.0 surface
+shipped before a real feedback cycle (see
+[ADR 0013](specs/decisions/0013-reusable-exception-policy-helper.md)). The same "new export →
+minor; changed behavior → potentially major" framing above applies to it identically.
+
 ## Private
 
 Never covered by semver, may change at any time without notice:
