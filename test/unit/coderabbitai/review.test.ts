@@ -157,6 +157,24 @@ describe("parseAgentStream", () => {
     expect(result.error).toContain("unexpected status")
   })
 
+  it("fails closed on any event after the terminal 'complete' event", () => {
+    const result = parseAgentStream(
+      [REVIEW_CONTEXT, complete(), finding(), complete({ findings: 1 })].join("\n"),
+    )
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.error).toContain('after its terminal "complete" event')
+  })
+
+  it("fails closed on a 'review_skipped' complete event that also carries findings", () => {
+    const result = parseAgentStream(
+      [finding(), complete({ status: "review_skipped", findings: 1 })].join("\n"),
+    )
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.error).toContain("skipped review cannot also have findings")
+  })
+
   it("reports completed: false when the stream ends without a 'complete' event", () => {
     const result = parseAgentStream([REVIEW_CONTEXT, STATUS, finding()].join("\n"))
     expect(result.ok).toBe(true)

@@ -4,9 +4,12 @@
 
 Accepted. Implemented in `src/helpers/{index,exception-policy,load-exception-registry}.ts`,
 published as the third, independent `repo-contract/helpers` subpath (Experimental, see
-VERSIONING.md). `checks/shared/{evaluate-exception-findings,exception-record}.ts` build the
-check-owned matching/identity layer on top of it; no self-hosting check consumes either layer yet
-— this ADR covers the primitive and its plumbing only, not any specific check built on it.
+VERSIONING.md). `checks/shared/evaluate-exception-findings.ts` and
+`scripts/shared/exception-record.ts` build the check-owned matching / canonical-identity /
+content-bound-verification layer on top of it. The `suppression-governance`, `security-socket`,
+and `coderabbitai` checks consume that layer (with more security-* checks retrofitted onto it
+over the same release); this ADR covers the primitive and its plumbing, with each check's own use
+of it documented in that check's own ADR (0006, 0014) or PR.
 
 ## Context
 

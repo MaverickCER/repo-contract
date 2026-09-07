@@ -20,17 +20,25 @@ import { runSecuritySocketScan } from "../../../scripts/security-socket/scan.js"
 const LOCAL_SOCKET_BIN = path.join("node_modules", ".bin", "socket")
 
 describe("runSecuritySocketScan -- real @socketsecurity/cli", () => {
-  it("reports the deterministic unavailable reason for this environment", () => {
-    const evidence = runSecuritySocketScan()
+  it(
+    "reports the deterministic unavailable reason for this environment",
+    () => {
+      const evidence = runSecuritySocketScan()
 
-    expect(evidence.status).toBe("unavailable")
-    if (evidence.status !== "unavailable") throw new Error("expected status: unavailable")
+      expect(evidence.status).toBe("unavailable")
+      if (evidence.status !== "unavailable") throw new Error("expected status: unavailable")
 
-    // Anything other than "unavailable" would mean this environment unexpectedly holds live
-    // Socket org credentials (a real "failed"/"passed"/"error"), worth knowing about, not
-    // silently accepting.
-    expect(evidence.reason).toBe(
-      existsSync(LOCAL_SOCKET_BIN) ? "not-authenticated" : "cli-not-installed",
-    )
-  })
+      // Anything other than "unavailable" would mean this environment unexpectedly holds live
+      // Socket org credentials (a real "failed"/"passed"/"error"), worth knowing about, not
+      // silently accepting.
+      expect(evidence.reason).toBe(
+        existsSync(LOCAL_SOCKET_BIN) ? "not-authenticated" : "cli-not-installed",
+      )
+    },
+    // `runSecuritySocketScan` calls `spawnSync` with its own 5-minute deadline; an
+    // unauthenticated CLI returns near-instantly in practice, but the test's own timeout must
+    // still sit above that worst case so a genuinely wedged binary fails as a timeout here
+    // rather than as an ambiguous Vitest 20s cutoff mid-spawn.
+    6 * 60 * 1000,
+  )
 })

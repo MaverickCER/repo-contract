@@ -76,6 +76,34 @@ describe("evaluateCoderabbitPolicy", () => {
     expect(result.rationale).toContain("cli-not-installed")
   })
 
+  it("fails a not-applicable (CI) run when the registry itself is malformed -- the registry is validated on every run, not only a real review", async () => {
+    const evidence: CoderabbitEvidence = {
+      status: "not-applicable",
+      reason: "ci",
+      expectedProvider: "coderabbit-github-app",
+    }
+    const result = await evaluateCoderabbitPolicy({
+      evidence,
+      loadRegistry: async () => ({ ok: false, errors: ["exceptions[0] is broken"] }),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("failed validation")
+  })
+
+  it("notes that present-but-unevaluated records exist on a not-applicable (CI) run", async () => {
+    const evidence: CoderabbitEvidence = {
+      status: "not-applicable",
+      reason: "ci",
+      expectedProvider: "coderabbit-github-app",
+    }
+    const result = await evaluateCoderabbitPolicy({
+      evidence,
+      loadRegistry: async () => ({ ok: true, records: [verifiedRecord()] }),
+    })
+    expect(result.outcome).toBe("warn")
+    expect(result.rationale).toContain("were not evaluated (no review ran this run)")
+  })
+
   it("warns on a detached-HEAD / unresolvable git context", async () => {
     const evidence: CoderabbitEvidence = {
       status: "unavailable",

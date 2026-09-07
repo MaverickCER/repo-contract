@@ -112,6 +112,55 @@ describe("validateCoderabbitExceptionRegistry", () => {
     expect(result.errors[0]).toContain("severity must be one of")
   })
 
+  it("rejects version !== 1", () => {
+    const result = validateCoderabbitExceptionRegistry([validRecord({ version: 2 })])
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.errors.some((e) => e.includes("version must be 1"))).toBe(true)
+  })
+
+  it("rejects a non-object verification block", () => {
+    const result = validateCoderabbitExceptionRegistry([validRecord({ verification: "yes" })])
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.errors.some((e) => e.includes("verification must be an object"))).toBe(true)
+  })
+
+  it("rejects an empty verifiedBy, a non-ISO verifiedAt, and an empty verifiedContentHash", () => {
+    const result = validateCoderabbitExceptionRegistry([
+      validRecord({
+        verification: {
+          method: "independent-human-review",
+          verifiedBy: "",
+          verifiedAt: "later",
+          verifiedContentHash: "",
+        },
+      }),
+    ])
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.errors.some((e) => e.includes("verifiedBy"))).toBe(true)
+    expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
+    expect(result.errors.some((e) => e.includes("verifiedContentHash"))).toBe(true)
+  })
+
+  it("rejects a non-string verification.evidence", () => {
+    const result = validateCoderabbitExceptionRegistry([
+      validRecord({
+        verification: {
+          method: "independent-human-review",
+          verifiedBy: "a-maintainer",
+          verifiedAt: "2026-01-01T00:00:00.000Z",
+          verifiedContentHash: "abc",
+          evidence: 42,
+        },
+      }),
+    ])
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.errors.some((e) => e.includes("evidence must be a string"))).toBe(true)
+  })
+
   it("rejects a duplicate id across two records", () => {
     const result = validateCoderabbitExceptionRegistry([validRecord(), validRecord()])
     expect(result.ok).toBe(false)

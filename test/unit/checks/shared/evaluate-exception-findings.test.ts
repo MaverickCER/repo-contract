@@ -117,6 +117,26 @@ describe("evaluateExceptionFindings", () => {
     expect(result.summary).toContain("1 stale exception record(s)")
   })
 
+  it("counts one record as used (never stale) when two findings both match it -- the many-to-one shape security-network relies on", () => {
+    // `checks/security-network.ts`'s `findingIdentity` excludes `column`, so two findings of the
+    // same capability on the same line legitimately collapse to one record. `usedRecords` is a
+    // Set, so that record is used once and never reported stale.
+    const items = [
+      finding({ id: "shared", category: "medium" }),
+      finding({ id: "shared", category: "medium" }),
+    ]
+    const records = [record({ id: "shared", justification: "Because." })]
+
+    const result = evaluateExceptionFindings({ items, records, matchRecord: matchById, evaluate })
+
+    expect(result.matched).toHaveLength(2)
+    expect(result.matched.every(({ determinant }) => determinant.verdict === "permitted")).toBe(
+      true,
+    )
+    expect(result.staleExceptions).toEqual([])
+    expect(result.unmatchedFindings).toEqual([])
+  })
+
   describe("cross-cutting invariants", () => {
     it("an unmatched exception-mode finding never passes just because a different finding's category is permitted elsewhere", () => {
       const items = [

@@ -139,21 +139,12 @@ export async function evaluateSecuritySocketPolicy(
     loadRegistry = defaultLoadRegistry,
   } = input
 
-  if (evidence.status === "unavailable") {
-    return {
-      outcome: "warn",
-      rationale: `security-socket did not run (${evidence.reason}) -- alerts were not evaluated. Install and authenticate @socketsecurity/cli to enable real enforcement.`,
-    }
-  }
-
-  if (evidence.status === "error") {
-    return { outcome: "fail", rationale: `security-socket scan failed: ${evidence.message}` }
-  }
-
-  if (evidence.status === "passed") {
-    return { outcome: "pass", rationale: "socket ci reported 0 alerts." }
-  }
-
+  // Config + registry validation run FIRST -- before every evidence-status branch, including
+  // `unavailable` (the CLI isn't installed / not authenticated, the steady state for this
+  // repository's own CI) and `passed` (0 alerts). Validating the registry only on a `failed`
+  // scan would mean a malformed or unparseable `.repo-contract/exceptions/socket.json` never
+  // fails CI -- the same "a broken registry rides along with a green run" gap the
+  // `coderabbitai` and `security-network` retrofits close by loading their registries up front.
   const configErrors = validateExceptionPolicyConfig(socketPolicy, VALID_SOCKET_REQUIREMENTS)
   if (configErrors.length > 0) {
     return {
@@ -173,6 +164,27 @@ export async function evaluateSecuritySocketPolicy(
         ...registry.errors.map((e) => `- ${e}`),
       ].join("\n"),
     }
+  }
+
+  /** Records present but not compared against any alert this run (no real scan result). */
+  const unevaluatedNote =
+    registry.records.length > 0
+      ? ` ${String(registry.records.length)} exception record(s) in ${exceptionsPath} were not evaluated (scan produced no alert list this run).`
+      : ""
+
+  if (evidence.status === "unavailable") {
+    return {
+      outcome: "warn",
+      rationale: `security-socket did not run (${evidence.reason}) -- alerts were not evaluated. Install and authenticate @socketsecurity/cli to enable real enforcement.${unevaluatedNote}`,
+    }
+  }
+
+  if (evidence.status === "error") {
+    return { outcome: "fail", rationale: `security-socket scan failed: ${evidence.message}` }
+  }
+
+  if (evidence.status === "passed") {
+    return { outcome: "pass", rationale: `socket ci reported 0 alerts.${unevaluatedNote}` }
   }
 
   const { matched, unmatchedFindings, staleExceptions, summary } = evaluateExceptionFindings({

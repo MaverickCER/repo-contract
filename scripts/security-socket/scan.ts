@@ -90,8 +90,9 @@ function isAuthError(parsed: unknown): boolean {
 /**
  * A best-effort recognizer for a network-reachability failure -- unlike `isAuthError` above, this
  * was never directly observed against a real run (this environment has outbound network access),
- * so it only matches conservatively-specific signals (`ENOTFOUND`/`ETIMEDOUT`/`ECONNREFUSED` in
- * stderr, or an explicit "network" mention in a parsed `ok: false` envelope's own message/cause)
+ * so it only matches conservatively-specific signals (`ENOTFOUND`/`ETIMEDOUT`/`ECONNREFUSED`/
+ * `ECONNRESET` in stderr, or an explicit "network" mention in a parsed `ok: false` envelope's own
+ * message/cause)
  * rather than guessing broadly -- anything else unrecognized falls through to `status: "error"`
  * instead of being misreported as a transient, retriable network condition.
  * @param stderr - The CLI process's captured stderr.

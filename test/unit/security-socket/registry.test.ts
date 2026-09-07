@@ -115,6 +115,38 @@ describe("validateSocketExceptionRegistry", () => {
     expect(result.errors.some((e) => e.includes("verifiedContentHash"))).toBe(true)
   })
 
+  it("rejects a verifiedAt that is not an ISO 8601 timestamp", () => {
+    const result = validateSocketExceptionRegistry([
+      validRecord({
+        verification: {
+          method: "independent-human-review",
+          verifiedBy: "someone",
+          verifiedAt: "later",
+          verifiedContentHash: "abc",
+        },
+      }),
+    ])
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
+  })
+
+  it("rejects a verifiedAt that is a shaped-but-impossible calendar date", () => {
+    const result = validateSocketExceptionRegistry([
+      validRecord({
+        verification: {
+          method: "independent-human-review",
+          verifiedBy: "someone",
+          verifiedAt: "2026-13-45",
+          verifiedContentHash: "abc",
+        },
+      }),
+    ])
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
+  })
+
   it("reports every problem across multiple bad records, not just the first", () => {
     const result = validateSocketExceptionRegistry([
       validRecord({ id: "wrong-1" }),
