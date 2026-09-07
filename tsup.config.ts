@@ -9,7 +9,11 @@ import { defineConfig } from "tsup"
 // declaration maps.
 export default defineConfig({
   name: "index",
-  entry: { index: "src/index.ts", presets: "src/presets/index.ts" },
+  entry: {
+    index: "src/index.ts",
+    presets: "src/presets/index.ts",
+    helpers: "src/helpers/index.ts",
+  },
   format: ["esm", "cjs"],
   // This package is Node-only by nature -- it uses node:os/node:fs-promises
   // throughout, and its public types reference node:child_process (type-only,
@@ -20,9 +24,10 @@ export default defineConfig({
   dts: false,
   sourcemap: true,
   treeshake: true,
-  // repo-contract has zero runtime dependencies: process spawning and ambient
-  // env access are consumer-supplied capabilities (RepoContractConfig.spawn/env),
-  // not something this package imports itself -- see
+  // repo-contract's root/presets entry points have zero runtime dependencies:
+  // process spawning and ambient env access are consumer-supplied capabilities
+  // (RepoContractConfig.spawn/env), not something this package imports itself
+  // -- see
   // specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md.
   // `cross-spawn` is not a dependency of this package at all anymore (only a
   // devDependency, used by scripts/npm-pack.mjs and this repo's own tests);
@@ -34,6 +39,11 @@ export default defineConfig({
   // external explicitly rather than relying on tsup's implicit
   // externalization of package.json dependencies, since that behavior
   // differs between esm/cjs output and isn't worth trusting silently for a
-  // security-relevant boundary like this.
-  external: ["yaml"],
+  // security-relevant boundary like this. `minimatch` is the one real,
+  // always-on runtime `dependencies` entry (see package.json) -- introduced by
+  // src/helpers/exception-policy.ts's glob-pattern matching (specs/decisions/
+  // 0013-reusable-exception-policy-helper.md) -- and is marked external for
+  // the same explicitness reason as yaml: a consumer's own installed copy is
+  // what should resolve at runtime, never a bundled-in duplicate.
+  external: ["yaml", "minimatch"],
 })

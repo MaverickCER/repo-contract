@@ -245,6 +245,14 @@ module.exports = {
       to: { path: "^src/(execution|evidence|policy)" },
     },
     {
+      name: "helpers-must-not-import-execution-evidence-or-policy",
+      severity: "error",
+      comment:
+        "src/helpers/ is a second, independent published barrel (repo-contract/helpers, specs/decisions/0013-reusable-exception-policy-helper.md) -- like src/presets/, it must not depend on the runtime layers that consume checks.",
+      from: { path: "^src/helpers" },
+      to: { path: "^src/(execution|evidence|policy)" },
+    },
+    {
       name: "src-must-not-import-scripts",
       severity: "error",
       comment:
