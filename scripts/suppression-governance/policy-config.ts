@@ -1,3 +1,9 @@
+import type {
+  ExceptionCategoryGroup,
+  ExceptionPolicy,
+  ExceptionPolicyConfig,
+} from "../../src/helpers/index.js"
+
 /**
  * Single source of truth for the repository's suppression-justification policy, imported by
  * checks/suppression-governance.ts's policy -- the same "one exported const, imported by the
@@ -20,6 +26,18 @@
  *     evidence-types.ts's `VERIFICATION_METHODS`).
  * The next run preserves those fields verbatim as long as the suppression's identity is still
  * found (unchanged, or moved unambiguously -- see synchronize.ts).
+ *
+ * `SuppressionPolicy`/`SuppressionDomainPolicy`/`SuppressionPolicyConfig` are thin aliases of
+ * `repo-contract/helpers`'s classification-neutral `ExceptionPolicy`/`ExceptionCategoryGroup`/
+ * `ExceptionPolicyConfig` (see specs/decisions/0013-reusable-exception-policy-helper.md) -- this
+ * is the suppression-governance domain's own instantiation of that generic pattern: `group` is a
+ * suppression's `domain` (`"eslint"`, `"typescript"`, `"stryker"`, ...), `category` is one of its
+ * `rule` entries. Aliasing rather than redeclaring keeps this file's own literal `suppressionPolicy`
+ * value assignable to the check's real resolver with no adapter code, at the cost of the
+ * `requirements` array widening from the closed `SuppressionRequirement` union to a plain
+ * `readonly string[]` at the type level -- `checks/suppression-governance.ts` recovers that
+ * narrower check at runtime via `validateExceptionPolicyConfig(suppressionPolicy,
+ * VALID_REQUIREMENTS)`, exactly as before this generalization.
  */
 
 /**
@@ -47,27 +65,24 @@ export type SuppressionRequirement =
  * -- a plain count is trivially satisfied by generating that many generic-sounding filler entries
  * without doing the underlying work. Naming exactly which fields must be filled in makes each one
  * individually reviewable against a specific question instead.
+ *
+ * An alias of `repo-contract/helpers`'s `ExceptionPolicy` -- see this file's own module doc
+ * comment above for why aliasing rather than redeclaring.
  */
-export type SuppressionPolicy =
-  | { readonly mode: "forbidden" }
-  | { readonly mode: "allowed" }
-  | {
-      readonly mode: "exception"
-      readonly requirements: readonly SuppressionRequirement[]
-    }
+export type SuppressionPolicy = ExceptionPolicy
 
 /**
  * `default` is this domain's fallback policy for any rule with no exact or pattern match in
- * `rules` (see scripts/suppression-governance/resolve-policy.ts's `resolveRequirement` for the full
- * exact > pattern > domain-default > global-default precedence). Omit `default` to fall through to
- * `GLOBAL_DEFAULT_POLICY` instead.
+ * `rules` (see `repo-contract/helpers`'s `resolveExceptionPolicy` for the full exact > pattern >
+ * domain-default > global-default precedence -- generalized from what this repository originally
+ * built here). Omit `default` to fall through to `GLOBAL_DEFAULT_POLICY` instead.
+ *
+ * An alias of `repo-contract/helpers`'s `ExceptionCategoryGroup`.
  */
-export interface SuppressionDomainPolicy {
-  readonly default?: SuppressionPolicy
-  readonly rules?: Readonly<Record<string, SuppressionPolicy>>
-}
+export type SuppressionDomainPolicy = ExceptionCategoryGroup
 
-export type SuppressionPolicyConfig = Readonly<Record<string, SuppressionDomainPolicy>>
+/** An alias of `repo-contract/helpers`'s `ExceptionPolicyConfig`. */
+export type SuppressionPolicyConfig = ExceptionPolicyConfig
 
 /** Used when a suppression's `domain` has no entry in `suppressionPolicy` at all -- the strictest non-forbidding policy, requiring every field. */
 export const GLOBAL_DEFAULT_POLICY: SuppressionPolicy = {
