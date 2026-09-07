@@ -102,6 +102,42 @@ regardless). The independent `security-network` check still catches the same vio
 `eslint-disable` were somehow accepted, since it has no awareness of ESLint suppression comments at
 all.
 
+## Amendment (2026-09-07): the reviewed-waiver mechanism, and the default policy it never changes
+
+`specs/decisions/0013-reusable-exception-policy-helper.md` introduced a generic, classification-
+neutral exception-policy primitive (`repo-contract/helpers`), and `checks/security-network.ts` is
+now built on it. This amendment records what that did and, more importantly, what it deliberately
+did **not** do.
+
+**The default posture is unchanged and absolute.** `scripts/security-network/policy-config.ts`'s
+`securityNetworkPolicy` sets its group `default` to `forbidden`. A network-capability finding in
+`src/**` fails the `security-network` check exactly as it always has -- the AST scan
+(`scripts/security-network/scan.ts`), its threat model, and its two-independent-layers design are
+untouched. Nothing about this amendment makes `src/` network I/O any more permissible by default.
+
+**What changed is only the shape of the reviewed exception.** Before, a genuine, reviewed
+network-capability exception was expressed as a fully-justified `disable-comments.json` entry
+against the underlying `eslint-disable` (the "Suppression governance" section above). That is now
+expressed instead as a finding-specific record in `.repo-contract/exceptions/security-network.json`,
+which is _stricter_, not looser:
+
+- The waiver is bound to one exact `capability:file:line` finding -- a bare "waive this capability
+  kind everywhere" record is not expressible (`scripts/security-network/registry.ts`).
+- It requires a small closed `exceptionType` (why the exception is legitimate) on top of the prose
+  fields.
+- It requires a **content-bound `verification`** block: a sign-off (`independent-human-review`, or
+  a `mechanical-reverification` re-scan scoped to the one file/line) whose hash is tied to the
+  record's exact prose. Editing the justification after sign-off silently invalidates the
+  verification and the finding fails again -- see
+  `specs/decisions/0013-reusable-exception-policy-helper.md`'s "Verification, not attestation."
+- A `validated-false-positive` claim _must_ be a `mechanical-reverification` -- re-running the
+  scanner narrowly, never opinion alone.
+
+The `eslint-disable` on `no-restricted-imports`/`no-restricted-globals` is still itself a
+`disable-comments.json` entry a reviewer sees (the ESLint layer is unchanged); the
+security-network registry is the second, independent layer's own equivalent record, now with the
+verification gate ADR 0006's prose-only model lacked.
+
 ## Consequences
 
 - `npm run contract` runs one additional check, `security-network` (see
