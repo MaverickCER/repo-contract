@@ -30,8 +30,17 @@ export type {
   ExceptionDeterminant,
   ExceptionPolicy,
   ExceptionPolicyConfig,
+  ExceptionRecordEvaluation,
   ExceptionVerdict,
 } from "./exception-policy.js"
+// Re-exported because `loadExceptionRegistry` below takes a `schema: StandardSchemaV1<...>`
+// parameter -- a consumer implementing one (or passing a real Zod/Valibot/ArkType schema, whose
+// own type already satisfies this hand-vendored interface structurally) needs this type in scope
+// without reaching past this independent `./helpers` barrel into the root `repo-contract` export
+// or `src/standard-schema/types.js` directly. Same vendored contract `src/index.ts` re-exports
+// for the root barrel's own `output.schema` option (ADR 0012) -- kept in sync by hand since the
+// two barrels are deliberately independent (see this file's own module doc comment above).
+export type { StandardSchemaV1 } from "../standard-schema/types.js"
 export {
   evaluateExceptionRecord,
   evaluateExceptionRecords,
