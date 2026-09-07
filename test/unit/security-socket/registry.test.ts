@@ -131,20 +131,37 @@ describe("validateSocketExceptionRegistry", () => {
     expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
   })
 
-  it("rejects a verifiedAt that is a shaped-but-impossible calendar date", () => {
+  it.each(["2026-13-45", "2026-02-29", "2026-04-31"])(
+    "rejects a shaped-but-impossible verifiedAt calendar date (%s)",
+    (verifiedAt) => {
+      const result = validateSocketExceptionRegistry([
+        validRecord({
+          verification: {
+            method: "independent-human-review",
+            verifiedBy: "someone",
+            verifiedAt,
+            verifiedContentHash: "abc",
+          },
+        }),
+      ])
+      expect(result.ok).toBe(false)
+      if (result.ok) throw new Error("expected ok:false")
+      expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
+    },
+  )
+
+  it("accepts a real leap-day verifiedAt", () => {
     const result = validateSocketExceptionRegistry([
       validRecord({
         verification: {
           method: "independent-human-review",
           verifiedBy: "someone",
-          verifiedAt: "2026-13-45",
+          verifiedAt: "2024-02-29T00:00:00.000Z",
           verifiedContentHash: "abc",
         },
       }),
     ])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
+    expect(result.ok).toBe(true)
   })
 
   it("reports every problem across multiple bad records, not just the first", () => {
