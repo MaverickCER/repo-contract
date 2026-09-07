@@ -111,6 +111,10 @@ const DISABLE_COMMENTS_PROPERTY_OVERRIDES = {
   // it would otherwise be silently clobbered.
   rule: { minItems: 1, items: { type: "string", minLength: 1 } },
   content: { minLength: 1 },
+  // "" (unsigned) or a 64-char lowercase hex SHA-256 digest -- registry.ts's own
+  // `SHA256_HEX`/`validateRecord` remain the authoritative, exact check; this only approximates it
+  // the same way `file`'s own pattern above only approximates "well-formed repo-relative path".
+  verifiedContentHash: { pattern: "^$|^[0-9a-f]{64}$" },
 }
 
 /**

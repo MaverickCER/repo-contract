@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { mutation } from "../../../checks/mutation.js"
+import { hashRequirementFields } from "../../../src/helpers/index.js"
 import type { CheckEvidence, Evidence, PolicyContext } from "../../../src/types.js"
 
 // Same real-fs-collision rationale as test/unit/presets/duplication.test.ts (and
@@ -48,7 +49,22 @@ function suppressionGovernanceEvidence(value: unknown): CheckEvidence {
   return fakeCheckEvidence({ output: { format: "json", success: true, value } })
 }
 
-const FULLY_JUSTIFIED_STRYKER_RECORD = {
+// The six fields verifiedContentHash is bound to (mirrors resolve-policy.ts's own
+// HASHED_AUTHORING_FIELDS), and a raw field reader to compute it the same way.
+const HASHED_AUTHORING_FIELDS = [
+  "justification",
+  "alternatives",
+  "remediation",
+  "category",
+  "verificationMethod",
+  "reason",
+] as const
+
+function rawFieldValue(record: Record<string, unknown>, field: string): string {
+  return record[field] as string
+}
+
+const UNSIGNED_STRYKER_RECORD = {
   file: "src/example.ts",
   line: 10,
   domain: "stryker",
@@ -60,7 +76,24 @@ const FULLY_JUSTIFIED_STRYKER_RECORD = {
   category: "equivalent-mutant",
   verificationMethod: "mutation-run",
   reason: "reason text",
+  verifiedBy: "",
+  verifiedAt: "",
+  verifiedContentHash: "",
   status: "existing",
+}
+
+// suppressionPolicy's real stryker policy now also requires a content-bound verifiedBy
+// sign-off (specs/decisions/0006-suppression-governance.md's "Verification" amendment) -- a
+// merely-fully-justified-but-unsigned record is `insufficient`, not `permitted`.
+const FULLY_JUSTIFIED_STRYKER_RECORD = {
+  ...UNSIGNED_STRYKER_RECORD,
+  verifiedBy: "@maverickcer",
+  verifiedAt: "2026-09-07T00:00:00.000Z",
+  verifiedContentHash: hashRequirementFields(
+    UNSIGNED_STRYKER_RECORD,
+    HASHED_AUTHORING_FIELDS,
+    rawFieldValue,
+  ),
 }
 
 function strykerReport(mutants: readonly Record<string, unknown>[]): unknown {

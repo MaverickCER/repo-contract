@@ -1,5 +1,9 @@
 import { SUPPRESSION_CATEGORIES, VERIFICATION_METHODS } from "./evidence-types.js"
 import type { DisableCommentRecord, DisableCommentRegistry } from "./evidence-types.js"
+import { isIso8601Timestamp } from "../shared/exception-record.js"
+
+/** A lowercase 64-char hex SHA-256 digest -- the exact shape `hashRequirementFields` produces for `verifiedContentHash`. */
+const SHA256_HEX = /^[0-9a-f]{64}$/
 
 interface RegistryValidationSuccess {
   readonly ok: true
@@ -43,11 +47,13 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Validates one of a record's free-prose string fields (`justification`/`alternatives`/
- * `remediation`/`reason`) -- each must be a `string`, but an *empty* string is valid registry
- * state (a freshly-created record legitimately starts that way; whether an empty value satisfies
- * policy is checks/suppression-governance.ts's concern, not this validator's). For the two
- * closed-enum fields (`category`/`verificationMethod`), see `validateEnumField` below instead.
+ * Validates one of a record's plain string fields (`justification`/`alternatives`/`remediation`/
+ * `reason`/`verifiedBy`/`verifiedContentHash`) -- each must be a `string`, but an *empty* string
+ * is valid registry state (a freshly-created record legitimately starts that way; whether an
+ * empty value satisfies policy is checks/suppression-governance.ts's concern, not this
+ * validator's). For the two closed-enum fields (`category`/`verificationMethod`), see
+ * `validateEnumField` below instead; `verifiedAt`/`verifiedContentHash` have an additional
+ * non-empty-shape check in `validateRecord` on top of this.
  * @param value - The candidate field value to validate.
  * @param index - The containing record's index, for error messages.
  * @param field - The field's own name, for error messages.
@@ -108,7 +114,7 @@ function validateEnumField<T extends string>(
 
 /**
  * Validates one candidate record and, only if every field is well-formed, rebuilds it as a fresh
- * object literal containing exactly the eleven documented fields -- the untrusted parsed value
+ * object literal containing exactly the fourteen documented fields -- the untrusted parsed value
  * itself is never spread or passed through, so a stray extra/prototype-shaped key on the parsed
  * JSON object can never ride along into a trusted record.
  * @param value - The candidate record to validate.
@@ -138,6 +144,9 @@ function validateRecord(
     category,
     verificationMethod,
     reason,
+    verifiedBy,
+    verifiedAt,
+    verifiedContentHash,
   } = value
 
   const fileValid = typeof file === "string" && isWellFormedRepoRelativePath(file)
@@ -190,6 +199,31 @@ function validateRecord(
     errors,
   )
   const validatedReason = validateStringField(reason, index, "reason", errors)
+  const validatedVerifiedBy = validateStringField(verifiedBy, index, "verifiedBy", errors)
+  const validatedVerifiedContentHash = validateStringField(
+    verifiedContentHash,
+    index,
+    "verifiedContentHash",
+    errors,
+  )
+  // `verifiedAt`/`verifiedContentHash` are valid empty (an unsigned record), but a non-empty value
+  // must be well-formed: an ISO 8601 timestamp, and a 64-char lowercase hex SHA-256 respectively.
+  const verifiedAtValid =
+    typeof verifiedAt === "string" && (verifiedAt.length === 0 || isIso8601Timestamp(verifiedAt))
+  if (!verifiedAtValid) {
+    errors.push(
+      `records[${String(index)}].verifiedAt must be "" or an ISO 8601 date/date-time (got ${JSON.stringify(verifiedAt)}).`,
+    )
+  }
+  const verifiedContentHashShapeValid =
+    validatedVerifiedContentHash === undefined ||
+    validatedVerifiedContentHash.length === 0 ||
+    SHA256_HEX.test(validatedVerifiedContentHash)
+  if (!verifiedContentHashShapeValid) {
+    errors.push(
+      `records[${String(index)}].verifiedContentHash must be "" or a 64-character lowercase hex SHA-256 digest.`,
+    )
+  }
 
   if (
     !fileValid ||
@@ -202,7 +236,11 @@ function validateRecord(
     validatedRemediation === undefined ||
     validatedCategory === undefined ||
     validatedVerificationMethod === undefined ||
-    validatedReason === undefined
+    validatedReason === undefined ||
+    validatedVerifiedBy === undefined ||
+    validatedVerifiedContentHash === undefined ||
+    !verifiedAtValid ||
+    !verifiedContentHashShapeValid
   ) {
     return undefined
   }
@@ -219,6 +257,9 @@ function validateRecord(
     category: validatedCategory,
     verificationMethod: validatedVerificationMethod,
     reason: validatedReason,
+    verifiedBy: validatedVerifiedBy,
+    verifiedAt,
+    verifiedContentHash: validatedVerifiedContentHash,
   }
 }
 
