@@ -5,22 +5,10 @@
 ```ts
 
 // @public
-export function evaluateExceptionRecord<TRecord>(input: {
-    readonly record: TRecord;
-    readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]];
-    readonly config: ExceptionPolicyConfig;
-    readonly globalDefault: ExceptionPolicy;
-    readonly fieldValue: (record: TRecord, requirement: string) => string;
-}): ExceptionDeterminant<TRecord>;
+export function evaluateExceptionRecord<TRecord>(input: ExceptionRecordEvaluation<TRecord>): ExceptionDeterminant<TRecord>;
 
 // @public
-export function evaluateExceptionRecords<TRecord>(inputs: readonly {
-    readonly record: TRecord;
-    readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]];
-    readonly config: ExceptionPolicyConfig;
-    readonly globalDefault: ExceptionPolicy;
-    readonly fieldValue: (record: TRecord, requirement: string) => string;
-}[]): readonly ExceptionDeterminant<TRecord>[];
+export function evaluateExceptionRecords<TRecord>(inputs: readonly ExceptionRecordEvaluation<TRecord>[]): readonly ExceptionDeterminant<TRecord>[];
 
 // @public
 export interface ExceptionCategoryGroup {
@@ -53,6 +41,15 @@ export type ExceptionPolicy = {
 
 // @public
 export type ExceptionPolicyConfig = Readonly<Record<string, ExceptionCategoryGroup>>;
+
+// @public
+export interface ExceptionRecordEvaluation<TRecord> {
+    readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]];
+    readonly config: ExceptionPolicyConfig;
+    readonly fieldValue: (record: TRecord, requirement: string) => string;
+    readonly globalDefault: ExceptionPolicy;
+    readonly record: TRecord;
+}
 
 // @public
 export type ExceptionVerdict = "forbidden" | "insufficient" | "permitted";
