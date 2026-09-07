@@ -4,8 +4,8 @@ import {
   indexRecordsById,
   isVerified,
   validateCanonicalIdentity,
-} from "../../../../checks/shared/exception-record.js"
-import type { ExceptionVerification } from "../../../../checks/shared/exception-record.js"
+} from "../../../../scripts/shared/exception-record.js"
+import type { ExceptionVerification } from "../../../../scripts/shared/exception-record.js"
 import { hashRequirementFields } from "../../../../src/helpers/index.js"
 
 describe("EXCEPTION_TYPES", () => {

@@ -3,8 +3,8 @@ import {
   evaluateExceptionFindings,
   stageMissingFields,
 } from "../../../../checks/shared/evaluate-exception-findings.js"
-import { isVerified } from "../../../../checks/shared/exception-record.js"
-import type { ExceptionVerification } from "../../../../checks/shared/exception-record.js"
+import { isVerified } from "../../../../scripts/shared/exception-record.js"
+import type { ExceptionVerification } from "../../../../scripts/shared/exception-record.js"
 import { evaluateExceptionRecord, hashRequirementFields } from "../../../../src/helpers/index.js"
 import type { ExceptionPolicyConfig } from "../../../../src/helpers/index.js"
 

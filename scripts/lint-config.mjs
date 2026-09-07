@@ -18,4 +18,7 @@ export const EXEMPT_UNUSED_DEV_DEPENDENCIES = [
   "oxlint",
   "pa11y",
   "publint",
+  // Spawned by name (via cross-spawn) in scripts/security-socket/scan.ts, never imported --
+  // knip can't see a spawned binary name as a use of the package that provides it.
+  "@socketsecurity/cli",
 ]
