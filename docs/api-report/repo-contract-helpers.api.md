@@ -5,22 +5,10 @@
 ```ts
 
 // @public
-export function evaluateExceptionRecord<TRecord>(input: {
-    readonly record: TRecord;
-    readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]];
-    readonly config: ExceptionPolicyConfig;
-    readonly globalDefault: ExceptionPolicy;
-    readonly fieldValue: (record: TRecord, requirement: string) => string;
-}): ExceptionDeterminant<TRecord>;
+export function evaluateExceptionRecord<TRecord>(input: ExceptionRecordEvaluation<TRecord>): ExceptionDeterminant<TRecord>;
 
 // @public
-export function evaluateExceptionRecords<TRecord>(inputs: readonly {
-    readonly record: TRecord;
-    readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]];
-    readonly config: ExceptionPolicyConfig;
-    readonly globalDefault: ExceptionPolicy;
-    readonly fieldValue: (record: TRecord, requirement: string) => string;
-}[]): readonly ExceptionDeterminant<TRecord>[];
+export function evaluateExceptionRecords<TRecord>(inputs: readonly ExceptionRecordEvaluation<TRecord>[]): readonly ExceptionDeterminant<TRecord>[];
 
 // @public
 export interface ExceptionCategoryGroup {
@@ -55,6 +43,15 @@ export type ExceptionPolicy = {
 export type ExceptionPolicyConfig = Readonly<Record<string, ExceptionCategoryGroup>>;
 
 // @public
+export interface ExceptionRecordEvaluation<TRecord> {
+    readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]];
+    readonly config: ExceptionPolicyConfig;
+    readonly fieldValue: (record: TRecord, requirement: string) => string;
+    readonly globalDefault: ExceptionPolicy;
+    readonly record: TRecord;
+}
+
+// @public
 export type ExceptionVerdict = "forbidden" | "insufficient" | "permitted";
 
 // @public
@@ -75,6 +72,45 @@ export function loadExceptionRegistry<T>(input: {
 
 // @public
 export function resolveExceptionPolicy(classification: ExceptionClassification, config: ExceptionPolicyConfig, globalDefault: ExceptionPolicy): ExceptionPolicy;
+
+// @public
+export interface StandardSchemaV1<Input = unknown, Output = Input> {
+    readonly "~standard": StandardSchemaV1.Props<Input, Output>;
+}
+
+// @public
+export namespace StandardSchemaV1 {
+    export interface FailureResult {
+        readonly issues: readonly Issue[];
+    }
+    export type InferInput<Schema extends StandardSchemaV1> = NonNullable<Schema["~standard"]["types"]>["input"];
+    export type InferOutput<Schema extends StandardSchemaV1> = NonNullable<Schema["~standard"]["types"]>["output"];
+    export interface Issue {
+        readonly message: string;
+        readonly path?: readonly (PropertyKey | PathSegment)[] | undefined;
+    }
+    export interface Options {
+        readonly libraryOptions?: Record<string, unknown> | undefined;
+    }
+    export interface PathSegment {
+        readonly key: PropertyKey;
+    }
+    export interface Props<Input = unknown, Output = Input> {
+        readonly types?: Types<Input, Output> | undefined;
+        readonly validate: (value: unknown, options?: Options) => Result<Output> | Promise<Result<Output>>;
+        readonly vendor: string;
+        readonly version: 1;
+    }
+    export type Result<Output> = SuccessResult<Output> | FailureResult;
+    export interface SuccessResult<Output> {
+        readonly issues?: undefined;
+        readonly value: Output;
+    }
+    export interface Types<Input = unknown, Output = Input> {
+        readonly input: Input;
+        readonly output: Output;
+    }
+}
 
 // @public
 export function validateExceptionPolicyConfig(config: ExceptionPolicyConfig, validRequirements?: readonly string[]): readonly string[];
