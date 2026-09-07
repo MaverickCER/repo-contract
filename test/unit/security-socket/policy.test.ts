@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest"
 import { evaluateSecuritySocketPolicy } from "../../../checks/security-socket.js"
 import type { SecuritySocketEvidence } from "../../../scripts/security-socket/evidence-types.js"
+import { VALID_SOCKET_REQUIREMENTS } from "../../../scripts/security-socket/policy-config.js"
 import type { SocketExceptionRecord } from "../../../scripts/security-socket/registry.js"
 import { hashRequirementFields } from "../../../src/helpers/index.js"
 
-const PROSE_REQUIREMENTS = ["justification", "alternatives", "remediation", "exceptionType"]
+// Derived from the production constant, filtered exactly the way `checks/security-socket.ts`'s own
+// `PROSE_REQUIREMENTS` is -- so a field added, dropped, or reordered in `VALID_SOCKET_REQUIREMENTS`
+// can never silently desynchronize this fixture's `verifiedContentHash` from the check's.
+const PROSE_REQUIREMENTS = VALID_SOCKET_REQUIREMENTS.filter(
+  (field) => field !== "verification.verifiedBy",
+)
 
 function fieldValue(record: SocketExceptionRecord, requirement: string): string {
   const value = (record as unknown as Record<string, unknown>)[requirement]
@@ -216,24 +222,67 @@ describe("evaluateSecuritySocketPolicy", () => {
     expect(result.rationale).toContain("verification.verifiedBy")
   })
 
-  it("passes with a note when an exception record matches nothing this run (stale)", async () => {
+  it("still passes on a clean scan, but notes that present records went unevaluated", async () => {
     const evidence: SecuritySocketEvidence = { status: "passed" }
-    // "passed" evidence never even reaches the registry -- confirm the note only appears when
-    // there ARE alerts to compare the registry against.
-    const result = await evaluateSecuritySocketPolicy({ evidence })
+    const result = await evaluateSecuritySocketPolicy({
+      evidence,
+      loadRegistry: async () => ({ ok: true, records: [verifiedRecord()] }),
+    })
     expect(result.outcome).toBe("pass")
-    expect(result.rationale).not.toContain("stale")
+    expect(result.rationale).toContain("were not evaluated")
   })
 
-  it("fails when socketPolicy itself is misconfigured", async () => {
+  it("fails a not-yet-authenticated (unavailable) run when the registry is malformed -- the registry is validated on every run", async () => {
+    const evidence: SecuritySocketEvidence = { status: "unavailable", reason: "not-authenticated" }
+    const result = await evaluateSecuritySocketPolicy({
+      evidence,
+      loadRegistry: async () => ({ ok: false, errors: ["exceptions[0].id is malformed"] }),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("failed validation")
+  })
+
+  it("passes a failed scan whose only alert is permitted, naming a record that matched nothing (stale)", async () => {
+    const evidence: SecuritySocketEvidence = {
+      status: "failed",
+      alerts: [
+        {
+          id: "lodash@4.17.20:envVars",
+          package: "lodash",
+          version: "4.17.20",
+          type: "envVars",
+          severity: "low",
+        },
+      ],
+    }
+    const result = await evaluateSecuritySocketPolicy({
+      evidence,
+      loadRegistry: async () => ({
+        ok: true,
+        records: [
+          verifiedRecord(),
+          verifiedRecord({
+            id: "left-pad@1.3.0:shellAccess",
+            package: "left-pad",
+            packageVersion: "1.3.0",
+            alertType: "shellAccess",
+          }),
+        ],
+      }),
+    })
+    expect(result.outcome).toBe("pass")
+    expect(result.rationale).toContain("left-pad@1.3.0:shellAccess")
+    expect(result.rationale).toContain("matched nothing this run")
+  })
+
+  it("confirms the committed socketPolicy module passes validateExceptionPolicyConfig", async () => {
     const evidence: SecuritySocketEvidence = {
       status: "failed",
       alerts: [{ id: "x@1.0.0:a", package: "x", version: "1.0.0", type: "a", severity: "low" }],
     }
-    // Exercise the misconfiguration path via a deliberately-broken registry loader is not
-    // possible (socketPolicy itself is a fixed module constant) -- this case is instead covered
-    // directly by the shared helpers/exception-policy.test.ts suite; here we only confirm the
-    // real socketPolicy module, as committed, is NOT itself misconfigured.
+    // socketPolicy is a fixed module constant -- the misconfiguration branch itself is exercised
+    // directly in test/unit/helpers/exception-policy.test.ts. Here we only assert the real,
+    // committed module is NOT itself misconfigured (no "misconfigured" text in the rationale).
     const result = await evaluateSecuritySocketPolicy({
       evidence,
       loadRegistry: async () => ({ ok: true, records: [] }),

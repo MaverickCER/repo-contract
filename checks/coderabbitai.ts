@@ -12,6 +12,7 @@ import type {
 import {
   CODERABBIT_GLOBAL_DEFAULT_POLICY,
   VALID_CODERABBIT_REQUIREMENTS,
+  VERIFICATION_FIELD,
   coderabbitPolicy,
 } from "../scripts/coderabbitai/policy-config.js"
 import type { CoderabbitExceptionRecord } from "../scripts/coderabbitai/registry.js"
@@ -25,7 +26,6 @@ import { handWrittenArraySchema } from "./shared/standard-schema-validator.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 
-const VERIFICATION_FIELD = "verification.verifiedBy"
 const PROSE_REQUIREMENTS = VALID_CODERABBIT_REQUIREMENTS.filter(
   (field) => field !== VERIFICATION_FIELD,
 )
@@ -135,24 +135,12 @@ export async function evaluateCoderabbitPolicy(
     loadRegistry = defaultLoadRegistry,
   } = input
 
-  if (evidence.status === "not-applicable") {
-    return {
-      outcome: "warn",
-      rationale: `coderabbitai did not run (${evidence.reason}) -- findings were not evaluated. Expected in CI, where review is delegated to the ${evidence.expectedProvider}.`,
-    }
-  }
-
-  if (evidence.status === "unavailable") {
-    return {
-      outcome: "warn",
-      rationale: `coderabbitai did not run (${evidence.reason}) -- findings were not evaluated. Install the CodeRabbit CLI (https://docs.coderabbit.ai/cli) and run from a real branch to enable real enforcement.`,
-    }
-  }
-
-  if (evidence.status === "error") {
-    return { outcome: "fail", rationale: `coderabbitai review failed: ${evidence.message}` }
-  }
-
+  // Config + registry validation run FIRST -- before every evidence-status branch, including the
+  // `not-applicable`/`unavailable` ones that don't evaluate any findings. In CI `status` is
+  // always `not-applicable` (review is delegated to the GitHub App), so validating the registry
+  // only on a real local `reviewed` run would mean a malformed or unparseable
+  // `.repo-contract/exceptions/coderabbit.json` never fails CI at all -- exactly the "a stale or
+  // broken registry silently rides along with a green run" gap this feature exists to close.
   const configErrors = validateExceptionPolicyConfig(
     coderabbitPolicy,
     VALID_CODERABBIT_REQUIREMENTS,
@@ -166,10 +154,6 @@ export async function evaluateCoderabbitPolicy(
     }
   }
 
-  // Loaded unconditionally, even with 0 findings this run: a record becomes stale exactly when
-  // its underlying finding disappears, and "every finding disappeared" is the single most common
-  // way that happens -- reporting stale records only in the findings.length > 0 branch below
-  // would make that exact drift signal unreachable in the most common case.
   const registry = await loadRegistry(exceptionsPath)
   if (!registry.ok) {
     return {
@@ -179,6 +163,30 @@ export async function evaluateCoderabbitPolicy(
         ...registry.errors.map((e) => `- ${e}`),
       ].join("\n"),
     }
+  }
+
+  /** Records present but not compared against any finding this run (no review ran). */
+  const unevaluatedNote =
+    registry.records.length > 0
+      ? ` ${String(registry.records.length)} exception record(s) in ${exceptionsPath} were not evaluated (no review ran this run).`
+      : ""
+
+  if (evidence.status === "not-applicable") {
+    return {
+      outcome: "warn",
+      rationale: `coderabbitai did not run (${evidence.reason}) -- findings were not evaluated. Expected in CI, where review is delegated to the ${evidence.expectedProvider}.${unevaluatedNote}`,
+    }
+  }
+
+  if (evidence.status === "unavailable") {
+    return {
+      outcome: "warn",
+      rationale: `coderabbitai did not run (${evidence.reason}) -- findings were not evaluated. Install the CodeRabbit CLI (https://docs.coderabbit.ai/cli) and run from a real branch to enable real enforcement.${unevaluatedNote}`,
+    }
+  }
+
+  if (evidence.status === "error") {
+    return { outcome: "fail", rationale: `coderabbitai review failed: ${evidence.message}` }
   }
 
   if (evidence.findings.length === 0) {

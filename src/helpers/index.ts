@@ -41,3 +41,7 @@ export {
 } from "./exception-policy.js"
 
 export { loadExceptionRegistry } from "./load-exception-registry.js"
+// Re-exported here (as well as from the root barrel) because `loadExceptionRegistry`'s own public
+// signature names it: a consumer of `repo-contract/helpers` typing their own `schema` argument
+// must be able to import the type from the same subpath the function comes from.
+export type { StandardSchemaV1 } from "../standard-schema/types.js"

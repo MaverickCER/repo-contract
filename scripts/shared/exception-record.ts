@@ -67,6 +67,27 @@ export interface ExceptionVerification {
   readonly evidence?: string
 }
 
+// A deliberately flat shape gate -- a `YYYY-MM-DD` prefix followed only by the character set an
+// ISO time/zone suffix can use. One character class, one bounded `{4}`/`{2}`, one `*`: no nested
+// quantifiers, so no catastrophic-backtracking surface. `Date.parse` below does the real
+// calendar/format validation (it rejects `"2026-13-45"` and `"2026-01-01Tnope"` alike); this
+// regex's only job is to keep out non-ISO-shaped strings `Date.parse` would otherwise accept
+// (`"Jan 1 2026"`, `"2026/01/01"`).
+const ISO_8601_SHAPE = /^\d{4}-\d{2}-\d{2}[T \d:.Z+-]*$/
+
+/**
+ * Whether `value` is a well-formed ISO 8601 date or date-time -- a shape check (`YYYY-MM-DD`,
+ * optionally with a time and offset) *and* a real-calendar check (`Date.parse` must not reject it,
+ * so `"2026-13-45"` and `"later"` both fail). Every `ExceptionVerification.verifiedAt` is validated
+ * with this at registry-load time: a free-text timestamp such as `"soon"` must never be able to
+ * back an active exception.
+ * @param value - The candidate timestamp string.
+ * @returns `true` if `value` is a valid ISO 8601 date/date-time.
+ */
+export function isIso8601Timestamp(value: string): boolean {
+  return ISO_8601_SHAPE.test(value) && !Number.isNaN(Date.parse(value))
+}
+
 /**
  * Whether `record`'s own stored addressing key matches what `deriveId` independently recomputes
  * from its embedded finding-identity fields -- a stored key that doesn't match its own claimed

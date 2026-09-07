@@ -99,6 +99,17 @@ export function parseAgentStream(stdout: string):
     .filter((line) => line.length > 0)
 
   for (const line of lines) {
+    // The `complete` event is terminal by definition -- anything after it means the stream did
+    // not end where the CLI said it did (a truncated-and-concatenated capture, a second review's
+    // output bleeding in). Accepting a trailing `finding` here would silently add it to an
+    // already-"completed" result; fail the whole parse closed instead.
+    if (completed) {
+      return {
+        ok: false,
+        error: `coderabbit review --agent produced an event after its terminal "complete" event: ${line}`,
+      }
+    }
+
     let parsed: unknown
     try {
       parsed = JSON.parse(line)
@@ -168,6 +179,16 @@ export function parseAgentStream(stdout: string):
         return {
           ok: false,
           error: `coderabbit review --agent produced a "complete" event whose findings count (${JSON.stringify(parsed.findings)}) does not match the ${String(findings.length)} finding event(s) actually streamed.`,
+        }
+      }
+      // `review_skipped` means "nothing was in scope to review" -- it must carry zero findings.
+      // A `review_skipped` with findings streamed is self-contradictory (the CLI both skipped and
+      // reviewed), and treating it as a clean terminal state would let those findings through
+      // unevaluated.
+      if (parsed.status === "review_skipped" && findings.length > 0) {
+        return {
+          ok: false,
+          error: `coderabbit review --agent produced a "review_skipped" complete event alongside ${String(findings.length)} finding event(s) -- a skipped review cannot also have findings.`,
         }
       }
       completed = true

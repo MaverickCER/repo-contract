@@ -1,4 +1,8 @@
-import { EXCEPTION_TYPES, validateCanonicalIdentity } from "../shared/exception-record.js"
+import {
+  EXCEPTION_TYPES,
+  isIso8601Timestamp,
+  validateCanonicalIdentity,
+} from "../shared/exception-record.js"
 import type { ExceptionVerification } from "../shared/exception-record.js"
 
 /** One hand-maintained waiver for a Socket alert -- `.repo-contract/exceptions/socket.json`'s own `exceptions` array element shape. */
@@ -39,7 +43,7 @@ const VERIFICATION_METHODS = new Set(["mechanical-reverification", "independent-
  * @param exceptionType - The record's own `exceptionType`, to enforce the pairing rule against.
  * @param index - This record's index in the registry array, for error messages.
  * @param errors - Accumulates every problem found.
- * @returns The validated `ExceptionVerification`, or `undefined` if `value` itself was `undefined` and no error was pushed.
+ * @returns The validated `ExceptionVerification`, or `undefined` when `value` is `undefined` or any field failed validation.
  */
 function validateVerification(
   value: unknown,
@@ -53,6 +57,8 @@ function validateVerification(
     errors.push(`exceptions[${String(index)}].verification must be an object.`)
     return undefined
   }
+
+  const errorsBefore = errors.length
 
   const { method, verifiedBy, verifiedAt, verifiedContentHash, evidence } = value as Record<
     string,
@@ -75,8 +81,10 @@ function validateVerification(
   if (typeof verifiedBy !== "string" || verifiedBy.length === 0) {
     errors.push(`exceptions[${String(index)}].verification.verifiedBy must be a non-empty string.`)
   }
-  if (typeof verifiedAt !== "string" || verifiedAt.length === 0) {
-    errors.push(`exceptions[${String(index)}].verification.verifiedAt must be a non-empty string.`)
+  if (typeof verifiedAt !== "string" || !isIso8601Timestamp(verifiedAt)) {
+    errors.push(
+      `exceptions[${String(index)}].verification.verifiedAt must be an ISO 8601 date or date-time (got ${JSON.stringify(verifiedAt)}).`,
+    )
   }
   if (typeof verifiedContentHash !== "string" || verifiedContentHash.length === 0) {
     errors.push(
@@ -87,7 +95,9 @@ function validateVerification(
     errors.push(`exceptions[${String(index)}].verification.evidence must be a string, if present.`)
   }
 
-  return value as ExceptionVerification
+  // If any check above pushed an error, this block is invalid -- return `undefined` rather than a
+  // cast that claims otherwise. (Accumulated errors already fail the whole registry either way.)
+  return errors.length > errorsBefore ? undefined : (value as ExceptionVerification)
 }
 
 /**
