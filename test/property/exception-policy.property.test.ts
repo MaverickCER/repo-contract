@@ -130,12 +130,14 @@ function oldEvaluateRecord(
 }
 
 // A small, fixed vocabulary -- large enough to exercise exact match, glob match (via the
-// "security/*"-shaped entries), multi-rule union, and "no match at all" (falling through to a
-// domain/global default), without an unbounded state space fast-check would struggle to shrink
-// usefully.
+// "security/*"-shaped entries), *overlapping* glob match ("security/*" and "security/**" both
+// match "security/x", exercising globMatches.reduce(stricterOf) across more than one matching
+// pattern -- not just "a glob matched," but "multiple globs matched and their strictest wins"),
+// multi-rule union, and "no match at all" (falling through to a domain/global default), without
+// an unbounded state space fast-check would struggle to shrink usefully.
 const DOMAINS = ["eslint", "stryker", "custom"] as const
 const RULE_NAMES = ["rule-a", "rule-b", "security/x", "security/y", "other"] as const
-const RULE_PATTERNS = ["rule-a", "security/*", "other"] as const
+const RULE_PATTERNS = ["rule-a", "security/*", "security/**", "other"] as const
 const REQUIREMENT_NAMES: readonly SuppressionRequirement[] = REQUIREMENT_ORDER
 
 const requirementsArbitrary = fc.uniqueArray(fc.constantFrom(...REQUIREMENT_NAMES), {
