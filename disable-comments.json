@@ -594,7 +594,7 @@
   },
   {
     "file": "src/helpers/exception-policy.ts",
-    "line": 415,
+    "line": 419,
     "domain": "stryker",
     "rule": [
       "StringLiteral"
@@ -633,6 +633,21 @@
     "justification": "node:fs/promises's readFile(path, \"\") returns a raw Buffer rather than a decoded string (unlike Hash.update, an empty inputEncoding is not treated the same as \"utf8\" here) -- but this function's only use of the result is JSON.parse(raw) immediately below, and JSON.parse's own ToString coercion on a Buffer calls Buffer.prototype.toString() with no arguments, whose own default encoding is \"utf8\". Confirmed directly, including with multi-byte UTF-8 content, that JSON.parse(bufferReadWithEmptyEncoding) produces byte-identical results to JSON.parse(stringReadWithUtf8Encoding) every time.",
     "alternatives": "No test can distinguish \"utf8\" from \"\" through this function's own return value, since both produce the exact same parsed JSON for every possible input -- there is no alternative test to write here, unlike a genuine coverage gap.",
     "remediation": "None needed: passing \"utf8\" explicitly documents the intent (a decoded string, not a raw Buffer) even though JSON.parse's own coercion happens to make the distinction unobservable at this exact call site.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "static-reasoning",
+    "reason": "equivalent mutant, see comment above."
+  },
+  {
+    "file": "src/helpers/load-exception-registry.ts",
+    "line": 103,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- equivalent mutant, see comment above.",
+    "justification": "`code` (the ternary's result) is consumed only by the `code === \"ENOENT\"` comparison two lines below -- an exact primitive-string equality check. Mutating `typeof error.code === \"string\"` to literal `true` changes what gets assigned to `code` for a non-string `.code` value (a number, or `undefined`), but there is no value for which the original `typeof` check is false yet that same value `=== \"ENOENT\"` is true: any value that literally equals the primitive string \"ENOENT\" always has `typeof value === \"string\"`. Confirmed directly with two covering test cases (a numeric `.code`, an absent `.code`) that both original and mutated code produce the identical not-ENOENT branch and final error message.",
+    "alternatives": "A test asserting on `code`'s own value directly (rather than only observing it through the ENOENT branch decision) was considered, but `code` is a function-local variable with no other observable effect -- there is nothing outside this one comparison a test could assert against to distinguish the two.",
+    "remediation": "None needed: the `typeof` check still documents the real intent (only trust a genuinely string-typed `.code`) even though its removal is unobservable at this exact call site, the same reasoning already justified for this same file's StringLiteral suppression two records above.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
     "reason": "equivalent mutant, see comment above."
@@ -968,6 +983,51 @@
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
     "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal."
+  },
+  {
+    "file": "test/unit/helpers/load-exception-registry.test.ts",
+    "line": 83,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/prefer-promise-reject-errors"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- deliberate non-Error rejection, see above",
+    "justification": "This test exists specifically to prove loadExceptionRegistry's own catch block never throws when a caller-supplied readFile rejects with a non-Error value (null, a plain string, etc.) -- a real robustness gap CodeRabbit flagged on PR #42 against src/helpers/load-exception-registry.ts. Proving that requires actually constructing a non-Error rejection, which is exactly what this lint rule otherwise (correctly) discourages in production code.",
+    "alternatives": "Wrapping the rejected value in a real Error before passing it to Promise.reject would satisfy the lint rule, but would no longer exercise the code path under test -- loadExceptionRegistry's own catch block would then always see a real Error, and the isPlainObject-based fallback logic added to handle a non-Error rejection would go completely untested.",
+    "remediation": "None needed -- this is a single, narrowly-scoped test file suppression, not production code; the rule's own purpose (discouraging non-Error rejections in code this repository owns and controls) doesn't apply to a test whose entire point is exercising the malformed-input case a caller-supplied capability could realistically produce.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "existing-test-suite",
+    "reason": "deliberate non-Error rejection, see above"
+  },
+  {
+    "file": "test/unit/helpers/load-exception-registry.test.ts",
+    "line": 96,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/prefer-promise-reject-errors"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- deliberate non-Error rejection, distinguishing the code-lookup fallback from the ENOENT-string-match mutant",
+    "justification": "Same underlying test as the record above (loadExceptionRegistry's non-Error-rejection handling), one file over: this specific case rejects with a plain object whose code is a number, not a string, so the `typeof error.code === \"string\"` check must genuinely evaluate (not just short-circuit on a non-object) to fall through to the not-ENOENT path while still surfacing the real message field. Needed to kill Stryker survivors on that exact ternary once the null-rejection test alone left it ambiguous.",
+    "alternatives": "A real Error subclass with a numeric `.code` property would satisfy the lint rule, but TypeScript's own Error type has no `.code` field, and casting one in would no longer exercise the plain-object branch this code path is specifically built to handle for a caller-supplied readFile capability.",
+    "remediation": "None needed -- narrowly-scoped test-only suppression, not production code.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "mutation-run",
+    "reason": "deliberate non-Error rejection, distinguishing the code-lookup fallback from the ENOENT-string-match mutant"
+  },
+  {
+    "file": "test/unit/helpers/load-exception-registry.test.ts",
+    "line": 108,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/prefer-promise-reject-errors"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- deliberate non-Error rejection, distinguishing the String(error) fallback from the real-message mutant",
+    "justification": "Same underlying test family as the two records above: this specific case rejects with an empty plain object (no `code`, no `message`), proving the final `String(error)` fallback is genuinely reached and produces a meaningful `\"[object Object]\"` value rather than the mutation-tested branch being provably dead code.",
+    "alternatives": "A real Error with no message set still has a real (empty) `.message` string, which would exercise a different branch (the real-message path with an empty string) rather than this one -- the fallback specifically for a rejection with no message property at all.",
+    "remediation": "None needed -- narrowly-scoped test-only suppression, not production code.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "mutation-run",
+    "reason": "deliberate non-Error rejection, distinguishing the String(error) fallback from the real-message mutant"
   },
   {
     "file": "test/unit/policy/run-policies.test.ts",
