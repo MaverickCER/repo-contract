@@ -67,6 +67,50 @@ export interface ExceptionVerification {
   readonly evidence?: string
 }
 
+// A deliberately flat shape gate -- a `YYYY-MM-DD` prefix followed only by the character set an
+// ISO time/zone suffix can use. One character class, one bounded `{4}`/`{2}`, one `*`: no nested
+// quantifiers, so no catastrophic-backtracking surface. It keeps out non-ISO-shaped strings
+// `Date.parse` would otherwise accept (`"Jan 1 2026"`, `"2026/01/01"`); the date part and the
+// time part are then each validated explicitly below.
+const ISO_8601_SHAPE = /^\d{4}-\d{2}-\d{2}[T \d:.Z+-]*$/
+
+/**
+ * Whether `y`-`m`-`d` is a real Gregorian calendar date -- month 1-12, day within that month's
+ * real length (leap years included). Done by hand rather than via `Date`: `Date.parse` and the
+ * `Date` constructor both *normalize* an overflow (`2026-02-29` silently becomes `2026-03-01`)
+ * instead of rejecting it, so an impossible `verifiedAt` would otherwise pass validation.
+ * @param y - Four-digit year.
+ * @param m - Month, 1-12.
+ * @param d - Day of month, 1-31.
+ * @returns `true` if the date exists on the Gregorian calendar.
+ */
+function isRealCalendarDate(y: number, m: number, d: number): boolean {
+  if (m < 1 || m > 12 || d < 1) return false
+  const leap = y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)
+  const lengths = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  return d <= (lengths[m - 1] ?? 0)
+}
+
+/**
+ * Whether `value` is a well-formed ISO 8601 date or date-time -- an ISO-shape check, an explicit
+ * real-Gregorian-calendar check on the `YYYY-MM-DD` part (so `"2026-02-29"` and `"2026-13-45"`
+ * both fail), and `Date.parse` for the optional time/offset part (so `"2026-01-01Tnope"` and
+ * `"later"` fail). Every `ExceptionVerification.verifiedAt` is validated with this at
+ * registry-load time: a free-text or impossible timestamp must never be able to back an
+ * exception.
+ * @param value - The candidate timestamp string.
+ * @returns `true` if `value` is a valid ISO 8601 date/date-time.
+ */
+export function isIso8601Timestamp(value: string): boolean {
+  // `$` in a non-`m` regex still matches *before* a single trailing newline, so `ISO_8601_SHAPE`
+  // alone would accept `"2026-01-01\n"` (which `Date.parse` then also tolerates). Reject any line
+  // terminator outright before the shape check.
+  if (/[\r\n]/.test(value) || !ISO_8601_SHAPE.test(value)) return false
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number) as [number, number, number]
+  if (!isRealCalendarDate(year, month, day)) return false
+  return !Number.isNaN(Date.parse(value))
+}
+
 /**
  * Whether `record`'s own stored addressing key matches what `deriveId` independently recomputes
  * from its embedded finding-identity fields -- a stored key that doesn't match its own claimed
