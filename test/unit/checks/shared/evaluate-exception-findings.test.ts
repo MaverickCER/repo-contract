@@ -3,8 +3,8 @@ import {
   evaluateExceptionFindings,
   stageMissingFields,
 } from "../../../../checks/shared/evaluate-exception-findings.js"
-import { isVerified } from "../../../../checks/shared/exception-record.js"
-import type { ExceptionVerification } from "../../../../checks/shared/exception-record.js"
+import { isVerified } from "../../../../scripts/shared/exception-record.js"
+import type { ExceptionVerification } from "../../../../scripts/shared/exception-record.js"
 import { evaluateExceptionRecord, hashRequirementFields } from "../../../../src/helpers/index.js"
 import type { ExceptionPolicyConfig } from "../../../../src/helpers/index.js"
 
@@ -115,6 +115,26 @@ describe("evaluateExceptionFindings", () => {
     expect(result.summary).toContain("1 insufficient")
     expect(result.summary).toContain("1 unmatched")
     expect(result.summary).toContain("1 stale exception record(s)")
+  })
+
+  it("counts one record as used (never stale) when two findings both match it -- the many-to-one shape security-network relies on", () => {
+    // `checks/security-network.ts`'s `findingIdentity` excludes `column`, so two findings of the
+    // same capability on the same line legitimately collapse to one record. `usedRecords` is a
+    // Set, so that record is used once and never reported stale.
+    const items = [
+      finding({ id: "shared", category: "medium" }),
+      finding({ id: "shared", category: "medium" }),
+    ]
+    const records = [record({ id: "shared", justification: "Because." })]
+
+    const result = evaluateExceptionFindings({ items, records, matchRecord: matchById, evaluate })
+
+    expect(result.matched).toHaveLength(2)
+    expect(result.matched.every(({ determinant }) => determinant.verdict === "permitted")).toBe(
+      true,
+    )
+    expect(result.staleExceptions).toEqual([])
+    expect(result.unmatchedFindings).toEqual([])
   })
 
   describe("cross-cutting invariants", () => {

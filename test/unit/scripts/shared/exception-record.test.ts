@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest"
 import {
   EXCEPTION_TYPES,
   indexRecordsById,
+  isIso8601Timestamp,
   isVerified,
   validateCanonicalIdentity,
-} from "../../../../checks/shared/exception-record.js"
-import type { ExceptionVerification } from "../../../../checks/shared/exception-record.js"
+} from "../../../../scripts/shared/exception-record.js"
+import type { ExceptionVerification } from "../../../../scripts/shared/exception-record.js"
 import { hashRequirementFields } from "../../../../src/helpers/index.js"
 
 describe("EXCEPTION_TYPES", () => {
@@ -18,6 +19,39 @@ describe("EXCEPTION_TYPES", () => {
       "scheduled-remediation",
       "platform-or-vendor-constraint",
     ])
+  })
+})
+
+describe("isIso8601Timestamp", () => {
+  it("accepts a date, a date-time, and an offset date-time", () => {
+    expect(isIso8601Timestamp("2026-01-01")).toBe(true)
+    expect(isIso8601Timestamp("2026-01-01T00:00:00.000Z")).toBe(true)
+    expect(isIso8601Timestamp("2026-06-15T12:30+05:30")).toBe(true)
+  })
+
+  it("accepts a real leap day and rejects a non-leap-year Feb 29", () => {
+    expect(isIso8601Timestamp("2024-02-29")).toBe(true)
+    expect(isIso8601Timestamp("2026-02-29")).toBe(false)
+  })
+
+  it("rejects month-end overflow that Date.parse would silently normalize", () => {
+    expect(isIso8601Timestamp("2026-04-31")).toBe(false)
+    expect(isIso8601Timestamp("2026-06-31")).toBe(false)
+    expect(isIso8601Timestamp("2026-00-10")).toBe(false)
+    expect(isIso8601Timestamp("2026-13-01")).toBe(false)
+  })
+
+  it("rejects non-ISO shapes and free text", () => {
+    expect(isIso8601Timestamp("later")).toBe(false)
+    expect(isIso8601Timestamp("2026/01/01")).toBe(false)
+    expect(isIso8601Timestamp("Jan 1 2026")).toBe(false)
+    expect(isIso8601Timestamp("2026-01-01Tnope")).toBe(false)
+    expect(isIso8601Timestamp("")).toBe(false)
+  })
+
+  it("rejects a trailing line terminator (the regex-$ leniency Date.parse also tolerates)", () => {
+    expect(isIso8601Timestamp("2026-01-01\n")).toBe(false)
+    expect(isIso8601Timestamp("2026-01-01T00:00:00.000Z\r\n")).toBe(false)
   })
 })
 

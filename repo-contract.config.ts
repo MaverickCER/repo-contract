@@ -89,6 +89,7 @@
 import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
 import { accessibility } from "./checks/accessibility.js"
 import { adrGovernance } from "./checks/adr-governance.js"
+import { coderabbitai } from "./checks/coderabbitai.js"
 import { apiContract } from "./checks/api-contract.js"
 import { apiDocs } from "./checks/api-docs.js"
 import { architecture } from "./checks/architecture.js"
@@ -101,6 +102,7 @@ import { lint } from "./checks/lint.js"
 import { mutation } from "./checks/mutation.js"
 import { schema } from "./checks/schema.js"
 import { securityNetwork } from "./checks/security-network.js"
+import { securitySocket } from "./checks/security-socket.js"
 import { size } from "./checks/size.js"
 import { suppressionGovernance } from "./checks/suppression-governance.js"
 import { testE2e } from "./checks/test-e2e.js"
@@ -255,6 +257,21 @@ export default defineRepoContract({
               "licensee found 0 production dependencies without an OSI-approved or Blue Oak Gold-rated license.",
           }
         }
+        // The preset's own failure heading has the identical --osi-only wording problem as its
+        // pass rationale above -- a failed run here would otherwise report a stricter policy
+        // ("without an OSI-approved license") than the one actually enforced (also accepting Blue
+        // Oak Gold), leaving a reader unable to tell from the rationale alone whether a listed
+        // dependency's license was rejected by both criteria or just misreported. The dynamic
+        // per-dependency detail lines that follow are untouched.
+        if (result.outcome === "fail") {
+          return {
+            ...result,
+            rationale: result.rationale.replace(
+              "without an OSI-approved license:",
+              "without an OSI-approved or Blue Oak Gold-rated license:",
+            ),
+          }
+        }
         return result
       },
     },
@@ -270,6 +287,18 @@ export default defineRepoContract({
     // `commitlint` binary against git history and touches nothing.
     commitlint: commitlint(),
     "security-network": securityNetwork,
+    // New security check built on the repo-contract/helpers exception-policy primitive (see
+    // specs/decisions/0013-reusable-exception-policy-helper.md) -- `unavailable` (the CLI isn't
+    // installed, or this environment holds no Socket org token, as is the case for this
+    // repository's own CI today) is a warn, not a hard dependency on real Socket credentials
+    // existing everywhere this contract runs.
+    "security-socket": securitySocket,
+    // Promotes the former local-only `coderabbit review --agent` pre-push shell step (see
+    // .githooks/pre-push and specs/decisions/0014-coderabbit-as-a-surfaced-check.md) into a real,
+    // always-declared check -- `not-applicable`/`unavailable` (CI, no CLI installed, a detached
+    // checkout) is a warn on every single run, by design: a local skip must surface the exact same
+    // warning CI always shows, never a silent pass.
+    coderabbitai,
     // Declared last among the readers so its own scheduling barrier (see checks/mutation.ts and
     // this file's own doc comment) blocks as little else as possible.
     mutation: { ...mutation, dependsOn: ["suppression-governance"] },
