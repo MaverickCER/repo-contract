@@ -74,24 +74,7 @@ export function evaluateExceptionFindings<TItem, TRecord>(input: {
   return { matched, unmatchedFindings, staleExceptions, summary }
 }
 
-/**
- * Stages a record's raw `missing` list (`ExceptionDeterminant.missing`, from `evaluateExceptionRecord`)
- * for presentation, per the user's own explicit direction (specs/decisions/0013-reusable-exception-policy-helper.md,
- * "Verification, not attestation"): `"verification.verifiedBy"` is a genuinely required field the
- * whole time -- `evaluateExceptionRecord`'s own pass/fail semantics never change -- but a record's
- * first-ever reported failure should ask only for the authoring-phase fields (`justification`,
- * `alternatives`, `exceptionType`, etc.), never simultaneously demand a sign-off on prose that
- * doesn't exist yet. Once every other required field is filled in, the next run's staged list
- * additionally names `verificationField` as still missing -- purely a presentation choice, applied
- * here, in the unpublished check layer, so `src/helpers`'s own published contract stays untouched.
- * @param missing - A record's raw `missing` list, exactly as `evaluateExceptionRecord` returned it.
- * @param verificationField - The verification requirement's own field name (e.g. `"verification.verifiedBy"`) to stage.
- * @returns `missing` with `verificationField` filtered out, unless every other entry is already satisfied (in which case `missing` is returned unchanged).
- */
-export function stageMissingFields(
-  missing: readonly string[],
-  verificationField: string,
-): readonly string[] {
-  const authoringMissing = missing.filter((field) => field !== verificationField)
-  return authoringMissing.length > 0 ? authoringMissing : missing
-}
+// Re-exported from its home in `scripts/shared/exception-record.ts` (a lower layer `checks/` may
+// import) so the three security checks here keep importing it from this module unchanged, while
+// `scripts/suppression-governance/` -- which cannot import `checks/` -- can reach it too.
+export { stageMissingFields } from "../../scripts/shared/exception-record.js"

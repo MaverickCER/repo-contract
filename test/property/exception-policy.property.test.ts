@@ -39,11 +39,19 @@ const REQUIREMENT_ORDER: readonly SuppressionRequirement[] = [
   "category",
   "verificationMethod",
   "reason",
+  "verifiedBy",
 ]
 
 const OLD_GLOBAL_DEFAULT_POLICY: SuppressionPolicy = {
   mode: "exception",
-  requirements: ["justification", "alternatives", "remediation", "category", "verificationMethod"],
+  requirements: [
+    "justification",
+    "alternatives",
+    "remediation",
+    "category",
+    "verificationMethod",
+    "verifiedBy",
+  ],
 }
 
 function oldStricterOf(a: SuppressionPolicy, b: SuppressionPolicy): SuppressionPolicy {
@@ -193,6 +201,15 @@ const recordArbitrary: fc.Arbitrary<SuppressionGovernanceRecordEvidence> = fc.re
     "static-reasoning",
   ),
   reason: fieldValueArbitrary,
+  // The content-bound verification block, held at `""`. This differential test covers the
+  // *precedence + field-completeness algorithm*; `verifiedBy` participates as a required field
+  // (it is in `REQUIREMENT_ORDER` below), but with no `verifiedContentHash` it is unsigned by
+  // definition, so the new content-bound `fieldValue` and the frozen old raw read agree without
+  // this test needing to model hash-binding -- that has its own coverage in
+  // test/unit/suppression-governance/policy.test.ts.
+  verifiedBy: fc.constant(""),
+  verifiedAt: fc.constant(""),
+  verifiedContentHash: fc.constant(""),
   status: fc.constant<SuppressionRecordStatus>("existing"),
 })
 

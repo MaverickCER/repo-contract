@@ -1,8 +1,9 @@
-import { evaluateExceptionRecord } from "../../src/helpers/index.js"
+import { evaluateExceptionRecord, hashRequirementFields } from "../../src/helpers/index.js"
 import type { ExceptionClassification } from "../../src/helpers/index.js"
 import type { SuppressionGovernanceRecordEvidence } from "./evidence-types.js"
 import type { SuppressionPolicyConfig, SuppressionRequirement } from "./policy-config.js"
 import { GLOBAL_DEFAULT_POLICY } from "./policy-config.js"
+import { stageMissingFields } from "../shared/exception-record.js"
 
 /**
  * Suppression-governance's own thin instantiation of `repo-contract/helpers`'s classification-
@@ -24,21 +25,49 @@ interface SuppressionRecordDeterminant {
   readonly missing: readonly SuppressionRequirement[]
 }
 
+/** The six authoring fields `verifiedContentHash` is bound to -- editing any of these after sign-off invalidates the hash and reverts `verifiedBy` to "missing". Order matters: it is the exact order `hashRequirementFields` digests. */
+const HASHED_AUTHORING_FIELDS: readonly SuppressionRequirement[] = [
+  "justification",
+  "alternatives",
+  "remediation",
+  "category",
+  "verificationMethod",
+  "reason",
+]
+
 /**
- * Resolves one required field's current value on `record`. `requirement` arrives as a plain
- * `string` (the generic core's own contract -- it never assumes a consumer's requirement names
- * form a closed set), but every value `evaluateExceptionRecord` ever actually calls this with
- * here is drawn from `suppressionPolicy`'s own `requirements` arrays, which
- * `validateExceptionPolicyConfig(policyConfig, VALID_REQUIREMENTS)` (see
- * checks/suppression-governance.ts) has already confirmed are members of `SuppressionRequirement`
- * before any record is ever evaluated -- so the cast below is safe by construction, not merely
- * assumed.
+ * Reads one authoring field's raw current string value straight off `record` -- the completeness
+ * primitive the generic core wants, and the exact input `hashRequirementFields` digests for the
+ * content-bound `"verifiedBy"` check below.
  * @param record - The record to read a field from.
  * @param requirement - The field name to resolve.
  * @returns That field's current string value.
  */
-function fieldValue(record: SuppressionGovernanceRecordEvidence, requirement: string): string {
+function rawFieldValue(record: SuppressionGovernanceRecordEvidence, requirement: string): string {
   return record[requirement as SuppressionRequirement]
+}
+
+/**
+ * Resolves one required field's current value on `record`. Every field but `"verifiedBy"` is read
+ * straight off the record. `"verifiedBy"` is *content-bound*: it resolves to the signer's name
+ * only when `record.verifiedContentHash` still equals `hashRequirementFields()` recomputed from
+ * the record's current authoring fields -- so editing a justification (or any of the six
+ * `HASHED_AUTHORING_FIELDS`) after sign-off makes `"verifiedBy"` resolve to `""` again, and the
+ * record fails policy until it is re-reviewed and re-signed. `requirement` arrives as a plain
+ * `string` (the generic core's contract), but every value it is actually called with here is
+ * drawn from a policy's `requirements` array, already confirmed a member of
+ * `SuppressionRequirement` by `validateExceptionPolicyConfig` (see checks/suppression-governance.ts).
+ * @param record - The record to read a field from.
+ * @param requirement - The field name to resolve.
+ * @returns That field's current string value (or `""` for an unverified/stale `"verifiedBy"`).
+ */
+function fieldValue(record: SuppressionGovernanceRecordEvidence, requirement: string): string {
+  if (requirement === "verifiedBy") {
+    if (record.verifiedContentHash.length === 0) return ""
+    const currentHash = hashRequirementFields(record, HASHED_AUTHORING_FIELDS, rawFieldValue)
+    return record.verifiedContentHash === currentHash ? record.verifiedBy : ""
+  }
+  return rawFieldValue(record, requirement)
 }
 
 /**
@@ -101,5 +130,8 @@ export function formatOffender(determinant: SuppressionRecordDeterminant): strin
   if (verdict === "forbidden") {
     return `${describeRecord(record)} -- forbidden by policy.`
   }
-  return `${describeRecord(record)} -- insufficient justification (missing: ${missing.join(", ")}).`
+  // Stage `verifiedBy`: a record whose authoring fields aren't all filled yet is asked only for
+  // those; `verifiedBy` is added to the ask on the next run, once there is prose to sign off on.
+  const staged = stageMissingFields(missing, "verifiedBy")
+  return `${describeRecord(record)} -- insufficient justification (missing: ${staged.join(", ")}).`
 }

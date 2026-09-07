@@ -54,6 +54,9 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
         category: "",
         verificationMethod: "",
         reason: "",
+        verifiedBy: "",
+        verifiedAt: "",
+        verifiedContentHash: "",
       },
     ])
   })

@@ -24,6 +24,9 @@ function synchronizedRecord(overrides: Partial<SynchronizedRecord> = {}): Synchr
     category: "equivalent-mutant",
     verificationMethod: "mutation-run",
     reason: "",
+    verifiedBy: "@maverickcer",
+    verifiedAt: "2026-09-07",
+    verifiedContentHash: "abc",
     status: "existing",
     ...overrides,
   }
@@ -45,6 +48,9 @@ describe("toPersistedRecord", () => {
       category: "equivalent-mutant",
       verificationMethod: "mutation-run",
       reason: "",
+      verifiedBy: "@maverickcer",
+      verifiedAt: "2026-09-07",
+      verifiedContentHash: "abc",
     })
     expect(Object.keys(persisted)).not.toContain("status")
   })

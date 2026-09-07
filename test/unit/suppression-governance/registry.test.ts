@@ -19,6 +19,9 @@ function record(overrides: Partial<DisableCommentRecord> = {}): DisableCommentRe
     category: "",
     verificationMethod: "",
     reason: "",
+    verifiedBy: "",
+    verifiedAt: "",
+    verifiedContentHash: "",
     ...overrides,
   }
 }
@@ -181,6 +184,43 @@ describe("validateSuppressionRegistry", () => {
     }
   })
 
+  it("accepts an empty verifiedBy/verifiedAt/verifiedContentHash (an unsigned record)", () => {
+    const result = validateSuppressionRegistry([record()])
+    expect(result.ok).toBe(true)
+  })
+
+  it("accepts a well-formed sign-off", () => {
+    const result = validateSuppressionRegistry([
+      record({
+        verifiedBy: "@maverickcer",
+        verifiedAt: "2026-09-07T00:00:00.000Z",
+        verifiedContentHash: "a".repeat(64),
+      }),
+    ])
+    expect(result.ok).toBe(true)
+  })
+
+  it("rejects a non-empty verifiedAt that isn't a well-formed ISO 8601 timestamp", () => {
+    const result = validateSuppressionRegistry([record({ verifiedAt: "soon" })])
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.errors.some((e) => e.includes(".verifiedAt"))).toBe(true)
+  })
+
+  it("rejects a shaped-but-impossible verifiedAt calendar date", () => {
+    const result = validateSuppressionRegistry([record({ verifiedAt: "2026-02-29" })])
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.errors.some((e) => e.includes(".verifiedAt"))).toBe(true)
+  })
+
+  it("rejects a non-empty verifiedContentHash that isn't a 64-char lowercase hex digest", () => {
+    for (const verifiedContentHash of ["not-a-hash", "A".repeat(64), "a".repeat(63)]) {
+      const result = validateSuppressionRegistry([record({ verifiedContentHash })])
+      expect(result.ok, `expected ${JSON.stringify(verifiedContentHash)} to be rejected`).toBe(
+        false,
+      )
+    }
+  })
+
   it("rejects duplicate records (same file, line, domain, rule, content)", () => {
     const result = validateSuppressionRegistry([record(), record()])
     expect(result.ok).toBe(false)
@@ -231,6 +271,9 @@ describe("validateSuppressionRegistry", () => {
           "remediation",
           "rule",
           "verificationMethod",
+          "verifiedBy",
+          "verifiedAt",
+          "verifiedContentHash",
         ].sort(),
       )
     }

@@ -77,3 +77,81 @@ to be adequately justified whenever at least one mutant is trusted on a comment'
   would let an automated governance registry silently transfer justification between two different
   suppressions just because they happen to be near each other, exactly the kind of silent bypass
   this system exists to prevent.
+
+## Amendment (2026-09-07): verification, not attestation
+
+`specs/decisions/0013-reusable-exception-policy-helper.md` generalized this registry's own
+exact/pattern/domain/global precedence and field-completeness engine into
+`repo-contract/helpers`, and `security-socket`/`coderabbitai`/`security-network` all built on it
+with one further gate this registry did not originally have: a **content-bound verification**
+block. This amendment brings that same gate to `disable-comments.json`.
+
+**The gap.** Every field this ADR's original design named —
+`justification`/`alternatives`/`remediation`/`category`/`verificationMethod` — is self-reported by
+the same actor who wants the suppression permitted. `verificationMethod` in particular _names_ a
+verification technique (`mutation-run`, `existing-test-suite`, ...) but nothing ever checks that
+the technique was actually applied to this specific record's claim. That is attestation, not
+enforcement — proving a suppression was _described_, never that it was _examined_ — precisely the
+weakness `specs/decisions/0013-reusable-exception-policy-helper.md`'s "Verification, not
+attestation" section identifies and fixes for the other checks built on the same primitive.
+
+**The fix.** `DisableCommentRecord` gains three more hand-authored fields, filled in and preserved
+across reruns exactly like the five above them:
+
+- `verifiedBy` — who (or what mechanical process) signed off.
+- `verifiedAt` — an ISO 8601 timestamp of the sign-off (informational; validated for shape, never
+  itself a policy requirement).
+- `verifiedContentHash` — `hashRequirementFields()` (`src/helpers/exception-policy.ts`) computed
+  over the record's six authoring fields (the five above, plus `reason`) _at the moment of
+  sign-off_.
+
+Every `"exception"`-mode policy in `suppressionPolicy` now additionally requires `"verifiedBy"`.
+`checks/suppression-governance.ts`'s own `fieldValue` resolves it only when `verifiedContentHash`
+still equals the hash recomputed from the record's _current_ authoring fields — editing
+`justification` (or any of the other five hashed fields) after sign-off silently invalidates the
+hash, `verifiedBy` reverts to "missing", and the record fails policy again on the very next run,
+with no separate staleness-tracking logic anywhere. Per the same user direction
+specs/decisions/0013 records, the reported `missing` list is _staged_: a freshly-created record's
+first failure names only the still-empty authoring fields, never `verifiedBy` simultaneously — it
+is added to the ask only once every authoring field is filled in.
+
+`verifiedBy` deliberately reuses the _existing_ `verificationMethod` enum rather than introducing
+a second, separate `method` field the way the security checks' `ExceptionVerification.method`
+does: `verificationMethod` already names _how_ the underlying claim was substantiated
+(`mutation-run`, `existing-test-suite`, `differential-testing`, `static-reasoning`, `untestable`),
+and a suppression's own domain (`stryker` mutation results, an ESLint rule, a `@ts-ignore`) has no
+second, independent tool this ADR's model could re-run the way `security-socket`/`security-network`
+re-scan a package or a file — `verificationMethod` already _is_ the record of what evidence was
+obtained, and content-binding it via `verifiedContentHash` is what makes it accountable rather than
+just recorded.
+
+**Migration.** All 64 records committed under this ADR's original (pre-amendment) model were
+backfilled with a single migration pass at the time this amendment landed: `verifiedBy:
+"@maverickcer"`, `verifiedAt` the migration date, `verifiedContentHash` computed from each record's
+own already-committed authoring fields. This is a one-time baseline, not 64 individual fresh
+reviews — but the content-binding is what makes the baseline meaningful going forward: any of those
+64 records whose prose is edited from here on immediately loses its inherited sign-off and must be
+re-verified like any other record. Every suppression discovered _after_ this amendment starts
+unsigned, exactly like every other hand-authored field.
+
+**Recommended repository setting** (documented, not enforced by repo-contract itself, per ADR
+0011's "don't own ambient platform capabilities you don't need" posture): require a second
+approving review on any PR touching `disable-comments.json`, so `verifiedBy` has a real,
+GitHub-enforced backing rather than resting on repo-contract's own say-so.
+
+### Alternatives considered (amendment)
+
+- **A separate `method: "mechanical-reverification" | "independent-human-review"` field**,
+  mirroring `scripts/shared/exception-record.ts`'s `ExceptionVerification` exactly. Rejected —
+  `verificationMethod` already captures a strictly _more specific_ version of the same idea (which
+  technique, not just which of two coarse categories), and adding a second, coarser field alongside
+  it would be redundant classification with no consumer.
+- **Auto-populating `verifiedBy` at synchronization time** (e.g. from the git commit author who
+  introduced the suppression). Rejected — the author and the verifier being allowed to be the same
+  actor with no independent check is exactly the "believe me" pattern this amendment closes; an
+  automatic self-sign-off would reintroduce it structurally, just one step removed.
+- **Skipping the 64-record backfill and letting every pre-existing suppression fail until
+  individually re-reviewed.** Rejected as the initial migration step — it would make landing this
+  amendment itself a hard blocker on a full manual audit of unrelated, already-reviewed history.
+  The content-bound hash means the baseline costs nothing going forward: it is not a permanent
+  exemption, only a starting point that the very next edit to any of those records revokes.

@@ -179,3 +179,27 @@ export function indexRecordsById<TRecord extends { readonly id: string }>(
 ): ReadonlyMap<string, TRecord> {
   return new Map(records.map((record) => [record.id, record]))
 }
+
+/**
+ * Stages a record's raw `missing` list (`ExceptionDeterminant.missing`, from
+ * `evaluateExceptionRecord`) for presentation, per the user's own explicit direction
+ * (specs/decisions/0013-reusable-exception-policy-helper.md, "Verification, not attestation"):
+ * the verification field (e.g. `"verification.verifiedBy"` for the security checks, `"verifiedBy"`
+ * for suppression-governance) is a genuinely required field the whole time --
+ * `evaluateExceptionRecord`'s own pass/fail semantics never change -- but a record's first-ever
+ * reported failure should ask only for the authoring-phase fields (`justification`,
+ * `alternatives`, ...), never simultaneously demand a sign-off on prose that doesn't exist yet.
+ * Once every other required field is filled in, the next run's staged list additionally names
+ * `verificationField` -- purely a presentation choice, so `src/helpers`'s own published contract
+ * stays untouched.
+ * @param missing - A record's raw `missing` list, exactly as `evaluateExceptionRecord` returned it.
+ * @param verificationField - The verification requirement's own field name to stage.
+ * @returns `missing` with `verificationField` filtered out, unless every other entry is already satisfied (in which case `missing` is returned unchanged).
+ */
+export function stageMissingFields(
+  missing: readonly string[],
+  verificationField: string,
+): readonly string[] {
+  const authoringMissing = missing.filter((field) => field !== verificationField)
+  return authoringMissing.length > 0 ? authoringMissing : missing
+}
