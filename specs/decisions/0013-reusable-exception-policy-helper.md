@@ -107,10 +107,10 @@ interface), is the honest choice here. `tsup.config.ts` marks it `external` (nev
 
 ## Consequences
 
-- A future `security-socket`/`coderabbitai`/`security-deps`/`security-secrets`/`security-network`
-  retrofit (and `suppression-governance`'s own retrofit, still pending — see the "Alternatives
-  considered" note below) shares one tested precedence algorithm and one tested field-completeness
-  check, instead of five-plus near-identical copies.
+- `suppression-governance`, `security-socket`, and `coderabbitai` (with more `security-*` checks
+  retrofitted onto it over the same release) share one tested precedence algorithm and one tested
+  field-completeness check, instead of five-plus near-identical copies. Each landed in its own
+  reviewable commit once this primitive itself had landed, not bundled in with it.
 - `repo-contract` now ships one real runtime dependency (`minimatch`) where it previously shipped
   zero. This is scoped and explained above, not silent — a consumer who never imports
   `repo-contract/helpers` still pays nothing extra at runtime (the root and `presets` entry points
@@ -118,17 +118,17 @@ interface), is the honest choice here. `tsup.config.ts` marks it `external` (nev
 - `repo-contract/helpers` carries no automated backward-compatibility protection of its own yet,
   the same interim gap ADR 0004 already documents for `repo-contract/presets` — the Experimental
   classification is the mitigation, not a permanent answer.
-- Matching, canonical-identity validation, and a closed `exceptionType` vocabulary are available in
-  `checks/shared/` for this repository's own checks to build on, but are not published — an outside
-  consumer wanting that layer writes their own, the same way they would write their own `matchRecord`
-  today.
+- Matching (`checks/shared/evaluate-exception-findings.ts`), canonical-identity validation and a
+  closed `exceptionType` vocabulary (`scripts/shared/exception-record.ts`) are available for this
+  repository's own checks to build on, but are not published — an outside consumer wanting that
+  layer writes their own, the same way they would write their own `matchRecord` today.
 
 ## Alternatives considered
 
-- **Retrofitting `suppression-governance` onto this core in the same change**: rejected for this
-  PR specifically — the retrofit is a pure, zero-behavior-change refactor with its own differential
-  property test as evidence, and belongs in its own reviewable, revertible commit once this
-  primitive itself has landed, not bundled into the same change that introduces it.
+- **Bundling the `suppression-governance` retrofit into the primitive's own introducing change**:
+  rejected — that retrofit is a pure, zero-behavior-change refactor with its own differential
+  property test as evidence, and landed in its own reviewable, revertible commit once this
+  primitive itself had landed, not bundled into the same change that introduced it.
 - **Publishing a matched/unmatched batch result type, or teaching the core a canonical-ID/indexed-
   registry concept**: rejected outright — this would re-introduce exactly the identity/matching
   semantics this design deliberately keeps out of the published core (see Decision above). The
