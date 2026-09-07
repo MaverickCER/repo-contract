@@ -136,7 +136,7 @@ which is _stricter_, not looser:
 The `eslint-disable` on `no-restricted-imports`/`no-restricted-globals` is still itself a
 `disable-comments.json` entry a reviewer sees (the ESLint layer is unchanged); the
 security-network registry is the second, independent layer's own equivalent record, now with the
-verification gate ADR 0006's prose-only model lacked.
+verification gate ADR 0006's prose-based exception model lacked.
 
 ## Consequences
 
