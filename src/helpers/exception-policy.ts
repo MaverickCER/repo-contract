@@ -175,6 +175,25 @@ export function resolveExceptionPolicy(
 }
 
 /**
+ * One record to evaluate, paired with everything `evaluateExceptionRecord` needs to judge it --
+ * shared by `evaluateExceptionRecord` and `evaluateExceptionRecords` (whose own `inputs` is just
+ * `readonly ExceptionRecordEvaluation<TRecord>[]`) so the same five-field shape isn't declared
+ * twice.
+ */
+export interface ExceptionRecordEvaluation<TRecord> {
+  /** The record to evaluate. */
+  readonly record: TRecord
+  /** Every classification this record is subject to; the strictest resolved policy across all of them wins. */
+  readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]]
+  /** The exception policy configuration to resolve `classifications` against. */
+  readonly config: ExceptionPolicyConfig
+  /** The policy to fall back to for any classification whose `group` has no entry in `config` at all. */
+  readonly globalDefault: ExceptionPolicy
+  /** Resolves one named required field's current string value on `record`. */
+  readonly fieldValue: (record: TRecord, requirement: string) => string
+}
+
+/**
  * Evaluates one record against every one of its own classifications, taking the strictest
  * (`stricterOf`) of each classification's resolved policy -- a record matching both a forbidden
  * classification and an otherwise-fine one is forbidden overall. `classifications` is a non-empty
@@ -185,21 +204,12 @@ export function resolveExceptionPolicy(
  * mode's name implies. `fieldValue` may resolve a dotted path (e.g. `"verification.verifiedBy"`)
  * or anything else a consumer's own record shape needs -- this function never interprets
  * `requirement` itself, it only ever calls `fieldValue(record, requirement)` and trims the result.
- * @param input - The record to evaluate, its classifications, the policy configuration and global default to resolve them against, and the field-value accessor.
- * @param input.record - The record to evaluate.
- * @param input.classifications - Every classification this record is subject to; the strictest resolved policy across all of them wins.
- * @param input.config - The exception policy configuration to resolve `input.classifications` against.
- * @param input.globalDefault - The policy to fall back to for any classification whose `group` has no entry in `input.config` at all.
- * @param input.fieldValue - Resolves one named required field's current string value on `input.record`.
+ * @param input - The record to evaluate, its classifications, the policy configuration and global default to resolve them against, and the field-value accessor -- see `ExceptionRecordEvaluation`'s own per-field doc comments.
  * @returns The record's verdict, and which required fields (if any) are still missing.
  */
-export function evaluateExceptionRecord<TRecord>(input: {
-  readonly record: TRecord
-  readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]]
-  readonly config: ExceptionPolicyConfig
-  readonly globalDefault: ExceptionPolicy
-  readonly fieldValue: (record: TRecord, requirement: string) => string
-}): ExceptionDeterminant<TRecord> {
+export function evaluateExceptionRecord<TRecord>(
+  input: ExceptionRecordEvaluation<TRecord>,
+): ExceptionDeterminant<TRecord> {
   const { record, classifications, config, globalDefault, fieldValue } = input
 
   const resolvedPolicy = classifications
@@ -229,13 +239,7 @@ export function evaluateExceptionRecord<TRecord>(input: {
  * @returns Each input's own determinant, in the same order as `inputs`.
  */
 export function evaluateExceptionRecords<TRecord>(
-  inputs: readonly {
-    readonly record: TRecord
-    readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]]
-    readonly config: ExceptionPolicyConfig
-    readonly globalDefault: ExceptionPolicy
-    readonly fieldValue: (record: TRecord, requirement: string) => string
-  }[],
+  inputs: readonly ExceptionRecordEvaluation<TRecord>[],
 ): readonly ExceptionDeterminant<TRecord>[] {
   return inputs.map((input) => evaluateExceptionRecord(input))
 }
