@@ -92,10 +92,38 @@ describe("evaluateCoderabbitPolicy", () => {
     expect(result.rationale).toContain("unexpected shape")
   })
 
-  it("passes when the review reports 0 findings", async () => {
+  it("passes when the review reports 0 findings and the registry is empty", async () => {
     const evidence: CoderabbitEvidence = { status: "reviewed", findings: [] }
-    const result = await evaluateCoderabbitPolicy({ evidence })
+    const result = await evaluateCoderabbitPolicy({
+      evidence,
+      loadRegistry: async () => ({ ok: true, records: [] }),
+    })
     expect(result.outcome).toBe("pass")
+    expect(result.rationale).not.toContain("matched nothing")
+  })
+
+  it("still reports stale exception records on a clean (0-findings) review -- the most common stale case", async () => {
+    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [] }
+    const result = await evaluateCoderabbitPolicy({
+      evidence,
+      loadRegistry: async () => ({
+        ok: true,
+        records: [record({ id: "src/gone.ts:major", file: "src/gone.ts" })],
+      }),
+    })
+    expect(result.outcome).toBe("pass")
+    expect(result.rationale).toContain("matched nothing this run")
+    expect(result.rationale).toContain("src/gone.ts:major")
+  })
+
+  it("fails a clean 0-findings review if the registry itself is malformed (loaded even with no findings)", async () => {
+    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [] }
+    const result = await evaluateCoderabbitPolicy({
+      evidence,
+      loadRegistry: async () => ({ ok: false, errors: ["exceptions[0] is broken"] }),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("failed validation")
   })
 
   it("fails a finding with no matching exception record", async () => {

@@ -153,12 +153,36 @@ function normalizeAlert(raw: unknown): NormalizedSocketAlert | undefined {
  * @returns This run's normalized evidence.
  */
 export function runSecuritySocketScan(): SecuritySocketEvidence {
-  const result = spawnSync("socket", SOCKET_ARGS, { encoding: "utf8" })
+  const result = spawnSync("socket", SOCKET_ARGS, {
+    encoding: "utf8",
+    // `socket ci` uploads a manifest and waits for the server-side scan+report; 5 min is a
+    // generous ceiling that still bounds a stalled invocation so it can never hang
+    // `runSecuritySocketScan`, `npm run contract`, or the pre-push hook. `cross-spawn` forwards
+    // this straight to `child_process.spawnSync`. A timeout is classified `status: "error"`, NOT
+    // `unavailable: network-unreachable` -- exceeding the deadline is not itself evidence the
+    // network was unreachable (a slow-but-reachable server hits it too), so it fails closed.
+    timeout: 5 * 60 * 1000,
+    // `SIGKILL` (not the default `SIGTERM`): a wedged `socket` process that ignores or slowly
+    // handles `SIGTERM` would keep `spawnSync` blocked past the deadline anyway.
+    killSignal: "SIGKILL",
+    // The `--json` report is a single object; well under the 1 MiB `spawnSync` default, but
+    // raised clear of it so a large SBOM report can never be misreported as a spawn failure.
+    maxBuffer: 32 * 1024 * 1024,
+  })
 
   if (result.error) {
     const nodeError = result.error as NodeJS.ErrnoException
     if (nodeError.code === "ENOENT") {
       return { status: "unavailable", reason: "cli-not-installed" }
+    }
+    if (nodeError.code === "ETIMEDOUT") {
+      return { status: "error", message: "The `socket` CLI timed out (exceeded 5 minutes)." }
+    }
+    if (nodeError.code === "ENOBUFS") {
+      return {
+        status: "error",
+        message: "The `socket` CLI produced more output than its buffer limit.",
+      }
     }
     return { status: "error", message: `Failed to spawn the \`socket\` CLI: ${nodeError.message}` }
   }

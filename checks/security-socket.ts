@@ -34,7 +34,7 @@ const DEFAULT_EXCEPTIONS_PATH = path.join(".repo-contract", "exceptions", "socke
 /**
  * Resolves one named field's current value on a `SocketExceptionRecord` -- the four ordinary
  * prose/enum fields read directly; `"verification.verifiedBy"` delegates to `isVerified`
- * (`checks/shared/exception-record.ts`), returning the verifier's own name only when the record's
+ * (`scripts/shared/exception-record.ts`), returning the verifier's own name only when the record's
  * `verification` block is present *and* still content-bound to the record's current prose (see
  * that function's own doc comment for what "content-bound" means).
  * @param record - The record to read a field from.
@@ -212,7 +212,7 @@ export async function evaluateSecuritySocketPolicy(
 }
 
 // Rejects any alert above a medium (Socket "middle") rating outright, and requires a
-// finding-specific, *verified* exception (checks/shared/exception-record.ts) for everything else
+// finding-specific, *verified* exception (scripts/shared/exception-record.ts) for everything else
 // -- see specs/decisions/0013-reusable-exception-policy-helper.md's "Verification, not
 // attestation". `@socketsecurity/cli`'s own real output for an authenticated org scan with policy
 // violations could not be verified against a real org in this environment -- see

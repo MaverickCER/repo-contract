@@ -1,9 +1,9 @@
-import { EXCEPTION_TYPES } from "../shared/exception-record.js"
+import { EXCEPTION_TYPES, validateCanonicalIdentity } from "../shared/exception-record.js"
 import type { ExceptionVerification } from "../shared/exception-record.js"
 
 /** One hand-maintained waiver for a Socket alert -- `.repo-contract/exceptions/socket.json`'s own `exceptions` array element shape. */
 export interface SocketExceptionRecord {
-  /** This record's own canonical addressing key -- must equal `deriveSocketExceptionId(record)`; see `validateCanonicalIdentity` (`checks/shared/exception-record.ts`). */
+  /** This record's own canonical addressing key -- must equal `deriveSocketExceptionId(record)`; see `validateCanonicalIdentity` (`scripts/shared/exception-record.ts`). */
   readonly id: string
   readonly version: 1
   readonly package: string
@@ -173,11 +173,9 @@ function validateSocketExceptionRecord(
     ...(validatedVerification !== undefined ? { verification: validatedVerification } : {}),
   }
 
-  const derivedId = deriveSocketExceptionId(record)
-  if (derivedId !== record.id) {
-    errors.push(
-      `exceptions[${String(index)}].id ${JSON.stringify(record.id)} does not match its own derived identity ${JSON.stringify(derivedId)} (package@packageVersion:alertType).`,
-    )
+  const identity = validateCanonicalIdentity(record, deriveSocketExceptionId)
+  if (!identity.ok) {
+    errors.push(`exceptions[${String(index)}]: ${identity.error}`)
     return undefined
   }
 

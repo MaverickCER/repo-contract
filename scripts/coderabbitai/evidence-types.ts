@@ -19,10 +19,13 @@
  *   observed value: `"major"`; the full enum is undocumented publicly as of this writing --
  *   `review.ts`'s own normalization treats any value it doesn't recognize as `"unknown"` rather
  *   than guessing at a vocabulary it can't confirm.
- * - `{"type":"complete", status:"review_completed", findings, reviewedFiles}` -- terminal event;
- *   `findings` here is a plain count (confirmed `0` on a clean run), not the findings themselves --
- *   the individual `finding` events (if any) arrive as their own separate stream lines before this
- *   one.
+ * - `{"type":"complete", status, findings, reviewedFiles}` -- terminal event. Two `status`
+ *   values confirmed by direct observation: `"review_completed"` (a review ran; `findings` here
+ *   is a plain count, not the findings themselves -- the individual `finding` events, if any,
+ *   arrive as their own separate stream lines before this one) and `"review_skipped"` (nothing
+ *   in scope to review -- an empty diff; the CLI emits this rather than `review_completed` when
+ *   `--uncommitted` finds no tracked edits). Both are clean, findings-complete terminal states;
+ *   any other `status` on a `complete` event fails the parse closed.
  *
  * See `review.ts`'s own comments for the exact recognized event vocabulary and what happens to an
  * event type/shape this wrapper doesn't recognize (fails closed, `status: "error"`).

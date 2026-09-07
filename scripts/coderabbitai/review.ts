@@ -83,7 +83,7 @@ function normalizeFinding(raw: Record<string, unknown>): NormalizedFinding | und
  * @param stdout - The CLI's raw captured stdout.
  * @returns The findings observed and whether a terminal `complete` event was seen, or the error message if parsing failed closed.
  */
-function parseAgentStream(stdout: string):
+export function parseAgentStream(stdout: string):
   | {
       readonly ok: true
       readonly findings: readonly NormalizedFinding[]
@@ -122,11 +122,36 @@ function parseAgentStream(stdout: string):
             'coderabbit review --agent produced a "finding" event missing a required field (fileName/codegenInstructions).',
         }
       }
+      // `NormalizedFinding.identity` is deliberately coarse (`file:severity` -- the CLI provides
+      // no native finding id, see evidence-types.ts). That is an acceptable matching granularity
+      // *across* runs, but within a *single* run two genuinely distinct findings that collapse to
+      // the same identity would both match one exception record, letting a single permitted
+      // waiver silently suppress both. Rather than accept that, fail the whole parse closed the
+      // moment a collision appears -- a real, if rare, case a maintainer must resolve by splitting
+      // the change so the two findings land in different files (or by fixing one of them).
+      if (findings.some((existing) => existing.identity === finding.identity)) {
+        return {
+          ok: false,
+          error: `coderabbit review --agent reported two distinct findings that share one coarse identity (${finding.identity}) -- a single exception record could suppress both. Address one of them, or split the change so they land in separate files.`,
+        }
+      }
       findings.push(finding)
       continue
     }
 
     if (parsed.type === "complete") {
+      // Two terminal statuses confirmed by direct observation against a real CLI:
+      // `"review_completed"` (a review ran; `findings` count is on this same event), and
+      // `"review_skipped"` (there was nothing in scope to review -- an empty diff -- which the
+      // CLI emits when `--uncommitted` finds no tracked edits). Both are clean, findings-complete
+      // terminal states. Any *other* status (missing, an unsuccessful value) means the review did
+      // not actually finish -- accepting it would let an incomplete run produce a clean result.
+      if (parsed.status !== "review_completed" && parsed.status !== "review_skipped") {
+        return {
+          ok: false,
+          error: `coderabbit review --agent produced a "complete" event with an unexpected status (${JSON.stringify(parsed.status)}); expected "review_completed" or "review_skipped".`,
+        }
+      }
       completed = true
       continue
     }
@@ -159,12 +184,33 @@ export function runCoderabbitReview(): CoderabbitEvidence {
 
   const result = spawnSync("coderabbit", ["review", "--agent", "--uncommitted"], {
     encoding: "utf8",
+    // A real review of a small local diff completes in ~1-2 min against this repository's own
+    // observed behaviour; 10 min is a generous ceiling that still bounds a stalled process so it
+    // can never hang `runCoderabbitReview`, `npm run contract`, or the pre-push hook indefinitely.
+    // `cross-spawn` forwards this straight to `child_process.spawnSync`.
+    timeout: 10 * 60 * 1000,
+    // `SIGKILL` (not the default `SIGTERM`): a wedged `coderabbit` process that ignores or slowly
+    // handles `SIGTERM` would keep `spawnSync` blocked past the deadline anyway.
+    killSignal: "SIGKILL",
+    // The `--agent` stream is line-delimited JSON, one short object per finding plus a handful of
+    // status lines -- far under the 1 MiB `spawnSync` default, but raised well clear of it so a
+    // verbose review can never be misreported as a spawn failure via `ENOBUFS`.
+    maxBuffer: 32 * 1024 * 1024,
   })
 
   if (result.error) {
     const nodeError = result.error as NodeJS.ErrnoException
     if (nodeError.code === "ENOENT") {
       return { status: "unavailable", reason: "cli-not-installed" }
+    }
+    if (nodeError.code === "ETIMEDOUT") {
+      return { status: "error", message: "The `coderabbit` CLI timed out (exceeded 10 minutes)." }
+    }
+    if (nodeError.code === "ENOBUFS") {
+      return {
+        status: "error",
+        message: "The `coderabbit` CLI produced more output than its buffer limit.",
+      }
     }
     return {
       status: "error",
