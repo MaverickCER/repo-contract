@@ -130,21 +130,24 @@ describe("validateNetworkExceptionRegistry", () => {
     expect(result.errors.some((e) => e.includes("verifiedContentHash"))).toBe(true)
   })
 
-  it("rejects a verifiedAt that is not an ISO 8601 timestamp", () => {
-    const result = validateNetworkExceptionRegistry([
-      validRecord({
-        verification: {
-          method: "independent-human-review",
-          verifiedBy: "someone",
-          verifiedAt: "soon",
-          verifiedContentHash: "abc",
-        },
-      }),
-    ])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
-  })
+  it.each(["soon", "2026-13-45", "2026-02-29"])(
+    "rejects a non-ISO or impossible verifiedAt (%s)",
+    (verifiedAt) => {
+      const result = validateNetworkExceptionRegistry([
+        validRecord({
+          verification: {
+            method: "independent-human-review",
+            verifiedBy: "someone",
+            verifiedAt,
+            verifiedContentHash: "abc",
+          },
+        }),
+      ])
+      expect(result.ok).toBe(false)
+      if (result.ok) throw new Error("expected ok:false")
+      expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
+    },
+  )
 
   it("reports every problem across multiple bad records, not just the first", () => {
     const result = validateNetworkExceptionRegistry([
