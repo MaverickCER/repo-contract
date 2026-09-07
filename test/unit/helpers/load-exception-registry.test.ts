@@ -73,6 +73,47 @@ describe("loadExceptionRegistry -- fixture readFile overrides", () => {
     expect(result.errors[0]).toContain("permission denied")
   })
 
+  it("returns ok:false (never throws) when readFile rejects with null instead of an Error -- e.g. a test double, or an unusual real filesystem implementation", async () => {
+    const result = await loadExceptionRegistry({
+      path: ".repo-contract/exceptions/fixture.json",
+      schema: fixtureExceptionsSchema,
+      // This test exists specifically to prove loadExceptionRegistry's own catch block never
+      // throws when a caller-supplied readFile rejects with a non-Error value -- see CodeRabbit
+      // finding on PR #42 / src/helpers/load-exception-registry.ts.
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- deliberate non-Error rejection, see above
+      readFile: () => Promise.reject(null),
+    })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.errors[0]).toContain("Could not read")
+    expect(result.errors[0]).toContain("null")
+  })
+
+  it("uses error.message when readFile rejects with a plain object whose code isn't a string (falls through the ENOENT check, still uses the real message)", async () => {
+    const result = await loadExceptionRegistry({
+      path: ".repo-contract/exceptions/fixture.json",
+      schema: fixtureExceptionsSchema,
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- deliberate non-Error rejection, distinguishing the code-lookup fallback from the ENOENT-string-match mutant
+      readFile: () => Promise.reject({ code: 123, message: "a real message" }),
+    })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.errors[0]).toContain("a real message")
+  })
+
+  it("falls back to String(error) when readFile rejects with a plain object carrying neither a string code nor a string message", async () => {
+    const result = await loadExceptionRegistry({
+      path: ".repo-contract/exceptions/fixture.json",
+      schema: fixtureExceptionsSchema,
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- deliberate non-Error rejection, distinguishing the String(error) fallback from the real-message mutant
+      readFile: () => Promise.reject({}),
+    })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.errors[0]).toContain("Could not read")
+    expect(result.errors[0]).toContain("[object Object]")
+  })
+
   it("returns ok:false when the file content is not valid JSON", async () => {
     const result = await loadExceptionRegistry({
       path: ".repo-contract/exceptions/fixture.json",

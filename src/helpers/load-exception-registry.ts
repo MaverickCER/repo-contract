@@ -86,9 +86,26 @@ export async function loadExceptionRegistry<T>(input: {
   try {
     raw = await readFile(path)
   } catch (error) {
-    const nodeError = error as NodeJS.ErrnoException
-    if (nodeError.code === "ENOENT") return { ok: true, records: [] }
-    return { ok: false, errors: [`Could not read ${path}: ${nodeError.message}`] }
+    // `readFile` is a caller-supplied capability (see this function's own doc comment) -- a test
+    // override, or an unusual real filesystem implementation, could reject with something other
+    // than a real `Error` (`null`, a plain string, ...); reading `.code`/`.message` off that
+    // directly would throw out of this catch block instead of returning the clean `{ ok: false }`
+    // this function promises for every other failure. `isPlainObject` narrows first.
+    // Equivalent mutant: `code` is consumed only by the `code === "ENOENT"` comparison two lines
+    // down, which requires an exact primitive-string match -- there is no value for which
+    // `typeof error.code === "string"` is false yet `error.code === "ENOENT"` is true (a value
+    // that literally equals the primitive string "ENOENT" always has `typeof` "string"). Mutating
+    // this `typeof` check to `true` therefore changes what gets assigned to `code` for a
+    // non-string `.code` (e.g. a number, or `undefined`), but never changes whether the
+    // subsequent `=== "ENOENT"` comparison can succeed -- confirmed directly: every plain-object
+    // test case covering this line (a numeric code, an absent code) produces the identical
+    // not-ENOENT branch and final message either way.
+    // Stryker disable next-line ConditionalExpression -- equivalent mutant, see comment above.
+    const code = isPlainObject(error) && typeof error.code === "string" ? error.code : undefined
+    if (code === "ENOENT") return { ok: true, records: [] }
+    const message =
+      isPlainObject(error) && typeof error.message === "string" ? error.message : String(error)
+    return { ok: false, errors: [`Could not read ${path}: ${message}`] }
   }
 
   let parsed: unknown
