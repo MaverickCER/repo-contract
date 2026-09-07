@@ -19,12 +19,14 @@ interface ApiReportTarget {
 }
 
 /**
- * Every public entry point this feature documents -- the package root and `repo-contract/presets`.
- * Points at `dist/.dts/`'s own real declaration files, not the `dist/index.d.ts`/`dist/presets.d.ts`
- * shims scripts/emit-dts-shims.mjs writes over them (there purely so consumers' declaration maps
- * resolve) -- a `@packageDocumentation` comment is only recognized on the literal entry file API
- * Extractor is pointed at, and a bare `export * from "./.dts/index.js"` shim carries none of its
- * own. The internal api-contract check (scripts/api-contract/check.ts) has no such requirement and
+ * Every public entry point this feature documents -- the package root, `repo-contract/presets`,
+ * and `repo-contract/helpers` (specs/decisions/0013-reusable-exception-policy-helper.md). Points
+ * at `dist/.dts/`'s own real declaration files, not the
+ * `dist/index.d.ts`/`dist/presets.d.ts`/`dist/helpers.d.ts` shims scripts/emit-dts-shims.mjs
+ * writes over them (there purely so consumers' declaration maps resolve) -- a
+ * `@packageDocumentation` comment is only recognized on the literal entry file API Extractor is
+ * pointed at, and a bare `export * from "./.dts/index.js"` shim carries none of its own. The
+ * internal api-contract check (scripts/api-contract/check.ts) has no such requirement and
  * deliberately keeps using the shim path -- its own concern is re-exported symbol shapes, not
  * package-level documentation.
  */
@@ -33,6 +35,10 @@ const API_REPORT_TARGETS: readonly ApiReportTarget[] = [
   {
     mainEntryPointFilePath: "dist/.dts/presets/index.d.ts",
     reportFileName: "repo-contract-presets",
+  },
+  {
+    mainEntryPointFilePath: "dist/.dts/helpers/index.d.ts",
+    reportFileName: "repo-contract-helpers",
   },
 ]
 

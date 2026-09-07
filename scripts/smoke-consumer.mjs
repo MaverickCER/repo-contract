@@ -60,6 +60,12 @@ const SHARED_PROBE_BODY = `
   if (typeof presets.format !== "object" || presets.format === null) throw new Error("repo-contract/presets did not export the format preset");
   if (!Array.isArray(presets.format.run) || typeof presets.format.policy !== "function") throw new Error("repo-contract/presets format is not a { run, policy } check definition");
 
+  const helpers = require("repo-contract/helpers");
+  if (typeof helpers.resolveExceptionPolicy !== "function") throw new Error("repo-contract/helpers did not export resolveExceptionPolicy");
+  if (typeof helpers.hashRequirementFields !== "function") throw new Error("repo-contract/helpers did not export hashRequirementFields");
+  const resolved = helpers.resolveExceptionPolicy({ group: "g", category: "x" }, {}, { mode: "allowed" });
+  if (resolved.mode !== "allowed") throw new Error("resolveExceptionPolicy did not fall back to the supplied globalDefault");
+
   const schema = JSON.parse(readFileSync(require.resolve("repo-contract/schema"), "utf8"));
   if (typeof schema.$schema !== "string") throw new Error("schema export missing $schema");
   if (typeof schema.$id !== "string") throw new Error("schema export missing $id");
