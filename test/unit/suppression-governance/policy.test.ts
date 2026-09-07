@@ -5,6 +5,8 @@ import type {
   SuppressionGovernanceRecordEvidence,
 } from "../../../scripts/suppression-governance/evidence-types.js"
 import type { SuppressionPolicyConfig } from "../../../scripts/suppression-governance/policy-config.js"
+import { suppressionPolicy } from "../../../scripts/suppression-governance/policy-config.js"
+import { HASHED_AUTHORING_FIELDS } from "../../../scripts/suppression-governance/resolve-policy.js"
 import { hashRequirementFields } from "../../../src/helpers/index.js"
 
 function record(
@@ -50,16 +52,6 @@ const FULLY_JUSTIFIED = {
   category: "equivalent-mutant",
   verificationMethod: "mutation-run",
 } as const
-
-/** The six fields `verifiedContentHash` is bound to -- mirrors `resolve-policy.ts`'s own `HASHED_AUTHORING_FIELDS`, in the same order. */
-const HASHED_AUTHORING_FIELDS = [
-  "justification",
-  "alternatives",
-  "remediation",
-  "category",
-  "verificationMethod",
-  "reason",
-] as const
 
 function rawFieldValue(record: SuppressionGovernanceRecordEvidence, requirement: string): string {
   return record[requirement as keyof SuppressionGovernanceRecordEvidence] as string
@@ -548,6 +540,28 @@ describe("evaluateSuppressionGovernancePolicy", () => {
           record({ justification: "Because.", verifiedBy: "someone", verifiedContentHash: "" }),
         ]),
         policyConfig,
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("missing: verifiedBy")
+    })
+
+    it("is locked into the real, committed suppressionPolicy -- not just hand-built test policies naming verifiedBy directly", () => {
+      // No policyConfig override: exercises the actual suppressionPolicy module as committed. A
+      // rule with no exact/pattern entry falls to the eslint domain's own `default`
+      // (BASE_EXCEPTION_REQUIREMENTS) -- if a future edit ever dropped "verifiedBy" from that
+      // constant, this is the one test that would catch it; every other case above pins its own
+      // hand-built policyConfig instead.
+      const fullyJustifiedButUnsigned = record({
+        rule: ["some-rule-with-no-specific-entry"],
+        justification: "Why this is the best option.",
+        alternatives: "Another way this could be done.",
+        remediation: "What was attempted, and why it wasn't enough.",
+        category: "equivalent-mutant",
+        verificationMethod: "mutation-run",
+      })
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([fullyJustifiedButUnsigned]),
+        policyConfig: suppressionPolicy,
       })
       expect(result.outcome).toBe("fail")
       expect(result.rationale).toContain("missing: verifiedBy")

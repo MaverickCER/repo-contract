@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { mutation } from "../../../checks/mutation.js"
+import { HASHED_AUTHORING_FIELDS } from "../../../scripts/suppression-governance/resolve-policy.js"
 import { hashRequirementFields } from "../../../src/helpers/index.js"
 import type { CheckEvidence, Evidence, PolicyContext } from "../../../src/types.js"
 
@@ -49,17 +50,8 @@ function suppressionGovernanceEvidence(value: unknown): CheckEvidence {
   return fakeCheckEvidence({ output: { format: "json", success: true, value } })
 }
 
-// The six fields verifiedContentHash is bound to (mirrors resolve-policy.ts's own
-// HASHED_AUTHORING_FIELDS), and a raw field reader to compute it the same way.
-const HASHED_AUTHORING_FIELDS = [
-  "justification",
-  "alternatives",
-  "remediation",
-  "category",
-  "verificationMethod",
-  "reason",
-] as const
-
+// A raw field reader mirroring resolve-policy.ts's own, to compute a matching
+// verifiedContentHash from HASHED_AUTHORING_FIELDS's real, exported definition.
 function rawFieldValue(record: Record<string, unknown>, field: string): string {
   return record[field] as string
 }

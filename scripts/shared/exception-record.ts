@@ -2,7 +2,7 @@ import { hashRequirementFields } from "../../src/helpers/index.js"
 
 /**
  * The small, closed vocabulary of *why* an exception is legitimate -- deliberately short, and
- * owned here in `checks/shared/` (unpublished), never in `src/helpers/**` (published): the
+ * owned here in `scripts/shared/` (unpublished), never in `src/helpers/**` (published): the
  * generic core has no opinion about a consumer's own classification of "why", only about which
  * named fields must be non-empty (see `src/helpers/exception-policy.ts`'s `ExceptionPolicy`). A
  * ~150-term cross-organization taxonomy (privacy, SRE, compliance, cost, etc.) was considered and
@@ -118,7 +118,7 @@ export function isIso8601Timestamp(value: string): boolean {
  * `deriveId` is entirely consumer-supplied, one per check, and free to compound however many of
  * the record's own fields it needs (e.g. a dependency-advisory check: `` `${advisoryId}:
  * ${packageName}` ``; a network-capability check: `` `${capability}:${file}:${line}` ``) --
- * `checks/shared/` never hardcodes a derivation shape or a fixed set of key fields, it only calls
+ * `scripts/shared/` never hardcodes a derivation shape or a fixed set of key fields, it only calls
  * `deriveId(record)` and compares the result against `record.id`.
  * @param record - The record whose own stored `id` is checked for self-consistency.
  * @param deriveId - Recomputes what `record`'s `id` should be, from its own embedded finding-identity fields.

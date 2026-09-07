@@ -115,24 +115,29 @@ specs/decisions/0013 records, the reported `missing` list is _staged_: a freshly
 first failure names only the still-empty authoring fields, never `verifiedBy` simultaneously — it
 is added to the ask only once every authoring field is filled in.
 
-`verifiedBy` deliberately reuses the _existing_ `verificationMethod` enum rather than introducing
-a second, separate `method` field the way the security checks' `ExceptionVerification.method`
-does: `verificationMethod` already names _how_ the underlying claim was substantiated
+This deliberately does _not_ introduce a second, separate `method` field the way the security
+checks' `ExceptionVerification.method` does (`"mechanical-reverification"` vs.
+`"independent-human-review"`) -- the record's own, already-existing `verificationMethod` field
+keeps that exact job: it already names _how_ the underlying claim was substantiated
 (`mutation-run`, `existing-test-suite`, `differential-testing`, `static-reasoning`, `untestable`),
 and a suppression's own domain (`stryker` mutation results, an ESLint rule, a `@ts-ignore`) has no
 second, independent tool this ADR's model could re-run the way `security-socket`/`security-network`
-re-scan a package or a file — `verificationMethod` already _is_ the record of what evidence was
-obtained, and content-binding it via `verifiedContentHash` is what makes it accountable rather than
-just recorded.
+re-scan a package or a file to justify a coarser `mechanical` vs. `human` split on top of it.
+`verificationMethod` already _is_ the record of what evidence was obtained; content-binding it
+(along with the other four authoring fields) via `verifiedContentHash` is what makes it
+accountable rather than just recorded.
 
 **Migration.** All 64 records committed under this ADR's original (pre-amendment) model were
 backfilled with a single migration pass at the time this amendment landed: `verifiedBy:
-"@maverickcer"`, `verifiedAt` the migration date, `verifiedContentHash` computed from each record's
-own already-committed authoring fields. This is a one-time baseline, not 64 individual fresh
-reviews — but the content-binding is what makes the baseline meaningful going forward: any of those
-64 records whose prose is edited from here on immediately loses its inherited sign-off and must be
-re-verified like any other record. Every suppression discovered _after_ this amendment starts
-unsigned, exactly like every other hand-authored field.
+"@maverickcer"`, an identical `verifiedAt` (the migration date, not each record's own original
+authoring date), and `verifiedContentHash` computed from each record's own already-committed
+authoring fields. **This is explicitly a one-time baseline import, not 64 individual, independent
+fresh reviews** — a later reader must not read the identical verifier/timestamp across all 64 as
+evidence any of them were re-examined at migration time; none were. The content-binding is what
+makes the baseline meaningful going forward regardless: any of those 64 records whose prose is
+edited from here on immediately loses its inherited sign-off and must be re-verified like any
+other record. Every suppression discovered _after_ this amendment starts unsigned, exactly like
+every other hand-authored field.
 
 **Recommended repository setting** (documented, not enforced by repo-contract itself, per ADR
 0011's "don't own ambient platform capabilities you don't need" posture): require a second

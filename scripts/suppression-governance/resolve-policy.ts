@@ -26,7 +26,8 @@ interface SuppressionRecordDeterminant {
 }
 
 /** The six authoring fields `verifiedContentHash` is bound to -- editing any of these after sign-off invalidates the hash and reverts `verifiedBy` to "missing". Order matters: it is the exact order `hashRequirementFields` digests. */
-const HASHED_AUTHORING_FIELDS: readonly SuppressionRequirement[] = [
+/** Exported so tests can compute a real, matching `verifiedContentHash` for a fixture record without maintaining their own copy of this list. */
+export const HASHED_AUTHORING_FIELDS: readonly SuppressionRequirement[] = [
   "justification",
   "alternatives",
   "remediation",
