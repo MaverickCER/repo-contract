@@ -152,6 +152,24 @@ export function parseAgentStream(stdout: string):
           error: `coderabbit review --agent produced a "complete" event with an unexpected status (${JSON.stringify(parsed.status)}); expected "review_completed" or "review_skipped".`,
         }
       }
+      // The terminal event carries its own findings *count* (see evidence-types.ts). Every
+      // individual `finding` event is streamed as its own line before this one, so that count
+      // and the number of findings actually parsed must agree exactly. A `complete` claiming
+      // more findings than were streamed means the stream was truncated (and accepting it would
+      // let an incomplete run produce a clean `reviewed` result); claiming fewer means an event
+      // this parser recognized that the CLI itself didn't count. Either way the stream is
+      // malformed -- fail closed, exactly as a bad status does.
+      if (
+        typeof parsed.findings !== "number" ||
+        !Number.isInteger(parsed.findings) ||
+        parsed.findings < 0 ||
+        parsed.findings !== findings.length
+      ) {
+        return {
+          ok: false,
+          error: `coderabbit review --agent produced a "complete" event whose findings count (${JSON.stringify(parsed.findings)}) does not match the ${String(findings.length)} finding event(s) actually streamed.`,
+        }
+      }
       completed = true
       continue
     }

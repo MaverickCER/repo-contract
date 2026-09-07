@@ -61,10 +61,35 @@ describe("parseAgentStream", () => {
   })
 
   it("maps an unrecognized severity value to 'unknown' (not an error)", () => {
-    const result = parseAgentStream([finding({ severity: "blocker" }), complete()].join("\n"))
+    const result = parseAgentStream(
+      [finding({ severity: "blocker" }), complete({ findings: 1 })].join("\n"),
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) throw new Error("expected ok:true")
     expect(result.findings[0]?.severity).toBe("unknown")
+  })
+
+  it("fails closed when the 'complete' count claims more findings than were streamed", () => {
+    const result = parseAgentStream([complete({ findings: 2 })].join("\n"))
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.error).toContain("does not match the 0 finding event(s)")
+  })
+
+  it("fails closed when the 'complete' count claims fewer findings than were streamed", () => {
+    const result = parseAgentStream(
+      [finding(), complete({ findings: 0, status: "review_completed" })].join("\n"),
+    )
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.error).toContain("does not match the 1 finding event(s)")
+  })
+
+  it("fails closed on a non-integer 'complete' findings count", () => {
+    const result = parseAgentStream([complete({ findings: "many" })].join("\n"))
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("expected ok:false")
+    expect(result.error).toContain('findings count ("many")')
   })
 
   it("ignores unrecognized event types (forward-compatible)", () => {

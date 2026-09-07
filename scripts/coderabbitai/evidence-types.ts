@@ -25,7 +25,9 @@
  *   arrive as their own separate stream lines before this one) and `"review_skipped"` (nothing
  *   in scope to review -- an empty diff; the CLI emits this rather than `review_completed` when
  *   `--uncommitted` finds no tracked edits). Both are clean, findings-complete terminal states;
- *   any other `status` on a `complete` event fails the parse closed.
+ *   any other `status` on a `complete` event fails the parse closed, as does a `findings` count
+ *   on it that isn't a non-negative integer equal to the number of `finding` events actually
+ *   streamed (a truncated or internally-inconsistent stream, never a clean result).
  *
  * See `review.ts`'s own comments for the exact recognized event vocabulary and what happens to an
  * event type/shape this wrapper doesn't recognize (fails closed, `status: "error"`).
