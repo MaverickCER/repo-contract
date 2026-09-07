@@ -4,10 +4,17 @@ import type {
   NetworkCapabilityKind,
   NetworkScanEvidence,
 } from "../../../scripts/security-network/evidence-types.js"
+import { VALID_SECURITY_NETWORK_REQUIREMENTS } from "../../../scripts/security-network/policy-config.js"
 import type { NetworkExceptionRecord } from "../../../scripts/security-network/registry.js"
 import { hashRequirementFields } from "../../../src/helpers/index.js"
 
-const PROSE_REQUIREMENTS = ["justification", "alternatives", "remediation", "exceptionType"]
+// Derived from the production constant, filtered exactly the way `checks/security-network.ts`'s
+// own `PROSE_REQUIREMENTS` is -- so a field added, dropped, or reordered in
+// `VALID_SECURITY_NETWORK_REQUIREMENTS` can never silently desynchronize this fixture's
+// `verifiedContentHash` from the check's.
+const PROSE_REQUIREMENTS = VALID_SECURITY_NETWORK_REQUIREMENTS.filter(
+  (field) => field !== "verification.verifiedBy",
+)
 
 function fieldValue(record: NetworkExceptionRecord, requirement: string): string {
   const value = (record as unknown as Record<string, unknown>)[requirement]
@@ -84,9 +91,19 @@ describe("evaluateSecurityNetworkPolicy", () => {
   it("fails when zero files were scanned, even with no findings", async () => {
     const result = await evaluateSecurityNetworkPolicy({
       evidence: evidence({ filesScanned: 0 }),
+      loadRegistry: async () => ({ ok: true, records: [] }),
     })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("zero files scanned")
+  })
+
+  it("fails a malformed registry even when zero files were scanned -- validation runs before the zero-file gate", async () => {
+    const result = await evaluateSecurityNetworkPolicy({
+      evidence: evidence({ filesScanned: 0 }),
+      loadRegistry: async () => ({ ok: false, errors: ["exceptions[0] is broken"] }),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("failed validation")
   })
 
   it("fails and lists every finding by file, location, and capability when no record backs them", async () => {

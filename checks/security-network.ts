@@ -172,15 +172,10 @@ export async function evaluateSecurityNetworkPolicy(
     loadRegistry = defaultLoadRegistry,
   } = input
 
-  if (evidence.filesScanned === 0) {
-    return {
-      outcome: "fail",
-      rationale:
-        "security-network scan reported zero files scanned under src/ -- a clean result from an " +
-        "empty scan is not evidence of a network-free surface. Check the scan's file discovery.",
-    }
-  }
-
+  // Config + registry validation run FIRST -- before the zero-file gate and the zero-findings
+  // gate below. A misconfigured `securityNetworkPolicy` or a malformed
+  // `.repo-contract/exceptions/security-network.json` is an independent, actionable failure that
+  // must surface even when the scan discovered no files or no findings this run.
   const configErrors = validateExceptionPolicyConfig(
     securityNetworkPolicy,
     VALID_SECURITY_NETWORK_REQUIREMENTS,
@@ -195,9 +190,6 @@ export async function evaluateSecurityNetworkPolicy(
     }
   }
 
-  // Loaded before the zero-findings check below so a stale record (its underlying finding is
-  // gone) still surfaces on an otherwise-clean run -- the drift signal would be unreachable in
-  // its most common case otherwise.
   const registry = await loadRegistry(exceptionsPath)
   if (!registry.ok) {
     return {
@@ -206,6 +198,15 @@ export async function evaluateSecurityNetworkPolicy(
         `${exceptionsPath} failed validation:`,
         ...registry.errors.map((e) => `- ${e}`),
       ].join("\n"),
+    }
+  }
+
+  if (evidence.filesScanned === 0) {
+    return {
+      outcome: "fail",
+      rationale:
+        "security-network scan reported zero files scanned under src/ -- a clean result from an " +
+        "empty scan is not evidence of a network-free surface. Check the scan's file discovery.",
     }
   }
 
@@ -265,7 +266,7 @@ export async function evaluateSecurityNetworkPolicy(
       ...unmatchedLines,
       "src/ must never perform network I/O directly -- see SECURITY.md's network-free surface " +
         "guarantee. A genuine, reviewed exception requires a finding-specific, verified record in " +
-        `${DEFAULT_EXCEPTIONS_PATH} (justification, alternatives, remediation, exceptionType, and a ` +
+        `${exceptionsPath} (justification, alternatives, remediation, exceptionType, and a ` +
         "content-bound verification -- see specs/decisions/0013-reusable-exception-policy-helper.md); " +
         "a new preset command still needs adding to scripts/security-network/network-surface.mjs's " +
         "ALLOWED_PRESET_COMMANDS." +
