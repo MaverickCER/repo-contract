@@ -57,11 +57,14 @@ Published API, deliberately minimal: `ExceptionPolicy`, `ExceptionCategoryGroup`
 `ExceptionPolicyConfig`, `ExceptionClassification`, `ExceptionRecordEvaluation`, `ExceptionVerdict`,
 `ExceptionDeterminant`, `resolveExceptionPolicy`, `evaluateExceptionRecord`,
 `evaluateExceptionRecords`, `validateExceptionPolicyConfig`, `hashRequirementFields`,
-`loadExceptionRegistry`, plus a re-export of the hand-vendored `StandardSchemaV1` type (ADR 0012)
+`loadExceptionRegistry`, and (added by the 2026-09 "review surface" amendment below)
+`reconcileExceptions`, `serializeExceptionRegistry`, `writeExceptionRegistry`, `ExceptionRecordCore`,
+`ExceptionReconciliation` — plus a re-export of the hand-vendored `StandardSchemaV1` type (ADR 0012)
 so a consumer can type `loadExceptionRegistry`'s `schema` argument without reaching past this
 independent barrel into the root export. Every function
-is synchronous and pure except `loadExceptionRegistry`, whose only I/O is an injectable `readFile`
-defaulting to `node:fs/promises` — `src/helpers/**` never imports `node:child_process` or reads
+is synchronous and pure except `loadExceptionRegistry` and `writeExceptionRegistry`, whose only
+I/O is through injectable `node:fs/promises` capabilities — `src/helpers/**` never imports
+`node:child_process` or reads
 `process.env` (enforced by `scripts/verify-no-ambient-capabilities.mjs` against the real published
 tarball, the same mechanism ADR 0011 already established for the root package).
 
@@ -147,6 +150,39 @@ the published core:
   sign off on prose that doesn't exist yet. `stageMissingFields` filters it back in only once every
   authoring field is filled. Purely a presentation choice, so the published contract stays
   untouched.
+
+## The exception registry is the review surface (amendment, 2026-09)
+
+Every one of this repository's own guardrail-loosening mechanisms is being unified onto
+`.repo-contract/exceptions/*.json` so that folder is the complete, single place a reviewer looks
+to see what a PR deliberately weakened. The unification runs on the same evidence/policy split
+ADR 0001 establishes, plus a small registry-lifecycle layer added to `repo-contract/helpers`:
+
+- **A check emits 100% of its findings, with zero knowledge of exceptions.** Evidence states
+  exactly what is wrong; an exception may change the _verdict_, never the _evidence_. A check that
+  filters its own output against an allowlist (as `scripts/security-network/scan.ts` did for
+  preset commands) is the specific bug this closes.
+- **`reconcileExceptions` (`repo-contract/helpers`)** diffs a run's findings against the loaded
+  registry: a matched record is preserved verbatim; an unmatched finding gets a fresh, blank
+  **stub** written to disk (the human fills in one prose field); a record whose id matches no
+  finding is **surfaced as stale and never removed** — retiring one is an explicit, reviewable
+  human edit. `deriveId` must be injective over a run's findings (a collision is an integrity
+  error the check surfaces, not a silent merge of two findings), and it is **semantic** — keyed to
+  what is excepted, never to a file line, so ordinary edits do not churn the registry.
+- **`serializeExceptionRegistry` / `writeExceptionRegistry`** give the on-disk form one canonical,
+  deterministic shape (`id`-sorted, fixed key order, `\n`, trailing newline) written atomically
+  (temp file + rename) and only when the bytes actually change — so a fully-governed tree stays
+  clean across `npm run contract` runs, and a run that _would_ scaffold a stub leaves the tree
+  dirty, which CI fails on.
+- **The policy stays a pure function of evidence** — it performs no I/O and never re-reads a
+  registry itself.
+
+Trust boundary: the folder is the complete **exception-approval surface** _given that_ the
+finding-producing code (`deriveId`, the scanners) is itself under normal code review. The
+mechanism provides discoverability and completeness, **not attestation authenticity** — a blank
+`justification` fails the build, but nothing checks that a filled-in one is true. A PR-approval
+gate that binds a human sign-off to the record is a deliberate follow-up, not part of this
+amendment.
 
 ## Consequences
 

@@ -776,6 +776,43 @@
     "verifiedContentHash": "db5ede6818b27264394827048c6166abba476a7d78547f5a957cc90896cee1e1"
   },
   {
+    "file": "src/helpers/reconcile-exceptions.ts",
+    "line": 167,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression",
+      "EqualityOperator"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression,EqualityOperator -- equivalent mutants, see comment above.",
+    "justification": "serializeExceptionRegistry receives reconciled records whose ids are guaranteed unique (reconcileExceptions produces one active record per finding, and stale records are disjoint from those), so this id comparator's `<`-vs-`<=` and `>`-vs-`>=` mutants and its unreachable `: 0` tie branch are all equivalent -- no two ids ever compare equal.",
+    "alternatives": "Sort by mapping each record to `[id, record]` and calling the comparator-free `Array.prototype.sort()`, whose default `String(element)` comparison would order by the id prefix.",
+    "remediation": "That alternative was implemented and rejected: `String([id, record])` throws `Cannot convert object to primitive value` for a null-prototype record object (which a caller can legitimately pass and fast-check generates), so a real id-string comparator is required. Its remaining equivalent mutants are inherent to comparing a set of values known to be distinct; the reversing mutants are all killed by the order-independence property test.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "mutation-run",
+    "reason": "equivalent mutants, see comment above.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-08T00:00:00.000Z",
+    "verifiedContentHash": "9af9eccf1714a99743d388adb23639812fbc14362a5efcb53bc920b8f3618c57"
+  },
+  {
+    "file": "src/helpers/write-exception-registry.ts",
+    "line": 24,
+    "domain": "stryker",
+    "rule": [
+      "ConditionalExpression"
+    ],
+    "content": "Stryker disable next-line ConditionalExpression -- equivalent mutant, see comment above.",
+    "justification": "isEnoent only distinguishes 'the file is not there yet' (a normal first-run state) from a real read failure. Replacing the `typeof error === \"object\"` guard with `true` changes nothing observable: for every non-object value that could reach this branch (a primitive, or a non-Error reject from an overridden capability) `error.code` is `undefined`, never the string \"ENOENT\", and `null` is already excluded by the `!== null` clause -- so the function returns `false` either way.",
+    "alternatives": "Use `error instanceof Error` instead of the structural `typeof`/`!== null` pair, or narrow via a shared `isPlainObject` helper.",
+    "remediation": "Both alternatives carry the identical equivalent mutant (an `instanceof`/typeof guard that a non-Error input funnels to the same `false` result), so neither removes the finding. load-exception-registry.ts's own ENOENT check accepts the same equivalent mutant with the same reasoning; matching that precedent keeps the two filesystem helpers consistent. A fault injector that produces a real non-ENOENT `lstat`/`readFile` failure is covered by the ENOTDIR integration test, which kills every non-equivalent mutant on this function.",
+    "category": "equivalent-mutant",
+    "verificationMethod": "mutation-run",
+    "reason": "equivalent mutant, see comment above.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-08T00:00:00.000Z",
+    "verifiedContentHash": "ad87773163661898a7ed9efaa391b2a3aba3d1ce4b217cb41bd712b9608aa781"
+  },
+  {
     "file": "src/parsing/format-schema-issues.ts",
     "line": 42,
     "domain": "stryker",
@@ -1226,6 +1263,24 @@
     "verifiedBy": "@maverickcer",
     "verifiedAt": "2026-09-07T00:00:00.000Z",
     "verifiedContentHash": "df33024c0301daac042b2622059a70bf68ec9c98d7530ee1d92b01ccf3b2d04d"
+  },
+  {
+    "file": "test/unit/helpers/write-exception-registry.test.ts",
+    "line": 121,
+    "domain": "eslint",
+    "rule": [
+      "@typescript-eslint/prefer-promise-reject-errors"
+    ],
+    "content": "eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- see comment above",
+    "justification": "This test's whole purpose is to reject the readFile capability with values that are deliberately NOT Errors -- a bare string and `null` -- to prove `isEnoent`'s `typeof`/`!== null` guards and the `String(error)` fallback never throw a TypeError out of writeExceptionRegistry's `{ ok: false }` path. Wrapping the reason in an Error would defeat the test.",
+    "alternatives": "Wrap each reason in `new Error(String(reason))` before rejecting, satisfying the rule.",
+    "remediation": "Wrapping would make the test exercise only the happy 'error is an Error' path and stop covering the exact non-Error inputs the defensive guards exist for -- the same trade-off, and the same resolution, as the three prefer-promise-reject-errors exceptions already recorded for load-exception-registry.test.ts.",
+    "category": "rule-not-applicable",
+    "verificationMethod": "static-reasoning",
+    "reason": "see comment above",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-08T00:00:00.000Z",
+    "verifiedContentHash": "67c080ea07518d051afbc4ce537477078e1b8b48bdf1e51f208a291b132828d9"
   },
   {
     "file": "test/unit/policy/run-policies.test.ts",
