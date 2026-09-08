@@ -37,7 +37,6 @@ import {
   deriveNetworkExceptionId,
 } from "./registry.js"
 import {
-  ALLOWED_PRESET_COMMANDS,
   NETWORK_CORE_MODULES,
   NETWORK_GLOBALS,
   NETWORK_THIRD_PARTY_PACKAGES,
@@ -199,86 +198,9 @@ export function scanSourceFile(
   }
 
   /**
-   * Peels off `as const`, `satisfies <Type>`, and parenthesization -- none of these change a
-   * `run:` initializer's runtime value, but each would otherwise defeat the array/string-literal
-   * shape checks below (e.g. `run: ["curl", "x"] as const` is idiomatic given `run`'s declared
-   * type `string | readonly string[]`, src/types.ts's own RunCommand type).
-   * @param expr - The expression to unwrap.
-   * @returns The innermost expression once every such wrapper has been removed.
-   */
-  function unwrapTypeWrapper(expr: ts.Expression): ts.Expression {
-    if (ts.isAsExpression(expr) || ts.isSatisfiesExpression(expr)) {
-      return unwrapTypeWrapper(expr.expression)
-    }
-    if (ts.isParenthesizedExpression(expr)) {
-      return unwrapTypeWrapper(expr.expression)
-    }
-    return expr
-  }
-
-  /**
-   * A preset's (or any check's) `run:` property -- an array's first element, or a plain string's
-   * first whitespace-separated token, must name a reviewed command. See
-   * network-surface.mjs's ALLOWED_PRESET_COMMANDS doc comment for why this list is manually
-   * maintained rather than derived.
-   *
-   * Fails closed: any shape this cannot statically resolve to a literal command name (a template
-   * literal with interpolation, an identifier, a call/conditional expression, ...) is itself a
-   * finding rather than a silent pass -- the same posture `dynamic-import-non-literal-specifier`
-   * already takes for module specifiers.
-   * @param initializer - The `run` property's value expression.
-   */
-  function checkRunProperty(initializer: ts.Expression): void {
-    const value = unwrapTypeWrapper(initializer)
-
-    if (ts.isArrayLiteralExpression(value)) {
-      const [first] = value.elements
-      if (first === undefined) return
-      const firstValue = unwrapTypeWrapper(first)
-      if (!ts.isStringLiteralLike(firstValue)) {
-        addFinding(
-          firstValue,
-          "non-literal-preset-command",
-          "The run array's first element is not a string literal and cannot be verified against the allowed command list.",
-        )
-        return
-      }
-      if (!ALLOWED_PRESET_COMMANDS.includes(firstValue.text)) {
-        addFinding(
-          firstValue,
-          "unreviewed-preset-command",
-          `Preset run command "${firstValue.text}" is not in the reviewed allowlist (scripts/security-network/network-surface.mjs's ALLOWED_PRESET_COMMANDS).`,
-        )
-      }
-      return
-    }
-
-    if (ts.isStringLiteralLike(value)) {
-      const [firstToken] = value.text.trim().split(/\s+/)
-      if (
-        firstToken !== undefined &&
-        firstToken !== "" &&
-        !ALLOWED_PRESET_COMMANDS.includes(firstToken)
-      ) {
-        addFinding(
-          value,
-          "unreviewed-preset-command",
-          `Preset run command "${firstToken}" is not in the reviewed allowlist (scripts/security-network/network-surface.mjs's ALLOWED_PRESET_COMMANDS).`,
-        )
-      }
-      return
-    }
-
-    addFinding(
-      value,
-      "non-literal-preset-command",
-      "The run property's value is not a string or array literal (after unwrapping type assertions) and cannot be verified against the allowed command list.",
-    )
-  }
-
-  /**
    * Recursively walks the whole tree rooted at `node`, dispatching each recognized shape to the
-   * appropriate check above.
+   * appropriate check above. (Preset `run:` command review moved to its own `preset-commands`
+   * check -- see scripts/preset-commands/scan.ts and ADR 0007's amendment.)
    * @param node - The AST node (or subtree root) to inspect.
    */
   function visit(node: ts.Node): void {
@@ -334,20 +256,6 @@ export function scanSourceFile(
         node,
         "restricted-global-usage",
         `Uses global "${node.expression.expression.text}.${node.expression.name.text}", which performs network I/O.`,
-      )
-    } else if (
-      ts.isPropertyAssignment(node) &&
-      (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)) &&
-      node.name.text === "run"
-    ) {
-      // `run:` and `"run":` are the same key -- a quoted property name must not
-      // slip a preset command past the allowlist check.
-      checkRunProperty(node.initializer)
-    } else if (ts.isShorthandPropertyAssignment(node) && node.name.text === "run") {
-      addFinding(
-        node,
-        "non-literal-preset-command",
-        "The run property uses shorthand syntax; its value cannot be verified against the allowed command list.",
       )
     }
 

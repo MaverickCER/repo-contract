@@ -1,0 +1,100 @@
+{
+  "exceptions": [
+    {
+      "id": "preset-command:attw",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `attw --pack . --format json` runs `npm pack` on the local directory and analyzes the resulting local tarball's type-resolution -- it does not download anything from the npm registry (that is the `attw <package-name>` form, not used here). `npm pack` runs the package's own `prepack`/`postpack` lifecycle scripts, which for a consumer are their own configured scripts, a capability they already hold. `--format json` writes to stdout.",
+      "command": "attw"
+    },
+    {
+      "id": "preset-command:commitlint",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `commitlint --from <sha> --to <sha>` reads git commit messages in the given range (via a local git invocation) and lints them against the resolved config. Config resolution (`extends`) resolves only from `node_modules` (`@commitlint/config-conventional` is a devDependency here), never a remote source. No network request; output to stdout.",
+      "command": "commitlint"
+    },
+    {
+      "id": "preset-command:eslint",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `eslint <path> --format json` makes no network request. Config and plugin resolution (`extends`, shareable configs, plugins) resolves only from `node_modules`, never a URL; every plugin is a consumer-chosen devDependency visible in a package.json diff. A loaded plugin runs as ordinary Node code during the lint pass, the same trust boundary as any installed dependency. `--format json` writes to stdout only.",
+      "command": "eslint"
+    },
+    {
+      "id": "preset-command:jscpd",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `jscpd <path> --reporters json --output reports/jscpd --silent` performs copy-paste detection over local files and makes no network request. The json reporter writes only to the local `--output` directory.",
+      "command": "jscpd"
+    },
+    {
+      "id": "preset-command:knip",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `knip --reporter json --reporter-options <json>` analyzes local files and package.json for unused code and dependencies, making no network request. Plugins and reporters resolve from `node_modules` and run as Node code. `--reporter-options` is a JSON string this repository's own dead-code preset constructs (the exempt-dev-dependency list), never external input; the json reporter writes to stdout.",
+      "command": "knip"
+    },
+    {
+      "id": "preset-command:licensee",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `licensee --production --osi --errors-only --ndjson` resolves each installed package's license from that package's own local metadata under `node_modules` and makes no network request -- no remote license database is queried. `--ndjson` writes to stdout only.",
+      "command": "licensee"
+    },
+    {
+      "id": "preset-command:linkinator",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `linkinator <start> --recurse --format json --skip node_modules` exists to make HTTP requests: it issues GET requests to every URL found in this repository's own committed docs content, to detect broken links. It sends no repository data anywhere -- it only requests URLs already present in the repo. This is the deliberate, documented network exception ADR 0007's Decision section calls out by name. `--format json` writes to stdout.",
+      "command": "linkinator"
+    },
+    {
+      "id": "preset-command:markdownlint-cli2",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `markdownlint-cli2 <glob>` lints Markdown text and makes no network request. A custom rule referenced by this repository's markdownlint config resolves from `node_modules` and runs as Node code, the same trust boundary as any installed dependency. Output goes to stdout (no `--output`).",
+      "command": "markdownlint-cli2"
+    },
+    {
+      "id": "preset-command:npm",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `npm audit --omit=dev --json` is the one command here that inherently makes a network request: it sends the production dependency tree (package names and versions only -- no source code, no auth) to the configured npm registry as a bulk advisory query and receives back known advisories. The subcommand is `audit` (read-only), verified against npm's documentation to not be `publish`/`install`/etc. This is exactly, and only, what a dependency-advisory check must do.",
+      "command": "npm"
+    },
+    {
+      "id": "preset-command:playwright",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `playwright test --reporter=json` runs this repository's own Playwright suite (`test/e2e/`), which exercises a local consumer-install flow, not remote origins. Which URLs a consumer's own Playwright tests navigate to is that consumer's test suite's concern. `--reporter=json` writes to stdout only.",
+      "command": "playwright"
+    },
+    {
+      "id": "preset-command:prettier",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `prettier --write .` rewrites source files in place (that is the point -- the `format` check is a writer). No network request: plugin resolution is `node_modules`-only. A loaded plugin runs as Node code during formatting, the same trust boundary as any installed dependency.",
+      "command": "prettier"
+    },
+    {
+      "id": "preset-command:publint",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `publint run` lints the local package's own package.json, exports map, and `files` for packaging correctness, reading only local packed contents. The `run` subcommand makes no npm-registry query.",
+      "command": "publint"
+    },
+    {
+      "id": "preset-command:secretlint",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `secretlint --format json --output reports/secretlint.json **/*` scans local files for secret patterns and makes no network request. Rules referenced by this repository's secretlint config resolve from `node_modules`. `--output` writes only to that local path, and `src/presets/security-secrets.ts`'s own policy code excludes a matched secret's value from repo-contract's own output.",
+      "command": "secretlint"
+    },
+    {
+      "id": "preset-command:stylelint",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `stylelint <glob> --formatter json` makes no network request. Plugin and config resolution is `node_modules`-only, never a remote source; a loaded plugin runs as Node code during the lint pass. `--formatter json` writes to stdout only.",
+      "command": "stylelint"
+    },
+    {
+      "id": "preset-command:tsc",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `tsc --noEmit -p tsconfig.json` makes no network request: it reads TypeScript sources and tsconfig.json and type-checks them. A custom transformer configured in a consumer's own tsconfig.json can execute code at compile time, but that is the consumer's own compiler config -- this repository's tsconfig.json configures none. `--noEmit` writes nothing.",
+      "command": "tsc"
+    },
+    {
+      "id": "preset-command:vitest",
+      "version": 1,
+      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `vitest run --reporter=json` executes this repository's own test files in-process. Whether an individual test performs a network call is that test file's own concern, and this repository's `test/**` is itself held to the no-network house rule (and covered by `security-network`). `--reporter=json` writes to stdout only.",
+      "command": "vitest"
+    }
+  ]
+}

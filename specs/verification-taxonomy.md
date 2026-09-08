@@ -116,9 +116,9 @@ access, or obfuscated code) that `security-deps`'s known-CVE advisories and `sec
 committed-secret scan do not; `coderabbitai` is the one check whose finding source is an LLM
 opinion rather than a reproducible tool result, so its own _presence and self-reporting_, not its
 pass/fail outcome, is what it establishes ([ADR 0014](decisions/0014-coderabbit-as-a-surfaced-check.md)).
-All three exception-policy-backed checks (`security-socket`, `coderabbitai`, `security-network`)
-plus `suppression-governance` share the same reviewed-waiver machinery — see "Reviewed exceptions"
-at the end of this section.
+All five exception-policy-backed checks (`security-socket`, `coderabbitai`, `security-network`,
+`preset-commands`, `suppression-governance`) share the same reviewed-waiver machinery — see
+"Reviewed exceptions" at the end of this section.
 
 ### Unit — `test-unit`
 
@@ -334,26 +334,24 @@ at the end of this section.
 ### Security — no network — `security-network`
 
 - **Establishes**: that the package's entire shipped surface (`src/**/*.ts` -- see
-  [ADR 0007](decisions/0007-no-network-surface.md)) contains no network-capable import, no
-  network-capable global usage, and no preset spawning a command outside a small, reviewed
-  allowlist. The second of two independent layers enforcing this invariant -- the first is an
-  ESLint rule (`eslint.config.js`) scoped to the same surface. Both cover the same core imports/
-  globals; this check additionally covers the preset-command allowlist and, unlike ESLint, cannot
-  be silenced by an `eslint-disable` comment or a weakened lint config. Since ADR 0007's 2026-09
-  amendment this check is built on the `repo-contract/helpers` exception-policy primitive, and
-  since the 2026-09 v0.4.0 unification (PR 3) its scan script reconciles
-  `.repo-contract/exceptions/security-network.json` against what it found (a blank stub per
-  unmatched finding; stale records surfaced and failed, never removed). The default posture is
+  [ADR 0007](decisions/0007-no-network-surface.md)) contains no network-capable import and no
+  network-capable global usage. The second of two independent layers enforcing this invariant --
+  the first is an ESLint rule (`eslint.config.js`) scoped to the same surface, and cannot be
+  silenced by an `eslint-disable` comment or a weakened lint config the way ESLint's own layer can.
+  Since ADR 0007's 2026-09 amendment this check is built on the `repo-contract/helpers`
+  exception-policy primitive, and since the 2026-09 v0.4.0 unification (PR 3) its scan script
+  reconciles `.repo-contract/exceptions/security-network.json` against what it found (a blank stub
+  per unmatched finding; stale records surfaced and failed, never removed). The default posture is
   unchanged and absolute (`securityNetworkPolicy`'s group `default` is `forbidden`); a reviewed
   exception is a finding-specific record bound to
   `security-network:<capability>:<file>:<line>:<column>`, complete only with `justification` /
   `alternatives` / `remediation` / `method` / `exceptionType` all filled in (see "Reviewed
-  exceptions" below).
+  exceptions" below). Preset-command review (what a published preset's `run:` property may spawn)
+  moved to its own `preset-commands` check as of the 2026-09 v0.4.0 unification (PR 4) -- see below.
 - **Does not establish**: that a dependency's own internal code never makes a network call, or that
   a consumer's own configured checks/presets never do (that's the tool's entire purpose -- execute
   what the repository's own configuration says; see ADR 0007's Decision section for the exact
-  boundary, including why `linkinator`, an allowlisted preset command, legitimately does make HTTP
-  requests on a consumer's own explicit behalf).
+  boundary).
 - **Files executed**: none -- a static AST scan (TypeScript compiler API, the same approach
   `suppression-governance` uses) of every `.ts` file under `src/`.
 - **Run alone**: `tsx scripts/security-network/scan.ts`, or `npm run contract -- security-network`.
@@ -366,6 +364,37 @@ at the end of this section.
   empty scan is not evidence of a network-free surface) or on any finding not backed by a
   finding-specific, still-verified exception record; passes when every finding is either absent or
   covered by such a record.
+- **CI**: part of `npm run contract`. No `dependsOn` -- independent of every other check.
+
+### Security — reviewed preset commands — `preset-commands`
+
+- **Establishes**: that every external command a published preset (`src/presets/*.ts`) spawns as
+  its `run:` property's first token has its own reviewed record in
+  `.repo-contract/exceptions/preset-commands.json`. Replaces the former manually-maintained
+  `ALLOWED_PRESET_COMMANDS` allowlist (ADR 0007's 2026-09 v0.4.0 amendment, PR 4): instead of a
+  command passing by silent construction (present in a list), _every_ command -- including ones
+  spawned since before this check existed -- needs its own written capability assessment. The id is
+  keyed by command name alone (`preset-command:<command>`), so one review covers a command however
+  many presets spawn it. `scripts/preset-commands/scan.ts` discovers every `run:` in
+  `src/presets/**`, reconciles the registry against the deduped set (a blank stub per new command;
+  a stale record whose command is gone fails, never auto-removed), and writes it back. A `run:`
+  first token that isn't a statically-resolvable string literal fails outright (never silently
+  passed).
+- **Does not establish**: that the resolved binary is actually trustworthy at the machine level --
+  repo-contract never bundles any of these tools; a consumer installs and trusts each one
+  separately, and nothing here can see what is actually on `PATH` when a preset runs. What it
+  establishes is narrower: that _this repository's own source_ never introduces an unreviewed
+  command, and that the review exists and is visible in the same folder every other guardrail
+  exception lives in.
+- **Files executed**: none -- a static AST scan of every file under `src/presets/`.
+- **Run alone**: `tsx scripts/preset-commands/scan.ts`, or `npm run contract -- preset-commands`.
+- **Coverage contribution**: no — static analysis, nothing executes.
+- **Evidence**: `PresetCommandsEvidence` (`scripts/preset-commands/evidence-types.ts`) -- every
+  discovered command finding, any non-literal `run:` properties, the reconciled
+  `activeExceptions`/`staleExceptions`, and which ids were freshly scaffolded.
+- **Policy**: `evaluatePresetCommandsPolicy` -- a pure evidence->verdict function; fails on any
+  non-literal `run:` property, any command whose record has a blank `justification`, or any stale
+  record; passes once every discovered command is backed by a non-empty `justification`.
 - **CI**: part of `npm run contract`. No `dependsOn` -- independent of every other check.
 
 ### GitHub Actions — `github-actions`
@@ -488,38 +517,42 @@ at the end of this section.
 
 ### Reviewed exceptions — `.repo-contract/exceptions/*.json`
 
-`suppression-governance`, `security-network`, `security-socket`, and `coderabbitai` all express a
-reviewed, accepted exception the same way, on the shared `repo-contract/helpers` primitives
-(`reconcileExceptions` / `serializeExceptionRegistry` / `writeExceptionRegistry` / the
-exception-policy resolver — [ADR 0013](decisions/0013-reusable-exception-policy-helper.md)) plus
-one check-owned layer (`scripts/shared/exception-record.ts` — `validateExceptionRegistry` + a
-per-registry `ExceptionRegistrySchema`, unpublished). Unified across PR 2 (suppression) and PR 3
-(the three security checks) of the 2026-09 v0.4.0 effort.
+`suppression-governance`, `security-network`, `security-socket`, `coderabbitai`, and
+`preset-commands` all express a reviewed, accepted exception the same way, on the shared
+`repo-contract/helpers` primitives (`reconcileExceptions` / `serializeExceptionRegistry` /
+`writeExceptionRegistry` / the exception-policy resolver —
+[ADR 0013](decisions/0013-reusable-exception-policy-helper.md)) plus one check-owned layer
+(`scripts/shared/exception-record.ts` — `validateExceptionRegistry` + a per-registry
+`ExceptionRegistrySchema`, unpublished). Unified across PR 2 (suppression), PR 3 (the three
+security checks), and PR 4 (preset commands) of the 2026-09 v0.4.0 effort.
 
-- **Where.** All four live under `.repo-contract/exceptions/`: `disable-comments.json`,
-  `socket.json`, `coderabbit.json`, `security-network.json`, all using the envelope
-  `{ "exceptions": [ … ] }` and read via `loadExceptionRegistry` (a missing file is a normal
-  empty-registry state, never an error). Each is owned end-to-end by its check's own scan/review
-  script, which reconciles it against that run's findings via `reconcileExceptions` and rewrites it
-  in place (creating `.repo-contract/exceptions/` first if a fresh tree has none). The two Socket /
-  CodeRabbit "the tool didn't run" states (`unavailable`/`not-applicable`/`error`) validate the
-  registry but do **not** reconcile — with no finding list, no record can be concluded stale.
+- **Where.** All five live under `.repo-contract/exceptions/`: `disable-comments.json`,
+  `socket.json`, `coderabbit.json`, `security-network.json`, `preset-commands.json`, all using the
+  envelope `{ "exceptions": [ … ] }` and read via `loadExceptionRegistry` (a missing file is a
+  normal empty-registry state, never an error). Each is owned end-to-end by its check's own
+  scan/review script, which reconciles it against that run's findings via `reconcileExceptions` and
+  rewrites it in place (creating `.repo-contract/exceptions/` first if a fresh tree has none). The
+  two Socket / CodeRabbit "the tool didn't run" states (`unavailable`/`not-applicable`/`error`)
+  validate the registry but do **not** reconcile — with no finding list, no record can be concluded
+  stale.
 - **Shape.** Every record carries the three-field core (`id`, `version`, `justification`) plus
   per-registry typed metadata. `disable-comments.json` adds `category`/`verificationMethod` closed
-  enums and `domain`/`rule`/`file`/`line`. The three security registries add the four
-  `SecurityExceptionFields` root fields — `alternatives`, `remediation`, `method` (an
+  enums and `domain`/`rule`/`file`/`line`. The three `SecurityExceptionFields` registries
+  (`security-network`, `socket`, `coderabbit`) add `alternatives`, `remediation`, `method` (an
   `EXCEPTION_METHODS` member: how the waiver's claim was substantiated), `exceptionType` (an
   `EXCEPTION_TYPES` member) — plus their own identity metadata (`capability`/`file`/`line`/`column`;
-  `package`/`packageVersion`/`type`/`severity`; `file`/`severity`/`summary`). The
-  `verifiedBy`/`verifiedContentHash` content-bound sign-off block that all four once carried was
-  removed in the 2026-09 unification and deferred with the `exception-governance` PR-approval gate.
-  Each record's `id` must equal what its registry's schema recomputes from the record's own
-  identity metadata — a stored key inconsistent with its own claimed identity is a registry bug,
-  caught at load time. Ids: `suppression:<domain>:<rule>:<file>:<line>`,
+  `package`/`packageVersion`/`type`/`severity`; `file`/`severity`/`summary`). `preset-commands.json`
+  is the minimal case: `justification` alone, plus the `command` name — a preset command isn't a
+  guardrail-loosening waiver the way the others are, so no `alternatives`/`method`/`exceptionType`
+  applies. The `verifiedBy`/`verifiedContentHash` content-bound sign-off block the first four once
+  carried was removed in the 2026-09 unification and deferred with the `exception-governance`
+  PR-approval gate. Each record's `id` must equal what its registry's schema recomputes from the
+  record's own identity metadata — a stored key inconsistent with its own claimed identity is a
+  registry bug, caught at load time. Ids: `suppression:<domain>:<rule>:<file>:<line>`,
   `security-network:<capability>:<file>:<line>:<column>`, `socket:<package>@<version>:<type>`,
-  `coderabbit:<file>:<severity>:<hash of summary>`. "No matching finding" _is_ staleness, and a
-  stale record fails the policy (never auto-removed).
-- **Validation.** No generated JSON Schema for any of the four; `validateExceptionRegistry` +
+  `coderabbit:<file>:<severity>:<hash of summary>`, `preset-command:<command>`. "No matching
+  finding" _is_ staleness, and a stale record fails the policy (never auto-removed).
+- **Validation.** No generated JSON Schema for any of the five; `validateExceptionRegistry` +
   each registry's `ExceptionRegistrySchema` is authoritative, run on _every_ contract run before
   any findings are evaluated — so a malformed or internally-inconsistent registry fails CI even on
   a clean or never-ran scan.
@@ -527,8 +560,9 @@ per-registry `ExceptionRegistrySchema`, unpublished). Unified across PR 2 (suppr
   stays `forbidden` (ADR 0007); `security-socket` forbids anything above "middle" outright;
   `coderabbitai` requires a complete waiver for every finding regardless of severity;
   `coderabbit.json` additionally forbids `exceptionType: "validated-false-positive"` /
-  `method: "mechanical-reverification"` (no oracle to re-run against an AI finding). A record only
-  ever moves a _specific, named_ finding from "fails" to "permitted".
+  `method: "mechanical-reverification"` (no oracle to re-run against an AI finding); every published
+  preset's spawned command still needs its own record regardless of what any other preset already
+  has one for. A record only ever moves a _specific, named_ finding from "fails" to "permitted".
 
 ## Coverage
 
