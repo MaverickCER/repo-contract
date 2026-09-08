@@ -26,6 +26,7 @@ const VALID_REQUIREMENTS: readonly SuppressionRequirement[] = [
   "category",
   "verificationMethod",
   "reason",
+  "verifiedBy",
 ]
 
 interface EvaluateSuppressionGovernancePolicyInput {
