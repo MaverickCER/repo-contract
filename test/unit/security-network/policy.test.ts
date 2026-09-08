@@ -4,16 +4,20 @@ import type {
   NetworkCapabilityKind,
   NetworkScanEvidence,
 } from "../../../scripts/security-network/evidence-types.js"
-import { VALID_SECURITY_NETWORK_REQUIREMENTS } from "../../../scripts/security-network/policy-config.js"
+import {
+  VALID_SECURITY_NETWORK_REQUIREMENTS,
+  VERIFICATION_FIELD,
+  securityNetworkPolicy,
+} from "../../../scripts/security-network/policy-config.js"
 import type { NetworkExceptionRecord } from "../../../scripts/security-network/registry.js"
-import { hashRequirementFields } from "../../../src/helpers/index.js"
+import { hashRequirementFields, validateExceptionPolicyConfig } from "../../../src/helpers/index.js"
 
-// Derived from the production constant, filtered exactly the way `checks/security-network.ts`'s
-// own `PROSE_REQUIREMENTS` is -- so a field added, dropped, or reordered in
-// `VALID_SECURITY_NETWORK_REQUIREMENTS` can never silently desynchronize this fixture's
-// `verifiedContentHash` from the check's.
+// Derived from the production constant, partitioned on the same exported `VERIFICATION_FIELD`
+// literal `checks/security-network.ts`'s own `PROSE_REQUIREMENTS` uses -- so a field added,
+// dropped, or reordered in `VALID_SECURITY_NETWORK_REQUIREMENTS` can never silently desynchronize
+// this fixture's `verifiedContentHash` from the check's.
 const PROSE_REQUIREMENTS = VALID_SECURITY_NETWORK_REQUIREMENTS.filter(
-  (field) => field !== "verification.verifiedBy",
+  (field) => field !== VERIFICATION_FIELD,
 )
 
 function fieldValue(record: NetworkExceptionRecord, requirement: string): string {
@@ -82,7 +86,10 @@ function verifiedRecord(overrides: Partial<NetworkExceptionRecord> = {}): Networ
 
 describe("evaluateSecurityNetworkPolicy", () => {
   it("passes and reports the files-scanned count when there are no findings", async () => {
-    const result = await evaluateSecurityNetworkPolicy({ evidence: evidence() })
+    const result = await evaluateSecurityNetworkPolicy({
+      evidence: evidence(),
+      loadRegistry: async () => ({ ok: true, records: [] }),
+    })
     expect(result.outcome).toBe("pass")
     expect(result.rationale).toContain("No prohibited network capability found")
     expect(result.rationale).toContain("39 file(s)")
@@ -197,12 +204,9 @@ describe("evaluateSecurityNetworkPolicy", () => {
     expect(result.rationale).toContain("failed validation")
   })
 
-  it("confirms the real securityNetworkPolicy module, as committed, is not itself misconfigured", async () => {
-    const result = await evaluateSecurityNetworkPolicy({
-      evidence: evidence({ findings: [EVIL_HTTP] }),
-      loadRegistry: async () => ({ ok: true, records: [] }),
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).not.toContain("misconfigured")
+  it("the committed securityNetworkPolicy passes validateExceptionPolicyConfig against its own valid-requirements set", () => {
+    expect(
+      validateExceptionPolicyConfig(securityNetworkPolicy, VALID_SECURITY_NETWORK_REQUIREMENTS),
+    ).toEqual([])
   })
 })
