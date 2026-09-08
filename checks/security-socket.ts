@@ -1,150 +1,85 @@
-import path from "node:path"
-import {
-  evaluateExceptionRecord,
-  loadExceptionRegistry,
-  validateExceptionPolicyConfig,
-} from "../src/helpers/index.js"
+import { evaluateExceptionRecord, validateExceptionPolicyConfig } from "../src/helpers/index.js"
 import type { ExceptionClassification } from "../src/helpers/index.js"
 import type {
   NormalizedSocketAlert,
   SecuritySocketEvidence,
+  SocketExceptionRecord,
 } from "../scripts/security-socket/evidence-types.js"
 import {
   SOCKET_GLOBAL_DEFAULT_POLICY,
   VALID_SOCKET_REQUIREMENTS,
   socketPolicy,
 } from "../scripts/security-socket/policy-config.js"
-import type { SocketExceptionRecord } from "../scripts/security-socket/registry.js"
-import { validateSocketExceptionRegistry } from "../scripts/security-socket/registry.js"
-import { isVerified } from "../scripts/shared/exception-record.js"
-import {
-  evaluateExceptionFindings,
-  stageMissingFields,
-} from "./shared/evaluate-exception-findings.js"
-import { handWrittenArraySchema } from "./shared/standard-schema-validator.js"
+import { SOCKET_EXCEPTION_SCHEMA } from "../scripts/security-socket/registry.js"
+import { validateExceptionRegistry } from "../scripts/shared/exception-record.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 
-const VERIFICATION_FIELD = "verification.verifiedBy"
-/** `justification`/`alternatives`/`remediation`/`exceptionType` -- the content a verification's hash is bound to. Excludes `VERIFICATION_FIELD` itself: a verification cannot be bound to its own presence. */
-const PROSE_REQUIREMENTS = VALID_SOCKET_REQUIREMENTS.filter((field) => field !== VERIFICATION_FIELD)
-
-const DEFAULT_EXCEPTIONS_PATH = path.join(".repo-contract", "exceptions", "socket.json")
-
 /**
- * Resolves one named field's current value on a `SocketExceptionRecord` -- the four ordinary
- * prose/enum fields read directly; `"verification.verifiedBy"` delegates to `isVerified`
- * (`scripts/shared/exception-record.ts`), returning the verifier's own name only when the record's
- * `verification` block is present *and* still content-bound to the record's current prose (see
- * that function's own doc comment for what "content-bound" means).
+ * Reads one required field's current string value straight off a reconciled record.
  * @param record - The record to read a field from.
  * @param requirement - The field name to resolve.
- * @returns That field's current string value, or `""` if empty/absent/unverified.
+ * @returns That field's current string value (`""` if absent or non-string).
  */
 function socketFieldValue(record: SocketExceptionRecord, requirement: string): string {
-  if (requirement === VERIFICATION_FIELD) {
-    return isVerified(record, PROSE_REQUIREMENTS, socketFieldValue)
-      ? (record.verification?.verifiedBy ?? "")
-      : ""
-  }
   const value = (record as unknown as Record<string, unknown>)[requirement]
   return typeof value === "string" ? value : ""
 }
 
 /**
- * Finds the (at most one) registry record backing `alert` -- by exact `id` match, the same
- * `` `${package}@${version}:${type}` `` identity both `NormalizedSocketAlert` and
- * `SocketExceptionRecord` share.
- * @param alert - The alert to find a backing record for.
- * @param records - This run's loaded exception registry.
- * @returns The matching record, or `undefined` if none backs this alert.
- */
-function matchAlertToRecord(
-  alert: NormalizedSocketAlert,
-  records: readonly SocketExceptionRecord[],
-): SocketExceptionRecord | undefined {
-  return records.find((record) => record.id === alert.id)
-}
-
-/**
- * Evaluates one already-matched `(alert, record)` pair against `socketPolicy` -- classified purely
- * on the alert's own normalized `severity`.
- * @param alert - The alert being evaluated.
- * @param record - The registry record `matchAlertToRecord` found for `alert`.
- * @returns The record's resolved verdict and any still-missing required fields.
+ * Evaluates one alert against `socketPolicy`, classified purely on its `severity`.
+ * @param alert - The alert.
+ * @param record - The reconciled live record for it, or `undefined` if the bijection broke.
+ * @returns The verdict and any still-missing required fields.
  */
 function evaluateAlert(
   alert: NormalizedSocketAlert,
-  record: SocketExceptionRecord,
-): ReturnType<typeof evaluateExceptionRecord<SocketExceptionRecord>> {
+  record: SocketExceptionRecord | undefined,
+): {
+  readonly verdict: "forbidden" | "insufficient" | "permitted" | "unmatched"
+  readonly missing: readonly string[]
+} {
+  if (record === undefined) return { verdict: "unmatched", missing: [] }
   const classifications: readonly [ExceptionClassification, ...ExceptionClassification[]] = [
     { group: "socket", category: alert.severity },
   ]
-  return evaluateExceptionRecord({
+  const determinant = evaluateExceptionRecord({
     record,
     classifications,
     config: socketPolicy,
     globalDefault: SOCKET_GLOBAL_DEFAULT_POLICY,
     fieldValue: socketFieldValue,
   })
-}
-
-interface EvaluateSecuritySocketPolicyInput {
-  readonly evidence: SecuritySocketEvidence
-  readonly exceptionsPath?: string
-  /** Overridable for tests -- defaults to reading the real `.repo-contract/exceptions/socket.json`. */
-  readonly loadRegistry?: (
-    exceptionsPath: string,
-  ) => Promise<
-    | { readonly ok: true; readonly records: readonly SocketExceptionRecord[] }
-    | { readonly ok: false; readonly errors: readonly string[] }
-  >
+  return { verdict: determinant.verdict, missing: determinant.missing }
 }
 
 /**
- * The real `.repo-contract/exceptions/socket.json` loader -- `evaluateSecuritySocketPolicy`'s own
- * default `loadRegistry`, overridable in tests so they never touch the filesystem.
- * @param exceptionsPath - Path to the exceptions registry file.
- * @returns The loaded registry records, or the errors found validating it.
- */
-async function defaultLoadRegistry(
-  exceptionsPath: string,
-): Promise<
-  | { readonly ok: true; readonly records: readonly SocketExceptionRecord[] }
-  | { readonly ok: false; readonly errors: readonly string[] }
-> {
-  const result = await loadExceptionRegistry<SocketExceptionRecord>({
-    path: exceptionsPath,
-    schema: handWrittenArraySchema(validateSocketExceptionRegistry),
-  })
-  return result.ok ? { ok: true, records: result.records } : { ok: false, errors: result.errors }
-}
-
-/**
- * Evaluates the `security-socket` check's own emitted evidence -- `unavailable` (CLI not
- * installed, not authenticated, or unreachable) is a `warn`, never a `fail`: this check cannot
- * distinguish "genuinely clean" from "never actually ran" on its own, so it says so rather than
- * claiming a pass it didn't earn. `error` (a malformed or unrecognized report) fails closed. A
- * clean scan (`passed`) or every alert permitted (`failed` with all determinants `permitted`)
- * passes; any `forbidden`/`insufficient` verdict or unmatched alert fails, listed individually.
- * @param input - The evidence to evaluate, and (for tests) the exceptions-registry path/loader to use.
+ * Evaluates the `security-socket` check's own emitted evidence -- a pure evidence->verdict
+ * function; the scan script owns loading, reconciling, and writing
+ * `.repo-contract/exceptions/socket.json`. `unavailable` (CLI not installed / not authenticated /
+ * unreachable) is a `warn`, never a `fail` -- this check cannot distinguish "genuinely clean" from
+ * "never ran". `error` (a malformed report) fails closed. A malformed/unreconcilable registry
+ * (`registryError`) fails regardless of status. A `passed`/`failed` scan: any `forbidden` /
+ * `insufficient` / `unmatched` verdict or stale record fails, listed individually.
+ * @param input - Wraps the evidence to evaluate.
+ * @param input.evidence - The `SecuritySocketEvidence` emitted by scan.ts.
  * @returns The check's `PolicyResult`.
  */
-export async function evaluateSecuritySocketPolicy(
-  input: EvaluateSecuritySocketPolicyInput,
-): Promise<PolicyResult> {
-  const {
-    evidence,
-    exceptionsPath = DEFAULT_EXCEPTIONS_PATH,
-    loadRegistry = defaultLoadRegistry,
-  } = input
+export function evaluateSecuritySocketPolicy(input: {
+  readonly evidence: SecuritySocketEvidence
+}): PolicyResult {
+  const { evidence } = input
 
-  // Config + registry validation run FIRST -- before every evidence-status branch, including
-  // `unavailable` (the CLI isn't installed / not authenticated, the steady state for this
-  // repository's own CI) and `passed` (0 alerts). Validating the registry only on a `failed`
-  // scan would mean a malformed or unparseable `.repo-contract/exceptions/socket.json` never
-  // fails CI -- the same "a broken registry rides along with a green run" gap the
-  // `coderabbitai` and `security-network` retrofits close by loading their registries up front.
+  if (evidence.registryError !== undefined) {
+    return {
+      outcome: "fail",
+      rationale: [
+        `${evidence.registryPath} failed to load or reconcile and was left unchanged:`,
+        ...evidence.registryError.map((e) => `- ${e}`),
+      ].join("\n"),
+    }
+  }
+
   const configErrors = validateExceptionPolicyConfig(socketPolicy, VALID_SOCKET_REQUIREMENTS)
   if (configErrors.length > 0) {
     return {
@@ -155,27 +90,14 @@ export async function evaluateSecuritySocketPolicy(
     }
   }
 
-  const registry = await loadRegistry(exceptionsPath)
-  if (!registry.ok) {
-    return {
-      outcome: "fail",
-      rationale: [
-        `${exceptionsPath} failed validation:`,
-        ...registry.errors.map((e) => `- ${e}`),
-      ].join("\n"),
-    }
-  }
-
-  /** Records present but not compared against any alert this run (no real scan result). */
-  const unevaluatedNote =
-    registry.records.length > 0
-      ? ` ${String(registry.records.length)} exception record(s) in ${exceptionsPath} were not evaluated (scan produced no alert list this run).`
-      : ""
-
   if (evidence.status === "unavailable") {
+    const note =
+      evidence.existingRecordCount > 0
+        ? ` ${String(evidence.existingRecordCount)} exception record(s) in ${evidence.registryPath} were validated but not reconciled (the CLI produced no alert list this run).`
+        : ""
     return {
       outcome: "warn",
-      rationale: `security-socket did not run (${evidence.reason}) -- alerts were not evaluated. Install and authenticate @socketsecurity/cli to enable real enforcement.${unevaluatedNote}`,
+      rationale: `security-socket did not run (${evidence.reason}) -- alerts were not evaluated. Install and authenticate @socketsecurity/cli to enable real enforcement.${note}`,
     }
   }
 
@@ -183,52 +105,85 @@ export async function evaluateSecuritySocketPolicy(
     return { outcome: "fail", rationale: `security-socket scan failed: ${evidence.message}` }
   }
 
-  if (evidence.status === "passed") {
-    return { outcome: "pass", rationale: `socket ci reported 0 alerts.${unevaluatedNote}` }
-  }
-
-  const { matched, unmatchedFindings, staleExceptions, summary } = evaluateExceptionFindings({
-    items: evidence.alerts,
-    records: registry.records,
-    matchRecord: matchAlertToRecord,
-    evaluate: evaluateAlert,
-  })
-
-  const offenders = matched.filter(({ determinant }) => determinant.verdict !== "permitted")
-
-  if (offenders.length === 0 && unmatchedFindings.length === 0) {
-    const staleNote =
-      staleExceptions.length > 0
-        ? ` ${String(staleExceptions.length)} exception record(s) matched nothing this run: ${staleExceptions.map((r) => r.id).join(", ")}.`
-        : ""
-    return { outcome: "pass", rationale: `${summary}${staleNote}` }
-  }
-
-  const offenderLines = offenders.map(({ item, determinant }) => {
-    const staged = stageMissingFields(determinant.missing, VERIFICATION_FIELD)
-    const detail =
-      determinant.verdict === "forbidden"
-        ? "forbidden by policy"
-        : `insufficient (missing: ${staged.join(", ")})`
-    return `- ${item.id} [${item.severity}]: ${detail}`
-  })
-
-  const unmatchedLines = unmatchedFindings.map(
-    (alert) => `- ${alert.id} [${alert.severity}]: no matching exception record`,
+  const activeRecords = Object.values(evidence.activeExceptions)
+  const revalidated = validateExceptionRegistry(
+    [...activeRecords, ...evidence.staleExceptions],
+    SOCKET_EXCEPTION_SCHEMA,
   )
+  if (!revalidated.ok) {
+    return {
+      outcome: "fail",
+      rationale: [
+        "security-socket evidence failed independent registry validation:",
+        ...revalidated.errors.map((e) => `- ${e}`),
+      ].join("\n"),
+    }
+  }
+
+  const alertIds = evidence.alerts.map((alert) => alert.id)
+  const activeIds = new Set(Object.keys(evidence.activeExceptions))
+  const bijectionErrors: string[] = []
+  if (new Set(alertIds).size !== alertIds.length)
+    bijectionErrors.push("evidence.alerts contains duplicate ids.")
+  for (const id of new Set(alertIds)) {
+    if (!activeIds.has(id))
+      bijectionErrors.push(`alert ${JSON.stringify(id)} has no active exception record.`)
+  }
+  for (const id of activeIds) {
+    if (!alertIds.includes(id))
+      bijectionErrors.push(`active exception ${JSON.stringify(id)} matches no alert.`)
+  }
+  if (bijectionErrors.length > 0) {
+    return {
+      outcome: "fail",
+      rationale: [
+        "security-socket evidence broke the alerts <-> activeExceptions bijection:",
+        ...bijectionErrors.map((e) => `- ${e}`),
+      ].join("\n"),
+    }
+  }
+
+  const staleLines = evidence.staleExceptions.map(
+    (record) =>
+      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)} -- Socket no longer raises this alert; delete this entry.`,
+  )
+
+  const determinants = evidence.alerts.map((alert) => ({
+    alert,
+    ...evaluateAlert(alert, evidence.activeExceptions[alert.id]),
+  }))
+  const offenders = determinants.filter((d) => d.verdict !== "permitted")
+
+  if (offenders.length === 0 && staleLines.length === 0) {
+    return {
+      outcome: "pass",
+      rationale: `${String(evidence.alerts.length)} Socket alert(s) evaluated: all permitted by a complete exception record.`,
+    }
+  }
+
+  const offenderLines = offenders.map((d) => {
+    const detail =
+      d.verdict === "forbidden"
+        ? "forbidden by policy (above medium severity)"
+        : d.verdict === "unmatched"
+          ? "no reconciled exception record (registry integrity failure)"
+          : `exception incomplete (missing: ${d.missing.join(", ")})`
+    return `- ${d.alert.id} [${d.alert.severity}]: ${detail}`
+  })
 
   return {
     outcome: "fail",
-    rationale: [summary, ...offenderLines, ...unmatchedLines].join("\n"),
+    rationale: [
+      `${String(offenders.length + evidence.staleExceptions.length)} Socket alert(s) or stale record(s) need attention:`,
+      ...offenderLines,
+      ...staleLines,
+    ].join("\n"),
   }
 }
 
-// Rejects any alert above a medium (Socket "middle") rating outright, and requires a
-// finding-specific, *verified* exception (scripts/shared/exception-record.ts) for everything else
-// -- see specs/decisions/0013-reusable-exception-policy-helper.md's "Verification, not
-// attestation". `@socketsecurity/cli`'s own real output for an authenticated org scan with policy
-// violations could not be verified against a real org in this environment -- see
-// scripts/security-socket/evidence-types.ts's own doc comment.
+// Rejects any alert above a medium ("middle") rating outright, and requires a complete
+// finding-specific exception for everything else -- see
+// specs/decisions/0013-reusable-exception-policy-helper.md.
 export const securitySocket: CheckDefinitionConfig = {
   run: ["tsx", "scripts/security-socket/scan.ts"],
   output: { format: "json" },

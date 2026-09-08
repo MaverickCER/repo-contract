@@ -62,7 +62,7 @@ export interface ExceptionClassification {
 /** A resolved judgment about one record, once its `ExceptionPolicy` has been checked against its own field values. See `ExceptionDeterminant`. */
 export type ExceptionVerdict = "forbidden" | "insufficient" | "permitted"
 
-/** One record's resolved policy verdict, and (for `"insufficient"`) which required fields are still empty. Never published as a batch/matched-vs-unmatched shape -- matching a record to a finding stays entirely check-owned (see `checks/shared/evaluate-exception-findings.ts`). */
+/** One record's resolved policy verdict, and (for `"insufficient"`) which required fields are still empty. Never published as a batch/matched-vs-unmatched shape -- matching a finding to a record stays entirely check-owned (each check reconciles its own findings against its own registry via `reconcileExceptions`). */
 export interface ExceptionDeterminant<TRecord> {
   /** The record this determinant was computed for, returned verbatim. */
   readonly record: TRecord
@@ -232,9 +232,9 @@ export function evaluateExceptionRecord<TRecord>(
  * A thin batch over already-matched `(record, classifications)` pairs -- exactly
  * `inputs.map(evaluateExceptionRecord)`, provided so a caller evaluating many records against the
  * same `config`/`globalDefault`/`fieldValue` doesn't have to write that `.map` itself. Matching a
- * record to a finding in the first place stays entirely check-owned (see
- * `checks/shared/evaluate-exception-findings.ts`) -- this function takes already-paired inputs, it
- * never does any matching of its own.
+ * record to a finding in the first place stays entirely check-owned (each check reconciles its own
+ * findings against its own registry) -- this function takes already-paired inputs, it never does
+ * any matching of its own.
  * @param inputs - Each already-matched record to evaluate, in the same shape `evaluateExceptionRecord` itself takes.
  * @returns Each input's own determinant, in the same order as `inputs`.
  */

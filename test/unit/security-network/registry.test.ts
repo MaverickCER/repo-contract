@@ -1,161 +1,133 @@
 import { describe, expect, it } from "vitest"
 import {
+  NETWORK_EXCEPTION_SCHEMA,
+  createNetworkStub,
   deriveNetworkExceptionId,
-  validateNetworkExceptionRegistry,
 } from "../../../scripts/security-network/registry.js"
+import { validateExceptionRegistry } from "../../../scripts/shared/exception-record.js"
 
 function validRecord(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
-    id: "restricted-module-import:src/presets/evil.ts:3",
+    id: "security-network:restricted-module-import:src/presets/evil.ts:3:5",
     version: 1,
     capability: "restricted-module-import",
     file: "src/presets/evil.ts",
     line: 3,
+    column: 5,
     justification: "Type-only import, elided at build time.",
     alternatives: "None found.",
     remediation: "Tracked upstream.",
+    method: "independent-human-review",
     exceptionType: "accepted-risk",
     ...overrides,
   }
 }
 
+const validate = (records: readonly unknown[]) =>
+  validateExceptionRegistry(records, NETWORK_EXCEPTION_SCHEMA)
+
 describe("deriveNetworkExceptionId", () => {
-  it("joins capability, file, and line exactly like checks/security-network.ts's finding identity", () => {
-    const id = deriveNetworkExceptionId({
-      id: "ignored",
-      version: 1,
-      capability: "unreviewed-preset-command",
-      file: "src/presets/x.ts",
-      line: 42,
-      justification: "",
-      alternatives: "",
-      remediation: "",
-      exceptionType: "accepted-risk",
-    })
-    expect(id).toBe("unreviewed-preset-command:src/presets/x.ts:42")
+  it("joins the namespace, capability, file, line, and column", () => {
+    expect(
+      deriveNetworkExceptionId({
+        capability: "unreviewed-preset-command",
+        file: "src/presets/x.ts",
+        line: 42,
+        column: 1,
+      }),
+    ).toBe("security-network:unreviewed-preset-command:src/presets/x.ts:42:1")
   })
 })
 
-describe("validateNetworkExceptionRegistry", () => {
-  it("accepts a well-formed exceptions array", () => {
-    const result = validateNetworkExceptionRegistry([validRecord()])
-    expect(result.ok).toBe(true)
-    if (!result.ok) throw new Error("expected ok:true")
-    expect(result.records).toHaveLength(1)
+describe("createNetworkStub", () => {
+  it("returns a blank record carrying the canonical id and identity fields", () => {
+    const finding = {
+      id: "security-network:restricted-global-usage:src/a.ts:9:2",
+      file: "src/a.ts",
+      line: 9,
+      column: 2,
+      capability: "restricted-global-usage" as const,
+      detail: "uses fetch",
+    }
+    expect(createNetworkStub(finding, finding.id)).toEqual({
+      id: finding.id,
+      version: 1,
+      justification: "",
+      alternatives: "",
+      remediation: "",
+      method: "",
+      exceptionType: "",
+      capability: "restricted-global-usage",
+      file: "src/a.ts",
+      line: 9,
+      column: 2,
+    })
+  })
+})
+
+describe("NETWORK_EXCEPTION_SCHEMA", () => {
+  it("accepts a well-formed record", () => {
+    const result = validate([validRecord()])
+    expect(result.ok, result.ok ? "" : result.errors.join("\n")).toBe(true)
   })
 
   it("rejects a non-array value", () => {
-    const result = validateNetworkExceptionRegistry({ not: "an array" })
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors[0]).toContain("must be a JSON array")
+    expect(validateExceptionRegistry({ not: "array" }, NETWORK_EXCEPTION_SCHEMA).ok).toBe(false)
   })
 
-  it("rejects a record whose id doesn't match its own derived identity", () => {
-    const result = validateNetworkExceptionRegistry([validRecord({ id: "wrong-id" })])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors[0]).toContain("does not match its own derived identity")
+  it.each([
+    ["a foreign namespace", { id: "suppression:x" }],
+    ["an unknown capability kind", { capability: "wat" }],
+    ["a non-positive line", { line: 0 }],
+    ["a missing column", { column: undefined }],
+    ["a bad exceptionType", { exceptionType: "not-real" }],
+    ["a bad method", { method: "vibes" }],
+  ])("rejects %s", (_desc, override) => {
+    expect(validate([validRecord(override)]).ok).toBe(false)
   })
 
-  it("rejects an unknown capability kind", () => {
-    const result = validateNetworkExceptionRegistry([validRecord({ capability: "wat" })])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors[0]).toContain("capability must be one of")
-  })
-
-  it("rejects a non-positive-integer line", () => {
-    const result = validateNetworkExceptionRegistry([
-      validRecord({ id: "restricted-module-import:src/presets/evil.ts:0", line: 0 }),
+  it("rejects a record whose id disagrees with its own capability/file/line/column", () => {
+    const result = validate([
+      validRecord({ id: "security-network:restricted-module-import:src/presets/evil.ts:99:1" }),
     ])
     expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("line must be a positive integer"))).toBe(true)
+    if (!result.ok) expect(result.errors.join("\n")).toContain("does not match the id derived")
   })
 
-  it("rejects an invalid exceptionType", () => {
-    const result = validateNetworkExceptionRegistry([validRecord({ exceptionType: "not-real" })])
+  it("rejects validated-false-positive backed by independent-human-review", () => {
+    const result = validate([
+      validRecord({
+        exceptionType: "validated-false-positive",
+        method: "independent-human-review",
+      }),
+    ])
     expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors[0]).toContain("exceptionType must be one of")
+    if (!result.ok) expect(result.errors.join("\n")).toContain("mechanical-reverification")
+  })
+
+  it("accepts validated-false-positive backed by a mechanical re-scan", () => {
+    expect(
+      validate([
+        validRecord({
+          exceptionType: "validated-false-positive",
+          method: "mechanical-reverification",
+        }),
+      ]).ok,
+    ).toBe(true)
   })
 
   it("rejects a duplicate id across two records", () => {
-    const result = validateNetworkExceptionRegistry([validRecord(), validRecord()])
+    const result = validate([validRecord(), validRecord()])
     expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("duplicates an earlier record"))).toBe(true)
+    if (!result.ok) expect(result.errors.join("\n")).toContain("reuses the id")
   })
-
-  it("rejects a validated-false-positive record backed only by independent-human-review", () => {
-    const result = validateNetworkExceptionRegistry([
-      validRecord({
-        exceptionType: "validated-false-positive",
-        verification: {
-          method: "independent-human-review",
-          verifiedBy: "someone",
-          verifiedAt: "2026-01-01T00:00:00.000Z",
-          verifiedContentHash: "abc",
-        },
-      }),
-    ])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors[0]).toContain("mechanical-reverification")
-  })
-
-  it("accepts a validated-false-positive record backed by a mechanical re-scan", () => {
-    const result = validateNetworkExceptionRegistry([
-      validRecord({
-        exceptionType: "validated-false-positive",
-        verification: {
-          method: "mechanical-reverification",
-          verifiedBy: "scoped-rescan",
-          verifiedAt: "2026-01-01T00:00:00.000Z",
-          verifiedContentHash: "abc",
-        },
-      }),
-    ])
-    expect(result.ok).toBe(true)
-  })
-
-  it("rejects a verification block missing a required field", () => {
-    const result = validateNetworkExceptionRegistry([
-      validRecord({ verification: { method: "independent-human-review" } }),
-    ])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("verifiedBy"))).toBe(true)
-    expect(result.errors.some((e) => e.includes("verifiedContentHash"))).toBe(true)
-  })
-
-  it.each(["soon", "2026-13-45", "2026-02-29"])(
-    "rejects a non-ISO or impossible verifiedAt (%s)",
-    (verifiedAt) => {
-      const result = validateNetworkExceptionRegistry([
-        validRecord({
-          verification: {
-            method: "independent-human-review",
-            verifiedBy: "someone",
-            verifiedAt,
-            verifiedContentHash: "abc",
-          },
-        }),
-      ])
-      expect(result.ok).toBe(false)
-      if (result.ok) throw new Error("expected ok:false")
-      expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
-    },
-  )
 
   it("reports every problem across multiple bad records, not just the first", () => {
-    const result = validateNetworkExceptionRegistry([
-      validRecord({ id: "wrong-1" }),
-      validRecord({ id: "wrong-2", file: "src/other.ts" }),
+    const result = validate([
+      validRecord({ line: 0 }),
+      validRecord({ file: "src/other.ts", exceptionType: "nope" }),
     ])
     expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors).toHaveLength(2)
+    if (!result.ok) expect(result.errors.length).toBeGreaterThan(1)
   })
 })

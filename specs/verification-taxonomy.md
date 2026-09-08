@@ -340,12 +340,14 @@ at the end of this section.
   ESLint rule (`eslint.config.js`) scoped to the same surface. Both cover the same core imports/
   globals; this check additionally covers the preset-command allowlist and, unlike ESLint, cannot
   be silenced by an `eslint-disable` comment or a weakened lint config. Since ADR 0007's 2026-09
-  amendment this check is built on the `repo-contract/helpers` exception-policy primitive: the
-  default posture is unchanged and absolute (`securityNetworkPolicy`'s group `default` is
-  `forbidden`), but a genuinely reviewed exception is now a finding-specific record in
-  `.repo-contract/exceptions/security-network.json` bound to one exact `` `${capability}:${file}:${line}` ``,
-  with a closed `exceptionType` and a content-bound `verification` block — _stricter_ than the
-  prose-only `disable-comments.json` path it replaces for network findings (see "Reviewed
+  amendment this check is built on the `repo-contract/helpers` exception-policy primitive, and
+  since the 2026-09 v0.4.0 unification (PR 3) its scan script reconciles
+  `.repo-contract/exceptions/security-network.json` against what it found (a blank stub per
+  unmatched finding; stale records surfaced and failed, never removed). The default posture is
+  unchanged and absolute (`securityNetworkPolicy`'s group `default` is `forbidden`); a reviewed
+  exception is a finding-specific record bound to
+  `security-network:<capability>:<file>:<line>:<column>`, complete only with `justification` /
+  `alternatives` / `remediation` / `method` / `exceptionType` all filled in (see "Reviewed
   exceptions" below).
 - **Does not establish**: that a dependency's own internal code never makes a network call, or that
   a consumer's own configured checks/presets never do (that's the tool's entire purpose -- execute
@@ -416,12 +418,11 @@ at the end of this section.
   patterns. It also makes no claim at all when it did not actually run (see the policy's `warn`,
   below).
 - **The reviewed-exception shape**: a record in `.repo-contract/exceptions/socket.json`, bound to
-  one exact `` `${package}@${version}:${type}` `` identity — a blanket "waive this alert type
-  everywhere" record is not expressible (`scripts/security-socket/registry.ts`) — carrying a closed
-  `exceptionType` and a content-bound `verification` block (see
-  [ADR 0013](decisions/0013-reusable-exception-policy-helper.md)'s "Verification, not attestation",
-  and "Reviewed exceptions" below). Anything rated above "middle" is `forbidden` outright: no
-  record can permit it.
+  `socket:<package>@<version>:<type>` (`scripts/security-socket/registry.ts`), carrying the four
+  `SecurityExceptionFields` root fields (`alternatives` / `remediation` / `method` /
+  `exceptionType`) plus `justification` (see "Reviewed exceptions" below). The scan script
+  reconciles the registry only when the CLI actually produced an alert assessment. Anything rated
+  above "middle" is `forbidden` outright: no record can permit it.
 - **Files executed**: none of this repository's code — `socket ci` (spawned through `cross-spawn`,
   a 5-minute hard timeout) analyzes the dependency tree server-side.
 - **Run alone**: `tsx scripts/security-socket/scan.ts` (prints the JSON evidence), or
@@ -456,10 +457,11 @@ at the end of this section.
   anything at all when `status` is `not-applicable` / `unavailable`. It never invokes an LLM
   itself — it spawns the already-locally-installed `coderabbit` binary.
 - **The reviewed-exception shape**: a record in `.repo-contract/exceptions/coderabbit.json`, keyed
-  by a deliberately coarse `` `${file}:${severity}` `` identity (the CLI exposes no native finding
-  id and no structured line number — a known, documented limitation:
-  `scripts/coderabbitai/evidence-types.ts`), carrying `justification` / `remediation` /
-  `exceptionType` and a content-bound `verification` block whose `method` **must** be
+  by `coderabbit:<file>:<severity>:<hash of the finding's summary>` (the CLI exposes no native
+  finding id and no structured line number, so the summary prose is hashed into the key — a
+  re-review whose wording changed re-derives a new id and the old record goes stale:
+  `scripts/coderabbitai/registry.ts`), carrying `justification` / `remediation` / `method` /
+  `exceptionType` plus the finding's `summary` at waiver time. `method` **must** be
   `"independent-human-review"` — `"mechanical-reverification"` and
   `exceptionType: "validated-false-positive"` are both refused, because there is no
   more-authoritative tool to re-run against an AI-generated finding (ADR 0014).
@@ -486,41 +488,47 @@ at the end of this section.
 
 ### Reviewed exceptions — `.repo-contract/exceptions/*.json`
 
-`suppression-governance`, `security-socket`, `coderabbitai`, and `security-network` all express a
-reviewed, accepted exception the same way, on the shared `repo-contract/helpers` primitive
-([ADR 0013](decisions/0013-reusable-exception-policy-helper.md)) plus one check-owned layer
-(`checks/shared/evaluate-exception-findings.ts`, `scripts/shared/exception-record.ts` —
-unpublished):
+`suppression-governance`, `security-network`, `security-socket`, and `coderabbitai` all express a
+reviewed, accepted exception the same way, on the shared `repo-contract/helpers` primitives
+(`reconcileExceptions` / `serializeExceptionRegistry` / `writeExceptionRegistry` / the
+exception-policy resolver — [ADR 0013](decisions/0013-reusable-exception-policy-helper.md)) plus
+one check-owned layer (`scripts/shared/exception-record.ts` — `validateExceptionRegistry` + a
+per-registry `ExceptionRegistrySchema`, unpublished). Unified across PR 2 (suppression) and PR 3
+(the three security checks) of the 2026-09 v0.4.0 effort.
 
 - **Where.** All four live under `.repo-contract/exceptions/`: `disable-comments.json`,
   `socket.json`, `coderabbit.json`, `security-network.json`, all using the envelope
   `{ "exceptions": [ … ] }` and read via `loadExceptionRegistry` (a missing file is a normal
-  empty-registry state, never an error). `disable-comments.json` is owned end-to-end by
-  `scripts/suppression-governance/check.ts`, which reads it, reconciles it against discovered
-  directives via `reconcileExceptions`, and deterministically rewrites it in place on every run
-  (creating `.repo-contract/exceptions/` first if a fresh tree has no such directory yet).
+  empty-registry state, never an error). Each is owned end-to-end by its check's own scan/review
+  script, which reconciles it against that run's findings via `reconcileExceptions` and rewrites it
+  in place (creating `.repo-contract/exceptions/` first if a fresh tree has none). The two Socket /
+  CodeRabbit "the tool didn't run" states (`unavailable`/`not-applicable`/`error`) validate the
+  registry but do **not** reconcile — with no finding list, no record can be concluded stale.
 - **Shape.** Every record carries the three-field core (`id`, `version`, `justification`) plus
-  per-registry typed metadata. `disable-comments.json` (unified 2026-09 — see ADR 0006's
-  "Reconciled onto the generic mechanism" amendment) carries `category`/`verificationMethod` closed
-  enums and `domain`/`rule`/`file`/`line`; `socket`/`coderabbit`/`security-network` still carry the
-  older `alternatives`/`remediation`/`exceptionType` prose and a content-bound `verification` block
-  (`verifiedBy`, `verifiedAt` ISO 8601, `verifiedContentHash`, and a closed `method`) pending their
-  own retrofit onto the generic reconcile/stale mechanism. Each record's `id` must equal what the
-  check's own `deriveId` recomputes from the record's embedded identity fields — a stored key
-  inconsistent with its own claimed identity is a registry bug, caught at load time. For
-  `suppression-governance` the id is `suppression:<domain>:<rule>:<file>:<line>` (the line is in
-  the id deliberately; see ADR 0006), and "no matching directive" _is_ staleness.
-- **Validation.** No generated JSON Schema for any of the four; the authoritative validator is
-  run on _every_ contract run before any findings are evaluated — so a malformed or
-  internally-inconsistent registry fails CI even on a clean or never-ran scan, never rides along
-  silently with a green run. `disable-comments.json` uses the generic
-  `validateExceptionRegistry` (`scripts/shared/exception-record.ts`) plus a per-registry schema;
-  the other three still use their own `scripts/<check>/registry.ts` validator pending their
-  retrofit.
+  per-registry typed metadata. `disable-comments.json` adds `category`/`verificationMethod` closed
+  enums and `domain`/`rule`/`file`/`line`. The three security registries add the four
+  `SecurityExceptionFields` root fields — `alternatives`, `remediation`, `method` (an
+  `EXCEPTION_METHODS` member: how the waiver's claim was substantiated), `exceptionType` (an
+  `EXCEPTION_TYPES` member) — plus their own identity metadata (`capability`/`file`/`line`/`column`;
+  `package`/`packageVersion`/`type`/`severity`; `file`/`severity`/`summary`). The
+  `verifiedBy`/`verifiedContentHash` content-bound sign-off block that all four once carried was
+  removed in the 2026-09 unification and deferred with the `exception-governance` PR-approval gate.
+  Each record's `id` must equal what its registry's schema recomputes from the record's own
+  identity metadata — a stored key inconsistent with its own claimed identity is a registry bug,
+  caught at load time. Ids: `suppression:<domain>:<rule>:<file>:<line>`,
+  `security-network:<capability>:<file>:<line>:<column>`, `socket:<package>@<version>:<type>`,
+  `coderabbit:<file>:<severity>:<hash of summary>`. "No matching finding" _is_ staleness, and a
+  stale record fails the policy (never auto-removed).
+- **Validation.** No generated JSON Schema for any of the four; `validateExceptionRegistry` +
+  each registry's `ExceptionRegistrySchema` is authoritative, run on _every_ contract run before
+  any findings are evaluated — so a malformed or internally-inconsistent registry fails CI even on
+  a clean or never-ran scan.
 - **What they never do.** Loosen a check's default posture. `security-network`'s group default
-  stays `forbidden` (ADR 0007's amendment); `security-socket` forbids anything above "middle"
-  outright; `coderabbitai` requires a verified waiver for every finding regardless of severity. A
-  record only ever moves a _specific, named, signed-off_ finding from "fails" to "permitted".
+  stays `forbidden` (ADR 0007); `security-socket` forbids anything above "middle" outright;
+  `coderabbitai` requires a complete waiver for every finding regardless of severity;
+  `coderabbit.json` additionally forbids `exceptionType: "validated-false-positive"` /
+  `method: "mechanical-reverification"` (no oracle to re-run against an AI finding). A record only
+  ever moves a _specific, named_ finding from "fails" to "permitted".
 
 ## Coverage
 

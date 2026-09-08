@@ -14,12 +14,28 @@
 // must survive its own primary enforcement mechanism being silently
 // weakened or bypassed). See specs/decisions/0007-no-network-surface.md.
 
-import { readFile } from "node:fs/promises"
+import { mkdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import * as ts from "typescript"
+import {
+  loadExceptionRegistry,
+  reconcileExceptions,
+  writeExceptionRegistry,
+} from "../../src/helpers/index.js"
+import type { StandardSchemaV1 } from "../../src/helpers/index.js"
 import { listSourceFiles } from "../suppression-governance/find-source-files.js"
-import type { NetworkCapabilityFinding, NetworkScanEvidence } from "./evidence-types.js"
+import { asFlatExceptionRecords, validateExceptionRegistry } from "../shared/exception-record.js"
+import type {
+  NetworkCapabilityFinding,
+  NetworkExceptionRecord,
+  NetworkScanEvidence,
+} from "./evidence-types.js"
+import {
+  NETWORK_EXCEPTION_SCHEMA,
+  createNetworkStub,
+  deriveNetworkExceptionId,
+} from "./registry.js"
 import {
   ALLOWED_PRESET_COMMANDS,
   NETWORK_CORE_MODULES,
@@ -27,6 +43,21 @@ import {
   NETWORK_THIRD_PARTY_PACKAGES,
   RESTRICTED_NAMED_IMPORTS,
 } from "./network-surface.mjs"
+
+const REGISTRY_RELATIVE_PATH = ".repo-contract/exceptions/security-network.json"
+
+const registrySchema: StandardSchemaV1<unknown, readonly NetworkExceptionRecord[]> = {
+  "~standard": {
+    version: 1,
+    vendor: "repo-contract",
+    validate: (value: unknown) => {
+      const result = validateExceptionRegistry(value, NETWORK_EXCEPTION_SCHEMA)
+      return result.ok
+        ? { value: result.records }
+        : { issues: result.errors.map((message) => ({ message })) }
+    },
+  },
+}
 
 /**
  * Scope: `src/**\/*.ts` only -- the entire built/published surface (see
@@ -93,7 +124,14 @@ export function scanSourceFile(
     detail: string,
   ): void {
     const { line, column } = lineAndColumn(sourceFile, node.getStart(sourceFile))
-    findings.push({ file: relativePath, line, column, capability, detail })
+    findings.push({
+      id: deriveNetworkExceptionId({ capability, file: relativePath, line, column }),
+      file: relativePath,
+      line,
+      column,
+      capability,
+      detail,
+    })
   }
 
   /**
@@ -321,14 +359,16 @@ export function scanSourceFile(
 }
 
 /**
- * The check's full logic, factored out of the bottom-of-file script invocation so
- * test/unit/security-network/scan.test.ts can exercise it directly against fixture directories,
- * without spawning a subprocess -- matching scripts/suppression-governance/check.ts's own testing
- * convention.
+ * The pure static scan -- every in-scope file looked at, every raw finding across all of them, in
+ * deterministic order. No registry, no I/O beyond reading source. Exercised directly by
+ * test/unit/security-network/scan.test.ts against fixture directories.
  * @param root - Absolute path to the repository (or fixture root) being scanned.
- * @returns The evidence for `output: { format: "json" }`: how many files were scanned, and every finding across all of them.
+ * @returns How many files were scanned, and every finding across all of them.
  */
-export async function scanForNetworkCapability(root: string): Promise<NetworkScanEvidence> {
+export async function scanForNetworkCapability(root: string): Promise<{
+  readonly filesScanned: number
+  readonly findings: readonly NetworkCapabilityFinding[]
+}> {
   const allFiles = await listSourceFiles(root)
   const scopedFiles = allFiles.filter((relativePath) => isInScope(relativePath))
 
@@ -347,7 +387,97 @@ export async function scanForNetworkCapability(root: string): Promise<NetworkSca
   return { filesScanned: scopedFiles.length, findings }
 }
 
+/**
+ * Collapses byte-identical findings (same file/line/column/capability/detail -- indistinguishable)
+ * before reconciliation. Findings that share an `id` but differ in `detail` are left for
+ * `reconcileExceptions` to surface as an integrity failure.
+ * @param findings - Every finding from the scan.
+ * @returns The findings with byte-identical duplicates removed.
+ */
+function dedupeFindings(
+  findings: readonly NetworkCapabilityFinding[],
+): readonly NetworkCapabilityFinding[] {
+  const seen = new Set<string>()
+  const unique: NetworkCapabilityFinding[] = []
+  for (const finding of findings) {
+    const key = JSON.stringify([finding.id, finding.detail])
+    if (seen.has(key)) continue
+    seen.add(key)
+    unique.push(finding)
+  }
+  return unique
+}
+
+/**
+ * The check's full logic: scan, then reconcile `.repo-contract/exceptions/security-network.json`
+ * against what was found (a fresh blank stub per unmatched finding, stale records surfaced never
+ * removed) and write it back. On a fully-governed clean tree it produces no diff.
+ * @param root - Absolute path to the repository (or fixture root) being scanned.
+ * @returns The full `NetworkScanEvidence` for `output: { format: "json" }`.
+ */
+export async function runSecurityNetworkScan(root: string): Promise<NetworkScanEvidence> {
+  const { filesScanned, findings: raw } = await scanForNetworkCapability(root)
+  const findings = dedupeFindings(raw)
+  const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
+
+  const empty = {
+    registryPath: REGISTRY_RELATIVE_PATH,
+    filesScanned,
+    findings,
+    activeExceptions: {} as Record<string, NetworkExceptionRecord>,
+    staleExceptions: [] as readonly NetworkExceptionRecord[],
+    scaffoldedIds: [] as readonly string[],
+  }
+
+  const loaded = await loadExceptionRegistry({ path: registryPath, schema: registrySchema })
+  if (!loaded.ok) return { ...empty, registryError: loaded.errors }
+
+  const reconciled = reconcileExceptions<NetworkCapabilityFinding, NetworkExceptionRecord>({
+    existing: loaded.records,
+    findings,
+    deriveId: (finding) => finding.id,
+    createStub: createNetworkStub,
+  })
+  if (!reconciled.ok) return { ...empty, registryError: [reconciled.error] }
+
+  const { activeRecords, staleRecords, newStubIds } = reconciled.reconciliation
+
+  try {
+    await mkdir(path.dirname(registryPath), { recursive: true })
+  } catch (error) {
+    return {
+      ...empty,
+      registryError: [`Could not create the exceptions directory: ${(error as Error).message}`],
+    }
+  }
+
+  const write = await writeExceptionRegistry({
+    path: registryPath,
+    records: asFlatExceptionRecords([...activeRecords, ...staleRecords]),
+  })
+  if (!write.ok) return { ...empty, registryError: [`Writing the registry failed: ${write.error}`] }
+
+  const activeExceptions: Record<string, NetworkExceptionRecord> = {}
+  for (const record of activeRecords) activeExceptions[record.id] = record
+
+  return {
+    registryPath: REGISTRY_RELATIVE_PATH,
+    filesScanned,
+    findings,
+    activeExceptions,
+    staleExceptions: staleRecords,
+    scaffoldedIds: newStubIds,
+  }
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const evidence = await scanForNetworkCapability(process.cwd())
+  const evidence = await runSecurityNetworkScan(process.cwd())
+  if (evidence.scaffoldedIds.length > 0) {
+    process.stderr.write(
+      `Scaffolded ${String(evidence.scaffoldedIds.length)} exception stub(s) in ${REGISTRY_RELATIVE_PATH}. ` +
+        `Fill in every field and \`git add ${REGISTRY_RELATIVE_PATH}\` before re-running or committing.\n`,
+    )
+  }
   process.stdout.write(JSON.stringify(evidence))
+  process.exitCode = evidence.registryError === undefined ? 0 : 1
 }

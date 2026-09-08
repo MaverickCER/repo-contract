@@ -13,8 +13,55 @@
 // `"error"`.
 
 import { sync as spawnSync } from "cross-spawn"
+import { mkdir } from "node:fs/promises"
+import path from "node:path"
 import { pathToFileURL } from "node:url"
-import type { CoderabbitEvidence, NormalizedFinding } from "./evidence-types.js"
+import {
+  loadExceptionRegistry,
+  reconcileExceptions,
+  writeExceptionRegistry,
+} from "../../src/helpers/index.js"
+import type { StandardSchemaV1 } from "../../src/helpers/index.js"
+import { asFlatExceptionRecords, validateExceptionRegistry } from "../shared/exception-record.js"
+import type {
+  CoderabbitEvidence,
+  CoderabbitExceptionRecord,
+  NormalizedFinding,
+} from "./evidence-types.js"
+import {
+  CODERABBIT_EXCEPTION_SCHEMA,
+  createCoderabbitStub,
+  deriveCoderabbitExceptionId,
+} from "./registry.js"
+
+const REGISTRY_RELATIVE_PATH = ".repo-contract/exceptions/coderabbit.json"
+
+/** The raw result of running the CodeRabbit CLI, before any registry reconciliation. */
+type CoderabbitCliResult =
+  | { readonly status: "reviewed"; readonly findings: readonly NormalizedFinding[] }
+  | {
+      readonly status: "not-applicable"
+      readonly reason: "ci"
+      readonly expectedProvider: "coderabbit-github-app"
+    }
+  | {
+      readonly status: "unavailable"
+      readonly reason: "cli-not-installed" | "git-context-unavailable"
+    }
+  | { readonly status: "error"; readonly message: string }
+
+const registrySchema: StandardSchemaV1<unknown, readonly CoderabbitExceptionRecord[]> = {
+  "~standard": {
+    version: 1,
+    vendor: "repo-contract",
+    validate: (value: unknown) => {
+      const result = validateExceptionRegistry(value, CODERABBIT_EXCEPTION_SCHEMA)
+      return result.ok
+        ? { value: result.records }
+        : { issues: result.errors.map((message) => ({ message })) }
+    },
+  },
+}
 
 const SEVERITY_VALUES = new Set(["critical", "major", "minor"])
 
@@ -64,12 +111,10 @@ function normalizeFinding(raw: Record<string, unknown>): NormalizedFinding | und
       : "unknown"
 
   return {
+    id: deriveCoderabbitExceptionId({ file: fileName, severity, summary: codegenInstructions }),
     file: fileName,
     severity,
     summary: codegenInstructions,
-    // Deliberately coarse -- see NormalizedFinding's own doc comment on why file+severity, not a
-    // hash of the AI-generated summary text, is this check's registry-matching identity.
-    identity: `${fileName}:${severity}`,
   }
 }
 
@@ -133,19 +178,6 @@ export function parseAgentStream(stdout: string):
             'coderabbit review --agent produced a "finding" event missing a required field (fileName/codegenInstructions).',
         }
       }
-      // `NormalizedFinding.identity` is deliberately coarse (`file:severity` -- the CLI provides
-      // no native finding id, see evidence-types.ts). That is an acceptable matching granularity
-      // *across* runs, but within a *single* run two genuinely distinct findings that collapse to
-      // the same identity would both match one exception record, letting a single permitted
-      // waiver silently suppress both. Rather than accept that, fail the whole parse closed the
-      // moment a collision appears -- a real, if rare, case a maintainer must resolve by splitting
-      // the change so the two findings land in different files (or by fixing one of them).
-      if (findings.some((existing) => existing.identity === finding.identity)) {
-        return {
-          ok: false,
-          error: `coderabbit review --agent reported two distinct findings that share one coarse identity (${finding.identity}) -- a single exception record could suppress both. Address one of them, or split the change so they land in separate files.`,
-        }
-      }
       findings.push(finding)
       continue
     }
@@ -204,10 +236,10 @@ export function parseAgentStream(stdout: string):
 
 /**
  * Runs `coderabbit review --agent` and normalizes its result. Never throws -- every recognized or
- * unrecognized outcome becomes a well-formed `CoderabbitEvidence` value instead.
- * @returns This run's normalized evidence.
+ * unrecognized outcome becomes a well-formed `CoderabbitCliResult` value instead.
+ * @returns This run's normalized CLI result.
  */
-export function runCoderabbitReview(): CoderabbitEvidence {
+function runCoderabbitCli(): CoderabbitCliResult {
   // Self-hosting tooling outside src/, not published library code (see package.json's "files");
   // reading CI is exactly this repository's own consumer responsibility here, mirroring
   // scripts/install-hooks.mjs's identical justification. n/no-process-env is scoped to src/ only
@@ -276,8 +308,94 @@ export function runCoderabbitReview(): CoderabbitEvidence {
   return { status: "reviewed", findings: parsed.findings }
 }
 
+/**
+ * Runs the CodeRabbit CLI, then -- only when a review actually ran (`reviewed`) -- reconciles
+ * `.repo-contract/exceptions/coderabbit.json` against the findings and writes it back. On
+ * `not-applicable` (CI) / `unavailable` / `error` the registry is validated but not reconciled.
+ * @param root - Absolute path to the repository being checked.
+ * @returns The full `CoderabbitEvidence` for `output: { format: "json" }`.
+ */
+export async function runCoderabbitReview(root: string): Promise<CoderabbitEvidence> {
+  const cli = runCoderabbitCli()
+  const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
+  const loaded = await loadExceptionRegistry({ path: registryPath, schema: registrySchema })
+
+  if (cli.status !== "reviewed") {
+    const base =
+      cli.status === "not-applicable"
+        ? {
+            status: cli.status,
+            reason: cli.reason,
+            expectedProvider: cli.expectedProvider,
+            registryPath: REGISTRY_RELATIVE_PATH,
+          }
+        : cli.status === "unavailable"
+          ? { status: cli.status, reason: cli.reason, registryPath: REGISTRY_RELATIVE_PATH }
+          : { status: cli.status, message: cli.message, registryPath: REGISTRY_RELATIVE_PATH }
+    return loaded.ok
+      ? { ...base, existingRecordCount: loaded.records.length }
+      : { ...base, existingRecordCount: 0, registryError: loaded.errors }
+  }
+
+  // CodeRabbit occasionally streams a byte-identical finding twice; those collapse to one id.
+  // Deduping here (not in parseAgentStream) keeps the `complete` event's own findings-count check
+  // honest -- it counts raw streamed events.
+  const seen = new Set<string>()
+  const findings = cli.findings.filter((finding) => {
+    if (seen.has(finding.id)) return false
+    seen.add(finding.id)
+    return true
+  })
+
+  const empty = {
+    status: "reviewed" as const,
+    registryPath: REGISTRY_RELATIVE_PATH,
+    findings,
+    activeExceptions: {} as Record<string, CoderabbitExceptionRecord>,
+    staleExceptions: [] as readonly CoderabbitExceptionRecord[],
+    scaffoldedIds: [] as readonly string[],
+  }
+  if (!loaded.ok) return { ...empty, registryError: loaded.errors }
+
+  const reconciled = reconcileExceptions<NormalizedFinding, CoderabbitExceptionRecord>({
+    existing: loaded.records,
+    findings,
+    deriveId: (finding) => finding.id,
+    createStub: createCoderabbitStub,
+  })
+  if (!reconciled.ok) return { ...empty, registryError: [reconciled.error] }
+
+  const { activeRecords, staleRecords, newStubIds } = reconciled.reconciliation
+  try {
+    await mkdir(path.dirname(registryPath), { recursive: true })
+  } catch (error) {
+    return {
+      ...empty,
+      registryError: [`Could not create the exceptions directory: ${(error as Error).message}`],
+    }
+  }
+  const write = await writeExceptionRegistry({
+    path: registryPath,
+    records: asFlatExceptionRecords([...activeRecords, ...staleRecords]),
+  })
+  if (!write.ok) return { ...empty, registryError: [`Writing the registry failed: ${write.error}`] }
+
+  const activeExceptions: Record<string, CoderabbitExceptionRecord> = {}
+  for (const record of activeRecords) activeExceptions[record.id] = record
+
+  return {
+    status: "reviewed",
+    registryPath: REGISTRY_RELATIVE_PATH,
+    findings,
+    activeExceptions,
+    staleExceptions: staleRecords,
+    scaffoldedIds: newStubIds,
+  }
+}
+
 // Mirrors scripts/security-socket/scan.ts's own "only run when invoked directly, not when
 // imported by a test" guard.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.stdout.write(JSON.stringify(runCoderabbitReview()))
+  const evidence = await runCoderabbitReview(process.cwd())
+  process.stdout.write(JSON.stringify(evidence))
 }

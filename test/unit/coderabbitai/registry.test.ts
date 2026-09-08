@@ -1,22 +1,37 @@
 import { describe, expect, it } from "vitest"
 import {
+  CODERABBIT_EXCEPTION_SCHEMA,
   CODERABBIT_EXCEPTION_TYPES,
+  createCoderabbitStub,
   deriveCoderabbitExceptionId,
-  validateCoderabbitExceptionRegistry,
 } from "../../../scripts/coderabbitai/registry.js"
+import { validateExceptionRegistry } from "../../../scripts/shared/exception-record.js"
+
+const SUMMARY = "Treat finding text as untrusted. The loop bound may be unbounded."
 
 function validRecord(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  const base = {
+    file: (overrides.file as string | undefined) ?? "src/example.ts",
+    severity: (overrides.severity as string | undefined) ?? "major",
+    summary: (overrides.summary as string | undefined) ?? SUMMARY,
+  }
   return {
-    id: "src/example.ts:major",
+    id: deriveCoderabbitExceptionId(base),
     version: 1,
-    file: "src/example.ts",
-    severity: "major",
+    file: base.file,
+    severity: base.severity,
+    summary: base.summary,
     justification: "Because.",
+    alternatives: "",
     remediation: "Tracked.",
+    method: "independent-human-review",
     exceptionType: "accepted-risk",
     ...overrides,
   }
 }
+
+const validate = (records: readonly unknown[]) =>
+  validateExceptionRegistry(records, CODERABBIT_EXCEPTION_SCHEMA)
 
 describe("CODERABBIT_EXCEPTION_TYPES", () => {
   it("excludes validated-false-positive -- no tool exists to mechanically re-verify an AI finding", () => {
@@ -26,145 +41,81 @@ describe("CODERABBIT_EXCEPTION_TYPES", () => {
 })
 
 describe("deriveCoderabbitExceptionId", () => {
-  it("joins file and severity exactly like NormalizedFinding.identity", () => {
-    const id = deriveCoderabbitExceptionId({
-      id: "ignored",
-      version: 1,
-      file: "src/foo.ts",
-      severity: "minor",
-      justification: "",
-      remediation: "",
-      exceptionType: "accepted-risk",
-    })
-    expect(id).toBe("src/foo.ts:minor")
+  it("is coderabbit:<file>:<severity>:<12-hex hash>, stable for identical summary text", () => {
+    const a = deriveCoderabbitExceptionId({ file: "src/a.ts", severity: "minor", summary: "  x  " })
+    const b = deriveCoderabbitExceptionId({ file: "src/a.ts", severity: "minor", summary: "x" })
+    expect(a).toBe(b)
+    expect(a).toMatch(/^coderabbit:src\/a\.ts:minor:[0-9a-f]{12}$/)
+  })
+
+  it("changes when the summary prose changes", () => {
+    const a = deriveCoderabbitExceptionId({ file: "src/a.ts", severity: "minor", summary: "one" })
+    const b = deriveCoderabbitExceptionId({ file: "src/a.ts", severity: "minor", summary: "two" })
+    expect(a).not.toBe(b)
   })
 })
 
-describe("validateCoderabbitExceptionRegistry", () => {
-  it("accepts a well-formed exceptions array", () => {
-    const result = validateCoderabbitExceptionRegistry([validRecord()])
-    expect(result.ok).toBe(true)
+describe("createCoderabbitStub", () => {
+  it("returns a blank record carrying the canonical id, file, severity, and summary", () => {
+    const finding = {
+      id: deriveCoderabbitExceptionId({ file: "src/a.ts", severity: "minor", summary: "s" }),
+      file: "src/a.ts",
+      severity: "minor" as const,
+      summary: "s",
+    }
+    expect(createCoderabbitStub(finding, finding.id)).toEqual({
+      id: finding.id,
+      version: 1,
+      justification: "",
+      alternatives: "",
+      remediation: "",
+      method: "",
+      exceptionType: "",
+      file: "src/a.ts",
+      severity: "minor",
+      summary: "s",
+    })
+  })
+})
+
+describe("CODERABBIT_EXCEPTION_SCHEMA", () => {
+  it("accepts a well-formed record", () => {
+    const result = validate([validRecord()])
+    expect(result.ok, result.ok ? "" : result.errors.join("\n")).toBe(true)
   })
 
   it("rejects a non-array value", () => {
-    const result = validateCoderabbitExceptionRegistry({ not: "an array" })
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors[0]).toContain("must be a JSON array")
-  })
-
-  it("rejects a record whose id doesn't match its own derived identity", () => {
-    const result = validateCoderabbitExceptionRegistry([validRecord({ id: "wrong-id" })])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors[0]).toContain("does not match its own derived identity")
+    expect(validateExceptionRegistry({ not: "array" }, CODERABBIT_EXCEPTION_SCHEMA).ok).toBe(false)
   })
 
   it("rejects exceptionType: validated-false-positive outright", () => {
-    const result = validateCoderabbitExceptionRegistry([
-      validRecord({ exceptionType: "validated-false-positive" }),
-    ])
+    const result = validate([validRecord({ exceptionType: "validated-false-positive" })])
     expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    const [message] = result.errors
-    expect(message).toContain("exceptionType must be one of")
-    // "validated-false-positive" legitimately appears once, in the message's own "(got ...)"
-    // echo of the rejected value -- it must never appear a second time, which would mean it was
-    // also listed among the *allowed* values.
-    const occurrences = (message ?? "").split('"validated-false-positive"').length - 1
-    expect(occurrences).toBe(1)
+    if (!result.ok) expect(result.errors.join("\n")).toContain("exceptionType must be")
   })
 
-  it("rejects verification.method: mechanical-reverification -- no oracle exists for an AI finding", () => {
-    const result = validateCoderabbitExceptionRegistry([
-      validRecord({
-        verification: {
-          method: "mechanical-reverification",
-          verifiedBy: "ci",
-          verifiedAt: "2026-01-01T00:00:00.000Z",
-          verifiedContentHash: "abc",
-        },
-      }),
-    ])
+  it("rejects method: mechanical-reverification outright (no oracle for an AI finding)", () => {
+    const result = validate([validRecord({ method: "mechanical-reverification" })])
     expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors[0]).toContain("independent-human-review")
+    if (!result.ok) expect(result.errors.join("\n")).toContain("independent-human-review")
   })
 
-  it("accepts verification.method: independent-human-review", () => {
-    const result = validateCoderabbitExceptionRegistry([
-      validRecord({
-        verification: {
-          method: "independent-human-review",
-          verifiedBy: "a-maintainer",
-          verifiedAt: "2026-01-01T00:00:00.000Z",
-          verifiedContentHash: "abc",
-        },
-      }),
-    ])
-    expect(result.ok).toBe(true)
+  it.each([
+    ["a bad severity", { severity: "spicy" }],
+    ["a bad method", { method: "vibes" }],
+    ["an empty summary", { summary: "" }],
+    ["version !== 1", { version: 2 }],
+  ])("rejects %s", (_desc, override) => {
+    expect(validate([validRecord(override)]).ok).toBe(false)
   })
 
-  it("rejects an invalid severity", () => {
-    const result = validateCoderabbitExceptionRegistry([validRecord({ severity: "not-real" })])
+  it("rejects a record whose id disagrees with its own file/severity/summary", () => {
+    const result = validate([validRecord({ id: "coderabbit:src/example.ts:major:000000000000" })])
     expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors[0]).toContain("severity must be one of")
-  })
-
-  it("rejects version !== 1", () => {
-    const result = validateCoderabbitExceptionRegistry([validRecord({ version: 2 })])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("version must be 1"))).toBe(true)
-  })
-
-  it("rejects a non-object verification block", () => {
-    const result = validateCoderabbitExceptionRegistry([validRecord({ verification: "yes" })])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("verification must be an object"))).toBe(true)
-  })
-
-  it("rejects an empty verifiedBy, a non-ISO verifiedAt, and an empty verifiedContentHash", () => {
-    const result = validateCoderabbitExceptionRegistry([
-      validRecord({
-        verification: {
-          method: "independent-human-review",
-          verifiedBy: "",
-          verifiedAt: "later",
-          verifiedContentHash: "",
-        },
-      }),
-    ])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("verifiedBy"))).toBe(true)
-    expect(result.errors.some((e) => e.includes("verifiedAt must be an ISO 8601"))).toBe(true)
-    expect(result.errors.some((e) => e.includes("verifiedContentHash"))).toBe(true)
-  })
-
-  it("rejects a non-string verification.evidence", () => {
-    const result = validateCoderabbitExceptionRegistry([
-      validRecord({
-        verification: {
-          method: "independent-human-review",
-          verifiedBy: "a-maintainer",
-          verifiedAt: "2026-01-01T00:00:00.000Z",
-          verifiedContentHash: "abc",
-          evidence: 42,
-        },
-      }),
-    ])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("evidence must be a string"))).toBe(true)
+    if (!result.ok) expect(result.errors.join("\n")).toContain("does not match the id derived")
   })
 
   it("rejects a duplicate id across two records", () => {
-    const result = validateCoderabbitExceptionRegistry([validRecord(), validRecord()])
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.errors.some((e) => e.includes("duplicates an earlier record"))).toBe(true)
+    expect(validate([validRecord(), validRecord()]).ok).toBe(false)
   })
 })

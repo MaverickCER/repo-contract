@@ -26,12 +26,13 @@ describe("runCoderabbitReview -- real short-circuit path", () => {
     else process.env.CI = originalCi
   })
 
-  it("returns 'not-applicable: ci' without spawning any process when CI is set", () => {
-    const evidence = runCoderabbitReview()
-    expect(evidence).toEqual({
+  it("returns 'not-applicable: ci' without spawning any review process when CI is set", async () => {
+    const evidence = await runCoderabbitReview(process.cwd())
+    expect(evidence).toMatchObject({
       status: "not-applicable",
       reason: "ci",
       expectedProvider: "coderabbit-github-app",
+      registryPath: ".repo-contract/exceptions/coderabbit.json",
     })
   })
 })

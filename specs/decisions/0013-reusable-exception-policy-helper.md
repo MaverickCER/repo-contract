@@ -2,14 +2,18 @@
 
 ## Status
 
-Accepted. Implemented in `src/helpers/{index,exception-policy,load-exception-registry}.ts`,
+Accepted. Implemented in
+`src/helpers/{index,exception-policy,load-exception-registry,reconcile-exceptions,write-exception-registry}.ts`,
 published as the third, independent `repo-contract/helpers` subpath (Experimental, see
-VERSIONING.md). `checks/shared/evaluate-exception-findings.ts` and
-`scripts/shared/exception-record.ts` build the check-owned matching / canonical-identity /
-content-bound-verification layer on top of it. The `suppression-governance`, `security-socket`,
-and `coderabbitai` checks consume that layer (with more security-* checks retrofitted onto it
-over the same release); this ADR covers the primitive and its plumbing, with each check's own use
-of it documented in that check's own ADR (0006, 0014) or PR.
+VERSIONING.md). `scripts/shared/exception-record.ts` builds the check-owned layer on top of it:
+the generic `validateExceptionRegistry` + per-registry `ExceptionRegistrySchema` (with the shared
+`validateSecurityExceptionFields` for the security family). Each check reconciles its own findings
+against its own registry via `reconcileExceptions` in its own scan/review script; the policy is a
+pure evidence->verdict function. The `suppression-governance`, `security-network`,
+`security-socket`, and `coderabbitai` checks all consume this; each check's own use is documented
+in that check's own ADR (0006, 0007, 0014) or PR. See the "The exception registry is the review
+surface" amendment below for the model, and the superseded-marker on "Verification, not
+attestation" for what was removed.
 
 ## Context
 
@@ -113,6 +117,21 @@ interface), is the honest choice here. `tsup.config.ts` marks it `external` (nev
 
 ## Verification, not attestation
 
+> **Substantially superseded (2026-09) by "The exception registry is the review surface" below.**
+> The content-bound `verification` block described here (`verifiedBy` / `verifiedAt` /
+> `verifiedContentHash`, plus `hashRequirementFields`-based staleness and `stageMissingFields`
+> staging) was removed from all four registries during the exception-registry unification. Its
+> job — "was this exception _examined_, not just _described_" — is deferred, with the
+> `exception-governance` PR-approval gate, to a post-0.4.0 release. What survives: the closed
+> `method` vocabulary (`"mechanical-reverification"` / `"independent-human-review"`), now a plain
+> required root field on every security-family record rather than a nested block, and the
+> `validated-false-positive` ⇒ `mechanical-reverification` refinement. `checks/shared/` and its
+> `evaluate-exception-findings.ts` / `isVerified` / `validateCanonicalIdentity` /
+> `stageMissingFields` helpers were deleted; `scripts/shared/exception-record.ts`'s
+> `validateExceptionRegistry` + a per-registry `ExceptionRegistrySchema` (with a shared
+> `validateSecurityExceptionFields`) is the whole check-owned layer now. The gap-analysis below
+> still stands as the reasoning that motivated the deferred gate.
+
 Every field this primitive checks for completeness is _self-reported_ by whoever wants the
 exception permitted — `justification`, `alternatives`, `remediation`, an `exceptionType`. A policy
 that requires those fields proves an exception was _described_; it never proves the description was
@@ -195,10 +214,11 @@ amendment.
 
 ## Consequences
 
-- `suppression-governance`, `security-socket`, and `coderabbitai` (with more `security-*` checks
-  retrofitted onto it over the same release) share one tested precedence algorithm and one tested
-  field-completeness check, instead of five-plus near-identical copies. Each landed in its own
-  reviewable commit once this primitive itself had landed, not bundled in with it.
+- `suppression-governance`, `security-network`, `security-socket`, and `coderabbitai` share one
+  tested precedence algorithm, one tested field-completeness check, one reconcile/stale mechanism,
+  and one generic registry validator, instead of five-plus near-identical copies. Each landed in
+  its own reviewable PR once the primitive itself had landed: PR 2 (suppression) and PR 3 (the
+  three security checks, together) of the 2026-09 v0.4.0 unification.
 - `repo-contract` now ships one real runtime dependency (`minimatch`) where it previously shipped
   zero. This is scoped and explained above, not silent — a consumer who never imports
   `repo-contract/helpers` still pays nothing extra at runtime (the root and `presets` entry points
@@ -206,14 +226,15 @@ amendment.
 - `repo-contract/helpers` carries no automated backward-compatibility protection of its own yet,
   the same interim gap ADR 0004 already documents for `repo-contract/presets` — the Experimental
   classification is the mitigation, not a permanent answer.
-- Matching (`checks/shared/evaluate-exception-findings.ts`), canonical-identity validation, a
-  closed `exceptionType` vocabulary, and `validateExceptionRegistry` — the one generic
+- The check-owned layer is `scripts/shared/exception-record.ts`: a closed `exceptionType` /
+  `method` vocabulary, and `validateExceptionRegistry` — the one generic
   core-plus-per-registry-schema validator every `.repo-contract/exceptions/*.json` shares, owning
   the `id`/`version`/`justification` core, id namespace, unknown-field rejection and id uniqueness,
-  and delegating registry-specific fields to a small `ExceptionRegistrySchema`
-  (`scripts/shared/exception-record.ts`) — are available for this repository's own checks to build
-  on, but are not published. An outside consumer wanting that layer writes their own, the same way
-  they would write their own `matchRecord` today.
+  and delegating registry-specific fields to a small `ExceptionRegistrySchema`. Not published; an
+  outside consumer wanting it writes their own. (The earlier `checks/shared/` matching layer —
+  `evaluate-exception-findings.ts`, `isVerified`, `validateCanonicalIdentity`,
+  `stageMissingFields` — was deleted in the 2026-09 unification: `reconcileExceptions` + a
+  per-registry schema's own id self-consistency check replace all of it.)
 - No generated JSON Schema backs `disable-comments.json` (or any exception registry): the runtime
   `validateExceptionRegistry` is authoritative, and editor schema support for an internal registry
   is not part of the contract. The bespoke `disable-comments.schema.json`, its generator entry, and
