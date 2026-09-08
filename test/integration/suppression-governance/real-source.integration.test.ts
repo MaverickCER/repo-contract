@@ -42,7 +42,10 @@ describe("disable-comments.json stays synchronized with real source", () => {
   it.runIf(!runningInsideMutationSandbox)(
     "the committed registry has zero new/moved/removed suppressions against the real, current source tree",
     async () => {
-      const registryUrl = new URL("../../../disable-comments.json", import.meta.url)
+      const registryUrl = new URL(
+        "../../../.repo-contract/exceptions/disable-comments.json",
+        import.meta.url,
+      )
       const currentContent = await readFile(registryUrl, "utf8")
       const rawRegistry = JSON.parse(currentContent) as unknown
 

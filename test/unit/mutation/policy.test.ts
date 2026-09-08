@@ -233,7 +233,7 @@ describe("mutation policy", () => {
         newCount: 0,
         movedCount: 0,
         removedCount: 0,
-        registryPath: "disable-comments.json",
+        registryPath: ".repo-contract/exceptions/disable-comments.json",
       }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
@@ -251,7 +251,7 @@ describe("mutation policy", () => {
         newCount: 0,
         movedCount: 0,
         removedCount: 0,
-        registryPath: "disable-comments.json",
+        registryPath: ".repo-contract/exceptions/disable-comments.json",
       }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
@@ -279,7 +279,7 @@ describe("mutation policy", () => {
         newCount: 0,
         movedCount: 0,
         removedCount: 0,
-        registryPath: "disable-comments.json",
+        registryPath: ".repo-contract/exceptions/disable-comments.json",
       }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
@@ -320,7 +320,7 @@ describe("mutation policy", () => {
         newCount: 0,
         movedCount: 0,
         removedCount: 0,
-        registryPath: "disable-comments.json",
+        registryPath: ".repo-contract/exceptions/disable-comments.json",
       }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
@@ -339,7 +339,7 @@ describe("mutation policy", () => {
     const dependencies = {
       "suppression-governance": suppressionGovernanceEvidence({
         ok: false,
-        error: "disable-comments.json failed validation.",
+        error: ".repo-contract/exceptions/disable-comments.json failed validation.",
       }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
@@ -442,7 +442,7 @@ describe("mutation policy", () => {
         newCount: 0,
         movedCount: 0,
         removedCount: 0,
-        registryPath: "disable-comments.json",
+        registryPath: ".repo-contract/exceptions/disable-comments.json",
       }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))

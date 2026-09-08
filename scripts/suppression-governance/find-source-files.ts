@@ -18,7 +18,7 @@ export const EXCLUDED_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
   // suppression once per active mutation-testing sandbox.
   ".stryker-tmp",
   ".git", // VCS internals
-  ".repo-contract", // generated api-contract snapshots
+  ".repo-contract", // api-contract snapshots + the reviewed-exception registries (incl. this check's own disable-comments.json) -- data, never scanned source
   ".changeset", // changeset metadata, not source
 ])
 

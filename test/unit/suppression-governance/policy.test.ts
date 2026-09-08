@@ -41,7 +41,7 @@ function evidenceFor(
     newCount: 0,
     movedCount: 0,
     removedCount: 0,
-    registryPath: "disable-comments.json",
+    registryPath: ".repo-contract/exceptions/disable-comments.json",
   }
 }
 
@@ -74,7 +74,10 @@ function verifiedRecord(
 describe("evaluateSuppressionGovernancePolicy", () => {
   it("fails immediately when the check's own evidence is ok: false (tool-infrastructure failure)", () => {
     const result = evaluateSuppressionGovernancePolicy({
-      evidence: { ok: false, error: "disable-comments.json failed validation." },
+      evidence: {
+        ok: false,
+        error: ".repo-contract/exceptions/disable-comments.json failed validation.",
+      },
     })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("failed validation")
