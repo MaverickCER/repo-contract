@@ -642,21 +642,22 @@ export default tseslint.config(
   },
   {
     // Same narrow carve-out as the scripts/ block above, for the same reason, scoped to exactly
-    // one file: src/helpers/load-exception-registry.ts's whole job (specs/decisions/
-    // 0013-reusable-exception-policy-helper.md) is reading a caller-supplied `path` -- the
-    // calling application's own registry-file location, e.g. its own check config -- via its
-    // own `readFile` capability, defaulting to `node:fs/promises`. That `path` is exactly the
-    // same trusted-capability boundary `RepoContractConfig.spawn`/`env` already establish (see
+    // two files: src/helpers/load-exception-registry.ts and write-exception-registry.ts
+    // (specs/decisions/0013-reusable-exception-policy-helper.md) both take a caller-supplied
+    // `path` -- the calling application's own registry-file location, e.g. its own check config
+    // -- via their own `readFile`/`writeFile`/`rename`/`lstat` capabilities, defaulting to
+    // `node:fs/promises`. That `path` is exactly the same trusted-capability boundary
+    // `RepoContractConfig.spawn`/`env` already establish (see
     // specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
     // -- never derived from network/request input, which is the actual vulnerability this rule
     // exists to catch. Every other file under src/helpers/** keeps the rule at "error" (see the
-    // src/checks block above); this file is the sole, structurally-unavoidable exception, since
-    // its entire published contract is "read this caller-supplied path." Not a suppression-
-    // governance-tracked inline `eslint-disable` -- the "security/*" domain's own policy
-    // (`suppressionPolicy.eslint.rules["security/*"]`) forbids exactly that; this is instead a
-    // deliberate, narrowly-scoped configuration decision, the same mechanism already established
-    // for scripts/ above.
-    files: ["src/helpers/load-exception-registry.ts"],
+    // src/checks block above); these two are the sole, structurally-unavoidable exceptions, since
+    // their entire published contract is "read/replace this caller-supplied path." Not a
+    // suppression-governance-tracked inline `eslint-disable` -- the "security/*" domain's own
+    // policy (`suppressionPolicy.eslint.rules["security/*"]`) forbids exactly that; this is
+    // instead a deliberate, narrowly-scoped configuration decision, the same mechanism already
+    // established for scripts/ above.
+    files: ["src/helpers/load-exception-registry.ts", "src/helpers/write-exception-registry.ts"],
     plugins: { "secure-coding": secureCoding, security },
     rules: {
       ...SECURITY_RULES,

@@ -55,6 +55,9 @@ examples/package-lock.json
 .repo-contract/api-contract/current.api.md
 .repo-contract/api-contract/current.api.json
 .repo-contract/api-contract/current.d.ts
+# writeExceptionRegistry (src/helpers/) writes <registry>.<uuid>.tmp then renames it over the
+# target; a rename failure leaves the temp file behind (the run has already failed).
+.repo-contract/exceptions/*.tmp
 
 # scripts/run-contract.mjs's own local run log -- appended to on every
 # `npm run contract` invocation, capped to the most recent runs (see

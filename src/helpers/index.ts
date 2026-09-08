@@ -33,6 +33,7 @@ export type {
   ExceptionRecordEvaluation,
   ExceptionVerdict,
 } from "./exception-policy.js"
+export type { ExceptionReconciliation, ExceptionRecordCore } from "./reconcile-exceptions.js"
 // Re-exported because `loadExceptionRegistry` below takes a `schema: StandardSchemaV1<...>`
 // parameter -- a consumer implementing one (or passing a real Zod/Valibot/ArkType schema, whose
 // own type already satisfies this hand-vendored interface structurally) needs this type in scope
@@ -50,3 +51,7 @@ export {
 } from "./exception-policy.js"
 
 export { loadExceptionRegistry } from "./load-exception-registry.js"
+
+export { reconcileExceptions, serializeExceptionRegistry } from "./reconcile-exceptions.js"
+
+export { writeExceptionRegistry } from "./write-exception-registry.js"

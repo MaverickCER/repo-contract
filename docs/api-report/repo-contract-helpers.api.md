@@ -43,6 +43,24 @@ export type ExceptionPolicy = {
 export type ExceptionPolicyConfig = Readonly<Record<string, ExceptionCategoryGroup>>;
 
 // @public
+export interface ExceptionReconciliation<TFinding, TRecord> {
+    readonly activeRecords: readonly TRecord[];
+    readonly matchedPairs: readonly {
+        readonly finding: TFinding;
+        readonly record: TRecord;
+    }[];
+    readonly newStubIds: readonly string[];
+    readonly staleRecords: readonly TRecord[];
+}
+
+// @public
+export interface ExceptionRecordCore {
+    readonly id: string;
+    readonly justification: string;
+    readonly version: number;
+}
+
+// @public
 export interface ExceptionRecordEvaluation<TRecord> {
     readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]];
     readonly config: ExceptionPolicyConfig;
@@ -71,7 +89,28 @@ export function loadExceptionRegistry<T>(input: {
 }>;
 
 // @public
+export function reconcileExceptions<TFinding, TRecord extends {
+    readonly id: string;
+}>(input: {
+    readonly existing: readonly TRecord[];
+    readonly findings: readonly TFinding[];
+    readonly deriveId: (finding: TFinding) => string;
+    readonly createStub: (finding: TFinding, id: string) => TRecord;
+}): {
+    readonly ok: true;
+    readonly reconciliation: ExceptionReconciliation<TFinding, TRecord>;
+} | {
+    readonly ok: false;
+    readonly error: string;
+};
+
+// @public
 export function resolveExceptionPolicy(classification: ExceptionClassification, config: ExceptionPolicyConfig, globalDefault: ExceptionPolicy): ExceptionPolicy;
+
+// @public
+export function serializeExceptionRegistry(records: readonly (Record<string, unknown> & {
+    readonly id: string;
+})[]): string;
 
 // @public
 export interface StandardSchemaV1<Input = unknown, Output = Input> {
@@ -114,5 +153,23 @@ export namespace StandardSchemaV1 {
 
 // @public
 export function validateExceptionPolicyConfig(config: ExceptionPolicyConfig, validRequirements?: readonly string[]): readonly string[];
+
+// @public
+export function writeExceptionRegistry(input: {
+    readonly path: string;
+    readonly records: readonly (Record<string, unknown> & {
+        readonly id: string;
+    })[];
+    readonly readFile?: (path: string) => Promise<string>;
+    readonly writeFile?: (path: string, data: string) => Promise<void>;
+    readonly rename?: (from: string, to: string) => Promise<void>;
+    readonly isSymlink?: (path: string) => Promise<boolean>;
+}): Promise<{
+    readonly ok: true;
+    readonly written: boolean;
+} | {
+    readonly ok: false;
+    readonly error: string;
+}>;
 
 ```
