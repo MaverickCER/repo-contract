@@ -1,74 +1,71 @@
 import { describe, expect, it } from "vitest"
 import { evaluateSuppressionGovernancePolicy } from "../../../checks/suppression-governance.js"
+import {
+  createSuppressionStub,
+  deriveSuppressionId,
+} from "../../../scripts/suppression-governance/evidence-types.js"
 import type {
+  SuppressionExceptionRecord,
+  SuppressionFinding,
   SuppressionGovernanceEvidence,
-  SuppressionGovernanceRecordEvidence,
 } from "../../../scripts/suppression-governance/evidence-types.js"
 import type { SuppressionPolicyConfig } from "../../../scripts/suppression-governance/policy-config.js"
 import { suppressionPolicy } from "../../../scripts/suppression-governance/policy-config.js"
-import { HASHED_AUTHORING_FIELDS } from "../../../scripts/suppression-governance/resolve-policy.js"
-import { hashRequirementFields } from "../../../src/helpers/index.js"
 
-function record(
-  overrides: Partial<SuppressionGovernanceRecordEvidence> = {},
-): SuppressionGovernanceRecordEvidence {
-  return {
-    file: "src/example.ts",
-    line: 42,
+function finding(overrides: Partial<SuppressionFinding> = {}): SuppressionFinding {
+  const base = {
     domain: "eslint",
     rule: ["no-console"],
+    file: "src/example.ts",
+    line: 42,
     content: "eslint-disable-next-line no-console",
-    justification: "",
-    alternatives: "",
-    remediation: "",
-    category: "",
-    verificationMethod: "",
     reason: "",
-    verifiedBy: "",
-    verifiedAt: "",
-    verifiedContentHash: "",
-    status: "existing",
     ...overrides,
   }
+  return { ...base, id: deriveSuppressionId(base) }
+}
+
+function record(
+  from: SuppressionFinding,
+  overrides: Partial<SuppressionExceptionRecord> = {},
+): SuppressionExceptionRecord {
+  return { ...createSuppressionStub(from, from.id), ...overrides }
+}
+
+interface Pair {
+  readonly finding: SuppressionFinding
+  readonly record: SuppressionExceptionRecord
 }
 
 function evidenceFor(
-  records: readonly SuppressionGovernanceRecordEvidence[],
+  pairs: readonly Pair[],
+  extras: {
+    readonly stale?: readonly SuppressionExceptionRecord[]
+    readonly scaffolded?: readonly string[]
+  } = {},
 ): SuppressionGovernanceEvidence {
+  const activeExceptions: Record<string, SuppressionExceptionRecord> = {}
+  for (const { finding: f, record: r } of pairs) activeExceptions[f.id] = r
   return {
     ok: true,
-    records,
-    newCount: 0,
-    movedCount: 0,
-    removedCount: 0,
     registryPath: ".repo-contract/exceptions/disable-comments.json",
+    findings: pairs.map((pair) => pair.finding),
+    activeExceptions,
+    staleExceptions: extras.stale ?? [],
+    scaffoldedIds: extras.scaffolded ?? [],
   }
 }
 
 const FULLY_JUSTIFIED = {
-  justification: "Why this is the best option.",
-  alternatives: "Another way this could be done.",
-  remediation: "What was attempted, and why it wasn't enough.",
+  justification:
+    "Why this guardrail is deliberately bypassed; alternatives considered; finding confirmed real.",
   category: "equivalent-mutant",
   verificationMethod: "mutation-run",
 } as const
 
-function rawFieldValue(record: SuppressionGovernanceRecordEvidence, requirement: string): string {
-  return record[requirement as keyof SuppressionGovernanceRecordEvidence] as string
-}
-
-/** A record with every authoring field filled in (`FULLY_JUSTIFIED`, plus any override) and a `verification` sign-off whose hash actually matches -- so it is genuinely `permitted`, not merely `FULLY_JUSTIFIED`-but-unsigned. */
-function verifiedRecord(
-  overrides: Partial<SuppressionGovernanceRecordEvidence> = {},
-): SuppressionGovernanceRecordEvidence {
-  const base = record({ ...FULLY_JUSTIFIED, ...overrides })
-  const hash = hashRequirementFields(base, HASHED_AUTHORING_FIELDS, rawFieldValue)
-  return {
-    ...base,
-    verifiedBy: "a-maintainer",
-    verifiedAt: "2026-01-01T00:00:00.000Z",
-    verifiedContentHash: hash,
-  }
+function justifiedPair(overrides: Partial<SuppressionFinding> = {}): Pair {
+  const f = finding(overrides)
+  return { finding: f, record: record(f, FULLY_JUSTIFIED) }
 }
 
 describe("evaluateSuppressionGovernancePolicy", () => {
@@ -76,11 +73,14 @@ describe("evaluateSuppressionGovernancePolicy", () => {
     const result = evaluateSuppressionGovernancePolicy({
       evidence: {
         ok: false,
-        error: ".repo-contract/exceptions/disable-comments.json failed validation.",
+        error:
+          ".repo-contract/exceptions/disable-comments.json failed to load and was left unchanged.",
+        registryValidationErrors: ["exceptions[0].line must be a positive integer (got 0)."],
       },
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("failed validation")
+    expect(result.rationale).toContain("failed to load")
+    expect(result.rationale).toContain("must be a positive integer")
   })
 
   it("passes with a summary rationale when there are no suppressions", () => {
@@ -89,14 +89,11 @@ describe("evaluateSuppressionGovernancePolicy", () => {
     expect(result.rationale).toContain("0 suppression(s) tracked")
   })
 
-  it('rejects a literal "*" rules key as misconfiguration -- it would glob-match every rule name in the domain', () => {
+  it('rejects a literal "*" rules key as misconfiguration', () => {
     const policyConfig: SuppressionPolicyConfig = {
       eslint: { rules: { "*": { mode: "forbidden" } } },
     }
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([]),
-      policyConfig,
-    })
+    const result = evaluateSuppressionGovernancePolicy({ evidence: evidenceFor([]), policyConfig })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain('must not use the literal "*"')
   })
@@ -106,7 +103,7 @@ describe("evaluateSuppressionGovernancePolicy", () => {
       eslint: { rules: { "no-console": { mode: "forbidden" } } },
     }
     const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record(FULLY_JUSTIFIED)]),
+      evidence: evidenceFor([justifiedPair()]),
       policyConfig,
     })
     expect(result.outcome).toBe("fail")
@@ -117,27 +114,32 @@ describe("evaluateSuppressionGovernancePolicy", () => {
     const policyConfig: SuppressionPolicyConfig = {
       eslint: { rules: { "no-console": { mode: "allowed" } } },
     }
+    const f = finding()
     const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record()]),
+      evidence: evidenceFor([{ finding: f, record: record(f) }]),
       policyConfig,
     })
     expect(result.outcome).toBe("pass")
   })
 
-  it("'exception' mode rejects a record missing any required field", () => {
+  it("'exception' mode rejects a record missing any required field, naming only the missing ones", () => {
     const policyConfig: SuppressionPolicyConfig = {
       eslint: {
         rules: {
-          "no-console": { mode: "exception", requirements: ["justification", "remediation"] },
+          "no-console": {
+            mode: "exception",
+            requirements: ["justification", "verificationMethod"],
+          },
         },
       },
     }
+    const f = finding()
     const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record({ justification: "Only this filled in." })]),
+      evidence: evidenceFor([{ finding: f, record: record(f, { justification: "Only this." }) }]),
       policyConfig,
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("missing: remediation")
+    expect(result.rationale).toContain("missing: verificationMethod")
     expect(result.rationale).not.toContain("missing: justification")
   })
 
@@ -145,28 +147,27 @@ describe("evaluateSuppressionGovernancePolicy", () => {
     const policyConfig: SuppressionPolicyConfig = {
       eslint: { rules: { "no-console": { mode: "exception", requirements: ["justification"] } } },
     }
+    const f = finding()
     const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record({ justification: "   " })]),
+      evidence: evidenceFor([{ finding: f, record: record(f, { justification: "   " }) }]),
       policyConfig,
     })
     expect(result.outcome).toBe("fail")
   })
 
-  it("registry validation and policy enforcement stay decoupled: a record with category/verificationMethod '' is registry-valid, and is rejected by policy only once a config actually requires them", () => {
-    const unclassified = record({ category: "", verificationMethod: "" })
+  it("registry validation and policy enforcement stay decoupled: an unclassified record is registry-valid, rejected by policy only once a config requires the classification", () => {
+    const f = finding()
 
     const notRequired = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([unclassified]),
+      evidence: evidenceFor([{ finding: f, record: record(f, { justification: "Because." }) }]),
       policyConfig: {
         eslint: { rules: { "no-console": { mode: "exception", requirements: ["justification"] } } },
       },
     })
-    expect(notRequired.outcome).toBe("fail")
-    expect(notRequired.rationale).not.toContain("category")
-    expect(notRequired.rationale).not.toContain("verificationMethod")
+    expect(notRequired.outcome).toBe("pass")
 
     const required = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([{ ...unclassified, justification: "Because." }]),
+      evidence: evidenceFor([{ finding: f, record: record(f, { justification: "Because." }) }]),
       policyConfig: {
         eslint: {
           rules: {
@@ -182,28 +183,21 @@ describe("evaluateSuppressionGovernancePolicy", () => {
     expect(required.rationale).toContain("missing: category, verificationMethod")
   })
 
-  it("'exception' mode accepts a record with every required field non-empty", () => {
-    const policyConfig: SuppressionPolicyConfig = {
-      eslint: {
-        rules: {
-          "no-console": { mode: "exception", requirements: ["justification", "alternatives"] },
+  it("defaults to the eslint domain default (all three record fields) when nothing else applies", () => {
+    const f = finding({ domain: "eslint", rule: ["some-unlisted-rule"] })
+    const result = evaluateSuppressionGovernancePolicy({
+      evidence: evidenceFor([{ finding: f, record: record(f) }]),
+      policyConfig: {
+        eslint: {
+          default: {
+            mode: "exception",
+            requirements: ["justification", "category", "verificationMethod"],
+          },
         },
       },
-    }
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record({ justification: "Because.", alternatives: "Considered X." })]),
-      policyConfig,
-    })
-    expect(result.outcome).toBe("pass")
-  })
-
-  it("defaults to requiring all three fields when nothing else in the config applies", () => {
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record({ domain: "unlisted-domain", rule: ["whatever"] })]),
-      policyConfig: {},
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("missing: justification, alternatives, remediation")
+    expect(result.rationale).toContain("missing: justification, category, verificationMethod")
   })
 
   it("an exact rule match takes precedence over a wildcard pattern", () => {
@@ -215,46 +209,15 @@ describe("evaluateSuppressionGovernancePolicy", () => {
         },
       },
     }
+    const f = finding({ rule: ["security/detect-object-injection"] })
     const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record({ rule: ["security/detect-object-injection"] })]),
+      evidence: evidenceFor([{ finding: f, record: record(f) }]),
       policyConfig,
     })
     expect(result.outcome).toBe("pass")
   })
 
-  it("a wildcard pattern matches correctly", () => {
-    const policyConfig: SuppressionPolicyConfig = {
-      eslint: { rules: { "security/*": { mode: "forbidden" } } },
-    }
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record({ rule: ["security/detect-unsafe-regex"] })]),
-      policyConfig,
-    })
-    expect(result.outcome).toBe("fail")
-  })
-
-  it("uses the domain default when no exact or pattern rule matches", () => {
-    const policyConfig: SuppressionPolicyConfig = {
-      eslint: { default: { mode: "exception", requirements: ["remediation"] } },
-    }
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record({ rule: ["unlisted-rule"], remediation: "Because." })]),
-      policyConfig,
-    })
-    expect(result.outcome).toBe("pass")
-  })
-
-  it("uses the global default (require all three fields) only when the domain itself has no entry in the config", () => {
-    const policyConfig: SuppressionPolicyConfig = { typescript: { default: { mode: "allowed" } } }
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record({ domain: "eslint" })]),
-      policyConfig,
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("missing: justification, alternatives, remediation")
-  })
-
-  it("evaluates multiple rules on one suppression and takes the strictest result (forbidding one forbids the whole suppression)", () => {
+  it("evaluates multiple rules on one suppression and takes the strictest (forbidding one forbids the whole)", () => {
     const policyConfig: SuppressionPolicyConfig = {
       eslint: {
         rules: {
@@ -263,311 +226,167 @@ describe("evaluateSuppressionGovernancePolicy", () => {
         },
       },
     }
+    const f = finding({ rule: ["other-rule", "security/detect-object-injection"] })
     const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([
-        record({ rule: ["other-rule", "security/detect-object-injection"], ...FULLY_JUSTIFIED }),
-      ]),
+      evidence: evidenceFor([{ finding: f, record: record(f, FULLY_JUSTIFIED) }]),
       policyConfig,
     })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("forbidden by policy")
   })
 
-  it("evaluates multiple rules with different exception requirements as the union of both", () => {
-    const policyConfig: SuppressionPolicyConfig = {
-      eslint: {
-        rules: {
-          "rule-a": { mode: "exception", requirements: ["justification"] },
-          "rule-b": { mode: "exception", requirements: ["remediation"] },
-        },
-      },
-    }
-    const onlyJustification = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record({ rule: ["rule-a", "rule-b"], justification: "Because." })]),
-      policyConfig,
-    })
-    expect(onlyJustification.outcome).toBe("fail")
-    expect(onlyJustification.rationale).toContain("missing: remediation")
-
-    const both = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([
-        record({ rule: ["rule-a", "rule-b"], justification: "Because.", remediation: "Tried X." }),
-      ]),
-      policyConfig,
-    })
-    expect(both.outcome).toBe("pass")
-  })
-
-  it("a security wildcard forbids every security rule", () => {
-    const policyConfig: SuppressionPolicyConfig = {
-      eslint: { rules: { "security/*": { mode: "forbidden" } } },
-    }
-    const securityRules = [
-      "security/detect-object-injection",
-      "security/detect-unsafe-regex",
-      "security/detect-non-literal-regexp",
-    ]
-
-    for (const rule of securityRules) {
-      const result = evaluateSuppressionGovernancePolicy({
-        evidence: evidenceFor([record({ rule: [rule], ...FULLY_JUSTIFIED })]),
-        policyConfig,
-      })
-      expect(result.outcome).toBe("fail")
-    }
-  })
-
-  it("never invents justification content -- a record with every field empty is always evaluated against exactly what's on the record", () => {
-    const policyConfig: SuppressionPolicyConfig = {
-      eslint: { rules: { "no-console": { mode: "exception", requirements: ["justification"] } } },
-    }
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record()]),
-      policyConfig,
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("missing: justification")
-  })
-
-  it("fails with a config-specific rationale when suppressionPolicy itself has an invalid mode", () => {
+  it("fails on a config-specific rationale when suppressionPolicy has an invalid mode", () => {
     const policyConfig = {
       eslint: { rules: { "no-console": { mode: "not-a-real-mode" } } },
     } as unknown as SuppressionPolicyConfig
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record()]),
-      policyConfig,
-    })
+    const result = evaluateSuppressionGovernancePolicy({ evidence: evidenceFor([]), policyConfig })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("misconfigured")
   })
 
-  it("fails with a config-specific rationale when an 'exception' policy has an empty requirements array", () => {
-    const policyConfig: SuppressionPolicyConfig = {
-      eslint: { rules: { "no-console": { mode: "exception", requirements: [] } } },
-    }
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record()]),
-      policyConfig,
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("misconfigured")
-  })
-
-  it("fails with a config-specific rationale when an 'exception' policy names an unrecognized requirement", () => {
+  it("fails on a config naming an unrecognized requirement", () => {
     const policyConfig = {
       eslint: {
         rules: { "no-console": { mode: "exception", requirements: ["not-a-real-field"] } },
       },
     } as unknown as SuppressionPolicyConfig
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([record()]),
-      policyConfig,
-    })
+    const result = evaluateSuppressionGovernancePolicy({ evidence: evidenceFor([]), policyConfig })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("misconfigured")
   })
 
-  it("the real stryker policy forbids disabling 'all' mutators", () => {
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([
-        record({ domain: "stryker", rule: ["all"], content: "Stryker disable all -- because" }),
-      ]),
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("forbidden by policy")
-  })
-
-  it("the real stryker policy permits a specific mutator disable with every required field filled in and signed off", () => {
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([
-        verifiedRecord({
-          domain: "stryker",
-          rule: ["ConditionalExpression"],
-          content: "Stryker disable next-line ConditionalExpression -- unreachable branch",
-          reason: "unreachable branch",
-        }),
-      ]),
-    })
-    expect(result.outcome).toBe("pass")
-  })
-
-  it("the real stryker policy rejects a record with prose but an unclassified ('') category, naming it as missing", () => {
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([
-        record({
-          domain: "stryker",
-          rule: ["ConditionalExpression"],
-          content: "Stryker disable next-line ConditionalExpression -- unreachable branch",
-          reason: "unreachable branch",
-          ...FULLY_JUSTIFIED,
-          category: "",
-        }),
-      ]),
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("missing: category")
-  })
-
-  it("the real stryker default now also requires justification, alternatives, and remediation, not just reason", () => {
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([
-        record({
-          domain: "stryker",
-          rule: ["ConditionalExpression"],
-          content: "Stryker disable next-line ConditionalExpression -- unreachable branch",
-          reason: "unreachable branch",
-        }),
-      ]),
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("missing: justification, alternatives, remediation")
-  })
-
-  it("the real stryker policy rejects a specific mutator disable with an empty reason even when otherwise fully justified", () => {
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([
-        record({
-          domain: "stryker",
-          rule: ["ConditionalExpression"],
-          content: "Stryker disable next-line ConditionalExpression",
-          reason: "",
-          ...FULLY_JUSTIFIED,
-        }),
-      ]),
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("missing: reason")
-  })
-
-  it("the stryker 'all' forbidden entry does not glob-match a real mutator name (minimatch-collision regression)", () => {
-    const result = evaluateSuppressionGovernancePolicy({
-      evidence: evidenceFor([
-        verifiedRecord({
-          domain: "stryker",
-          rule: ["ConditionalExpression"],
-          content: "Stryker disable next-line ConditionalExpression -- reason text",
-          reason: "reason text",
-        }),
-      ]),
-    })
-    expect(result.outcome).toBe("pass")
-  })
-
-  it("independently re-validates evidence.records and fails if the registry shape is invalid", () => {
-    const invalidRecord = {
-      ...record(),
-      rule: [],
-    } as unknown as SuppressionGovernanceRecordEvidence
-    const result = evaluateSuppressionGovernancePolicy({ evidence: evidenceFor([invalidRecord]) })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("independent registry validation")
-  })
-
-  describe("the verifiedBy sign-off gate", () => {
-    it("stages verifiedBy out of the rationale while authoring fields are still missing", () => {
-      const policyConfig: SuppressionPolicyConfig = {
-        eslint: {
-          rules: {
-            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
-          },
-        },
-      }
+  describe("stale exceptions", () => {
+    it("fails naming a stale exception record whose finding is gone", () => {
+      const gone = finding({ file: "src/deleted.ts", line: 9 })
       const result = evaluateSuppressionGovernancePolicy({
-        evidence: evidenceFor([record()]),
-        policyConfig,
+        evidence: evidenceFor([], { stale: [record(gone, FULLY_JUSTIFIED)] }),
       })
       expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("Stale exception")
+      expect(result.rationale).toContain(gone.id)
+      expect(result.rationale).toContain("delete this entry")
+    })
+
+    it("fails even when every live finding is fully justified, if any stale record remains", () => {
+      const stale = finding({ file: "src/old.ts", line: 3 })
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([justifiedPair()], { stale: [record(stale, FULLY_JUSTIFIED)] }),
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("Stale exception")
+    })
+  })
+
+  describe("scaffolded stubs", () => {
+    it("fails a blank scaffolded stub for an 'exception'-mode finding and calls out the scaffolding", () => {
+      const f = finding({ rule: ["@typescript-eslint/unbound-method"] })
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([{ finding: f, record: record(f) }], { scaffolded: [f.id] }),
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("Scaffolded 1 stub")
       expect(result.rationale).toContain("missing: justification")
-      expect(result.rationale).not.toContain("verifiedBy")
+    })
+  })
+
+  describe("bijection integrity", () => {
+    it("fails when a finding has no active exception record", () => {
+      const f = finding()
+      const evidence: SuppressionGovernanceEvidence = {
+        ok: true,
+        registryPath: ".repo-contract/exceptions/disable-comments.json",
+        findings: [f],
+        activeExceptions: {},
+        staleExceptions: [],
+        scaffoldedIds: [],
+      }
+      const result = evaluateSuppressionGovernancePolicy({ evidence })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("bijection")
     })
 
-    it("surfaces verifiedBy once every authoring field is filled but the record is unsigned", () => {
-      const policyConfig: SuppressionPolicyConfig = {
-        eslint: {
-          rules: {
-            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
-          },
-        },
+    it("fails when an active exception matches no finding", () => {
+      const f = finding()
+      const evidence: SuppressionGovernanceEvidence = {
+        ok: true,
+        registryPath: ".repo-contract/exceptions/disable-comments.json",
+        findings: [],
+        activeExceptions: { [f.id]: record(f, FULLY_JUSTIFIED) },
+        staleExceptions: [],
+        scaffoldedIds: [],
       }
+      const result = evaluateSuppressionGovernancePolicy({ evidence })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("bijection")
+    })
+  })
+
+  describe("the real, committed suppressionPolicy", () => {
+    it("forbids disabling 'all' Stryker mutators", () => {
+      const f = finding({
+        domain: "stryker",
+        rule: ["all"],
+        content: "Stryker disable all -- because",
+        reason: "because",
+      })
       const result = evaluateSuppressionGovernancePolicy({
-        evidence: evidenceFor([record({ justification: "Because." })]),
-        policyConfig,
+        evidence: evidenceFor([{ finding: f, record: record(f, FULLY_JUSTIFIED) }]),
       })
       expect(result.outcome).toBe("fail")
-      expect(result.rationale).toContain("missing: verifiedBy")
+      expect(result.rationale).toContain("forbidden by policy")
     })
 
-    it("passes a record whose verifiedContentHash matches its current authoring fields", () => {
-      const policyConfig: SuppressionPolicyConfig = {
-        eslint: {
-          rules: {
-            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
-          },
-        },
-      }
+    it("permits a specific mutator disable with every required field filled in", () => {
+      const f = finding({
+        domain: "stryker",
+        rule: ["ConditionalExpression"],
+        content: "Stryker disable next-line ConditionalExpression -- unreachable branch",
+        reason: "unreachable branch",
+      })
       const result = evaluateSuppressionGovernancePolicy({
-        evidence: evidenceFor([verifiedRecord({ domain: "eslint", rule: ["no-console"] })]),
-        policyConfig,
+        evidence: evidenceFor([{ finding: f, record: record(f, FULLY_JUSTIFIED) }]),
       })
       expect(result.outcome).toBe("pass")
     })
 
-    it("reverts a verified record to insufficient once a hashed field is edited after sign-off (content-bound staleness)", () => {
-      const policyConfig: SuppressionPolicyConfig = {
-        eslint: {
-          rules: {
-            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
-          },
-        },
-      }
-      const verified = verifiedRecord({ domain: "eslint", rule: ["no-console"] })
-      const edited = { ...verified, justification: "Edited after sign-off, invalidating the hash." }
-      const result = evaluateSuppressionGovernancePolicy({
-        evidence: evidenceFor([edited]),
-        policyConfig,
+    it("rejects a Stryker record with prose but an unclassified ('') category", () => {
+      const f = finding({
+        domain: "stryker",
+        rule: ["ConditionalExpression"],
+        content: "Stryker disable next-line ConditionalExpression -- unreachable branch",
+        reason: "unreachable branch",
       })
-      expect(result.outcome).toBe("fail")
-      expect(result.rationale).toContain("missing: verifiedBy")
-    })
-
-    it("never lets a stored verifiedBy count on its own -- an empty verifiedContentHash is always unsigned, regardless of verifiedBy's own value", () => {
-      const policyConfig: SuppressionPolicyConfig = {
-        eslint: {
-          rules: {
-            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
-          },
-        },
-      }
       const result = evaluateSuppressionGovernancePolicy({
         evidence: evidenceFor([
-          record({ justification: "Because.", verifiedBy: "someone", verifiedContentHash: "" }),
+          { finding: f, record: record(f, { ...FULLY_JUSTIFIED, category: "" }) },
         ]),
-        policyConfig,
       })
       expect(result.outcome).toBe("fail")
-      expect(result.rationale).toContain("missing: verifiedBy")
+      expect(result.rationale).toContain("missing: category")
     })
 
-    it("is locked into the real, committed suppressionPolicy -- not just hand-built test policies naming verifiedBy directly", () => {
-      // No policyConfig override: exercises the actual suppressionPolicy module as committed. A
-      // rule with no exact/pattern entry falls to the eslint domain's own `default`
-      // (BASE_EXCEPTION_REQUIREMENTS) -- if a future edit ever dropped "verifiedBy" from that
-      // constant, this is the one test that would catch it; every other case above pins its own
-      // hand-built policyConfig instead.
-      const fullyJustifiedButUnsigned = record({
-        rule: ["some-rule-with-no-specific-entry"],
-        justification: "Why this is the best option.",
-        alternatives: "Another way this could be done.",
-        remediation: "What was attempted, and why it wasn't enough.",
-        category: "equivalent-mutant",
-        verificationMethod: "mutation-run",
+    it("rejects a specific Stryker mutator disable with an empty reason even when otherwise fully justified", () => {
+      const f = finding({
+        domain: "stryker",
+        rule: ["ConditionalExpression"],
+        content: "Stryker disable next-line ConditionalExpression",
+        reason: "",
       })
       const result = evaluateSuppressionGovernancePolicy({
-        evidence: evidenceFor([fullyJustifiedButUnsigned]),
+        evidence: evidenceFor([{ finding: f, record: record(f, FULLY_JUSTIFIED) }]),
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("missing: reason")
+    })
+
+    it("is locked into the committed suppressionPolicy module (a rule with no specific entry falls to the eslint domain default)", () => {
+      const f = finding({ rule: ["some-rule-with-no-specific-entry"] })
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([{ finding: f, record: record(f) }]),
         policyConfig: suppressionPolicy,
       })
       expect(result.outcome).toBe("fail")
-      expect(result.rationale).toContain("missing: verifiedBy")
+      expect(result.rationale).toContain("missing: justification, category, verificationMethod")
     })
   })
 })

@@ -1,7 +1,13 @@
-// Generates schemas/*.schema.json (and one internal, non-published schema --
-// see the "disable-comments" target below) directly from their source types
-// -- never hand-authored, so a schema and the type it describes cannot
-// silently drift apart. Regenerated as part of `npm run verify`.
+// Generates schemas/*.schema.json directly from their source types -- never
+// hand-authored, so a schema and the type it describes cannot silently drift
+// apart. Regenerated as part of `npm run verify`.
+//
+// disable-comments.json deliberately has NO generated schema: its runtime
+// validator (scripts/shared/exception-record.ts's validateExceptionRegistry +
+// scripts/suppression-governance/evidence-types.ts's SUPPRESSION_EXCEPTION_SCHEMA)
+// is authoritative and editor schema support for that internal registry is not
+// part of the contract -- see specs/decisions/0013-reusable-exception-policy-helper.md's
+// "The exception registry is the review surface" section.
 
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
@@ -56,100 +62,7 @@ export const TARGETS = [
     // See the "evidence" target's own comment above -- identical reasoning.
     additionalProperties: true,
   },
-  {
-    name: "disable-comments",
-    // Deliberately left at ts-json-schema-generator's own strict default (additionalProperties:
-    // false) rather than opting in like evidence/verdict above: this registry is internal,
-    // single-producer/single-consumer tooling with no forward-compatibility promise (see this
-    // target's own comment below) -- strict validation here catches a real drift bug rather than
-    // tolerating one.
-    // Targets scripts/suppression-governance/evidence-types.ts directly -- unlike
-    // Evidence/Verdict above, DisableCommentRecord/DisableCommentRegistry are not generic, so
-    // none of the scripts/schema-types.ts re-export indirection those two need (to work around
-    // ts-json-schema-generator's inability to resolve a bare generic interface as a root type)
-    // applies here.
-    sourceFile: "scripts/suppression-governance/evidence-types.ts",
-    type: "DisableCommentRegistry",
-    outputFile: "scripts/suppression-governance/disable-comments.schema.json",
-    // Deliberately NOT under the maverickcer.github.io/repo-contract/schema/ namespace the two
-    // targets above use: disable-comments.json is this repository's own internal self-assurance
-    // registry (see specs/decisions/0006-suppression-governance.md), not part of the published
-    // package surface (schemas/ is inside package.json's `files` and its `exports["./schema/*"]`;
-    // this file deliberately lives outside that directory so it never ships to a consumer or gets
-    // promoted to VERSIONING.md's Stable tier). The $id below reflects that non-published status
-    // rather than reusing the public schema host.
-    id: "https://github.com/maverickcer/repo-contract/internal/disable-comments.schema.json",
-    title: "repo-contract Disable Comments",
-    description:
-      "Machine-readable schema for this repository's own disable-comments.json suppression- " +
-      "governance registry (see specs/decisions/0006-suppression-governance.md) -- internal " +
-      "self-assurance tooling, never part of the published package surface. Generated from " +
-      "scripts/suppression-governance/evidence-types.ts's DisableCommentRegistry type -- never " +
-      "hand-authored.",
-  },
 ]
-
-// ts-json-schema-generator (unlike e.g. typescript-json-schema) has no JSDoc-annotation mechanism
-// for value-level JSON Schema keywords (`minimum`, `minLength`, `minItems`, `pattern`, ...) -- it
-// only ever derives structural shape from the TS type itself. That means a value-level invariant
-// registry.ts's `validateRecord` enforces at runtime (e.g. "line must be a positive integer") can
-// never appear in the generated schema no matter what the source type or its JSDoc says, since
-// TypeScript's own `number`/`string`/`readonly string[]` types carry no such refinement.
-// Merged in by basename after generation, purely for the internal "disable-comments" target
-// (never the two published schemas/evidence.schema.json /verdict.schema.json -- those stay
-// exactly what the generator produces): each entry mirrors one of validateRecord's own checks, so
-// a divergence between the two is now a schema-conformance-test failure (an invalid record that
-// satisfies the schema but not the validator) rather than a silent, undetected gap. `file`'s
-// `pattern` only approximates "well-formed repo-relative path" (no leading `/`, no `..` segment)
-// -- registry.ts's `isWellFormedRepoRelativePath` remains the authoritative, exact check.
-const DISABLE_COMMENTS_PROPERTY_OVERRIDES = {
-  file: { minLength: 1, pattern: "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$" },
-  line: { type: "integer", minimum: 1 },
-  domain: { minLength: 1 },
-  // `items` is assigned wholesale (Object.assign only shallow-merges), so `type: "string"` must
-  // be repeated here rather than relying on the generator's own `{ type: "string" }` surviving --
-  // it would otherwise be silently clobbered.
-  rule: { minItems: 1, items: { type: "string", minLength: 1 } },
-  content: { minLength: 1 },
-  // "" (unsigned) or a 64-char lowercase hex SHA-256 digest -- registry.ts's own
-  // `SHA256_HEX`/`validateRecord` remain the authoritative, exact check; this only approximates it
-  // the same way `file`'s own pattern above only approximates "well-formed repo-relative path".
-  verifiedContentHash: { pattern: "^$|^[0-9a-f]{64}$" },
-  // `verifiedAt` deliberately has NO override here, unlike every other value-level-constrained
-  // field above: registry.ts's `isIso8601Timestamp` (scripts/shared/exception-record.ts) rejects
-  // a shaped-but-impossible calendar date (`"2026-02-29"` on a non-leap year) by hand-checking
-  // real Gregorian month lengths, not merely by regex shape -- no JSON Schema `pattern` can
-  // express "day 29 is invalid for February in this specific year." A pattern approximating only
-  // the *shape* (as `file`/`verifiedContentHash` above do for their own constraints) would make
-  // this field's schema and runtime contracts look equivalent when they are not: a value the
-  // schema accepts as `verifiedAt` can still be rejected by `validateSuppressionRegistry` at load
-  // time. `verifiedAt` therefore stays schema-unconstrained (any string) and remains a runtime-only
-  // contract, enforced exclusively by registry.ts.
-}
-
-/**
- * Merges `DISABLE_COMMENTS_PROPERTY_OVERRIDES` into the generated "disable-comments" schema's
- * `DisableCommentRecord` definition -- see that constant's own comment for why this can't instead
- * be expressed as a generator input.
- * @param schema - The freshly generated schema object (mutated in place).
- */
-function applyDisableCommentsOverrides(schema) {
-  const record = schema.definitions?.DisableCommentRecord
-  if (record === undefined) {
-    throw new Error(
-      "generate-json-schema: expected a DisableCommentRecord definition to layer value-level overrides onto, but none was generated -- did evidence-types.ts's DisableCommentRecord shape change?",
-    )
-  }
-  for (const [property, override] of Object.entries(DISABLE_COMMENTS_PROPERTY_OVERRIDES)) {
-    const existing = record.properties?.[property]
-    if (existing === undefined) {
-      throw new Error(
-        `generate-json-schema: expected DisableCommentRecord to have a "${property}" property to override, but it did not.`,
-      )
-    }
-    Object.assign(existing, override)
-  }
-}
 
 function generateSchema(target) {
   const config = {
@@ -159,13 +72,11 @@ function generateSchema(target) {
     expose: "export",
     jsDoc: "extended",
     skipTypeCheck: false,
-    // Defaults to ts-json-schema-generator's own strict `false` when a target doesn't opt in --
-    // see the "disable-comments" target's own comment for why that default is correct there.
+    // Defaults to ts-json-schema-generator's own strict `false` when a target doesn't opt in.
     additionalProperties: target.additionalProperties ?? false,
   }
 
   const schema = createGenerator(config).createSchema(config.type)
-  if (target.name === "disable-comments") applyDisableCommentsOverrides(schema)
   return {
     $schema: schema.$schema,
     $id: target.id,

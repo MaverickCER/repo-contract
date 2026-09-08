@@ -302,6 +302,25 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
 
+      # A contract run is not a pure read: `format`/`lint` auto-fix, and
+      # `suppression-governance` reconciles `.repo-contract/exceptions/*.json`
+      # (scaffolding a blank stub for any new disable directive, surfacing a
+      # stale record whose directive moved). On a fully-governed tree the run
+      # writes nothing; CI starts from a clean checkout, so ANY post-run
+      # working-tree change means an ungoverned finding, an unformatted file, or
+      # an un-added exception stub slipped through. Fail loudly rather than let
+      # it ride along with a green run -- see
+      # specs/decisions/0013-reusable-exception-policy-helper.md's "review
+      # surface" amendment (invariant 8).
+      - name: Working tree is clean after the contract run
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::The contract run left the working tree dirty. A new disable directive needs its exception stub filled in and committed (.repo-contract/exceptions/), a file needs formatting, or a stale exception record needs deleting. Run 'npm run contract' locally and commit the result."
+            git status --porcelain
+            git diff
+            exit 1
+          fi
+
   # Belt-and-suspenders for the squash-merge case (see
   # specs/decisions/0009-conventional-commits-versioning-and-local-gates.md): the merge-commit /
   # rebase policy keeps every commit conforming, but if a squash ever slips
