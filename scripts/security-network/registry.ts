@@ -19,8 +19,6 @@ const CAPABILITY_KIND_SET: Readonly<Record<NetworkCapabilityKind, true>> = {
   "restricted-named-import": true,
   "restricted-global-usage": true,
   "dynamic-import-non-literal-specifier": true,
-  "non-literal-preset-command": true,
-  "unreviewed-preset-command": true,
 }
 const CAPABILITY_KINDS = Object.keys(CAPABILITY_KIND_SET) as readonly NetworkCapabilityKind[]
 

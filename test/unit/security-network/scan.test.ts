@@ -167,92 +167,10 @@ describe("scanSourceFile -- representative capability categories", () => {
     expect(findings[0]?.capability).toBe("restricted-global-usage")
   })
 
-  it("flags a preset run command not in the reviewed allowlist", () => {
-    const findings = scanSourceFile(
-      "f.ts",
-      'const c = { run: ["curl", "https://evil.example.com"] }',
-    )
-    expect(findings).toHaveLength(1)
-    expect(findings[0]?.capability).toBe("unreviewed-preset-command")
-  })
-
-  it("flags a preset run command that isn't a string literal at all", () => {
-    const findings = scanSourceFile(
-      "f.ts",
-      'function build(cmd: string) { return { run: [cmd, "x"] } }',
-    )
-    expect(findings).toHaveLength(1)
-    expect(findings[0]?.capability).toBe("non-literal-preset-command")
-  })
-
-  it("does not flag a preset run command already in the reviewed allowlist", () => {
-    const findings = scanSourceFile("f.ts", 'const c = { run: ["eslint", "."] }')
-    expect(findings).toHaveLength(0)
-  })
-
-  it("sees through an 'as const' assertion on the run array -- it doesn't change the runtime value", () => {
-    const findings = scanSourceFile(
-      "f.ts",
-      'const c = { run: ["curl", "https://evil.example.com"] as const }',
-    )
-    expect(findings).toHaveLength(1)
-    expect(findings[0]?.capability).toBe("unreviewed-preset-command")
-  })
-
-  it("does not flag an 'as const' run array whose command is allowlisted", () => {
-    const findings = scanSourceFile("f.ts", 'const c = { run: ["eslint", "."] as const }')
-    expect(findings).toHaveLength(0)
-  })
-
-  it("sees through a 'satisfies' assertion on the run array the same way", () => {
-    const findings = scanSourceFile(
-      "f.ts",
-      'const c = { run: ["curl", "https://evil.example.com"] satisfies readonly string[] }',
-    )
-    expect(findings).toHaveLength(1)
-    expect(findings[0]?.capability).toBe("unreviewed-preset-command")
-  })
-
-  it("resolves a no-substitution template literal run command the same as a plain string", () => {
-    const findings = scanSourceFile("f.ts", "const c = { run: `curl https://evil.example.com` }")
-    expect(findings).toHaveLength(1)
-    expect(findings[0]?.capability).toBe("unreviewed-preset-command")
-  })
-
-  it("fails closed on a template literal with interpolation -- its value cannot be statically known", () => {
-    const findings = scanSourceFile(
-      "f.ts",
-      "function build(cmd: string) { return { run: `${cmd} x` } }",
-    )
-    expect(findings).toHaveLength(1)
-    expect(findings[0]?.capability).toBe("non-literal-preset-command")
-  })
-
-  it("fails closed on a run property that is a bare identifier reference", () => {
-    const findings = scanSourceFile(
-      "f.ts",
-      "declare const CMD: readonly string[]\nconst c = { run: CMD }",
-    )
-    expect(findings).toHaveLength(1)
-    expect(findings[0]?.capability).toBe("non-literal-preset-command")
-  })
-
-  it('flags a quoted "run" key carrying a disallowed command, same as an unquoted key', () => {
-    const findings = scanSourceFile(
-      "f.ts",
-      'const c = { "run": ["curl", "https://evil.example.com"] }',
-    )
-    expect(findings).toHaveLength(1)
-    expect(findings[0]?.capability).toBe("unreviewed-preset-command")
-  })
-
-  it("fails closed on shorthand run property syntax", () => {
-    const findings = scanSourceFile(
-      "f.ts",
-      "declare const run: readonly string[]\nconst c = { run }",
-    )
-    expect(findings).toHaveLength(1)
-    expect(findings[0]?.capability).toBe("non-literal-preset-command")
+  it("no longer flags any preset run command -- that moved to the preset-commands check", () => {
+    expect(
+      scanSourceFile("f.ts", 'const c = { run: ["curl", "https://evil.example.com"] }'),
+    ).toEqual([])
   })
 
   it("does not flag ordinary, network-free source", () => {
@@ -271,22 +189,12 @@ describe("scanForNetworkCapability -- real filesystem fixtures", () => {
     expect(evidence.findings).toEqual([])
   })
 
-  it("finds every distinct violation across the violating fixture tree, including the malicious preset", async () => {
+  it("finds every distinct violation across the violating fixture tree", async () => {
     const evidence = await scanForNetworkCapability(path.join(FIXTURES_ROOT, "violating"))
 
     const capabilities = evidence.findings.map((f) => f.capability).sort()
     expect(capabilities).toEqual(
-      [
-        "dynamic-import-non-literal-specifier",
-        "restricted-module-import",
-        "unreviewed-preset-command",
-      ].sort(),
+      ["dynamic-import-non-literal-specifier", "restricted-module-import"].sort(),
     )
-
-    const maliciousPresetFinding = evidence.findings.find(
-      (f) => f.file === "src/malicious-preset.ts",
-    )
-    expect(maliciousPresetFinding?.capability).toBe("unreviewed-preset-command")
-    expect(maliciousPresetFinding?.detail).toContain("curl")
   })
 })
