@@ -277,56 +277,55 @@ at the end of this section.
   enough named justification to satisfy a repository-owned, per-domain/per-rule policy? Inline disable
   comments remain allowed; what this check guarantees is that none of them can silently bypass a
   guardrail without leaving a durable, reviewable, policy-gated record. Two strictly separated layers,
-  the same split as `architecture`: `scripts/suppression-governance/` discovers
-  suppression comments (via the TypeScript compiler's own scanner, not by shelling out to ESLint — this
-  check must be able to audit a suppression that caused ESLint itself to be bypassed) and synchronizes
-  the registry (new suppressions get empty `justification`/`alternatives`/`remediation`/`category`/
-  `verificationMethod` fields, removed ones are dropped, unambiguous line-moves preserve those fields,
-  ambiguous ones never guess); `checks/suppression-governance.ts` reads that already-synchronized
-  registry and evaluates it against `suppressionPolicy` (`scripts/suppression-governance/policy-config.ts`)
-  — each rule resolves to one of three modes: `"forbidden"` (never permitted), `"allowed"` (permitted
-  unconditionally), or `"exception"` (permitted once every field named in its `requirements` list is
-  non-empty), resolved per rule via exact match, then wildcard pattern, then domain default, then a
-  global default requiring `justification`/`alternatives`/`remediation`/`category`/`verificationMethod`
-  — and, since ADR 0006's 2026-09 amendment, `verifiedBy` on every `"exception"`-mode rule.
-  This replaces an earlier numeric "N justification entries required" design, dropped because a plain
-  count is trivially satisfied by generating N generic-sounding entries without doing any of the
-  underlying work the count was meant to prove happened (see ADR 0006's "not a numeric threshold"
-  section). `category`/`verificationMethod` (see
-  [ADR 0006](decisions/0006-suppression-governance.md)) are hand-authored
-  the same way as `justification`/`alternatives`/`remediation`, but are closed enumerations rather than
-  free prose, letting a reviewer or report triage a suppression's kind and evidentiary basis without
-  reading the full prose. ADR 0006's amendment adds a **content-bound verification** block —
-  `verifiedBy` / `verifiedAt` / `verifiedContentHash`, the same gate the exception-policy checks use
-  (see "Reviewed exceptions" above, and ADR 0013's "Verification, not attestation"):
-  `verifiedContentHash` is `hashRequirementFields()` over the record's six authoring fields at
-  sign-off time, recomputed every run, and `verifiedBy` only counts as present while the hash still
-  matches — editing any authoring field after sign-off silently reverts `verifiedBy` to "missing"
-  and the record fails policy again, with no separate staleness tracking. `verifiedBy` reuses the
-  existing `verificationMethod` enum rather than adding a second `method` field.
+  the same split as `architecture`: `scripts/suppression-governance/check.ts` discovers every
+  suppression directive (via the TypeScript compiler's own scanner, not by shelling out to ESLint — this
+  check must be able to audit a suppression that caused ESLint itself to be bypassed), derives one
+  semantic id per directive (`suppression:<domain>:<rule>:<file>:<line>`), and reconciles that id set
+  against the on-disk registry via `repo-contract/helpers`' `reconcileExceptions` (see ADR 0013's "The
+  exception registry is the review surface" amendment): a matched record is preserved verbatim, an
+  unmatched directive gets a fresh blank stub written to disk, and **a record whose id matches no
+  directive is surfaced as stale and never auto-removed** (retiring it is an explicit human edit).
+  `checks/suppression-governance.ts` reads that already-reconciled evidence and evaluates it against
+  `suppressionPolicy` (`scripts/suppression-governance/policy-config.ts`) — each rule resolves to one of
+  three modes: `"forbidden"` (never permitted), `"allowed"` (permitted unconditionally), or
+  `"exception"` (permitted once every field named in its `requirements` list is non-empty), resolved
+  per rule via exact match, then wildcard pattern, then domain default, then a global default requiring
+  `justification`/`category`/`verificationMethod`. This replaces an earlier numeric "N justification
+  entries required" design, dropped because a plain count is trivially satisfied by generating N
+  generic-sounding entries without doing any of the underlying work the count was meant to prove
+  happened (see ADR 0006's "not a numeric threshold" section). `justification` is the one
+  human-authored prose field (it absorbed the older model's separate `alternatives`/`remediation`);
+  `category`/`verificationMethod` (see [ADR 0006](decisions/0006-suppression-governance.md)) are
+  hand-authored the same way but are closed enumerations rather than free prose, letting a reviewer or
+  report triage a suppression's kind and evidentiary basis without reading the full prose. The
+  `stryker` domain additionally requires a non-empty `reason` on the _finding_ (the text a recognizer
+  extracts from the directive comment). The `verifiedBy`/`verifiedContentHash` content-bound sign-off
+  block ADR 0006's 2026-09-07 amendment added was **removed** with the registry unification and
+  deferred, with ADR 0013's PR-approval attestation gate, to a post-0.4.0 release.
 - **Does not establish**: whether a suppression is _technically justified_ — the check never invents or
-  evaluates the truth of `justification`/`alternatives`/`remediation`, only whether the fields a policy
-  requires are non-empty; that judgment is left entirely to whoever writes the prose. The same applies to
+  evaluates the truth of `justification`, only whether the fields a policy requires are non-empty; that
+  judgment is left entirely to whoever writes the prose. The same applies to
   `category`/`verificationMethod`: the check verifies a classification is _present and a valid member of
-  its enum_, never that it is _correct_. The verification block is content-binding, not
-  correctness-checking: it proves a named sign-off is tied to the exact prose it approved, never that
-  the sign-off's judgment was right. It also does not establish anything about whether ESLint/TypeScript
-  itself currently passes — discovery is fully independent of any other check's outcome.
+  its enum_, never that it is _correct_. It also does not establish anything about whether
+  ESLint/TypeScript itself currently passes — discovery is fully independent of any other check's
+  outcome.
 - **Files executed**: none in the runtime sense — a static scan of every governed source file
   (`scripts/suppression-governance/find-source-files.ts`'s own exclusion rules, deliberately not
   inherited from `eslint.config.js`/`.gitignore`/`.jscpd.json`) via the TypeScript compiler's scanner.
 - **Run alone**: `tsx scripts/suppression-governance/check.ts`.
 - **Coverage contribution**: no — static analysis, nothing executes.
 - **Evidence**: `SuppressionGovernanceEvidence`
-  (`scripts/suppression-governance/evidence-types.ts`) — every synchronized record (`file`, `line`,
-  `domain`, `rule`, `content`, `justification`, `alternatives`, `remediation`, `category`,
-  `verificationMethod`, `reason`, `verifiedBy`, `verifiedAt`, `verifiedContentHash`, plus this run's
-  `new`/`existing`/`moved` status), and `newCount`/`movedCount`/`removedCount` for the run as a whole.
+  (`scripts/suppression-governance/evidence-types.ts`) — `findings` (every raw directive: `id`,
+  `domain`, `rule`, `file`, `line`, `content`, `reason`), `activeExceptions` (the reconciled live
+  record per finding, keyed by id — `id`/`version`/`justification` core plus
+  `category`/`domain`/`file`/`line`/`rule`/`verificationMethod` metadata), `staleExceptions` (records
+  whose directive is gone), and `scaffoldedIds` (the stubs freshly created this run).
 - **Policy**: `evaluateSuppressionGovernancePolicy` — fails on a script-level tool-infrastructure failure
-  (an unreadable source file, or a pre-existing `disable-comments.json` that fails validation — left
-  untouched on disk rather than overwritten), on evidence that independently re-fails registry
-  validation, or on any suppression resolved as forbidden or under-justified; passes otherwise, with a
-  summary of how many suppressions are tracked/new/moved/removed.
+  (an unreadable source file, a pre-existing `disable-comments.json` that fails validation — left
+  untouched on disk rather than overwritten, a `deriveId` collision, or a failed write), on evidence
+  that independently re-fails registry validation or breaks the `findings ↔ activeExceptions`
+  bijection, on any stale exception, or on any suppression resolved as forbidden or under-justified;
+  passes otherwise, with a summary of how many suppressions are tracked, newly scaffolded, and stale.
 - **CI**: part of `npm run contract`. `mutation` declares a genuine `dependsOn: ["suppression-governance"]`
   -- its policy reads this check's evidence to verify every Stryker-domain suppression before trusting
   a comment-ignored mutant (ADR 0006); `mutation`'s separate need to run alone, last, is expressed by
@@ -494,29 +493,30 @@ reviewed, accepted exception the same way, on the shared `repo-contract/helpers`
 unpublished):
 
 - **Where.** All four live under `.repo-contract/exceptions/`: `disable-comments.json`,
-  `socket.json`, `coderabbit.json`, `security-network.json`. `socket`/`coderabbit`/`security-network`
-  use the envelope `{ "exceptions": [ … ] }` and are read via `loadExceptionRegistry` (a missing
-  file is a normal empty-registry state, never an error). `disable-comments.json` is the exception
-  to the shape but not the location: a bare array (each suppression comment _is_ a record), owned
-  end-to-end by `scripts/suppression-governance/check.ts`, which reads it, reconciles it against
-  discovered suppressions, and deterministically rewrites it in place on every run (creating
-  `.repo-contract/exceptions/` first if a fresh tree has no such directory yet).
-- **Shape.** Every record carries prose/enum authoring fields (`justification`, and per check some
-  of `alternatives` / `remediation` / `exceptionType`) plus a content-bound `verification` block
-  (`verifiedBy`, `verifiedAt` ISO 8601, `verifiedContentHash`, and — except for
-  `suppression-governance` — a closed `method`). Each envelope-shaped record also carries an `id`
-  that must equal what the check's own `deriveId` recomputes from the record's embedded
-  finding-identity fields (`validateCanonicalIdentity`) — a stored key inconsistent with its own
-  claimed identity is a registry bug, caught at load time. `disable-comments.json` records are
-  addressed positionally by `(file, line, domain, rule, content)` instead, reconciled by the
-  synchronizer rather than matched by a stored id.
-- **Validation.** There is no generated JSON Schema for the three envelope files; the authoritative
-  validator is each check's own `scripts/<check>/registry.ts`, run on _every_ contract run before
-  any findings are evaluated — so a malformed or internally-inconsistent registry fails CI even on
-  a clean or never-ran scan, never rides along silently with a green run. `disable-comments.json`
-  additionally has an internal, non-published generated JSON Schema
-  (`scripts/suppression-governance/disable-comments.schema.json`), cross-checked against its
-  hand-written validator by a schema-conformance test.
+  `socket.json`, `coderabbit.json`, `security-network.json`, all using the envelope
+  `{ "exceptions": [ … ] }` and read via `loadExceptionRegistry` (a missing file is a normal
+  empty-registry state, never an error). `disable-comments.json` is owned end-to-end by
+  `scripts/suppression-governance/check.ts`, which reads it, reconciles it against discovered
+  directives via `reconcileExceptions`, and deterministically rewrites it in place on every run
+  (creating `.repo-contract/exceptions/` first if a fresh tree has no such directory yet).
+- **Shape.** Every record carries the three-field core (`id`, `version`, `justification`) plus
+  per-registry typed metadata. `disable-comments.json` (unified 2026-09 — see ADR 0006's
+  "Reconciled onto the generic mechanism" amendment) carries `category`/`verificationMethod` closed
+  enums and `domain`/`rule`/`file`/`line`; `socket`/`coderabbit`/`security-network` still carry the
+  older `alternatives`/`remediation`/`exceptionType` prose and a content-bound `verification` block
+  (`verifiedBy`, `verifiedAt` ISO 8601, `verifiedContentHash`, and a closed `method`) pending their
+  own retrofit onto the generic reconcile/stale mechanism. Each record's `id` must equal what the
+  check's own `deriveId` recomputes from the record's embedded identity fields — a stored key
+  inconsistent with its own claimed identity is a registry bug, caught at load time. For
+  `suppression-governance` the id is `suppression:<domain>:<rule>:<file>:<line>` (the line is in
+  the id deliberately; see ADR 0006), and "no matching directive" _is_ staleness.
+- **Validation.** No generated JSON Schema for any of the four; the authoritative validator is
+  run on _every_ contract run before any findings are evaluated — so a malformed or
+  internally-inconsistent registry fails CI even on a clean or never-ran scan, never rides along
+  silently with a green run. `disable-comments.json` uses the generic
+  `validateExceptionRegistry` (`scripts/shared/exception-record.ts`) plus a per-registry schema;
+  the other three still use their own `scripts/<check>/registry.ts` validator pending their
+  retrofit.
 - **What they never do.** Loosen a check's default posture. `security-network`'s group default
   stays `forbidden` (ADR 0007's amendment); `security-socket` forbids anything above "middle"
   outright; `coderabbitai` requires a verified waiver for every finding regardless of severity. A

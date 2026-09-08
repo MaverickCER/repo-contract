@@ -2,82 +2,100 @@ import path from "node:path"
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
-import { toPersistedRecord } from "../../../scripts/suppression-governance/check.js"
+import { reconcileExceptions, serializeExceptionRegistry } from "../../../src/helpers/index.js"
 import { discoverSuppressions } from "../../../scripts/suppression-governance/discover-suppressions.js"
 import { listSourceFiles } from "../../../scripts/suppression-governance/find-source-files.js"
 import {
-  serializeRegistry,
-  validateSuppressionRegistry,
-} from "../../../scripts/suppression-governance/registry.js"
-import { synchronize } from "../../../scripts/suppression-governance/synchronize.js"
+  SUPPRESSION_EXCEPTION_SCHEMA,
+  asFlatRecords,
+  createSuppressionStub,
+  deriveSuppressionId,
+  validateExceptionRegistry,
+} from "../../../scripts/suppression-governance/evidence-types.js"
+import type {
+  SuppressionExceptionRecord,
+  SuppressionFinding,
+} from "../../../scripts/suppression-governance/evidence-types.js"
 
 /**
- * Proves the committed disable-comments.json is currently synchronized with this repository's own
+ * Proves the committed disable-comments.json is currently reconciled with this repository's own
  * real source -- previously only ever verified as a side effect of actually running the full
  * `suppression-governance` check via `npm run contract`, never as part of `npm test`.
  *
  * Deliberately calls the execution-layer functions directly (listSourceFiles -> discoverSuppressions
- * -> synchronize) rather than `runSuppressionGovernanceCheck`, which has a real `writeFile` side
- * effect on disagreement -- calling that against the real repo root inside `npm test` (run far more
- * often than `npm run contract`) would let a failing test silently rewrite the committed registry.
- * This composition has no write path at all.
+ * -> reconcileExceptions) rather than `runSuppressionGovernanceCheck`, which has a real `writeFile`
+ * side effect on disagreement -- this composition has no write path at all.
  */
 
 const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url))
 
-// A real, on-disk Stryker mutation-testing sandbox (stryker.config.mjs's `tempDirName`) is a
-// *temporary, deliberately-mutated copy* of this repository -- Stryker's own dry run instruments
-// every `mutate`-scope file with mutant-switch code (real, added lines, shifting every later line
-// number in that file) as an intrinsic, unavoidable part of establishing per-test mutant coverage.
-// This test's own premise -- "the committed registry has zero drift against the current source
-// tree" -- is about the real, committed repository; it is neither true nor meaningful to assert
-// against a sandbox copy Stryker has already begun rewriting by design. Detected structurally (a
-// ".stryker-tmp" path segment in this test file's own resolved location -- true for any file
-// inside any sandbox Stryker ever creates, since Stryker always copies the whole project,
-// including this very test file, into the sandbox it runs against), not via an environment
-// variable Stryker does not document as stable API.
+// A real, on-disk Stryker mutation-testing sandbox is a temporary, deliberately-mutated copy of
+// this repository -- Stryker instruments every `mutate`-scope file, shifting line numbers. This
+// test's premise ("the committed registry has zero drift against the current source tree") is
+// about the real, committed repository, not a sandbox copy. Detected structurally.
 const runningInsideMutationSandbox = REPO_ROOT.split(path.sep).includes(".stryker-tmp")
 
-describe("disable-comments.json stays synchronized with real source", () => {
+describe("disable-comments.json stays reconciled with real source", () => {
   it.runIf(!runningInsideMutationSandbox)(
-    "the committed registry has zero new/moved/removed suppressions against the real, current source tree",
+    "the committed registry has zero stale records and zero unscaffolded findings against the real, current source tree, and is byte-identical to its canonical serialization",
     async () => {
       const registryUrl = new URL(
         "../../../.repo-contract/exceptions/disable-comments.json",
         import.meta.url,
       )
       const currentContent = await readFile(registryUrl, "utf8")
-      const rawRegistry = JSON.parse(currentContent) as unknown
+      const parsed = JSON.parse(currentContent) as { exceptions: unknown }
 
-      const validated = validateSuppressionRegistry(rawRegistry)
-      // A malformed registry must fail this test loudly, never be silently read as "zero
-      // differences" -- see the module doc comment above.
+      const validated = validateExceptionRegistry(parsed.exceptions, SUPPRESSION_EXCEPTION_SCHEMA)
       expect(validated.ok, validated.ok ? undefined : JSON.stringify(validated.errors)).toBe(true)
       if (!validated.ok) return
 
       const files = await listSourceFiles(REPO_ROOT)
       const discovered = await discoverSuppressions(REPO_ROOT, files)
-      const { records, newCount, movedCount, removedCount } = synchronize(
-        validated.records,
-        discovered,
-      )
 
-      expect({ newCount, movedCount, removedCount }).toEqual({
-        newCount: 0,
-        movedCount: 0,
-        removedCount: 0,
+      const seen = new Set<string>()
+      const findings: SuppressionFinding[] = []
+      for (const item of discovered) {
+        const id = deriveSuppressionId(item)
+        const identity = JSON.stringify([
+          item.file,
+          item.line,
+          item.domain,
+          item.rule,
+          item.content,
+          item.reason,
+        ])
+        if (seen.has(identity)) continue
+        seen.add(identity)
+        findings.push({
+          id,
+          domain: item.domain,
+          rule: [...item.rule],
+          file: item.file,
+          line: item.line,
+          content: item.content,
+          reason: item.reason,
+        })
+      }
+
+      const reconciled = reconcileExceptions<SuppressionFinding, SuppressionExceptionRecord>({
+        existing: validated.records,
+        findings,
+        deriveId: (finding) => finding.id,
+        createStub: createSuppressionStub,
       })
+      expect(reconciled.ok, reconciled.ok ? undefined : reconciled.error).toBe(true)
+      if (!reconciled.ok) return
 
-      // The three counts above can each independently be zero while the committed file is still
-      // byte-different from what `synchronize` would (re-)produce today -- a `reason`
-      // re-extraction, sort-order, or serialization-formatting regression changes none of the
-      // three counts (see synchronize.ts's own doc comment: `reason` is never preserved
-      // verbatim, and is retaken fresh on every run even for an "existing" record). This is the
-      // exact comparison scripts/suppression-governance/check.ts's own `run()` uses to decide
-      // whether to rewrite the file on disk -- replicated here (read-only, never writing) so a
-      // mismatch fails this test instead of only being caught by actually running
-      // `npm run contract`.
-      const serialized = serializeRegistry(records.map(toPersistedRecord))
+      expect(reconciled.reconciliation.staleRecords).toEqual([])
+      expect(reconciled.reconciliation.newStubIds).toEqual([])
+
+      const serialized = serializeExceptionRegistry(
+        asFlatRecords([
+          ...reconciled.reconciliation.activeRecords,
+          ...reconciled.reconciliation.staleRecords,
+        ]),
+      )
       expect(currentContent).toBe(serialized)
     },
   )

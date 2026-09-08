@@ -1,66 +1,78 @@
 import { describe, expect, it } from "vitest"
-import { toPersistedRecord } from "../../../scripts/suppression-governance/check.js"
-import type { SynchronizedRecord } from "../../../scripts/suppression-governance/synchronize.js"
+import {
+  createSuppressionStub,
+  deriveSuppressionId,
+} from "../../../scripts/suppression-governance/evidence-types.js"
+import type { SuppressionFinding } from "../../../scripts/suppression-governance/evidence-types.js"
 
 /**
- * Focused, isolated unit test for `toPersistedRecord` -- the function whose own object literal
- * independently enumerates every field written to disk (see check.ts's doc comment on why this
- * exact function was the one drop site that a required-field type change alone couldn't catch).
- * The integration test (test/integration/suppression-governance/check.integration.test.ts) proves
- * the whole pipeline works end-to-end through a real disk round-trip; this test exists so a future
- * regression here fails with a precise, fast, isolated signal instead of a confusing
- * several-layers-away disk-round-trip failure.
+ * Focused unit tests for the two identity/scaffolding primitives `check.ts` hands to
+ * `reconcileExceptions`. The integration test
+ * (test/integration/suppression-governance/check.integration.test.ts) proves the whole pipeline
+ * end-to-end through a real disk round-trip; these exist so a regression here fails with a
+ * precise, fast, isolated signal.
  */
-function synchronizedRecord(overrides: Partial<SynchronizedRecord> = {}): SynchronizedRecord {
-  return {
-    file: "src/example.ts",
-    line: 42,
+
+function finding(overrides: Partial<SuppressionFinding> = {}): SuppressionFinding {
+  const base = {
     domain: "eslint",
     rule: ["no-console"],
+    file: "src/example.ts",
+    line: 42,
     content: "eslint-disable-next-line no-console",
-    justification: "Because.",
-    alternatives: "Considered X.",
-    remediation: "Tried Y.",
-    category: "equivalent-mutant",
-    verificationMethod: "mutation-run",
     reason: "",
-    verifiedBy: "@maverickcer",
-    verifiedAt: "2026-09-07",
-    verifiedContentHash: "abc",
-    status: "existing",
     ...overrides,
   }
+  return { ...base, id: deriveSuppressionId(base) }
 }
 
-describe("toPersistedRecord", () => {
-  it("carries every hand-authored and discovered field through to the persisted shape, dropping only status", () => {
-    const persisted = toPersistedRecord(synchronizedRecord())
-
-    expect(persisted).toEqual({
-      file: "src/example.ts",
-      line: 42,
-      domain: "eslint",
-      rule: ["no-console"],
-      content: "eslint-disable-next-line no-console",
-      justification: "Because.",
-      alternatives: "Considered X.",
-      remediation: "Tried Y.",
-      category: "equivalent-mutant",
-      verificationMethod: "mutation-run",
-      reason: "",
-      verifiedBy: "@maverickcer",
-      verifiedAt: "2026-09-07",
-      verifiedContentHash: "abc",
-    })
-    expect(Object.keys(persisted)).not.toContain("status")
+describe("deriveSuppressionId", () => {
+  it("composes <check>:<domain>:<rule.join(',')>:<file>:<line>", () => {
+    expect(
+      deriveSuppressionId({ domain: "eslint", rule: ["no-console"], file: "src/a.ts", line: 3 }),
+    ).toBe("suppression:eslint:no-console:src/a.ts:3")
   })
 
-  it("carries a not-yet-classified ('' category/verificationMethod) record through unchanged", () => {
-    const persisted = toPersistedRecord(
-      synchronizedRecord({ category: "", verificationMethod: "", status: "new" }),
-    )
+  it("joins a multi-rule directive with commas, in source order", () => {
+    expect(
+      deriveSuppressionId({
+        domain: "stryker",
+        rule: ["ConditionalExpression", "EqualityOperator"],
+        file: "src/b.ts",
+        line: 10,
+      }),
+    ).toBe("suppression:stryker:ConditionalExpression,EqualityOperator:src/b.ts:10")
+  })
 
-    expect(persisted.category).toBe("")
-    expect(persisted.verificationMethod).toBe("")
+  it("distinguishes two directives that differ only by line -- moving a directive changes its id", () => {
+    const a = deriveSuppressionId({ domain: "eslint", rule: ["x"], file: "src/c.ts", line: 5 })
+    const b = deriveSuppressionId({ domain: "eslint", rule: ["x"], file: "src/c.ts", line: 6 })
+    expect(a).not.toBe(b)
+  })
+})
+
+describe("createSuppressionStub", () => {
+  it("returns a blank record carrying the canonical id and the finding's identity fields", () => {
+    const f = finding({ domain: "stryker", rule: ["ArrayDeclaration"], line: 7, reason: "why" })
+    const stub = createSuppressionStub(f, f.id)
+
+    expect(stub).toEqual({
+      id: f.id,
+      version: 1,
+      justification: "",
+      category: "",
+      domain: "stryker",
+      file: "src/example.ts",
+      line: 7,
+      rule: ["ArrayDeclaration"],
+      verificationMethod: "",
+    })
+  })
+
+  it("copies the rule array rather than aliasing the finding's", () => {
+    const f = finding()
+    const stub = createSuppressionStub(f, f.id)
+    expect(stub.rule).not.toBe(f.rule)
+    expect(stub.rule).toEqual(f.rule)
   })
 })

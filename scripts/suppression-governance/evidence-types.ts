@@ -1,19 +1,34 @@
 /**
  * Shapes shared across the suppression-governance execution layer
- * (scripts/suppression-governance/*.ts, which discovers suppression comments and synchronizes
- * disable-comments.json) and its policy layer (checks/suppression-governance.ts, which evaluates
- * the synchronized registry against suppressionPolicy). See
- * specs/decisions/0006-suppression-governance.md for the full rationale.
+ * (scripts/suppression-governance/*.ts, which discovers suppression comments and reconciles
+ * .repo-contract/exceptions/disable-comments.json) and its policy layer
+ * (checks/suppression-governance.ts, which evaluates the reconciled registry against
+ * suppressionPolicy). See specs/decisions/0006-suppression-governance.md and
+ * specs/decisions/0013-reusable-exception-policy-helper.md's "The exception registry is the review
+ * surface" section for the full rationale.
+ *
+ * The model, since ADR 0013's amendment: the check discovers **100% of suppression directives**
+ * with zero knowledge of any exception, derives one semantic id per directive, reconciles those
+ * ids against the on-disk registry via `repo-contract/helpers`' `reconcileExceptions` (a fresh
+ * blank stub per unmatched directive, stale records surfaced never removed), writes the reconciled
+ * registry back, and emits every raw finding plus the reconciled records as evidence. The policy
+ * is a pure evidence->verdict function.
  */
 
+import type { ExceptionRegistrySchema } from "../shared/exception-record.js"
+import { validateExceptionRegistry } from "../shared/exception-record.js"
+
+// Re-exported so the policy layer and tests reach the suppression registry validator through this
+// same module they get `SUPPRESSION_EXCEPTION_SCHEMA` from. `reconcileExceptions`/
+// `serializeExceptionRegistry`/`writeExceptionRegistry` are imported straight from
+// `repo-contract/helpers` at their (few) use sites instead.
+export { validateExceptionRegistry }
+
 /**
- * Every allowed `category` value on a `DisableCommentRecord` -- the single source of truth
+ * Every allowed `category` value on a suppression exception record -- the single source of truth
  * `SuppressionCategory` (below) is derived from, rather than a separate union this array is merely
  * checked against, so a member added here without updating the type (or vice versa) is
- * structurally impossible, not just something a test happens to catch. See `SuppressionCategory`'s
- * own doc comment for what each member means -- that's also what a generated JSON Schema surfaces
- * as this field's `description` (ts-json-schema-generator reads a type alias's own JSDoc, not this
- * array's), so the full semantics live there, not here.
+ * structurally impossible, not just something a test happens to catch.
  */
 export const SUPPRESSION_CATEGORIES = [
   "",
@@ -26,13 +41,10 @@ export const SUPPRESSION_CATEGORIES = [
 ] as const
 
 /**
- * What kind of suppression a `DisableCommentRecord` is. `""` is a deliberate member, not an
- * omission -- it is the "not yet classified" sentinel every other hand-authored field
- * (`justification`/`alternatives`/`remediation`) already uses: a freshly auto-created record
- * starts with `category: ""`, same as those three. This field is hand-authored the same way -- a
- * human/AI classifies it after the fact; nothing ever infers it from the comment's own text (see
- * `reason`'s doc comment below for why that would defeat this whole registry's purpose -- ADR
- * 0006's rejection of a mechanically-satisfiable model applies identically here).
+ * What kind of suppression an exception record is. `""` is a deliberate member, not an omission --
+ * it is the "not yet classified" sentinel a freshly-scaffolded stub starts with, exactly like
+ * `justification`. This field is hand-authored; nothing ever infers it from the comment's own text
+ * (ADR 0006's rejection of a mechanically-satisfiable model applies identically here).
  *
  * Boundary tests, since several of these are easy to conflate:
  *
@@ -43,33 +55,25 @@ export const SUPPRESSION_CATEGORIES = [
  *   it is never `equivalent-mutant` -- it's `tooling-limit`.
  * - `"tooling-limit"` vs. `"platform-limitation"`: both describe a real behavior mutation-testing
  *   can't verify, but for different reasons. `platform-limitation` means the mutated behavior is
- *   not exercised at all by the mutation run substantiating this record (defined against that
- *   run, not against "CI" specifically, so the category's meaning doesn't depend on today's CI
- *   topology -- e.g. a Windows-only branch, when the mutation run happened on Linux).
- *   `tooling-limit` means the behavior is exercised, but the mutation tool's own mechanics
- *   (per-process instrumentation overhead vs. a timeout budget, a signal handler only observable
- *   in a separate process, no API exposing a value back to any test) can't meaningfully observe
- *   the mutation's effect. The distinction matters for remediation: a `platform-limitation` could
- *   in principle be closed by running mutation testing on the missing platform; a `tooling-limit`
- *   is an inherent limit of comment-based mutation testing that no CI change fixes.
+ *   not exercised at all by the mutation run substantiating this record (e.g. a Windows-only
+ *   branch, when the mutation run happened on Linux). `tooling-limit` means the behavior is
+ *   exercised, but the mutation tool's own mechanics can't meaningfully observe the mutation's
+ *   effect. A `platform-limitation` could in principle be closed by running mutation testing on
+ *   the missing platform; a `tooling-limit` is an inherent limit of comment-based mutation testing
+ *   that no CI change fixes.
  * - `"rule-not-applicable"` vs. `"intentional-deviation"`: would complying with the suppressed
- *   rule change runtime behavior the author considers worse? If yes, it's `intentional-deviation`
- *   (the rule's concern is real and understood, but the discouraged thing is deliberate because the
- *   alternative is documented-worse). If complying would be a pure no-op refactor because the
- *   rule's underlying premise is simply false for this code, it's `rule-not-applicable`.
+ *   rule change runtime behavior the author considers worse? If yes, it's `intentional-deviation`.
+ *   If complying would be a pure no-op refactor because the rule's underlying premise is simply
+ *   false for this code, it's `rule-not-applicable`.
  *
- * No validation ties a `category` to a `domain` (e.g. `equivalent-mutant` is not restricted to
- * `domain: "stryker"`) -- deliberately out of scope; a domain/category compatibility matrix would
- * be a new class of rule with its own gaming surface and no current need.
+ * No validation ties a `category` to a `domain` -- deliberately out of scope.
  */
 export type SuppressionCategory = (typeof SUPPRESSION_CATEGORIES)[number]
 
 /**
- * Every allowed `verificationMethod` value on a `DisableCommentRecord` -- the single source of
- * truth `VerificationMethod` (below) is derived from, for the identical structural-drift-safety
- * reason `SUPPRESSION_CATEGORIES` is above. See `VerificationMethod`'s own doc comment for what
- * each member means and why -- that's what a generated JSON Schema surfaces as this field's
- * `description`, not this array's own comment.
+ * Every allowed `verificationMethod` value on a suppression exception record -- the single source
+ * of truth `VerificationMethod` (below) is derived from, for the identical structural-drift-safety
+ * reason `SUPPRESSION_CATEGORIES` is above.
  */
 export const VERIFICATION_METHODS = [
   "",
@@ -86,19 +90,14 @@ export const VERIFICATION_METHODS = [
  * text.
  *
  * This field means "the strongest evidence actually obtained for the specific claim this record
- * makes," not "the only verification that was ever performed on this code." Several real records
- * legitimately have more than one kind of evidence (e.g. a static-invariant argument plus a
- * scoped Stryker run) -- record the strongest one actually obtained, using this precedence:
- * `"mutation-run" > "existing-test-suite" > "differential-testing" > "static-reasoning" >
- * "untestable"`.
+ * makes," not "the only verification that was ever performed on this code." Where a record
+ * legitimately has more than one kind of evidence, record the strongest one actually obtained,
+ * using this precedence: `"mutation-run" > "existing-test-suite" > "differential-testing" >
+ * "static-reasoning" > "untestable"`.
  *
- * Anti-gaming rule, applying to every member equally: a verification method must describe
- * evidence that actually substantiates *this specific record's* claim -- never merely evidence
- * that exists somewhere in the same file, test suite, or CI run. A record must not be
- * `"mutation-run"` just because a Stryker run happened nearby in the same file for a *different*
- * mutant; equally, it must not be `"existing-test-suite"` just because some passing test exists
- * for the same module without that test actually covering the suppressed behavior. The same
- * applies to `"differential-testing"`.
+ * Anti-gaming rule, applying to every member equally: a verification method must describe evidence
+ * that actually substantiates *this specific record's* claim -- never merely evidence that exists
+ * somewhere in the same file, test suite, or CI run.
  *
  * - `"mutation-run"` -- verified by literally un-exempting the mutant and running Stryker scoped
  *   to the file, observing the survivor (or `NoCoverage`) result directly.
@@ -109,133 +108,260 @@ export const VERIFICATION_METHODS = [
  * - `"static-reasoning"` -- a logical/structural argument alone (type-level guarantees, call-graph
  *   analysis, a documented language/API contract), nothing run empirically.
  * - `"untestable"` -- deliberately not verified empirically because doing so would be
- *   unsafe/impossible (e.g. would crash the test process from inside an event-listener exception;
- *   no API exposes the value to any test). **Not** an escape hatch: it must never mean
- *   "verification would have been inconvenient," "verification wasn't attempted," or "the author
- *   was unsure" -- those are not valid uses of this member.
+ *   unsafe/impossible. **Not** an escape hatch: it must never mean "verification would have been
+ *   inconvenient," "verification wasn't attempted," or "the author was unsure."
  */
 export type VerificationMethod = (typeof VERIFICATION_METHODS)[number]
 
 /**
- * One row of disable-comments.json. Identity is `(file, line, domain, rule, content)` -- there is
- * no separate id field; see synchronize.ts for how that identity is used to preserve the
- * hand-authored fields (`justification`/`alternatives`/`remediation`/`category`/
- * `verificationMethod`, plus the `verifiedBy`/`verifiedAt`/`verifiedContentHash` verification
- * block) across reruns, including across an unambiguous line move. Those fields are deliberately
- * excluded from identity: they are classification/attestation metadata about a discovered
- * suppression, not part of what makes the suppression itself unique, and folding them into
- * identity would make editing a record unmatchable against its own source comment on the next
- * run -- silently wiping its justification as a spurious removed+new pair.
+ * One suppression directive discovered in governed source -- a raw *finding*, emitted whether or
+ * not it is governed by an exception record. `id` is this finding's check-namespaced semantic
+ * identity and the exact key an exception record must carry to waive it.
  *
- * `rule` is a "policy-addressable suppression identifier," not always a literal static-analysis
- * rule id: for `domain: "eslint"` it genuinely is a rule id
- * (`security/detect-object-injection`); for `domain: "typescript"`, `@ts-ignore`/
- * `@ts-expect-error`/`@ts-nocheck` are directives rather than parameterized rules, but are still
- * modeled as `rule: ["@ts-ignore"]`/`["@ts-expect-error"]`/`["@ts-nocheck"]` so the same
- * exact/pattern/domain/global policy mechanism
- * (scripts/suppression-governance/resolve-policy.ts's `resolveRequirement`) applies uniformly across
- * every domain.
+ * `id` = `suppression:<domain>:<rule.join(",")>:<file>:<line>` (see `deriveSuppressionId`). The
+ * line is deliberately *in* the identity: moving a suppressed directive to a new line makes its
+ * old record go stale and scaffolds a fresh blank stub at the new line -- both fail the build
+ * until a human carries the justification across. No move detection is attempted; an automated
+ * registry silently transferring justification between locations is exactly the bypass ADR 0006
+ * forbids.
  *
- * `justification`/`alternatives`/`remediation` are three fixed, named prose fields -- deliberately
- * not a count of arbitrary free-form entries (the earlier design this replaced): a numeric "N
- * details required" threshold is trivially gameable by generating N generic-sounding filler
- * entries without ever doing the underlying work. Naming exactly what must be explained
- * (`justification`: why this is the best option; `alternatives`: what other approach was
- * considered; `remediation`: what was actually attempted, and why it didn't remove the need for
- * the suppression) doesn't make low-effort filler impossible, but it does make each field
- * individually reviewable against a specific question, rather than an undifferentiated count. The
- * check never invents these -- a fresh record always starts with all three as empty strings; a
- * developer/AI fills them in by hand after a record is auto-created (see
- * scripts/suppression-governance/policy-config.ts's doc comment for exactly how).
- *
- * `category`/`verificationMethod` are two more hand-authored fields, filled in the same way and at
- * the same time as the three above -- but unlike those three, they are *closed enumerations*
- * rather than free prose, so a reviewer or report can triage a suppression's kind and evidentiary
- * basis without reading three paragraphs. See `SUPPRESSION_CATEGORIES`/`VERIFICATION_METHODS`
- * above for their full semantics.
- *
- * `reason` is a sixth, differently-sourced field: unlike the five above, it is never
- * hand-authored. Every recognizer (recognizers.ts) derives it mechanically from the directive
- * comment's own content -- whatever text remains once the disable-domain keywords and the rule
- * list are stripped out -- so it is always freshly recomputed from current source on every run,
- * even for an otherwise-unchanged "existing" record (see synchronize.ts). A domain's policy opts
- * into requiring it via `SuppressionRequirement`'s `"reason"` (policy-config.ts); today only
- * `stryker` does.
- *
- * `verifiedBy`/`verifiedAt`/`verifiedContentHash` are the content-bound *verification* block --
- * the "not believe-me" second gate `checks/security-socket.ts`/`checks/coderabbitai.ts`/
- * `checks/security-network.ts` already carry, applied here too (see
- * specs/decisions/0006-suppression-governance.md's own "Verification" amendment and
- * specs/decisions/0013-reusable-exception-policy-helper.md). All three are hand-authored strings
- * that start `""` on a fresh record and are preserved across reruns exactly like
- * `justification`/etc. `verifiedContentHash` is `hashRequirementFields()` (see
- * `src/helpers/exception-policy.ts`) computed over the six authoring fields
- * (`justification`/`alternatives`/`remediation`/`category`/`verificationMethod`/`reason`) *at the
- * moment the record was signed off*; `checks/suppression-governance.ts` recomputes that hash on
- * every run and only counts `verifiedBy` as present when it still matches -- so editing any of
- * those six fields after sign-off silently reverts `verifiedBy` to "missing" and the record fails
- * policy again, forcing a fresh review. `verifiedAt` is an ISO 8601 timestamp, informational
- * (never a policy requirement itself), validated for shape only.
+ * `content` is the canonicalized directive comment; `reason` is the text a recognizer
+ * (recognizers.ts) mechanically extracts from it (everything after the domain keywords and rule
+ * list). Both are evidence for a reviewer and for the `stryker`-domain `"reason"` policy
+ * requirement -- neither is stored on the record (a record holds only what a human authors plus
+ * the structured identity fields).
  */
-export interface DisableCommentRecord {
-  readonly file: string
-  readonly line: number
+export interface SuppressionFinding {
+  readonly id: string
   readonly domain: string
   readonly rule: readonly string[]
+  readonly file: string
+  readonly line: number
   readonly content: string
-  readonly justification: string
-  readonly alternatives: string
-  readonly remediation: string
-  readonly category: SuppressionCategory
-  readonly verificationMethod: VerificationMethod
   readonly reason: string
-  /** Who (or what mechanical process) signed off on this suppression's justification. `""` until signed off. Only counts once `verifiedContentHash` still matches the current authoring fields. */
-  readonly verifiedBy: string
-  /** ISO 8601 timestamp of the sign-off. `""` until signed off. Informational -- validated for shape, never a policy requirement on its own. */
-  readonly verifiedAt: string
-  /** `hashRequirementFields()` over `justification`/`alternatives`/`remediation`/`category`/`verificationMethod`/`reason` at sign-off time. `""` until signed off. A mismatch on a later run means an authoring field was edited after sign-off -- `verifiedBy` reverts to "missing". */
-  readonly verifiedContentHash: string
 }
 
-/** The on-disk shape of disable-comments.json itself -- a plain array of records, in `sortRecords`'s deterministic order. */
-export type DisableCommentRegistry = readonly DisableCommentRecord[]
+/**
+ * One row of disable-comments.json -- the on-disk exception record shape. `id`/`version`/
+ * `justification` are the core every `.repo-contract/exceptions/*.json` registry shares;
+ * `category`/`domain`/`file`/`line`/`rule`/`verificationMethod` are this registry's typed
+ * metadata. `id` must equal `deriveSuppressionId({ domain, rule, file, line })` -- a hand-edited
+ * record cannot lie about which finding it waives.
+ *
+ * `justification` is the one human-authored prose field (it absorbed the older model's separate
+ * `alternatives`/`remediation` fields): why this guardrail is deliberately bypassed for an
+ * approved architectural reason, what alternatives were considered, and what was checked to
+ * confirm the finding is real. `category`/`verificationMethod` are hand-authored closed
+ * enumerations (see `SUPPRESSION_CATEGORIES`/`VERIFICATION_METHODS`). A freshly-scaffolded stub
+ * starts with all three at their empty value; whether an empty value satisfies policy is
+ * checks/suppression-governance.ts's concern, not the validator's.
+ */
+export interface SuppressionExceptionRecord {
+  readonly id: string
+  readonly version: 1
+  readonly justification: string
+  readonly category: SuppressionCategory
+  readonly domain: string
+  readonly file: string
+  readonly line: number
+  readonly rule: readonly string[]
+  readonly verificationMethod: VerificationMethod
+}
 
-/** How this run's synchronization classified one record: freshly discovered, unchanged from the prior registry, or an unambiguous line move. */
-export type SuppressionRecordStatus = "new" | "existing" | "moved"
-
-/** A `DisableCommentRecord` augmented with how this run's synchronization classified it -- evidence-only, never written to disable-comments.json itself. */
-export interface SuppressionGovernanceRecordEvidence extends DisableCommentRecord {
-  readonly status: SuppressionRecordStatus
+/**
+ * Widens typed suppression records to the flat `Record<string, unknown> & { id }` shape the
+ * generic `serializeExceptionRegistry`/`writeExceptionRegistry` accept. A
+ * `SuppressionExceptionRecord` is structurally exactly that (flat, string `id`); TypeScript will
+ * not infer the implicit index signature through an interface, so this narrow, single-purpose
+ * assertion lives here rather than being repeated at each call site.
+ * @param records - The typed records to widen.
+ * @returns The same records, typed as flat string-keyed records.
+ */
+export function asFlatRecords(
+  records: readonly SuppressionExceptionRecord[],
+): readonly (Record<string, unknown> & { readonly id: string })[] {
+  return records as unknown as readonly (Record<string, unknown> & { readonly id: string })[]
 }
 
 /**
  * Printed as JSON to stdout by scripts/suppression-governance/check.ts for repo-contract's
  * `output: { format: "json" }` to parse, and read (never re-derived) by
- * checks/suppression-governance.ts's policy.
+ * checks/suppression-governance.ts's policy and checks/mutation.ts's Stryker suppression gate.
  *
  * `ok: false` means the script itself could not complete its work -- a source file couldn't be
- * read, or a pre-existing disable-comments.json failed validation (in which case it is left on
- * disk untouched; see check.ts) -- a tool-infrastructure failure, distinct from "synchronization
- * succeeded and found suppressions the policy will go on to reject." A forbidden or
- * under-justified suppression is never itself an `ok: false` condition; only the policy layer
- * judges that.
+ * read, a pre-existing registry failed validation (left on disk untouched), a `deriveId` collision
+ * (two indistinguishable directives), or the reconciled registry could not be written -- a
+ * tool-infrastructure/integrity failure, distinct from "reconciliation succeeded and found
+ * suppressions the policy will go on to reject."
  *
- * `newCount`/`movedCount`/`removedCount` are informational execution evidence describing what this
- * run's synchronization did -- not an independently-auditable registry assertion. The policy
- * trusts them the same way every other check's policy already trusts its own script's counts
- * (knip's issue counts, jscpd's clone counts): nothing re-derives them from source.
+ * On `ok: true`: `findings` is every raw directive discovered (nothing filtered). `activeExceptions`
+ * is the reconciled live record for each finding, keyed by finding id -- `set(findings.map(id))`
+ * equals `set(keys(activeExceptions))` exactly (the policy asserts this bijection).
+ * `staleExceptions` is every prior record whose id matched no finding this run -- surfaced for the
+ * policy to fail on, never removed here. `scaffoldedIds` is the subset of `activeExceptions` keys
+ * that were freshly stubbed this run (blank `justification`).
  */
 export type SuppressionGovernanceEvidence =
   | {
       readonly ok: true
-      readonly records: readonly SuppressionGovernanceRecordEvidence[]
-      readonly newCount: number
-      readonly movedCount: number
-      readonly removedCount: number
       readonly registryPath: string
+      readonly findings: readonly SuppressionFinding[]
+      readonly activeExceptions: Readonly<Record<string, SuppressionExceptionRecord>>
+      readonly staleExceptions: readonly SuppressionExceptionRecord[]
+      readonly scaffoldedIds: readonly string[]
     }
   | {
       readonly ok: false
       readonly error: string
       readonly registryValidationErrors?: readonly string[]
     }
+
+const WINDOWS_DRIVE_PATH = /^[A-Za-z]:[/\\]/
+
+/**
+ * Whether `file` is a well-formed repository-relative POSIX path: non-empty, never absolute (POSIX
+ * `/...` or a Windows drive path), never backslash-separated, and never containing a `..` segment
+ * -- defense-in-depth against a hand-edited record smuggling in a path that escapes the repository
+ * root.
+ * @param file - The candidate `file` value.
+ * @returns `true` if `file` is a well-formed repository-relative POSIX path.
+ */
+function isWellFormedRepoRelativePath(file: string): boolean {
+  if (file.length === 0) return false
+  if (file.startsWith("/") || WINDOWS_DRIVE_PATH.test(file)) return false
+  if (file.includes("\\")) return false
+  return !file.split("/").includes("..")
+}
+
+/**
+ * The check-namespaced semantic identity of one suppression directive:
+ * `suppression:<domain>:<rule.join(",")>:<file>:<line>`. Injective over a run's findings unless
+ * two byte-distinct directives share a domain, rule set, file, and line -- a real condition the
+ * check surfaces as an integrity failure (the human must make the two directives distinguishable).
+ * @param finding - The directive's structured identity fields.
+ * @param finding.domain - The suppression's governed domain (`"eslint"`, `"typescript"`, `"stryker"`).
+ * @param finding.rule - The rule(s) the directive covers within its domain.
+ * @param finding.file - The directive's repository-relative POSIX source path.
+ * @param finding.line - The directive comment's 1-indexed source line.
+ * @returns The semantic id.
+ */
+export function deriveSuppressionId(finding: {
+  readonly domain: string
+  readonly rule: readonly string[]
+  readonly file: string
+  readonly line: number
+}): string {
+  return `suppression:${finding.domain}:${finding.rule.join(",")}:${finding.file}:${String(finding.line)}`
+}
+
+/**
+ * Builds a fresh, blank exception record for a directive that has no matching record yet -- every
+ * hand-authored field at its empty value, the structured identity fields copied straight from the
+ * finding. `reconcileExceptions` hands this the canonical id and asserts the result carries it.
+ * @param finding - The unmatched directive.
+ * @param id - The canonical id `reconcileExceptions` computed (equals `finding.id`).
+ * @returns The blank stub record.
+ */
+export function createSuppressionStub(
+  finding: SuppressionFinding,
+  id: string,
+): SuppressionExceptionRecord {
+  return {
+    id,
+    version: 1,
+    justification: "",
+    category: "",
+    domain: finding.domain,
+    file: finding.file,
+    line: finding.line,
+    rule: [...finding.rule],
+    verificationMethod: "",
+  }
+}
+
+/**
+ * The per-registry schema for disable-comments.json, plugged into the generic
+ * `validateExceptionRegistry`. Owns the six typed metadata fields on top of the shared core, and
+ * the self-consistency check that a record's stored `id` matches the id derived from its own
+ * `domain`/`rule`/`file`/`line`.
+ */
+export const SUPPRESSION_EXCEPTION_SCHEMA: ExceptionRegistrySchema<SuppressionExceptionRecord> = {
+  namespace: "suppression:",
+  metadataKeys: ["category", "domain", "file", "line", "rule", "verificationMethod"],
+  validateRecord(core, raw, index, errors) {
+    const { category, domain, file, line, rule, verificationMethod } = raw
+    const at = `exceptions[${String(index)}]`
+
+    const domainValid = typeof domain === "string" && domain.length > 0
+    if (!domainValid) errors.push(`${at}.domain must be a non-empty string.`)
+
+    const fileValid = typeof file === "string" && isWellFormedRepoRelativePath(file)
+    if (!fileValid) {
+      errors.push(
+        `${at}.file must be a non-empty, repository-relative POSIX path with no ".." segments (got ${JSON.stringify(file)}).`,
+      )
+    }
+
+    const lineValid = typeof line === "number" && Number.isInteger(line) && line >= 1
+    if (!lineValid) {
+      errors.push(`${at}.line must be a positive integer (got ${JSON.stringify(line)}).`)
+    }
+
+    const ruleValid =
+      Array.isArray(rule) &&
+      rule.length > 0 &&
+      rule.every((entry) => typeof entry === "string" && entry.length > 0)
+    if (!ruleValid) {
+      errors.push(`${at}.rule must be a non-empty array of non-empty strings.`)
+    }
+
+    const categoryValid =
+      typeof category === "string" &&
+      (SUPPRESSION_CATEGORIES as readonly string[]).includes(category)
+    if (!categoryValid) {
+      errors.push(
+        `${at}.category must be one of ${SUPPRESSION_CATEGORIES.map((c) => JSON.stringify(c)).join(", ")} (got ${JSON.stringify(category)}).`,
+      )
+    }
+
+    const verificationMethodValid =
+      typeof verificationMethod === "string" &&
+      (VERIFICATION_METHODS as readonly string[]).includes(verificationMethod)
+    if (!verificationMethodValid) {
+      errors.push(
+        `${at}.verificationMethod must be one of ${VERIFICATION_METHODS.map((m) => JSON.stringify(m)).join(", ")} (got ${JSON.stringify(verificationMethod)}).`,
+      )
+    }
+
+    if (
+      !domainValid ||
+      !fileValid ||
+      !lineValid ||
+      !ruleValid ||
+      !categoryValid ||
+      !verificationMethodValid
+    ) {
+      return undefined
+    }
+
+    const derived = deriveSuppressionId({ domain, rule: rule as string[], file, line })
+    if (derived !== core.id) {
+      errors.push(
+        `${at}.id ${JSON.stringify(core.id)} does not match the id derived from its own domain/rule/file/line (${JSON.stringify(derived)}) -- this record's addressing key is inconsistent with its own identity fields.`,
+      )
+      return undefined
+    }
+
+    return {
+      id: core.id,
+      version: 1,
+      justification: core.justification,
+      category: category as SuppressionCategory,
+      domain,
+      file,
+      line,
+      rule: [...(rule as string[])],
+      verificationMethod: verificationMethod as VerificationMethod,
+    }
+  },
+}

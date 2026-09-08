@@ -3,7 +3,7 @@ import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { runSuppressionGovernanceCheck } from "../../../scripts/suppression-governance/check.js"
-import type { DisableCommentRecord } from "../../../scripts/suppression-governance/evidence-types.js"
+import type { SuppressionExceptionRecord } from "../../../scripts/suppression-governance/evidence-types.js"
 
 // Repo-root-relative registry location -- kept in lockstep with
 // scripts/suppression-governance/check.ts's own REGISTRY_RELATIVE_PATH.
@@ -31,36 +31,36 @@ async function write(relativePath: string, content: string): Promise<void> {
   await writeFile(target, content, "utf8")
 }
 
+async function readRegistry(): Promise<{ exceptions: SuppressionExceptionRecord[] }> {
+  return JSON.parse(await readFile(path.join(root, REGISTRY_RELATIVE_PATH), "utf8")) as {
+    exceptions: SuppressionExceptionRecord[]
+  }
+}
+
 describe("runSuppressionGovernanceCheck -- full real path", () => {
-  it("synchronizes a missing registry into existence on the first run", async () => {
+  it("scaffolds a missing registry into existence on the first run", async () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
 
     const evidence = await runSuppressionGovernanceCheck(root)
 
     expect(evidence.ok).toBe(true)
     if (!evidence.ok) return
-    expect(evidence.newCount).toBe(1)
-    expect(evidence.records).toHaveLength(1)
+    expect(evidence.findings).toHaveLength(1)
+    expect(evidence.scaffoldedIds).toEqual(["suppression:eslint:no-console:src/example.ts:1"])
+    expect(evidence.staleExceptions).toEqual([])
 
-    const onDisk = JSON.parse(
-      await readFile(path.join(root, REGISTRY_RELATIVE_PATH), "utf8"),
-    ) as readonly DisableCommentRecord[]
-    expect(onDisk).toEqual([
+    const { exceptions } = await readRegistry()
+    expect(exceptions).toEqual([
       {
+        id: "suppression:eslint:no-console:src/example.ts:1",
+        version: 1,
+        justification: "",
+        category: "",
+        domain: "eslint",
         file: "src/example.ts",
         line: 1,
-        domain: "eslint",
         rule: ["no-console"],
-        content: "eslint-disable-next-line no-console",
-        justification: "",
-        alternatives: "",
-        remediation: "",
-        category: "",
         verificationMethod: "",
-        reason: "",
-        verifiedBy: "",
-        verifiedAt: "",
-        verifiedContentHash: "",
       },
     ])
   })
@@ -77,77 +77,75 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
     expect(secondContent).toBe(firstContent)
     expect(secondEvidence.ok).toBe(true)
     if (secondEvidence.ok) {
-      expect(secondEvidence.newCount).toBe(0)
-      expect(secondEvidence.movedCount).toBe(0)
-      expect(secondEvidence.removedCount).toBe(0)
+      expect(secondEvidence.scaffoldedIds).toEqual([])
+      expect(secondEvidence.staleExceptions).toEqual([])
     }
   })
 
-  it("preserves hand-added justification/category/verificationMethod fields across a run where the suppression is untouched -- proves toPersistedRecord carries every hand-authored field through a real disk round-trip", async () => {
+  it("preserves a hand-added justification/category/verificationMethod across a run where the directive is untouched", async () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
     await runSuppressionGovernanceCheck(root)
 
     const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
-    const records = JSON.parse(await readFile(registryPath, "utf8")) as DisableCommentRecord[]
-    const [first] = records
+    const { exceptions } = await readRegistry()
+    const [first] = exceptions
     if (!first) throw new Error("expected the registry to contain one record")
-    const withJustification = [
-      {
-        ...first,
-        justification: "Debug logging is intentional here.",
-        alternatives: "Considered a debug-only logger wrapper.",
-        remediation: "Removed the console.log once; still needed for debug builds.",
-        category: "rule-not-applicable",
-        verificationMethod: "static-reasoning",
-      },
-    ]
-    await writeFile(registryPath, JSON.stringify(withJustification, null, 2), "utf8")
+    await writeFile(
+      registryPath,
+      JSON.stringify(
+        {
+          exceptions: [
+            {
+              ...first,
+              justification: "Debug logging is intentional here.",
+              category: "rule-not-applicable",
+              verificationMethod: "static-reasoning",
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    )
 
     const evidence = await runSuppressionGovernanceCheck(root)
 
     expect(evidence.ok).toBe(true)
     if (evidence.ok) {
-      expect(evidence.records[0]?.justification).toBe("Debug logging is intentional here.")
-      expect(evidence.records[0]?.alternatives).toBe("Considered a debug-only logger wrapper.")
-      expect(evidence.records[0]?.remediation).toBe(
-        "Removed the console.log once; still needed for debug builds.",
-      )
-      expect(evidence.records[0]?.category).toBe("rule-not-applicable")
-      expect(evidence.records[0]?.verificationMethod).toBe("static-reasoning")
-      expect(evidence.records[0]?.status).toBe("existing")
+      const record = evidence.activeExceptions[first.id]
+      expect(record?.justification).toBe("Debug logging is intentional here.")
+      expect(record?.category).toBe("rule-not-applicable")
+      expect(record?.verificationMethod).toBe("static-reasoning")
+      expect(evidence.scaffoldedIds).toEqual([])
     }
 
-    // Re-read from disk directly (not just the in-memory evidence) -- this is the assertion that
-    // actually catches toPersistedRecord dropping a field, since only the write path can lose data
-    // silently while the in-memory evidence above still looks correct.
-    const onDiskAfter = JSON.parse(
-      await readFile(registryPath, "utf8"),
-    ) as readonly DisableCommentRecord[]
-    expect(onDiskAfter[0]?.category).toBe("rule-not-applicable")
-    expect(onDiskAfter[0]?.verificationMethod).toBe("static-reasoning")
+    const after = await readRegistry()
+    expect(after.exceptions[0]?.justification).toBe("Debug logging is intentional here.")
+    expect(after.exceptions[0]?.category).toBe("rule-not-applicable")
   })
 
-  it("a fully-classified record survives two consecutive runs byte-identically -- category/verificationMethod round-trip through discovery/synchronization/persistence without churn", async () => {
+  it("a fully-classified record survives two consecutive runs byte-identically", async () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
     await runSuppressionGovernanceCheck(root)
 
     const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
-    const records = JSON.parse(await readFile(registryPath, "utf8")) as DisableCommentRecord[]
-    const [first] = records
+    const { exceptions } = await readRegistry()
+    const [first] = exceptions
     if (!first) throw new Error("expected the registry to contain one record")
     await writeFile(
       registryPath,
       JSON.stringify(
-        [
-          {
-            ...first,
-            justification: "Because.",
-            alternatives: "Considered X.",
-            remediation: "Tried Y.",
-            category: "equivalent-mutant",
-            verificationMethod: "mutation-run",
-          },
-        ],
+        {
+          exceptions: [
+            {
+              ...first,
+              justification: "Because.",
+              category: "equivalent-mutant",
+              verificationMethod: "mutation-run",
+            },
+          ],
+        },
         null,
         2,
       ),
@@ -163,7 +161,7 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
     expect(run2Bytes).toBe(run1Bytes)
   })
 
-  it("removes a registry record whose suppression was deleted from source", async () => {
+  it("surfaces -- never removes -- a registry record whose directive was deleted from source", async () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
     await runSuppressionGovernanceCheck(root)
 
@@ -172,15 +170,22 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
 
     expect(evidence.ok).toBe(true)
     if (evidence.ok) {
-      expect(evidence.records).toHaveLength(0)
-      expect(evidence.removedCount).toBe(1)
+      expect(evidence.findings).toHaveLength(0)
+      expect(evidence.activeExceptions).toEqual({})
+      expect(evidence.staleExceptions.map((r) => r.id)).toEqual([
+        "suppression:eslint:no-console:src/example.ts:1",
+      ])
     }
+
+    // The stale record is kept on disk -- retiring it is an explicit human edit.
+    const { exceptions } = await readRegistry()
+    expect(exceptions).toHaveLength(1)
   })
 
   it("leaves a malformed pre-existing registry untouched and reports ok: false", async () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
     const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
-    const corrupted = JSON.stringify([{ file: "", line: -1, domain: "", rule: [], content: "" }])
+    const corrupted = JSON.stringify({ exceptions: [{ id: "suppression:x", version: 9 }] })
     await mkdir(path.dirname(registryPath), { recursive: true })
     await writeFile(registryPath, corrupted, "utf8")
 
@@ -193,10 +198,7 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
     expect(await readFile(registryPath, "utf8")).toBe(corrupted)
   })
 
-  it("reports ok: true (never a tool-infrastructure failure) even when a discovered suppression would later be judged forbidden by policy", async () => {
-    // The script's own success/failure is about whether synchronization completed, not whether
-    // any suppression is acceptable -- that judgment belongs entirely to the downstream policy
-    // (checks/suppression-governance.ts), which reads this same evidence.
+  it("reports ok: true even when a discovered suppression would later be judged forbidden by policy", async () => {
     await write(
       "src/example.ts",
       "// eslint-disable-next-line security/detect-object-injection\nconst x = obj[key]\n",
@@ -217,7 +219,10 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
 
     expect(evidence.ok).toBe(true)
     if (evidence.ok) {
-      expect(evidence.records[0]?.file).toBe("src/nested/deep/example.ts")
+      expect(evidence.findings[0]?.file).toBe("src/nested/deep/example.ts")
+      expect(evidence.findings[0]?.id).toBe(
+        "suppression:eslint:no-console:src/nested/deep/example.ts:1",
+      )
     }
   })
 })

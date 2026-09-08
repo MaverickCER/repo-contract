@@ -1,103 +1,84 @@
-import { evaluateExceptionRecord, hashRequirementFields } from "../../src/helpers/index.js"
+import { evaluateExceptionRecord } from "../../src/helpers/index.js"
 import type { ExceptionClassification } from "../../src/helpers/index.js"
-import type { SuppressionGovernanceRecordEvidence } from "./evidence-types.js"
+import type { SuppressionExceptionRecord, SuppressionFinding } from "./evidence-types.js"
 import type { SuppressionPolicyConfig, SuppressionRequirement } from "./policy-config.js"
 import { GLOBAL_DEFAULT_POLICY } from "./policy-config.js"
-import { stageMissingFields } from "../shared/exception-record.js"
 
 /**
  * Suppression-governance's own thin instantiation of `repo-contract/helpers`'s classification-
  * neutral exception-policy resolver -- see specs/decisions/0013-reusable-exception-policy-helper.md.
- * The generic exact/glob/domain-default/global-default precedence, the `"*"` blanket-suppression
- * special case, and the strictest-policy merge across multiple classifications now all live in
+ * The generic exact/glob/domain-default/global-default precedence, the `"*"` blanket special case,
+ * and the strictest-policy merge across multiple classifications all live in
  * `resolveExceptionPolicy`/`stricterOf`/`evaluateExceptionRecord` (`src/helpers/exception-policy.ts`)
- * -- this file only maps a `DisableCommentRecord`'s own shape onto that generic contract:
- * `{ group: record.domain, category: rule }` per entry in `record.rule`, and `fieldValue` indexing
- * one of the five hand-authored fields (`justification`/`alternatives`/`remediation`/`category`/
- * `verificationMethod`) or the mechanically-derived `reason`.
+ * -- this file only maps one *finding* and its reconciled record onto that generic contract:
+ * `{ group: finding.domain, category: rule }` per entry in `finding.rule`, and `fieldValue`
+ * reading one required field from the record (`justification`/`category`/`verificationMethod`) or,
+ * for the `stryker`-only `"reason"` requirement, from the finding's mechanically-derived reason
+ * text.
  */
 
-type SuppressionRecordVerdict = "forbidden" | "insufficient" | "permitted"
+export type SuppressionFindingVerdict = "forbidden" | "insufficient" | "permitted" | "unmatched"
 
-interface SuppressionRecordDeterminant {
-  readonly record: SuppressionGovernanceRecordEvidence
-  readonly verdict: SuppressionRecordVerdict
+export interface SuppressionFindingDeterminant {
+  readonly finding: SuppressionFinding
+  readonly verdict: SuppressionFindingVerdict
   readonly missing: readonly SuppressionRequirement[]
 }
 
-/** The six authoring fields `verifiedContentHash` is bound to -- editing any of these after sign-off invalidates the hash and reverts `verifiedBy` to "missing". Order matters: it is the exact order `hashRequirementFields` digests. */
-/** Exported so tests can compute a real, matching `verifiedContentHash` for a fixture record without maintaining their own copy of this list. */
-export const HASHED_AUTHORING_FIELDS: readonly SuppressionRequirement[] = [
-  "justification",
-  "alternatives",
-  "remediation",
-  "category",
-  "verificationMethod",
-  "reason",
-]
+/**
+ * The subject `evaluateExceptionRecord`'s `fieldValue` reads from: the reconciled record's own
+ * fields, plus the finding's mechanically-derived `reason` (never stored on a record -- it is
+ * recomputed from source every run, so a policy that required it off the record would be trusting
+ * stale text).
+ */
+type EvaluationSubject = SuppressionExceptionRecord & { readonly reason: string }
 
 /**
- * Reads one authoring field's raw current string value straight off `record` -- the completeness
- * primitive the generic core wants, and the exact input `hashRequirementFields` digests for the
- * content-bound `"verifiedBy"` check below.
- * @param record - The record to read a field from.
+ * Reads one required field's current string value off the combined record+reason subject.
+ * @param subject - The record augmented with the finding's `reason`.
  * @param requirement - The field name to resolve.
- * @returns That field's current string value.
+ * @returns That field's current string value (`""` if absent or non-string).
  */
-function rawFieldValue(record: SuppressionGovernanceRecordEvidence, requirement: string): string {
-  return record[requirement as SuppressionRequirement]
+function fieldValue(subject: EvaluationSubject, requirement: string): string {
+  const value = (subject as unknown as Record<string, unknown>)[requirement]
+  return typeof value === "string" ? value : ""
 }
 
 /**
- * Resolves one required field's current value on `record`. Every field but `"verifiedBy"` is read
- * straight off the record. `"verifiedBy"` is *content-bound*: it resolves to the signer's name
- * only when `record.verifiedContentHash` still equals `hashRequirementFields()` recomputed from
- * the record's current authoring fields -- so editing a justification (or any of the six
- * `HASHED_AUTHORING_FIELDS`) after sign-off makes `"verifiedBy"` resolve to `""` again, and the
- * record fails policy until it is re-reviewed and re-signed. `requirement` arrives as a plain
- * `string` (the generic core's contract), but every value it is actually called with here is
- * drawn from a policy's `requirements` array, already confirmed a member of
- * `SuppressionRequirement` by `validateExceptionPolicyConfig` (see checks/suppression-governance.ts).
- * @param record - The record to read a field from.
- * @param requirement - The field name to resolve.
- * @returns That field's current string value (or `""` for an unverified/stale `"verifiedBy"`).
+ * Evaluates one finding against `policyConfig`, taking the strictest (`stricterOf`) of the
+ * per-rule resolved policies -- a finding naming both a forbidden rule and an otherwise-fine rule
+ * is forbidden overall. A required field only counts as satisfied once it is a non-empty
+ * (post-trim) string.
+ * @param finding - The raw suppression finding.
+ * @param record - The reconciled live record for this finding (from `evidence.activeExceptions[finding.id]`), or `undefined` if the bijection is somehow broken.
+ * @param policyConfig - The suppression policy configuration.
+ * @returns The finding's verdict, and which required record fields (if any) are still missing.
  */
-function fieldValue(record: SuppressionGovernanceRecordEvidence, requirement: string): string {
-  if (requirement === "verifiedBy") {
-    if (record.verifiedContentHash.length === 0) return ""
-    const currentHash = hashRequirementFields(record, HASHED_AUTHORING_FIELDS, rawFieldValue)
-    return record.verifiedContentHash === currentHash ? record.verifiedBy : ""
-  }
-  return rawFieldValue(record, requirement)
-}
-
-/**
- * Evaluates one registry record's every `rule` against `policyConfig`, taking the strictest
- * (`stricterOf`) of the per-rule resolved policies -- a record naming both a forbidden rule and an
- * otherwise-fine rule is forbidden overall. A required field only counts as satisfied once it's a
- * non-empty (post-trim) string -- an empty `justification`/`alternatives`/`remediation` is
- * registry-valid but policy-insufficient, exactly as `"exception"` mode's name implies.
- * @param record - The registry record to evaluate.
- * @param policyConfig - The suppression policy configuration to evaluate against.
- * @returns The record's verdict, and which required fields (if any) are still missing.
- */
-export function evaluateRecord(
-  record: SuppressionGovernanceRecordEvidence,
+export function evaluateFinding(
+  finding: SuppressionFinding,
+  record: SuppressionExceptionRecord | undefined,
   policyConfig: SuppressionPolicyConfig,
-): SuppressionRecordDeterminant {
-  // `record.rule` is a non-empty array by the registry's own validated invariant
-  // (registry.ts's validateRecord, recognizers.ts) -- TypeScript can't express that
-  // non-emptiness through a plain `.map()` over a `readonly string[]`, so the result is cast
-  // (via `unknown`, since a same-length array type doesn't structurally overlap with a non-empty
-  // tuple type on its own) to the non-empty tuple `evaluateExceptionRecord` requires, rather than
-  // that requirement being re-proven here.
-  const classifications = record.rule.map((rule) => ({
-    group: record.domain,
+): SuppressionFindingDeterminant {
+  if (record === undefined) {
+    return { finding, verdict: "unmatched", missing: [] }
+  }
+
+  // `finding.rule` is a non-empty array by the registry validator's own invariant and by every
+  // recognizer (recognizers.ts) -- but `evaluateExceptionRecord` reduces `classifications` with no
+  // seed, so an empty array would throw rather than return a verdict. Guard it: an empty rule list
+  // is a malformed finding, treated the same as a missing record (an integrity failure the policy
+  // fails on), never a runtime exception out of a pure function.
+  if (finding.rule.length === 0) {
+    return { finding, verdict: "unmatched", missing: [] }
+  }
+
+  const classifications = finding.rule.map((rule) => ({
+    group: finding.domain,
     category: rule,
   })) as unknown as readonly [ExceptionClassification, ...ExceptionClassification[]]
 
-  const determinant = evaluateExceptionRecord({
-    record,
+  const determinant = evaluateExceptionRecord<EvaluationSubject>({
+    record: { ...record, reason: finding.reason },
     classifications,
     config: policyConfig,
     globalDefault: GLOBAL_DEFAULT_POLICY,
@@ -105,34 +86,36 @@ export function evaluateRecord(
   })
 
   return {
-    record: determinant.record,
+    finding,
     verdict: determinant.verdict,
     missing: determinant.missing as readonly SuppressionRequirement[],
   }
 }
 
 /**
- * A one-line, actionable identification of a record -- its file, line, domain, rule(s), and content.
- * @param record - The record to describe.
- * @returns A one-line description of `record`.
+ * A one-line, actionable identification of a finding -- its file, line, domain, rule(s), and the
+ * canonicalized directive text. Internal to `formatOffender`; callers render an offender through
+ * that, so verdict-specific detail is never dropped.
+ * @param finding - The finding to describe.
+ * @returns A one-line description of `finding`.
  */
-export function describeRecord(record: SuppressionGovernanceRecordEvidence): string {
-  return `${record.file}:${String(record.line)} [${record.domain}: ${record.rule.join(", ")}] "${record.content}"`
+function describeFinding(finding: SuppressionFinding): string {
+  return `${finding.file}:${String(finding.line)} [${finding.domain}: ${finding.rule.join(", ")}] "${finding.content}"`
 }
 
 /**
- * Renders one non-permitted record's determinant as a rationale line.
- * @param determinant - The record's evaluated verdict and (if insufficient) missing fields.
- * @returns A one-line, actionable description of why `determinant.record` failed policy.
+ * Renders one non-permitted finding's determinant as a rationale line.
+ * @param determinant - The finding's evaluated verdict and (if insufficient) missing fields.
+ * @returns A one-line, actionable description of why `determinant.finding` failed policy.
  */
-export function formatOffender(determinant: SuppressionRecordDeterminant): string {
-  const { record, verdict, missing } = determinant
+export function formatOffender(determinant: SuppressionFindingDeterminant): string {
+  const { finding, verdict, missing } = determinant
 
   if (verdict === "forbidden") {
-    return `${describeRecord(record)} -- forbidden by policy.`
+    return `${describeFinding(finding)} -- forbidden by policy.`
   }
-  // Stage `verifiedBy`: a record whose authoring fields aren't all filled yet is asked only for
-  // those; `verifiedBy` is added to the ask on the next run, once there is prose to sign off on.
-  const staged = stageMissingFields(missing, "verifiedBy")
-  return `${describeRecord(record)} -- insufficient justification (missing: ${staged.join(", ")}).`
+  if (verdict === "unmatched") {
+    return `${describeFinding(finding)} -- no reconciled exception record (registry integrity failure).`
+  }
+  return `${describeFinding(finding)} -- insufficient justification (missing: ${missing.join(", ")}).`
 }
