@@ -1,231 +1,105 @@
+import type { NormalizedSocketAlert, SocketExceptionRecord } from "./evidence-types.js"
 import {
   EXCEPTION_TYPES,
-  isIso8601Timestamp,
-  validateCanonicalIdentity,
+  SECURITY_EXCEPTION_FIELD_KEYS,
+  validateSecurityExceptionFields,
 } from "../shared/exception-record.js"
-import type { ExceptionVerification } from "../shared/exception-record.js"
+import type { ExceptionRegistrySchema, ExceptionType } from "../shared/exception-record.js"
 
-/** One hand-maintained waiver for a Socket alert -- `.repo-contract/exceptions/socket.json`'s own `exceptions` array element shape. */
-export interface SocketExceptionRecord {
-  /** This record's own canonical addressing key -- must equal `deriveSocketExceptionId(record)`; see `validateCanonicalIdentity` (`scripts/shared/exception-record.ts`). */
-  readonly id: string
-  readonly version: 1
+export type { SocketExceptionRecord } from "./evidence-types.js"
+
+const SEVERITY_VALUES = new Set(["critical", "high", "middle", "low", "unknown"])
+
+/** Every `EXCEPTION_TYPES` member is a valid reason to tolerate a real Socket alert. */
+const ALLOWED_EXCEPTION_TYPES: readonly ExceptionType[] = EXCEPTION_TYPES
+
+/**
+ * The check-namespaced semantic identity of one Socket alert: `socket:<package>@<version>:<type>`.
+ * Injective over a run (Socket does not emit the same package@version:type twice); stable across
+ * runs as long as the dependency and alert type are unchanged.
+ * @param alert - The alert's (or record's) identity fields.
+ * @param alert.package - The npm package name.
+ * @param alert.packageVersion - The exact installed version the alert is against.
+ * @param alert.type - Socket's own alert type (e.g. `"envVars"`).
+ * @returns The semantic id.
+ */
+export function deriveSocketExceptionId(alert: {
   readonly package: string
   readonly packageVersion: string
-  readonly alertType: string
-  readonly justification: string
-  readonly alternatives: string
-  readonly remediation: string
-  readonly exceptionType: (typeof EXCEPTION_TYPES)[number]
-  readonly verification?: ExceptionVerification
+  readonly type: string
+}): string {
+  return `socket:${alert.package}@${alert.packageVersion}:${alert.type}`
 }
 
 /**
- * This check's own `deriveId` for `validateCanonicalIdentity` -- deliberately identical in shape
- * to `NormalizedSocketAlert.id` (`scripts/security-socket/evidence-types.ts`'s
- * `` `${package}@${version}:${type}` ``) so a record's stored `id` is also its direct match key
- * against a scan's real alerts.
- * @param record - The record to derive a canonical id for.
- * @returns The record's canonical id, from its own embedded finding-identity fields.
+ * Builds a fresh, blank exception record for an alert with no matching record yet.
+ * @param alert - The unmatched alert.
+ * @param id - The canonical id `reconcileExceptions` computed (equals `alert.id`).
+ * @returns The blank stub record.
  */
-export function deriveSocketExceptionId(record: SocketExceptionRecord): string {
-  return `${record.package}@${record.packageVersion}:${record.alertType}`
-}
-
-const VERIFICATION_METHODS = new Set(["mechanical-reverification", "independent-human-review"])
-
-/**
- * Validates one candidate `verification` value, if present. `undefined` is always valid (a
- * not-yet-verified record). Enforces the `"validated-false-positive"` + `mechanical-
- * reverification` pairing rule from specs/decisions/0013-reusable-exception-policy-helper.md: a
- * false-positive claim must be backed by re-running the tool that raised it, never opinion alone.
- * @param value - The candidate `verification` value.
- * @param exceptionType - The record's own `exceptionType`, to enforce the pairing rule against.
- * @param index - This record's index in the registry array, for error messages.
- * @param errors - Accumulates every problem found.
- * @returns The validated `ExceptionVerification`, or `undefined` when `value` is `undefined` or any field failed validation.
- */
-function validateVerification(
-  value: unknown,
-  exceptionType: string,
-  index: number,
-  errors: string[],
-): ExceptionVerification | undefined {
-  if (value === undefined) return undefined
-
-  if (typeof value !== "object" || value === null) {
-    errors.push(`exceptions[${String(index)}].verification must be an object.`)
-    return undefined
-  }
-
-  const errorsBefore = errors.length
-
-  const { method, verifiedBy, verifiedAt, verifiedContentHash, evidence } = value as Record<
-    string,
-    unknown
-  >
-
-  if (typeof method !== "string" || !VERIFICATION_METHODS.has(method)) {
-    errors.push(
-      `exceptions[${String(index)}].verification.method must be one of ${[...VERIFICATION_METHODS].map((m) => `"${m}"`).join(", ")} (got ${JSON.stringify(method)}).`,
-    )
-  } else if (
-    exceptionType === "validated-false-positive" &&
-    method !== "mechanical-reverification"
-  ) {
-    errors.push(
-      `exceptions[${String(index)}]: exceptionType "validated-false-positive" requires verification.method "mechanical-reverification" (a false-positive claim must be re-checked against the tool that raised it, not approved by opinion alone) -- got ${JSON.stringify(method)}.`,
-    )
-  }
-
-  if (typeof verifiedBy !== "string" || verifiedBy.length === 0) {
-    errors.push(`exceptions[${String(index)}].verification.verifiedBy must be a non-empty string.`)
-  }
-  if (typeof verifiedAt !== "string" || !isIso8601Timestamp(verifiedAt)) {
-    errors.push(
-      `exceptions[${String(index)}].verification.verifiedAt must be an ISO 8601 date or date-time (got ${JSON.stringify(verifiedAt)}).`,
-    )
-  }
-  if (typeof verifiedContentHash !== "string" || verifiedContentHash.length === 0) {
-    errors.push(
-      `exceptions[${String(index)}].verification.verifiedContentHash must be a non-empty string.`,
-    )
-  }
-  if (evidence !== undefined && typeof evidence !== "string") {
-    errors.push(`exceptions[${String(index)}].verification.evidence must be a string, if present.`)
-  }
-
-  // If any check above pushed an error, this block is invalid -- return `undefined` rather than a
-  // cast that claims otherwise. (Accumulated errors already fail the whole registry either way.)
-  return errors.length > errorsBefore ? undefined : (value as ExceptionVerification)
-}
-
-/**
- * Validates one candidate registry record's shape, and that its own `id` matches what
- * `deriveSocketExceptionId` independently recomputes from its embedded finding-identity fields.
- * @param value - The candidate record.
- * @param index - This record's index in the registry array, for error messages.
- * @param errors - Accumulates every problem found.
- * @returns The validated record, or `undefined` if any field was invalid.
- */
-function validateSocketExceptionRecord(
-  value: unknown,
-  index: number,
-  errors: string[],
-): SocketExceptionRecord | undefined {
-  if (typeof value !== "object" || value === null) {
-    errors.push(`exceptions[${String(index)}] must be an object.`)
-    return undefined
-  }
-
-  const {
+export function createSocketStub(alert: NormalizedSocketAlert, id: string): SocketExceptionRecord {
+  return {
     id,
-    version,
-    package: packageName,
-    packageVersion,
-    alertType,
-    justification,
-    alternatives,
-    remediation,
-    exceptionType,
-    verification,
-  } = value as Record<string, unknown>
-
-  const stringFields: readonly [string, unknown][] = [
-    ["id", id],
-    ["package", packageName],
-    ["packageVersion", packageVersion],
-    ["alertType", alertType],
-    ["justification", justification],
-    ["alternatives", alternatives],
-    ["remediation", remediation],
-  ]
-  let allStringsValid = true
-  for (const [field, fieldValue] of stringFields) {
-    if (typeof fieldValue !== "string") {
-      errors.push(`exceptions[${String(index)}].${field} must be a string.`)
-      allStringsValid = false
-    }
-  }
-
-  if (version !== 1) {
-    errors.push(`exceptions[${String(index)}].version must be 1 (got ${JSON.stringify(version)}).`)
-  }
-
-  const exceptionTypeValid =
-    typeof exceptionType === "string" &&
-    (EXCEPTION_TYPES as readonly string[]).includes(exceptionType)
-  if (!exceptionTypeValid) {
-    errors.push(
-      `exceptions[${String(index)}].exceptionType must be one of ${EXCEPTION_TYPES.map((t) => `"${t}"`).join(", ")} (got ${JSON.stringify(exceptionType)}).`,
-    )
-  }
-
-  const validatedVerification = validateVerification(
-    verification,
-    exceptionTypeValid ? exceptionType : "",
-    index,
-    errors,
-  )
-
-  if (!allStringsValid || version !== 1 || !exceptionTypeValid) return undefined
-
-  const record: SocketExceptionRecord = {
-    id: id as string,
     version: 1,
-    package: packageName as string,
-    packageVersion: packageVersion as string,
-    alertType: alertType as string,
-    justification: justification as string,
-    alternatives: alternatives as string,
-    remediation: remediation as string,
-    exceptionType: exceptionType as (typeof EXCEPTION_TYPES)[number],
-    ...(validatedVerification !== undefined ? { verification: validatedVerification } : {}),
+    justification: "",
+    alternatives: "",
+    remediation: "",
+    method: "",
+    exceptionType: "",
+    package: alert.package,
+    packageVersion: alert.version,
+    type: alert.type,
+    severity: alert.severity,
   }
-
-  const identity = validateCanonicalIdentity(record, deriveSocketExceptionId)
-  if (!identity.ok) {
-    errors.push(`exceptions[${String(index)}]: ${identity.error}`)
-    return undefined
-  }
-
-  return record
 }
 
-/**
- * Validates an untrusted parsed `exceptions` array against the socket registry's contract.
- * Malformed input always fails the entire registry (every problem found, not just the first) --
- * a bad record is never silently dropped while the rest are kept, matching
- * `scripts/suppression-governance/registry.ts`'s own convention.
- * @param value - The parsed (but otherwise untrusted) `exceptions` array value.
- * @returns Every valid record, or every validation error found.
- */
-export function validateSocketExceptionRegistry(
-  value: unknown,
-):
-  | { readonly ok: true; readonly records: readonly SocketExceptionRecord[] }
-  | { readonly ok: false; readonly errors: readonly string[] } {
-  if (!Array.isArray(value)) {
-    return { ok: false, errors: ['socket.json\'s "exceptions" field must be a JSON array.'] }
-  }
+/** The per-registry schema for socket.json. */
+export const SOCKET_EXCEPTION_SCHEMA: ExceptionRegistrySchema<SocketExceptionRecord> = {
+  namespace: "socket:",
+  metadataKeys: [...SECURITY_EXCEPTION_FIELD_KEYS, "package", "packageVersion", "type", "severity"],
+  validateRecord(core, raw, index, errors) {
+    const at = `exceptions[${String(index)}]`
+    const { package: pkg, packageVersion, type, severity } = raw
 
-  const errors: string[] = []
-  const records: SocketExceptionRecord[] = []
-  const seenIds = new Set<string>()
-
-  for (const [index, entry] of value.entries()) {
-    const record = validateSocketExceptionRecord(entry, index, errors)
-    if (record === undefined) continue
-    if (seenIds.has(record.id)) {
+    const pkgValid = typeof pkg === "string" && pkg.length > 0
+    if (!pkgValid) errors.push(`${at}.package must be a non-empty string.`)
+    const versionValid = typeof packageVersion === "string" && packageVersion.length > 0
+    if (!versionValid) errors.push(`${at}.packageVersion must be a non-empty string.`)
+    const typeValid = typeof type === "string" && type.length > 0
+    if (!typeValid) errors.push(`${at}.type must be a non-empty string.`)
+    const severityValid = typeof severity === "string" && SEVERITY_VALUES.has(severity)
+    if (!severityValid) {
       errors.push(
-        `exceptions[${String(index)}].id ${JSON.stringify(record.id)} duplicates an earlier record.`,
+        `${at}.severity must be one of ${[...SEVERITY_VALUES].map((s) => JSON.stringify(s)).join(", ")} (got ${JSON.stringify(severity)}).`,
       )
-      continue
     }
-    seenIds.add(record.id)
-    records.push(record)
-  }
 
-  if (errors.length > 0) return { ok: false, errors }
-  return { ok: true, records }
+    const security = validateSecurityExceptionFields(raw, index, ALLOWED_EXCEPTION_TYPES, errors)
+
+    if (!pkgValid || !versionValid || !typeValid || !severityValid || security === undefined) {
+      return undefined
+    }
+
+    const identity = {
+      package: pkg,
+      packageVersion: packageVersion,
+      type: type,
+    }
+    const derived = deriveSocketExceptionId(identity)
+    if (derived !== core.id) {
+      errors.push(
+        `${at}.id ${JSON.stringify(core.id)} does not match the id derived from its own package/packageVersion/type (${JSON.stringify(derived)}).`,
+      )
+      return undefined
+    }
+
+    return {
+      id: core.id,
+      version: 1,
+      justification: core.justification,
+      ...security,
+      ...identity,
+      severity: severity as SocketExceptionRecord["severity"],
+    }
+  },
 }

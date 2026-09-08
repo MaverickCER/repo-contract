@@ -1,117 +1,60 @@
-import {
-  evaluateExceptionRecord,
-  loadExceptionRegistry,
-  validateExceptionPolicyConfig,
-} from "../src/helpers/index.js"
+import { evaluateExceptionRecord, validateExceptionPolicyConfig } from "../src/helpers/index.js"
 import type { ExceptionClassification } from "../src/helpers/index.js"
 import type {
   NetworkCapabilityFinding,
+  NetworkExceptionRecord,
   NetworkScanEvidence,
 } from "../scripts/security-network/evidence-types.js"
 import {
   SECURITY_NETWORK_GLOBAL_DEFAULT_POLICY,
   VALID_SECURITY_NETWORK_REQUIREMENTS,
-  VERIFICATION_FIELD,
   securityNetworkPolicy,
 } from "../scripts/security-network/policy-config.js"
-import type { NetworkExceptionRecord } from "../scripts/security-network/registry.js"
-import {
-  deriveNetworkExceptionId,
-  validateNetworkExceptionRegistry,
-} from "../scripts/security-network/registry.js"
-import { isVerified } from "../scripts/shared/exception-record.js"
-import {
-  evaluateExceptionFindings,
-  stageMissingFields,
-} from "./shared/evaluate-exception-findings.js"
-import { handWrittenArraySchema } from "./shared/standard-schema-validator.js"
+import { NETWORK_EXCEPTION_SCHEMA } from "../scripts/security-network/registry.js"
+import { validateExceptionRegistry } from "../scripts/shared/exception-record.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 
-/** `justification`/`alternatives`/`remediation`/`exceptionType` -- the content a verification's hash is bound to. Excludes `VERIFICATION_FIELD` itself: a verification cannot be bound to its own presence. */
-const PROSE_REQUIREMENTS = VALID_SECURITY_NETWORK_REQUIREMENTS.filter(
-  (field) => field !== VERIFICATION_FIELD,
-)
-
-// A forward-slash repo-relative literal, not `path.join` -- this string is shown verbatim in the
-// check's own rationale (pointing a reader at the file to edit), where a back-slashed Windows
-// rendering would be wrong, and `node:fs` accepts `/` on every platform for the actual read.
-const DEFAULT_EXCEPTIONS_PATH = ".repo-contract/exceptions/security-network.json"
-
 /**
- * The one identity a `NetworkCapabilityFinding` and its (at most one) backing
- * `NetworkExceptionRecord` share -- `` `${capability}:${file}:${line}` ``, deliberately identical
- * to `deriveNetworkExceptionId` so a record's stored `id` is also its direct match key. `column`
- * is intentionally excluded (a documented coarsening -- two findings of the same capability on the
- * same line share one record), matching the plan's `capability`+`file`+`line` waiver identity.
- * @param finding - The finding to derive a match key for.
- * @returns The finding's canonical identity.
- */
-function findingIdentity(finding: NetworkCapabilityFinding): string {
-  return `${finding.capability}:${finding.file}:${String(finding.line)}`
-}
-
-/**
- * Resolves one named field's current value on a `NetworkExceptionRecord` -- the four ordinary
- * prose/enum fields read directly; `"verification.verifiedBy"` delegates to `isVerified`
- * (`scripts/shared/exception-record.ts`), returning the verifier's own name only when the
- * record's `verification` block is present *and* still content-bound to the record's current
- * prose.
+ * Reads one required field's current string value straight off a reconciled record.
  * @param record - The record to read a field from.
  * @param requirement - The field name to resolve.
- * @returns That field's current string value, or `""` if empty/absent/unverified.
+ * @returns That field's current string value (`""` if absent or non-string).
  */
 function networkFieldValue(record: NetworkExceptionRecord, requirement: string): string {
-  if (requirement === VERIFICATION_FIELD) {
-    return isVerified(record, PROSE_REQUIREMENTS, networkFieldValue)
-      ? (record.verification?.verifiedBy ?? "")
-      : ""
-  }
   const value = (record as unknown as Record<string, unknown>)[requirement]
   return typeof value === "string" ? value : ""
 }
 
 /**
- * Finds the (at most one) registry record backing `finding` -- by exact `id` match on the
- * `` `${capability}:${file}:${line}` `` identity both sides share.
- * @param finding - The finding to find a backing record for.
- * @param records - This run's loaded exception registry.
- * @returns The matching record, or `undefined` if none backs this finding.
- */
-function matchFindingToRecord(
-  finding: NetworkCapabilityFinding,
-  records: readonly NetworkExceptionRecord[],
-): NetworkExceptionRecord | undefined {
-  const identity = findingIdentity(finding)
-  return records.find((record) => deriveNetworkExceptionId(record) === identity)
-}
-
-/**
- * Evaluates one already-matched `(finding, record)` pair against `securityNetworkPolicy` --
- * classified purely on the finding's own `capability` kind.
- * @param finding - The finding being evaluated.
- * @param record - The registry record `matchFindingToRecord` found for `finding`.
- * @returns The record's resolved verdict and any still-missing required fields.
+ * Evaluates one finding against `securityNetworkPolicy`, classified purely on its `capability`.
+ * @param finding - The finding.
+ * @param record - The reconciled live record for it, or `undefined` if the bijection broke.
+ * @returns The verdict and any still-missing required fields.
  */
 function evaluateFinding(
   finding: NetworkCapabilityFinding,
-  record: NetworkExceptionRecord,
-): ReturnType<typeof evaluateExceptionRecord<NetworkExceptionRecord>> {
+  record: NetworkExceptionRecord | undefined,
+): {
+  readonly verdict: "forbidden" | "insufficient" | "permitted" | "unmatched"
+  readonly missing: readonly string[]
+} {
+  if (record === undefined) return { verdict: "unmatched", missing: [] }
   const classifications: readonly [ExceptionClassification, ...ExceptionClassification[]] = [
     { group: "security-network", category: finding.capability },
   ]
-  return evaluateExceptionRecord({
+  const determinant = evaluateExceptionRecord({
     record,
     classifications,
     config: securityNetworkPolicy,
     globalDefault: SECURITY_NETWORK_GLOBAL_DEFAULT_POLICY,
     fieldValue: networkFieldValue,
   })
+  return { verdict: determinant.verdict, missing: determinant.missing }
 }
 
 /**
- * Renders one finding exactly as this check has always listed one in its rationale --
- * `file:line:column [capability] detail`.
+ * Renders one finding: `file:line:column [capability] detail`.
  * @param finding - The finding to render.
  * @returns The single-line rendering.
  */
@@ -119,63 +62,30 @@ function renderFinding(finding: NetworkCapabilityFinding): string {
   return `${finding.file}:${String(finding.line)}:${String(finding.column)} [${finding.capability}] ${finding.detail}`
 }
 
-interface EvaluateSecurityNetworkPolicyInput {
-  readonly evidence: NetworkScanEvidence
-  readonly exceptionsPath?: string
-  /** Overridable for tests -- defaults to reading the real `.repo-contract/exceptions/security-network.json`. */
-  readonly loadRegistry?: (
-    exceptionsPath: string,
-  ) => Promise<
-    | { readonly ok: true; readonly records: readonly NetworkExceptionRecord[] }
-    | { readonly ok: false; readonly errors: readonly string[] }
-  >
-}
-
-/**
- * The real `.repo-contract/exceptions/security-network.json` loader -- `evaluateSecurityNetworkPolicy`'s
- * own default `loadRegistry`, overridable in tests so they never touch the filesystem.
- * @param exceptionsPath - Path to the exceptions registry file.
- * @returns The loaded registry records, or the errors found validating it.
- */
-async function defaultLoadRegistry(
-  exceptionsPath: string,
-): Promise<
-  | { readonly ok: true; readonly records: readonly NetworkExceptionRecord[] }
-  | { readonly ok: false; readonly errors: readonly string[] }
-> {
-  const result = await loadExceptionRegistry<NetworkExceptionRecord>({
-    path: exceptionsPath,
-    schema: handWrittenArraySchema(validateNetworkExceptionRegistry),
-  })
-  return result.ok ? { ok: true, records: result.records } : { ok: false, errors: result.errors }
-}
-
 /**
  * Fails whenever scripts/security-network/scan.ts found any prohibited (or unverifiable) network
- * capability in `src/**\/*.ts` that is not backed by a finding-specific, *verified* exception
- * record (`.repo-contract/exceptions/security-network.json`). ADR 0007's default posture is
- * unchanged and absolute -- `securityNetworkPolicy`'s `default` is `forbidden`, and the reviewed
- * waiver path additionally requires an `exceptionType`, a content-bound `verification.verifiedBy`,
- * and (for a false-positive claim) a mechanical re-scan; see
- * specs/decisions/0013-reusable-exception-policy-helper.md's "Verification, not attestation" and
- * specs/decisions/0007-no-network-surface.md's own amendment. A zero-file scan still fails (a
- * clean result from an empty scan is not evidence of a network-free surface).
- * @param input - The evidence to evaluate, and (for tests) the exceptions-registry path/loader to use.
+ * capability in `src/**\/*.ts` not backed by a complete exception record, or a stale record whose
+ * finding is gone. A pure evidence->verdict function -- the scan script owns loading, reconciling,
+ * and writing `.repo-contract/exceptions/security-network.json`. A zero-file scan still fails.
+ * @param input - Wraps the scan evidence.
+ * @param input.evidence - The `NetworkScanEvidence` emitted by scan.ts.
  * @returns the pass/fail outcome and its rationale.
  */
-export async function evaluateSecurityNetworkPolicy(
-  input: EvaluateSecurityNetworkPolicyInput,
-): Promise<PolicyResult> {
-  const {
-    evidence,
-    exceptionsPath = DEFAULT_EXCEPTIONS_PATH,
-    loadRegistry = defaultLoadRegistry,
-  } = input
+export function evaluateSecurityNetworkPolicy(input: {
+  readonly evidence: NetworkScanEvidence
+}): PolicyResult {
+  const { evidence } = input
 
-  // Config + registry validation run FIRST -- before the zero-file gate and the zero-findings
-  // gate below. A misconfigured `securityNetworkPolicy` or a malformed
-  // `.repo-contract/exceptions/security-network.json` is an independent, actionable failure that
-  // must surface even when the scan discovered no files or no findings this run.
+  if (evidence.registryError !== undefined) {
+    return {
+      outcome: "fail",
+      rationale: [
+        `${evidence.registryPath} failed to load or reconcile and was left unchanged:`,
+        ...evidence.registryError.map((e) => `- ${e}`),
+      ].join("\n"),
+    }
+  }
+
   const configErrors = validateExceptionPolicyConfig(
     securityNetworkPolicy,
     VALID_SECURITY_NETWORK_REQUIREMENTS,
@@ -190,13 +100,17 @@ export async function evaluateSecurityNetworkPolicy(
     }
   }
 
-  const registry = await loadRegistry(exceptionsPath)
-  if (!registry.ok) {
+  const activeRecords = Object.values(evidence.activeExceptions)
+  const revalidated = validateExceptionRegistry(
+    [...activeRecords, ...evidence.staleExceptions],
+    NETWORK_EXCEPTION_SCHEMA,
+  )
+  if (!revalidated.ok) {
     return {
       outcome: "fail",
       rationale: [
-        `${exceptionsPath} failed validation:`,
-        ...registry.errors.map((e) => `- ${e}`),
+        "security-network evidence failed independent registry validation:",
+        ...revalidated.errors.map((e) => `- ${e}`),
       ].join("\n"),
     }
   }
@@ -210,76 +124,90 @@ export async function evaluateSecurityNetworkPolicy(
     }
   }
 
-  const { matched, unmatchedFindings, staleExceptions, summary } = evaluateExceptionFindings({
-    items: evidence.findings,
-    records: registry.records,
-    matchRecord: matchFindingToRecord,
-    evaluate: evaluateFinding,
-  })
+  const findingIds = evidence.findings.map((finding) => finding.id)
+  const activeIds = new Set(Object.keys(evidence.activeExceptions))
+  const bijectionErrors: string[] = []
+  if (new Set(findingIds).size !== findingIds.length) {
+    bijectionErrors.push("evidence.findings contains duplicate ids.")
+  }
+  for (const id of new Set(findingIds)) {
+    if (!activeIds.has(id))
+      bijectionErrors.push(`finding ${JSON.stringify(id)} has no active exception record.`)
+  }
+  for (const id of activeIds) {
+    if (!findingIds.includes(id)) {
+      bijectionErrors.push(`active exception ${JSON.stringify(id)} matches no finding.`)
+    }
+  }
+  if (bijectionErrors.length > 0) {
+    return {
+      outcome: "fail",
+      rationale: [
+        "security-network evidence broke the findings <-> activeExceptions bijection:",
+        ...bijectionErrors.map((e) => `- ${e}`),
+      ].join("\n"),
+    }
+  }
 
-  const staleNote =
-    staleExceptions.length > 0
-      ? ` ${String(staleExceptions.length)} exception record(s) in ${exceptionsPath} matched nothing this run: ${staleExceptions.map((r) => r.id).join(", ")}.`
-      : ""
+  const staleLines = evidence.staleExceptions.map(
+    (record) =>
+      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)} -- its finding is gone; delete this entry.`,
+  )
 
   if (evidence.findings.length === 0) {
+    if (staleLines.length === 0) {
+      return {
+        outcome: "pass",
+        rationale: `No prohibited network capability found across ${String(evidence.filesScanned)} file(s) under src/.`,
+      }
+    }
     return {
-      outcome: "pass",
-      rationale:
-        `No prohibited network capability found across ${String(evidence.filesScanned)} file(s) under src/.` +
-        staleNote,
+      outcome: "fail",
+      rationale: [
+        `No prohibited network capability found across ${String(evidence.filesScanned)} file(s) under src/, but the registry has stale records:`,
+        ...staleLines,
+      ].join("\n"),
     }
   }
 
-  const offenders = matched.filter(({ determinant }) => determinant.verdict !== "permitted")
+  const determinants = evidence.findings.map((finding) => ({
+    finding,
+    ...evaluateFinding(finding, evidence.activeExceptions[finding.id]),
+  }))
+  const offenders = determinants.filter((d) => d.verdict !== "permitted")
 
-  if (offenders.length === 0 && unmatchedFindings.length === 0) {
+  if (offenders.length === 0 && staleLines.length === 0) {
     return {
       outcome: "pass",
-      rationale:
-        `Every network capability finding across ${String(evidence.filesScanned)} file(s) under src/ is backed by a verified exception. ${summary}` +
-        staleNote,
+      rationale: `Every network capability finding across ${String(evidence.filesScanned)} file(s) under src/ is backed by a complete exception record (${String(evidence.findings.length)} finding(s)).`,
     }
   }
 
-  const failingCount = offenders.length + unmatchedFindings.length
-
-  const offenderLines = offenders.map(({ item, determinant }) => {
-    const staged = stageMissingFields(determinant.missing, VERIFICATION_FIELD)
+  const offenderLines = offenders.map((d) => {
     const detail =
-      determinant.verdict === "forbidden"
+      d.verdict === "forbidden"
         ? "forbidden by policy (no waiver path for this capability kind)"
-        : `exception insufficient (missing: ${staged.join(", ")})`
-    return `- ${renderFinding(item)} -- ${detail}`
+        : d.verdict === "unmatched"
+          ? "no reconciled exception record (registry integrity failure)"
+          : `exception incomplete (missing: ${d.missing.join(", ")})`
+    return `- ${renderFinding(d.finding)} -- ${detail}`
   })
-
-  const unmatchedLines = unmatchedFindings.map(
-    (finding) => `- ${renderFinding(finding)} -- no matching exception record`,
-  )
 
   return {
     outcome: "fail",
     rationale: [
-      summary,
-      `${String(failingCount)} prohibited or unverifiable network capability finding(s) ` +
-        `across ${String(evidence.filesScanned)} file(s) scanned under src/:`,
+      `${String(offenders.length + evidence.staleExceptions.length)} prohibited/unverifiable network capability finding(s) or stale record(s) across ${String(evidence.filesScanned)} file(s) scanned under src/:`,
       ...offenderLines,
-      ...unmatchedLines,
-      "src/ must never perform network I/O directly -- see SECURITY.md's network-free surface " +
-        "guarantee. A genuine, reviewed exception requires a finding-specific, verified record in " +
-        `${exceptionsPath} (justification, alternatives, remediation, exceptionType, and a ` +
-        "content-bound verification -- see specs/decisions/0013-reusable-exception-policy-helper.md); " +
-        "a new preset command still needs adding to scripts/security-network/network-surface.mjs's " +
-        "ALLOWED_PRESET_COMMANDS." +
-        staleNote,
+      ...staleLines,
+      `src/ must never perform network I/O directly -- see SECURITY.md's network-free surface guarantee. A reviewed exception requires a complete record in ${evidence.registryPath} (justification, alternatives, remediation, method, exceptionType).`,
     ].join("\n"),
   }
 }
 
 // Second, independent layer of the "no network calls" invariant -- see eslint.config.js's own doc
-// comment on the first (ESLint) layer, and specs/decisions/0007-no-network-surface.md for the full
-// threat model. This check's own script (scripts/security-network/scan.ts) never invokes ESLint,
-// so a silently weakened/removed ESLint rule or a suppressed violation still fails here.
+// comment on the first (ESLint) layer, and specs/decisions/0007-no-network-surface.md. This
+// check's own script (scripts/security-network/scan.ts) never invokes ESLint, so a silently
+// weakened/removed ESLint rule or a suppressed violation still fails here.
 export const securityNetwork: CheckDefinitionConfig = {
   run: ["tsx", "scripts/security-network/scan.ts"],
   output: { format: "json" },

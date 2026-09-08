@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest"
 import {
+  EXCEPTION_METHODS,
   EXCEPTION_TYPES,
-  indexRecordsById,
-  isIso8601Timestamp,
-  isVerified,
-  validateCanonicalIdentity,
+  validateExceptionRegistry,
+  validateSecurityExceptionFields,
 } from "../../../../scripts/shared/exception-record.js"
-import type { ExceptionVerification } from "../../../../scripts/shared/exception-record.js"
-import { hashRequirementFields } from "../../../../src/helpers/index.js"
+import type {
+  ExceptionRegistrySchema,
+  ExceptionType,
+} from "../../../../scripts/shared/exception-record.js"
 
-describe("EXCEPTION_TYPES", () => {
-  it("is exactly the documented, closed set of six members", () => {
+describe("EXCEPTION_TYPES / EXCEPTION_METHODS", () => {
+  it("EXCEPTION_TYPES is exactly the documented, closed set of six members", () => {
     expect(EXCEPTION_TYPES).toEqual([
       "validated-false-positive",
       "accepted-risk",
@@ -20,131 +21,141 @@ describe("EXCEPTION_TYPES", () => {
       "platform-or-vendor-constraint",
     ])
   })
-})
 
-describe("isIso8601Timestamp", () => {
-  it("accepts a date, a date-time, and an offset date-time", () => {
-    expect(isIso8601Timestamp("2026-01-01")).toBe(true)
-    expect(isIso8601Timestamp("2026-01-01T00:00:00.000Z")).toBe(true)
-    expect(isIso8601Timestamp("2026-06-15T12:30+05:30")).toBe(true)
-  })
-
-  it("accepts a real leap day and rejects a non-leap-year Feb 29", () => {
-    expect(isIso8601Timestamp("2024-02-29")).toBe(true)
-    expect(isIso8601Timestamp("2026-02-29")).toBe(false)
-  })
-
-  it("rejects month-end overflow that Date.parse would silently normalize", () => {
-    expect(isIso8601Timestamp("2026-04-31")).toBe(false)
-    expect(isIso8601Timestamp("2026-06-31")).toBe(false)
-    expect(isIso8601Timestamp("2026-00-10")).toBe(false)
-    expect(isIso8601Timestamp("2026-13-01")).toBe(false)
-  })
-
-  it("rejects non-ISO shapes and free text", () => {
-    expect(isIso8601Timestamp("later")).toBe(false)
-    expect(isIso8601Timestamp("2026/01/01")).toBe(false)
-    expect(isIso8601Timestamp("Jan 1 2026")).toBe(false)
-    expect(isIso8601Timestamp("2026-01-01Tnope")).toBe(false)
-    expect(isIso8601Timestamp("")).toBe(false)
-  })
-
-  it("rejects a trailing line terminator (the regex-$ leniency Date.parse also tolerates)", () => {
-    expect(isIso8601Timestamp("2026-01-01\n")).toBe(false)
-    expect(isIso8601Timestamp("2026-01-01T00:00:00.000Z\r\n")).toBe(false)
+  it("EXCEPTION_METHODS is exactly the two recognized substantiation methods", () => {
+    expect(EXCEPTION_METHODS).toEqual(["mechanical-reverification", "independent-human-review"])
   })
 })
 
-describe("validateCanonicalIdentity", () => {
-  it("returns ok:true when the record's stored id matches its own derived identity", () => {
-    const record = {
-      id: "advisory-123:left-pad",
-      advisoryId: "advisory-123",
-      packageName: "left-pad",
-    }
-    const result = validateCanonicalIdentity(record, (r) => `${r.advisoryId}:${r.packageName}`)
-    expect(result).toEqual({ ok: true })
+const ALL_TYPES: readonly ExceptionType[] = EXCEPTION_TYPES
+
+describe("validateSecurityExceptionFields", () => {
+  const complete = {
+    alternatives: "Considered X and Y.",
+    remediation: "Tried Z; tracked in #42.",
+    method: "independent-human-review",
+    exceptionType: "accepted-risk",
+  }
+
+  it("accepts an all-empty stub", () => {
+    const errors: string[] = []
+    const result = validateSecurityExceptionFields(
+      { alternatives: "", remediation: "", method: "", exceptionType: "" },
+      0,
+      ALL_TYPES,
+      errors,
+    )
+    expect(errors).toEqual([])
+    expect(result).toEqual({ alternatives: "", remediation: "", method: "", exceptionType: "" })
   })
 
-  it("returns ok:false naming both ids when the stored id does not match its own derived identity", () => {
-    const record = { id: "wrong-id", advisoryId: "advisory-123", packageName: "left-pad" }
-    const result = validateCanonicalIdentity(record, (r) => `${r.advisoryId}:${r.packageName}`)
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.error).toContain('"wrong-id"')
-    expect(result.error).toContain('"advisory-123:left-pad"')
-  })
-})
-
-describe("indexRecordsById", () => {
-  it("indexes every record by its own stored id", () => {
-    const a = { id: "a", value: 1 }
-    const b = { id: "b", value: 2 }
-    const index = indexRecordsById([a, b])
-    expect(index.get("a")).toBe(a)
-    expect(index.get("b")).toBe(b)
-    expect(index.get("missing")).toBeUndefined()
+  it("accepts a complete record", () => {
+    const errors: string[] = []
+    expect(validateSecurityExceptionFields(complete, 0, ALL_TYPES, errors)).toEqual(complete)
+    expect(errors).toEqual([])
   })
 
-  it("resolves a duplicate id to the later record (last write wins)", () => {
-    const first = { id: "dup", value: "first" }
-    const second = { id: "dup", value: "second" }
-    const index = indexRecordsById([first, second])
-    expect(index.get("dup")).toBe(second)
+  it.each([
+    ["a non-string alternatives", { ...complete, alternatives: 3 }],
+    ["a bogus method", { ...complete, method: "vibes" }],
+    ["a bogus exceptionType", { ...complete, exceptionType: "made-up" }],
+  ])("rejects %s", (_desc, raw) => {
+    const errors: string[] = []
+    expect(validateSecurityExceptionFields(raw, 0, ALL_TYPES, errors)).toBeUndefined()
+    expect(errors.length).toBeGreaterThan(0)
   })
 
-  it("returns an empty map for an empty input", () => {
-    expect(indexRecordsById([]).size).toBe(0)
-  })
-})
-
-interface VerifiableRecord {
-  readonly id: string
-  readonly justification: string
-  readonly verification?: ExceptionVerification
-}
-
-const PROSE_FIELDS = ["justification"] as const
-
-function fieldValue(record: VerifiableRecord, requirement: string): string {
-  if (requirement === "justification") return record.justification
-  return ""
-}
-
-describe("isVerified", () => {
-  it("is false when the record has no verification block at all", () => {
-    const record: VerifiableRecord = { id: "r1", justification: "Because." }
-    expect(isVerified(record, [...PROSE_FIELDS], fieldValue)).toBe(false)
-  })
-
-  it("is true when the verification's hash matches the record's current prose fields", () => {
-    const unverified: VerifiableRecord = { id: "r1", justification: "Because." }
-    const hash = hashRequirementFields(unverified, [...PROSE_FIELDS], fieldValue)
-    const record: VerifiableRecord = {
-      ...unverified,
-      verification: {
+  it("enforces validated-false-positive => mechanical-reverification once method is set", () => {
+    const errors: string[] = []
+    const result = validateSecurityExceptionFields(
+      {
+        ...complete,
+        exceptionType: "validated-false-positive",
         method: "independent-human-review",
-        verifiedBy: "alice",
-        verifiedAt: "2026-01-01T00:00:00.000Z",
-        verifiedContentHash: hash,
       },
-    }
-    expect(isVerified(record, [...PROSE_FIELDS], fieldValue)).toBe(true)
+      0,
+      ALL_TYPES,
+      errors,
+    )
+    expect(result).toBeUndefined()
+    expect(errors.join("\n")).toContain("mechanical-reverification")
   })
 
-  it("is false (stale) when the verified content hash no longer matches the record's edited prose", () => {
-    const original: VerifiableRecord = { id: "r1", justification: "Original justification." }
-    const hash = hashRequirementFields(original, [...PROSE_FIELDS], fieldValue)
-    const edited: VerifiableRecord = {
-      id: "r1",
-      justification: "Edited justification after verification.",
-      verification: {
-        method: "independent-human-review",
-        verifiedBy: "alice",
-        verifiedAt: "2026-01-01T00:00:00.000Z",
-        verifiedContentHash: hash,
-      },
+  it("allows validated-false-positive with method still blank (an incomplete stub)", () => {
+    const errors: string[] = []
+    const result = validateSecurityExceptionFields(
+      { ...complete, exceptionType: "validated-false-positive", method: "" },
+      0,
+      ALL_TYPES,
+      errors,
+    )
+    expect(errors).toEqual([])
+    expect(result?.exceptionType).toBe("validated-false-positive")
+  })
+
+  it("respects a narrowed allowed-type set (coderabbit excludes validated-false-positive)", () => {
+    const errors: string[] = []
+    const narrowed = ALL_TYPES.filter((t) => t !== "validated-false-positive")
+    expect(
+      validateSecurityExceptionFields(
+        { ...complete, exceptionType: "validated-false-positive" },
+        0,
+        narrowed,
+        errors,
+      ),
+    ).toBeUndefined()
+    expect(errors.length).toBeGreaterThan(0)
+  })
+})
+
+describe("validateExceptionRegistry (generic core)", () => {
+  interface ToyRecord {
+    readonly id: string
+    readonly version: 1
+    readonly justification: string
+    readonly slug: string
+  }
+  const schema: ExceptionRegistrySchema<ToyRecord> = {
+    namespace: "toy:",
+    metadataKeys: ["slug"],
+    validateRecord(core, raw, index, errors) {
+      const { slug } = raw
+      if (typeof slug !== "string" || slug.length === 0) {
+        errors.push(`exceptions[${String(index)}].slug must be a non-empty string.`)
+        return undefined
+      }
+      if (core.id !== `toy:${slug}`) {
+        errors.push(`exceptions[${String(index)}].id must be toy:<slug>.`)
+        return undefined
+      }
+      return { id: core.id, version: 1, justification: core.justification, slug }
+    },
+  }
+
+  it("accepts a valid array", () => {
+    const r = validateExceptionRegistry(
+      [{ id: "toy:a", version: 1, justification: "", slug: "a" }],
+      schema,
+    )
+    expect(r.ok).toBe(true)
+  })
+
+  it("rejects a foreign namespace, a bad version, an unknown field, and a duplicate id", () => {
+    for (const bad of [
+      { id: "other:a", version: 1, justification: "", slug: "a" },
+      { id: "toy:a", version: 2, justification: "", slug: "a" },
+      { id: "toy:a", version: 1, justification: "", slug: "a", extra: 1 },
+    ]) {
+      expect(validateExceptionRegistry([bad], schema).ok).toBe(false)
     }
-    expect(isVerified(edited, [...PROSE_FIELDS], fieldValue)).toBe(false)
+    expect(
+      validateExceptionRegistry(
+        [
+          { id: "toy:a", version: 1, justification: "", slug: "a" },
+          { id: "toy:a", version: 1, justification: "", slug: "a" },
+        ],
+        schema,
+      ).ok,
+    ).toBe(false)
   })
 })

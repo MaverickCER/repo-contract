@@ -34,8 +34,8 @@ function socketExecutableResolves(): boolean {
 describe("runSecuritySocketScan -- real @socketsecurity/cli", () => {
   it(
     "reports the deterministic unavailable reason for this environment",
-    () => {
-      const evidence = runSecuritySocketScan()
+    async () => {
+      const evidence = await runSecuritySocketScan(process.cwd())
 
       expect(evidence.status).toBe("unavailable")
       if (evidence.status !== "unavailable") throw new Error("expected status: unavailable")

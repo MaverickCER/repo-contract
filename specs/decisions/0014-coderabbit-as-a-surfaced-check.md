@@ -78,16 +78,19 @@ evidence instead of a console line.
   it.
 - CodeRabbit findings are now first-class exception-policy subjects: a finding a maintainer
   judges incorrect or acceptable is dismissed the same governed way a Socket alert or a
-  suppressed lint rule is — a finding-specific, verified `.repo-contract/exceptions/
-coderabbit.json` record, not silent dismissal.
+  suppressed lint rule is — a finding-specific `.repo-contract/exceptions/coderabbit.json`
+  record, not silent dismissal. Since the 2026-09 v0.4.0 unification (PR 3) the review script
+  reconciles the registry against each run's findings (a blank stub per new finding; a stale
+  record whose finding is gone **fails** the policy, never auto-removed).
 - Because there is no more-authoritative tool to mechanically re-run against an AI-generated
   finding, `scripts/coderabbitai/registry.ts` excludes `"validated-false-positive"` from a
-  CodeRabbit exception's own allowed `exceptionType` set, and requires every verification's
-  `method` to be `"independent-human-review"` — never `"mechanical-reverification"`. A human's
-  own accountable judgment call is the only verification this check can ever accept.
+  CodeRabbit exception's allowed `exceptionType` set and forbids `method:
+"mechanical-reverification"` outright — `"independent-human-review"`, a human's own accountable
+  judgment call, is the only substantiation this check can accept.
 - CodeRabbit's own `--agent` event stream provides no native per-finding identifier and no
-  structured line number — `NormalizedFinding.identity` is deliberately coarse (`file` +
-  `severity` only; see `scripts/coderabbitai/evidence-types.ts`'s own doc comment), a known,
+  structured line number — the finding id is `coderabbit:<file>:<severity>:<hash of the finding's
+summary>` (see `scripts/coderabbitai/registry.ts`), so a re-review whose wording changed
+  re-derives a new id and the old record goes stale (re-review), a known, deliberate
   documented limitation rather than a precise-looking key that silently stops matching once the
   CLI's own free-text finding wording shifts between runs.
 - This check never invokes an LLM itself, and never introduces new ambient/network surface: it

@@ -2,218 +2,173 @@ import { describe, expect, it } from "vitest"
 import { evaluateCoderabbitPolicy } from "../../../checks/coderabbitai.js"
 import type {
   CoderabbitEvidence,
+  CoderabbitExceptionRecord,
   NormalizedFinding,
 } from "../../../scripts/coderabbitai/evidence-types.js"
-import type { CoderabbitExceptionRecord } from "../../../scripts/coderabbitai/registry.js"
-import { hashRequirementFields } from "../../../src/helpers/index.js"
-
-const PROSE_REQUIREMENTS = ["justification", "remediation", "exceptionType"]
-
-function fieldValue(record: CoderabbitExceptionRecord, requirement: string): string {
-  const value = (record as unknown as Record<string, unknown>)[requirement]
-  return typeof value === "string" ? value : ""
-}
+import {
+  createCoderabbitStub,
+  deriveCoderabbitExceptionId,
+} from "../../../scripts/coderabbitai/registry.js"
 
 function finding(overrides: Partial<NormalizedFinding> = {}): NormalizedFinding {
-  return {
+  const base = {
     file: "src/example.ts",
-    severity: "major",
+    severity: "major" as NormalizedFinding["severity"],
     summary: "A finding CodeRabbit reported.",
-    identity: "src/example.ts:major",
     ...overrides,
   }
+  return { ...base, id: deriveCoderabbitExceptionId(base) }
 }
 
-function record(overrides: Partial<CoderabbitExceptionRecord> = {}): CoderabbitExceptionRecord {
-  return {
-    id: "src/example.ts:major",
-    version: 1,
-    file: "src/example.ts",
-    severity: "major",
-    justification: "",
-    remediation: "",
-    exceptionType: "accepted-risk",
-    ...overrides,
-  }
+const COMPLETE = {
+  justification: "The suggested change would regress a documented invariant.",
+  remediation: "Tracked as a follow-up; not blocking.",
+  method: "independent-human-review" as const,
+  exceptionType: "accepted-risk" as const,
 }
 
-function verifiedRecord(
+function record(
+  from: NormalizedFinding,
   overrides: Partial<CoderabbitExceptionRecord> = {},
 ): CoderabbitExceptionRecord {
-  const base = record({
-    justification: "The suggested change would regress a documented invariant.",
-    remediation: "Tracked as a follow-up; not blocking.",
-    ...overrides,
-  })
-  const hash = hashRequirementFields(base, PROSE_REQUIREMENTS, fieldValue)
+  return { ...createCoderabbitStub(from, from.id), ...overrides }
+}
+
+interface Pair {
+  readonly finding: NormalizedFinding
+  readonly record: CoderabbitExceptionRecord
+}
+
+function reviewed(
+  pairs: readonly Pair[],
+  extras: {
+    readonly stale?: readonly CoderabbitExceptionRecord[]
+    readonly registryError?: readonly string[]
+  } = {},
+): CoderabbitEvidence {
+  const activeExceptions: Record<string, CoderabbitExceptionRecord> = {}
+  for (const { finding: f, record: r } of pairs) activeExceptions[f.id] = r
   return {
-    ...base,
-    verification: {
-      method: "independent-human-review",
-      verifiedBy: "a-maintainer",
-      verifiedAt: "2026-01-01T00:00:00.000Z",
-      verifiedContentHash: hash,
-    },
+    status: "reviewed",
+    registryPath: ".repo-contract/exceptions/coderabbit.json",
+    findings: pairs.map((p) => p.finding),
+    activeExceptions,
+    staleExceptions: extras.stale ?? [],
+    scaffoldedIds: [],
+    ...(extras.registryError !== undefined ? { registryError: extras.registryError } : {}),
   }
+}
+
+const NOT_APPLICABLE: CoderabbitEvidence = {
+  status: "not-applicable",
+  reason: "ci",
+  expectedProvider: "coderabbit-github-app",
+  registryPath: ".repo-contract/exceptions/coderabbit.json",
+  existingRecordCount: 0,
 }
 
 describe("evaluateCoderabbitPolicy", () => {
-  it("warns when the review is not-applicable (CI), naming the expected provider", async () => {
-    const evidence: CoderabbitEvidence = {
-      status: "not-applicable",
-      reason: "ci",
-      expectedProvider: "coderabbit-github-app",
-    }
-    const result = await evaluateCoderabbitPolicy({ evidence })
+  it("warns when the review is not-applicable (CI), naming the expected provider", () => {
+    const result = evaluateCoderabbitPolicy({ evidence: NOT_APPLICABLE })
     expect(result.outcome).toBe("warn")
     expect(result.rationale).toContain("coderabbit-github-app")
   })
 
-  it("warns (never fails or silently passes) when the CLI isn't installed", async () => {
-    const evidence: CoderabbitEvidence = { status: "unavailable", reason: "cli-not-installed" }
-    const result = await evaluateCoderabbitPolicy({ evidence })
+  it("warns when the CLI isn't installed", () => {
+    const result = evaluateCoderabbitPolicy({
+      evidence: {
+        status: "unavailable",
+        reason: "cli-not-installed",
+        registryPath: ".repo-contract/exceptions/coderabbit.json",
+        existingRecordCount: 0,
+      },
+    })
     expect(result.outcome).toBe("warn")
     expect(result.rationale).toContain("cli-not-installed")
   })
 
-  it("fails a not-applicable (CI) run when the registry itself is malformed -- the registry is validated on every run, not only a real review", async () => {
-    const evidence: CoderabbitEvidence = {
-      status: "not-applicable",
-      reason: "ci",
-      expectedProvider: "coderabbit-github-app",
-    }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: false, errors: ["exceptions[0] is broken"] }),
+  it("fails a not-applicable run when the registry is malformed (registryError)", () => {
+    const result = evaluateCoderabbitPolicy({
+      evidence: { ...NOT_APPLICABLE, registryError: ["exceptions[0] is broken"] },
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("failed validation")
+    expect(result.rationale).toContain("failed to load or reconcile")
   })
 
-  it("notes that present-but-unevaluated records exist on a not-applicable (CI) run", async () => {
-    const evidence: CoderabbitEvidence = {
-      status: "not-applicable",
-      reason: "ci",
-      expectedProvider: "coderabbit-github-app",
-    }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: true, records: [verifiedRecord()] }),
+  it("notes present-but-unreconciled records on a not-applicable run", () => {
+    const result = evaluateCoderabbitPolicy({
+      evidence: { ...NOT_APPLICABLE, existingRecordCount: 2 },
     })
     expect(result.outcome).toBe("warn")
-    expect(result.rationale).toContain("were not evaluated (no review ran this run)")
+    expect(result.rationale).toContain("were validated but not reconciled")
   })
 
-  it("warns on a detached-HEAD / unresolvable git context", async () => {
-    const evidence: CoderabbitEvidence = {
-      status: "unavailable",
-      reason: "git-context-unavailable",
-    }
-    const result = await evaluateCoderabbitPolicy({ evidence })
-    expect(result.outcome).toBe("warn")
-  })
-
-  it("fails on a malformed event stream or a real CLI-reported error", async () => {
-    const evidence: CoderabbitEvidence = { status: "error", message: "unexpected shape" }
-    const result = await evaluateCoderabbitPolicy({ evidence })
+  it("fails on a real CLI-reported error", () => {
+    const result = evaluateCoderabbitPolicy({
+      evidence: {
+        status: "error",
+        message: "unexpected shape",
+        registryPath: ".repo-contract/exceptions/coderabbit.json",
+        existingRecordCount: 0,
+      },
+    })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("unexpected shape")
   })
 
-  it("passes when the review reports 0 findings and the registry is empty", async () => {
-    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [] }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: true, records: [] }),
-    })
+  it("passes a 0-findings review with an empty registry", () => {
+    const result = evaluateCoderabbitPolicy({ evidence: reviewed([]) })
     expect(result.outcome).toBe("pass")
-    expect(result.rationale).not.toContain("matched nothing")
   })
 
-  it("still reports stale exception records on a clean (0-findings) review -- the most common stale case", async () => {
-    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [] }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({
-        ok: true,
-        records: [record({ id: "src/gone.ts:major", file: "src/gone.ts" })],
-      }),
-    })
-    expect(result.outcome).toBe("pass")
-    expect(result.rationale).toContain("matched nothing this run")
-    expect(result.rationale).toContain("src/gone.ts:major")
-  })
-
-  it("fails a clean 0-findings review if the registry itself is malformed (loaded even with no findings)", async () => {
-    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [] }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: false, errors: ["exceptions[0] is broken"] }),
+  it("fails a 0-findings review with a stale record", () => {
+    const gone = finding({ file: "src/gone.ts" })
+    const result = evaluateCoderabbitPolicy({
+      evidence: reviewed([], { stale: [record(gone, COMPLETE)] }),
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("failed validation")
+    expect(result.rationale).toContain("Stale exception")
+    expect(result.rationale).toContain(gone.id)
   })
 
-  it("fails a finding with no matching exception record", async () => {
-    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [finding()] }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: true, records: [] }),
+  it("fails a finding backed only by a blank stub", () => {
+    const f = finding()
+    const result = evaluateCoderabbitPolicy({
+      evidence: reviewed([{ finding: f, record: record(f) }]),
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("no matching exception record")
+    expect(result.rationale).toContain("missing:")
   })
 
-  it("passes a finding with a fully verified, matching exception record", async () => {
-    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [finding()] }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: true, records: [verifiedRecord()] }),
+  it("passes a finding with a complete matching record", () => {
+    const f = finding()
+    const result = evaluateCoderabbitPolicy({
+      evidence: reviewed([{ finding: f, record: record(f, COMPLETE) }]),
     })
     expect(result.outcome).toBe("pass")
   })
 
-  it("stages the rationale to omit verification.verifiedBy while authoring fields are still missing", async () => {
-    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [finding()] }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: true, records: [record()] }),
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).not.toContain("verification.verifiedBy")
-    expect(result.rationale).toContain("justification")
-  })
-
-  it("reverts a verified record to insufficient once its verified content is edited (content-bound staleness)", async () => {
-    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [finding()] }
-    const edited = { ...verifiedRecord(), justification: "Edited after verification." }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: true, records: [edited] }),
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("verification.verifiedBy")
-  })
-
-  it("includes the finding's own summary text in the failure rationale", async () => {
-    const evidence: CoderabbitEvidence = {
-      status: "reviewed",
-      findings: [finding({ summary: "A very specific description of the problem." })],
-    }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: true, records: [] }),
+  it("includes the finding's own summary text in the failure rationale", () => {
+    const f = finding({ summary: "A very specific description of the problem." })
+    const result = evaluateCoderabbitPolicy({
+      evidence: reviewed([{ finding: f, record: record(f) }]),
     })
     expect(result.rationale).toContain("A very specific description of the problem.")
   })
 
-  it("fails when the exceptions registry itself fails validation", async () => {
-    const evidence: CoderabbitEvidence = { status: "reviewed", findings: [finding()] }
-    const result = await evaluateCoderabbitPolicy({
-      evidence,
-      loadRegistry: async () => ({ ok: false, errors: ["exceptions[0].id is malformed"] }),
+  it("fails on a broken findings <-> activeExceptions bijection", () => {
+    const f = finding()
+    const result = evaluateCoderabbitPolicy({
+      evidence: {
+        status: "reviewed",
+        registryPath: ".repo-contract/exceptions/coderabbit.json",
+        findings: [f],
+        activeExceptions: {},
+        staleExceptions: [],
+        scaffoldedIds: [],
+      },
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("failed validation")
+    expect(result.rationale).toContain("bijection")
   })
 })

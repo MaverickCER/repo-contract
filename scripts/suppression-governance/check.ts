@@ -50,8 +50,8 @@ const REGISTRY_RELATIVE_PATH = ".repo-contract/exceptions/disable-comments.json"
 /**
  * Wraps the check-owned `validateExceptionRegistry` as a `StandardSchemaV1` for
  * `loadExceptionRegistry` (which owns only the `{ "exceptions": [...] }` envelope and delegates
- * every field-level concern to the schema). Kept inline rather than importing
- * `checks/shared/standard-schema-validator.ts` -- `scripts/` does not depend on `checks/`.
+ * every field-level concern to the schema). Each retrofitted check's own scan/review script
+ * builds one of these the same way.
  */
 const registrySchema: StandardSchemaV1<unknown, readonly SuppressionExceptionRecord[]> = {
   "~standard": {
