@@ -168,6 +168,9 @@ describe("disable-comments.json conformance to its internal, generated JSON Sche
     category: "",
     verificationMethod: "",
     reason: "",
+    verifiedBy: "",
+    verifiedAt: "",
+    verifiedContentHash: "",
   }
 
   // generate-json-schema.mjs's DISABLE_COMMENTS_PROPERTY_OVERRIDES layers value-level invariants

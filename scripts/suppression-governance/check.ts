@@ -79,7 +79,7 @@ async function loadExistingRegistry(registryPath: string): Promise<ExistingRegis
 }
 
 /**
- * disable-comments.json's on-disk shape carries only the eleven documented fields -- `status` is
+ * disable-comments.json's on-disk shape carries only the fourteen documented fields -- `status` is
  * evidence-only, never persisted. Every field must be listed explicitly here: this function (along
  * with synchronize.ts's moved/new-record literals) independently reconstructs a record via its own
  * object literal rather than spreading `record` wholesale, so a field added to `DisableCommentRecord`
@@ -102,6 +102,9 @@ export function toPersistedRecord(record: SynchronizedRecord): DisableCommentRec
     category: record.category,
     verificationMethod: record.verificationMethod,
     reason: record.reason,
+    verifiedBy: record.verifiedBy,
+    verifiedAt: record.verifiedAt,
+    verifiedContentHash: record.verifiedContentHash,
   }
 }
 

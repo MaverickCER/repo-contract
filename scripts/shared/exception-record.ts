@@ -2,7 +2,7 @@ import { hashRequirementFields } from "../../src/helpers/index.js"
 
 /**
  * The small, closed vocabulary of *why* an exception is legitimate -- deliberately short, and
- * owned here in `checks/shared/` (unpublished), never in `src/helpers/**` (published): the
+ * owned here in `scripts/shared/` (unpublished), never in `src/helpers/**` (published): the
  * generic core has no opinion about a consumer's own classification of "why", only about which
  * named fields must be non-empty (see `src/helpers/exception-policy.ts`'s `ExceptionPolicy`). A
  * ~150-term cross-organization taxonomy (privacy, SRE, compliance, cost, etc.) was considered and
@@ -118,7 +118,7 @@ export function isIso8601Timestamp(value: string): boolean {
  * `deriveId` is entirely consumer-supplied, one per check, and free to compound however many of
  * the record's own fields it needs (e.g. a dependency-advisory check: `` `${advisoryId}:
  * ${packageName}` ``; a network-capability check: `` `${capability}:${file}:${line}` ``) --
- * `checks/shared/` never hardcodes a derivation shape or a fixed set of key fields, it only calls
+ * `scripts/shared/` never hardcodes a derivation shape or a fixed set of key fields, it only calls
  * `deriveId(record)` and compares the result against `record.id`.
  * @param record - The record whose own stored `id` is checked for self-consistency.
  * @param deriveId - Recomputes what `record`'s `id` should be, from its own embedded finding-identity fields.
@@ -178,4 +178,28 @@ export function indexRecordsById<TRecord extends { readonly id: string }>(
   records: readonly TRecord[],
 ): ReadonlyMap<string, TRecord> {
   return new Map(records.map((record) => [record.id, record]))
+}
+
+/**
+ * Stages a record's raw `missing` list (`ExceptionDeterminant.missing`, from
+ * `evaluateExceptionRecord`) for presentation, per the user's own explicit direction
+ * (specs/decisions/0013-reusable-exception-policy-helper.md, "Verification, not attestation"):
+ * the verification field (e.g. `"verification.verifiedBy"` for the security checks, `"verifiedBy"`
+ * for suppression-governance) is a genuinely required field the whole time --
+ * `evaluateExceptionRecord`'s own pass/fail semantics never change -- but a record's first-ever
+ * reported failure should ask only for the authoring-phase fields (`justification`,
+ * `alternatives`, ...), never simultaneously demand a sign-off on prose that doesn't exist yet.
+ * Once every other required field is filled in, the next run's staged list additionally names
+ * `verificationField` -- purely a presentation choice, so `src/helpers`'s own published contract
+ * stays untouched.
+ * @param missing - A record's raw `missing` list, exactly as `evaluateExceptionRecord` returned it.
+ * @param verificationField - The verification requirement's own field name to stage.
+ * @returns `missing` with `verificationField` filtered out, unless every other entry is already satisfied (in which case `missing` is returned unchanged).
+ */
+export function stageMissingFields(
+  missing: readonly string[],
+  verificationField: string,
+): readonly string[] {
+  const authoringMissing = missing.filter((field) => field !== verificationField)
+  return authoringMissing.length > 0 ? authoringMissing : missing
 }

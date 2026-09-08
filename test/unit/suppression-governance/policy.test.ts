@@ -5,6 +5,9 @@ import type {
   SuppressionGovernanceRecordEvidence,
 } from "../../../scripts/suppression-governance/evidence-types.js"
 import type { SuppressionPolicyConfig } from "../../../scripts/suppression-governance/policy-config.js"
+import { suppressionPolicy } from "../../../scripts/suppression-governance/policy-config.js"
+import { HASHED_AUTHORING_FIELDS } from "../../../scripts/suppression-governance/resolve-policy.js"
+import { hashRequirementFields } from "../../../src/helpers/index.js"
 
 function record(
   overrides: Partial<SuppressionGovernanceRecordEvidence> = {},
@@ -21,6 +24,9 @@ function record(
     category: "",
     verificationMethod: "",
     reason: "",
+    verifiedBy: "",
+    verifiedAt: "",
+    verifiedContentHash: "",
     status: "existing",
     ...overrides,
   }
@@ -46,6 +52,24 @@ const FULLY_JUSTIFIED = {
   category: "equivalent-mutant",
   verificationMethod: "mutation-run",
 } as const
+
+function rawFieldValue(record: SuppressionGovernanceRecordEvidence, requirement: string): string {
+  return record[requirement as keyof SuppressionGovernanceRecordEvidence] as string
+}
+
+/** A record with every authoring field filled in (`FULLY_JUSTIFIED`, plus any override) and a `verification` sign-off whose hash actually matches -- so it is genuinely `permitted`, not merely `FULLY_JUSTIFIED`-but-unsigned. */
+function verifiedRecord(
+  overrides: Partial<SuppressionGovernanceRecordEvidence> = {},
+): SuppressionGovernanceRecordEvidence {
+  const base = record({ ...FULLY_JUSTIFIED, ...overrides })
+  const hash = hashRequirementFields(base, HASHED_AUTHORING_FIELDS, rawFieldValue)
+  return {
+    ...base,
+    verifiedBy: "a-maintainer",
+    verifiedAt: "2026-01-01T00:00:00.000Z",
+    verifiedContentHash: hash,
+  }
+}
 
 describe("evaluateSuppressionGovernancePolicy", () => {
   it("fails immediately when the check's own evidence is ok: false (tool-infrastructure failure)", () => {
@@ -350,15 +374,14 @@ describe("evaluateSuppressionGovernancePolicy", () => {
     expect(result.rationale).toContain("forbidden by policy")
   })
 
-  it("the real stryker policy permits a specific mutator disable with every required field filled in", () => {
+  it("the real stryker policy permits a specific mutator disable with every required field filled in and signed off", () => {
     const result = evaluateSuppressionGovernancePolicy({
       evidence: evidenceFor([
-        record({
+        verifiedRecord({
           domain: "stryker",
           rule: ["ConditionalExpression"],
           content: "Stryker disable next-line ConditionalExpression -- unreachable branch",
           reason: "unreachable branch",
-          ...FULLY_JUSTIFIED,
         }),
       ]),
     })
@@ -416,12 +439,11 @@ describe("evaluateSuppressionGovernancePolicy", () => {
   it("the stryker 'all' forbidden entry does not glob-match a real mutator name (minimatch-collision regression)", () => {
     const result = evaluateSuppressionGovernancePolicy({
       evidence: evidenceFor([
-        record({
+        verifiedRecord({
           domain: "stryker",
           rule: ["ConditionalExpression"],
           content: "Stryker disable next-line ConditionalExpression -- reason text",
           reason: "reason text",
-          ...FULLY_JUSTIFIED,
         }),
       ]),
     })
@@ -436,5 +458,113 @@ describe("evaluateSuppressionGovernancePolicy", () => {
     const result = evaluateSuppressionGovernancePolicy({ evidence: evidenceFor([invalidRecord]) })
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("independent registry validation")
+  })
+
+  describe("the verifiedBy sign-off gate", () => {
+    it("stages verifiedBy out of the rationale while authoring fields are still missing", () => {
+      const policyConfig: SuppressionPolicyConfig = {
+        eslint: {
+          rules: {
+            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
+          },
+        },
+      }
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([record()]),
+        policyConfig,
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("missing: justification")
+      expect(result.rationale).not.toContain("verifiedBy")
+    })
+
+    it("surfaces verifiedBy once every authoring field is filled but the record is unsigned", () => {
+      const policyConfig: SuppressionPolicyConfig = {
+        eslint: {
+          rules: {
+            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
+          },
+        },
+      }
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([record({ justification: "Because." })]),
+        policyConfig,
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("missing: verifiedBy")
+    })
+
+    it("passes a record whose verifiedContentHash matches its current authoring fields", () => {
+      const policyConfig: SuppressionPolicyConfig = {
+        eslint: {
+          rules: {
+            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
+          },
+        },
+      }
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([verifiedRecord({ domain: "eslint", rule: ["no-console"] })]),
+        policyConfig,
+      })
+      expect(result.outcome).toBe("pass")
+    })
+
+    it("reverts a verified record to insufficient once a hashed field is edited after sign-off (content-bound staleness)", () => {
+      const policyConfig: SuppressionPolicyConfig = {
+        eslint: {
+          rules: {
+            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
+          },
+        },
+      }
+      const verified = verifiedRecord({ domain: "eslint", rule: ["no-console"] })
+      const edited = { ...verified, justification: "Edited after sign-off, invalidating the hash." }
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([edited]),
+        policyConfig,
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("missing: verifiedBy")
+    })
+
+    it("never lets a stored verifiedBy count on its own -- an empty verifiedContentHash is always unsigned, regardless of verifiedBy's own value", () => {
+      const policyConfig: SuppressionPolicyConfig = {
+        eslint: {
+          rules: {
+            "no-console": { mode: "exception", requirements: ["justification", "verifiedBy"] },
+          },
+        },
+      }
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([
+          record({ justification: "Because.", verifiedBy: "someone", verifiedContentHash: "" }),
+        ]),
+        policyConfig,
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("missing: verifiedBy")
+    })
+
+    it("is locked into the real, committed suppressionPolicy -- not just hand-built test policies naming verifiedBy directly", () => {
+      // No policyConfig override: exercises the actual suppressionPolicy module as committed. A
+      // rule with no exact/pattern entry falls to the eslint domain's own `default`
+      // (BASE_EXCEPTION_REQUIREMENTS) -- if a future edit ever dropped "verifiedBy" from that
+      // constant, this is the one test that would catch it; every other case above pins its own
+      // hand-built policyConfig instead.
+      const fullyJustifiedButUnsigned = record({
+        rule: ["some-rule-with-no-specific-entry"],
+        justification: "Why this is the best option.",
+        alternatives: "Another way this could be done.",
+        remediation: "What was attempted, and why it wasn't enough.",
+        category: "equivalent-mutant",
+        verificationMethod: "mutation-run",
+      })
+      const result = evaluateSuppressionGovernancePolicy({
+        evidence: evidenceFor([fullyJustifiedButUnsigned]),
+        policyConfig: suppressionPolicy,
+      })
+      expect(result.outcome).toBe("fail")
+      expect(result.rationale).toContain("missing: verifiedBy")
+    })
   })
 })

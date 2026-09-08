@@ -23,6 +23,9 @@ function existing(overrides: Partial<DisableCommentRecord> = {}): DisableComment
     remediation: "",
     category: "",
     verificationMethod: "",
+    verifiedBy: "",
+    verifiedAt: "",
+    verifiedContentHash: "",
     ...overrides,
   }
 }
@@ -33,6 +36,9 @@ const JUSTIFICATION_A = {
   remediation: "A",
   category: "equivalent-mutant",
   verificationMethod: "mutation-run",
+  verifiedBy: "",
+  verifiedAt: "",
+  verifiedContentHash: "",
 } as const
 const JUSTIFICATION_B = {
   justification: "B",
@@ -40,6 +46,9 @@ const JUSTIFICATION_B = {
   remediation: "B",
   category: "unreachable-invariant",
   verificationMethod: "static-reasoning",
+  verifiedBy: "",
+  verifiedAt: "",
+  verifiedContentHash: "",
 } as const
 
 describe("synchronize", () => {
@@ -55,6 +64,9 @@ describe("synchronize", () => {
         remediation: "",
         category: "",
         verificationMethod: "",
+        verifiedBy: "",
+        verifiedAt: "",
+        verifiedContentHash: "",
         status: "new",
       },
     ])
@@ -66,6 +78,24 @@ describe("synchronize", () => {
     expect(result.records).toEqual([{ ...discovered(), ...JUSTIFICATION_A, status: "existing" }])
     expect(result.newCount).toBe(0)
     expect(result.movedCount).toBe(0)
+  })
+
+  it("preserves a real sign-off (verifiedBy/verifiedAt/verifiedContentHash) across an ordinary rerun and across a move, never fabricating or dropping it", () => {
+    const signedOff = {
+      ...JUSTIFICATION_A,
+      verifiedBy: "@maverickcer",
+      verifiedAt: "2026-09-07T00:00:00.000Z",
+      verifiedContentHash: "a".repeat(64),
+    }
+
+    const unchanged = synchronize([existing(signedOff)], [discovered()])
+    expect(unchanged.records[0]?.verifiedBy).toBe("@maverickcer")
+    expect(unchanged.records[0]?.verifiedContentHash).toBe("a".repeat(64))
+
+    const moved = synchronize([existing(signedOff)], [discovered({ line: 25 })])
+    expect(moved.movedCount).toBe(1)
+    expect(moved.records[0]?.verifiedBy).toBe("@maverickcer")
+    expect(moved.records[0]?.verifiedContentHash).toBe("a".repeat(64))
   })
 
   it("preserves a populated category/verificationMethod exactly across an ordinary rerun with no source changes at all", () => {
@@ -205,6 +235,9 @@ describe("synchronize", () => {
         category,
         verificationMethod,
         reason,
+        verifiedBy,
+        verifiedAt,
+        verifiedContentHash,
       }) => ({
         file,
         line,
@@ -217,6 +250,9 @@ describe("synchronize", () => {
         category,
         verificationMethod,
         reason,
+        verifiedBy,
+        verifiedAt,
+        verifiedContentHash,
       }),
     )
 

@@ -118,13 +118,14 @@ export type VerificationMethod = (typeof VERIFICATION_METHODS)[number]
 
 /**
  * One row of disable-comments.json. Identity is `(file, line, domain, rule, content)` -- there is
- * no separate id field; see synchronize.ts for how that identity is used to preserve
- * `justification`/`alternatives`/`remediation`/`category`/`verificationMethod` across reruns,
- * including across an unambiguous line move. `category`/`verificationMethod` are deliberately
- * excluded from identity: they are classification metadata about a discovered suppression, not
- * part of what makes the suppression itself unique, and folding them into identity would make
- * editing a record's classification unmatchable against its own source comment on the next run --
- * silently wiping its `justification`/`alternatives`/`remediation` as a spurious removed+new pair.
+ * no separate id field; see synchronize.ts for how that identity is used to preserve the
+ * hand-authored fields (`justification`/`alternatives`/`remediation`/`category`/
+ * `verificationMethod`, plus the `verifiedBy`/`verifiedAt`/`verifiedContentHash` verification
+ * block) across reruns, including across an unambiguous line move. Those fields are deliberately
+ * excluded from identity: they are classification/attestation metadata about a discovered
+ * suppression, not part of what makes the suppression itself unique, and folding them into
+ * identity would make editing a record unmatchable against its own source comment on the next
+ * run -- silently wiping its justification as a spurious removed+new pair.
  *
  * `rule` is a "policy-addressable suppression identifier," not always a literal static-analysis
  * rule id: for `domain: "eslint"` it genuinely is a rule id
@@ -160,6 +161,21 @@ export type VerificationMethod = (typeof VERIFICATION_METHODS)[number]
  * even for an otherwise-unchanged "existing" record (see synchronize.ts). A domain's policy opts
  * into requiring it via `SuppressionRequirement`'s `"reason"` (policy-config.ts); today only
  * `stryker` does.
+ *
+ * `verifiedBy`/`verifiedAt`/`verifiedContentHash` are the content-bound *verification* block --
+ * the "not believe-me" second gate `checks/security-socket.ts`/`checks/coderabbitai.ts`/
+ * `checks/security-network.ts` already carry, applied here too (see
+ * specs/decisions/0006-suppression-governance.md's own "Verification" amendment and
+ * specs/decisions/0013-reusable-exception-policy-helper.md). All three are hand-authored strings
+ * that start `""` on a fresh record and are preserved across reruns exactly like
+ * `justification`/etc. `verifiedContentHash` is `hashRequirementFields()` (see
+ * `src/helpers/exception-policy.ts`) computed over the six authoring fields
+ * (`justification`/`alternatives`/`remediation`/`category`/`verificationMethod`/`reason`) *at the
+ * moment the record was signed off*; `checks/suppression-governance.ts` recomputes that hash on
+ * every run and only counts `verifiedBy` as present when it still matches -- so editing any of
+ * those six fields after sign-off silently reverts `verifiedBy` to "missing" and the record fails
+ * policy again, forcing a fresh review. `verifiedAt` is an ISO 8601 timestamp, informational
+ * (never a policy requirement itself), validated for shape only.
  */
 export interface DisableCommentRecord {
   readonly file: string
@@ -173,6 +189,12 @@ export interface DisableCommentRecord {
   readonly category: SuppressionCategory
   readonly verificationMethod: VerificationMethod
   readonly reason: string
+  /** Who (or what mechanical process) signed off on this suppression's justification. `""` until signed off. Only counts once `verifiedContentHash` still matches the current authoring fields. */
+  readonly verifiedBy: string
+  /** ISO 8601 timestamp of the sign-off. `""` until signed off. Informational -- validated for shape, never a policy requirement on its own. */
+  readonly verifiedAt: string
+  /** `hashRequirementFields()` over `justification`/`alternatives`/`remediation`/`category`/`verificationMethod`/`reason` at sign-off time. `""` until signed off. A mismatch on a later run means an authoring field was edited after sign-off -- `verifiedBy` reverts to "missing". */
+  readonly verifiedContentHash: string
 }
 
 /** The on-disk shape of disable-comments.json itself -- a plain array of records, in `sortRecords`'s deterministic order. */

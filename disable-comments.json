@@ -12,7 +12,10 @@
     "remediation": "A wrapper would only relocate this same read one file over, not remove it -- n/no-process-env exists to catch config values read ad hoc instead of through an app's config layer, which doesn't apply to a top-level consumer script whose entire job is supplying the ambient environment to the library it configures.",
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
-    "reason": "this is the top-level self-hosting config, not published library code (see package.json's \"files\"); supplying the real ambient environment to repo-contract's own checks is exactly what this repository, as a consumer, is supposed to do."
+    "reason": "this is the top-level self-hosting config, not published library code (see package.json's \"files\"); supplying the real ambient environment to repo-contract's own checks is exactly what this repository, as a consumer, is supposed to do.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "d3a7f5b277837f64dd88b3cf7bc56b6bd49d803e4812fa33f2a9efb347055f65"
   },
   {
     "file": "src/config/tokenize-command.ts",
@@ -31,7 +34,10 @@
     "remediation": "Tried scoring this line's own mutations in isolation (leaving the loop body untouched) and confirmed empirically that they produce no observable difference in tokenizeRunString's output for any tested input -- `i <= run.length` still terminates via the `char === undefined` check on the same pass. Removing the `iterations` bound instead would strip the only thing standing between a possible future body-emptying regression and an unkillable infinite loop, a materially worse outcome than accepting this equivalent mutant.",
     "category": "equivalent-mutant",
     "verificationMethod": "mutation-run",
-    "reason": "loosening i < run.length to i <= run.length is behaviorally invisible since the unmutatable char === undefined check right after already catches it, and the iterations bound is a second, independent forward-progress bound tracked in this line's own clauses (outside the body's braces) specifically so a body-emptying mutation can't produce an unkillable hang; every mutation of this line's own clauses is equivalent as long as the body still advances i correctly, confirmed empirically."
+    "reason": "loosening i < run.length to i <= run.length is behaviorally invisible since the unmutatable char === undefined check right after already catches it, and the iterations bound is a second, independent forward-progress bound tracked in this line's own clauses (outside the body's braces) specifically so a body-emptying mutation can't produce an unkillable hang; every mutation of this line's own clauses is equivalent as long as the body still advances i correctly, confirmed empirically.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "594ebefe469ba7ed4da0f8692d2b7f45279025e8f26a0a4bc0dbb0dd1e0ea8e8"
   },
   {
     "file": "src/config/tokenize-command.ts",
@@ -46,7 +52,10 @@
     "remediation": "Considered the assertion but rejected it: it would silence the type without any runtime signal if the invariant it depends on (the loop bound) were ever later broken by a refactor, whereas the guarded `break` at least fails safely instead of treating `undefined` as a character. The branch is genuinely unreachable given the loop guard directly above it, so no test can exercise the `false` path without breaking that same invariant.",
     "category": "unreachable-invariant",
     "verificationMethod": "static-reasoning",
-    "reason": "unreachable given the loop's own i < run.length guard already ensures run[i] is defined; kept only because noUncheckedIndexedAccess can't itself express that invariant."
+    "reason": "unreachable given the loop's own i < run.length guard already ensures run[i] is defined; kept only because noUncheckedIndexedAccess can't itself express that invariant.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "60c70f8341c29020877afc53833fb03fe588f0d717e4dc0bd65ade7231a2b91f"
   },
   {
     "file": "src/config/validate-config.ts",
@@ -61,7 +70,10 @@
     "remediation": "Considered removing it, but the explicit typeof check documents intent for a reader scanning the condition left-to-right (\"must be a number, and an integer, and positive\") in a way a bare `Number.isInteger` call doesn't self-explain; since both forms reject exactly the same inputs, keeping the more readable version costs nothing in correctness while a mutation removing it can never be observed by any test.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "the typeof check is redundant with Number.isInteger, which returns false (never throws) for every non-number value, so it's kept only for readability at the call site."
+    "reason": "the typeof check is redundant with Number.isInteger, which returns false (never throws) for every non-number value, so it's kept only for readability at the call site.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "e3b1135142ccea063ac93ee7eab3f679e1f93216f31d4367026c8a7f693534e7"
   },
   {
     "file": "src/config/validate-config.ts",
@@ -76,7 +88,10 @@
     "remediation": "If `tokenizeRunString` ever gains a code path that returns an empty array without throwing, this `?.` becomes load-bearing and the mutant becomes killable -- add a test passing a `run` string that tokenizes to `[]` and expects the \"first token ... is empty or contains only whitespace\" error, and remove this suppression.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "equivalent mutant: `executable` is provably always a string here (see comment above), so `executable?.trim()` and `executable.trim()` are identical."
+    "reason": "equivalent mutant: `executable` is provably always a string here (see comment above), so `executable?.trim()` and `executable.trim()` are identical.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "cab941c4f48c7dc86e49b8d5384fea8e1cd003ff7e9a31e4260d77ac7d145159"
   },
   {
     "file": "src/config/validate-config.ts",
@@ -91,7 +106,10 @@
     "remediation": "Same conclusion as the concurrency check: removing the readability-only clause changes no rejected input, so no test can distinguish the two forms, and keeping it costs nothing since both checks already reject the identical set of invalid values.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "same redundancy as the concurrency check above: the typeof check is redundant with Number.isFinite, which returns false for every non-number value."
+    "reason": "same redundancy as the concurrency check above: the typeof check is redundant with Number.isFinite, which returns false for every non-number value.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "1e24b6ef226a9a7f0bc5a3b3b20d223f393691804c35fcdeef224ba9e946f0a3"
   },
   {
     "file": "src/config/validate-config.ts",
@@ -106,7 +124,10 @@
     "remediation": "Same reasoning as the concurrency/timeoutMs redundant-typeof cases above: the two clauses reject the identical set of invalid `format` values, so no test can observe a difference between keeping and removing the typeof check, and it's kept purely because it documents intent before the array-membership check.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "the typeof check is redundant with Array#includes' strict equality against OUTPUT_FORMATS (all strings), so a non-string format can never match regardless of the typeof check."
+    "reason": "the typeof check is redundant with Array#includes' strict equality against OUTPUT_FORMATS (all strings), so a non-string format can never match regardless of the typeof check.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "4ce6ce8c418ff7798085cd9762c9058ddf51e0015af0f8fb1d27f7cd35a57a43"
   },
   {
     "file": "src/config/validate-config.ts",
@@ -121,7 +142,10 @@
     "remediation": "None needed: the preceding short-circuit already rules out null, and the very next check in this same function already rejects any object (including an array) that lacks a \"~standard\" property, so no runtime gap exists for this rule to actually be guarding.",
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
-    "reason": "`null` is already excluded by the preceding `schema === null` short-circuit, and an array slipping past this check (typeof [] === \"object\") is still correctly rejected by the \"~standard\" property check just below, since no array has one -- the class of bug this rule guards against (silently treating null/an array as a valid object) can't actually happen here."
+    "reason": "`null` is already excluded by the preceding `schema === null` short-circuit, and an array slipping past this check (typeof [] === \"object\") is still correctly rejected by the \"~standard\" property check just below, since no array has one -- the class of bug this rule guards against (silently treating null/an array as a valid object) can't actually happen here.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "8cd985286ae03fc4e677fdab5145326456ef75f418bf90cdce5fde31e48ad04a"
   },
   {
     "file": "src/config/validate-config.ts",
@@ -136,7 +160,10 @@
     "remediation": "Rejected the assertion for the same reason as this file's other noUncheckedIndexedAccess-only guards: it would silence the type without any runtime protection if this invariant were ever broken by a future refactor of the loop above, whereas the current guarded form degrades to an empty dependsOn instead of throwing. No test can distinguish the two forms since `id` is provably always a valid key here.",
     "category": "unreachable-invariant",
     "verificationMethod": "static-reasoning",
-    "reason": "id always comes from Object.keys(checks), so check can never be undefined here; the optional chaining exists only to satisfy noUncheckedIndexedAccess."
+    "reason": "id always comes from Object.keys(checks), so check can never be undefined here; the optional chaining exists only to satisfy noUncheckedIndexedAccess.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "390f3bf5d4f98df20f8ba1a8b20b5645f99d2c0af1580c54516f058aee3cfb03"
   },
   {
     "file": "src/evidence/build-evidence.ts",
@@ -151,7 +178,10 @@
     "remediation": "Rejected: the surrounding `.map()` callback is typed to return `Promise<ParsedCheckEntry>`, a 3-element tuple, for every branch -- returning `undefined` here would require weakening that return type (e.g. to `ParsedCheckEntry | undefined`) throughout the rest of the function purely to describe a value that is provably never observed, trading a real type guarantee for no actual safety benefit.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "this tuple is never read: both branches below that can run when `thrown` is non-empty (thrown.length === 1 or > 1) throw before `entries` -- the array this returns into -- is ever returned to a caller."
+    "reason": "this tuple is never read: both branches below that can run when `thrown` is non-empty (thrown.length === 1 or > 1) throw before `entries` -- the array this returns into -- is ever returned to a caller.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "1966b4df3395c6a9cb42e44e1ad05fab03efaa39050e346a978f841b3db0ccfa"
   },
   {
     "file": "src/evidence/build-evidence.ts",
@@ -166,7 +196,10 @@
     "remediation": "Restructuring to a single check was considered but rejected: throwing the lone error directly (rather than wrapping a single error in an AggregateError) is deliberate, documented behavior a caller catching a specific error type depends on (see ParserDependencyMissingError's own callers), so the two-branch structure with its now-redundant second comparison is intentional. Documented this equivalence explicitly, matching run-policies.ts's own precedent, so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "\"> 1\" vs. \">= 1\" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing."
+    "reason": "\"> 1\" vs. \">= 1\" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "932371b4c07a26fb0962511bc3802ba7ce91cbf60960e86e17901721452a8a6c"
   },
   {
     "file": "src/execution/dependency-scheduler.ts",
@@ -181,7 +214,10 @@
     "remediation": "A single-pass construction would still need to allocate a fresh array per index before appending to it, so it wouldn't remove the \"what do we seed each entry with\" question this suppression covers -- it would just relocate it. Kept the current two-pass form since it's simpler to read, and the seed value itself is provably unobservable.",
     "category": "equivalent-mutant",
     "verificationMethod": "differential-testing",
-    "reason": "each dependents[] entry's initial contents are unobservable regardless of value, confirmed empirically across diamond, fan-out, and no-dependency shapes that seeding it with garbage produces identical scheduling results."
+    "reason": "each dependents[] entry's initial contents are unobservable regardless of value, confirmed empirically across diamond, fan-out, and no-dependency shapes that seeding it with garbage produces identical scheduling results.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "46e9f1594a89e83a4a39c9ecf6129b91b0b0377d2317419f9d4b7615d298ebaf"
   },
   {
     "file": "src/execution/dependency-scheduler.ts",
@@ -196,7 +232,10 @@
     "remediation": "Confirmed empirically that the unexempted `{}` mutant (an effectively empty/zero-length starting array) survives, matching this reasoning. Kept the pre-sized form anyway rather than switching to `[]`: pre-sizing documents the function's own invariant (exactly items.length results, one per item) at the point of declaration, more directly than a `[]` start would, even though both are behaviorally identical once every item has settled.",
     "category": "equivalent-mutant",
     "verificationMethod": "mutation-run",
-    "reason": "pre-sizing only matters while the run is in flight; by completion every index is guaranteed filled exactly once, so a sparse vs. dense start is indistinguishable in the returned result, confirmed empirically that the unexempted {} mutant survives."
+    "reason": "pre-sizing only matters while the run is in flight; by completion every index is guaranteed filled exactly once, so a sparse vs. dense start is indistinguishable in the returned result, confirmed empirically that the unexempted {} mutant survives.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "3789f5665c8535ddb586eb5c24035d8baade82a806276544da42ed1b55969023"
   },
   {
     "file": "src/execution/dependency-scheduler.ts",
@@ -211,7 +250,10 @@
     "remediation": "Confirmed that native Promise rejection is idempotent (a settled promise silently ignores further resolve/reject calls), so no test can distinguish the guarded and unguarded forms. Kept the explicit guard anyway since it documents `fail`'s single-shot contract for a future reader, and the `done` flag is already needed elsewhere in this function regardless of this particular check.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "native Promise resolution is idempotent, so a second rejectPromise call after settling has no observable effect either way; kept only for clarity/intent, not because it changes behavior."
+    "reason": "native Promise resolution is idempotent, so a second rejectPromise call after settling has no observable effect either way; kept only for clarity/intent, not because it changes behavior.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "ad41141839a8e68f776af80bc06e44d28c649841328b22be03cdea7ca38d2eed"
   },
   {
     "file": "src/execution/dependency-scheduler.ts",
@@ -226,7 +268,10 @@
     "remediation": "Rejected wrapping because it would make this function's contract differ from runWithConcurrency's for exactly the input class that matters most -- a worker rejecting with a plain object -- where a caller inspecting a custom property on the rejection would silently lose it. Passing the value through unmodified preserves an existing, already-tested contract instead of introducing a new one only for this code path.",
     "category": "intentional-deviation",
     "verificationMethod": "static-reasoning",
-    "reason": "propagated verbatim, not wrapped: matches runWithConcurrency's own existing behavior (a worker rejection passes straight through Promise.all unmodified), which this function is meant to be a drop-in graph-aware replacement for."
+    "reason": "propagated verbatim, not wrapped: matches runWithConcurrency's own existing behavior (a worker rejection passes straight through Promise.all unmodified), which this function is meant to be a drop-in graph-aware replacement for.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "03b6f63820585d5d711e6cfa09841c2fda6138557d8bb14652f73964eec1c3a8"
   },
   {
     "file": "src/execution/dependency-scheduler.ts",
@@ -244,7 +289,10 @@
     "remediation": "Confirmed equivalent by exhaustive differential testing across the same diamond/fan-out/no-dependency shapes used elsewhere in this file, not assumed: mutating this condition alone (leaving the loop body's own guards untouched) produces no observable difference in scheduling results. Kept the condition anyway since relying solely on the inner break would make the loop's termination less obvious from its own header, even though both forms behave identically today.",
     "category": "equivalent-mutant",
     "verificationMethod": "differential-testing",
-    "reason": "loosening the while condition or its guard checks to always-true is behaviorally invisible: the loop just runs one harmless extra iteration where ready.shift() returns undefined and the immediately-following index === undefined check breaks back out, and every index ever pushed onto ready is already guaranteed valid so the equivalent item === undefined guard is confirmed equivalent by exhaustive differential testing, not assumed."
+    "reason": "loosening the while condition or its guard checks to always-true is behaviorally invisible: the loop just runs one harmless extra iteration where ready.shift() returns undefined and the immediately-following index === undefined check breaks back out, and every index ever pushed onto ready is already guaranteed valid so the equivalent item === undefined guard is confirmed equivalent by exhaustive differential testing, not assumed.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "fc8523cf7453aa3b33bab3a03876b73f74dc929e69e35f55d6955764309d46dc"
   },
   {
     "file": "src/execution/dependency-scheduler.ts",
@@ -259,7 +307,10 @@
     "remediation": "Confirmed empirically, not just by analogy: un-exempting this mutant and running Stryker scoped to this file showed the `?? []` fallback's own ArrayDeclaration content is NoCoverage -- the fallback branch never executes at all, so a non-null assertion would be behaviorally identical. Kept the nullish-coalescing form instead of an assertion anyway, for the same \"fails safely rather than crashing if the invariant is ever broken\" reason used elsewhere in this codebase; the surrounding BlockStatement/LogicalOperator mutants on this same line are deliberately not exempted, since those stay live and killed.",
     "category": "unreachable-invariant",
     "verificationMethod": "mutation-run",
-    "reason": "dependents[index] can never actually be undefined (dependents is built with exactly items.length entries, one per valid index), confirmed empirically -- not just by analogy -- that un-exempting this mutant and running Stryker scoped to this file shows the ?? [] fallback's own ArrayDeclaration content is NoCoverage, i.e. the fallback branch never executes."
+    "reason": "dependents[index] can never actually be undefined (dependents is built with exactly items.length entries, one per valid index), confirmed empirically -- not just by analogy -- that un-exempting this mutant and running Stryker scoped to this file shows the ?? [] fallback's own ArrayDeclaration content is NoCoverage, i.e. the fallback branch never executes.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "9cf1ac05e1545fca873ed336a80d8bfa6e5907199ff2e23b29904cd1d788701d"
   },
   {
     "file": "src/execution/process-tree.ts",
@@ -280,7 +331,10 @@
     "remediation": "Not pursued: this branch is already covered by a real, dedicated Windows-only test (test/unit/cross-platform/windows-taskkill.test.ts, run on the CI Windows runner per .github/workflows/ci.yml's verify job OS matrix, which includes windows-latest) -- adding a second, mutation-tested CI job just for this one branch would mean maintaining an entire additional Windows CI lane for a single function's single platform-specific branch, a cost disproportionate to the coverage gap it would close.",
     "category": "platform-limitation",
     "verificationMethod": "existing-test-suite",
-    "reason": "this whole branch only runs on Windows, and mutation testing only runs in the ubuntu-only CI job (see the v8-ignore comment above), so every mutator that could apply to it would surface as an unreachable \"no coverage\" survivor rather than a real test gap."
+    "reason": "this whole branch only runs on Windows, and mutation testing only runs in the ubuntu-only CI job (see the v8-ignore comment above), so every mutator that could apply to it would surface as an unreachable \"no coverage\" survivor rather than a real test gap.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "4dccfe3687559da406d77ce3bad3d711f790219c7a3557889c97d43b3d6dc155"
   },
   {
     "file": "src/execution/run-checks.ts",
@@ -299,7 +353,10 @@
     "remediation": "The handler body is a short, linear sequence (capture hadActiveChecks, kill every active handle, uninstall, then either re-signal immediately or after a delay) with no independent branching logic worth extracting -- factoring it into a separate function would just relocate the same lines one level down without changing what mutation testing can observe, since the new function would still only ever be invoked from this same signal-only code path. The existing child-process integration test (\"SIGINT while checks are in flight...\") already proves the real behavior works, including the hadActiveChecks branch; this suppression accepts that mutation testing specifically cannot re-prove it from within its own process, for every mutator that applies within this body, not just the two originally listed.",
     "category": "tooling-limit",
     "verificationMethod": "existing-test-suite",
-    "reason": "this handler body only executes when the host process receives a real SIGINT/SIGTERM; the test exercising it necessarily runs in a separate child process (v8 coverage and Stryker's own instrumentation are both per-process), so mutating this body -- including the hadActiveChecks/!hadActiveChecks branch below -- always reports an uncoverable-looking survivor rather than a real gap."
+    "reason": "this handler body only executes when the host process receives a real SIGINT/SIGTERM; the test exercising it necessarily runs in a separate child process (v8 coverage and Stryker's own instrumentation are both per-process), so mutating this body -- including the hadActiveChecks/!hadActiveChecks branch below -- always reports an uncoverable-looking survivor rather than a real gap.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "af6615dfec0e5833a93d4bd2d255db00f48a2f5a4893eb4eef6fb8ea0bd268e9"
   },
   {
     "file": "src/execution/run-checks.ts",
@@ -314,7 +371,10 @@
     "remediation": "Rejected: this mutant is the single deepest-recursing case in the whole suite (an unbounded cycle), so a timeout large enough to let instrumented recursion reach V8's stack limit would inflate the budget for every other mutant in the same run, slowing the entire mutation run measurably for a fix that only benefits one already-covered-by-a-real-test guard (see \"throws when a requested subset's dependsOn forms a cycle\" in run-checks.test.ts, which already proves this guard's real behavior).",
     "category": "tooling-limit",
     "verificationMethod": "differential-testing",
-    "reason": "disabling this in an uninstrumented process empirically produces unbounded mutual recursion that hits V8's stack limit in single-digit milliseconds, but under Stryker's own per-statement instrumentation overhead reaching that same stack limit takes long enough to exceed stryker.config.mjs's timeoutMS, surfacing as a \"Timeout\" verdict rather than a real test gap."
+    "reason": "disabling this in an uninstrumented process empirically produces unbounded mutual recursion that hits V8's stack limit in single-digit milliseconds, but under Stryker's own per-statement instrumentation overhead reaching that same stack limit takes long enough to exceed stryker.config.mjs's timeoutMS, surfacing as a \"Timeout\" verdict rather than a real test gap.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "fea92d05935b1a9283c2db7d2d0d1f7e9959fc05c9a2b2af361d6694671bf696"
   },
   {
     "file": "src/execution/run-checks.ts",
@@ -329,7 +389,10 @@
     "remediation": "Directly invoking a captured process.once handler would exercise the code without ever exercising a real signal, which is exactly the kind of internals-mocking this repository's real-behavior-over-mocking house style (CONTRIBUTING.md) avoids -- and it still wouldn't run in a separate OS process, so Stryker's per-process instrumentation would report it identically either way. A real, separate-child-process regression test (test/unit/execution/run-checks.test.ts's \"does not spawn a check still queued behind the concurrency limit once SIGINT cleanup has begun\") already exists, was confirmed to fail against the pre-fix code and pass against this fix, and is the strongest verification actually obtainable for this exact line.",
     "category": "tooling-limit",
     "verificationMethod": "mutation-run",
-    "reason": "see comment immediately above: only provable via a real signal delivered to a separate child process, invisible to this process's own Stryker instrumentation, the same per-process-invisible situation already documented on installTerminationHandlers' handler."
+    "reason": "see comment immediately above: only provable via a real signal delivered to a separate child process, invisible to this process's own Stryker instrumentation, the same per-process-invisible situation already documented on installTerminationHandlers' handler.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "01cc480df6eadab65f2fdad2ff039441dbb22bd5a3b3c4b233cd559f1c34c0f3"
   },
   {
     "file": "src/execution/run-checks.ts",
@@ -351,7 +414,10 @@
     "remediation": "Considered removing the fast path given the proven equivalence, but kept it deliberately: runWithConcurrency is the simpler, more heavily-used primitive and the common case -- a config with no dependsOn/isolated checks at all -- should take the cheaper, better-exercised code path rather than the more complex graph scheduler for zero behavioral benefit. This is a real performance decision the zero-edges equivalence test suite already justifies, not a gap in that suite's own coverage.",
     "category": "equivalent-mutant",
     "verificationMethod": "existing-test-suite",
-    "reason": "dependency-scheduler.test.ts's own \"zero-edges equivalence\" suite already proves runWithConcurrencyGraph behaves identically to runWithConcurrency for a graph with no real edges, so this fast path is a pure performance optimization: every existing no-dependsOn/no-isolated test would pass identically either way, making this branch provably unobservable rather than undertested."
+    "reason": "dependency-scheduler.test.ts's own \"zero-edges equivalence\" suite already proves runWithConcurrencyGraph behaves identically to runWithConcurrency for a graph with no real edges, so this fast path is a pure performance optimization: every existing no-dependsOn/no-isolated test would pass identically either way, making this branch provably unobservable rather than undertested.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "f784a01da66cf3e98ffb9233a9774e85584700ffe800db5b0b2e9de147d023b7"
   },
   {
     "file": "src/execution/run-checks.ts",
@@ -366,7 +432,10 @@
     "remediation": "Rejected as unnecessary: the array is only ever appended to (push) and read via a numeric-comparison filter, both a few lines away in the same function -- the safety property already follows directly from that narrow, fully-visible usage, and restructuring the initialization would only relocate the same reasoning into a different form without removing it.",
     "category": "equivalent-mutant",
     "verificationMethod": "differential-testing",
-    "reason": "this array's own initial contents are unobservable regardless of what they are: every real isolated index is still pushed on below, and dependencyIndexesFor's own earlierIsolated filter compares each entry against a numeric index with `<`, which coerces a non-numeric seed value to NaN and silently filters it out (every comparison against NaN is false) -- confirmed empirically that a bogus seed entry never appears in any real edge list."
+    "reason": "this array's own initial contents are unobservable regardless of what they are: every real isolated index is still pushed on below, and dependencyIndexesFor's own earlierIsolated filter compares each entry against a numeric index with `<`, which coerces a non-numeric seed value to NaN and silently filters it out (every comparison against NaN is false) -- confirmed empirically that a bogus seed entry never appears in any real edge list.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "e7cdbf81ca50c125c406751745f9179bfc3bbcccd6a486f489612653f82d8b6c"
   },
   {
     "file": "src/execution/run-checks.ts",
@@ -385,7 +454,10 @@
     "remediation": "Same conclusion as resolveCheckDependencies's identical internal-error pattern earlier in this file: noUncheckedIndexedAccess still types this lookup as possibly undefined regardless of the upstream guarantee, so some runtime narrowing is needed even though the branch is provably unreachable for valid input; kept as a fail-loud guard rather than a silent fallback so a real regression surfaces immediately as a clear internal error.",
     "category": "unreachable-invariant",
     "verificationMethod": "static-reasoning",
-    "reason": "validate-config.ts has already guaranteed, before runChecks is ever invoked, that every dependsOn id names a check that exists in this same checks record; reaching this would be a bug in that guarantee, not a user-input problem."
+    "reason": "validate-config.ts has already guaranteed, before runChecks is ever invoked, that every dependsOn id names a check that exists in this same checks record; reaching this would be a bug in that guarantee, not a user-input problem.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "6d8b0698d35be35bf0de3ca357548e4628e93146e64f2db3de0df45d20436cb1"
   },
   {
     "file": "src/execution/run-checks.ts",
@@ -400,7 +472,10 @@
     "remediation": "Rejected as unnecessary defensive code: the invariant is a direct, structural consequence of this function's own two-branch shape (checked once, a few lines above, by the isolated === true early return) rather than an assumption about external input -- adding a runtime assertion for something the type/control-flow structure of this same function already guarantees would be dead code by construction, never exercisable without first breaking the early-return branch above it.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "provably equivalent: this branch only runs when check.isolated !== true, and isolatedIndexes contains only indexes of checks where isolated === true, so this check's own `index` can never be a member of isolatedIndexes -- isolatedIndex === index is unconditionally false, making `<` and `<=` select the identical subset for every value this filter is ever called with."
+    "reason": "provably equivalent: this branch only runs when check.isolated !== true, and isolatedIndexes contains only indexes of checks where isolated === true, so this check's own `index` can never be a member of isolatedIndexes -- isolatedIndex === index is unconditionally false, making `<` and `<=` select the identical subset for every value this filter is ever called with.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "1acda394321a6fabeb7e2d1d888e9522d8cdef2b06bfe3f840425a201fc03332"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -415,7 +490,10 @@
     "remediation": "Rejected: omitting the argument would rely on the exact same underlying default-normalization behavior this suppression already documents, just spelled differently -- it wouldn't remove the equivalence, only relocate which \"non-literal-looking but actually fixed\" detail a future reader has to rediscover, and would make the encoding this collector actually decodes as less explicit at the call site.",
     "category": "equivalent-mutant",
     "verificationMethod": "differential-testing",
-    "reason": "Node's own encoding normalization treats a falsy/unrecognized encoding argument as \"utf8\" (confirmed empirically: `new StringDecoder(\"\").encoding === \"utf8\"`, decoding identically to an explicit \"utf8\", including for a multi-byte character split across writes); this is the only encoding this collector is ever used with, so no other string value is reachable here to distinguish it."
+    "reason": "Node's own encoding normalization treats a falsy/unrecognized encoding argument as \"utf8\" (confirmed empirically: `new StringDecoder(\"\").encoding === \"utf8\"`, decoding identically to an explicit \"utf8\", including for a multi-byte character split across writes); this is the only encoding this collector is ever used with, so no other string value is reachable here to distinguish it.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "5d558373b3908624ce60559e96864f0dbf6b16fdc428233114b9f3c79793a41f"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -430,7 +508,10 @@
     "remediation": "Rejected: this project's own mutation policy (checks/mutation.ts) already treats a \"Timed out\" mutant outcome as a failure requiring investigation, not an accepted kill, precisely because timing-based detection is flaky and machine/load-dependent -- adding a timing-based assertion to chase this exact mutant would reintroduce the same unreliability this repository's own policy is designed to reject. The real content-level behavior (what bytes `value()` returns) is already fully covered by test/unit/execution/spawn-check.test.ts's bounded-output-capture tests, including the exact-cap-boundary case.",
     "category": "tooling-limit",
     "verificationMethod": "mutation-run",
-    "reason": "removing this guard has no effect on the content `value()` ever returns (see comment above); it only removes an unbounded-with-chunk-count amount of wasted repeated work for a process that keeps writing past the cap, which no deterministic test can observe without relying on flaky timing."
+    "reason": "removing this guard has no effect on the content `value()` ever returns (see comment above); it only removes an unbounded-with-chunk-count amount of wasted repeated work for a process that keeps writing past the cap, which no deterministic test can observe without relying on flaky timing.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "2f2878b2ed36cb7898e57413f4058d6ab230dc68397f42472dd0c73e8cd12bd8"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -445,7 +526,10 @@
     "remediation": "Rejected for the identical reason as the paired `if (truncated) return` guard above: this project's own mutation policy already treats \"Timed out\" as a failure requiring investigation rather than an accepted kill, specifically to avoid rewarding flaky, timing-based test detection.",
     "category": "tooling-limit",
     "verificationMethod": "mutation-run",
-    "reason": "leaving this false has no effect on returned content (see comment above and the identical reasoning on the `if (truncated) return` guard); it only removes an unbounded-with-chunk-count amount of wasted repeated work, which no deterministic test can observe without relying on flaky timing."
+    "reason": "leaving this false has no effect on returned content (see comment above and the identical reasoning on the `if (truncated) return` guard); it only removes an unbounded-with-chunk-count amount of wasted repeated work, which no deterministic test can observe without relying on flaky timing.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "e53ec404cf2bbb46f3dd45ddd03964502b81d7dd360ce29713f098ca4633f9c7"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -464,7 +548,10 @@
     "remediation": "Rejected the assertion for the same \"fails safely rather than crashing if the invariant is ever broken\" reason used elsewhere in this codebase: if tokenizeRunString's own contract were ever weakened by a future change, this guard would produce a clear InvalidCheckConfigError instead of a confusing runtime crash from destructuring undefined as a command. Kept it as defense in depth even though no test can currently reach the true branch.",
     "category": "unreachable-invariant",
     "verificationMethod": "static-reasoning",
-    "reason": "unlike the array-form check above, this one has no way to be exercised directly: tokenizeRunString's own contract guarantees a non-empty result or a throw, with no way to bypass it short of calling this private function directly, which isn't exported."
+    "reason": "unlike the array-form check above, this one has no way to be exercised directly: tokenizeRunString's own contract guarantees a non-empty result or a throw, with no way to bypass it short of calling this private function directly, which isn't exported.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "80202a6edb3bf22175fde5bd62f5a43a039c76617814ecda149c3644d0a5d634"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -479,7 +566,10 @@
     "remediation": "Not pursued: removing it would silently regress a real (if minor) user-facing behavior on Windows -- a visible console window flash on every spawned check -- for no reduction in this suite's already-zero ability to test it, since no observable signal exists for either the true or false value.",
     "category": "tooling-limit",
     "verificationMethod": "untestable",
-    "reason": "Windows-only cosmetic behavior (suppresses a console window flash) with no effect on stdout/stderr/exitCode/signal on any platform, and no Node API exposes it back for a test to observe either way."
+    "reason": "Windows-only cosmetic behavior (suppresses a console window flash) with no effect on stdout/stderr/exitCode/signal on any platform, and no Node API exposes it back for a test to observe either way.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "7761bedc800a93f23d3bbd817248c3943ba44be7ef554de3972a6b34c980f155"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -494,7 +584,10 @@
     "remediation": "Rejected the assertion for the same \"fail safely, not crash, if this ever changes\" reason used throughout this file: if some future refactor ever did pass a stdio option that nulls out this stream, the current guarded form would just silently not capture output instead of throwing from deep inside a spawn callback. Kept as defense in depth even though no test can currently make child.stdout actually null at this call site.",
     "category": "unreachable-invariant",
     "verificationMethod": "differential-testing",
-    "reason": "child.stdout is typed Readable | null (Node is only ever null when stdio overrides that stream to something other than \"pipe\"), but this call site never passes a stdio option, so it's always a real stream in practice, confirmed empirically including for a spawn that fails outright (ENOENT)."
+    "reason": "child.stdout is typed Readable | null (Node is only ever null when stdio overrides that stream to something other than \"pipe\"), but this call site never passes a stdio option, so it's always a real stream in practice, confirmed empirically including for a spawn that fails outright (ENOENT).",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "dc5b5e4b95bcf8da29cb8ef2de8808e9f5d8d51b25b2c35eac320ea5b91c85a2"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -509,7 +602,10 @@
     "remediation": "Confirmed empirically here too, not just by analogy with the stdout guard: un-exempting this mutant and running Stryker scoped to this file showed the OptionalChaining mutation to child.stderr.on (removing the `?.`) survives, for the identical reason. Kept the guarded form for the same defense-in-depth reasoning as stdout's own guard.",
     "category": "unreachable-invariant",
     "verificationMethod": "mutation-run",
-    "reason": "same reasoning as the stdout guard above (which already covers \"both\"), confirmed empirically here too: un-exempting this mutant and running Stryker scoped to this file showed OptionalChaining's child.stderr.on replacement survives."
+    "reason": "same reasoning as the stdout guard above (which already covers \"both\"), confirmed empirically here too: un-exempting this mutant and running Stryker scoped to this file showed OptionalChaining's child.stderr.on replacement survives.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "961a03f1343004c9efa441e432ae24311a949f1321fa62e296fa00f472e34243"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -527,7 +623,10 @@
     "remediation": "Rejected the assertion for the same \"fail safely rather than crash if the invariant is ever broken\" reasoning used elsewhere in this file (see the child.pid guard in resolveCommand and the child.stdout/child.stderr optional-chaining guards): if this invariant were ever violated by a future refactor, a non-null assertion would let killWithEscalation(undefined, ...) throw synchronously inside an AbortSignal listener, which Node reschedules as an uncaught exception on process.nextTick -- crashing the whole host process instead of merely skipping one kill attempt.",
     "category": "unreachable-invariant",
     "verificationMethod": "untestable",
-    "reason": "if child.pid were ever genuinely undefined here, calling killWithEscalation(undefined, ...) would throw synchronously inside this AbortSignal listener, which Node reschedules onto process.nextTick as an uncaught exception, crashing the whole test process rather than failing one assertion; the \"SIGTERM\" string literal is separately unkillable since Node's own process.kill() normalizes a falsy/empty signal argument back to SIGTERM, so the OS-observed signal is identical either way."
+    "reason": "if child.pid were ever genuinely undefined here, calling killWithEscalation(undefined, ...) would throw synchronously inside this AbortSignal listener, which Node reschedules onto process.nextTick as an uncaught exception, crashing the whole test process rather than failing one assertion; the \"SIGTERM\" string literal is separately unkillable since Node's own process.kill() normalizes a falsy/empty signal argument back to SIGTERM, so the OS-observed signal is identical either way.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "8a2d89fd3aae3b865bbcb0661cd65cefde675eb700453e002f205d9750da134c"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -543,7 +642,10 @@
     "remediation": "Not pursued: repo-contract itself is exactly the kind of long-running consumer process this cleanup protects (a single run can spawn many checks over its lifetime), so omitting it would introduce a real, if slow, listener leak in normal use even though no test in this short-lived suite can observe the difference either way.",
     "category": "tooling-limit",
     "verificationMethod": "untestable",
-    "reason": "removing the wrong event name here has no test-observable effect within a short-lived test: the real listener is attached to an AbortController that's garbage-collected with the test, and effectiveSignal only ever fires \"abort\" once in its lifetime regardless; it matters for a long-running consumer process avoiding a listener leak, not for anything this suite can directly assert on."
+    "reason": "removing the wrong event name here has no test-observable effect within a short-lived test: the real listener is attached to an AbortController that's garbage-collected with the test, and effectiveSignal only ever fires \"abort\" once in its lifetime regardless; it matters for a long-running consumer process avoiding a listener leak, not for anything this suite can directly assert on.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "ddc06b8fca051e583d14d5e366bbf9987f932db5610e2990fcc56c6c6a825f56"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -558,7 +660,10 @@
     "remediation": "Rejected: Set<ActiveCheckHandle>#delete is typed to take an ActiveCheckHandle, not ActiveCheckHandle | undefined, so some form of narrowing is required to satisfy the type either way -- an assertion would just relocate the same guard to a less safe form for no behavioral gain, since Set#delete's own no-op-on-non-member semantics make the guard's presence or absence unobservable regardless.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "handle is ActiveCheckHandle | undefined exactly when spawning itself failed and no pid was ever obtained (see below); this guard exists to satisfy Set#delete's parameter type, not because calling delete(undefined) would behave differently at runtime -- Set#delete on a non-member value is already a silent no-op."
+    "reason": "handle is ActiveCheckHandle | undefined exactly when spawning itself failed and no pid was ever obtained (see below); this guard exists to satisfy Set#delete's parameter type, not because calling delete(undefined) would behave differently at runtime -- Set#delete on a non-member value is already a silent no-op.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "9a2f7f968c56858fca477e0ace4ae46a5efd4f667aacef08012875dda49af024"
   },
   {
     "file": "src/execution/spawn-check.ts",
@@ -575,7 +680,10 @@
     "remediation": "Considered relying solely on code === null, but kept the redundant clause anyway: Node's own documentation describes this as a contract rather than a hard guarantee enforced by types, and a real child process producing an unexpected (null, null) pair (however unlikely) would otherwise be silently misreported as \"signaled\" instead of falling through correctly. No test can construct the counterexample needed to distinguish the two forms, since doing so would require a non-conforming child process this suite has no way to simulate.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "Node's own child_process contract guarantees exactly one of code/signal is non-null on a normal \"exit\" event, making signal !== null here effectively redundant given code === null already; kept as a belt-and-suspenders check against that contract rather than assumed absolute, since it is difficult to construct a real counterexample to test against (both null, or both non-null, simultaneously)."
+    "reason": "Node's own child_process contract guarantees exactly one of code/signal is non-null on a normal \"exit\" event, making signal !== null here effectively redundant given code === null already; kept as a belt-and-suspenders check against that contract rather than assumed absolute, since it is difficult to construct a real counterexample to test against (both null, or both non-null, simultaneously).",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "aee2b6d267f0bf38964be6ab3569aa76e8455a288b7b16191536570e7274a9a1"
   },
   {
     "file": "src/helpers/exception-policy.ts",
@@ -590,7 +698,10 @@
     "remediation": "None needed: removing the `pattern !== category &&` guard entirely would be behaviorally identical and was considered, but keeping it documents the intent (never re-consider an already-exact-matched entry as a glob candidate) even though it is not behaviorally load-bearing at this exact call site.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "equivalent mutant, see comment above."
+    "reason": "equivalent mutant, see comment above.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "a7907f3f77880407c41136139d58f5273cce5553dd21fcd74fea6e556d9af780"
   },
   {
     "file": "src/helpers/exception-policy.ts",
@@ -605,7 +716,10 @@
     "remediation": "None needed: passing \"utf8\" explicitly (rather than omitting the argument) documents the intent even though Node's own default behavior already makes it redundant.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "equivalent mutant, see comment above."
+    "reason": "equivalent mutant, see comment above.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "96cf6a8468c94045a3bbfba62a6930e035798e3061c67976efdd094fa7330fa7"
   },
   {
     "file": "src/helpers/load-exception-registry.ts",
@@ -620,7 +734,10 @@
     "remediation": "None needed: the type system already rules out the unsafe cases (null, array) this rule exists to catch, so no runtime guard adds real safety beyond what TypeScript already guarantees at every call site.",
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
-    "reason": "`segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === \"object\"` can only match the `PathSegment` object form here; the null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type, so satisfying both rules at once is impossible -- the type itself is the guarantee this check would otherwise add at runtime."
+    "reason": "`segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === \"object\"` can only match the `PathSegment` object form here; the null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type, so satisfying both rules at once is impossible -- the type itself is the guarantee this check would otherwise add at runtime.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "a1999aee46ef347d00f83e6055fdd8753eb573e645353e88c4dbbabfb22c5aa6"
   },
   {
     "file": "src/helpers/load-exception-registry.ts",
@@ -635,7 +752,10 @@
     "remediation": "None needed: passing \"utf8\" explicitly documents the intent (a decoded string, not a raw Buffer) even though JSON.parse's own coercion happens to make the distinction unobservable at this exact call site.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "equivalent mutant, see comment above."
+    "reason": "equivalent mutant, see comment above.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "e33d39cfad8bb4e2a0cd169e1820e33bada0e7b79dbe2d79e1d9e94b652ba8f3"
   },
   {
     "file": "src/helpers/load-exception-registry.ts",
@@ -650,7 +770,10 @@
     "remediation": "None needed: the `typeof` check still documents the real intent (only trust a genuinely string-typed `.code`) even though its removal is unobservable at this exact call site, the same reasoning already justified for this same file's StringLiteral suppression two records above.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "equivalent mutant, see comment above."
+    "reason": "equivalent mutant, see comment above.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "db5ede6818b27264394827048c6166abba476a7d78547f5a957cc90896cee1e1"
   },
   {
     "file": "src/parsing/format-schema-issues.ts",
@@ -665,7 +788,10 @@
     "remediation": "None needed: removing the early return entirely (relying only on the fall-through) would be behaviorally identical and was considered, but keeping the explicit `path.length === 0` check documents the intent (short-circuit an empty path before the per-segment mapping/formatting logic) even though it is not behaviorally load-bearing.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "equivalent mutant: `path.length === 0` falling through to `path.map(...).join(\"\")` on an empty array also produces `\"\"`, identical to this early return, for every possible input -- no test could ever distinguish them."
+    "reason": "equivalent mutant: `path.length === 0` falling through to `path.map(...).join(\"\")` on an empty array also produces `\"\"`, identical to this early return, for every possible input -- no test could ever distinguish them.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "2937b298d66b88e5fce7b5fa184ce032fd6ad7c1cae3412787a50de867b2ffae"
   },
   {
     "file": "src/parsing/format-schema-issues.ts",
@@ -680,7 +806,10 @@
     "remediation": "None needed: the type system already rules out the unsafe cases (null, array) this rule exists to catch, so no runtime guard adds real safety beyond what TypeScript already guarantees at every call site.",
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
-    "reason": "`segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === \"object\"` can only match the `PathSegment` object form here; the null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type, so satisfying both rules at once is impossible -- the type itself is the guarantee this check would otherwise add at runtime."
+    "reason": "`segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === \"object\"` can only match the `PathSegment` object form here; the null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type, so satisfying both rules at once is impossible -- the type itself is the guarantee this check would otherwise add at runtime.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "189f9b14092670672c1a9c8998fe5a85dc34f0dd0b550414d03ec288cd21bb97"
   },
   {
     "file": "src/policy/run-policies.ts",
@@ -695,7 +824,10 @@
     "remediation": "Kept the guard rather than simplifying it away: it documents the intent (\"only a recognized property name counts\") for a reader who would otherwise have to independently know that `Set.has(undefined)` is always false, and TypeScript's own control-flow narrowing already gets a real, if not runtime-observable, benefit from it (the ternary's `? property` branch is typed `string`, not `string | undefined`, only because of this check). No test can distinguish the two forms since they are behaviorally identical for every input, not merely difficult to exercise.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "OUTPUT_PROPERTIES is a ReadonlySet<string>, so .has(undefined) is always false regardless of argument, making the property !== undefined guard redundant with the .has() call it short-circuits into; removing it changes no observable behavior."
+    "reason": "OUTPUT_PROPERTIES is a ReadonlySet<string>, so .has(undefined) is always false regardless of argument, making the property !== undefined guard redundant with the .has() call it short-circuits into; removing it changes no observable behavior.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "38344585b60dc3b1e7c1e1dd928c75d53cc1df236b6a55cbd37f65241197f8e0"
   },
   {
     "file": "src/policy/run-policies.ts",
@@ -710,7 +842,10 @@
     "remediation": "Confirmed by the existing \"a policy with no dependsOn sees ctx.dependencies as an empty object\" test in run-policies.test.ts, which passes regardless of this fallback's specific value, matching this reasoning. Kept the `?? []` fallback anyway since it's the simplest way to express \"iterate zero or more dependency ids\" without a separate branch, and its behavioral equivalence to any other fallback value is exactly what makes this suppression safe.",
     "category": "equivalent-mutant",
     "verificationMethod": "existing-test-suite",
-    "reason": "check.dependsOn is undefined exactly when a check has no declared dependencies, in which case this fallback's contents are unobservable regardless of value: any id iterated would look up evidence.checks[depId], find nothing, and get filtered out by the guard below anyway, confirmed by the \"sees ctx.dependencies as an empty object\" test in run-policies.test.ts, which passes regardless of the fallback's specific value."
+    "reason": "check.dependsOn is undefined exactly when a check has no declared dependencies, in which case this fallback's contents are unobservable regardless of value: any id iterated would look up evidence.checks[depId], find nothing, and get filtered out by the guard below anyway, confirmed by the \"sees ctx.dependencies as an empty object\" test in run-policies.test.ts, which passes regardless of the fallback's specific value.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "c844141fb705d6367e5dd85401a1e72b2de157bae492c5b05e725e47d5d41fec"
   },
   {
     "file": "src/policy/run-policies.ts",
@@ -725,7 +860,10 @@
     "remediation": "Rejected the assertion for the same \"fail safely instead of crashing if an invariant is ever broken\" reason used throughout this codebase: if either upstream guarantee (validate-config.ts's dependsOn validation, or this function's own phasing) were ever violated by a future change, the current guarded form would just silently omit one entry from `dependencies` instead of throwing from inside a policy-invocation loop. Kept as defense in depth even though no test can currently make depEvidence actually undefined here.",
     "category": "unreachable-invariant",
     "verificationMethod": "static-reasoning",
-    "reason": "validate-config.ts already guarantees every dependsOn id names a check that exists in this run, and the phasing invariant guarantees its evidence is already assembled by the time any policy runs; this guard exists only to satisfy noUncheckedIndexedAccess."
+    "reason": "validate-config.ts already guarantees every dependsOn id names a check that exists in this run, and the phasing invariant guarantees its evidence is already assembled by the time any policy runs; this guard exists only to satisfy noUncheckedIndexedAccess.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "208ccabad1ea7047ad189d8a69f6f776f4b76dee154dc2f71363cd88967b0a94"
   },
   {
     "file": "src/policy/run-policies.ts",
@@ -740,7 +878,10 @@
     "remediation": "Restructuring to a single check was considered but rejected: throwing the lone PolicyThrewError directly (rather than wrapping a single error in an AggregateError) is deliberate, documented behavior a caller catching a specific error type depends on, so the two-branch structure with its now-redundant second comparison is intentional. Documented this equivalence explicitly (rather than silently accepting it) so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "\"> 1\" vs. \">= 1\" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this silently."
+    "reason": "\"> 1\" vs. \">= 1\" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this silently.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "385b4c5b9eb2b5e558bd6e5c088b6d4734b263f38a44fe65e741352b12f49338"
   },
   {
     "file": "src/presets/dead-code.ts",
@@ -757,7 +898,10 @@
     "remediation": "Confirmed JSON.parse(undefined) throws in every tested Node version, making the two forms behaviorally identical; kept the explicit early return anyway since it documents the \"flag absent\" case as its own distinct, intentional branch rather than an implicit side effect of a parse failure, which is clearer for a future reader even though no test can distinguish the two.",
     "category": "equivalent-mutant",
     "verificationMethod": "differential-testing",
-    "reason": "JSON.parse(undefined) always throws, and the catch block below already converts that back to undefined, the same result this early return produces"
+    "reason": "JSON.parse(undefined) always throws, and the catch block below already converts that back to undefined, the same result this early return produces",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "92fde74a59860dceb594afcc44ca74c7c078fa4d021c21a870187fbe33577537"
   },
   {
     "file": "src/presets/dead-code.ts",
@@ -772,7 +916,10 @@
     "remediation": "Considered adding the explicit return undefined, which would be equally valid and arguably marginally clearer, but left the block empty since it's the function's trailing statement and the implicit undefined return is a well-understood JavaScript idiom immediately adjacent to the explicit version used in the early-return case above; no test can observe a difference between the two forms.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "an empty catch block falls off the end of the function and implicitly returns undefined, identical to its explicit return"
+    "reason": "an empty catch block falls off the end of the function and implicitly returns undefined, identical to its explicit return",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "b330556a4996002073aa366e460b43a35c16863b2b377985002c9f59ff6d3dd4"
   },
   {
     "file": "src/presets/duplication.ts",
@@ -787,7 +934,10 @@
     "remediation": "Considered omitting the encoding argument, but kept it explicit: naming \"utf8\" documents the actual expected file encoding for a future reader, even though Buffer's coercion happens to default to the same encoding today -- relying on that coincidence implicitly would make a future change to jscpd's own report encoding a silent, hard-to-diagnose bug instead of an explicit mismatch.",
     "category": "equivalent-mutant",
     "verificationMethod": "differential-testing",
-    "reason": "JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way"
+    "reason": "JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "605b6a48654536c48c1e1a355adc2687118efcf9924c23f478b9dce97af2724d"
   },
   {
     "file": "src/presets/e2e.ts",
@@ -802,7 +952,10 @@
     "remediation": "Rejected the assertion: Playwright's JSON report is external, untrusted input from this check's own perspective (a third-party tool's output, not data this codebase controls the shape of), so a genuinely malformed report should degrade to \"no failure detail available\" rather than crash this check's own policy evaluation. Kept the safe fallback for that reason, even though its specific contents are unobservable given the optional chaining that follows it.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "any fallback garbage here resolves safely to undefined via optional chaining below, same as a genuinely empty array"
+    "reason": "any fallback garbage here resolves safely to undefined via optional chaining below, same as a genuinely empty array",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "ebcc2ca9a2e193073ae55aa1a9394eff630d85384f53280fba8b4e1f4ecfcb42"
   },
   {
     "file": "src/presets/e2e.ts",
@@ -817,7 +970,10 @@
     "remediation": "Rejected for the same reason as collectFailingSpecs's own internal fallback (see this file's other suppression): Playwright's report is external, untrusted output this codebase doesn't control the shape of, so a malformed report degrading to \"no failure detail available\" is safer than asserting a shape that isn't actually guaranteed. Kept the fallback despite its contents being unobservable given collectFailingSpecs's own defensive reads.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "collectFailingSpecs only reads .specs/.suites via safe optional chaining, so fallback garbage yields zero details either way"
+    "reason": "collectFailingSpecs only reads .specs/.suites via safe optional chaining, so fallback garbage yields zero details either way",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "9721295eda247f961a87cb882076b61acb42bba53cda6cad6a5fea629de7f392"
   },
   {
     "file": "src/presets/markdownlint.ts",
@@ -832,7 +988,10 @@
     "remediation": "Same conclusion as duplication.ts's identical case: kept the explicit \"utf8\" argument to document the expected report encoding for a future reader rather than relying on Buffer's coercion default coinciding with it by coincidence, even though no test can currently observe a difference between the two forms.",
     "category": "equivalent-mutant",
     "verificationMethod": "differential-testing",
-    "reason": "JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way"
+    "reason": "JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "6920ce31348f71e0206b365df75c4b9c2381ce9beb94ea72f165503fff928ae4"
   },
   {
     "file": "src/presets/security-secrets.ts",
@@ -847,7 +1006,10 @@
     "remediation": "Same conclusion as duplication.ts's identical case: kept the explicit \"utf8\" argument to document the expected report encoding for a future reader rather than relying on Buffer's coercion default coinciding with it by coincidence, even though no test can currently observe a difference between the two forms.",
     "category": "equivalent-mutant",
     "verificationMethod": "differential-testing",
-    "reason": "JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way"
+    "reason": "JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "bfe1b78d1c85cdd2ac62ae03e27c5666034055d9bfbe55c3bd0c9c990c4d88b6"
   },
   {
     "file": "src/presets/shared/vitest-json-policy.ts",
@@ -862,7 +1024,10 @@
     "remediation": "Not pursued: no test-suite change closes this gap, since the existing tests already kill the mutation under real execution -- the gap is entirely in Stryker's own per-mutant test-selection bookkeeping for this line, which this repository does not control. Re-check whether a future `@stryker-mutator/core`/`@stryker-mutator/vitest-runner` upgrade resolves the attribution gap before assuming it is permanent.",
     "category": "tooling-limit",
     "verificationMethod": "differential-testing",
-    "reason": "proven killed under direct vitest execution but Stryker's own coverage attribution never runs the two tests that would kill it; see the comment above."
+    "reason": "proven killed under direct vitest execution but Stryker's own coverage attribution never runs the two tests that would kill it; see the comment above.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "b08ae7f370e14593fa09185c03ff87e6c34bf20f291310ce67195994da97e3e8"
   },
   {
     "file": "src/run-repo-contract.ts",
@@ -877,7 +1042,10 @@
     "remediation": "Considered re-deriving the guarantee locally (e.g. asserting concurrency > 0 again right before this line), but that would just duplicate validate-config.ts's own check for a property it already guarantees before runRepoContract's caller can reach this line -- validateRepoContractConfig is not optional and always runs first, so the invariant already holds unconditionally by construction, not merely by convention.",
     "category": "equivalent-mutant",
     "verificationMethod": "static-reasoning",
-    "reason": "validateRepoContractConfig above already rejects any config.concurrency that is not a positive integer (>= 1), so by the time this line runs config.concurrency is always either undefined or already truthy; `??` and `&&` therefore select the identical branch for every value this parameter can actually hold here, making them equivalent at this exact call site."
+    "reason": "validateRepoContractConfig above already rejects any config.concurrency that is not a positive integer (>= 1), so by the time this line runs config.concurrency is always either undefined or already truthy; `??` and `&&` therefore select the identical branch for every value this parameter can actually hold here, making them equivalent at this exact call site.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "1036dd1b0b045aa36dbd87fbcf68e9c6e3967d462c4b763c160be5e0572cd61b"
   },
   {
     "file": "src/standard-schema/types.ts",
@@ -892,7 +1060,10 @@
     "remediation": "None needed: declare namespace here compiles to zero runtime code (an ambient, type-only declaration merged with the interface of the same name) -- the rule's actual concern (the runtime IIFE-style namespace object TypeScript emits for a non-declare namespace) does not apply, since nothing here is emitted at all.",
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
-    "reason": "the interface+namespace declaration-merging pattern is required here to mirror @standard-schema/spec's own published shape (StandardSchemaV1.Props/.Result/.Issue/... nested under the interface's own name) -- an ES2015 module can't merge with an interface of the same name the way a namespace does, and diverging from upstream's exact shape would defeat this file's whole purpose of being a faithful, re-diffable vendor copy (see this file's own top comment)."
+    "reason": "the interface+namespace declaration-merging pattern is required here to mirror @standard-schema/spec's own published shape (StandardSchemaV1.Props/.Result/.Issue/... nested under the interface's own name) -- an ES2015 module can't merge with an interface of the same name the way a namespace does, and diverging from upstream's exact shape would defeat this file's whole purpose of being a faithful, re-diffable vendor copy (see this file's own top comment).",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "832bc3d4dce30853d151472ad3874c4eaa81ee94fc548f881e84071c7a207a21"
   },
   {
     "file": "test/unit/crap/policy.test.ts",
@@ -907,7 +1078,10 @@
     "remediation": "",
     "category": "",
     "verificationMethod": "",
-    "reason": "-- deliberately modelling a malformed crap4ts row with no `crap` field"
+    "reason": "-- deliberately modelling a malformed crap4ts row with no `crap` field",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "c4bf920dd3016a6fe2d0c83699faa1a734643300a1f51736c16c0a4e5a9bc86d"
   },
   {
     "file": "test/unit/crap/policy.test.ts",
@@ -922,7 +1096,10 @@
     "remediation": "",
     "category": "",
     "verificationMethod": "",
-    "reason": "-- deliberately modelling a malformed crap4ts row with no `complexity` field"
+    "reason": "-- deliberately modelling a malformed crap4ts row with no `complexity` field",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "8bd87a9d20239bf0bd181389cec8e2de04d3ccd7bfe85db849dfdeee94fe9b97"
   },
   {
     "file": "test/unit/execution/abort-signals.test.ts",
@@ -937,7 +1114,10 @@
     "remediation": "The reference is never called here -- it's saved and later reassigned back onto `AbortSignal.any` to restore it, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
-    "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal."
+    "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "ba411bc17021cb4dd6a3d9d78b3f38301010948c7392bd08c5723b2b0bfc2af2"
   },
   {
     "file": "test/unit/execution/process-tree.test.ts",
@@ -952,7 +1132,10 @@
     "remediation": "That would test a different, already-covered branch of isErrnoException (the `instanceof Error` check passing) rather than the one this test targets: that a non-Error value must be rejected regardless of whether it carries a `code` property.",
     "category": "intentional-deviation",
     "verificationMethod": "static-reasoning",
-    "reason": "deliberately not an Error instance, to prove isErrnoException requires both `instanceof Error` and a `code` property, not either alone."
+    "reason": "deliberately not an Error instance, to prove isErrnoException requires both `instanceof Error` and a `code` property, not either alone.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "34fa9d65ae07aa1e90d75e73eca5792a7150f6f041cc98503aca49ba319f62f0"
   },
   {
     "file": "test/unit/execution/run-checks.test.ts",
@@ -967,7 +1150,10 @@
     "remediation": "The reference is never called here -- it's saved and later reassigned back onto `AbortSignal.any` to restore it, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
-    "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal."
+    "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "1a0c4391d98a1b1fde6273ea1003abe07b6fdaee55c069c6e57723d288d67017"
   },
   {
     "file": "test/unit/execution/spawn-check.test.ts",
@@ -982,7 +1168,10 @@
     "remediation": "The reference is never called here -- it is saved and later reassigned back onto `AbortSignal.any` to restore it after the test forces composeSignals' manual-fallback path, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
-    "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal."
+    "reason": "reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "1c604c2cc0c3d6fc6c6790db0e4dbc6d472de2b0b8592ca510017c78051e7742"
   },
   {
     "file": "test/unit/helpers/load-exception-registry.test.ts",
@@ -997,7 +1186,10 @@
     "remediation": "None needed -- this is a single, narrowly-scoped test file suppression, not production code; the rule's own purpose (discouraging non-Error rejections in code this repository owns and controls) doesn't apply to a test whose entire point is exercising the malformed-input case a caller-supplied capability could realistically produce.",
     "category": "rule-not-applicable",
     "verificationMethod": "existing-test-suite",
-    "reason": "deliberate non-Error rejection, see above"
+    "reason": "deliberate non-Error rejection, see above",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "a03253cf3fc289d28f118dc6e2b3aeede11ab1202dd995e44ad7fd528fa10536"
   },
   {
     "file": "test/unit/helpers/load-exception-registry.test.ts",
@@ -1012,7 +1204,10 @@
     "remediation": "None needed -- narrowly-scoped test-only suppression, not production code.",
     "category": "rule-not-applicable",
     "verificationMethod": "mutation-run",
-    "reason": "deliberate non-Error rejection, distinguishing the code-lookup fallback from the ENOENT-string-match mutant"
+    "reason": "deliberate non-Error rejection, distinguishing the code-lookup fallback from the ENOENT-string-match mutant",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "834bcf4d50f0348d825f235a13ced309978fdb85f49ea231592e148b21d56c47"
   },
   {
     "file": "test/unit/helpers/load-exception-registry.test.ts",
@@ -1027,7 +1222,10 @@
     "remediation": "None needed -- narrowly-scoped test-only suppression, not production code.",
     "category": "rule-not-applicable",
     "verificationMethod": "mutation-run",
-    "reason": "deliberate non-Error rejection, distinguishing the String(error) fallback from the real-message mutant"
+    "reason": "deliberate non-Error rejection, distinguishing the String(error) fallback from the real-message mutant",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "df33024c0301daac042b2622059a70bf68ec9c98d7530ee1d92b01ccf3b2d04d"
   },
   {
     "file": "test/unit/policy/run-policies.test.ts",
@@ -1042,7 +1240,10 @@
     "remediation": "An Error instance is already covered by the adjacent 'preserves the original error as cause' test above this one; this test exists specifically to prove non-Error throws are also preserved verbatim rather than coerced or wrapped, which requires actually throwing a non-Error value.",
     "category": "intentional-deviation",
     "verificationMethod": "static-reasoning",
-    "reason": "deliberately testing a non-Error throw"
+    "reason": "deliberately testing a non-Error throw",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "7e7040d18543f14708f2676fb054dcb5b24abf327ebe5940743be78ec6875af3"
   },
   {
     "file": "test/unit/schema/schema-conformance.test.ts",
@@ -1057,6 +1258,9 @@
     "remediation": "That form works today only by coincidence of ajv's current export shape and isn't what ajv documents or tests against -- following the default-import usage ajv's own docs prescribe is the more future-proof choice, so the rule is suppressed here rather than the import rewritten.",
     "category": "rule-not-applicable",
     "verificationMethod": "static-reasoning",
-    "reason": "ajv's own documented usage is `import Ajv from \"ajv\"`; `Ajv` is coincidentally also a named export of the same class."
+    "reason": "ajv's own documented usage is `import Ajv from \"ajv\"`; `Ajv` is coincidentally also a named export of the same class.",
+    "verifiedBy": "@maverickcer",
+    "verifiedAt": "2026-09-07T00:00:00.000Z",
+    "verifiedContentHash": "b0a525a623b3a236e839700ebd17adf190aeaf9273f78aa5c7c1bc19e28b0ffc"
   }
 ]

@@ -53,7 +53,36 @@ import type {
  * only `stryker` requires `"reason"`.
  */
 export type SuppressionRequirement =
-  "justification" | "alternatives" | "remediation" | "category" | "verificationMethod" | "reason"
+  | "justification"
+  | "alternatives"
+  | "remediation"
+  | "category"
+  | "verificationMethod"
+  | "reason"
+  | "verifiedBy"
+
+/**
+ * The five hand-authored fields every non-`stryker` `"exception"` policy requires, plus
+ * `"verifiedBy"` -- the content-bound sign-off gate (see
+ * specs/decisions/0006-suppression-governance.md's "Verification" amendment). `"verifiedBy"` is
+ * a genuinely required field, but `checks/suppression-governance.ts` *stages* it in the reported
+ * `missing` list: it only surfaces once the authoring fields are all filled, so a freshly-created
+ * record is never asked to sign off on prose that doesn't exist yet.
+ */
+const BASE_EXCEPTION_REQUIREMENTS: readonly SuppressionRequirement[] = [
+  "justification",
+  "alternatives",
+  "remediation",
+  "category",
+  "verificationMethod",
+  "verifiedBy",
+]
+
+/** `BASE_EXCEPTION_REQUIREMENTS` plus `"reason"` -- the `stryker` domain additionally requires the mechanically-derived reason text. Derived, not re-listed, so the two can never silently diverge. */
+const STRYKER_EXCEPTION_REQUIREMENTS: readonly SuppressionRequirement[] = [
+  ...BASE_EXCEPTION_REQUIREMENTS,
+  "reason",
+]
 
 /**
  * `"forbidden"`: the suppression is never permitted, regardless of justification.
@@ -84,23 +113,17 @@ export type SuppressionDomainPolicy = ExceptionCategoryGroup
 /** An alias of `repo-contract/helpers`'s `ExceptionPolicyConfig`. */
 export type SuppressionPolicyConfig = ExceptionPolicyConfig
 
-/** Used when a suppression's `domain` has no entry in `suppressionPolicy` at all -- the strictest non-forbidding policy, requiring every field. */
+/** Used when a suppression's `domain` has no entry in `suppressionPolicy` at all -- the strictest non-forbidding policy. Requires the five hand-authored fields plus the `verifiedBy` sign-off (not `reason`, which is a `stryker`-only mechanically-derived field). */
 export const GLOBAL_DEFAULT_POLICY: SuppressionPolicy = {
   mode: "exception",
-  requirements: ["justification", "alternatives", "remediation", "category", "verificationMethod"],
+  requirements: BASE_EXCEPTION_REQUIREMENTS,
 }
 
 export const suppressionPolicy: SuppressionPolicyConfig = {
   eslint: {
     default: {
       mode: "exception",
-      requirements: [
-        "justification",
-        "alternatives",
-        "remediation",
-        "category",
-        "verificationMethod",
-      ],
+      requirements: BASE_EXCEPTION_REQUIREMENTS,
     },
     rules: {
       "security/*": {
@@ -111,13 +134,7 @@ export const suppressionPolicy: SuppressionPolicyConfig = {
       },
       "react-hooks/exhaustive-deps": {
         mode: "exception",
-        requirements: [
-          "justification",
-          "alternatives",
-          "remediation",
-          "category",
-          "verificationMethod",
-        ],
+        requirements: BASE_EXCEPTION_REQUIREMENTS,
       },
     },
   },
@@ -125,13 +142,7 @@ export const suppressionPolicy: SuppressionPolicyConfig = {
   typescript: {
     default: {
       mode: "exception",
-      requirements: [
-        "justification",
-        "alternatives",
-        "remediation",
-        "category",
-        "verificationMethod",
-      ],
+      requirements: BASE_EXCEPTION_REQUIREMENTS,
     },
     rules: {
       "@ts-ignore": {
@@ -151,14 +162,7 @@ export const suppressionPolicy: SuppressionPolicyConfig = {
   stryker: {
     default: {
       mode: "exception",
-      requirements: [
-        "justification",
-        "alternatives",
-        "remediation",
-        "category",
-        "verificationMethod",
-        "reason",
-      ],
+      requirements: STRYKER_EXCEPTION_REQUIREMENTS,
     },
     rules: {
       // Stryker's own literal "disable all mutators" token, not a glob -- see

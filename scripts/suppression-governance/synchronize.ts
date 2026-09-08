@@ -15,6 +15,24 @@ interface SynchronizeResult {
   readonly removedCount: number
 }
 
+/**
+ * Every hand-authored field, at its "not yet filled" value -- what a brand-new record (one just
+ * discovered in source, with no prior registry entry) starts with. `verifiedBy`/`verifiedAt`/
+ * `verifiedContentHash` are `""` here exactly like the five above them: `synchronize` never
+ * fabricates a sign-off, so a new suppression is always `insufficient` until a human both
+ * justifies it and signs it off.
+ */
+const FRESH_AUTHORING_FIELDS = {
+  justification: "",
+  alternatives: "",
+  remediation: "",
+  category: "",
+  verificationMethod: "",
+  verifiedBy: "",
+  verifiedAt: "",
+  verifiedContentHash: "",
+} as const
+
 interface IdentifiableSuppression {
   readonly file: string
   readonly domain: string
@@ -144,6 +162,9 @@ export function synchronize(
         remediation: existingRecord.remediation,
         category: existingRecord.category,
         verificationMethod: existingRecord.verificationMethod,
+        verifiedBy: existingRecord.verifiedBy,
+        verifiedAt: existingRecord.verifiedAt,
+        verifiedContentHash: existingRecord.verifiedContentHash,
         status: "moved",
       })
       movedCount += 1
@@ -152,15 +173,7 @@ export function synchronize(
 
     removedCount += existingGroup.length
     for (const item of discoveredGroup) {
-      result.push({
-        ...item,
-        justification: "",
-        alternatives: "",
-        remediation: "",
-        category: "",
-        verificationMethod: "",
-        status: "new",
-      })
+      result.push({ ...item, ...FRESH_AUTHORING_FIELDS, status: "new" })
       newCount += 1
     }
   }
@@ -168,15 +181,7 @@ export function synchronize(
   for (const [key, discoveredGroup] of discoveredGroups) {
     if (handledGroupKeys.has(key)) continue
     for (const item of discoveredGroup) {
-      result.push({
-        ...item,
-        justification: "",
-        alternatives: "",
-        remediation: "",
-        category: "",
-        verificationMethod: "",
-        status: "new",
-      })
+      result.push({ ...item, ...FRESH_AUTHORING_FIELDS, status: "new" })
       newCount += 1
     }
   }
