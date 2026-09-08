@@ -100,6 +100,7 @@ import { docs } from "./checks/docs.js"
 import { githubActions } from "./checks/github-actions.js"
 import { lint } from "./checks/lint.js"
 import { mutation } from "./checks/mutation.js"
+import { presetCommands } from "./checks/preset-commands.js"
 import { schema } from "./checks/schema.js"
 import { securityNetwork } from "./checks/security-network.js"
 import { securitySocket } from "./checks/security-socket.js"
@@ -288,6 +289,10 @@ export default defineRepoContract({
     // `commitlint` binary against git history and touches nothing.
     commitlint: commitlint(),
     "security-network": securityNetwork,
+    // The reconciled successor to network-surface.mjs's former ALLOWED_PRESET_COMMANDS allowlist
+    // (ADR 0007's amendment): every external command a published preset spawns is held to a
+    // reviewed record in .repo-contract/exceptions/preset-commands.json.
+    "preset-commands": presetCommands,
     // New security check built on the repo-contract/helpers exception-policy primitive (see
     // specs/decisions/0013-reusable-exception-policy-helper.md) -- `unavailable` (the CLI isn't
     // installed, or this environment holds no Socket org token, as is the case for this

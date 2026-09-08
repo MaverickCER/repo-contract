@@ -148,6 +148,34 @@ The `eslint-disable` on `no-restricted-imports`/`no-restricted-globals` is still
 `disable-comments.json` entry a reviewer sees (the ESLint layer is unchanged); the
 security-network registry is the second, independent layer's own equivalent record.
 
+## Amendment (2026-09, v0.4.0 PR 4): preset-command review is its own reconciled registry
+
+The former `ALLOWED_PRESET_COMMANDS` allowlist (derived from `PRESET_COMMAND_REVIEW`) in
+`scripts/security-network/network-surface.mjs` is **removed**. Preset-command review moves to its
+own check, `preset-commands`, and its own registry, `.repo-contract/exceptions/preset-commands.json`:
+
+- `scripts/preset-commands/scan.ts` emits a finding for **every** external command a published
+  preset (`src/presets/*.ts`) spawns as its `run:` first token -- not just commands absent from an
+  allowlist -- and reconciles the registry against that set. A new preset command scaffolds a blank
+  record; a `run:` command whose name changed leaves a stale record that **fails** the check until
+  deleted; a `run:` first token that isn't a statically-resolvable string literal fails outright.
+- Each record's only field is a non-empty `justification` -- the whole review: what network or
+  code-execution capability the command has under the exact flags the preset passes, and why
+  repo-contract spawning it on a consumer's behalf is acceptable. The id is keyed by command name
+  alone (`preset-command:<command>`), so one review covers a command however many presets spawn it
+  and editing a preset file never churns the registry.
+- `PRESET_COMMAND_REVIEW`'s per-command `docs` link and `reviewFor` question survive as
+  `scripts/preset-commands/review-guidance.ts` -- printed as scaffold guidance when the check stubs
+  a new record, never gating anything and never pre-filled into `justification`.
+- `network-surface.mjs` keeps only the module/global/named-import ban lists (still shared with
+  `eslint.config.js`); `security-network`'s own scan no longer looks at `run:` properties at all,
+  and its `NetworkCapabilityKind` drops `non-literal-preset-command` / `unreviewed-preset-command`.
+
+This is strictly _more_ explicit than the allowlist: before, `eslint`/`tsc`/`prettier`/etc. passed
+by silent construction (present in the list); now each carries its own written, individually
+reviewable capability assessment in the same `.repo-contract/exceptions/` folder every other
+guardrail exception lives in.
+
 ## Consequences
 
 - `npm run contract` runs one additional check, `security-network` (see
@@ -155,9 +183,10 @@ security-network registry is the second, independent layer's own equivalent reco
 - A contributor introducing any of the above into `src/` gets a fast, precise ESLint error while
   editing, and (independently) a failed `security-network` check if they somehow bypass or disable
   the lint layer.
-- A new preset that legitimately needs to spawn a new external tool must add that tool's name to
-  `ALLOWED_PRESET_COMMANDS` -- a small, explicit, reviewable diff -- or the `security-network` check
-  fails with a clear "not in the reviewed allowlist" message naming the exact command.
+- A new preset that legitimately needs to spawn a new external tool has the `preset-commands`
+  check scaffold a blank record for it in `.repo-contract/exceptions/preset-commands.json`; the
+  check fails until a maintainer fills in that record's `justification` (see the 2026-09
+  amendment above).
 - README's guarantee can now say it is mechanically enforced, not merely true today by inspection.
 - Known, accepted limitation: this does not audit a dependency's own transitive network behavior
   (see Decision above) or prevent a consumer's own `repo-contract.config.ts` from configuring a

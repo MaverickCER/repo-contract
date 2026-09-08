@@ -9,14 +9,12 @@
 
 import type { SecurityExceptionFields } from "../shared/exception-record.js"
 
-/** What kind of prohibited (or unverifiable) capability a finding represents. */
+/** What kind of prohibited (or unverifiable) capability a finding represents. (Preset `run:` command review moved to its own `preset-commands` check -- ADR 0007's amendment.) */
 export type NetworkCapabilityKind =
   | "restricted-module-import"
   | "restricted-named-import"
   | "restricted-global-usage"
   | "dynamic-import-non-literal-specifier"
-  | "non-literal-preset-command"
-  | "unreviewed-preset-command"
 
 /**
  * One prohibited (or unverifiable) capability found in a single source file -- a raw *finding*,

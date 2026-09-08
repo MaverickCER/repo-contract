@@ -40,8 +40,6 @@ export const securityNetworkPolicy: ExceptionPolicyConfig = {
       "restricted-named-import": WAIVABLE,
       "restricted-global-usage": WAIVABLE,
       "dynamic-import-non-literal-specifier": WAIVABLE,
-      "non-literal-preset-command": WAIVABLE,
-      "unreviewed-preset-command": WAIVABLE,
     },
   },
 }

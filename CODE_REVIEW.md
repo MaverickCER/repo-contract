@@ -20,19 +20,19 @@ The review process should not duplicate mechanical verification. Where `npm run 
 
 Before reviewing anything manually, know what `npm run contract` already guarantees, so review effort goes to what's left rather than what's redundant:
 
-| Already mechanically enforced                                                                              | Not enforced — requires semantic review                                                                                      |
-| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Type correctness, lint, formatting                                                                         | Whether the types/lint rules chosen still express the right constraint                                                       |
-| Unit/integration/property/e2e tests pass                                                                   | Whether those tests express the intended contract, or merely happen to pass                                                  |
-| Mutation score on `src/**` (100%, no unjustified survivors)                                                | Test effectiveness on `checks/**`/`scripts/**` — mutation testing does not cover them                                        |
-| Dependency-graph layering (`architecture` check)                                                           | Whether a new dependency _direction_ that violates no existing rule is still sound                                           |
-| Public API structural compatibility (`api-contract`)                                                       | Whether unchanged type signatures still hide a semantic/behavioral change                                                    |
-| Every suppression has non-empty justification fields (`suppression-governance`)                            | Whether that justification is actually _correct_, not merely present                                                         |
-| No network-capable import/global/unreviewed preset command in `src/` (`security-network`)                  | Whether a newly allowlisted preset command is actually safe to add                                                           |
-| Dependency vulnerabilities and license compliance (`security-deps`, `license`)                             | Whether a new dependency is actually necessary and what capability it adds                                                   |
-| Commit messages are Conventional and declare a bump ≥ the API diff requires (`commitlint`, `api-contract`) | Whether the subject actually communicates the user-visible impact, and whether any documentation touched is still _accurate_ |
-| `src/execution`/`src/policy` changes reference an ADR in a commit (`adr-governance`)                       | Whether the ADR's reasoning actually holds up                                                                                |
-| Dead-code detection (`dead-code`)                                                                          | Whether newly introduced behavioral paths are meaningful and reachable according to the intended state model                 |
+| Already mechanically enforced                                                                                                          | Not enforced — requires semantic review                                                                                      |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Type correctness, lint, formatting                                                                                                     | Whether the types/lint rules chosen still express the right constraint                                                       |
+| Unit/integration/property/e2e tests pass                                                                                               | Whether those tests express the intended contract, or merely happen to pass                                                  |
+| Mutation score on `src/**` (100%, no unjustified survivors)                                                                            | Test effectiveness on `checks/**`/`scripts/**` — mutation testing does not cover them                                        |
+| Dependency-graph layering (`architecture` check)                                                                                       | Whether a new dependency _direction_ that violates no existing rule is still sound                                           |
+| Public API structural compatibility (`api-contract`)                                                                                   | Whether unchanged type signatures still hide a semantic/behavioral change                                                    |
+| Every suppression has non-empty justification fields (`suppression-governance`)                                                        | Whether that justification is actually _correct_, not merely present                                                         |
+| No network-capable import/global in `src/` (`security-network`); every preset `run:` command has a reviewed record (`preset-commands`) | Whether a preset command's `justification` actually answers its capability question, not merely fills the field              |
+| Dependency vulnerabilities and license compliance (`security-deps`, `license`)                                                         | Whether a new dependency is actually necessary and what capability it adds                                                   |
+| Commit messages are Conventional and declare a bump ≥ the API diff requires (`commitlint`, `api-contract`)                             | Whether the subject actually communicates the user-visible impact, and whether any documentation touched is still _accurate_ |
+| `src/execution`/`src/policy` changes reference an ADR in a commit (`adr-governance`)                                                   | Whether the ADR's reasoning actually holds up                                                                                |
+| Dead-code detection (`dead-code`)                                                                                                      | Whether newly introduced behavioral paths are meaningful and reachable according to the intended state model                 |
 
 Do not manually recompute anything in the left column. If a check in the left column is green, trust it. The rest of this document is about the right column.
 
@@ -87,9 +87,7 @@ This is not "run a security scanner" — `security-deps`, `security-secrets`, an
 
 Concretely:
 
-- A new entry in `scripts/security-network/network-surface.mjs`'s `ALLOWED_PRESET_COMMANDS` passes the check by construction because it is now in the list. The check cannot establish whether the tool is safe to allow. The reviewer must follow the command's documentation link in its matching `PRESET_COMMAND_REVIEW` entry and investigate the specific question named there. The entry's presence or `reviewFor` text is not itself evidence that the question has been answered.
-
-- A new allowlist entry without a corresponding `PRESET_COMMAND_REVIEW` record is invalid.
+- A new record in `.repo-contract/exceptions/preset-commands.json` (scaffolded when a preset spawns a new `run:` command) passes the `preset-commands` check the moment its `justification` is non-empty. The check cannot establish whether the tool is safe to spawn. The reviewer must follow the command's documentation link in `scripts/preset-commands/review-guidance.ts` and confirm the `justification` actually answers the capability question, not just fills the field.
 
 - A new `no-restricted-imports`/`no-restricted-globals` exception, an `eslint-disable`, or removal of an entry from `network-surface.mjs` is capability expansion even when `suppression-governance` passes. The reviewer must determine whether the justification is technically sound.
 
@@ -987,7 +985,7 @@ Do not emit generic conclusions such as "looks good", "no security issues", or "
 
 Never treat the mechanism under review as proof that the mechanism is correct.
 
-A new `ALLOWED_PRESET_COMMANDS` or `PRESET_COMMAND_REVIEW` entry does not prove that the command is safe. Follow its documentation link and resolve the stated review question.
+A new `.repo-contract/exceptions/preset-commands.json` record does not prove the command is safe. Follow its documentation link (scripts/preset-commands/review-guidance.ts) and confirm the justification resolves the stated review question.
 
 A suppression justification does not prove that the suppression is technically justified.
 
@@ -1230,7 +1228,7 @@ Do not stop at the final PASS/FAIL line. Inspect the actual output and relevant 
 
 #### Security boundary
 
-Determine whether the PR introduces, expands, or weakens a capability or security restriction. Pay particular attention to `ALLOWED_PRESET_COMMANDS`, `PRESET_COMMAND_REVIEW`, `no-restricted-imports`, `no-restricted-globals`, `eslint-disable`, `inheritEnv`, `env`, `shell: true`, network restrictions, process execution, publication boundaries, and CI permissions.
+Determine whether the PR introduces, expands, or weakens a capability or security restriction. Pay particular attention to `.repo-contract/exceptions/preset-commands.json`, `no-restricted-imports`, `no-restricted-globals`, `eslint-disable`, `inheritEnv`, `env`, `shell: true`, network restrictions, process execution, publication boundaries, and CI permissions.
 
 If safety and intent cannot be established, `FAIL`.
 

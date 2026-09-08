@@ -30,12 +30,12 @@ describe("deriveNetworkExceptionId", () => {
   it("joins the namespace, capability, file, line, and column", () => {
     expect(
       deriveNetworkExceptionId({
-        capability: "unreviewed-preset-command",
+        capability: "restricted-global-usage",
         file: "src/presets/x.ts",
         line: 42,
         column: 1,
       }),
-    ).toBe("security-network:unreviewed-preset-command:src/presets/x.ts:42:1")
+    ).toBe("security-network:restricted-global-usage:src/presets/x.ts:42:1")
   })
 })
 

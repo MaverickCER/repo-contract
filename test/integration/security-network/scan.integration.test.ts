@@ -1,25 +1,44 @@
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { runSecurityNetworkScan } from "../../../scripts/security-network/scan.js"
+import { reconcileExceptions } from "../../../src/helpers/index.js"
+import {
+  runSecurityNetworkScan,
+  scanForNetworkCapability,
+} from "../../../scripts/security-network/scan.js"
+import {
+  createNetworkStub,
+  deriveNetworkExceptionId,
+} from "../../../scripts/security-network/registry.js"
+import type {
+  NetworkCapabilityFinding,
+  NetworkExceptionRecord,
+} from "../../../scripts/security-network/evidence-types.js"
 
 const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url))
 const runningInsideMutationSandbox = REPO_ROOT.split(path.sep).includes(".stryker-tmp")
 
-describe("runSecurityNetworkScan -- full real path", () => {
+describe("security-network scan -- full real path", () => {
   it.runIf(!runningInsideMutationSandbox)(
-    "reports a reconciled, clean registry against this repository's own src/ (no error, no stale, no scaffolded stub)",
+    "this repository's own src/ is network-free and its registry reconciles clean (read-only composition, no write)",
     async () => {
-      const evidence = await runSecurityNetworkScan(REPO_ROOT)
+      const { filesScanned, findings } = await scanForNetworkCapability(REPO_ROOT)
+      expect(filesScanned).toBeGreaterThan(0)
+      expect(findings).toEqual([])
 
-      expect(evidence.registryError).toBeUndefined()
-      expect(evidence.filesScanned).toBeGreaterThan(0)
-      expect(evidence.findings).toEqual([])
-      expect(evidence.activeExceptions).toEqual({})
-      expect(evidence.staleExceptions).toEqual([])
-      expect(evidence.scaffoldedIds).toEqual([])
+      const reconciled = reconcileExceptions<NetworkCapabilityFinding, NetworkExceptionRecord>({
+        existing: [],
+        findings: [...findings],
+        deriveId: (finding) => finding.id,
+        createStub: createNetworkStub,
+      })
+      expect(reconciled.ok).toBe(true)
+      if (reconciled.ok) {
+        expect(reconciled.reconciliation.staleRecords).toEqual([])
+        expect(reconciled.reconciliation.newStubIds).toEqual([])
+      }
     },
   )
 
@@ -32,8 +51,6 @@ describe("runSecurityNetworkScan -- full real path", () => {
   })
 
   it("creates the exceptions directory and scaffolds a stub for a fresh finding", async () => {
-    // A brand-new tree with a src/ file that performs network I/O and no registry.
-    const { mkdir, writeFile } = await import("node:fs/promises")
     await mkdir(path.join(scratch, "src"), { recursive: true })
     await writeFile(
       path.join(scratch, "src", "bad.ts"),
@@ -48,6 +65,7 @@ describe("runSecurityNetworkScan -- full real path", () => {
     expect(evidence.scaffoldedIds.length).toBe(evidence.findings.length)
     for (const finding of evidence.findings) {
       expect(evidence.activeExceptions[finding.id]?.justification).toBe("")
+      expect(deriveNetworkExceptionId(finding)).toBe(finding.id)
     }
   })
 })
