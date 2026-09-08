@@ -5,28 +5,20 @@ import type { ExceptionPolicy, ExceptionPolicyConfig } from "../../src/helpers/i
  * neutral exception policy (see specs/decisions/0013-reusable-exception-policy-helper.md), a
  * single `"security-network"` group classified on the finding's own `capability` kind.
  *
- * ADR 0007's default posture is unchanged and absolute (see its own "default policy vs. reviewed
- * waiver mechanism" amendment): `src/**` must never perform network I/O, and the `default` below
- * is `forbidden` -- a capability kind this policy does not name has no waiver path at all. The
- * six recognized `NetworkCapabilityKind`s resolve to `exception`, which is strictly *narrower*
- * than the mechanism it replaces: the old path was a prose-only `disable-comments.json` entry, and
- * this one additionally requires a small closed `exceptionType`, a content-bound
- * `verification.verifiedBy` (staged -- see `checks/shared/evaluate-exception-findings.ts`), and,
- * because there is no more-authoritative scanner to mechanically re-run against a
- * genuinely-reachable capability, an `independent-human-review` verification method
- * (`scripts/security-network/registry.ts`). The waiver never changes the default posture; it is
- * an additive, reviewed, per-finding exception to it.
+ * ADR 0007's default posture is unchanged and absolute: `src/**` must never perform network I/O,
+ * and the `default` below is `forbidden` -- a capability kind this policy does not name has no
+ * waiver path at all. The six recognized `NetworkCapabilityKind`s resolve to `exception`, permitted
+ * only once every field in `VALID_SECURITY_NETWORK_REQUIREMENTS` is non-empty on the reconciled
+ * record: `justification`, `alternatives`, `remediation`, `method` (an `EXCEPTION_METHODS`
+ * member -- how the waiver's claim was substantiated), and `exceptionType`. The waiver never
+ * changes the default posture; it is an additive, reviewed, per-finding exception to it.
  */
-/** The verification sign-off field, staged in the reported `missing` list -- see `checks/shared/evaluate-exception-findings.ts`. Exported so `checks/security-network.ts` and its tests partition `VALID_SECURITY_NETWORK_REQUIREMENTS` on the same literal rather than each re-declaring it. */
-export const VERIFICATION_FIELD = "verification.verifiedBy"
-
-/** Every field name this check's own `"exception"` mode policy requires -- passed to `validateExceptionPolicyConfig` as `validRequirements`, and the single list `WAIVABLE` below and every derived `PROSE_REQUIREMENTS` elsewhere is built from. Order matters: `hashRequirementFields` digests the prose fields in exactly this order. */
 export const VALID_SECURITY_NETWORK_REQUIREMENTS = [
   "justification",
   "alternatives",
   "remediation",
+  "method",
   "exceptionType",
-  VERIFICATION_FIELD,
 ] as const
 
 const WAIVABLE: ExceptionPolicy = {
@@ -56,7 +48,7 @@ export const securityNetworkPolicy: ExceptionPolicyConfig = {
 
 /**
  * The global default, used only for a classification whose `group` isn't `"security-network"` --
- * never reached today (the check only ever classifies on that one group), kept `forbidden` so a
- * future miswiring fails closed rather than silently permitting.
+ * never reached today, kept `forbidden` so a future miswiring fails closed rather than silently
+ * permitting.
  */
 export const SECURITY_NETWORK_GLOBAL_DEFAULT_POLICY: ExceptionPolicy = { mode: "forbidden" }

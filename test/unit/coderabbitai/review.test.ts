@@ -50,14 +50,13 @@ describe("parseAgentStream", () => {
     )
     expect(result.ok).toBe(true)
     if (!result.ok) throw new Error("expected ok:true")
-    expect(result.findings).toEqual([
-      {
-        file: "src/example.ts",
-        severity: "major",
-        summary: "Do the thing at line 3.",
-        identity: "src/example.ts:major",
-      },
-    ])
+    expect(result.findings).toHaveLength(1)
+    expect(result.findings[0]).toMatchObject({
+      file: "src/example.ts",
+      severity: "major",
+      summary: "Do the thing at line 3.",
+    })
+    expect(result.findings[0]?.id).toMatch(/^coderabbit:src\/example\.ts:major:[0-9a-f]{12}$/)
   })
 
   it("maps an unrecognized severity value to 'unknown' (not an error)", () => {
@@ -122,7 +121,7 @@ describe("parseAgentStream", () => {
     expect(result.error).toContain("missing a required field")
   })
 
-  it("fails closed on two distinct findings that collapse to the same coarse identity", () => {
+  it("keeps two findings in the same file+severity distinct when their summary text differs", () => {
     const result = parseAgentStream(
       [
         finding({ codegenInstructions: "First problem." }),
@@ -130,10 +129,10 @@ describe("parseAgentStream", () => {
         complete({ findings: 2 }),
       ].join("\n"),
     )
-    expect(result.ok).toBe(false)
-    if (result.ok) throw new Error("expected ok:false")
-    expect(result.error).toContain("share one coarse identity")
-    expect(result.error).toContain("src/example.ts:major")
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error("expected ok:true")
+    expect(result.findings).toHaveLength(2)
+    expect(result.findings[0]?.id).not.toBe(result.findings[1]?.id)
   })
 
   it("accepts a 'review_skipped' terminal status (nothing in scope to review -- an empty diff)", () => {

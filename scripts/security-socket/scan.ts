@@ -9,8 +9,47 @@
 // `status: "unavailable"`/`"error"`.
 
 import { sync as spawnSync } from "cross-spawn"
+import { mkdir } from "node:fs/promises"
+import path from "node:path"
 import { pathToFileURL } from "node:url"
-import type { NormalizedSocketAlert, SecuritySocketEvidence } from "./evidence-types.js"
+import {
+  loadExceptionRegistry,
+  reconcileExceptions,
+  writeExceptionRegistry,
+} from "../../src/helpers/index.js"
+import type { StandardSchemaV1 } from "../../src/helpers/index.js"
+import { asFlatExceptionRecords, validateExceptionRegistry } from "../shared/exception-record.js"
+import type {
+  NormalizedSocketAlert,
+  SecuritySocketEvidence,
+  SocketExceptionRecord,
+} from "./evidence-types.js"
+import { SOCKET_EXCEPTION_SCHEMA, createSocketStub } from "./registry.js"
+
+const REGISTRY_RELATIVE_PATH = ".repo-contract/exceptions/socket.json"
+
+/** The raw result of running the Socket CLI, before any registry reconciliation. */
+type SocketCliResult =
+  | { readonly status: "passed" }
+  | { readonly status: "failed"; readonly alerts: readonly NormalizedSocketAlert[] }
+  | {
+      readonly status: "unavailable"
+      readonly reason: "cli-not-installed" | "not-authenticated" | "network-unreachable"
+    }
+  | { readonly status: "error"; readonly message: string }
+
+const registrySchema: StandardSchemaV1<unknown, readonly SocketExceptionRecord[]> = {
+  "~standard": {
+    version: 1,
+    vendor: "repo-contract",
+    validate: (value: unknown) => {
+      const result = validateExceptionRegistry(value, SOCKET_EXCEPTION_SCHEMA)
+      return result.ok
+        ? { value: result.records }
+        : { issues: result.errors.map((message) => ({ message })) }
+    },
+  },
+}
 
 // `--no-banner`/`--no-spinner` keep stdout free of Socket's own decorative ASCII banner and
 // spinner control codes -- confirmed directly (against a real, unauthenticated, installed
@@ -150,10 +189,10 @@ function normalizeAlert(raw: unknown): NormalizedSocketAlert | undefined {
 
 /**
  * Runs `socket ci --json` and normalizes its result. Never throws -- every recognized or
- * unrecognized outcome becomes a well-formed `SecuritySocketEvidence` value instead.
- * @returns This run's normalized evidence.
+ * unrecognized outcome becomes a well-formed `SocketCliResult` value instead.
+ * @returns This run's normalized CLI result.
  */
-export function runSecuritySocketScan(): SecuritySocketEvidence {
+function runSocketCli(): SocketCliResult {
   const result = spawnSync("socket", SOCKET_ARGS, {
     encoding: "utf8",
     // `socket ci` uploads a manifest and waits for the server-side scan+report; 5 min is a
@@ -252,8 +291,81 @@ export function runSecuritySocketScan(): SecuritySocketEvidence {
   return { status: "failed", alerts: normalized as NormalizedSocketAlert[] }
 }
 
+/**
+ * Runs the Socket CLI, then -- only when the CLI actually produced an alert assessment
+ * (`passed`/`failed`) -- reconciles `.repo-contract/exceptions/socket.json` against the alerts it
+ * found and writes it back. On `unavailable`/`error` the registry is validated but not reconciled
+ * (the CLI produced no alert list, so no record can be concluded stale).
+ * @param root - Absolute path to the repository being checked.
+ * @returns The full `SecuritySocketEvidence` for `output: { format: "json" }`.
+ */
+export async function runSecuritySocketScan(root: string): Promise<SecuritySocketEvidence> {
+  const cli = runSocketCli()
+  const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
+
+  const loaded = await loadExceptionRegistry({ path: registryPath, schema: registrySchema })
+
+  if (cli.status === "unavailable" || cli.status === "error") {
+    const base =
+      cli.status === "unavailable"
+        ? { status: cli.status, reason: cli.reason, registryPath: REGISTRY_RELATIVE_PATH }
+        : { status: cli.status, message: cli.message, registryPath: REGISTRY_RELATIVE_PATH }
+    return loaded.ok
+      ? { ...base, existingRecordCount: loaded.records.length }
+      : { ...base, existingRecordCount: 0, registryError: loaded.errors }
+  }
+
+  const alerts = cli.status === "failed" ? cli.alerts : []
+  const empty = {
+    status: cli.status,
+    registryPath: REGISTRY_RELATIVE_PATH,
+    alerts,
+    activeExceptions: {} as Record<string, SocketExceptionRecord>,
+    staleExceptions: [] as readonly SocketExceptionRecord[],
+    scaffoldedIds: [] as readonly string[],
+  }
+  if (!loaded.ok) return { ...empty, registryError: loaded.errors }
+
+  const reconciled = reconcileExceptions<NormalizedSocketAlert, SocketExceptionRecord>({
+    existing: loaded.records,
+    findings: alerts,
+    deriveId: (alert) => alert.id,
+    createStub: createSocketStub,
+  })
+  if (!reconciled.ok) return { ...empty, registryError: [reconciled.error] }
+
+  const { activeRecords, staleRecords, newStubIds } = reconciled.reconciliation
+
+  try {
+    await mkdir(path.dirname(registryPath), { recursive: true })
+  } catch (error) {
+    return {
+      ...empty,
+      registryError: [`Could not create the exceptions directory: ${(error as Error).message}`],
+    }
+  }
+  const write = await writeExceptionRegistry({
+    path: registryPath,
+    records: asFlatExceptionRecords([...activeRecords, ...staleRecords]),
+  })
+  if (!write.ok) return { ...empty, registryError: [`Writing the registry failed: ${write.error}`] }
+
+  const activeExceptions: Record<string, SocketExceptionRecord> = {}
+  for (const record of activeRecords) activeExceptions[record.id] = record
+
+  return {
+    status: cli.status,
+    registryPath: REGISTRY_RELATIVE_PATH,
+    alerts,
+    activeExceptions,
+    staleExceptions: staleRecords,
+    scaffoldedIds: newStubIds,
+  }
+}
+
 // Mirrors scripts/suppression-governance/check.ts's own "only run when invoked directly, not when
 // imported by a test" guard.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  process.stdout.write(JSON.stringify(runSecuritySocketScan()))
+  const evidence = await runSecuritySocketScan(process.cwd())
+  process.stdout.write(JSON.stringify(evidence))
 }

@@ -128,22 +128,25 @@ waiver for an `eslint-disable`-based exception therefore satisfies both. The reg
 check now asks for is _stricter_ than the `disable-comments.json` entry it used to point at, not
 looser:
 
-- The waiver is bound to one exact `capability:file:line` finding -- a bare "waive this capability
-  kind everywhere" record is not expressible (`scripts/security-network/registry.ts`).
-- It requires a small closed `exceptionType` (why the exception is legitimate) on top of the prose
-  fields.
-- It requires a **content-bound `verification`** block: a sign-off (`independent-human-review`, or
-  a `mechanical-reverification` re-scan scoped to the one file/line) whose hash is tied to the
-  record's exact prose. Editing the justification after sign-off silently invalidates the
-  verification and the finding fails again -- see
-  `specs/decisions/0013-reusable-exception-policy-helper.md`'s "Verification, not attestation."
-- A `validated-false-positive` claim _must_ be a `mechanical-reverification` -- re-running the
-  scanner narrowly, never opinion alone.
+- The waiver is bound to one exact `security-network:<capability>:<file>:<line>:<column>` finding
+  -- a bare "waive this capability kind everywhere" record is not expressible
+  (`scripts/security-network/registry.ts`). Since the 2026-09 v0.4.0 unification (PR 3) the scan
+  script reconciles the registry against what it found: an unmatched finding scaffolds a blank
+  stub, and a record whose finding is gone is surfaced as stale and **fails** the policy (never
+  auto-removed).
+- It requires every `SecurityExceptionFields` root field non-empty: `justification`,
+  `alternatives`, `remediation`, a closed `method` (`independent-human-review` or a
+  `mechanical-reverification` re-scan scoped to the one file/line), and a closed `exceptionType`.
+- A `validated-false-positive` claim _must_ be paired with `method: "mechanical-reverification"`
+  -- re-running the scanner narrowly, never opinion alone.
+
+_(The content-bound `verifiedContentHash` sign-off block this section originally described was
+removed in that same unification and deferred with the `exception-governance` PR-approval gate --
+see ADR 0013's superseded "Verification, not attestation" section.)_
 
 The `eslint-disable` on `no-restricted-imports`/`no-restricted-globals` is still itself a
 `disable-comments.json` entry a reviewer sees (the ESLint layer is unchanged); the
-security-network registry is the second, independent layer's own equivalent record, now with the
-verification gate ADR 0006's prose-based exception model lacked.
+security-network registry is the second, independent layer's own equivalent record.
 
 ## Consequences
 
