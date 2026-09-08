@@ -7,6 +7,18 @@ Accepted. Implemented in `src/execution/dependency-scheduler.ts`, `src/execution
 and applied in `repo-contract.config.ts` (`test-integration` and `mutation` both
 `dependsOn: ["suppression-governance"]`).
 
+**Update (2026-09, exception-registry unification — see
+[ADR 0013](0013-reusable-exception-policy-helper.md)'s "review surface" amendment):**
+`scripts/suppression-governance/check.ts` no longer calls a bespoke `synchronize()`; it now
+reconciles the registry via `repo-contract/helpers`' `reconcileExceptions` and still
+`writeExceptionRegistry`s it back on a change. The check remains a writer of a shared file, so
+every part of this decision stands unchanged — the `dependsOn: ["suppression-governance"]` edges
+on `test-integration`/`mutation`, and the retry-is-not-a-fix principle, are exactly as before. The
+one difference: `test/integration/suppression-governance/real-source.integration.test.ts` is now a
+pure read (it calls `reconcileExceptions` and asserts zero stale records / zero scaffolded stubs,
+with no write path at all), so it no longer duplicates the writing half of the check the way the
+last "Alternatives considered" entry warned against.
+
 ## Context
 
 Every check originally ran independently in one unordered concurrent pool. Running this

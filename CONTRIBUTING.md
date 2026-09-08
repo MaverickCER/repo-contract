@@ -21,7 +21,15 @@ so this one command after `npm install` is the whole setup. Use Node 24 locally
 2. Make the change and its tests. Tests here exercise real behavior over mocking — real
    commands, real files, real throwaway git repos.
 3. Run `npm run check` — the fast offline checks (it auto-fixes formatting and lint), and
-   it tells you what to do next. The `pre-commit` hook runs the same set.
+   it tells you what to do next. The `pre-commit` hook runs the same set. A contract run is
+   **not** a pure read: `format`/`lint` auto-fix, and `suppression-governance` reconciles
+   `.repo-contract/exceptions/disable-comments.json` against the disable directives it finds —
+   adding an inline `eslint-disable` / `@ts-expect-error` / `Stryker disable` scaffolds a blank
+   exception stub there. Fill in its `justification` (and `category` / `verificationMethod`),
+   `git add .repo-contract/exceptions/`, and re-run. On a fully-governed clean tree the run
+   changes nothing; CI fails the `contract` job on any leftover working-tree change. Moving a
+   suppressed directive to a new line retires its old record (which then fails as _stale_ — delete
+   it) and scaffolds a fresh one; carry the justification across by hand.
 4. Commit. Your editor opens with a Conventional Commits cheat sheet; `commitlint` (a
    `commit-msg` hook) rejects a message that doesn't conform. `--no-verify` skips a hook
    for a work-in-progress checkpoint.

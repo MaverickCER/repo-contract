@@ -168,7 +168,16 @@ ADR 0001 establishes, plus a small registry-lifecycle layer added to `repo-contr
   finding is **surfaced as stale and never removed** — retiring one is an explicit, reviewable
   human edit. `deriveId` must be injective over a run's findings (a collision is an integrity
   error the check surfaces, not a silent merge of two findings), and it is **semantic** — keyed to
-  what is excepted, never to a file line, so ordinary edits do not churn the registry.
+  what is excepted. Most checks keep the file line _out_ of the id so ordinary edits do not churn
+  the registry (`security-network:<capability>:<file>`, `preset-command:<command>`,
+  `dead-code:<kind>:<name>`). `suppression-governance` is the deliberate exception: its id is
+  `suppression:<domain>:<rule>:<file>:<line>` **including the line**, because a `<domain,rule,file>`
+  key collides for ~30% of this repository's own directives (many equivalent-mutant `Stryker
+disable`s in one file), and a colliding `deriveId` is a hard integrity failure, not a mergeable
+  state. The accepted tradeoff: moving a suppressed directive to a new line makes its old record
+  stale and scaffolds a fresh blank stub — both fail the build until a human carries the
+  justification across. No move detection is attempted (an automated registry that silently
+  transferred justification between locations would itself be the bypass ADR 0006 forbids).
 - **`serializeExceptionRegistry` / `writeExceptionRegistry`** give the on-disk form one canonical,
   deterministic shape (`id`-sorted, fixed key order, `\n`, trailing newline) written atomically
   (temp file + rename) and only when the bytes actually change — so a fully-governed tree stays
@@ -197,10 +206,18 @@ amendment.
 - `repo-contract/helpers` carries no automated backward-compatibility protection of its own yet,
   the same interim gap ADR 0004 already documents for `repo-contract/presets` — the Experimental
   classification is the mitigation, not a permanent answer.
-- Matching (`checks/shared/evaluate-exception-findings.ts`), canonical-identity validation and a
-  closed `exceptionType` vocabulary (`scripts/shared/exception-record.ts`) are available for this
-  repository's own checks to build on, but are not published — an outside consumer wanting that
-  layer writes their own, the same way they would write their own `matchRecord` today.
+- Matching (`checks/shared/evaluate-exception-findings.ts`), canonical-identity validation, a
+  closed `exceptionType` vocabulary, and `validateExceptionRegistry` — the one generic
+  core-plus-per-registry-schema validator every `.repo-contract/exceptions/*.json` shares, owning
+  the `id`/`version`/`justification` core, id namespace, unknown-field rejection and id uniqueness,
+  and delegating registry-specific fields to a small `ExceptionRegistrySchema`
+  (`scripts/shared/exception-record.ts`) — are available for this repository's own checks to build
+  on, but are not published. An outside consumer wanting that layer writes their own, the same way
+  they would write their own `matchRecord` today.
+- No generated JSON Schema backs `disable-comments.json` (or any exception registry): the runtime
+  `validateExceptionRegistry` is authoritative, and editor schema support for an internal registry
+  is not part of the contract. The bespoke `disable-comments.schema.json`, its generator entry, and
+  its schema-conformance test were removed with the `suppression-governance` retrofit.
 
 ## Alternatives considered
 

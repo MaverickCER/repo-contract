@@ -2,7 +2,10 @@ import { readFile } from "node:fs/promises"
 import { readJsonReport } from "../src/presets/shared/read-json-report.js"
 import type { SuppressionGovernanceEvidence } from "../scripts/suppression-governance/evidence-types.js"
 import { suppressionPolicy } from "../scripts/suppression-governance/policy-config.js"
-import { describeRecord, evaluateRecord } from "../scripts/suppression-governance/resolve-policy.js"
+import {
+  evaluateFinding,
+  formatOffender,
+} from "../scripts/suppression-governance/resolve-policy.js"
 import type { CheckDefinitionConfig } from "../src/types.js"
 
 type StrykerMutantStatus =
@@ -291,16 +294,28 @@ export const mutation: CheckDefinitionConfig = {
               }
             }
 
-            const insufficient = evidence.records
-              .filter((record) => record.domain === "stryker")
-              .map((record) => evaluateRecord(record, suppressionPolicy))
+            const insufficient = evidence.findings
+              .filter((finding) => finding.domain === "stryker")
+              .map((finding) =>
+                evaluateFinding(finding, evidence.activeExceptions[finding.id], suppressionPolicy),
+              )
               .filter((determinant) => determinant.verdict !== "permitted")
 
-            if (insufficient.length === 0) return undefined
+            const staleStryker = evidence.staleExceptions.filter(
+              (record) => record.domain === "stryker",
+            )
+
+            if (insufficient.length === 0 && staleStryker.length === 0) return undefined
 
             return {
-              header: `Under-justified Stryker suppressions (${String(insufficient.length)}):`,
-              details: insufficient.map((determinant) => `- ${describeRecord(determinant.record)}`),
+              header: `Under-justified or stale Stryker suppressions (${String(insufficient.length + staleStryker.length)}):`,
+              details: [
+                ...insufficient.map((determinant) => `- ${formatOffender(determinant)}`),
+                ...staleStryker.map(
+                  (record) =>
+                    `- stale: ${JSON.stringify(record.id)} (directive gone; delete this entry)`,
+                ),
+              ],
             }
           })()
 

@@ -1,20 +1,3 @@
 {
-  "exceptions": [
-    {
-      "id": "scripts/suppression-governance/check.ts:major",
-      "version": 1,
-      "file": "scripts/suppression-governance/check.ts",
-      "severity": "major",
-      "justification": "The move from a repository-root disable-comments.json to .repo-contract/exceptions/disable-comments.json is a one-time `git mv` in the same commit -- the file's content, bare-array shape, and every field are unchanged, and a full `npm run contract` run confirms zero synchronization drift (0 new / 0 moved / 0 removed) against the new location. scripts/suppression-governance/ is a self-hosting check, never part of the published package (package.json `files`), so no external consumer ever runs it against a legacy layout. The failure mode the finding describes -- an absent new file beside a stale root file causing a silent empty-registry synthesis -- is a transient state only an unrebased branch or a stale local checkout hits for a single merge, and an ordinary merge conflict on the relocated file surfaces it. A permanent legacy-import plus dual-path-precedence code path would be dead weight the moment this transition completes, against this repository's standing preference for fewer special cases in the suppression-governance flow (see specs/decisions/0006-suppression-governance.md and the disable-comments.json fragility notes).",
-      "remediation": "None planned. A local checkout that somehow retains only a root disable-comments.json is repaired with `git mv disable-comments.json .repo-contract/exceptions/disable-comments.json`; ADR 0006's Status section records the move and its rationale. Revisit only if suppression-governance is ever promoted to a consumer-facing surface, at which point a real migration path (import + precedence + upgrade-path test) would be warranted.",
-      "exceptionType": "accepted-risk",
-      "verification": {
-        "method": "independent-human-review",
-        "verifiedBy": "@maverickcer",
-        "verifiedAt": "2026-09-08T00:00:00.000Z",
-        "verifiedContentHash": "ec4dc4541c3c974b7f1a26ec53714a44084d38b60208203c7c010547d389e69d",
-        "evidence": "CodeRabbit local review on branch feat/move-disable-comments-to-exceptions-dir (2026-09-08); the migration-path finding was reviewed and accepted by the maintainer as a one-time git-mv migration that needs no code."
-      }
-    }
-  ]
+  "exceptions": []
 }

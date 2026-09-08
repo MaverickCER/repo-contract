@@ -2,8 +2,8 @@
  * The extensible discovery abstraction: one recognizer per suppression domain, each trying to
  * interpret a comment's already-canonicalized content (see canonicalize-comment.ts) as a
  * suppression directive belonging to its own domain. Adding a new domain means adding one more
- * recognizer to RECOGNIZERS below -- nothing about discover-suppressions.ts, registry.ts, or
- * synchronize.ts needs to change.
+ * recognizer to RECOGNIZERS below -- nothing about discover-suppressions.ts or the registry
+ * reconciliation in check.ts needs to change.
  */
 interface RecognizedSuppression {
   readonly domain: string

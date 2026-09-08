@@ -3,11 +3,12 @@
 ## Status
 
 Accepted. Implemented in `scripts/suppression-governance/*.ts`, `checks/suppression-governance.ts`,
-`checks/mutation.ts`. Registry: `.repo-contract/exceptions/disable-comments.json` (moved there from
-the repository root once ADR 0013 established `.repo-contract/exceptions/` as the shared home for
-every reviewed-exception registry — see `specs/verification-taxonomy.md`'s "Reviewed exceptions"
-section; the file's bare-array shape, its deterministic serialization, and every field are
-otherwise unchanged).
+`checks/mutation.ts`. Registry: `.repo-contract/exceptions/disable-comments.json`. Its on-disk shape
+and the check's internals were reworked by the 2026-09 exception-registry unification (see the
+"Reconciled onto the generic mechanism" amendment below and
+[ADR 0013](0013-reusable-exception-policy-helper.md)); the governance model this ADR decides —
+central inventory, forbidden/allowed/exception modes, identity independent of the prose fields,
+the mutation-check cross-gate — is unchanged.
 
 ## Context
 
@@ -83,6 +84,12 @@ to be adequately justified whenever at least one mutant is trusted on a comment'
   this system exists to prevent.
 
 ## Amendment (2026-09-07): verification, not attestation
+
+> **Superseded (2026-09) by "Reconciled onto the generic mechanism" below.** The
+> `verifiedBy`/`verifiedAt`/`verifiedContentHash` block described here was removed with the
+> exception-registry unification and deferred, alongside ADR 0013's PR-approval attestation gate,
+> to a post-0.4.0 release. This section is kept for the historical record and for the gap analysis
+> in its first paragraph, which still stands.
 
 `specs/decisions/0013-reusable-exception-policy-helper.md` generalized this registry's own
 exact/pattern/domain/global precedence and field-completeness engine into
@@ -164,3 +171,54 @@ GitHub-enforced backing rather than resting on repo-contract's own say-so.
   amendment itself a hard blocker on a full manual audit of unrelated, already-reviewed history.
   The content-bound hash means the baseline costs nothing going forward: it is not a permanent
   exemption, only a starting point that the very next edit to any of those records revokes.
+
+## Amendment (2026-09): reconciled onto the generic mechanism
+
+The 2026-09 exception-registry unification ([ADR 0013](0013-reusable-exception-policy-helper.md)'s
+"The exception registry is the review surface" amendment) put this registry onto the same generic
+lifecycle every `.repo-contract/exceptions/*.json` now shares. Nothing about the governance model
+changed — the change is mechanical.
+
+**`synchronize.ts` is gone.** Its three-pass diff/merge engine (exact match → move detection →
+new/removed) is replaced by `repo-contract/helpers`' `reconcileExceptions`: the check discovers
+100% of directives with zero exception knowledge, derives one semantic id per directive, and
+reconciles that id set against the on-disk registry. A matched record is preserved verbatim; an
+unmatched directive gets a fresh blank stub; **a record whose id matches no directive is surfaced
+as stale and fails the policy — it is never auto-removed.** Retiring a stale record is now an
+explicit, reviewable human edit (the old engine silently dropped it).
+
+**Identity is `suppression:<domain>:<rule>:<file>:<line>` — the line is deliberately in the id.**
+The old identity `(file, line, domain, rule, content)` needed a dedicated move-detection pass to
+survive line shifts. The new identity keeps the line because `<domain, rule, file>` alone collides
+for ~30% of this repository's own directives (many equivalent-mutant `Stryker disable`s per file),
+and `reconcileExceptions` treats a `deriveId` collision as a hard integrity failure, not a
+mergeable state. The accepted cost: moving a suppressed directive to a new line makes its old
+record stale and scaffolds a fresh blank stub, both failing the build until a human carries the
+justification across. **No move detection is carried over** — this ADR's own "Alternatives
+considered" already rejected proximity-based justification transfer, and an automated re-match
+across a line change is a softer version of the same thing.
+
+**Record shape: the three-field core (`id`, `version`, `justification`) plus typed metadata
+(`domain`, `rule`, `file`, `line`, `category`, `verificationMethod`).** `alternatives` and
+`remediation` — two of the three original prose fields — folded into the single `justification`
+field (the generic core's one human-authored field); the questions they asked are now asked of
+that one field. `content` and `reason` are no longer stored on a record (both are re-derived from
+source every run; a record that stored them would be trusting stale text) — `reason` stays a
+`stryker`-only policy requirement checked against the live _finding_, not the record.
+
+**The `verifiedBy` / `verifiedAt` / `verifiedContentHash` verification block (added by the
+2026-09-07 "verification, not attestation" amendment above) is removed.** It is deferred, with
+ADR 0013's own PR-approval attestation gate, to a post-0.4.0 release: content-binding a sign-off
+hash over the authoring fields only ever detected _edits_ to an already-signed record, never
+whether the sign-off was real, and carrying it through the model simplification (one prose field,
+one generic validator, no per-check config) added surface for no enforcement the generic mechanism
+doesn't already provide. The "require a second approving review on any PR touching
+`disable-comments.json`" repository setting the earlier amendment recommends still stands, and is
+now the _only_ attestation backing until that gate lands — the registry mechanism provides
+discoverability and completeness, explicitly not attestation authenticity.
+
+**No generated JSON Schema.** `disable-comments.schema.json`, its generator entry in
+`scripts/generate-json-schema.mjs`, and its schema-conformance test are removed. The runtime
+validator — `scripts/shared/exception-record.ts`'s generic `validateExceptionRegistry` plus
+`scripts/suppression-governance/evidence-types.ts`'s `SUPPRESSION_EXCEPTION_SCHEMA` — is
+authoritative; editor schema support for an internal registry is not part of the contract.

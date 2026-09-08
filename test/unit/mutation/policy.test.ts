@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { mutation } from "../../../checks/mutation.js"
-import { HASHED_AUTHORING_FIELDS } from "../../../scripts/suppression-governance/resolve-policy.js"
-import { hashRequirementFields } from "../../../src/helpers/index.js"
+import { deriveSuppressionId } from "../../../scripts/suppression-governance/evidence-types.js"
+import type {
+  SuppressionExceptionRecord,
+  SuppressionFinding,
+} from "../../../scripts/suppression-governance/evidence-types.js"
 import type { CheckEvidence, Evidence, PolicyContext } from "../../../src/types.js"
 
 // Same real-fs-collision rationale as test/unit/presets/duplication.test.ts (and
@@ -46,46 +49,78 @@ function contextWithDependencies(
   return { result, evidence, dependencies }
 }
 
-function suppressionGovernanceEvidence(value: unknown): CheckEvidence {
-  return fakeCheckEvidence({ output: { format: "json", success: true, value } })
+// Builds the parsed `suppression-governance` evidence a `dependencies["suppression-governance"]`
+// carries, from a list of (finding, record) pairs plus any stale records.
+function suppressionGovernanceEvidence(input: {
+  readonly pairs?: readonly {
+    readonly finding: SuppressionFinding
+    readonly record: SuppressionExceptionRecord
+  }[]
+  readonly stale?: readonly SuppressionExceptionRecord[]
+  readonly ok?: false
+  readonly error?: string
+}): CheckEvidence {
+  if (input.ok === false) {
+    return fakeCheckEvidence({
+      output: { format: "json", success: true, value: { ok: false, error: input.error } },
+    })
+  }
+  const pairs = input.pairs ?? []
+  const activeExceptions: Record<string, SuppressionExceptionRecord> = {}
+  for (const { finding, record } of pairs) activeExceptions[finding.id] = record
+  return fakeCheckEvidence({
+    output: {
+      format: "json",
+      success: true,
+      value: {
+        ok: true,
+        registryPath: ".repo-contract/exceptions/disable-comments.json",
+        findings: pairs.map((pair) => pair.finding),
+        activeExceptions,
+        staleExceptions: input.stale ?? [],
+        scaffoldedIds: [],
+      },
+    },
+  })
 }
 
-// A raw field reader mirroring resolve-policy.ts's own, to compute a matching
-// verifiedContentHash from HASHED_AUTHORING_FIELDS's real, exported definition.
-function rawFieldValue(record: Record<string, unknown>, field: string): string {
-  return record[field] as string
+function strykerFinding(overrides: Partial<SuppressionFinding> = {}): SuppressionFinding {
+  const base = {
+    domain: "stryker",
+    rule: ["ConditionalExpression"],
+    file: "src/example.ts",
+    line: 10,
+    content: "Stryker disable next-line ConditionalExpression -- reason text",
+    reason: "reason text",
+    ...overrides,
+  }
+  return { ...base, id: deriveSuppressionId(base) }
 }
 
-const UNSIGNED_STRYKER_RECORD = {
-  file: "src/example.ts",
-  line: 10,
-  domain: "stryker",
-  rule: ["ConditionalExpression"],
-  content: "Stryker disable next-line ConditionalExpression -- reason text",
-  justification: "Why this is the best option.",
-  alternatives: "Another way this could be done.",
-  remediation: "What was attempted, and why it wasn't enough.",
-  category: "equivalent-mutant",
-  verificationMethod: "mutation-run",
-  reason: "reason text",
-  verifiedBy: "",
-  verifiedAt: "",
-  verifiedContentHash: "",
-  status: "existing",
+function strykerRecord(
+  finding: SuppressionFinding,
+  overrides: Partial<SuppressionExceptionRecord> = {},
+): SuppressionExceptionRecord {
+  return {
+    id: finding.id,
+    version: 1,
+    justification: "Why this is deliberately bypassed, alternatives considered, finding confirmed.",
+    category: "equivalent-mutant",
+    domain: finding.domain,
+    file: finding.file,
+    line: finding.line,
+    rule: [...finding.rule],
+    verificationMethod: "mutation-run",
+    ...overrides,
+  }
 }
 
-// suppressionPolicy's real stryker policy now also requires a content-bound verifiedBy
-// sign-off (specs/decisions/0006-suppression-governance.md's "Verification" amendment) -- a
-// merely-fully-justified-but-unsigned record is `insufficient`, not `permitted`.
-const FULLY_JUSTIFIED_STRYKER_RECORD = {
-  ...UNSIGNED_STRYKER_RECORD,
-  verifiedBy: "@maverickcer",
-  verifiedAt: "2026-09-07T00:00:00.000Z",
-  verifiedContentHash: hashRequirementFields(
-    UNSIGNED_STRYKER_RECORD,
-    HASHED_AUTHORING_FIELDS,
-    rawFieldValue,
-  ),
+function fullyJustifiedPair(): {
+  finding: SuppressionFinding
+  record: SuppressionExceptionRecord
+} {
+  const finding = strykerFinding()
+  return { finding, record: strykerRecord(finding) }
 }
 
 function strykerReport(mutants: readonly Record<string, unknown>[]): unknown {
@@ -227,14 +262,7 @@ describe("mutation policy", () => {
       JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
     )
     const dependencies = {
-      "suppression-governance": suppressionGovernanceEvidence({
-        ok: true,
-        records: [FULLY_JUSTIFIED_STRYKER_RECORD],
-        newCount: 0,
-        movedCount: 0,
-        removedCount: 0,
-        registryPath: ".repo-contract/exceptions/disable-comments.json",
-      }),
+      "suppression-governance": suppressionGovernanceEvidence({ pairs: [fullyJustifiedPair()] }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
     expect(result.outcome).toBe("pass")
@@ -244,19 +272,15 @@ describe("mutation policy", () => {
     readFile.mockResolvedValue(
       JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
     )
+    const finding = strykerFinding()
     const dependencies = {
       "suppression-governance": suppressionGovernanceEvidence({
-        ok: true,
-        records: [{ ...FULLY_JUSTIFIED_STRYKER_RECORD, justification: "" }],
-        newCount: 0,
-        movedCount: 0,
-        removedCount: 0,
-        registryPath: ".repo-contract/exceptions/disable-comments.json",
+        pairs: [{ finding, record: strykerRecord(finding, { justification: "" }) }],
       }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Under-justified Stryker suppressions")
+    expect(result.rationale).toContain("Stryker suppressions")
     expect(result.rationale).toContain("src/example.ts:10")
   })
 
@@ -264,22 +288,17 @@ describe("mutation policy", () => {
     readFile.mockResolvedValue(
       JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
     )
+    const finding = strykerFinding({
+      domain: "eslint",
+      rule: ["no-console"],
+      content: "eslint-disable-next-line no-console",
+      reason: "",
+    })
     const dependencies = {
       "suppression-governance": suppressionGovernanceEvidence({
-        ok: true,
-        records: [
-          {
-            ...FULLY_JUSTIFIED_STRYKER_RECORD,
-            domain: "eslint",
-            justification: "",
-            alternatives: "",
-            remediation: "",
-          },
+        pairs: [
+          { finding, record: strykerRecord(finding, { justification: "", domain: "eslint" }) },
         ],
-        newCount: 0,
-        movedCount: 0,
-        removedCount: 0,
-        registryPath: ".repo-contract/exceptions/disable-comments.json",
       }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
@@ -299,33 +318,30 @@ describe("mutation policy", () => {
     readFile.mockResolvedValue(
       JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
     )
+    // Fully justified, at the exact location of the reported comment-ignored mutant.
+    const related = fullyJustifiedPair()
+    // Insufficient, and deliberately at a different file/line, unrelated to the reported mutant --
+    // Stryker's own report gives no per-mutant back-reference to a specific disable comment, so
+    // this must still fail the whole check.
+    const unrelatedFinding = strykerFinding({
+      file: "src/unrelated-other-file.ts",
+      line: 999,
+      content: "Stryker disable next-line ConditionalExpression -- unrelated reason",
+      reason: "unrelated reason",
+    })
     const dependencies = {
       "suppression-governance": suppressionGovernanceEvidence({
-        ok: true,
-        records: [
-          // Fully justified, and at the exact location of the reported comment-ignored mutant.
-          FULLY_JUSTIFIED_STRYKER_RECORD,
-          // Insufficient, and deliberately at a different file/line, unrelated to the reported
-          // mutant -- Stryker's own report gives no per-mutant back-reference to a specific
-          // disable comment, so this must still fail the whole check, not be silently ignored
-          // because it isn't "the" record for mutant #2.
+        pairs: [
+          related,
           {
-            ...FULLY_JUSTIFIED_STRYKER_RECORD,
-            file: "src/unrelated-other-file.ts",
-            line: 999,
-            content: "Stryker disable next-line ConditionalExpression -- unrelated reason",
-            justification: "",
+            finding: unrelatedFinding,
+            record: strykerRecord(unrelatedFinding, { justification: "" }),
           },
         ],
-        newCount: 0,
-        movedCount: 0,
-        removedCount: 0,
-        registryPath: ".repo-contract/exceptions/disable-comments.json",
       }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Under-justified Stryker suppressions")
     // The unrelated record must be named -- not merely that *something* failed.
     expect(result.rationale).toContain("src/unrelated-other-file.ts:999")
     // And the fully-justified record must not itself be flagged as an offender.
@@ -436,14 +452,7 @@ describe("mutation policy", () => {
       JSON.stringify(strykerReport([killedMutant({ id: 14 }), commentIgnoredMutant({ id: 15 })])),
     )
     const dependencies = {
-      "suppression-governance": suppressionGovernanceEvidence({
-        ok: true,
-        records: [FULLY_JUSTIFIED_STRYKER_RECORD],
-        newCount: 0,
-        movedCount: 0,
-        removedCount: 0,
-        registryPath: ".repo-contract/exceptions/disable-comments.json",
-      }),
+      "suppression-governance": suppressionGovernanceEvidence({ pairs: [fullyJustifiedPair()] }),
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
     expect(result.outcome).toBe("pass")
