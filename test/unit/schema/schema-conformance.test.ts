@@ -135,7 +135,10 @@ describe("Evidence/Verdict runtime conformance to the published JSON Schema", ()
 describe("disable-comments.json conformance to its internal, generated JSON Schema", () => {
   it("the real, current disable-comments.json validates against the generated schema -- deliberately redundant with registry.ts's own hand-written validator, since this checks the *generated schema*, not the *runtime validator*; a disagreement between the two would itself be the finding", async () => {
     const registry = JSON.parse(
-      readFileSync(new URL("../../../disable-comments.json", import.meta.url), "utf8"),
+      readFileSync(
+        new URL("../../../.repo-contract/exceptions/disable-comments.json", import.meta.url),
+        "utf8",
+      ),
     ) as unknown
 
     const validate = compileSchema(loadInternalSchema("disable-comments.schema.json"))

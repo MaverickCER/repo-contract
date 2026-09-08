@@ -5,6 +5,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { runSuppressionGovernanceCheck } from "../../../scripts/suppression-governance/check.js"
 import type { DisableCommentRecord } from "../../../scripts/suppression-governance/evidence-types.js"
 
+// Repo-root-relative registry location -- kept in lockstep with
+// scripts/suppression-governance/check.ts's own REGISTRY_RELATIVE_PATH.
+const REGISTRY_RELATIVE_PATH = path.join(".repo-contract", "exceptions", "disable-comments.json")
+
 /**
  * The complete real path: a real scratch directory, real files on disk, real registry reads/
  * writes -- no subprocess spawned for the check itself, per the project's
@@ -39,7 +43,7 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
     expect(evidence.records).toHaveLength(1)
 
     const onDisk = JSON.parse(
-      await readFile(path.join(root, "disable-comments.json"), "utf8"),
+      await readFile(path.join(root, REGISTRY_RELATIVE_PATH), "utf8"),
     ) as readonly DisableCommentRecord[]
     expect(onDisk).toEqual([
       {
@@ -65,10 +69,10 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
 
     await runSuppressionGovernanceCheck(root)
-    const firstContent = await readFile(path.join(root, "disable-comments.json"), "utf8")
+    const firstContent = await readFile(path.join(root, REGISTRY_RELATIVE_PATH), "utf8")
 
     const secondEvidence = await runSuppressionGovernanceCheck(root)
-    const secondContent = await readFile(path.join(root, "disable-comments.json"), "utf8")
+    const secondContent = await readFile(path.join(root, REGISTRY_RELATIVE_PATH), "utf8")
 
     expect(secondContent).toBe(firstContent)
     expect(secondEvidence.ok).toBe(true)
@@ -83,7 +87,7 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
     await runSuppressionGovernanceCheck(root)
 
-    const registryPath = path.join(root, "disable-comments.json")
+    const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
     const records = JSON.parse(await readFile(registryPath, "utf8")) as DisableCommentRecord[]
     const [first] = records
     if (!first) throw new Error("expected the registry to contain one record")
@@ -127,7 +131,7 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
     await runSuppressionGovernanceCheck(root)
 
-    const registryPath = path.join(root, "disable-comments.json")
+    const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
     const records = JSON.parse(await readFile(registryPath, "utf8")) as DisableCommentRecord[]
     const [first] = records
     if (!first) throw new Error("expected the registry to contain one record")
@@ -175,8 +179,9 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
 
   it("leaves a malformed pre-existing registry untouched and reports ok: false", async () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
-    const registryPath = path.join(root, "disable-comments.json")
+    const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
     const corrupted = JSON.stringify([{ file: "", line: -1, domain: "", rule: [], content: "" }])
+    await mkdir(path.dirname(registryPath), { recursive: true })
     await writeFile(registryPath, corrupted, "utf8")
 
     const evidence = await runSuppressionGovernanceCheck(root)

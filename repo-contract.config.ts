@@ -153,8 +153,9 @@ export default defineRepoContract({
     lint,
     // Rewrites the whole source tree in place (`prettier --write .`) -- same reasoning as `lint`
     // above. `.prettierignore` already excludes every other writer's own generated output
-    // (schemas/*.schema.json, disable-comments.json, .repo-contract, docs/api-report), so
-    // co-locating it here introduces no new race against those. `dependsOn: ["lint"]` because
+    // (schemas/*.schema.json, .repo-contract -- which now also holds the suppression registry
+    // .repo-contract/exceptions/disable-comments.json -- docs/api-report), so co-locating it here
+    // introduces no new race against those. `dependsOn: ["lint"]` because
     // `lint` and `format` are the only two writers that rewrite the *same* files (`src/**`):
     // co-location in this phase keeps readers off that content but does not serialize the two
     // writers against each other, so an explicit edge does.
