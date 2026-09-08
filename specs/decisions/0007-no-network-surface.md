@@ -102,6 +102,49 @@ regardless). The independent `security-network` check still catches the same vio
 `eslint-disable` were somehow accepted, since it has no awareness of ESLint suppression comments at
 all.
 
+## Amendment (2026-09-07): the reviewed-waiver mechanism, and the default policy it never changes
+
+`specs/decisions/0013-reusable-exception-policy-helper.md` introduced a generic, classification-
+neutral exception-policy primitive (`repo-contract/helpers`), and `checks/security-network.ts` is
+now built on it. This amendment records what that did and, more importantly, what it deliberately
+did **not** do.
+
+**The default posture is unchanged and absolute.** `scripts/security-network/policy-config.ts`'s
+`securityNetworkPolicy` sets its group `default` to `forbidden`. A network-capability finding in
+`src/**` fails the `security-network` check exactly as it always has -- the AST scan
+(`scripts/security-network/scan.ts`), its threat model, and its two-independent-layers design are
+untouched. Nothing about this amendment makes `src/` network I/O any more permissible by default.
+
+**What changed is only what the `security-network` check itself asks for.** Before, this check's
+own failure message pointed a reviewer at a fully-justified `disable-comments.json` entry (against
+the `eslint-disable` on the underlying rule) as the place a genuine, reviewed exception was
+recorded. It now points instead at a finding-specific record in
+`.repo-contract/exceptions/security-network.json`. This is an _additional, independent_ gate, not
+a replacement: an `eslint-disable` in `src/**` still produces its own `disable-comments.json`
+entry that the `suppression-governance` check independently requires be fully justified (the
+"Suppression governance" section above is unchanged), and the `security-network` layer -- which
+never reads `eslint-disable` comments at all -- _also_ requires its own registry record. A real
+waiver for an `eslint-disable`-based exception therefore satisfies both. The registry record this
+check now asks for is _stricter_ than the `disable-comments.json` entry it used to point at, not
+looser:
+
+- The waiver is bound to one exact `capability:file:line` finding -- a bare "waive this capability
+  kind everywhere" record is not expressible (`scripts/security-network/registry.ts`).
+- It requires a small closed `exceptionType` (why the exception is legitimate) on top of the prose
+  fields.
+- It requires a **content-bound `verification`** block: a sign-off (`independent-human-review`, or
+  a `mechanical-reverification` re-scan scoped to the one file/line) whose hash is tied to the
+  record's exact prose. Editing the justification after sign-off silently invalidates the
+  verification and the finding fails again -- see
+  `specs/decisions/0013-reusable-exception-policy-helper.md`'s "Verification, not attestation."
+- A `validated-false-positive` claim _must_ be a `mechanical-reverification` -- re-running the
+  scanner narrowly, never opinion alone.
+
+The `eslint-disable` on `no-restricted-imports`/`no-restricted-globals` is still itself a
+`disable-comments.json` entry a reviewer sees (the ESLint layer is unchanged); the
+security-network registry is the second, independent layer's own equivalent record, now with the
+verification gate ADR 0006's prose-based exception model lacked.
+
 ## Consequences
 
 - `npm run contract` runs one additional check, `security-network` (see
