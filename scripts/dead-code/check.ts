@@ -129,6 +129,50 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * Narrows `value` to a single `KnipIssueEntry` -- the shape `formatEntry` and
+ * `buildDeadCodeFindings` require before reading `.name`/`.line`/`.col`.
+ * @param value - The value to check.
+ * @returns Whether `value` is a well-formed single issue entry.
+ */
+function isValidIssueEntry(value: unknown): value is KnipIssueEntry {
+  if (!isPlainObject(value)) return false
+  if (typeof value.name !== "string") return false
+  if (value.line !== undefined && typeof value.line !== "number") return false
+  if (value.col !== undefined && typeof value.col !== "number") return false
+  return true
+}
+
+/**
+ * Narrows `value` to one `KnipCategory` element -- either a single entry, or (for `duplicates`
+ * and `cycles`) a group of them.
+ * @param value - The value to check.
+ * @returns Whether `value` is a well-formed category entry (single or grouped).
+ */
+function isValidCategoryEntryOrGroup(
+  value: unknown,
+): value is KnipIssueEntry | readonly KnipIssueEntry[] {
+  return Array.isArray(value) ? value.every(isValidIssueEntry) : isValidIssueEntry(value)
+}
+
+/**
+ * Narrows `value` to a well-formed `KnipIssue` -- a plain object with a string `file`, and every
+ * recognized category (when present) an array of valid entries/groups. Rejects anything
+ * `buildDeadCodeFindings` could not safely read a `name`/`line`/`col` off of without throwing.
+ * @param value - The value to check.
+ * @returns Whether `value` is a well-formed single knip issue.
+ */
+function isValidKnipIssue(value: unknown): value is KnipIssue {
+  if (!isPlainObject(value)) return false
+  if (typeof value.file !== "string") return false
+  for (const category of Object.keys(CATEGORY_KIND)) {
+    const entries = value[category]
+    if (entries === undefined) continue
+    if (!Array.isArray(entries) || !entries.every(isValidCategoryEntryOrGroup)) return false
+  }
+  return true
+}
+
+/**
  * Flattens a raw, parsed knip `json`-reporter report into this check's own `DeadCodeFinding[]`,
  * deduping byte-identical entries (same kind/name/file/location -- indistinguishable). Findings
  * that share an id but differ in file/location are left for `reconcileExceptions` to surface as an
@@ -203,9 +247,20 @@ function runKnip(
   try {
     parsed = JSON.parse(result.stdout)
   } catch {
-    return { ok: false, error: "`knip --reporter json` produced no parseable JSON output." }
+    const stderr = result.stderr.trim()
+    return {
+      ok: false,
+      error:
+        stderr.length > 0
+          ? `\`knip --reporter json\` produced no parseable JSON output:\n${stderr}`
+          : "`knip --reporter json` produced no parseable JSON output.",
+    }
   }
-  if (!isPlainObject(parsed) || !Array.isArray(parsed.issues)) {
+  if (
+    !isPlainObject(parsed) ||
+    !Array.isArray(parsed.issues) ||
+    !parsed.issues.every(isValidKnipIssue)
+  ) {
     return {
       ok: false,
       error: '`knip --reporter json` produced JSON with no recognized "issues" array.',

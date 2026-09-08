@@ -51,7 +51,24 @@ describe("buildDeadCodeFindings", () => {
     ])
   })
 
-  it("covers every recognized knip category with a distinct kind", () => {
+  it("maps every recognized knip category to its own distinct, correct kind", () => {
+    const expectedKindByName: Record<string, string> = {
+      a: "unused-dependency",
+      b: "unused-dev-dependency",
+      c: "unused-optional-peer-dependency",
+      d: "unlisted-dependency",
+      e: "unresolved-import",
+      f: "unused-export",
+      g: "unused-export-namespace",
+      h: "unused-type",
+      i: "unused-type-namespace",
+      j: "unused-namespace-member",
+      k: "unused-enum-member",
+      l: "unlisted-binary",
+      m: "duplicate-export",
+      n: "circular-dependency",
+      o: "unused-file",
+    }
     const findings = buildDeadCodeFindings({
       issues: [
         {
@@ -74,7 +91,17 @@ describe("buildDeadCodeFindings", () => {
         },
       ],
     })
+
+    // Every category produced exactly one finding, and none collided onto a shared kind.
+    expect(findings).toHaveLength(15)
     expect(new Set(findings.map((f) => f.kind)).size).toBe(15)
+
+    // Pins the exact category-to-kind assignment: swapping two categories' kinds (e.g. `types`
+    // and `nsTypes`) would leave the count/distinctness assertions above untouched while every
+    // affected finding's derived `dead-code:<kind>:<name>` id silently became wrong.
+    for (const finding of findings) {
+      expect(finding.kind).toBe(expectedKindByName[finding.name])
+    }
   })
 
   it("collapses byte-identical entries (same kind/name/file/location)", () => {
