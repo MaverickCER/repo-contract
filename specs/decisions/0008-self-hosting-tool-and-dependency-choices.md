@@ -5,7 +5,10 @@
 Accepted. Reflected across `repo-contract.config.ts`'s self-hosting checks and `package.json`.
 This is a reference document, not a single decision — it records why this repository's own
 self-assurance tooling picked what it picked, at a level future contributors can act on without
-re-deriving it, without giving each narrow choice full individual ADR treatment.
+re-deriving it, without giving each narrow choice full individual ADR treatment. `dead-code`
+joined the self-hosted set in the 2026-09 exception-registry unification (see the "dead-code
+detection self-hosts, off the published preset" amendment below and
+[ADR 0013](0013-reusable-exception-policy-helper.md)).
 
 ## Context
 
@@ -103,3 +106,47 @@ rejected as unnecessary weight for the common case; a static-analysis-only acces
 Go-binary secret scanner's alternative-installability concern doesn't apply here — the real defect
 this check found on its first run was a rendered contrast failure, invisible to a tool that never
 computes actual on-screen color values.
+
+## Amendment (2026-09): dead-code detection self-hosts, off the published preset
+
+The 2026-09 exception-registry unification ([ADR 0013](0013-reusable-exception-policy-helper.md)'s
+"The exception registry is the review surface" amendment) reconciled every guardrail exception in
+this repository, including its own unused-dependency exemptions, onto the generic
+`.repo-contract/exceptions/*.json` mechanism. `dead-code` is the one check this repository does not
+run via the published preset catalog (`src/presets/dead-code.ts`, still published and unchanged for
+external consumers) to do it — it self-hosts `scripts/dead-code/check.ts` / `checks/dead-code.ts`
+instead, alongside the other self-hosting checks this ADR already documents.
+
+**The reason is a structural boot-time loop, not a preference.** The published `deadCode` preset
+takes a config-time `exemptUnusedDevDependencies` option: a list of package names knip is told to
+ignore _before it ever runs_. A reconciled exception registry cannot supply that list, because the
+registry that would suppress a finding can only be built from findings that already ran
+unsuppressed — reconciliation needs knip's raw, complete output first, and a config-time exempt
+list needs its answer before knip runs at all. The two models are incompatible in the direction
+this repository's own governance needs (every finding discoverable and reconciled against a
+reviewed record, never silently excluded before it is ever seen).
+
+**The fix: run knip with no exempt list, at all, ever, for this repository's own build.**
+`scripts/dead-code/check.ts` spawns `knip --reporter json` raw, flattens every category of its
+report into one `DeadCodeFinding[]` (`dead-code:<kind>:<name>` — the package/export name is the
+subject; deliberately no file/line, so a rename of the surrounding file does not stale an otherwise
+still-valid exemption), and reconciles that finding set against
+`.repo-contract/exceptions/dead-code.json` the same way every other self-hosted check does. A
+finding permitted by a justified record passes; an unbacked or under-justified finding fails,
+naming the package/export and its kind; a stale record (the finding it once justified is gone)
+fails until a human deletes it. `scripts/lint-config.mjs`'s `EXEMPT_UNUSED_DEV_DEPENDENCIES` (nine
+entries) is deleted entirely; its per-entry rationale comments became the seed `justification` text
+for the equivalent records. Seven of the nine genuinely need a record: `@arethetypeswrong/cli`,
+`@commitlint/cli`, `licensee`, `linkinator`, `oxlint`, `publint`, and `@socketsecurity/cli` are all
+spawned by literal command name (a `run: [...]` array or `cross-spawn`), never `import`ed, so knip
+cannot see the use. The other two turned out not to need one at all once knip ran raw:
+`github-actionlint` is resolved via `require.resolve("github-actionlint/dist/bin/actionlint.js")`
+in `scripts/github-actions/lint.mjs`, and `pa11y` via a real `import pa11y from "pa11y"` in
+`scripts/check-accessibility.mjs` — both are static references knip's own resolution already sees,
+so raw knip reports zero finding for either and no exception record exists for them.
+
+**The published `deadCode` preset is untouched.** Its `exemptUnusedDevDependencies` option remains
+exactly as-is for external consumers, who have no equivalent to this repository's own
+`.repo-contract/exceptions/` reconciliation loop and still need a config-time exempt list to use
+the preset at all. This repository choosing not to consume its own published preset for this one
+check is the accepted cost of dogfooding the stricter, fully-reconciled model for itself.

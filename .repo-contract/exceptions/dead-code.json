@@ -1,0 +1,53 @@
+{
+  "exceptions": [
+    {
+      "id": "dead-code:unused-dev-dependency:@arethetypeswrong/cli",
+      "version": 1,
+      "justification": "Spawned by literal command name (\"attw\") via the arethetypeswrong preset's `run: [\"attw\", ...]` (src/presets/arethetypeswrong.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "kind": "unused-dev-dependency",
+      "name": "@arethetypeswrong/cli"
+    },
+    {
+      "id": "dead-code:unused-dev-dependency:@commitlint/cli",
+      "version": 1,
+      "justification": "Spawned by literal command name (\"commitlint\") via the commitlint preset's `run: [\"commitlint\", ...]` (src/presets/commitlint.ts) and by .githooks/commit-msg -- nothing `import`s the package, so knip cannot see the use.",
+      "kind": "unused-dev-dependency",
+      "name": "@commitlint/cli"
+    },
+    {
+      "id": "dead-code:unused-dev-dependency:@socketsecurity/cli",
+      "version": 1,
+      "justification": "Spawned by literal command name (\"socket\") via `cross-spawn` in scripts/security-socket/scan.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
+      "kind": "unused-dev-dependency",
+      "name": "@socketsecurity/cli"
+    },
+    {
+      "id": "dead-code:unused-dev-dependency:licensee",
+      "version": 1,
+      "justification": "Spawned by literal command name via the license preset's `run: [\"licensee\", ...]` (src/presets/license.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "kind": "unused-dev-dependency",
+      "name": "licensee"
+    },
+    {
+      "id": "dead-code:unused-dev-dependency:linkinator",
+      "version": 1,
+      "justification": "Spawned by literal command name via the broken-links preset's `run: [\"linkinator\", ...]` (src/presets/broken-links.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "kind": "unused-dev-dependency",
+      "name": "linkinator"
+    },
+    {
+      "id": "dead-code:unused-dev-dependency:oxlint",
+      "version": 1,
+      "justification": "Spawned by literal command name via scripts/check-lint.mjs (checks/lint.ts's own script) -- nothing `import`s the package, so knip cannot see the use.",
+      "kind": "unused-dev-dependency",
+      "name": "oxlint"
+    },
+    {
+      "id": "dead-code:unused-dev-dependency:publint",
+      "version": 1,
+      "justification": "Spawned by literal command name via the publint preset's `run: [\"publint\", \"run\"]` (src/presets/publint.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "kind": "unused-dev-dependency",
+      "name": "publint"
+    }
+  ]
+}

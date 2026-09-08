@@ -73,18 +73,30 @@
  * place every check id is actually in scope to depend on.
  *
  * `typecheck`, `format`, `license`, `publint`, `arethetypeswrong`,
- * `security-deps`, `security-secrets`, `dead-code`, and `duplication` are
- * NOT defined under checks/ -- they're consumed directly from
- * `src/presets/`, the same published preset catalog an outside consumer
- * would import via `repo-contract/presets` (see
+ * `security-deps`, `security-secrets`, and `duplication` are NOT defined
+ * under checks/ -- they're consumed directly from `src/presets/`, the same
+ * published preset catalog an outside consumer would import via
+ * `repo-contract/presets` (see
  * specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). This repository dogfoods
  * its own public presets rather than maintaining a parallel private copy;
  * where a value needs to differ from a preset's generic default
- * (`dead-code`'s exempt list, `duplication`'s scanned path), it's supplied
- * via factory options, the preferred mechanism. `arethetypeswrong` goes
- * further still -- see that check's own inline comment below -- because
- * this repository's multiple entrypoints trigger a real upstream attw bug
- * no `run`-spread override alone could work around.
+ * (`duplication`'s scanned path), it's supplied via factory options, the
+ * preferred mechanism. `arethetypeswrong` goes further still -- see that
+ * check's own inline comment below -- because this repository's multiple
+ * entrypoints trigger a real upstream attw bug no `run`-spread override
+ * alone could work around.
+ *
+ * `dead-code` is the one deliberate exception: this repository's own run
+ * does NOT use the published `deadCode` preset (still published, unchanged,
+ * for external consumers) -- it self-hosts `checks/dead-code.ts` /
+ * `scripts/dead-code/check.ts` instead, running knip with no config-time
+ * exempt list at all and reconciling `.repo-contract/exceptions/dead-code.json`
+ * against every raw finding afterward. See that check's own doc comment and
+ * specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's amendment for why: a
+ * preset's `exemptUnusedDevDependencies` option needs its exempt list before
+ * knip ever runs, which a *reconciled* registry structurally cannot supply
+ * (the registry that would suppress a finding can only be built from
+ * findings that already ran unsuppressed).
  */
 import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
 import { accessibility } from "./checks/accessibility.js"
@@ -96,6 +108,7 @@ import { architecture } from "./checks/architecture.js"
 import { build } from "./checks/build.js"
 import { coverage } from "./checks/coverage.js"
 import { crap } from "./checks/crap.js"
+import { deadCode } from "./checks/dead-code.js"
 import { docs } from "./checks/docs.js"
 import { githubActions } from "./checks/github-actions.js"
 import { lint } from "./checks/lint.js"
@@ -110,7 +123,6 @@ import { testE2e } from "./checks/test-e2e.js"
 import { testIntegration } from "./checks/test-integration.js"
 import { testProperty } from "./checks/test-property.js"
 import { testUnit } from "./checks/test-unit.js"
-import { EXEMPT_UNUSED_DEV_DEPENDENCIES } from "./scripts/lint-config.mjs"
 import { defineRepoContract } from "./src/index.js"
 import type { PolicyContext } from "./src/index.js"
 import type { AttwReport } from "./src/presets/arethetypeswrong.js"
@@ -118,7 +130,6 @@ import { evaluateAttwReport } from "./src/presets/arethetypeswrong.js"
 import { readJsonReport } from "./src/presets/shared/read-json-report.js"
 import {
   commitlint,
-  deadCode,
   duplication,
   format,
   license,
@@ -281,7 +292,7 @@ export default defineRepoContract({
     accessibility,
     "security-deps": securityDeps,
     "security-secrets": securitySecrets,
-    "dead-code": deadCode({ exemptUnusedDevDependencies: EXEMPT_UNUSED_DEV_DEPENDENCIES }),
+    "dead-code": deadCode,
     "adr-governance": adrGovernance,
     // Conventional Commits are the sole versioning input (release-please derives the bump +
     // changelog from them); commitlint enforces the format across `origin/main..HEAD`. See
