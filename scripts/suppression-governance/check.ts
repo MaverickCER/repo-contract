@@ -9,7 +9,7 @@
 // tool-infrastructure failure (an unreadable source file, or a pre-existing disable-comments.json
 // that fails validation) sets a non-zero exit code here.
 
-import { readFile, writeFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { discoverSuppressions } from "./discover-suppressions.js"
@@ -22,7 +22,12 @@ import { listSourceFiles } from "./find-source-files.js"
 import { serializeRegistry, validateSuppressionRegistry } from "./registry.js"
 import { synchronize, type SynchronizedRecord } from "./synchronize.js"
 
-const REGISTRY_FILE_NAME = "disable-comments.json"
+// Repo-root-relative location of the on-disk registry. Lives under `.repo-contract/exceptions/`
+// alongside the other reviewed-exception registries (socket.json, coderabbit.json,
+// security-network.json -- see specs/verification-taxonomy.md's "Reviewed exceptions" section),
+// not at the repository root. Shown verbatim in this check's error messages and evidence, so it
+// stays a forward-slash literal that points a reader straight at the file to edit.
+const REGISTRY_RELATIVE_PATH = ".repo-contract/exceptions/disable-comments.json"
 
 type ExistingRegistryLoad =
   | { readonly ok: true; readonly records: DisableCommentRegistry }
@@ -33,7 +38,7 @@ type ExistingRegistryLoad =
  * registry" state (first run). A present-but-malformed file is deliberately never overwritten by
  * the synchronization step below -- it's surfaced as an `ok: false` tool-infrastructure failure
  * instead, left exactly as found on disk.
- * @param registryPath - Absolute path to disable-comments.json.
+ * @param registryPath - Absolute path to `.repo-contract/exceptions/disable-comments.json`.
  * @returns The existing records, or the `ok: false` evidence to return immediately.
  */
 async function loadExistingRegistry(registryPath: string): Promise<ExistingRegistryLoad> {
@@ -46,7 +51,10 @@ async function loadExistingRegistry(registryPath: string): Promise<ExistingRegis
     if (nodeError.code === "ENOENT") return { ok: true, records: [] }
     return {
       ok: false,
-      evidence: { ok: false, error: `Could not read ${REGISTRY_FILE_NAME}: ${nodeError.message}` },
+      evidence: {
+        ok: false,
+        error: `Could not read ${REGISTRY_RELATIVE_PATH}: ${nodeError.message}`,
+      },
     }
   }
 
@@ -58,7 +66,7 @@ async function loadExistingRegistry(registryPath: string): Promise<ExistingRegis
       ok: false,
       evidence: {
         ok: false,
-        error: `${REGISTRY_FILE_NAME} is not valid JSON: ${(error as Error).message}`,
+        error: `${REGISTRY_RELATIVE_PATH} is not valid JSON: ${(error as Error).message}`,
       },
     }
   }
@@ -69,7 +77,7 @@ async function loadExistingRegistry(registryPath: string): Promise<ExistingRegis
       ok: false,
       evidence: {
         ok: false,
-        error: `${REGISTRY_FILE_NAME} failed validation and was left unchanged.`,
+        error: `${REGISTRY_RELATIVE_PATH} failed validation and was left unchanged.`,
         registryValidationErrors: validated.errors,
       },
     }
@@ -120,7 +128,7 @@ export function toPersistedRecord(record: SynchronizedRecord): DisableCommentRec
 export async function runSuppressionGovernanceCheck(
   root: string,
 ): Promise<SuppressionGovernanceEvidence> {
-  const registryPath = path.join(root, REGISTRY_FILE_NAME)
+  const registryPath = path.join(root, REGISTRY_RELATIVE_PATH)
 
   const existing = await loadExistingRegistry(registryPath)
   if (!existing.ok) return existing.evidence
@@ -139,6 +147,11 @@ export async function runSuppressionGovernanceCheck(
   const currentContent = await readFile(registryPath, "utf8").catch(() => undefined)
   if (currentContent !== serialized) {
     try {
+      // The registry now lives under `.repo-contract/exceptions/`; on a first run against a tree
+      // that has no such directory yet (a fresh scratch fixture, a brand-new consumer repo) the
+      // parent must be created before the write, where a root-level `disable-comments.json` never
+      // needed this. `recursive: true` makes it a no-op once the directory already exists.
+      await mkdir(path.dirname(registryPath), { recursive: true })
       await writeFile(registryPath, serialized, "utf8")
     } catch (error) {
       return {
@@ -154,7 +167,7 @@ export async function runSuppressionGovernanceCheck(
     newCount,
     movedCount,
     removedCount,
-    registryPath: REGISTRY_FILE_NAME,
+    registryPath: REGISTRY_RELATIVE_PATH,
   }
 }
 

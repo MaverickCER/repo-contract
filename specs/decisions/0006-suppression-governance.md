@@ -3,7 +3,11 @@
 ## Status
 
 Accepted. Implemented in `scripts/suppression-governance/*.ts`, `checks/suppression-governance.ts`,
-`checks/mutation.ts`. Registry: `disable-comments.json` (repository root).
+`checks/mutation.ts`. Registry: `.repo-contract/exceptions/disable-comments.json` (moved there from
+the repository root once ADR 0013 established `.repo-contract/exceptions/` as the shared home for
+every reviewed-exception registry — see `specs/verification-taxonomy.md`'s "Reviewed exceptions"
+section; the file's bare-array shape, its deterministic serialization, and every field are
+otherwise unchanged).
 
 ## Context
 

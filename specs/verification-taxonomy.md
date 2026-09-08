@@ -493,23 +493,30 @@ reviewed, accepted exception the same way, on the shared `repo-contract/helpers`
 (`checks/shared/evaluate-exception-findings.ts`, `scripts/shared/exception-record.ts` —
 unpublished):
 
-- **Where.** `suppression-governance` keeps its records inline in `disable-comments.json` (each
-  suppression _is_ a record); the other three each read a small JSON file under
-  `.repo-contract/exceptions/` (`socket.json`, `coderabbit.json`, `security-network.json`) with the
-  envelope `{ "exceptions": [ … ] }` — a missing file is a normal empty-registry state, never an
-  error (`loadExceptionRegistry`).
+- **Where.** All four live under `.repo-contract/exceptions/`: `disable-comments.json`,
+  `socket.json`, `coderabbit.json`, `security-network.json`. `socket`/`coderabbit`/`security-network`
+  use the envelope `{ "exceptions": [ … ] }` and are read via `loadExceptionRegistry` (a missing
+  file is a normal empty-registry state, never an error). `disable-comments.json` is the exception
+  to the shape but not the location: a bare array (each suppression comment _is_ a record), owned
+  end-to-end by `scripts/suppression-governance/check.ts`, which reads it, reconciles it against
+  discovered suppressions, and deterministically rewrites it in place on every run (creating
+  `.repo-contract/exceptions/` first if a fresh tree has no such directory yet).
 - **Shape.** Every record carries prose/enum authoring fields (`justification`, and per check some
   of `alternatives` / `remediation` / `exceptionType`) plus a content-bound `verification` block
   (`verifiedBy`, `verifiedAt` ISO 8601, `verifiedContentHash`, and — except for
-  `suppression-governance` — a closed `method`). Each `.repo-contract/exceptions/*.json` record
-  also carries an `id` that must equal what the check's own `deriveId` recomputes from the record's
-  embedded finding-identity fields (`validateCanonicalIdentity`) — a stored key inconsistent with
-  its own claimed identity is a registry bug, caught at load time.
-- **Validation.** There is no generated JSON Schema for these three files (unlike
-  `disable-comments.json`, which has an internal, non-published one). The authoritative validator
-  is each check's own `scripts/<check>/registry.ts`, run on _every_ contract run before any
-  findings are evaluated — so a malformed or internally-inconsistent registry fails CI even on a
-  clean or never-ran scan, never rides along silently with a green run.
+  `suppression-governance` — a closed `method`). Each envelope-shaped record also carries an `id`
+  that must equal what the check's own `deriveId` recomputes from the record's embedded
+  finding-identity fields (`validateCanonicalIdentity`) — a stored key inconsistent with its own
+  claimed identity is a registry bug, caught at load time. `disable-comments.json` records are
+  addressed positionally by `(file, line, domain, rule, content)` instead, reconciled by the
+  synchronizer rather than matched by a stored id.
+- **Validation.** There is no generated JSON Schema for the three envelope files; the authoritative
+  validator is each check's own `scripts/<check>/registry.ts`, run on _every_ contract run before
+  any findings are evaluated — so a malformed or internally-inconsistent registry fails CI even on
+  a clean or never-ran scan, never rides along silently with a green run. `disable-comments.json`
+  additionally has an internal, non-published generated JSON Schema
+  (`scripts/suppression-governance/disable-comments.schema.json`), cross-checked against its
+  hand-written validator by a schema-conformance test.
 - **What they never do.** Loosen a check's default posture. `security-network`'s group default
   stays `forbidden` (ADR 0007's amendment); `security-socket` forbids anything above "middle"
   outright; `coderabbitai` requires a verified waiver for every finding regardless of severity. A
