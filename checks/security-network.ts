@@ -11,6 +11,7 @@ import type {
 import {
   SECURITY_NETWORK_GLOBAL_DEFAULT_POLICY,
   VALID_SECURITY_NETWORK_REQUIREMENTS,
+  VERIFICATION_FIELD,
   securityNetworkPolicy,
 } from "../scripts/security-network/policy-config.js"
 import type { NetworkExceptionRecord } from "../scripts/security-network/registry.js"
@@ -27,7 +28,6 @@ import { handWrittenArraySchema } from "./shared/standard-schema-validator.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 
-const VERIFICATION_FIELD = "verification.verifiedBy"
 /** `justification`/`alternatives`/`remediation`/`exceptionType` -- the content a verification's hash is bound to. Excludes `VERIFICATION_FIELD` itself: a verification cannot be bound to its own presence. */
 const PROSE_REQUIREMENTS = VALID_SECURITY_NETWORK_REQUIREMENTS.filter(
   (field) => field !== VERIFICATION_FIELD,
@@ -260,6 +260,7 @@ export async function evaluateSecurityNetworkPolicy(
   return {
     outcome: "fail",
     rationale: [
+      summary,
       `${String(failingCount)} prohibited or unverifiable network capability finding(s) ` +
         `across ${String(evidence.filesScanned)} file(s) scanned under src/:`,
       ...offenderLines,

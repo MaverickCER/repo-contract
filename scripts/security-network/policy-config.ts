@@ -17,16 +17,22 @@ import type { ExceptionPolicy, ExceptionPolicyConfig } from "../../src/helpers/i
  * (`scripts/security-network/registry.ts`). The waiver never changes the default posture; it is
  * an additive, reviewed, per-finding exception to it.
  */
-const VERIFICATION_FIELD = "verification.verifiedBy"
-const REQUIREMENTS = [
+/** The verification sign-off field, staged in the reported `missing` list -- see `checks/shared/evaluate-exception-findings.ts`. Exported so `checks/security-network.ts` and its tests partition `VALID_SECURITY_NETWORK_REQUIREMENTS` on the same literal rather than each re-declaring it. */
+export const VERIFICATION_FIELD = "verification.verifiedBy"
+
+/** Every field name this check's own `"exception"` mode policy requires -- passed to `validateExceptionPolicyConfig` as `validRequirements`, and the single list `WAIVABLE` below and every derived `PROSE_REQUIREMENTS` elsewhere is built from. Order matters: `hashRequirementFields` digests the prose fields in exactly this order. */
+export const VALID_SECURITY_NETWORK_REQUIREMENTS = [
   "justification",
   "alternatives",
   "remediation",
   "exceptionType",
   VERIFICATION_FIELD,
-]
+] as const
 
-const WAIVABLE: ExceptionPolicy = { mode: "exception", requirements: REQUIREMENTS }
+const WAIVABLE: ExceptionPolicy = {
+  mode: "exception",
+  requirements: [...VALID_SECURITY_NETWORK_REQUIREMENTS],
+}
 
 /**
  * Every recognized capability kind resolves to `exception`; anything else hits `default`
@@ -54,12 +60,3 @@ export const securityNetworkPolicy: ExceptionPolicyConfig = {
  * future miswiring fails closed rather than silently permitting.
  */
 export const SECURITY_NETWORK_GLOBAL_DEFAULT_POLICY: ExceptionPolicy = { mode: "forbidden" }
-
-/** Every field name this check's own `"exception"` mode policy may require -- passed to `validateExceptionPolicyConfig` as `validRequirements`. */
-export const VALID_SECURITY_NETWORK_REQUIREMENTS = [
-  "justification",
-  "alternatives",
-  "remediation",
-  "exceptionType",
-  VERIFICATION_FIELD,
-] as const
