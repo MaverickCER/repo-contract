@@ -54,9 +54,12 @@ identity validation, a small closed `exceptionType` vocabulary, content-bound ve
 one layer down, in `checks/shared/` (unpublished), where check-specific identity already belongs.
 
 Published API, deliberately minimal: `ExceptionPolicy`, `ExceptionCategoryGroup`,
-`ExceptionPolicyConfig`, `ExceptionClassification`, `ExceptionVerdict`, `ExceptionDeterminant`,
-`resolveExceptionPolicy`, `evaluateExceptionRecord`, `evaluateExceptionRecords`,
-`validateExceptionPolicyConfig`, `hashRequirementFields`, `loadExceptionRegistry`. Every function
+`ExceptionPolicyConfig`, `ExceptionClassification`, `ExceptionRecordEvaluation`, `ExceptionVerdict`,
+`ExceptionDeterminant`, `resolveExceptionPolicy`, `evaluateExceptionRecord`,
+`evaluateExceptionRecords`, `validateExceptionPolicyConfig`, `hashRequirementFields`,
+`loadExceptionRegistry`, plus a re-export of the hand-vendored `StandardSchemaV1` type (ADR 0012)
+so a consumer can type `loadExceptionRegistry`'s `schema` argument without reaching past this
+independent barrel into the root export. Every function
 is synchronous and pure except `loadExceptionRegistry`, whose only I/O is an injectable `readFile`
 defaulting to `node:fs/promises` — `src/helpers/**` never imports `node:child_process` or reads
 `process.env` (enforced by `scripts/verify-no-ambient-capabilities.mjs` against the real published
@@ -104,6 +107,46 @@ pinned version to a real dependency, rather than hand-vendoring a glob matcher's
 logic (a real correctness risk a thin vendor copy would not meaningfully reduce, unlike a pure-type
 interface), is the honest choice here. `tsup.config.ts` marks it `external` (never bundled into
 `dist/`), the same explicit treatment `yaml` already gets.
+
+## Verification, not attestation
+
+Every field this primitive checks for completeness is _self-reported_ by whoever wants the
+exception permitted — `justification`, `alternatives`, `remediation`, an `exceptionType`. A policy
+that requires those fields proves an exception was _described_; it never proves the description was
+_examined_. `scripts/suppression-governance/`'s original design (ADR 0006) has exactly this shape:
+its `verificationMethod` field _names_ a technique (`mutation-run`, `existing-test-suite`, …)
+without anything ever confirming the technique was applied to that specific record. That is
+attestation, not enforcement — and it is the weakness every check built on this primitive
+(`security-socket`, `coderabbitai`, the `security-*` retrofits, and `disable-comments.json` itself
+via ADR 0006's amendment) closes with one further gate.
+
+`hashRequirementFields` is what makes that gate possible without the core learning anything new.
+The check-owned layer (`checks/shared/`, `scripts/shared/exception-record.ts`) records, alongside a
+sign-off (`verifiedBy` / `verifiedAt`), a `verifiedContentHash` — `hashRequirementFields()` over
+the record's prose/classification fields _at the moment of sign-off_. On every later run the check
+recomputes that hash from the record's _current_ field values and treats the sign-off as present
+only while the two still match. Editing any hashed field after sign-off silently invalidates the
+hash, the verification field reverts to "missing", and the record fails policy again — with no
+separate staleness-tracking logic anywhere, and with `src/helpers/`'s generic core still only ever
+seeing "a named field, trimmed, non-empty."
+
+Two deliberate refinements live one layer down, in `checks/shared/` / `scripts/shared/`, never in
+the published core:
+
+- **A closed verification-`method` vocabulary** (for the checks whose records carry a
+  `verification` block): `"mechanical-reverification"` — re-run the same tool that raised the
+  finding, scoped narrowly, and confirm it no longer fires — or `"independent-human-review"`, an
+  accountable human judgment call for everything mechanical re-verification can't reach. A
+  `validated-false-positive` claim _must_ be a `mechanical-reverification`; `coderabbitai` (an AI
+  opinion with no more-authoritative oracle to re-run) forbids `mechanical-reverification` outright
+  (ADR 0014). `suppression-governance` reuses its existing `verificationMethod` enum instead of a
+  second `method` field — see ADR 0006's amendment for why.
+- **Staged reporting of the verification field.** It is a genuinely required field the whole time —
+  `evaluateExceptionRecord`'s pass/fail semantics never change — but a freshly-created record's
+  first reported `missing` list names only the still-empty _authoring_ fields, never a demand to
+  sign off on prose that doesn't exist yet. `stageMissingFields` filters it back in only once every
+  authoring field is filled. Purely a presentation choice, so the published contract stays
+  untouched.
 
 ## Consequences
 

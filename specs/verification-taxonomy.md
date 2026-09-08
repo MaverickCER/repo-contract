@@ -83,20 +83,22 @@ Performance tests, Golden/snapshot contracts, Git/repository guardrails, Release
 preserved unchanged and not repeated here — see the repo-contract checks list in
 `repo-contract.config.ts` for those.
 
-| Verification                 | Semantic question                                                                                           | Tool                                                            | Execution boundary                                                                                                    | Coverage                                                      | Evidence                               | repo-contract check      |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------- | ------------------------ |
-| Unit                         | Does isolated behavior satisfy its examples/contracts?                                                      | Vitest                                                          | `test/unit/**`                                                                                                        | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-unit`              |
-| Integration                  | Do internal components compose correctly?                                                                   | Vitest                                                          | `test/integration/**`                                                                                                 | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-integration`       |
-| Property (incl. model-based) | Do generalized invariants hold over generated inputs?                                                       | Vitest + fast-check                                             | `test/property/**`                                                                                                    | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-property`          |
-| E2E / package-acceptance     | Does the built package work as a consumer would use it?                                                     | Vitest + real subprocesses, against `dist/`                     | `test/e2e/**`                                                                                                         | No                                                            | JSON (Vitest `--reporter=json`)        | `test-e2e`               |
-| Architecture                 | Does the production dependency graph obey architectural constraints?                                        | dependency-cruiser                                              | `src/**/*.ts` module graph (+ each Vitest config's own boundary)                                                      | No                                                            | JSON (`ArchitectureEvidence`)          | `architecture`           |
-| Coverage                     | What proportion of the canonical source surface is exercised by the contributing test categories, in union? | istanbul-lib-coverage (merge) + `@vitest/coverage-v8`           | aggregate (reads only prior categories' artifacts)                                                                    | N/A — this _is_ the measurement                               | JSON (`coverage-summary.json` total)   | `coverage`               |
-| Mutation                     | Do tests detect injected behavioral changes?                                                                | Stryker (running the fast Vitest suite per mutant)              | `src/**/*.ts` mutated, `vitest.config.ts`'s dev-aggregate suite as the oracle                                         | No — a separate quality signal, not ordinary runtime coverage | JSON (Stryker's `json` reporter)       | `mutation`               |
-| API compatibility            | Do the branch's commits declare a SemVer bump ≥ what the public-API change requires?                        | API Extractor + `scripts/api-contract/`                         | package API surface (`src/index.ts`'s curated barrel vs. committed baseline), and `origin/main..HEAD` commit messages | No                                                            | JSON (`ApiContractEvidence`)           | `api-contract`           |
-| Commit-message format        | Is every commit on the branch a valid Conventional Commit?                                                  | commitlint + `@commitlint/config-conventional`                  | `origin/main..HEAD`                                                                                                   | No                                                            | exit code                              | `commitlint`             |
-| Suppression governance       | Is every static-analysis suppression directive centrally inventoried and justified against policy?          | TypeScript compiler scanner + `scripts/suppression-governance/` | governed source files (`find-source-files.ts`)                                                                        | No                                                            | JSON (`SuppressionGovernanceEvidence`) | `suppression-governance` |
-| Security -- no network       | Does the shipped surface (src/**) avoid network-capable imports, globals, and unreviewed spawned commands?  | TypeScript compiler scanner + `scripts/security-network/`       | `src/**/*.ts`                                                                                                         | No                                                            | JSON (`NetworkScanEvidence`)           | `security-network`       |
-| GitHub Actions               | Are this repository's own workflow files free of correctness and script-injection defects?                  | actionlint (via the `github-actionlint` npm wrapper)            | `.github/workflows/*.{yml,yaml}`                                                                                      | No                                                            | JSON (`GitHubActionsEvidence`)         | `github-actions`         |
+| Verification                 | Semantic question                                                                                           | Tool                                                              | Execution boundary                                                                                                    | Coverage                                                      | Evidence                               | repo-contract check      |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------- | ------------------------ |
+| Unit                         | Does isolated behavior satisfy its examples/contracts?                                                      | Vitest                                                            | `test/unit/**`                                                                                                        | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-unit`              |
+| Integration                  | Do internal components compose correctly?                                                                   | Vitest                                                            | `test/integration/**`                                                                                                 | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-integration`       |
+| Property (incl. model-based) | Do generalized invariants hold over generated inputs?                                                       | Vitest + fast-check                                               | `test/property/**`                                                                                                    | Yes                                                           | JSON (Vitest `--reporter=json`)        | `test-property`          |
+| E2E / package-acceptance     | Does the built package work as a consumer would use it?                                                     | Vitest + real subprocesses, against `dist/`                       | `test/e2e/**`                                                                                                         | No                                                            | JSON (Vitest `--reporter=json`)        | `test-e2e`               |
+| Architecture                 | Does the production dependency graph obey architectural constraints?                                        | dependency-cruiser                                                | `src/**/*.ts` module graph (+ each Vitest config's own boundary)                                                      | No                                                            | JSON (`ArchitectureEvidence`)          | `architecture`           |
+| Coverage                     | What proportion of the canonical source surface is exercised by the contributing test categories, in union? | istanbul-lib-coverage (merge) + `@vitest/coverage-v8`             | aggregate (reads only prior categories' artifacts)                                                                    | N/A — this _is_ the measurement                               | JSON (`coverage-summary.json` total)   | `coverage`               |
+| Mutation                     | Do tests detect injected behavioral changes?                                                                | Stryker (running the fast Vitest suite per mutant)                | `src/**/*.ts` mutated, `vitest.config.ts`'s dev-aggregate suite as the oracle                                         | No — a separate quality signal, not ordinary runtime coverage | JSON (Stryker's `json` reporter)       | `mutation`               |
+| API compatibility            | Do the branch's commits declare a SemVer bump ≥ what the public-API change requires?                        | API Extractor + `scripts/api-contract/`                           | package API surface (`src/index.ts`'s curated barrel vs. committed baseline), and `origin/main..HEAD` commit messages | No                                                            | JSON (`ApiContractEvidence`)           | `api-contract`           |
+| Commit-message format        | Is every commit on the branch a valid Conventional Commit?                                                  | commitlint + `@commitlint/config-conventional`                    | `origin/main..HEAD`                                                                                                   | No                                                            | exit code                              | `commitlint`             |
+| Suppression governance       | Is every static-analysis suppression directive centrally inventoried and justified against policy?          | TypeScript compiler scanner + `scripts/suppression-governance/`   | governed source files (`find-source-files.ts`)                                                                        | No                                                            | JSON (`SuppressionGovernanceEvidence`) | `suppression-governance` |
+| Security -- no network       | Does the shipped surface (src/**) avoid network-capable imports, globals, and unreviewed spawned commands?  | TypeScript compiler scanner + `scripts/security-network/`         | `src/**/*.ts`                                                                                                         | No                                                            | JSON (`NetworkScanEvidence`)           | `security-network`       |
+| GitHub Actions               | Are this repository's own workflow files free of correctness and script-injection defects?                  | actionlint (via the `github-actionlint` npm wrapper)              | `.github/workflows/*.{yml,yaml}`                                                                                      | No                                                            | JSON (`GitHubActionsEvidence`)         | `github-actions`         |
+| Security -- supply-chain     | Does any installed dependency trip a Socket.dev supply-chain alert above a medium rating, unwaived?         | `@socketsecurity/cli` + `scripts/security-socket/`                | the installed dependency tree (`socket ci`)                                                                           | No                                                            | JSON (`SecuritySocketEvidence`)        | `security-socket`        |
+| AI-assisted review           | Has a CodeRabbit `review --agent` pass run locally on the working tree, or is its non-execution recorded?   | CodeRabbit CLI (`--agent` event stream) + `scripts/coderabbitai/` | uncommitted, tracked edits (`coderabbit review --agent --uncommitted`)                                                | No                                                            | JSON (`CoderabbitEvidence`)            | `coderabbitai`           |
 
 Rows with their own `###` section below are detailed there, including the exact command to run
 each alone (`npm run test:unit`, etc. — see "Execution layers"). Mutation, Coverage, and API
@@ -104,6 +106,19 @@ compatibility have no separate `###` section: the table row plus the check's own
 (`checks/*.ts`, `scripts/*/`) and its ADR are the description. Coverage's aggregation mechanism
 is documented under "Coverage architecture" below; API compatibility's commit-based gate is
 [ADR 0009](decisions/0009-conventional-commits-versioning-and-local-gates.md).
+
+`security-socket` and `coderabbitai` were added after this taxonomy's original expansion, in the
+same release that introduced the `repo-contract/helpers` exception-policy primitive
+([ADR 0013](decisions/0013-reusable-exception-policy-helper.md)). Both clear the admission rule
+above on the "materially different semantic question" test: `security-socket` asks a _behavioral_
+supply-chain question (a dependency that newly gains install scripts, shell/network/filesystem
+access, or obfuscated code) that `security-deps`'s known-CVE advisories and `security-secrets`'s
+committed-secret scan do not; `coderabbitai` is the one check whose finding source is an LLM
+opinion rather than a reproducible tool result, so its own _presence and self-reporting_, not its
+pass/fail outcome, is what it establishes ([ADR 0014](decisions/0014-coderabbit-as-a-surfaced-check.md)).
+All three exception-policy-backed checks (`security-socket`, `coderabbitai`, `security-network`)
+plus `suppression-governance` share the same reviewed-waiver machinery — see "Reviewed exceptions"
+at the end of this section.
 
 ### Unit — `test-unit`
 
@@ -272,7 +287,8 @@ is documented under "Coverage architecture" below; API compatibility's commit-ba
   — each rule resolves to one of three modes: `"forbidden"` (never permitted), `"allowed"` (permitted
   unconditionally), or `"exception"` (permitted once every field named in its `requirements` list is
   non-empty), resolved per rule via exact match, then wildcard pattern, then domain default, then a
-  global default requiring `justification`/`alternatives`/`remediation`/`category`/`verificationMethod`.
+  global default requiring `justification`/`alternatives`/`remediation`/`category`/`verificationMethod`
+  — and, since ADR 0006's 2026-09 amendment, `verifiedBy` on every `"exception"`-mode rule.
   This replaces an earlier numeric "N justification entries required" design, dropped because a plain
   count is trivially satisfied by generating N generic-sounding entries without doing any of the
   underlying work the count was meant to prove happened (see ADR 0006's "not a numeric threshold"
@@ -280,12 +296,21 @@ is documented under "Coverage architecture" below; API compatibility's commit-ba
   [ADR 0006](decisions/0006-suppression-governance.md)) are hand-authored
   the same way as `justification`/`alternatives`/`remediation`, but are closed enumerations rather than
   free prose, letting a reviewer or report triage a suppression's kind and evidentiary basis without
-  reading the full prose.
+  reading the full prose. ADR 0006's amendment adds a **content-bound verification** block —
+  `verifiedBy` / `verifiedAt` / `verifiedContentHash`, the same gate the exception-policy checks use
+  (see "Reviewed exceptions" above, and ADR 0013's "Verification, not attestation"):
+  `verifiedContentHash` is `hashRequirementFields()` over the record's six authoring fields at
+  sign-off time, recomputed every run, and `verifiedBy` only counts as present while the hash still
+  matches — editing any authoring field after sign-off silently reverts `verifiedBy` to "missing"
+  and the record fails policy again, with no separate staleness tracking. `verifiedBy` reuses the
+  existing `verificationMethod` enum rather than adding a second `method` field.
 - **Does not establish**: whether a suppression is _technically justified_ — the check never invents or
   evaluates the truth of `justification`/`alternatives`/`remediation`, only whether the fields a policy
   requires are non-empty; that judgment is left entirely to whoever writes the prose. The same applies to
   `category`/`verificationMethod`: the check verifies a classification is _present and a valid member of
-  its enum_, never that it is _correct_. It also does not establish anything about whether ESLint/TypeScript
+  its enum_, never that it is _correct_. The verification block is content-binding, not
+  correctness-checking: it proves a named sign-off is tied to the exact prose it approved, never that
+  the sign-off's judgment was right. It also does not establish anything about whether ESLint/TypeScript
   itself currently passes — discovery is fully independent of any other check's outcome.
 - **Files executed**: none in the runtime sense — a static scan of every governed source file
   (`scripts/suppression-governance/find-source-files.ts`'s own exclusion rules, deliberately not
@@ -295,8 +320,8 @@ is documented under "Coverage architecture" below; API compatibility's commit-ba
 - **Evidence**: `SuppressionGovernanceEvidence`
   (`scripts/suppression-governance/evidence-types.ts`) — every synchronized record (`file`, `line`,
   `domain`, `rule`, `content`, `justification`, `alternatives`, `remediation`, `category`,
-  `verificationMethod`, `reason`, plus this run's `new`/`existing`/`moved` status), and
-  `newCount`/`movedCount`/`removedCount` for the run as a whole.
+  `verificationMethod`, `reason`, `verifiedBy`, `verifiedAt`, `verifiedContentHash`, plus this run's
+  `new`/`existing`/`moved` status), and `newCount`/`movedCount`/`removedCount` for the run as a whole.
 - **Policy**: `evaluateSuppressionGovernancePolicy` — fails on a script-level tool-infrastructure failure
   (an unreadable source file, or a pre-existing `disable-comments.json` that fails validation — left
   untouched on disk rather than overwritten), on evidence that independently re-fails registry
@@ -315,7 +340,14 @@ is documented under "Coverage architecture" below; API compatibility's commit-ba
   allowlist. The second of two independent layers enforcing this invariant -- the first is an
   ESLint rule (`eslint.config.js`) scoped to the same surface. Both cover the same core imports/
   globals; this check additionally covers the preset-command allowlist and, unlike ESLint, cannot
-  be silenced by an `eslint-disable` comment or a weakened lint config.
+  be silenced by an `eslint-disable` comment or a weakened lint config. Since ADR 0007's 2026-09
+  amendment this check is built on the `repo-contract/helpers` exception-policy primitive: the
+  default posture is unchanged and absolute (`securityNetworkPolicy`'s group `default` is
+  `forbidden`), but a genuinely reviewed exception is now a finding-specific record in
+  `.repo-contract/exceptions/security-network.json` bound to one exact `` `${capability}:${file}:${line}` ``,
+  with a closed `exceptionType` and a content-bound `verification` block — _stricter_ than the
+  prose-only `disable-comments.json` path it replaces for network findings (see "Reviewed
+  exceptions" below).
 - **Does not establish**: that a dependency's own internal code never makes a network call, or that
   a consumer's own configured checks/presets never do (that's the tool's entire purpose -- execute
   what the repository's own configuration says; see ADR 0007's Decision section for the exact
@@ -323,13 +355,16 @@ is documented under "Coverage architecture" below; API compatibility's commit-ba
   requests on a consumer's own explicit behalf).
 - **Files executed**: none -- a static AST scan (TypeScript compiler API, the same approach
   `suppression-governance` uses) of every `.ts` file under `src/`.
-- **Run alone**: `tsx scripts/security-network/scan.ts`.
+- **Run alone**: `tsx scripts/security-network/scan.ts`, or `npm run contract -- security-network`.
 - **Coverage contribution**: no — static analysis, nothing executes.
 - **Evidence**: `NetworkScanEvidence` (`scripts/security-network/evidence-types.ts`) -- how many
   files were scanned, and every finding (`file`, `line`, `column`, `capability`, `detail`) across
   all of them.
-- **Policy**: `evaluateSecurityNetworkPolicy` -- passes only when `findings` is empty; fails
-  otherwise, listing every finding's location and explanation.
+- **Policy**: `evaluateSecurityNetworkPolicy` -- validates `securityNetworkPolicy` and the
+  exception registry first (on every run); then fails on a zero-file scan (a clean result from an
+  empty scan is not evidence of a network-free surface) or on any finding not backed by a
+  finding-specific, still-verified exception record; passes when every finding is either absent or
+  covered by such a record.
 - **CI**: part of `npm run contract`. No `dependsOn` -- independent of every other check.
 
 ### GitHub Actions — `github-actions`
@@ -360,6 +395,125 @@ is documented under "Coverage architecture" below; API compatibility's commit-ba
 - **Policy**: `evaluateGitHubActionsPolicy` -- fails on any actionlint tool-infrastructure failure
   or any finding; passes when the scan ran clean (or there are no workflow files).
 - **CI**: part of `npm run contract`. A pure reader -- no `dependsOn`, needs no build.
+
+### Security — supply-chain alerts — `security-socket`
+
+- **Establishes**: that no installed dependency trips a [Socket.dev](https://socket.dev)
+  supply-chain alert above a medium ("middle") rating, and that every lower-rated alert is covered
+  by a finding-specific, content-bound _verified_ exception. A materially different semantic
+  question from `security-deps` (known-CVE advisories, via `npm audit`) and `security-secrets`
+  (committed secrets): Socket's analysis is _behavioral_ — a dependency that newly gains install
+  scripts, shell access, network access, filesystem access, or obfuscated code — so it catches a
+  compromised or typosquatted package that carries no CVE at all. `@socketsecurity/cli` runs the
+  scan (`socket ci --json`); `scripts/security-socket/scan.ts` normalizes its output into
+  `NormalizedSocketAlert[]` (repo-contract owns the evidence contract, never the raw tool JSON),
+  and `checks/security-socket.ts` evaluates that against `socketPolicy`
+  (`scripts/security-socket/policy-config.ts`) via the `repo-contract/helpers` exception-policy
+  primitive ([ADR 0013](decisions/0013-reusable-exception-policy-helper.md)), classified purely on
+  each alert's normalized severity.
+- **Does not establish**: that a dependency is safe in any absolute sense, that Socket's own
+  heuristics are complete, or anything about a dependency's _runtime_ behavior on a consumer's
+  machine — this is a static, pre-install-time signal about capability changes and known bad
+  patterns. It also makes no claim at all when it did not actually run (see the policy's `warn`,
+  below).
+- **The reviewed-exception shape**: a record in `.repo-contract/exceptions/socket.json`, bound to
+  one exact `` `${package}@${version}:${type}` `` identity — a blanket "waive this alert type
+  everywhere" record is not expressible (`scripts/security-socket/registry.ts`) — carrying a closed
+  `exceptionType` and a content-bound `verification` block (see
+  [ADR 0013](decisions/0013-reusable-exception-policy-helper.md)'s "Verification, not attestation",
+  and "Reviewed exceptions" below). Anything rated above "middle" is `forbidden` outright: no
+  record can permit it.
+- **Files executed**: none of this repository's code — `socket ci` (spawned through `cross-spawn`,
+  a 5-minute hard timeout) analyzes the dependency tree server-side.
+- **Run alone**: `tsx scripts/security-socket/scan.ts` (prints the JSON evidence), or
+  `npm run contract -- security-socket`.
+- **Coverage contribution**: no — external analysis, none of this package's code runs.
+- **Evidence**: `SecuritySocketEvidence` (`scripts/security-socket/evidence-types.ts`) — a closed
+  state machine: `passed` (0 alerts), `failed` (with the normalized `alerts`), `unavailable`
+  (`cli-not-installed` / `not-authenticated` / `network-unreachable`), or `error` (a malformed or
+  unrecognized report — fails closed, exactly like `mutation` does for a malformed Stryker report).
+- **Policy**: `evaluateSecuritySocketPolicy` — validates `socketPolicy` and the registry _first_,
+  on every run (so a malformed `.repo-contract/exceptions/socket.json` fails CI even on an
+  otherwise-clean or never-ran scan); maps `unavailable` to **`warn`** (this repository's own CI
+  holds no Socket org token, so the check cannot distinguish "genuinely clean" from "never ran"
+  and says so rather than claiming a pass); `error` fails closed; a clean scan or every alert
+  permitted passes; any `forbidden`/`insufficient` verdict or unmatched alert fails, listed
+  individually.
+- **CI**: part of `npm run contract`. No `dependsOn` — independent of every other check.
+
+### AI-assisted review — `coderabbitai`
+
+- **Establishes**: that this repository's own working tree has been through a CodeRabbit
+  `review --agent` pass locally — _or_, and this is the actual guarantee, that the fact it has
+  **not** is recorded on this run as a `warn`. A genuinely different category from every
+  deterministic check above: the finding source is an LLM opinion, not a reproducible tool result,
+  so the check's _presence and consistent self-reporting_, never its pass/fail outcome, is what it
+  guarantees (see [ADR 0014](decisions/0014-coderabbit-as-a-surfaced-check.md)). It promotes the
+  former local-only `.githooks/pre-push` `coderabbit review --agent` shell step into the
+  evidence/policy pipeline every other check participates in.
+- **Does not establish**: that the code is correct, that CodeRabbit reviewed the _committed_ PR
+  diff (that is CodeRabbit's own GitHub App, which posts findings on the PR directly — this
+  check's `--uncommitted` scope is the narrower, faster, always-terminating local layer), or
+  anything at all when `status` is `not-applicable` / `unavailable`. It never invokes an LLM
+  itself — it spawns the already-locally-installed `coderabbit` binary.
+- **The reviewed-exception shape**: a record in `.repo-contract/exceptions/coderabbit.json`, keyed
+  by a deliberately coarse `` `${file}:${severity}` `` identity (the CLI exposes no native finding
+  id and no structured line number — a known, documented limitation:
+  `scripts/coderabbitai/evidence-types.ts`), carrying `justification` / `remediation` /
+  `exceptionType` and a content-bound `verification` block whose `method` **must** be
+  `"independent-human-review"` — `"mechanical-reverification"` and
+  `exceptionType: "validated-false-positive"` are both refused, because there is no
+  more-authoritative tool to re-run against an AI-generated finding (ADR 0014).
+- **Files executed**: none of this repository's code — `coderabbit review --agent --uncommitted`
+  (spawned through `cross-spawn`) reviews the uncommitted, tracked working-tree edits.
+- **Run alone**: `tsx scripts/coderabbitai/review.ts` (prints the JSON evidence), or
+  `npm run contract -- coderabbitai`.
+- **Coverage contribution**: no — external analysis, none of this package's code runs.
+- **Evidence**: `CoderabbitEvidence` (`scripts/coderabbitai/evidence-types.ts`) — a closed state
+  machine: `reviewed` (with the normalized `findings`), `not-applicable` (`reason: "ci"`, carrying
+  `expectedProvider: "coderabbit-github-app"` so no automation reads "ran in CI" as "review was
+  skipped"), `unavailable` (`cli-not-installed` / `git-context-unavailable`), or `error` (a
+  malformed event stream or a real CLI failure — fails closed).
+- **Policy**: `evaluateCoderabbitPolicy` — validates `coderabbitPolicy` and the registry _first_,
+  on every run (in CI `status` is always `not-applicable`, so a broken
+  `.repo-contract/exceptions/coderabbit.json` would otherwise never fail CI); maps
+  `not-applicable` / `unavailable` to **`warn`** on every single run, by design — CI, a missing
+  CLI, and a bypassed hook must all surface the identical signal, so a local skip can never
+  masquerade as "nothing to warn about"; `error` fails closed; a clean review or every finding
+  permitted passes; any `forbidden`/`insufficient` verdict or unmatched finding fails, listed
+  individually.
+- **CI**: part of `npm run contract`. Always `not-applicable` there (review is delegated to the
+  CodeRabbit GitHub App); no `dependsOn`.
+
+### Reviewed exceptions — `.repo-contract/exceptions/*.json`
+
+`suppression-governance`, `security-socket`, `coderabbitai`, and `security-network` all express a
+reviewed, accepted exception the same way, on the shared `repo-contract/helpers` primitive
+([ADR 0013](decisions/0013-reusable-exception-policy-helper.md)) plus one check-owned layer
+(`checks/shared/evaluate-exception-findings.ts`, `scripts/shared/exception-record.ts` —
+unpublished):
+
+- **Where.** `suppression-governance` keeps its records inline in `disable-comments.json` (each
+  suppression _is_ a record); the other three each read a small JSON file under
+  `.repo-contract/exceptions/` (`socket.json`, `coderabbit.json`, `security-network.json`) with the
+  envelope `{ "exceptions": [ … ] }` — a missing file is a normal empty-registry state, never an
+  error (`loadExceptionRegistry`).
+- **Shape.** Every record carries prose/enum authoring fields (`justification`, and per check some
+  of `alternatives` / `remediation` / `exceptionType`) plus a content-bound `verification` block
+  (`verifiedBy`, `verifiedAt` ISO 8601, `verifiedContentHash`, and — except for
+  `suppression-governance` — a closed `method`). Each `.repo-contract/exceptions/*.json` record
+  also carries an `id` that must equal what the check's own `deriveId` recomputes from the record's
+  embedded finding-identity fields (`validateCanonicalIdentity`) — a stored key inconsistent with
+  its own claimed identity is a registry bug, caught at load time.
+- **Validation.** There is no generated JSON Schema for these three files (unlike
+  `disable-comments.json`, which has an internal, non-published one). The authoritative validator
+  is each check's own `scripts/<check>/registry.ts`, run on _every_ contract run before any
+  findings are evaluated — so a malformed or internally-inconsistent registry fails CI even on a
+  clean or never-ran scan, never rides along silently with a green run.
+- **What they never do.** Loosen a check's default posture. `security-network`'s group default
+  stays `forbidden` (ADR 0007's amendment); `security-socket` forbids anything above "middle"
+  outright; `coderabbitai` requires a verified waiver for every finding regardless of severity. A
+  record only ever moves a _specific, named, signed-off_ finding from "fails" to "permitted".
 
 ## Coverage
 
