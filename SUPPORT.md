@@ -22,7 +22,7 @@ Open a **GitHub Issue**. The fastest path to a fix is a minimal reproduction —
 
 - The version of `repo-contract`
 - Your runtime (Node.js, Bun, or Deno) and its version, and your OS — see the
-  [README's runtime support matrix](README.md#runtime-support-matrix) for what's tested
+  [guide's runtime support section](GUIDE.md#runtime-support) for what's tested
 - Expected vs. actual behavior
 - Any relevant config, evidence, or log output
 
