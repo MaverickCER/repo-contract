@@ -7,13 +7,13 @@
 
 **Define your engineering standards once. Share them across repositories. Get actionable rationale for every outcome.**
 
-repo-contract turns the engineering rules scattered across CI, scripts, configuration, and documentation into one reusable contract. It runs the tools you already use, evaluates their results against your standards, and gives people and automation an actionable reason for every outcome. You replace none of your existing tools — your CI, scripts, and development workflow stay intact.
+repo-contract is a TypeScript library that turns the engineering rules scattered across CI, scripts, configuration, and documentation into a single contract you can version, review, and share. It runs the tools you already use, evaluates their results against your standards, and gives actionable information for every outcome. You replace none of your existing tools; your CI, scripts, and development workflow stay intact.
 
-[See the rationale](#see-it-run) · [Define it once](#quick-start) · [Share it across repositories](#from-one-repo-to-a-whole-org) · [Guide](GUIDE.md)
+[See it run](#see-it-run) · [Quick Start](#quick-start) · [Across repositories](#from-one-repo-to-a-whole-org)
 
 ## See it run
 
-**Actionable rationale for every outcome.** The real output of the tiny contract in [`examples/demo/`](examples/demo/README.md) — three published presets against one deliberately imperfect file:
+**Actionable rationale for every outcome.** Here's the real output of the tiny contract in [`examples/demo/`](examples/demo/README.md) — three published presets against one deliberately imperfect file:
 
 ```ts
 checks: {
@@ -30,7 +30,8 @@ $ npm run demo
   tsc reported no type errors.
 
 [FAIL] format
-  Prettier reported formatting failures: Checking formatting...
+  Prettier reported formatting failures:
+  Checking formatting...
   [warn] src/greet.ts
   [warn] Code style issues found in the above file. Run Prettier with --write to fix.
 
@@ -39,25 +40,27 @@ $ npm run demo
   - src/greet.ts:15:3 [no-console]: Unexpected console statement.
 ```
 
-Real output, not a mockup — run it yourself with `npm run demo` from [`examples/demo/`](examples/demo/README.md). Not "CI failed": each line says what happened, where, why the repository treats it that way, and what to do. `warn` doesn't block the run; `fail` does.
+Real output, not a mockup — run it yourself with `npm run demo` from [`examples/demo/`](examples/demo/README.md). Not "CI failed": each line says what happened, where, why the repository treats it that way, and — when there's something to fix — how. `warn` doesn't block the run; `fail` does.
 
 ## Why it exists
 
 Green CI does not mean your standard held.
 
-- Coverage stays above 85% while the file you just added has almost none — no step notices.
-- The mutation score moved because the test suite moved — no step knows the number is now meaningless.
+- Coverage stays above 85%, but the file you just added has almost none — and whether that's acceptable isn't written down anywhere executable.
+- The mutation score moved because the test suite moved — and nothing reconciles the two.
 - A contributor gets "CI failed" and no idea what the repository expects them to do.
 
-Individual tools answer individual questions. A repository standard is a question about all of them **together** — and today that question lives scattered across CI YAML, `package.json` scripts, docs, and review habits. repo-contract makes it one executable thing.
+Individual tools answer individual questions. Your engineering standard is the answer to all of them together — and today it lives scattered across CI YAML, `package.json` scripts, configuration, docs, and review habits. repo-contract makes that standard one executable thing.
 
 ## Quick start
 
-**Your standards, defined once as typed code.** Three files, about five minutes.
+**Your standards, defined once as typed code.** A minimal contract takes three files.
 
 ```sh
-npm install --save-dev repo-contract
+npm install --save-dev repo-contract tsx
 ```
+
+`tsx` runs the TypeScript config and runner. Each check invokes its own tool, so install those too — `typescript`, `vitest`, and `eslint` for the three below. repo-contract bundles none of them.
 
 ```ts
 // repo-contract.config.ts — your standard, as typed code
@@ -92,13 +95,11 @@ process.exitCode = verdict.passed ? 0 : 1
 npm run contract
 ```
 
-Point your pre-commit hook and your CI job at that same `npm run contract`. There is no CLI [by design](GUIDE.md#the-runner-and-ci-integration) — your repository owns the entry point (the file above), not the package. `spawn` and `env` are passed in rather than acquired by the package, so the runner holds no ambient capabilities; plain `node:child_process` works on macOS/Linux, on Windows pass [`cross-spawn`](GUIDE.md#supplying-spawn-and-env).
-
-Node.js `>=20` (Bun and Deno are tested too).
+Point your pre-commit hook and your CI job at that same `npm run contract`. The [Guide](GUIDE.md#the-runner-and-ci-integration) covers the runner, the `spawn`/`env` capability model, and Windows. Node.js `>=20` (Bun and Deno are tested too).
 
 ## What a policy can express
 
-A check runs a tool. A **policy** — your code — decides whether that result meets your standard, and can read any other check's result to do it:
+**Checks produce evidence. Policies decide whether that evidence meets your standard** — and a policy can read any other check's result to do it:
 
 ```ts
 checks: {
@@ -115,13 +116,17 @@ checks: {
 }
 ```
 
-That "don't evaluate X until Y passed" is the thing a pile of independent CI steps can't say. The [Guide](GUIDE.md#a-fuller-example-cross-check-policy) has the full version — coverage floors, per-file warnings, surviving-mutant rationales.
+That relationship — "don't evaluate X until Y passed" — is easy to state in the contract and awkward to maintain as independent CI steps. The [Guide](GUIDE.md#a-fuller-example-cross-check-policy) has the full version: coverage floors, per-file warnings, surviving-mutant rationales.
 
 Presets exist for the common tools — TypeScript, ESLint, Vitest, Prettier, security auditing, dependency and dead-code analysis, package validation, and more. Each assumes its CLI is already a devDependency; repo-contract never installs anything. [Full catalog →](GUIDE.md#presets)
 
 ## Why not just add more CI steps?
 
-CI steps tell you whether each tool passed. They can't tell you what the results mean **together**, and they don't run on your laptop.
+**repo-contract distributes the whole engineering standard, not just individual checks.** One versioned package defines what your repositories consider acceptable — typed code, reviewed like any other code, and runnable on a developer's laptop as well as in CI.
+
+You can express any individual check in CI. The problem is that the standard governing those checks ends up scattered across CI YAML, shared configs, and reusable workflows — infrastructure that distributes **how checks run**, rather than **what your organization considers acceptable**.
+
+Shared ESLint configs, reusable workflows, and template repos distribute individual checks. repo-contract distributes the **whole standard**: the checks, the policies that relate them, and the rationale for their outcomes.
 
 ```text
 GitHub Actions                    repo-contract
@@ -132,8 +137,6 @@ GitHub Actions                    repo-contract
   ── but does that meet
      our standard? ──
 ```
-
-Shared ESLint configs, reusable workflows, and template repos distribute individual checks. repo-contract distributes the **whole standard** as one versioned package your repositories depend on.
 
 ## From one repo to a whole org
 
@@ -147,22 +150,22 @@ one contract package, inherited by every repository
 new requirements land as `warn`, become `fail` on a date
 ```
 
-**One definition, shared across every repository.** An organization expresses its engineering standard for a project type **once** — an internal package that wraps repo-contract and owns the executors — and every project of that type extends it instead of redefining it. Change the shared standard, and every consuming repository picks it up, including ones created from an older boilerplate.
+**One definition, shared across every repository.** An organization expresses its engineering standard for a project type **once** — an internal package that wraps repo-contract and owns the executors — and every project of that type extends it instead of redefining it. Change the shared standard, and consuming repositories receive it through their normal dependency updates, including ones created from an older boilerplate.
 
 - [`examples/`](examples/README.md) — a minimal, runnable end-to-end wiring of that model.
 - [`examples/day-one-walkthrough/`](examples/day-one-walkthrough/README.md) — rolling out a new shared requirement as a dated `warn` → `fail`, not an overnight red build.
 - [`examples/exceptions-walkthrough/`](examples/exceptions-walkthrough/README.md) — _Experimental:_ a governed, justified waiver for one finding, without weakening the check.
 - [ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md) — the reasoning.
 
-## Works with automated contributors
-
-An AI coding agent, a CI bot, or release automation gets the same contract as a human. Rather than pushing every rule into an agent's context window, put the important ones around the automation: the change is regenerated until the verdict passes, and a rationale that names the file, line, and fix is what makes that loop converge.
-
 ## You probably don't need it when
 
 - `npm test` plus a linter is the whole story;
 - each CI check is already independent and that's fine;
 - you don't need any policy logic on top of exit codes.
+
+## Works with automation
+
+AI coding agents, CI bots, and release automation consume the same contract as human contributors. An actionable rationale gives automation a concrete thing to fix rather than a bare "a check failed" — making regenerate-until-green workflows much easier to converge.
 
 ## Status
 
@@ -178,7 +181,7 @@ Pre-1.0. Per [VERSIONING.md](VERSIONING.md), a `0.x` minor may carry a breaking 
 
 ## If this is useful
 
-If this model matches how you think about repository standards, [star it on GitHub](https://github.com/MaverickCER/repo-contract) — it's the main way other maintainers find it. If it doesn't fit your repo, [open an issue](https://github.com/MaverickCER/repo-contract/issues) and say why; that's more useful than a star.
+If this model matches how you think about repository standards, try the demo and examples. If it doesn't fit your repo, [open an issue](https://github.com/MaverickCER/repo-contract/issues) and say why.
 
 ## Contributing
 
