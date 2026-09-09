@@ -18,7 +18,7 @@ import { patchContractScript } from "./package-json-patch.mjs"
 
 const USAGE = `Usage: repo-contract init
 
-Scaffolds repo-contract.config.ts and scripts/contract.mjs from your package.json's declared
+Scaffolds repo-contract.config.mts and scripts/contract.mjs from your package.json's declared
 dependencies, and wires "scripts.contract" into package.json. That's the only thing this command
 does -- checks always run afterwards via \`npm run contract\`, never through this CLI.`
 
@@ -57,7 +57,7 @@ function readPackageJson(cwd) {
  * @returns The absolute paths of the two scaffold targets.
  */
 function preflight(cwd) {
-  const configPath = path.join(cwd, "repo-contract.config.ts")
+  const configPath = path.join(cwd, "repo-contract.config.mts")
   const scriptsDir = path.join(cwd, "scripts")
   const runnerPath = path.join(scriptsDir, "contract.mjs")
 
@@ -139,8 +139,8 @@ function report({ configResult, runnerResult, scriptStatus, detected, skipped })
 
   const createdFiles = []
   const skippedFiles = []
-  if (configResult === "created") createdFiles.push("repo-contract.config.ts")
-  else skippedFiles.push("repo-contract.config.ts (already exists)")
+  if (configResult === "created") createdFiles.push("repo-contract.config.mts")
+  else skippedFiles.push("repo-contract.config.mts (already exists)")
   if (runnerResult === "created") createdFiles.push("scripts/contract.mjs")
   else skippedFiles.push("scripts/contract.mjs (already exists)")
 

@@ -79,7 +79,7 @@ Decision already left open — _"a future CLI remains straightforward to add lat
 consumer of the existing programmatic API"_ — for exactly one reason: onboarding friction.
 Competitor research (packages with real adoption momentum: `lint`, `@forgespace/core`,
 `forge-ai-init`) found that repo-contract requires hand-authoring two files
-(`repo-contract.config.ts`, `scripts/contract.mjs`) and a `package.json` script edit before any
+(`repo-contract.config.mts`, `scripts/contract.mjs`) and a `package.json` script edit before any
 value is visible, where comparable tools offer one command. The friction is entirely at setup time —
 nothing about _running_ checks was ever missing a CLI; `npm run contract` already is, and remains,
 the working runtime entry point.
@@ -106,6 +106,19 @@ invariant to this new surface rather than excepting it from it.
 That paragraph is deliberately load-bearing: it is what makes "we already have a CLI, let's add
 `repo-contract doctor`" visibly inconsistent with this decision later, not merely discouraged by
 convention.
+
+The generated config is `repo-contract.config.mts`, not `.ts`, for a correctness reason discovered
+during testing, not a style preference: `.mts` is always ESM to Node regardless of whether the
+consumer's own `package.json` has `"type": "module"` set — and `npm init`'s default output does
+not set it. A plain `.ts` config under a `"type"`-less `package.json` compiles to CommonJS, while
+the generated `.mjs` runner (ESM by its own extension) imports it with a native ESM `import`
+statement; Node's CJS/ESM default-export interop then binds the whole `module.exports` object to
+that import, not just its `.default`, so `config.checks` silently becomes `undefined` and
+`runRepoContract` rejects the config before anything spawns. `.mts`/`.mjs` sidesteps this for
+every consumer without `init` ever touching `package.json`'s project-wide `"type"` field — the
+safer fix, since flipping `"type"` is a blast-radius change that could affect unrelated `.js`
+files elsewhere in a consumer's project, where switching two file extensions affects only the
+files `init` itself owns.
 
 **Consequences.** `package.json` gains a `bin` field, and `files` gains a new top-level published
 directory (`bin/`), for the first time — the first hand-written, unbundled top-level JS this

@@ -82,7 +82,7 @@ with nothing hidden.
 `tsx` runs the TypeScript config and runner. Each check invokes its own tool, so install those too — `typescript`, `vitest`, and `eslint` for the three below. repo-contract bundles none of them.
 
 ```ts
-// repo-contract.config.ts — your standard, as typed code
+// repo-contract.config.mts — your standard, as typed code
 import { spawn } from "node:child_process"
 import { defineRepoContract } from "repo-contract"
 import { lint, test, typecheck } from "repo-contract/presets"
@@ -94,10 +94,12 @@ export default defineRepoContract({
 })
 ```
 
+`.mts`, not `.ts`: an `.mts` file is always ESM to Node, regardless of whether your own `package.json` has `"type": "module"` set (`npm init`'s default output doesn't). A plain `.ts` config would compile to CommonJS in that case while the `.mjs` runner below — ESM by its own extension — imports it, and Node's CJS/ESM default-export interop would silently hand `runRepoContract` the wrong shape.
+
 ```ts
 // scripts/contract.mjs — the entry point; this is the whole thing
 import { runRepoContract } from "repo-contract"
-import config from "../repo-contract.config.js"
+import config from "../repo-contract.config.mjs"
 
 const { verdict } = await runRepoContract(config)
 for (const [id, result] of Object.entries(verdict.checks)) {

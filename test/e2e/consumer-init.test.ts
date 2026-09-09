@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { runNpm } from "../../scripts/npm-pack.mjs"
 import {
   createConsumerFixture,
   distIsBuilt,
@@ -76,7 +77,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     expect(result.stdout).toContain("✓ securityDeps")
     expect(result.stdout).toContain("npm run contract")
 
-    const config = readFileSync(path.join(consumerDir, "repo-contract.config.ts"), "utf8")
+    const config = readFileSync(path.join(consumerDir, "repo-contract.config.mts"), "utf8")
     expect(config).toContain("typecheck, securityDeps")
 
     const runner = readFileSync(path.join(consumerDir, "scripts", "contract.mjs"), "utf8")
@@ -85,31 +86,75 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     expect(readScripts(path.join(consumerDir, "package.json")).contract).toBe(
       "tsx scripts/contract.mjs",
     )
-
-    // The generated config is valid, importable TypeScript against the real installed package --
-    // resolves the actual RepoContractConfig type and the actual `typecheck`/`securityDeps`
-    // presets, not a stand-in.
-    const typecheckResult = spawnSync(
-      process.execPath,
-      [
-        path.join(consumerDir, "node_modules", "typescript", "bin", "tsc"),
-        "--noEmit",
-        "--moduleResolution",
-        "bundler",
-        "--module",
-        "esnext",
-        "--target",
-        "es2022",
-        path.join(consumerDir, "repo-contract.config.ts"),
-      ],
-      { cwd: consumerDir, encoding: "utf8" },
-    )
-    expect(typecheckResult.stderr + typecheckResult.stdout).not.toContain("error TS")
   }, 60_000)
+
+  it('actually runs the generated contract end to end, without package.json\'s "type" field set -- the exact scenario that regresses the CJS/ESM default-export interop bug', () => {
+    // A dedicated fixture, not the shared consumerDir above: this test needs to install real
+    // devDependencies (tsc, tsx) for a genuine run, and any further `npm install` in the shared
+    // fixture -- even a targeted, --no-save one -- risks npm treating the shared fixture's
+    // already-installed-but-undeclared repo-contract (itself installed via --no-save, so absent
+    // from package.json, and there's no lockfile to anchor it) as extraneous and pruning it,
+    // breaking every other test that reuses that fixture. A fresh, disposable fixture sidesteps
+    // that entirely.
+    const { consumerDir: dir, tarballPath } = createConsumerFixture(
+      "repo-contract-consumer-init-interop-",
+    )
+    try {
+      writeFileSync(
+        path.join(dir, "package.json"),
+        JSON.stringify(
+          {
+            name: "interop-fixture",
+            version: "0.0.0",
+            // Deliberately no "type": "module" -- npm init's default output doesn't set it
+            // either, and that absence is exactly what regressed the original bug:
+            // repo-contract.config.mts (not .ts) exists to survive it regardless. See
+            // specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md's
+            // 2026-09-09 amendment.
+            devDependencies: { typescript: "^5.0.0", tsx: "^4.0.0" },
+          },
+          null,
+          2,
+        ),
+      )
+
+      // Re-installs repo-contract's own tarball alongside typescript/tsx in one atomic command --
+      // without a lockfile to anchor it, even a `--no-save` install of *specific* packages still
+      // does a full reconciliation pass and prunes anything else in node_modules not reachable
+      // from what's being installed, which would otherwise silently remove
+      // createConsumerFixture's own (already `--no-save`, and so equally unanchored) install of
+      // repo-contract itself.
+      const installResult = runNpm(["install", tarballPath, "typescript", "tsx", "--no-save"], {
+        cwd: dir,
+      })
+      expect(installResult.status).toBe(0)
+
+      const initResult = runInit(dir)
+      expect(initResult.status).toBe(0)
+
+      // Beyond type-level validity: actually RUN the generated contract. The interop bug this
+      // regresses against (config.checks silently becoming undefined) only manifests at
+      // runtime -- a typecheck pass alone never catches it, which is exactly how the original
+      // bug shipped undetected in the first place. Not asserting a specific outcome per check or
+      // overall exit code: this scratch fixture has no tsconfig.json and no lockfile, so
+      // `typecheck`/`securityDeps` may legitimately PASS or FAIL depending on the environment --
+      // what matters is that each produces a real, well-formed `[PASS]`/`[FAIL]` line with a real
+      // rationale, categorically different from the crash (an uncaught ERR_MODULE_NOT_FOUND /
+      // InvalidRepoContractConfigError stack trace, asserted against directly below) the bug this
+      // regresses against actually produced.
+      const runResult = runNpm(["run", "contract"], { cwd: dir })
+      expect(runResult.stderr).not.toContain("InvalidRepoContractConfigError")
+      expect(runResult.stderr).not.toContain("Cannot find package")
+      expect(runResult.stdout).toMatch(/\[(PASS|FAIL)\] typecheck:/)
+      expect(runResult.stdout).toMatch(/\[(PASS|FAIL)\] securityDeps:/)
+    } finally {
+      removeConsumerFixture(dir)
+    }
+  }, 120_000)
 
   it("is a clean no-op on a second run once everything is already in place", () => {
     const before = {
-      config: readFileSync(path.join(consumerDir, "repo-contract.config.ts"), "utf8"),
+      config: readFileSync(path.join(consumerDir, "repo-contract.config.mts"), "utf8"),
       runner: readFileSync(path.join(consumerDir, "scripts", "contract.mjs"), "utf8"),
       packageJson: readFileSync(path.join(consumerDir, "package.json"), "utf8"),
     }
@@ -117,10 +162,10 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     const result = runInit(consumerDir)
     expect(result.status).toBe(0)
     expect(result.stdout).toContain("Skipped:")
-    expect(result.stdout).toContain("repo-contract.config.ts (already exists)")
+    expect(result.stdout).toContain("repo-contract.config.mts (already exists)")
     expect(result.stdout).toContain("already set to this value")
 
-    expect(readFileSync(path.join(consumerDir, "repo-contract.config.ts"), "utf8")).toBe(
+    expect(readFileSync(path.join(consumerDir, "repo-contract.config.mts"), "utf8")).toBe(
       before.config,
     )
     expect(readFileSync(path.join(consumerDir, "scripts", "contract.mjs"), "utf8")).toBe(
@@ -138,7 +183,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     expect(result.stdout).toContain("✓ securityDeps")
     expect(result.stdout).not.toMatch(/✓ (test|lint|typecheck|format)\b/)
 
-    const config = readFileSync(path.join(dir, "repo-contract.config.ts"), "utf8")
+    const config = readFileSync(path.join(dir, "repo-contract.config.mts"), "utf8")
     expect(config).toContain("import { securityDeps } from")
     expect(config).toContain("securityDeps,")
 
@@ -195,7 +240,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     expect(result.stdout).toContain("install tsx")
 
     expect(readScripts(path.join(dir, "package.json")).contract).toBeUndefined()
-    expect(readFileSync(path.join(dir, "repo-contract.config.ts"), "utf8")).toContain("typecheck")
+    expect(readFileSync(path.join(dir, "repo-contract.config.mts"), "utf8")).toContain("typecheck")
 
     rmSync(dir, { recursive: true, force: true })
   }, 20_000)

@@ -60,6 +60,11 @@ export default tseslint.config(
       "node_modules",
       "**/node_modules",
       "test/e2e/*/fixtures",
+      // A throwaway local scratch dir for manually testing `repo-contract init` (see
+      // GUIDE.md/README.md's Quick Start) -- never tracked (see .gitignore), never source, and
+      // its own generated files (an arbitrary consumer's package.json/scripts/contract.mjs) fit
+      // no element this repo's own module-boundary model covers.
+      "temp",
       // examples/ is a self-contained npm workspace with its own package.json,
       // tsconfig, and ESLint/Prettier configs -- a demonstration consumer of the
       // published package (see examples/README.md), not this package's own source.
