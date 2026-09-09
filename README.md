@@ -52,18 +52,37 @@ Green CI does not mean your standard held.
 
 Individual tools answer individual questions. Your engineering standard is the answer to all of them together — and today it lives scattered across CI YAML, `package.json` scripts, configuration, docs, and review habits. repo-contract makes that standard one executable thing.
 
+Tools run checks. Quality gates aggregate their exit codes. repo-contract sits a layer under both: it turns each tool's output into structured evidence, then lets your own policies decide what that evidence means — including reading one check's evidence to judge another's.
+
 ## Quick start
 
-**Your standards, defined once as typed code.** A minimal contract takes three files.
+**Your standards, defined once as typed code.**
 
 ```sh
-npm install --save-dev repo-contract tsx
+npm install --save-dev repo-contract tsx typescript vitest eslint
+npx repo-contract init
+npm run contract
 ```
+
+`init` reads your `package.json`'s existing devDependencies (`typescript`, `vitest`, and `eslint`
+above — install whichever of the [presets](GUIDE.md#presets) apply to you, `init` only wires up
+what it finds), writes the same two files shown below
+from them, and adds (or, if one's already there, leaves untouched) that same `"contract"` entry in
+`package.json`'s own `scripts` — nothing it generates is required to run a contract; it's the same
+scaffold you'd otherwise type by hand, once, so it stops being the first thing between you and
+seeing this work. Point your pre-commit hook and your CI job at that same `npm run contract`.
+`init` is Experimental (see [VERSIONING.md](VERSIONING.md)) — everything it writes is yours from
+the moment it lands, so that classification is about the generator, never about what it produces.
+
+### Already know how you want it configured? Create it by hand
+
+A hand-authored contract is the same two files and the same `package.json` entry `init` writes,
+with nothing hidden.
 
 `tsx` runs the TypeScript config and runner. Each check invokes its own tool, so install those too — `typescript`, `vitest`, and `eslint` for the three below. repo-contract bundles none of them.
 
 ```ts
-// repo-contract.config.ts — your standard, as typed code
+// repo-contract.config.mts — your standard, as typed code
 import { spawn } from "node:child_process"
 import { defineRepoContract } from "repo-contract"
 import { lint, test, typecheck } from "repo-contract/presets"
@@ -75,10 +94,12 @@ export default defineRepoContract({
 })
 ```
 
+`.mts`, not `.ts`: an `.mts` file is always ESM to Node, regardless of whether your own `package.json` has `"type": "module"` set (`npm init`'s default output doesn't). A plain `.ts` config would compile to CommonJS in that case while the `.mjs` runner below — ESM by its own extension — imports it, and Node's CJS/ESM default-export interop would silently hand `runRepoContract` the wrong shape.
+
 ```ts
 // scripts/contract.mjs — the entry point; this is the whole thing
 import { runRepoContract } from "repo-contract"
-import config from "../repo-contract.config.js"
+import config from "../repo-contract.config.mjs"
 
 const { verdict } = await runRepoContract(config)
 for (const [id, result] of Object.entries(verdict.checks)) {
@@ -96,6 +117,12 @@ npm run contract
 ```
 
 Point your pre-commit hook and your CI job at that same `npm run contract`. The [Guide](GUIDE.md#the-runner-and-ci-integration) covers the runner, the `spawn`/`env` capability model, and Windows. Node.js `>=20` (Bun and Deno are tested too).
+
+Two patterns worth knowing about early, not just once you're rolling this out across an org: the
+[**ratchet**](examples/day-one-walkthrough/README.md) (a new requirement lands as a dated `warn` →
+`fail`, never an overnight red build) and [**governed exceptions**](examples/exceptions-walkthrough/README.md)
+(_Experimental_ — a justified, reviewed waiver for one specific finding, without weakening the
+check for everything else).
 
 ## What a policy can express
 
@@ -153,7 +180,7 @@ new requirements land as `warn`, become `fail` on a date
 **One definition, shared across every repository.** An organization expresses its engineering standard for a project type **once** — an internal package that wraps repo-contract and owns the executors — and every project of that type extends it instead of redefining it. Change the shared standard, and consuming repositories receive it through their normal dependency updates, including ones created from an older boilerplate.
 
 - [`examples/`](examples/README.md) — a minimal, runnable end-to-end wiring of that model.
-- [`examples/day-one-walkthrough/`](examples/day-one-walkthrough/README.md) — rolling out a new shared requirement as a dated `warn` → `fail`, not an overnight red build.
+- [`examples/day-one-walkthrough/`](examples/day-one-walkthrough/README.md) — the **ratchet** pattern: rolling out a new shared requirement as a dated `warn` → `fail`, not an overnight red build.
 - [`examples/exceptions-walkthrough/`](examples/exceptions-walkthrough/README.md) — _Experimental:_ a governed, justified waiver for one finding, without weakening the check.
 - [ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md) — the reasoning.
 

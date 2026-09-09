@@ -11,6 +11,9 @@ node_modules
 # `npm pack --pack-destination ./artifacts` -- CI's package-build job and the local
 # `npm run smoke` (scripts/smoke-consumer.mjs) both land the packed tarball here.
 /artifacts
+# Scratch directory for manually testing `repo-contract init` locally (see GUIDE.md/README.md's
+# Quick Start) -- never a build artifact or tracked fixture, just a throwaway consumer project.
+/temp
 *.log
 .DS_Store
 .env

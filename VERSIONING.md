@@ -53,15 +53,26 @@ behavior:
 > interpretation (e.g. a finding that used to fail now warns) → potentially major; a bug fix that
 > restores documented behavior → patch or minor depending on impact.
 
-Also unstable at v0.1.0, per the same "not yet been through a real feedback cycle" framing as the
-README's and the original design notes' explicit "not yet" language for a future CLI: none
-shipped yet.
+Also unstable at v0.1.0, per the same "not yet been through a real feedback cycle" framing the
+original design notes used for a future CLI before one existed — that CLI is
+`bin/repo-contract.mjs`, classified Experimental in its own right below.
 
 **`repo-contract/helpers`** (the whole subpath) — a second Experimental surface, added after
 `repo-contract/presets`, classified the same way and for the same reason: a new pre-1.0 surface
 shipped before a real feedback cycle (see
 [ADR 0013](specs/decisions/0013-reusable-exception-policy-helper.md)). The same "new export →
 minor; changed behavior → potentially major" framing above applies to it identically.
+
+**`bin/repo-contract.mjs`** (the `repo-contract init` command) — a third Experimental surface,
+added per [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)'s
+2026-09-09 amendment: its detection table (which preset maps to which npm dependency) and its
+generated file content may both change in a minor or patch release. **Experimental here is a
+version-stability classification, not a caution against using it** — the files `init` writes are
+ordinary, fully-yours source the moment they land, no different from writing them by hand; what
+may change between releases is what `init` writes next time you run it, not what it already wrote.
+The `PresetName` union and `detectPresets`/`buildConfigTemplate`/`patchContractScript` (all
+internal to `bin/`, never imported by a consumer) follow the same "new preset → minor; changed
+default → potentially major" framing as `repo-contract/presets` above.
 
 ## Private
 
