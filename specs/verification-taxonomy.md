@@ -99,6 +99,7 @@ preserved unchanged and not repeated here — see the repo-contract checks list 
 | GitHub Actions               | Are this repository's own workflow files free of correctness and script-injection defects?                  | actionlint (via the `github-actionlint` npm wrapper)              | `.github/workflows/*.{yml,yaml}`                                                                                      | No                                                            | JSON (`GitHubActionsEvidence`)         | `github-actions`         |
 | Security -- supply-chain     | Does any installed dependency trip a Socket.dev supply-chain alert above a medium rating, unwaived?         | `@socketsecurity/cli` + `scripts/security-socket/`                | the installed dependency tree (`socket ci`)                                                                           | No                                                            | JSON (`SecuritySocketEvidence`)        | `security-socket`        |
 | AI-assisted review           | Has a CodeRabbit `review --agent` pass run locally on the working tree, or is its non-execution recorded?   | CodeRabbit CLI (`--agent` event stream) + `scripts/coderabbitai/` | uncommitted, tracked edits (`coderabbit review --agent --uncommitted`)                                                | No                                                            | JSON (`CoderabbitEvidence`)            | `coderabbitai`           |
+| Dead-code detection          | Does knip report an unused dependency/export/file with no reviewed record justifying it?                    | knip + `scripts/dead-code/`                                       | this repository's own full project graph (`knip --reporter json`, no config-time exemptions)                          | No                                                            | JSON (`DeadCodeEvidence`)              | `dead-code`              |
 
 Rows with their own `###` section below are detailed there, including the exact command to run
 each alone (`npm run test:unit`, etc. — see "Execution layers"). Mutation, Coverage, and API
@@ -116,9 +117,9 @@ access, or obfuscated code) that `security-deps`'s known-CVE advisories and `sec
 committed-secret scan do not; `coderabbitai` is the one check whose finding source is an LLM
 opinion rather than a reproducible tool result, so its own _presence and self-reporting_, not its
 pass/fail outcome, is what it establishes ([ADR 0014](decisions/0014-coderabbit-as-a-surfaced-check.md)).
-All five exception-policy-backed checks (`security-socket`, `coderabbitai`, `security-network`,
-`preset-commands`, `suppression-governance`) share the same reviewed-waiver machinery — see
-"Reviewed exceptions" at the end of this section.
+All six exception-policy-backed checks (`security-socket`, `coderabbitai`, `security-network`,
+`preset-commands`, `suppression-governance`, `dead-code`) share the same reviewed-waiver machinery
+— see "Reviewed exceptions" at the end of this section.
 
 ### Unit — `test-unit`
 
@@ -515,26 +516,67 @@ All five exception-policy-backed checks (`security-socket`, `coderabbitai`, `sec
 - **CI**: part of `npm run contract`. Always `not-applicable` there (review is delegated to the
   CodeRabbit GitHub App); no `dependsOn`.
 
+### Dead-code detection — `dead-code`
+
+- **Establishes**: that every unused-dependency/export/file finding [knip](https://knip.dev)
+  reports against this repository's own project graph has its own reviewed record in
+  `.repo-contract/exceptions/dead-code.json`. This repository's own run is the one deliberate
+  exception among the checks built on published `src/presets/*.ts` factories: it does not consume
+  the published `deadCode` preset (still published, unchanged, for external consumers) — it
+  self-hosts `scripts/dead-code/check.ts` instead, running knip with **no config-time exempt list
+  at all**, because a config-time exempt list needs its answer before knip ever runs, which a
+  _reconciled_ registry structurally cannot supply (the registry that would suppress a finding can
+  only be built from findings that already ran unsuppressed — see
+  [ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md)'s 2026-09 v0.4.0
+  amendment, PR 5). `scripts/dead-code/check.ts` flattens every knip issue category into one
+  `DeadCodeFinding[]`, reconciles it against the registry (a blank stub per unmatched finding; a
+  stale record whose finding is gone surfaced and failed, never auto-removed), and writes it back.
+- **Does not establish**: that a genuinely dead code path is harmless to delete, or that knip's own
+  static reachability analysis is complete — a dynamic `require`, a spawned-by-name CLI, or a
+  GitHub Actions workflow reference are all real uses knip cannot see, which is exactly what a
+  record's `justification` exists to explain.
+- **The reviewed-exception shape**: a record in `.repo-contract/exceptions/dead-code.json`, bound
+  to `dead-code:<kind>:<name>` (`scripts/dead-code/registry.ts`) — the package/export/file `name`
+  is the subject, deliberately with no file/line coordinates, so the same symbol or dependency name
+  reported unused in two different places is a genuine `deriveId` collision `reconcileExceptions`
+  surfaces as an integrity failure rather than silently merging. Carries only `justification` plus
+  its own `kind`/`name` identity metadata — no `alternatives`/`method`/`exceptionType`, the same
+  minimal shape as `preset-commands.json`: an unused-dependency exemption isn't a
+  guardrail-loosening waiver the way the security registries' findings are.
+- **Files executed**: none of this repository's code — `knip --reporter json` (spawned through
+  `cross-spawn`, a 5-minute hard timeout) statically analyzes the project graph.
+- **Run alone**: `tsx scripts/dead-code/check.ts` (prints the JSON evidence), or
+  `npm run contract -- dead-code`.
+- **Coverage contribution**: no — external static analysis, none of this package's code runs.
+- **Evidence**: `DeadCodeEvidence` (`scripts/dead-code/evidence-types.ts`) — every raw finding
+  (`kind`, `name`, `file`, `location`), the reconciled `activeExceptions`/`staleExceptions`, and
+  which ids were freshly scaffolded.
+- **Policy**: `evaluateDeadCodePolicy` — a pure evidence->verdict function; fails when knip itself
+  could not run, on any registry load/reconcile error, on any finding whose record has a blank
+  `justification`, or on any stale record; passes once every discovered finding is backed by a
+  non-empty `justification` (including the trivial case: knip reports 0 issues).
+- **CI**: part of `npm run contract`. No `dependsOn` -- independent of every other check.
+
 ### Reviewed exceptions — `.repo-contract/exceptions/*.json`
 
-`suppression-governance`, `security-network`, `security-socket`, `coderabbitai`, and
-`preset-commands` all express a reviewed, accepted exception the same way, on the shared
-`repo-contract/helpers` primitives (`reconcileExceptions` / `serializeExceptionRegistry` /
+`suppression-governance`, `security-network`, `security-socket`, `coderabbitai`,
+`preset-commands`, and `dead-code` all express a reviewed, accepted exception the same way, on the
+shared `repo-contract/helpers` primitives (`reconcileExceptions` / `serializeExceptionRegistry` /
 `writeExceptionRegistry` / the exception-policy resolver —
 [ADR 0013](decisions/0013-reusable-exception-policy-helper.md)) plus one check-owned layer
 (`scripts/shared/exception-record.ts` — `validateExceptionRegistry` + a per-registry
 `ExceptionRegistrySchema`, unpublished). Unified across PR 2 (suppression), PR 3 (the three
-security checks), and PR 4 (preset commands) of the 2026-09 v0.4.0 effort.
+security checks), PR 4 (preset commands), and PR 5 (dead-code) of the 2026-09 v0.4.0 effort.
 
-- **Where.** All five live under `.repo-contract/exceptions/`: `disable-comments.json`,
-  `socket.json`, `coderabbit.json`, `security-network.json`, `preset-commands.json`, all using the
-  envelope `{ "exceptions": [ … ] }` and read via `loadExceptionRegistry` (a missing file is a
-  normal empty-registry state, never an error). Each is owned end-to-end by its check's own
-  scan/review script, which reconciles it against that run's findings via `reconcileExceptions` and
-  rewrites it in place (creating `.repo-contract/exceptions/` first if a fresh tree has none). The
-  two Socket / CodeRabbit "the tool didn't run" states (`unavailable`/`not-applicable`/`error`)
-  validate the registry but do **not** reconcile — with no finding list, no record can be concluded
-  stale.
+- **Where.** All six live under `.repo-contract/exceptions/`: `disable-comments.json`,
+  `socket.json`, `coderabbit.json`, `security-network.json`, `preset-commands.json`,
+  `dead-code.json`, all using the envelope `{ "exceptions": [ … ] }` and read via
+  `loadExceptionRegistry` (a missing file is a normal empty-registry state, never an error). Each
+  is owned end-to-end by its check's own scan/review script, which reconciles it against that run's
+  findings via `reconcileExceptions` and rewrites it in place (creating
+  `.repo-contract/exceptions/` first if a fresh tree has none). The two Socket / CodeRabbit "the
+  tool didn't run" states (`unavailable`/`not-applicable`/`error`) validate the registry but do
+  **not** reconcile — with no finding list, no record can be concluded stale.
 - **Shape.** Every record carries the three-field core (`id`, `version`, `justification`) plus
   per-registry typed metadata. `disable-comments.json` adds `category`/`verificationMethod` closed
   enums and `domain`/`rule`/`file`/`line`. The three `SecurityExceptionFields` registries
@@ -542,17 +584,19 @@ security checks), and PR 4 (preset commands) of the 2026-09 v0.4.0 effort.
   `EXCEPTION_METHODS` member: how the waiver's claim was substantiated), `exceptionType` (an
   `EXCEPTION_TYPES` member) — plus their own identity metadata (`capability`/`file`/`line`/`column`;
   `package`/`packageVersion`/`type`/`severity`; `file`/`severity`/`summary`). `preset-commands.json`
-  is the minimal case: `justification` alone, plus the `command` name — a preset command isn't a
-  guardrail-loosening waiver the way the others are, so no `alternatives`/`method`/`exceptionType`
-  applies. The `verifiedBy`/`verifiedContentHash` content-bound sign-off block the first four once
-  carried was removed in the 2026-09 unification and deferred with the `exception-governance`
-  PR-approval gate. Each record's `id` must equal what its registry's schema recomputes from the
-  record's own identity metadata — a stored key inconsistent with its own claimed identity is a
-  registry bug, caught at load time. Ids: `suppression:<domain>:<rule>:<file>:<line>`,
-  `security-network:<capability>:<file>:<line>:<column>`, `socket:<package>@<version>:<type>`,
-  `coderabbit:<file>:<severity>:<hash of summary>`, `preset-command:<command>`. "No matching
-  finding" _is_ staleness, and a stale record fails the policy (never auto-removed).
-- **Validation.** No generated JSON Schema for any of the five; `validateExceptionRegistry` +
+  and `dead-code.json` are the minimal case: `justification` alone, plus their own identity metadata
+  (`command`; `kind`/`name`) — neither a preset command nor an unused-dependency exemption is a
+  guardrail-loosening waiver the way the security registries' findings are, so no
+  `alternatives`/`method`/`exceptionType` applies to either. The `verifiedBy`/`verifiedContentHash`
+  content-bound sign-off block the first four once carried was removed in the 2026-09 unification
+  and deferred with the `exception-governance` PR-approval gate. Each record's `id` must equal what
+  its registry's schema recomputes from the record's own identity metadata — a stored key
+  inconsistent with its own claimed identity is a registry bug, caught at load time. Ids:
+  `suppression:<domain>:<rule>:<file>:<line>`, `security-network:<capability>:<file>:<line>:<column>`,
+  `socket:<package>@<version>:<type>`, `coderabbit:<file>:<severity>:<hash of summary>`,
+  `preset-command:<command>`, `dead-code:<kind>:<name>`. "No matching finding" _is_ staleness, and a
+  stale record fails the policy (never auto-removed).
+- **Validation.** No generated JSON Schema for any of the six; `validateExceptionRegistry` +
   each registry's `ExceptionRegistrySchema` is authoritative, run on _every_ contract run before
   any findings are evaluated — so a malformed or internally-inconsistent registry fails CI even on
   a clean or never-ran scan.
@@ -562,7 +606,9 @@ security checks), and PR 4 (preset commands) of the 2026-09 v0.4.0 effort.
   `coderabbit.json` additionally forbids `exceptionType: "validated-false-positive"` /
   `method: "mechanical-reverification"` (no oracle to re-run against an AI finding); every published
   preset's spawned command still needs its own record regardless of what any other preset already
-  has one for. A record only ever moves a _specific, named_ finding from "fails" to "permitted".
+  has one for; `dead-code` runs knip with no config-time exempt list at all, so every finding —
+  including one an old exempt list would have silenced before knip ever saw it — needs its own
+  record. A record only ever moves a _specific, named_ finding from "fails" to "permitted".
 
 ## Coverage
 

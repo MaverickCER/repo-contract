@@ -10,10 +10,10 @@ the generic `validateExceptionRegistry` + per-registry `ExceptionRegistrySchema`
 `validateSecurityExceptionFields` for the security family). Each check reconciles its own findings
 against its own registry via `reconcileExceptions` in its own scan/review script; the policy is a
 pure evidence->verdict function. The `suppression-governance`, `security-network`,
-`security-socket`, and `coderabbitai` checks all consume this; each check's own use is documented
-in that check's own ADR (0006, 0007, 0014) or PR. See the "The exception registry is the review
-surface" amendment below for the model, and the superseded-marker on "Verification, not
-attestation" for what was removed.
+`security-socket`, `coderabbitai`, `preset-commands`, and `dead-code` checks all consume this; each
+check's own use is documented in that check's own ADR (0006, 0007, 0008, 0014) or PR. See the "The
+exception registry is the review surface" amendment below for the model, and the
+superseded-marker on "Verification, not attestation" for what was removed.
 
 ## Context
 
@@ -214,11 +214,14 @@ amendment.
 
 ## Consequences
 
-- `suppression-governance`, `security-network`, `security-socket`, and `coderabbitai` share one
-  tested precedence algorithm, one tested field-completeness check, one reconcile/stale mechanism,
-  and one generic registry validator, instead of five-plus near-identical copies. Each landed in
-  its own reviewable PR once the primitive itself had landed: PR 2 (suppression) and PR 3 (the
-  three security checks, together) of the 2026-09 v0.4.0 unification.
+- `suppression-governance`, `security-network`, `security-socket`, `coderabbitai`,
+  `preset-commands`, and `dead-code` share one tested precedence algorithm, one tested
+  field-completeness check, one reconcile/stale mechanism, and one generic registry validator,
+  instead of six-plus near-identical copies. Each landed in its own reviewable PR once the
+  primitive itself had landed: PR 2 (suppression), PR 3 (the three security checks, together),
+  PR 4 (preset-commands), and PR 5 (dead-code, self-hosted off the boot-time exempt-list loop —
+  see [ADR 0008](0008-self-hosting-tool-and-dependency-choices.md)'s amendment) of the 2026-09
+  v0.4.0 unification.
 - `repo-contract` now ships one real runtime dependency (`minimatch`) where it previously shipped
   zero. This is scoped and explained above, not silent — a consumer who never imports
   `repo-contract/helpers` still pays nothing extra at runtime (the root and `presets` entry points
