@@ -1,13 +1,19 @@
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig } from "../src/types.js"
 
-/** One pa11y finding, `--reporter json` shape -- not published as a TypeScript type by the tool. */
+/**
+ * One pa11y finding, `--reporter json` shape (not published as a TypeScript type by the tool),
+ * plus the `page` scripts/check-accessibility.mjs attaches so a finding names which scanned page
+ * it is on.
+ */
 interface Pa11yFinding {
   readonly code: string
   readonly type: "error" | "warning" | "notice"
   readonly message: string
   readonly context: string | null
   readonly selector: string
+  /** Repo-relative path of the page this finding is on, e.g. `"docs/index.html"`. */
+  readonly page: string
 }
 
 type ToolResult<T> =
@@ -15,15 +21,16 @@ type ToolResult<T> =
 
 /**
  * @param finding One pa11y finding.
- * @returns A single-line `selector [code]: message` summary.
+ * @returns A single-line `page -- selector [code]: message` summary.
  */
 function formatFinding(finding: Pa11yFinding): string {
-  return `${finding.selector} [${finding.code}]: ${finding.message}`
+  return `${finding.page} -- ${finding.selector} [${finding.code}]: ${finding.message}`
 }
 
-// Runs pa11y (WCAG2AA, its default standard) against docs/index.html via a
-// real headless-Chromium accessibility tree, not static markup analysis --
-// see scripts/check-accessibility.mjs's own doc comment and
+// Runs pa11y (WCAG2AA, its default standard) against a short list of built
+// pages (scripts/check-accessibility.mjs's own PAGES) via a real
+// headless-Chromium accessibility tree, not static markup analysis -- see
+// that script's own doc comment (which pages, and why only those) and
 // specs/decisions/0008-self-hosting-tool-and-dependency-choices.md for why
 // this tool was chosen. "error"-type findings fail; "warning" surfaces as
 // warn (never blocks); "notice" is too noisy relative to its actionability
@@ -51,7 +58,7 @@ export const accessibility: CheckDefinitionConfig = {
       return {
         outcome: "fail",
         rationale: [
-          `pa11y reported ${String(errors.length)} WCAG2AA error(s) against docs/index.html:`,
+          `pa11y reported ${String(errors.length)} WCAG2AA error(s) across the scanned pages:`,
           ...errors.map((finding) => `- ${formatFinding(finding)}`),
         ].join("\n"),
       }
@@ -69,7 +76,7 @@ export const accessibility: CheckDefinitionConfig = {
 
     return {
       outcome: "pass",
-      rationale: `pa11y reported 0 WCAG2AA issues against docs/index.html (${String(evidence.value.length)} finding(s) total, all informational).`,
+      rationale: `pa11y reported 0 WCAG2AA issues across the scanned pages (${String(evidence.value.length)} finding(s) total, all informational).`,
     }
   },
 }

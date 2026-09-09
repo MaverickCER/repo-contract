@@ -140,17 +140,14 @@ export const LINKINATOR_SKIP_PATTERNS = [
   "^https?://maverickcer\\.github\\.io/repo-contract/api/",
 ]
 
-async function runLinkinator() {
-  const matches = await Promise.all(DOCS_GLOBS.map((pattern) => globHasMatch(pattern)))
-  const matchingGlobs = DOCS_GLOBS.filter((_pattern, index) => matches[index])
-
-  if (matchingGlobs.length === 0) {
+async function runLinkinatorOn(targets, extraArgs) {
+  if (targets.length === 0) {
     return { ok: true, value: { links: [] } }
   }
 
   const spawned = await runTool("linkinator", [
-    ...matchingGlobs,
-    "--markdown",
+    ...targets,
+    ...extraArgs,
     "--retry",
     ...LINKINATOR_SKIP_PATTERNS.flatMap((pattern) => ["--skip", pattern]),
     "--format",
@@ -166,6 +163,36 @@ async function runLinkinator() {
   } catch (error) {
     return { ok: false, error: `linkinator did not produce valid JSON: ${error.message}` }
   }
+}
+
+async function runMarkdownLinkinator() {
+  const matches = await Promise.all(DOCS_GLOBS.map((pattern) => globHasMatch(pattern)))
+  const matchingGlobs = DOCS_GLOBS.filter((_pattern, index) => matches[index])
+  return runLinkinatorOn(matchingGlobs, ["--markdown"])
+}
+
+// A second, HTML-mode crawl over docs/ -- the site's own index.html and (once
+// scripts/api-docs-html/ has run) the generated docs/api/**/*.html pages. Neither was covered by
+// the markdown-only crawl above (DOCS_GLOBS never included docs/), a real, confirmed gap this
+// closes rather than a new requirement invented for its own sake. Internal (docs/-relative) links
+// get no special tolerance -- a broken one fails this check same as any markdown link would;
+// external links get the same `--retry` + LINKINATOR_SKIP_PATTERNS treatment already established
+// above, so a transient third-party hiccup can't turn into a contract failure. Unlike DOCS_GLOBS
+// above, `docs/index.html` is a permanent, always-committed part of this repository (the site
+// itself), so this target needs no globHasMatch-style existence pre-check.
+async function runHtmlLinkinator() {
+  // --recurse: linkinator's default is "crawl only the given start file/URL" -- without it, this
+  // would check docs/index.html alone and never descend into docs/api/**.
+  return runLinkinatorOn(["docs"], ["--recurse"])
+}
+
+async function runLinkinator() {
+  const [markdown, html] = await Promise.all([runMarkdownLinkinator(), runHtmlLinkinator()])
+
+  if (!markdown.ok) return markdown
+  if (!html.ok) return html
+
+  return { ok: true, value: { links: [...markdown.value.links, ...html.value.links] } }
 }
 
 // Run the two tools only when invoked as a script (`node scripts/check-docs.mjs`,
