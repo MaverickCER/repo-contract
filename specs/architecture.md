@@ -438,6 +438,13 @@ solely as a target for `ts-json-schema-generator` (see
 [ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md)); it is not part of the
 runtime.
 
+`bin/` is a fourth top-level module, a sibling of `src/`, not a layer within it — published as
+this package's one executable surface (`repo-contract init`, see
+[ADR 0004](decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)'s
+2026-09-09 amendment). It is the first hand-written, unbundled top-level JS this package has ever
+published: not compiled by tsup, not routed through `src/index.ts`, and it imports nothing from
+`src/` — only `node:fs`/`node:path`. It writes files; it never executes the pipeline above.
+
 ## Self-hosting
 
 This repository's own `repo-contract.config.ts` uses the package's real public API to validate

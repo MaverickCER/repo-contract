@@ -129,6 +129,21 @@
             existing tools.
           </p>
 
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">Quick start</span>
+
+              <button class="copy-button" type="button" data-copy-target="hero-init-snippet">
+                Copy
+              </button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="hero-init-snippet">npm install --save-dev repo-contract tsx typescript vitest eslint
+npx repo-contract init
+npm run contract</code></pre>
+          </div>
+
           <div class="hero-actions">
             <a class="button button--primary" href="#see-it">See it in action</a>
 
@@ -422,7 +437,10 @@
             <p class="callout-title">A progressive rollout, not a migration</p>
 
             <ol class="callout-steps">
-              <li>Wrap one existing check.</li>
+              <li>
+                Wrap one existing check — <code>npx repo-contract init</code> detects what's already
+                in your <code>package.json</code> and generates a starting point.
+              </li>
               <li>Write its policy.</li>
               <li>Run the contract locally.</li>
               <li>Run the same contract in CI.</li>

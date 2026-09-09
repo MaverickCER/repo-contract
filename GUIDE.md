@@ -134,13 +134,20 @@ Alternatives).
 
 ## The runner and CI integration
 
-### Why there is no CLI
+### Why the CLI only scaffolds
 
 repo-contract is a library, not a repository-wide command. Your repository owns the entry
 point, the process-spawning capability, and the environment it runs with — so the contract
 stays composable and the package never becomes another opaque layer between you and your
-tools. The cost is one small file you write once (below); everything after that is
-`npm run contract`.
+tools. `npx repo-contract init` (see the [README's Quick Start](README.md#quick-start))
+automates writing the files below — it detects your `package.json`'s existing devDependencies,
+generates `repo-contract.config.ts` and `scripts/contract.mjs` from them, and adds (or, if it's
+already present, leaves untouched) a `"contract"` entry in `package.json`'s own `scripts` — but
+it's a one-time scaffold, not a runtime. It never runs a check itself, never spawns anything, and
+never becomes a prerequisite for `npm run contract`: everything it writes is yours from the
+moment it lands, indistinguishable from writing it by hand. Everything after that is
+`npm run contract`, exactly as below, whether you got there via `init` or by typing this out
+yourself.
 
 `runRepoContract()` never calls `process.exit()` itself — your integration decides what to
 do with the result. That file is the whole integration:

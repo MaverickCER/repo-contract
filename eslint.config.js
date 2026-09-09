@@ -170,6 +170,12 @@ export default tseslint.config(
         // policies below".
         { type: "checks", pattern: "checks" },
         { type: "scripts", pattern: "scripts" },
+        // bin/repo-contract.mjs -- the one published executable surface (see
+        // specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md's
+        // 2026-09-09 amendment). Hand-written, unbundled, imports nothing from src/ (it must not,
+        // per that amendment's ambient-capability constraints) -- default "allow" below is fine
+        // as-is, this only needs to exist so boundaries/no-unknown-files doesn't reject it.
+        { type: "bin", pattern: "bin" },
         { type: "eslint-rules", pattern: "eslint-rules" },
         { type: "test", pattern: "test" },
       ],
@@ -756,9 +762,9 @@ export default tseslint.config(
     // `type-definitions-only` requires every top-level statement in a file
     // to be a type declaration -- correct only for genuine ambient
     // declaration files, which in this repo means exactly the
-    // hand-written *.d.mts siblings of scripts/**/*.mjs and
-    // eslint-rules/**/*.mjs (see their own config block further down).
-    files: ["scripts/**/*.d.mts", "eslint-rules/**/*.d.mts"],
+    // hand-written *.d.mts siblings of scripts/**/*.mjs, eslint-rules/**/*.mjs, and
+    // bin/**/*.mjs (see their own config block further down).
+    files: ["scripts/**/*.d.mts", "eslint-rules/**/*.d.mts", "bin/**/*.d.mts"],
     plugins: { "@rnx-kit": rnxKit },
     rules: {
       "@rnx-kit/type-definitions-only": "error",
@@ -968,7 +974,7 @@ export default tseslint.config(
     // treatment as the root *.config.ts block below, and for the same
     // reason: not part of tsconfig.json's projectService-driven type
     // checking.
-    files: ["scripts/**/*.d.mts", "eslint-rules/**/*.d.mts"],
+    files: ["scripts/**/*.d.mts", "eslint-rules/**/*.d.mts", "bin/**/*.d.mts"],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
   },
   {
