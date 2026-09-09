@@ -72,6 +72,12 @@ export function getWidgetCount(): number {
 }
 `
 
+    // One scratch root, recompiled in place for each version -- writeFixtureSource overwrites
+    // src/index.ts and recompiles every call, so a second buildFixturePackage against the same
+    // root is a real, independent extraction of the *new* content, not a cached result. Reusing
+    // the root (rather than a second mkdtemp) keeps this test's own footprint small under the
+    // full contract's concurrent test-integration run -- see [[api-contract-test-isolation]] on
+    // heavy test hooks tipping vitest's coverage provider into a race.
     const before = await buildFixturePackage(root, source("The original summary."))
     const beforeMarkdownDir = path.join(root, "md-before")
     generateMarkdownPages(before.apiJsonPath, beforeMarkdownDir)
@@ -79,26 +85,16 @@ export function getWidgetCount(): number {
       await readFile(path.join(beforeMarkdownDir, "fixture-package.getwidgetcount.md"), "utf8"),
     )
 
-    // A fresh scratch root -- buildFixturePackage recompiles in place, and this proves the
-    // *content* changed, not merely that a second run produced different output for unrelated
-    // reasons (a stale cache, a nondeterministic ordering, etc).
-    const secondRoot = await mkdtemp(
-      path.join(os.tmpdir(), "repo-contract-api-docs-html-integration-"),
+    const after = await buildFixturePackage(root, source("A completely different summary."))
+    const afterMarkdownDir = path.join(root, "md-after")
+    generateMarkdownPages(after.apiJsonPath, afterMarkdownDir)
+    const afterHtml = markdownToHtml(
+      await readFile(path.join(afterMarkdownDir, "fixture-package.getwidgetcount.md"), "utf8"),
     )
-    try {
-      const after = await buildFixturePackage(secondRoot, source("A completely different summary."))
-      const afterMarkdownDir = path.join(secondRoot, "md-after")
-      generateMarkdownPages(after.apiJsonPath, afterMarkdownDir)
-      const afterHtml = markdownToHtml(
-        await readFile(path.join(afterMarkdownDir, "fixture-package.getwidgetcount.md"), "utf8"),
-      )
 
-      expect(beforeHtml).toContain("The original summary.")
-      expect(beforeHtml).not.toContain("A completely different summary.")
-      expect(afterHtml).toContain("A completely different summary.")
-      expect(afterHtml).not.toContain("The original summary.")
-    } finally {
-      await removeTempDir(secondRoot)
-    }
+    expect(beforeHtml).toContain("The original summary.")
+    expect(beforeHtml).not.toContain("A completely different summary.")
+    expect(afterHtml).toContain("A completely different summary.")
+    expect(afterHtml).not.toContain("The original summary.")
   })
 })
