@@ -1,0 +1,21 @@
+{
+  "name": "exceptions-walkthrough",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Advanced example: a governed, justified exception to an otherwise-blocking finding, built on repo-contract/helpers (Experimental). See ./README.md.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "walkthrough": "tsx run.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@types/node": "^20.19.43",
+    "repo-contract": "file:../..",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3"
+  }
+}

@@ -527,7 +527,12 @@ local/CI ... local/CI
 
 Each service depends on one package and receives repo-contract plus every executor transitively. When the shared standard changes, every consuming repository picks it up — including repositories created from an older boilerplate.
 
-[`examples/`](examples/README.md) is a minimal, runnable end-to-end wiring of that model: an `internal-boilerplate-contract` package (three read-only checks, exported ESLint/Prettier/TypeScript baselines, a reusable CI workflow) and a trivial `boilerplate` that consumes it. See the [walkthrough](examples/README.md) and [ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md).
+[`examples/`](examples/README.md) is a minimal, runnable end-to-end wiring of that model: an `internal-boilerplate-contract` package (three read-only checks, exported ESLint/Prettier/TypeScript baselines, a reusable CI workflow) and a trivial `boilerplate` that consumes it. Two deeper, runnable walkthroughs build on it:
+
+- [`examples/day-one-walkthrough/`](examples/day-one-walkthrough/README.md) — rolling out a **new** shared requirement across every repository at once, as a dated `warn` → `fail` rather than an immediate red build.
+- [`examples/exceptions-walkthrough/`](examples/exceptions-walkthrough/README.md) — _Experimental:_ a governed, justified waiver for one specific finding, built on [`repo-contract/helpers`](#helpers), without weakening the check for everything else.
+
+See the [walkthrough](examples/README.md) and [ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md).
 
 ## Open-source contribution guardrails
 
