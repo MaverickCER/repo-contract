@@ -27,7 +27,7 @@ import { Marked } from "marked"
  * @param value - The raw string to escape.
  * @returns `value` with `&`, `<`, `>`, `"`, `'` entity-escaped.
  */
-function escapeAttribute(value: string): string {
+export function escapeAttribute(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -137,7 +137,7 @@ export interface RenderPageOptions {
  * favicon links, and `styles.css` stylesheet `docs/index.html` uses (via `rootRelativePath`, so
  * dark/light mode and every existing design token apply here unchanged), a minimal header, and a
  * footer. No JavaScript beyond the theme bootstrap -- these pages don't need the main site's nav
- * toggle or search overlay.
+ * toggle.
  * @param options - See {@link RenderPageOptions}.
  * @returns The complete HTML document as a string.
  */
