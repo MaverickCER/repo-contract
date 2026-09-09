@@ -1,16 +1,22 @@
 {
   "name": "repo-contract",
   "version": "0.3.2",
-  "description": "Enforce your repository's own quality bar before CI even spins up. Configure arbitrary checks, capture what happened as evidence, and let repository-owned policies determine what passes. repo-contract provides the execution and evidence layer without becoming another CI system or imposing its own definition of code quality.",
+  "description": "Define repository quality standards as executable contracts. Run existing checks, capture structured evidence, and apply repository-owned policies to produce actionable pass, warn, or fail results.",
   "keywords": [
-    "contract",
-    "ci",
-    "policy",
-    "evidence",
     "quality-gate",
-    "process-execution",
+    "code-quality",
+    "engineering-standards",
+    "repository-standards",
+    "ci",
+    "continuous-integration",
+    "policy",
+    "quality-checks",
+    "validation",
+    "governance",
+    "developer-tools",
+    "automation",
     "typescript",
-    "tool-agnostic"
+    "contract"
   ],
   "homepage": "https://maverickcer.github.io/repo-contract/",
   "bugs": {
@@ -22,8 +28,8 @@
   },
   "license": "MIT",
   "author": {
-    "name": "MaverickCER",
-    "url": "https://github.com/maverickcer"
+    "name": "Maverick Manasco",
+    "url": "https://github.com/MaverickCER"
   },
   "sideEffects": false,
   "type": "module",
@@ -70,8 +76,7 @@
     "dist",
     "helpers",
     "presets",
-    "schemas",
-    "src"
+    "schemas"
   ],
   "scripts": {
     "accessibility": "npm run contract -- accessibility",
@@ -205,5 +210,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   }
 }
