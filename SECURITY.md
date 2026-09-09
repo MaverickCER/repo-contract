@@ -1,10 +1,17 @@
 # Security policy
 
-This document defines the security boundaries and threat model for `repo-contract`:
-what protections the package intentionally provides, what responsibilities remain with the
-application that configures it, and why those boundaries exist. See the README's
-[Security model](README.md#security-model) section for a shorter summary, and
-`specs/decisions/` for the ADRs behind specific choices referenced below.
+**In short:**
+
+- Commands run with **no shell interpretation** unless a check opts in with `shell: true`.
+- Process spawning and environment access are capabilities **the consumer supplies**, not
+  owned by the package.
+- The shipped surface has no CLI, no network calls, and no telemetry — and the no-network
+  property is enforced by a check, not merely documented.
+
+The rest of this document defines the security boundaries and threat model for
+`repo-contract`: what protections the package intentionally provides, what responsibilities
+remain with the application that configures it, and why those boundaries exist.
+`specs/decisions/` holds the ADRs behind specific choices referenced below.
 
 ## Reporting a vulnerability
 

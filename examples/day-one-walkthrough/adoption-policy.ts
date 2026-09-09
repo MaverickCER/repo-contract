@@ -10,7 +10,7 @@
  * the requirement's real check in a function like this so that, before a chosen date, a
  * not-yet-satisfied repository gets an actionable `"warn"` with a countdown instead of a `"fail"`.
  *
- * See ./README.md and repo-contract's own README section "Standardize once, enforce everywhere".
+ * See ./README.md and repo-contract's own README section "From one repo to a whole org".
  */
 import type { Policy, PolicyContext } from "repo-contract"
 
