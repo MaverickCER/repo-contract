@@ -147,3 +147,6 @@ itself.
 
 - [ADR 0010 — Review-driven contract evolution and consumer-owned shared contracts](../specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md)
 - [The `repo-contract` README](../README.md)
+- [`demo/`](demo) — a smaller, unrelated example: the tiny, real contract behind the main README's
+  opening demo (three published presets, one deliberately imperfect file, real pass/fail/warn
+  output).
