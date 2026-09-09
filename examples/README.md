@@ -73,6 +73,23 @@ repo-contract
   - `.github/workflows/contract.yml` — a thin caller that references the reusable
     workflow.
 
+## Two deeper walkthroughs
+
+`internal-boilerplate-contract` + `boilerplate` above show the wiring. These two
+packages each pick up one thing an organization does _after_ the wiring is in
+place. Each has its own `README.md` and a runnable `npm run walkthrough`.
+
+- **[`day-one-walkthrough/`](day-one-walkthrough)** — rolling out a **new** shared
+  requirement across every repository at once, as a dated `warn` → `fail` instead
+  of an immediate red build. The `exampleAdoptionPolicy` wrapper it defines is
+  ordinary policy code you could keep in your own shared contract, not a
+  `repo-contract` feature.
+- **[`exceptions-walkthrough/`](exceptions-walkthrough)** — _Advanced /
+  Experimental._ A governed, justified waiver for one specific finding, built on
+  `repo-contract/helpers` (`loadExceptionRegistry`, `reconcileExceptions`,
+  `evaluateExceptionRecord`, `resolveExceptionPolicy`, `hashRequirementFields`),
+  without weakening the check for everything else.
+
 ## How execution context works
 
 ```text

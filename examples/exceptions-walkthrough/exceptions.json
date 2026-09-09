@@ -1,0 +1,16 @@
+{
+  "exceptions": [
+    {
+      "id": "tough-cookie:GHSA-72xf-g2v4-qvf3",
+      "version": 1,
+      "justification": "tough-cookie is a transitive dependency of a test-only HTTP recorder. The prototype-pollution path requires attacker-controlled cookie names, which never reach it inside a recorded test fixture. There is no production exposure.",
+      "alternatives": "Upgrade is blocked until the recorder ships a release compatible with tough-cookie >=4.1.3 (tracked upstream). Re-evaluate on its next minor; drop this waiver once resolved."
+    },
+    {
+      "id": "semver:GHSA-c2qf-rxjj-qqgw",
+      "version": 1,
+      "justification": "The semver ReDoS only triggers on untrusted version strings; every version string this repository parses comes from package.json files it authors.",
+      "alternatives": ""
+    }
+  ]
+}
