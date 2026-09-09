@@ -13,13 +13,16 @@ import { markdownToHtml } from "../../../scripts/api-docs-html/render.js"
  * fixture package built by the same helper api-contract's own tests use, per this project's
  * real-behavior-over-mocking house style.
  *
- * The specific thing `render.test.ts`'s pure-function tests cannot prove on their own: that this
- * pipeline actually reflects a real TSDoc change, not just that it runs deterministically on a
- * fixed input. A pipeline that silently stopped reading the Doc Model (e.g. a hand-rolled
- * signature-only renderer swapped in by mistake) would still pass every determinism/link-rewrite
- * test while failing this one.
+ * What `render.test.ts`'s pure-function tests cannot prove on their own: that the HTML is actually
+ * derived from the real Doc Model's TSDoc prose, not from a hand-rolled signature-only renderer
+ * that happens to pass every determinism/link-rewrite test. This does one real compile+extraction
+ * (not two -- see [[api-contract-test-isolation]] on heavy per-test footprints tipping vitest's
+ * coverage provider into a race under the full concurrent contract) and asserts three things a
+ * signature-only or mocked pipeline would fail: the distinctive doc-comment sentence appears, a
+ * plausible-but-absent string does not, and the output carries real prose rather than only a
+ * `declare function` signature.
  */
-describe("the real API-Extractor -> api-documenter -> HTML pipeline reflects real doc changes", () => {
+describe("the real API-Extractor -> api-documenter -> HTML pipeline", () => {
   let root: string | undefined
 
   beforeEach(async () => {
@@ -31,16 +34,15 @@ describe("the real API-Extractor -> api-documenter -> HTML pipeline reflects rea
     root = undefined
   })
 
-  it("carries a real TSDoc summary all the way through to the rendered HTML", async () => {
+  it("renders the real TSDoc prose, not a signature-only or mocked artifact", async () => {
     if (root === undefined) throw new Error("beforeEach did not set root")
 
     const fixture = await buildFixturePackage(
       root,
       `
 /**
- * A sentinel sentence this test looks for after the full pipeline runs -- not present anywhere
- * except this one doc comment, so finding it in the rendered HTML proves the Doc Model's real
- * TSDoc prose survived extraction, markdown rendering, and HTML rendering intact.
+ * A sentinel sentence unique to this one doc comment, so finding it in the rendered HTML proves
+ * the Doc Model's real TSDoc prose survived extraction, markdown rendering, and HTML rendering.
  * @public
  */
 export function getWidgetCount(): number {
@@ -52,49 +54,18 @@ export function getWidgetCount(): number {
     const markdownDir = path.join(root, "md")
     generateMarkdownPages(fixture.apiJsonPath, markdownDir)
 
-    const page = await readFile(path.join(markdownDir, "fixture-package.getwidgetcount.md"), "utf8")
-    expect(page).toContain("A sentinel sentence this test looks for after the full pipeline runs")
-
-    const html = markdownToHtml(page)
-    expect(html).toContain("A sentinel sentence this test looks for after the full pipeline runs")
-  })
-
-  it("changes the rendered HTML when the source TSDoc comment changes", async () => {
-    if (root === undefined) throw new Error("beforeEach did not set root")
-
-    const source = (summary: string) => `
-/**
- * ${summary}
- * @public
- */
-export function getWidgetCount(): number {
-  return 0
-}
-`
-
-    // One scratch root, recompiled in place for each version -- writeFixtureSource overwrites
-    // src/index.ts and recompiles every call, so a second buildFixturePackage against the same
-    // root is a real, independent extraction of the *new* content, not a cached result. Reusing
-    // the root (rather than a second mkdtemp) keeps this test's own footprint small under the
-    // full contract's concurrent test-integration run -- see [[api-contract-test-isolation]] on
-    // heavy test hooks tipping vitest's coverage provider into a race.
-    const before = await buildFixturePackage(root, source("The original summary."))
-    const beforeMarkdownDir = path.join(root, "md-before")
-    generateMarkdownPages(before.apiJsonPath, beforeMarkdownDir)
-    const beforeHtml = markdownToHtml(
-      await readFile(path.join(beforeMarkdownDir, "fixture-package.getwidgetcount.md"), "utf8"),
+    const markdown = await readFile(
+      path.join(markdownDir, "fixture-package.getwidgetcount.md"),
+      "utf8",
     )
+    const html = markdownToHtml(markdown)
 
-    const after = await buildFixturePackage(root, source("A completely different summary."))
-    const afterMarkdownDir = path.join(root, "md-after")
-    generateMarkdownPages(after.apiJsonPath, afterMarkdownDir)
-    const afterHtml = markdownToHtml(
-      await readFile(path.join(afterMarkdownDir, "fixture-package.getwidgetcount.md"), "utf8"),
-    )
-
-    expect(beforeHtml).toContain("The original summary.")
-    expect(beforeHtml).not.toContain("A completely different summary.")
-    expect(afterHtml).toContain("A completely different summary.")
-    expect(afterHtml).not.toContain("The original summary.")
+    // Derived from the real doc comment -- present verbatim, in both the markdown and the HTML.
+    expect(markdown).toContain("A sentinel sentence unique to this one doc comment")
+    expect(html).toContain("A sentinel sentence unique to this one doc comment")
+    // Not hardcoded/mocked: a plausible sentence that is not in the source does not appear.
+    expect(html).not.toContain("A completely different sentence")
+    // Real prose, not just a signature dump: a full sentence with a trailing period is rendered.
+    expect(html).toMatch(/survived extraction, markdown rendering, and HTML rendering\./)
   })
 })

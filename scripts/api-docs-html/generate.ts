@@ -114,7 +114,7 @@ function renderLandingPage(summaries: readonly TargetSummary[]): string {
         <ul class="adoption-grid">
 ${cards}
         </ul>
-        <p>Checking against an unreleased commit? The <a href="../api-report/">markdown API reports</a> are regenerated and verified on every commit by this repository's own <code>api-docs</code> check.</p>`
+        <p>Checking against an unreleased commit? The <a href="https://github.com/MaverickCER/repo-contract/tree/main/docs/api-report">markdown API reports</a> are regenerated and verified on every commit by this repository's own <code>api-docs</code> check.</p>`
 
   return renderPage({
     title: "API reference",
