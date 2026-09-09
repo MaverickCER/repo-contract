@@ -114,7 +114,14 @@ function detectStyle(text, sampleKeyStart) {
   const newline = text.includes("\r\n") ? "\r\n" : "\n"
   if (sampleKeyStart === undefined) return { newline, indent: "  " }
   const lineStart = text.lastIndexOf("\n", sampleKeyStart) + 1
-  const indent = text.slice(lineStart, sampleKeyStart)
+  const candidate = text.slice(lineStart, sampleKeyStart)
+  // A single-line (minified) file has no newline before `sampleKeyStart` at all, so `lineStart`
+  // falls back to 0 and `candidate` becomes everything from the start of the file up to the key
+  // -- real JSON content, not whitespace. Using that verbatim as "indentation" would splice
+  // arbitrary file content into the insertion and corrupt the output. Only ever treat `candidate`
+  // as a real indent when it actually is one (spaces/tabs only); anything else falls back to the
+  // same two-space default as "no sample to measure from".
+  const indent = /^[ \t]*$/.test(candidate) ? candidate : ""
   return { newline, indent: indent.length > 0 ? indent : "  " }
 }
 
@@ -138,6 +145,16 @@ export function patchContractScript(text, scriptValue) {
   const scripts = findProperty(text, rootStart, "scripts")
 
   if (scripts !== undefined) {
+    if (text[scripts.valueStart] !== "{") {
+      // findProperty below assumes an object at this offset -- anything else (a string, null,
+      // an array, ...) must be rejected here with a clear message, not left to fail deeper with
+      // a confusing "not valid JSON" error from treating non-object syntax as one.
+      const value = JSON.parse(text.slice(scripts.valueStart, scripts.valueEnd))
+      throw new Error(
+        `package.json's "scripts" field must be an object, not ${JSON.stringify(value)}.`,
+      )
+    }
+
     const contract = findProperty(text, scripts.valueStart, "contract")
     if (contract !== undefined) {
       const currentValue = JSON.parse(text.slice(contract.valueStart, contract.valueEnd))

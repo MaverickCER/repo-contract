@@ -89,8 +89,10 @@ exactly one subcommand: `init`. Any other invocation (`run`, `ci`, `explain`, `d
 prints that `init` is the only supported command and that checks run via `npm run contract`, then
 exits non-zero. `init` writes the same two files, and makes the same `package.json` script edit, a
 consumer would otherwise hand-write, using a
-fixed, hand-maintained table from each of the 16 existing presets to the npm dependency it needs,
-and never anything fuzzier than "is this dependency present." It performs **zero process spawning
+fixed, hand-maintained table from each of the 16 existing presets to the npm `devDependency` it
+needs — checking `devDependencies` only, matching every preset's own published documentation
+("...is already a devDependency of your repository") — and never anything fuzzier than "is this
+devDependency present." It performs **zero process spawning
 and zero `process.env` access** — it only reads the consumer's local `package.json` via `node:fs`
 and writes local files, extending [ADR 0011](0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)'s
 invariant to this new surface rather than excepting it from it.

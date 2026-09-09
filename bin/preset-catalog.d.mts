@@ -31,6 +31,9 @@ export interface DetectPresetsResult {
 }
 
 export declare function detectPresets(packageJson: {
+  // A real package.json naturally has both fields -- this type accepts `dependencies` for
+  // shape-compatibility with that, even though detectPresets's implementation only ever reads
+  // `devDependencies` (see preset-catalog.mjs's own doc comment for why).
   readonly dependencies?: Readonly<Record<string, string>>
   readonly devDependencies?: Readonly<Record<string, string>>
 }): DetectPresetsResult

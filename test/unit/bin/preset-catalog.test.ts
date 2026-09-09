@@ -35,9 +35,10 @@ describe("detectPresets", () => {
     expect(skipped.map((s) => s.preset)).toContain("lint")
   })
 
-  it("checks dependencies as well as devDependencies", () => {
-    const { detected } = detectPresets({ dependencies: { eslint: "^9.0.0" } })
-    expect(detected).toContain("lint")
+  it("ignores dependencies -- only devDependencies count, matching every preset's own documented convention", () => {
+    const { detected, skipped } = detectPresets({ dependencies: { eslint: "^9.0.0" } })
+    expect(detected).not.toContain("lint")
+    expect(skipped.map((s) => s.preset)).toContain("lint")
   })
 
   it("preserves PRESET_DEPENDENCIES's declared order in its output", () => {

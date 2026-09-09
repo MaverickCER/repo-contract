@@ -75,16 +75,34 @@ function preflight(cwd) {
 }
 
 /**
- * Writes `content` to `filePath` if it doesn't already exist. Existing files are never touched --
- * an existing-state conflict is handled by skipping, never by overwriting.
+ * Writes `content` to `filePath` if it doesn't already exist. Uses exclusive-create (`"wx"`)
+ * rather than a separate existsSync check followed by a write -- the two-step form has a race
+ * between the check and the write; exclusive-create makes "don't overwrite an existing file"
+ * atomic instead. Existing files are never touched -- an existing-state conflict is handled by
+ * skipping, never by overwriting.
  * @param filePath - Absolute path to write.
  * @param content - File content.
  * @returns Whether the file was created or already existed.
  */
 function writeIfAbsent(filePath, content) {
-  if (existsSync(filePath)) return "skipped"
-  writeFileSync(filePath, content)
-  return "created"
+  try {
+    writeFileSync(filePath, content, { flag: "wx" })
+    return "created"
+  } catch (error) {
+    if (error.code === "EEXIST") return "skipped"
+    throw error
+  }
+}
+
+/**
+ * Whether `name` is declared in `packageJson.devDependencies` -- the same devDependencies-only
+ * convention `detectPresets` uses (see preset-catalog.mjs).
+ * @param packageJson - Parsed package.json content.
+ * @param name - Package name to look up.
+ * @returns Whether it's declared.
+ */
+function isDevDependencyDeclared(packageJson, name) {
+  return Object.hasOwn(packageJson.devDependencies ?? {}, name)
 }
 
 function runInit(cwd) {
@@ -92,19 +110,27 @@ function runInit(cwd) {
   const { configPath, scriptsDir, runnerPath } = preflight(cwd)
 
   const { detected, skipped } = detectPresets(parsed)
+  const tsxInstalled = isDevDependencyDeclared(parsed, "tsx")
+
+  // Always compute (and, for a malformed "scripts" field, validate) the package.json patch
+  // before writing anything else -- a failure here must mean zero writes, never a config/runner
+  // file left behind with no matching package.json change. Computing it doesn't write anything
+  // by itself, so this happens regardless of tsx: an existing "scripts.contract" -- matching or
+  // conflicting -- must still be detected and reported correctly even when tsx is missing. Only
+  // *writing a brand-new value* is gated on tsx being installed: a generated "scripts.contract"
+  // that shells out to a missing tsx would fail on its first real run.
+  const patch = patchContractScript(text, CONTRACT_SCRIPT_VALUE)
+  const writeNewScript = patch.status === "created" && tsxInstalled
 
   const configResult = writeIfAbsent(configPath, buildConfigTemplate(detected))
   if (!existsSync(scriptsDir)) mkdirSync(scriptsDir, { recursive: true })
   const runnerResult = writeIfAbsent(runnerPath, CONTRACT_RUNNER_TEMPLATE)
 
-  const { text: patchedText, status: scriptStatus } = patchContractScript(
-    text,
-    CONTRACT_SCRIPT_VALUE,
-  )
-  if (scriptStatus === "created") {
-    writeFileSync(packageJsonPath, patchedText)
+  if (writeNewScript) {
+    writeFileSync(packageJsonPath, patch.text)
   }
 
+  const scriptStatus = patch.status === "created" && !tsxInstalled ? "tsx-missing" : patch.status
   report({ configResult, runnerResult, scriptStatus, detected, skipped })
 }
 
@@ -132,6 +158,11 @@ function report({ configResult, runnerResult, scriptStatus, detected, skipped })
   if (scriptStatus === "created") lines.push('Added "scripts.contract" to package.json.', "")
   else if (scriptStatus === "unchanged")
     lines.push('"scripts.contract" already set to this value.', "")
+  else if (scriptStatus === "tsx-missing")
+    lines.push(
+      'Skipped "scripts.contract" -- install tsx as a devDependency, then run `repo-contract init` again.',
+      "",
+    )
   else lines.push('"scripts.contract" already exists with a different value -- left untouched.', "")
 
   lines.push("Detected:")
@@ -145,7 +176,16 @@ function report({ configResult, runnerResult, scriptStatus, detected, skipped })
     lines.push("")
   }
 
-  lines.push("Next:", "  npm run contract")
+  if (scriptStatus === "tsx-missing") {
+    lines.push(
+      "Next:",
+      "  npm install --save-dev tsx",
+      "  npx repo-contract init",
+      "  npm run contract",
+    )
+  } else {
+    lines.push("Next:", "  npm run contract")
+  }
 
   console.log(lines.join("\n"))
 }

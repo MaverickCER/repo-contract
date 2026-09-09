@@ -46,15 +46,15 @@ export const FACTORY_PRESETS = new Set([
 
 /**
  * Detects which presets' underlying CLIs are already declared in a consumer's package.json.
+ * Checks `devDependencies` only -- every published preset's own documentation (GUIDE.md's
+ * presets table) already states its CLI "is already a devDependency of your repository"; a
+ * production `dependencies` entry is not the documented, expected place to declare one.
  * @param packageJson - Parsed package.json content.
  * @returns detected preset names (in PRESET_DEPENDENCIES's declared order) and, for each skipped
  * preset, the dependency name that was missing.
  */
 export function detectPresets(packageJson) {
-  const declared = new Set([
-    ...Object.keys(packageJson.dependencies ?? {}),
-    ...Object.keys(packageJson.devDependencies ?? {}),
-  ])
+  const declared = new Set(Object.keys(packageJson.devDependencies ?? {}))
 
   const detected = []
   const skipped = []

@@ -4,6 +4,20 @@ import { patchContractScript } from "../../../bin/package-json-patch.mjs"
 const SCRIPT_VALUE = "tsx scripts/contract.mjs"
 
 describe("patchContractScript", () => {
+  it.each([
+    ["a string", `{"name":"x","scripts":"not-an-object"}`],
+    ["null", `{"name":"x","scripts":null}`],
+    ["an array", `{"name":"x","scripts":["a","b"]}`],
+    ["a number", `{"name":"x","scripts":42}`],
+  ])(
+    "rejects a non-object scripts field (%s) with a clear error, not a JSON.parse crash",
+    (_label, input) => {
+      expect(() => patchContractScript(input, SCRIPT_VALUE)).toThrow(
+        /"scripts" field must be an object/,
+      )
+    },
+  )
+
   it("creates scripts.contract when package.json has no scripts object at all", () => {
     const input = `{
   "name": "x",
@@ -95,6 +109,24 @@ describe("patchContractScript", () => {
     const { text } = patchContractScript(input, SCRIPT_VALUE)
     expect(text).toContain('        "contract"')
   })
+
+  it.each([
+    ["no scripts key", `{"name":"x","devDependencies":{"tsx":"^4.0.0"}}`],
+    ["scripts with a sibling", `{"name":"x","scripts":{"build":"tsc"}}`],
+    ["empty scripts", `{"name":"x","scripts":{}}`],
+  ])(
+    'produces valid JSON for a single-line (minified) package.json: %s -- regression test for indent detection splicing real file content in as "indentation"',
+    (_label, input) => {
+      const { text, status } = patchContractScript(input, SCRIPT_VALUE)
+      expect(status).toBe("created")
+      expect(() => {
+        JSON.parse(text)
+      }).not.toThrow()
+      expect((JSON.parse(text) as { scripts: { contract: string } }).scripts.contract).toBe(
+        SCRIPT_VALUE,
+      )
+    },
+  )
 
   it("preserves CRLF newlines", () => {
     const input = '{\r\n  "name": "x"\r\n}'

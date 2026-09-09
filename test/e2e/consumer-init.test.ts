@@ -62,7 +62,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
           name: "repo-contract-consumer-fixture",
           version: "0.0.0",
           type: "module",
-          devDependencies: { typescript: "^5.0.0" },
+          devDependencies: { typescript: "^5.0.0", tsx: "^4.0.0" },
         },
         null,
         2,
@@ -149,7 +149,11 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     const dir = scratchDir("repo-contract-init-partial-scripts-")
     writeFileSync(
       path.join(dir, "package.json"),
-      JSON.stringify({ name: "x", scripts: { build: "tsc" } }, null, 2),
+      JSON.stringify(
+        { name: "x", devDependencies: { tsx: "^4.0.0" }, scripts: { build: "tsc" } },
+        null,
+        2,
+      ),
     )
 
     const result = runInit(dir)
@@ -172,6 +176,41 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     const result = runInit(dir)
     expect(result.status).toBe(0)
     expect(result.stdout).toContain("already exists with a different value -- left untouched")
+
+    expect(readScripts(path.join(dir, "package.json")).contract).toBe("node my-own-runner.js")
+
+    rmSync(dir, { recursive: true, force: true })
+  }, 20_000)
+
+  it("skips writing a new scripts.contract when tsx isn't installed, but still scaffolds the config/runner files", () => {
+    const dir = scratchDir("repo-contract-init-no-tsx-")
+    writeFileSync(
+      path.join(dir, "package.json"),
+      JSON.stringify({ name: "x", devDependencies: { typescript: "^5.0.0" } }, null, 2),
+    )
+
+    const result = runInit(dir)
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('Skipped "scripts.contract"')
+    expect(result.stdout).toContain("install tsx")
+
+    expect(readScripts(path.join(dir, "package.json")).contract).toBeUndefined()
+    expect(readFileSync(path.join(dir, "repo-contract.config.ts"), "utf8")).toContain("typecheck")
+
+    rmSync(dir, { recursive: true, force: true })
+  }, 20_000)
+
+  it("still reports an existing conflicting scripts.contract correctly even when tsx isn't installed", () => {
+    const dir = scratchDir("repo-contract-init-conflict-no-tsx-")
+    writeFileSync(
+      path.join(dir, "package.json"),
+      JSON.stringify({ name: "x", scripts: { contract: "node my-own-runner.js" } }, null, 2),
+    )
+
+    const result = runInit(dir)
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain("already exists with a different value -- left untouched")
+    expect(result.stdout).not.toContain("tsx")
 
     expect(readScripts(path.join(dir, "package.json")).contract).toBe("node my-own-runner.js")
 
