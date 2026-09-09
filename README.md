@@ -5,17 +5,15 @@
 [![Node](https://img.shields.io/node/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
 [![License](https://img.shields.io/npm/l/repo-contract.svg)](LICENSE)
 
-**Turn your repository's engineering standards into one enforceable contract.**
+**Define your engineering standards once. Share them across repositories. Get actionable rationale for every outcome.**
 
-repo-contract runs the lint, test, coverage, security, and quality tools you already use, and turns their results into one repository-defined **pass / warn / fail** — with an actionable reason on every outcome.
+repo-contract turns the engineering rules scattered across CI, scripts, configuration, and documentation into one reusable contract. It runs the tools you already use, evaluates their results against your standards, and gives people and automation an actionable reason for every outcome. You replace none of your existing tools — your CI, scripts, and development workflow stay intact.
 
-You replace nothing. Your tools, your CI, and your scripts stay exactly as they are.
-
-[See it run](#see-it-run) · [Quick start](#quick-start) · [Guide](GUIDE.md) · [API reference](https://maverickcer.github.io/repo-contract/api/)
+[See the rationale](#see-it-run) · [Define it once](#quick-start) · [Share it across repositories](#from-one-repo-to-a-whole-org) · [Guide](GUIDE.md)
 
 ## See it run
 
-The real output of the tiny contract in [`examples/demo/`](examples/demo/README.md) — three published presets against one deliberately imperfect file:
+**Actionable rationale for every outcome.** The real output of the tiny contract in [`examples/demo/`](examples/demo/README.md) — three published presets against one deliberately imperfect file:
 
 ```ts
 checks: {
@@ -55,7 +53,7 @@ Individual tools answer individual questions. A repository standard is a questio
 
 ## Quick start
 
-Three files, about five minutes.
+**Your standards, defined once as typed code.** Three files, about five minutes.
 
 ```sh
 npm install --save-dev repo-contract
@@ -149,7 +147,7 @@ one contract package, inherited by every repository
 new requirements land as `warn`, become `fail` on a date
 ```
 
-An organization expresses its engineering standard for a project type **once** — an internal package that wraps repo-contract and owns the executors — and every project of that type extends it instead of redefining it. Change the shared standard, and every consuming repository picks it up, including ones created from an older boilerplate.
+**One definition, shared across every repository.** An organization expresses its engineering standard for a project type **once** — an internal package that wraps repo-contract and owns the executors — and every project of that type extends it instead of redefining it. Change the shared standard, and every consuming repository picks it up, including ones created from an older boilerplate.
 
 - [`examples/`](examples/README.md) — a minimal, runnable end-to-end wiring of that model.
 - [`examples/day-one-walkthrough/`](examples/day-one-walkthrough/README.md) — rolling out a new shared requirement as a dated `warn` → `fail`, not an overnight red build.
