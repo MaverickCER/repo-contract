@@ -134,13 +134,20 @@ Alternatives).
 
 ## The runner and CI integration
 
-### Why there is no CLI
+### Why the CLI only scaffolds
 
 repo-contract is a library, not a repository-wide command. Your repository owns the entry
 point, the process-spawning capability, and the environment it runs with — so the contract
 stays composable and the package never becomes another opaque layer between you and your
-tools. The cost is one small file you write once (below); everything after that is
-`npm run contract`.
+tools. `npx repo-contract init` (see the [README's Quick Start](README.md#quick-start))
+automates writing the files below — it detects your `package.json`'s existing devDependencies,
+generates `repo-contract.config.mts` and `scripts/contract.mjs` from them, and adds (or, if it's
+already present, leaves untouched) a `"contract"` entry in `package.json`'s own `scripts` — but
+it's a one-time scaffold, not a runtime. It never runs a check itself, never spawns anything, and
+never becomes a prerequisite for `npm run contract`: everything it writes is yours from the
+moment it lands, indistinguishable from writing it by hand. Everything after that is
+`npm run contract`, exactly as below, whether you got there via `init` or by typing this out
+yourself.
 
 `runRepoContract()` never calls `process.exit()` itself — your integration decides what to
 do with the result. That file is the whole integration:
@@ -148,7 +155,7 @@ do with the result. That file is the whole integration:
 ```ts
 // scripts/contract.mjs
 import { runRepoContract } from "repo-contract"
-import config from "../repo-contract.config.js"
+import config from "../repo-contract.config.mjs"
 
 const { verdict } = await runRepoContract(config)
 
@@ -158,6 +165,13 @@ for (const [id, result] of Object.entries(verdict.checks)) {
 
 process.exitCode = verdict.passed ? 0 : 1
 ```
+
+The config is `repo-contract.config.mts`, not `.ts` — an `.mts` file is always ESM to Node
+regardless of whether your `package.json` has `"type": "module"` set (`npm init`'s default output
+doesn't). A plain `.ts` config would compile to CommonJS in that case while this `.mjs` runner
+(ESM by its own extension) imports it, and Node's CJS/ESM default-export interop would silently
+hand `runRepoContract` the wrong shape — `config.checks` ends up `undefined` and the run fails
+with `InvalidRepoContractConfigError` before anything spawns.
 
 ```json
 {
@@ -397,7 +411,7 @@ with `dependsOn`, reads a sibling check's evidence, and produces a specific, act
 `"warn"` instead of a vague one:
 
 ```ts
-// repo-contract.config.ts
+// repo-contract.config.mts
 import { spawn } from "node:child_process"
 import { defineRepoContract } from "repo-contract"
 import { test, typecheck } from "repo-contract/presets"
