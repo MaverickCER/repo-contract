@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process"
+import { sync as spawnSync } from "cross-spawn"
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
