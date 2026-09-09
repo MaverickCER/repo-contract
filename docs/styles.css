@@ -930,6 +930,83 @@ section[id] {
   font-weight: 700;
 }
 
+/* Generated API reference (scripts/api-docs-html/) -- every page's rendered markdown body.
+   h1/h2/h3, p, a, and inline code already have sensible global rules above; this only adds what
+   bare, unstyled markdown output needs on top of those: page spacing, list bullets (ul/ol/li are
+   reset to no markers/indent globally, for the site's own hand-built lists that use their own
+   classes), and table borders/padding (api-documenter's own raw <table> markup carries none) --
+   the same visual language .comparison-table already established, not a new one. */
+
+.api-body {
+  padding: var(--space-4) 0;
+}
+
+.api-body h1:first-child {
+  margin-top: 0;
+}
+
+.api-body ul,
+.api-body ol {
+  margin: 0 0 var(--space-2);
+  padding-left: 1.4em;
+}
+
+.api-body li {
+  margin-bottom: 0.35em;
+}
+
+.api-body table {
+  /* api-documenter emits tables as raw HTML, not markdown table syntax, so marked's own `table`
+     renderer/`.table-scroll` wrapper convention (used by .comparison-table) never sees these --
+     `display: block` + `overflow-x: auto` on the table itself is the equivalent no-wrapper-needed
+     way to keep a wide table from breaking this page's own no-horizontal-scroll-on-body rule. */
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--space-3) 0;
+  background: var(--color-surface);
+}
+
+.api-body th,
+.api-body td {
+  text-align: left;
+  padding: 0.85rem var(--space-2);
+  border-bottom: var(--border-width) solid var(--color-border);
+  vertical-align: top;
+  font-size: 0.95rem;
+}
+
+.api-body thead th {
+  background: var(--color-background);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.api-body tbody tr:last-child th,
+.api-body tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.api-body pre {
+  background: var(--color-code-bg);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  margin: var(--space-2) 0;
+}
+
+.api-body pre code {
+  /* Undo the global inline-<code> padding/background/radius -- a signature block's own <pre>
+     already provides that treatment for the whole block. */
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
 /* Footer */
 
 .site-footer {

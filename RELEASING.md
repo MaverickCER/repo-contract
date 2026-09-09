@@ -18,6 +18,14 @@ merge as the version bump. If that job is ever disabled, run `npm run contract:b
 after the release and commit the result — that is the only other way the baseline is
 updated.
 
+The same job also regenerates the browsable HTML API reference (`docs/api/`), release-cadence
+only by design — see
+[specs/decisions/0008](specs/decisions/0008-self-hosting-tool-and-dependency-choices.md)'s
+"a real, browsable HTML API reference" amendment. If that job is ever disabled, run
+`npm run api-docs:html` and commit the result — the always-fresh `docs/api-report/*.api.md`
+markdown reports stay current on every commit regardless (via the `api-docs` check), so `docs/api/`
+falling behind between releases is never a correctness gap, only a staleness one.
+
 `runUpdateBaseline` has four outcomes — only the first two exit 0:
 
 | outcome   | when                                                                                                                                                            | writes? |

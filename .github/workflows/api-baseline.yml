@@ -1,24 +1,38 @@
 name: API baseline
 
-# Keeps .repo-contract/api-contract/baseline.* in sync with each release,
-# automatically, so it is no longer a manual post-release step (it was:
-# "after a release ships, run `npm run contract:baseline` and commit").
+# Keeps two generated artifacts in sync with each release, automatically, so
+# neither is a manual post-release step:
+#
+# - .repo-contract/api-contract/baseline.* (it was: "after a release ships,
+#   run `npm run contract:baseline` and commit").
+# - docs/api/, the browsable HTML API reference (it was: nothing -- this
+#   artifact didn't exist before specs/decisions/0008's "a real, browsable
+#   HTML API reference" amendment).
+#
+# Both share this one job deliberately, not a sibling workflow: they need the
+# identical expensive prerequisites (a write-permission checkout of the
+# Release PR branch, `npm ci`, `npm run build`), and both push a commit to
+# that same branch -- two workflows racing that push is a real hazard this
+# job's own `concurrency` group only serializes *within* one workflow. The
+# job/workflow names stay "API baseline"/"update-baseline" despite now
+# covering more than the baseline alone: both are check-list identifiers
+# branch protection may reference, so renaming them is a real (if quiet)
+# breaking change, not a cosmetic one.
 #
 # Runs only on release-please's own Release PR branch (which bumps package.json).
-# The regenerated baseline is committed straight onto that PR branch, so it lands
+# Both artifacts are committed straight onto that PR branch, so they land
 # atomically with the version bump and CHANGELOG entry -- no direct push to
 # protected `main`, no follow-up PR.
 #
-# The job re-fires on every `synchronize` of that PR: its own baseline commit,
-# and every time release-please refreshes the PR because another change merged to
-# `main` while it sat open. That is fine -- `npm run contract:baseline` is
-# idempotent: it exits 0 and writes nothing once the baseline already carries
-# package.json's version and its contents match (it still re-writes if an
-# API-changing commit landed on the branch at the same version). See
-# scripts/api-contract/update-baseline.ts for the full outcome matrix.
+# The job re-fires on every `synchronize` of that PR: its own commit, and
+# every time release-please refreshes the PR because another change merged to
+# `main` while it sat open. That is fine -- both generation steps are
+# idempotent (see each one's own note below), so a re-run with nothing new to
+# regenerate commits nothing and stays green.
 #
-# RELEASING.md documents `npm run contract:baseline` as the manual backstop if
-# this job is ever disabled.
+# RELEASING.md documents the manual backstop for each artifact if this job is
+# ever disabled: `npm run contract:baseline` for the api-contract baseline,
+# `npm run api-docs:html` for docs/api/.
 
 on:
   pull_request:
@@ -63,23 +77,34 @@ jobs:
       # Idempotent: a no-op (exit 0, no file writes) once the baseline already
       # carries package.json's version. See update-baseline.ts.
       - run: npm run contract:baseline
+      # Idempotent by construction: fully wipes and regenerates docs/api/ from
+      # the same built dist/.dts/ every time, so a re-run with no underlying
+      # API change reproduces byte-identical output. Release-cadence only, by
+      # design -- see specs/decisions/0008's amendment for why this artifact,
+      # unlike the api-contract baseline above, has no every-commit freshness
+      # check of its own.
+      - name: Regenerate the HTML API reference
+        run: npm run api-docs:html
 
-      # When contract:baseline was a no-op the working tree is clean and the
-      # `git diff --quiet` guard below exits before committing -- so this job's
-      # own push (or any later re-run) never turns into a red check.
-      - name: Commit the regenerated baseline
+      - name: Commit the regenerated baseline and API reference
         env:
           # Passed through the environment rather than interpolated straight into
           # `run` -- a branch ref is attacker-influenced input and must never be
           # spliced into the shell command text.
           HEAD_REF: ${{ github.head_ref }}
         run: |
-          if git diff --quiet -- .repo-contract/api-contract; then
-            echo "Baseline already current; nothing to commit."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .repo-contract/api-contract
-          git commit -m "chore: sync api-contract baseline for release"
+          # `git add` first, then diff the INDEX: plain `git diff --quiet` never
+          # sees untracked files, so it would silently skip docs/api/'s very
+          # first commit (and any commit after a full wipe+regenerate produced
+          # an empty-then-repopulated directory) -- a real bug the api-contract
+          # baseline's own older guard didn't have to worry about, since
+          # .repo-contract/api-contract/ is already tracked.
+          git add -A -- .repo-contract/api-contract docs/api
+          if git diff --cached --quiet -- .repo-contract/api-contract docs/api; then
+            echo "Generated artifacts already current; nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore: sync generated API baseline and HTML docs for release"
           git push origin HEAD:"$HEAD_REF"

@@ -8,7 +8,9 @@ self-assurance tooling picked what it picked, at a level future contributors can
 re-deriving it, without giving each narrow choice full individual ADR treatment. `dead-code`
 joined the self-hosted set in the 2026-09 exception-registry unification (see the "dead-code
 detection self-hosts, off the published preset" amendment below and
-[ADR 0013](0013-reusable-exception-policy-helper.md)).
+[ADR 0013](0013-reusable-exception-policy-helper.md)). `docs/api/`, a generated, browsable HTML
+API reference, joined in a later 2026-09 amendment (see "a real, browsable HTML API reference,
+generated at release cadence" below).
 
 ## Context
 
@@ -150,3 +152,53 @@ exactly as-is for external consumers, who have no equivalent to this repository'
 `.repo-contract/exceptions/` reconciliation loop and still need a config-time exempt list to use
 the preset at all. This repository choosing not to consume its own published preset for this one
 check is the accepted cost of dogfooding the stricter, fully-reconciled model for itself.
+
+## Amendment (2026-09): a real, browsable HTML API reference, generated at release cadence
+
+Before this amendment, the only generated API reference was `docs/api-report/*.api.md` --
+signature-only markdown (API Extractor's own report format deliberately strips TSDoc prose),
+committed and kept fresh on every commit by the `api-docs` check, but never rendered anywhere a
+reader could actually browse it. `docs/api/` (via `scripts/api-docs-html/`) closes that gap: one
+HTML page per exported API item, across all three published entry points, with the real TSDoc
+prose intact.
+
+**Tool choice: API Extractor's Doc Model + `@microsoft/api-documenter`, not TypeDoc.** TypeDoc
+would perform its own, independent AST analysis of the public surface -- a second computation of
+"what's public and how it's documented," alongside the one API Extractor's Doc Model already
+performs and that `api-contract`/`api-docs` already treat as canonical. Two independently-computed
+answers to the same question is exactly the kind of duplicated source of truth this repository's
+own conventions avoid elsewhere (see the CRAP-threshold and API-report reasoning above). API
+Extractor already writes a Doc Model JSON (`.api.json`) on every run `scripts/api-docs/report-targets.ts`
+makes -- previously discarded into a scratch directory once the human-readable report was written,
+now optionally preserved (`generateApiReports`'s `docModelFolder` option) for `scripts/api-docs-html/`
+to render, at the cost of zero additional API Extractor invocations.
+
+**`@microsoft/api-documenter` emits Markdown, not HTML** -- there is no HTML output mode in this
+toolchain, confirmed against the installed package's own `exports` map and type declarations, not
+assumed. `scripts/api-docs-html/render.ts` renders that markdown to HTML via a new `marked`
+devDependency (chosen for zero runtime dependencies of its own, and because the copies already
+present transitively via other tools cannot be imported directly without violating
+dependency-cruiser's `no-non-package-json` rule -- it must be a declared dependency). The one thing
+this repository's own code does beyond plain markdown rendering: rewrite each page's internal `.md`
+links to `.html`, at marked's token level (a custom `Renderer.link`, not a text-level regex) so it
+can't misfire inside a fenced code block or on an already-external URL.
+
+**Per-symbol page granularity, mirroring api-documenter's own native output**, rather than a
+handful of hand-assembled long pages: less new code (a link-suffix rewrite, vs. hand-building
+page-concatenation and cross-reference rewriting), and more reviewable per-symbol diffs in the
+generated output.
+
+**Generated and committed, at release cadence, matching `docs/api-report/*.api.md`'s own
+established pattern -- not deploy-time generation via GitHub Actions Pages hosting.** This
+repository's Pages site serves `docs/` directly from `main` with no build step at all (confirmed:
+no Pages-deploy workflow exists in `.github/workflows/`); switching to Actions-based deployment
+would require a one-time manual change to this repository's own GitHub Settings, a real but
+avoidable cost this decision declines to pay. `.github/workflows/api-baseline.yml`'s existing
+Release-PR-branch job (already checking out with write access, already running `npm run build`)
+runs the new generator too and commits `docs/api/` alongside the existing baseline commit, rather
+than a sibling workflow racing a second `git push` to the same branch. `docs/api/` therefore
+carries near-zero transitive dependency cost (`@microsoft/api-documenter` and `marked` add almost
+nothing not already in the tree via API Extractor/other tooling) at the accepted cost of
+**release-cadence, not every-commit, freshness** -- an explicit limitation, stated on
+`docs/api/index.html` itself, with the always-fresh `docs/api-report/*.api.md` linked as the
+fallback for anyone checking against an unreleased commit.

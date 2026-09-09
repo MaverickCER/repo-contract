@@ -835,6 +835,7 @@ export default tseslint.config(
       "scripts/api-contract/update-baseline.ts",
       "scripts/api-docs/check.ts",
       "scripts/api-docs/generate.ts",
+      "scripts/api-docs-html/generate.ts",
       "scripts/coderabbitai/review.ts",
       "scripts/dead-code/check.ts",
       "scripts/preset-commands/scan.ts",

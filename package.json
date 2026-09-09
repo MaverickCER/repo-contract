@@ -80,6 +80,7 @@
     "api-contract": "npm run contract -- api-contract",
     "api-docs": "npm run contract -- api-docs",
     "api-docs:generate": "npm run build && tsx scripts/api-docs/generate.ts",
+    "api-docs:html": "npm run build && tsx scripts/api-docs-html/generate.ts",
     "arethetypeswrong": "npm run contract -- arethetypeswrong",
     "build": "npm run clean && tsup && tsc -p tsconfig.build.json && node scripts/emit-dts-shims.mjs",
     "check": "node scripts/check.mjs",
@@ -124,6 +125,7 @@
     "verify-no-ambient-capabilities": "node scripts/verify-no-ambient-capabilities.mjs"
   },
   "overrides": {
+    "@microsoft/api-extractor-model": "^7.33.12",
     "esbuild": "^0.28.1",
     "qs": "^6.15.2"
   },
@@ -137,8 +139,9 @@
     "@danibram/crap4ts": "^0.6.0",
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^10.0.1",
+    "@microsoft/api-documenter": "^7.30.14",
     "@microsoft/api-extractor": "^7.58.13",
-    "@microsoft/api-extractor-model": "^7.33.11",
+    "@microsoft/api-extractor-model": "^7.33.12",
     "@microsoft/tsdoc": "^0.16.0",
     "@rnx-kit/eslint-plugin": "^0.9.9",
     "@secretlint/secretlint-rule-preset-recommend": "^9.0.0",
@@ -177,6 +180,7 @@
     "linkinator": "^8.0.4",
     "markdownlint-cli2": "^0.23.2",
     "markdownlint-cli2-formatter-json": "^0.0.9",
+    "marked": "^18.0.12",
     "oxlint": "^1.79.0",
     "pa11y": "^9.1.1",
     "prettier": "3.9.6",

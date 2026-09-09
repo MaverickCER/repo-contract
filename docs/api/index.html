@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      // Applies the stored/system theme before paint, matching docs/index.html's own inline
+      // bootstrap script verbatim -- keeps dark/light mode consistent across the whole site and
+      // avoids a flash of the wrong theme.
+      try {
+        var stored = localStorage.getItem("repo-contract-theme")
+        if (stored === "dark" || stored === "light") {
+          document.documentElement.setAttribute("data-theme", stored)
+        }
+      } catch (error) {
+        /* localStorage can throw in a locked-down environment -- fall back to prefers-color-scheme */
+      }
+    </script>
+    <title>API reference — repo-contract API</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="../favicon.png" type="image/png" sizes="48x48" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="container">
+        <a class="site-logo" href="../index.html">repo-contract</a>
+        <div class="header-actions">
+          <a href="index.html">API reference</a>
+          <a class="github-link" href="https://github.com/MaverickCER/repo-contract">GitHub ↗</a>
+        </div>
+      </div>
+    </header>
+    <main id="main">
+      <div class="container container--narrow">
+        <div class="api-body">
+<h1>API reference</h1>
+        <p>API reference for the latest published release. Generated from this package's own TSDoc comments -- every page here is real documentation, not a hand-maintained copy.</p>
+        <ul class="adoption-grid">
+<li class="adoption-card">
+            <h3><a href="./repo-contract/index.html">repo-contract</a></h3>
+            <p>138 documented item(s).</p>
+          </li>
+<li class="adoption-card">
+            <h3><a href="./repo-contract-presets/index.html">repo-contract-presets</a></h3>
+            <p>18 documented item(s).</p>
+          </li>
+<li class="adoption-card">
+            <h3><a href="./repo-contract-helpers/index.html">repo-contract-helpers</a></h3>
+            <p>64 documented item(s).</p>
+          </li>
+        </ul>
+        <p>Checking against an unreleased commit? The <a href="https://github.com/MaverickCER/repo-contract/tree/main/docs/api-report">markdown API reports</a> are regenerated and verified on every commit by this repository's own <code>api-docs</code> check.</p>
+        </div>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <p>MIT — <a href="../index.html">repo-contract</a></p>
+      </div>
+    </footer>
+  </body>
+</html>
