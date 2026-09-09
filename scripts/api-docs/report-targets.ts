@@ -1,11 +1,14 @@
 /**
  * The public entry points this feature generates an API Extractor report for, and the shared
- * extraction routine both check.ts (drift/completeness detection) and generate.ts (the
- * human-invoked regeneration command) run against. Isolates both callers from
+ * extraction routine every caller runs against: check.ts (drift/completeness detection),
+ * generate.ts (the human-invoked markdown regeneration command), and
+ * `../api-docs-html/generate.ts` (the HTML API reference generator, which needs this same
+ * extraction's Doc Model JSON rather than running API Extractor a second time -- see
+ * `GenerateApiReportsOptions.docModelFolder`). Isolates every caller from
  * `../api-contract/extractor-adapter.js`'s own API Extractor details, the same way that adapter
  * isolates the rest of the api-contract feature from `@microsoft/api-extractor` itself.
  */
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 
@@ -47,35 +50,64 @@ export interface GeneratedApiReport {
   /** Absolute path the report was written to, inside `reportFolder`. */
   readonly reportPath: string
   readonly content: string
+  /**
+   * Absolute path of this target's Doc Model JSON (`<reportFileName>.api.json`), preserved only
+   * when `options.docModelFolder` was supplied to {@link generateApiReports} -- otherwise the
+   * file was written to a throwaway scratch directory and discarded, as before.
+   */
+  readonly apiJsonPath?: string
+}
+
+export interface GenerateApiReportsOptions {
+  /**
+   * Absolute folder to ALSO write each target's `<reportFileName>.api.json` Doc Model into,
+   * preserved after this call returns (`generateApiReports` still creates it if missing). Omit to
+   * keep the original behavior: the Doc Model is written to a throwaway scratch directory and
+   * discarded, since the human-readable report is all this feature needed historically.
+   * `scripts/api-docs-html/generate.ts` is the one caller that supplies this, to render the same
+   * Doc Model into HTML without running API Extractor a second time.
+   */
+  readonly docModelFolder?: string
 }
 
 /**
  * Runs API Extractor once per `API_REPORT_TARGETS` entry, writing each `<reportFileName>.api.md`
- * into `reportFolder`. The Doc Model JSON and `.d.ts` rollup API Extractor also always produces
- * are written to a throwaway scratch directory and discarded -- this feature only needs the
- * human-readable report, never the machine-readable ones the internal api-contract check already
- * owns (see specs/decisions/0009-conventional-commits-versioning-and-local-gates.md).
+ * into `reportFolder`. The `.d.ts` rollup API Extractor also always produces is written to a
+ * throwaway scratch directory and discarded either way -- nothing in this feature or its callers
+ * needs it. The Doc Model JSON is discarded the same way UNLESS `options.docModelFolder` is
+ * supplied, in which case it's preserved there and returned via each report's `apiJsonPath`.
  * @param root - Absolute path to the repository root; must contain a built `dist/` and `tsconfig.json`.
  * @param reportFolder - Absolute path to write each target's report into. Pass the committed
  *   `docs/api-report/` to regenerate it in place, or a scratch directory to inspect fresh output
  *   without touching the committed files.
+ * @param options - See {@link GenerateApiReportsOptions}.
  * @returns Each target's generated report, content included.
  */
 export async function generateApiReports(
   root: string,
   reportFolder: string,
+  options: GenerateApiReportsOptions = {},
 ): Promise<GeneratedApiReport[]> {
   const scratchDir = await mkdtemp(path.join(os.tmpdir(), "repo-contract-api-docs-"))
+
+  if (options.docModelFolder !== undefined) {
+    await mkdir(options.docModelFolder, { recursive: true })
+  }
 
   try {
     const reports: GeneratedApiReport[] = []
 
     for (const target of API_REPORT_TARGETS) {
+      const apiJsonFilePath = path.join(
+        options.docModelFolder ?? scratchDir,
+        `${target.reportFileName}.api.json`,
+      )
+
       const result = runApiExtractor({
         projectFolder: root,
         mainEntryPointFilePath: target.mainEntryPointFilePath,
         tsconfigFilePath: path.join(root, "tsconfig.json"),
-        apiJsonFilePath: path.join(scratchDir, `${target.reportFileName}.api.json`),
+        apiJsonFilePath,
         dtsRollupFilePath: path.join(scratchDir, `${target.reportFileName}.d.ts`),
         apiReportFolder: reportFolder,
         apiReportFileName: target.reportFileName,
@@ -91,6 +123,7 @@ export async function generateApiReports(
         reportFileName: target.reportFileName,
         reportPath: result.apiReportFilePath,
         content: await readFile(result.apiReportFilePath, "utf8"),
+        ...(options.docModelFolder !== undefined ? { apiJsonPath: apiJsonFilePath } : {}),
       })
     }
 

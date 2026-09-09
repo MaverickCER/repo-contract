@@ -116,6 +116,16 @@ async function runMarkdownlint() {
 // repo's own version URLs rather than let a mid-release CI go red -- a
 // compare/tag link under any other owner (a fork, a typo) is still crawled.
 //
+// README.md links the generated HTML API reference at its live, deployed
+// GitHub Pages URL (docs/api/, built by scripts/api-docs-html/ -- see
+// specs/decisions/0008's "a real, browsable HTML API reference" amendment).
+// Pages serves docs/ only from `main`, so that URL is, by construction, never
+// verifiable from a PR branch's own perspective -- not flaky, structurally
+// unreachable until the exact PR that adds/changes it has already merged.
+// Scoped to the /api/ subpath only (not the whole maverickcer.github.io/
+// repo-contract/ site), so an unrelated broken link to the already-live
+// landing page is still caught.
+//
 // linkinator applies each `--skip` value as a bare `new RegExp(x)` (no flags,
 // unanchored, tested against the full href), so the pattern anchors the scheme
 // and host itself -- otherwise `https://evil.example/?x=github.com/maverickcer/
@@ -127,6 +137,7 @@ async function runMarkdownlint() {
 export const LINKINATOR_SKIP_PATTERNS = [
   "security/advisories/new",
   "^https?://github\\.com/[Mm][Aa][Vv][Ee][Rr][Ii][Cc][Kk][Cc][Ee][Rr]/repo-contract/(compare|releases/tag)/",
+  "^https?://maverickcer\\.github\\.io/repo-contract/api/",
 ]
 
 async function runLinkinator() {
