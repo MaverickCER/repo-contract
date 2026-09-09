@@ -77,6 +77,7 @@
 
         <nav class="primary-nav" id="primary-nav" aria-label="Primary">
           <ul class="primary-nav-list">
+            <li><a href="#value">For Leaders</a></li>
             <li><a href="#problem">Problem</a></li>
             <li><a href="#contract">Contract</a></li>
             <li><a href="#pipeline">Pipeline</a></li>
@@ -189,7 +190,8 @@
             <li>Capture exit code, signal, timing, and output as structured evidence.</li>
             <li>Decide pass, fail, or warn with a policy function you own.</li>
             <li>Run the exact same gate locally and in CI — no drift.</li>
-            <li>No CLI, no network calls, no telemetry, no hidden state.</li>
+            <li>Programmatic by design — a typed function call, not another CLI to learn.</li>
+            <li>No network calls, no telemetry, no hidden state.</li>
           </ul>
 
           <div class="hero-actions">
@@ -202,8 +204,252 @@
         </div>
       </section>
 
+      <!-- Value (decision-maker layer) -->
+      <section class="section" id="value" aria-labelledby="value-heading">
+        <div class="container">
+          <p class="section-eyebrow">For engineering leaders</p>
+
+          <h2 id="value-heading">
+            As codebases change faster, manual verification doesn't scale with them.
+          </h2>
+
+          <p class="section-lede">
+            More of the code shipped today is written faster than any review process can fully
+            inspect — AI coding agents are one accelerant of that, not the only one. The standards a
+            repository already agreed to don't enforce themselves just because the volume went up.
+          </p>
+
+          <div class="table-scroll">
+            <table class="comparison-table">
+              <caption>
+                Engineering risk, and the mechanism that constrains it
+              </caption>
+
+              <thead>
+                <tr>
+                  <th scope="col">Risk to the business</th>
+                  <th scope="col">What repo-contract makes enforceable</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <th scope="row">Architectural drift as teams and agents scale</th>
+                  <td>Architecture boundaries become a check with a repository-owned policy</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">A breaking change reaching consumers unannounced</th>
+                  <td>
+                    Public API changes can be checked against a committed baseline before they ship
+                  </td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Guardrails quietly bypassed across distributed teams</th>
+                  <td>Every suppression needs a reviewed, registry-tracked record</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">"CI is green" without anyone knowing why</th>
+                  <td>Every outcome, including pass, carries a mandatory rationale</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Local-vs-CI divergence</th>
+                  <td>
+                    The same contract definition runs in the pre-commit hook, pre-push hook, and CI
+                  </td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Standards buried in CI YAML only one platform can execute</th>
+                  <td>
+                    The contract lives in the repository; CI is one consumer of it, not the owner
+                  </td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Generated reference docs drifting from the code</th>
+                  <td>
+                    The API reference is regenerated and byte-compared against the source on every
+                    commit
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="section-lede">
+            Standardizing this once means a shared organizational contract, not a tool every team
+            configures separately:
+          </p>
+
+          <div class="diagram">
+            <p class="sr-only">
+              An organization defines its standard once, as a shared contract package. Every service
+              in the organization consumes that same package and runs the identical contract, both
+              locally and in CI.
+            </p>
+
+            <ol class="diagram-tree">
+              <li>
+                <span class="diagram-branch-label">Shared contract package, defined once</span>
+                <ol>
+                  <li>Service A — the same contract, locally and in CI</li>
+                  <li>Service B — the same contract, locally and in CI</li>
+                  <li>Service C — the same contract, locally and in CI</li>
+                </ol>
+              </li>
+            </ol>
+          </div>
+
+          <div class="hero-actions">
+            <a
+              class="button button--primary"
+              href="https://github.com/maverickcer/repo-contract/blob/main/specs/architecture.md"
+            >
+              Read the architecture
+            </a>
+
+            <a class="button button--secondary" href="api/"> Browse the API reference </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Works with your stack -->
+      <section class="section section--muted" id="works-with" aria-labelledby="works-with-heading">
+        <div class="container">
+          <p class="section-eyebrow">Compatibility</p>
+
+          <h2 id="works-with-heading">Works with your stack</h2>
+
+          <p class="section-lede">
+            repo-contract runs on the runtime and CI provider you already use — no plugin API, no
+            vendor lock-in.
+          </p>
+
+          <p class="trust-group-label">Runtimes</p>
+          <ul class="trust-row">
+            <li class="trust-chip">Node.js &gt;=20</li>
+            <li class="trust-chip">Bun</li>
+            <li class="trust-chip">Deno</li>
+          </ul>
+
+          <p class="trust-group-label">Tested in this repository's own CI</p>
+          <ul class="trust-row">
+            <li class="trust-chip">GitHub Actions</li>
+            <li class="trust-chip">TypeScript (strict)</li>
+            <li class="trust-chip">npm</li>
+          </ul>
+
+          <p>
+            This repository enforces its own standards with repo-contract on every commit — see
+            <a href="https://github.com/maverickcer/repo-contract/blob/main/repo-contract.config.ts"
+              >its own contract</a
+            >.
+          </p>
+
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">.github/workflows/ci.yml</span>
+
+              <button class="copy-button" type="button" data-copy-target="works-with-code">
+                Copy
+              </button>
+            </div>
+
+            <!-- prettier-ignore -->
+            <pre><code id="works-with-code">- uses: actions/checkout@v4
+- uses: actions/setup-node@v4
+  with: { node-version: 24, cache: npm }
+- run: npm ci
+- run: npm run build
+- run: npm run contract</code></pre>
+          </div>
+
+          <p>
+            This repository's own workflow additionally pins each action to a commit SHA rather than
+            a tag, and passes <code>fetch-depth: 0</code> to <code>actions/checkout</code> because
+            some of its own checks read <code>origin/main..HEAD</code> — neither is needed for the
+            minimal setup above.
+          </p>
+        </div>
+      </section>
+
+      <!-- Mental model (moved earlier, deliberately: the vocabulary below -- evidence, policy,
+           verdict -- is what the rest of this page uses throughout, so it's worth establishing
+           before the deeper technical walkthrough, not only after it. -->
+      <section class="section" id="questions" aria-labelledby="questions-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">Three questions, three answers</p>
+
+          <h2 id="questions-heading">Evidence, policy, and enforcement stay separate on purpose</h2>
+
+          <p class="section-lede">
+            A reliable engineering contract should distinguish what happened from what the
+            repository concluded and what an external system ultimately does about that conclusion.
+          </p>
+
+          <div class="diagram">
+            <p class="sr-only">
+              Evidence answers what happened. Policy answers what the repository concludes. Consumer
+              judgment answers what an external system does about that conclusion.
+            </p>
+
+            <ol class="diagram-tree">
+              <li>
+                <span class="diagram-branch-label">Evidence answers "what happened?"</span>
+                <ol>
+                  <li>Exit code, signal, timing</li>
+                  <li>Captured and parsed output</li>
+                  <li>Facts without policy interpretation</li>
+                </ol>
+              </li>
+
+              <li>
+                <span class="diagram-branch-label">
+                  Policy answers "what does our standard require?"
+                </span>
+                <ol>
+                  <li>Repository-owned judgment</li>
+                  <li>Pass, fail, or warn</li>
+                  <li>A mandatory rationale</li>
+                </ol>
+              </li>
+
+              <li>
+                <span class="diagram-branch-label">
+                  The consumer answers "what do we do about it?"
+                </span>
+                <ol>
+                  <li>CI can block a merge</li>
+                  <li>A script can set an exit code</li>
+                  <li>A bot or human can inspect the result</li>
+                </ol>
+              </li>
+            </ol>
+          </div>
+
+          <p>
+            <code>Verdict</code> is returned alongside <code>Evidence</code>, never merged into it.
+            A consumer therefore has both <code>evidence.checks[id]</code> and
+            <code>verdict.checks[id]</code> available independently.
+          </p>
+
+          <div class="callout callout--note">
+            <p class="callout-title">The contract is not the automation platform</p>
+
+            <p>
+              A CI provider can enforce the verdict. It does not have to own the definition of the
+              standard that produced it.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <!-- Problem -->
-      <section class="section" id="problem" aria-labelledby="problem-heading">
+      <section class="section section--muted" id="problem" aria-labelledby="problem-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">The problem</p>
 
@@ -263,7 +509,7 @@
       </section>
 
       <!-- Contract -->
-      <section class="section section--muted" id="contract" aria-labelledby="contract-heading">
+      <section class="section" id="contract" aria-labelledby="contract-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">The contract</p>
 
@@ -338,7 +584,7 @@
       </section>
 
       <!-- Pipeline -->
-      <section class="section" id="pipeline" aria-labelledby="pipeline-heading">
+      <section class="section section--muted" id="pipeline" aria-labelledby="pipeline-heading">
         <div class="container">
           <p class="section-eyebrow">The pipeline</p>
 
@@ -423,7 +669,7 @@
       </section>
 
       <!-- Configure -->
-      <section class="section section--muted" id="configure" aria-labelledby="configure-heading">
+      <section class="section" id="configure" aria-labelledby="configure-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">01 · Configure</p>
 
@@ -493,7 +739,7 @@
       </section>
 
       <!-- Execute -->
-      <section class="section" id="execute" aria-labelledby="execute-heading">
+      <section class="section section--muted" id="execute" aria-labelledby="execute-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">02 · Execute</p>
 
@@ -585,7 +831,7 @@
       </section>
 
       <!-- Evidence -->
-      <section class="section section--muted" id="evidence" aria-labelledby="evidence-heading">
+      <section class="section" id="evidence" aria-labelledby="evidence-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">03 · Evidence</p>
 
@@ -643,7 +889,7 @@
       </section>
 
       <!-- Policy -->
-      <section class="section" id="policy" aria-labelledby="policy-heading">
+      <section class="section section--muted" id="policy" aria-labelledby="policy-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">04 · Policy</p>
 
@@ -721,7 +967,7 @@
       </section>
 
       <!-- Verdict -->
-      <section class="section section--muted" id="verdict" aria-labelledby="verdict-heading">
+      <section class="section" id="verdict" aria-labelledby="verdict-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">05 · Verdict</p>
 
@@ -776,74 +1022,6 @@ process.exitCode = verdict.passed ? 0 : 1</code></pre>
       </section>
 
       <!-- Three questions -->
-      <section class="section" id="questions" aria-labelledby="questions-heading">
-        <div class="container container--narrow">
-          <p class="section-eyebrow">Three questions, three answers</p>
-
-          <h2 id="questions-heading">Evidence, policy, and enforcement stay separate on purpose</h2>
-
-          <p class="section-lede">
-            A reliable engineering contract should distinguish what happened from what the
-            repository concluded and what an external system ultimately does about that conclusion.
-          </p>
-
-          <div class="diagram">
-            <p class="sr-only">
-              Evidence answers what happened. Policy answers what the repository concludes. Consumer
-              judgment answers what an external system does about that conclusion.
-            </p>
-
-            <ol class="diagram-tree">
-              <li>
-                <span class="diagram-branch-label">Evidence answers "what happened?"</span>
-                <ol>
-                  <li>Exit code, signal, timing</li>
-                  <li>Captured and parsed output</li>
-                  <li>Facts without policy interpretation</li>
-                </ol>
-              </li>
-
-              <li>
-                <span class="diagram-branch-label">
-                  Policy answers "what does our standard require?"
-                </span>
-                <ol>
-                  <li>Repository-owned judgment</li>
-                  <li>Pass, fail, or warn</li>
-                  <li>A mandatory rationale</li>
-                </ol>
-              </li>
-
-              <li>
-                <span class="diagram-branch-label">
-                  The consumer answers "what do we do about it?"
-                </span>
-                <ol>
-                  <li>CI can block a merge</li>
-                  <li>A script can set an exit code</li>
-                  <li>A bot or human can inspect the result</li>
-                </ol>
-              </li>
-            </ol>
-          </div>
-
-          <p>
-            <code>Verdict</code> is returned alongside <code>Evidence</code>, never merged into it.
-            A consumer therefore has both <code>evidence.checks[id]</code> and
-            <code>verdict.checks[id]</code> available independently.
-          </p>
-
-          <div class="callout callout--note">
-            <p class="callout-title">The contract is not the automation platform</p>
-
-            <p>
-              A CI provider can enforce the verdict. It does not have to own the definition of the
-              standard that produced it.
-            </p>
-          </div>
-        </div>
-      </section>
-
       <!-- Comparison -->
       <section class="section section--muted" id="comparison" aria-labelledby="comparison-heading">
         <div class="container">
@@ -857,6 +1035,12 @@ process.exitCode = verdict.passed ? 0 : 1</code></pre>
             repo-contract does not replace the tools that analyze your code or the systems that
             automate your repository. It gives those systems a common, repository-owned contract to
             execute.
+          </p>
+
+          <p class="section-lede">
+            <strong
+              >One contract. Multiple tools. Multiple repositories. Multiple consumers.</strong
+            >
           </p>
 
           <div class="table-scroll">
@@ -1063,12 +1247,19 @@ process.exitCode = verdict.passed ? 0 : 1</code></pre>
           </p>
 
           <div class="callout callout--note">
-            <p class="callout-title">Start with one requirement</p>
+            <p class="callout-title">A progressive rollout, not a migration</p>
 
-            <p>
-              Pick one existing check. Define its policy. Run the contract locally. Once the
-              contract produces the result you expect, add the next requirement.
-            </p>
+            <ol class="callout-steps">
+              <li>Wrap one existing check.</li>
+              <li>Write its policy.</li>
+              <li>Run the contract locally.</li>
+              <li>Run the same contract in CI.</li>
+              <li>Move the next standard into the contract.</li>
+              <li>
+                <a href="#value">Share the contract across repositories</a>, once more than one
+                needs it.
+              </li>
+            </ol>
           </div>
 
           <div class="adoption-grid">
@@ -1104,8 +1295,8 @@ process.exitCode = verdict.passed ? 0 : 1</code></pre>
               <span class="adoption-card-title">Locked-down environments</span>
 
               <span class="adoption-card-desc">
-                No CLI, no network calls, no telemetry, and no implicit filesystem discovery. The
-                primary surface is a programmatic function call.
+                Programmatic by design: a typed function call, not a CLI. No network calls, no
+                telemetry, no implicit filesystem discovery.
               </span>
 
               <span class="external-link-note">Read the security model ↗</span>
@@ -1308,18 +1499,6 @@ process.exitCode = verdict.passed ? 0 : 1</code></pre>
           </details>
 
           <details class="faq-item">
-            <summary>
-              Does repo-contract replace SonarQube, Qodana, or similar quality platforms?
-            </summary>
-
-            <p>
-              No. Those systems provide analysis capabilities and quality models of their own.
-              repo-contract can run them as checks when their results are part of your repository's
-              engineering contract.
-            </p>
-          </details>
-
-          <details class="faq-item">
             <summary>Does repo-contract decide what counts as good code?</summary>
 
             <p>
@@ -1340,46 +1519,6 @@ process.exitCode = verdict.passed ? 0 : 1</code></pre>
           </details>
 
           <details class="faq-item">
-            <summary>Does repo-contract persist evidence or maintain a baseline?</summary>
-
-            <p>
-              No. It does not maintain a baseline or persist evidence on your behalf. If your
-              repository wants regression detection, it can persist evidence and compare it inside
-              its own policy.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>What happens if my policy throws an error?</summary>
-
-            <p>
-              A policy exception is treated as an error in the contract itself rather than as a
-              normal failing outcome. <code>runRepoContract()</code> rejects with a dedicated error,
-              distinct from a policy that successfully returns a failing outcome.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>What does "warn" mean?</summary>
-
-            <p>
-              <code>"warn"</code> represents a policy that is satisfied but wants to surface
-              additional information. It does not fail the aggregate verdict and is not intended to
-              be a softer representation of failure.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>Does repo-contract run checks in parallel?</summary>
-
-            <p>
-              Yes, by default, within the configured concurrency boundary. Checks that require
-              ordering can declare <code>dependsOn</code>. Checks whose tooling needs exclusive
-              access can declare <code>isolated</code>.
-            </p>
-          </details>
-
-          <details class="faq-item">
             <summary>Does repo-contract work on Windows?</summary>
 
             <p>
@@ -1394,15 +1533,6 @@ process.exitCode = verdict.passed ? 0 : 1</code></pre>
             <p>
               Yes. The repository's own contract configures the checks used to validate the project,
               using the package's public API rather than a special internal execution path.
-            </p>
-          </details>
-
-          <details class="faq-item">
-            <summary>Is the website itself checked?</summary>
-
-            <p>
-              Yes. The page participates in the repository's verification suite, including
-              accessibility verification against the built page.
             </p>
           </details>
 
@@ -1543,6 +1673,7 @@ process.exitCode = verdict.passed ? 0 : 1</code></pre>
     <footer class="site-footer">
       <div class="container footer-inner">
         <ul class="footer-nav">
+          <li><a href="#value">For Leaders</a></li>
           <li><a href="#problem">Problem</a></li>
           <li><a href="#contract">Contract</a></li>
           <li><a href="#pipeline">Pipeline</a></li>

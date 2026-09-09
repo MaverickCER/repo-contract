@@ -42,3 +42,25 @@ describe("LINKINATOR_SKIP_PATTERNS -- changelog release URLs", () => {
     expect(isSkipped(href)).toBe(false)
   })
 })
+
+describe("LINKINATOR_SKIP_PATTERNS -- the generated HTML API reference", () => {
+  it.each([
+    "https://maverickcer.github.io/repo-contract/api/",
+    "https://maverickcer.github.io/repo-contract/api/repo-contract/index.html",
+    "http://maverickcer.github.io/repo-contract/api/repo-contract-helpers/repo-contract.md",
+  ])("skips the /api/ subpath, unreachable from a PR branch by construction: %s", (href) => {
+    expect(isSkipped(href)).toBe(true)
+  })
+
+  it.each([
+    // the already-live landing page -- a broken link to it must still be caught
+    "https://maverickcer.github.io/repo-contract/",
+    "https://maverickcer.github.io/repo-contract/index.html",
+    // a path that merely starts with "api" but isn't the /api/ subpath
+    "https://maverickcer.github.io/repo-contract/apiary/",
+    // spoofed host / path smuggled into a query string
+    "https://evil.example/?x=maverickcer.github.io/repo-contract/api/",
+  ])("does not skip: %s", (href) => {
+    expect(isSkipped(href)).toBe(false)
+  })
+})
