@@ -10,27 +10,58 @@
 
 **Turn your repository's engineering standards into enforceable contracts.**
 
-repo-contract is a tool-agnostic contract execution and evidence layer. You define the engineering standards your repository cares about — tests, coverage, mutation testing, linting, security scanning, documentation, dependency health, or anything else that runs as a command — and repo-contract turns those standards into enforceable, machine-readable contracts.
+repo-contract is a tool-agnostic contract execution and evidence layer. You define the engineering standards your repository cares about — tests, coverage, mutation testing, linting, security scanning, documentation, dependency health, or anything else that runs as a command — and repo-contract turns those standards into enforceable, machine-readable contracts: each check executes a command, captures what actually happened as evidence, and hands that evidence to a policy function **you write**, which returns `{ outcome: "pass" | "fail" | "warn", rationale: string }`. repo-contract aggregates every policy result into one verdict. It does not decide what "good code" means. **Your repository does.**
 
-Each check executes a command, captures what actually happened as evidence, and hands that evidence to a policy function **you write**. The policy decides whether the evidence satisfies your repository's standard:
+## See what the output looks like
+
+That claim is easier to believe with real output than a description. This is the actual result of running the tiny contract in [`examples/demo/`](examples/demo/README.md) — three real, published presets, evaluated against one deliberately imperfect file:
 
 ```ts
-{ outcome: "pass" | "fail" | "warn", rationale: string }
+// examples/demo/repo-contract.config.ts
+checks: {
+  typecheck,
+  format: { ...format, run: ["prettier", "--check", "."] },
+  lint: lint(),
+}
 ```
 
-repo-contract aggregates every policy result into one verdict.
+```text
+$ npm run demo
 
-It does not decide what "good code" means.
+[PASS] typecheck
+  tsc reported no type errors.
 
-**Your repository does.**
+[FAIL] format
+  Prettier reported formatting failures: Checking formatting...
+  [warn] src/greet.ts
+  [warn] Code style issues found in the above file. Run Prettier with --write to fix.
 
-This makes repo-contract different from a test runner, linter, CI provider, or quality analyzer. It does not replace ESLint, Vitest, Stryker, npm audit, or similar tools. It executes them, captures their results, and gives your repository a programmable enforcement layer across all of them.
+[WARN] lint
+  ESLint reported 0 errors but 1 warning(s):
+  - src/greet.ts:15:3 [no-console]: Unexpected console statement.
+```
 
-Because it is a plain function call with no CLI and no hidden state, the same contract can run locally and in CI. Wire it into a `precommit`, `prepublishOnly`, CI job, or whatever workflow your repository already uses.
+That's real output, not a mockup — run it yourself with `npm run demo` from `examples/demo/`. Notice what each line actually gives you: `typecheck` doesn't just say "ok," it says what it checked. `format` names the exact file and tells you the exact fix (`prettier --write`). `lint` didn't block the run — it's a `"warn"`, non-blocking by design — and it still names the file, the line, and the rule. Nothing here says "CI failed" without saying why.
 
-The result is not merely "the tests passed."
+repo-contract doesn't replace ESLint, Vitest, Stryker, npm audit, or any other tool you already run. It turns the standards you already care about into one executable, explainable contract those tools feed into:
 
-It is a repository-defined engineering contract with evidence explaining why.
+```text
+ESLint, Vitest, Stryker, npm audit, ...
+              |
+        repo-contract
+              |
+     evidence + verdict
+              |
+      local hooks / CI
+```
+
+- Non-blocking warnings carry a mandatory, actionable rationale — on every outcome, including pass.
+- Any command-line tool can contribute evidence without a custom adapter.
+- The same contract definition runs locally (pre-commit/pre-push) and in CI.
+- No network calls or telemetry — mechanically enforced by this repository's own checks, not just documented.
+- A shared contract package can be inherited by every repository in an org from day one.
+
+Because it is a plain function call with no CLI and no hidden state, the same contract can run locally and in CI. Wire it into a `precommit`, `prepublishOnly`, CI job, or whatever workflow your repository already uses. The result is not merely "the tests passed" — it is a repository-defined engineering contract with evidence explaining why.
 
 This README is a narrative walkthrough. For the precise reference — every exported type, field, and error code — see the generated [API report](docs/api-report/repo-contract.api.md) (and its [presets counterpart](docs/api-report/repo-contract-presets.api.md) for `repo-contract/presets`), produced straight from source by [API Extractor](https://api-extractor.com/) so it can never drift from what the package actually exports.
 
@@ -110,7 +141,7 @@ repo-contract has no user interface. It produces machine-readable `Evidence`/`Ve
 
 ## Quick start
 
-Define your repository's standards as checks:
+_Copy this to get started._ Define your repository's standards as checks:
 
 ```ts
 // repo-contract.config.ts
@@ -228,6 +259,139 @@ Passing `cross-spawn` fixes Windows command resolution; it does not by itself en
 
 `repo-contract` doesn't ship a ready-made spawner of its own, on purpose (see ADR 0011's Alternatives) — the two snippets above are the whole integration.
 
+## A fuller example
+
+Once a contract grows past "run tests, run mutation," it typically starts reasoning across checks. This example is further down the road than Quick Start — a preset used as-is and one spread and overridden, execution ordered with `dependsOn`, a policy reading a sibling check's evidence, and a JSON-output policy that produces a specific, actionable `"warn"` instead of a vague one:
+
+```ts
+// repo-contract.config.ts
+import { spawn } from "node:child_process"
+import { defineRepoContract } from "repo-contract"
+import { test, typecheck } from "repo-contract/presets"
+import {
+  readCoverageSummary,
+  weakestFile,
+  readSurvivingMutants,
+  describeMutant,
+} from "./contract/reports.js"
+
+const COVERAGE_FLOOR = 85
+const MUTATION_FLOOR = 90
+
+export default defineRepoContract({
+  spawn,
+  env: process.env,
+  checks: {
+    // A preset used exactly as published.
+    typecheck,
+
+    // The same preset, spread and overridden: published command and output
+    // parsing, your timeout.
+    tests: { ...test, timeoutMs: 300_000 },
+
+    // Your own check. `output: { format: "json" }` is what makes
+    // `result.output.value` available to the policy at all.
+    coverage: {
+      run: ["npm", "run", "coverage", "--", "--reporter=json-summary"],
+      output: { format: "json" },
+      policy: ({ result }) => {
+        const summary = readCoverageSummary(result.output)
+        if (!summary.ok) return summary.failure
+
+        const total = summary.value.total.lines.pct
+        const weakest = weakestFile(summary.value)
+
+        if (total < COVERAGE_FLOOR) {
+          return {
+            outcome: "fail",
+            rationale:
+              `Line coverage is ${total}%, ${(COVERAGE_FLOOR - total).toFixed(1)} points below the ` +
+              `${COVERAGE_FLOOR}% floor. Start with ${weakest.path} (${weakest.pct}%, ` +
+              `${weakest.uncoveredLines} uncovered lines) -- it is the single largest gap.`,
+          }
+        }
+
+        // Clearing the floor is not the same as being finished.
+        return weakest.pct < COVERAGE_FLOOR
+          ? {
+              outcome: "warn",
+              rationale:
+                `Line coverage is ${total}%, above the ${COVERAGE_FLOOR}% floor. ` +
+                `${weakest.path} is at ${weakest.pct}% and is being carried by the rest of the ` +
+                `repository; its ${weakest.uncoveredLines} uncovered lines are the highest-value ` +
+                `tests left to write.`,
+            }
+          : {
+              outcome: "pass",
+              rationale:
+                `Line coverage is ${total}% and every file is at or above the ${COVERAGE_FLOOR}% ` +
+                `floor. Closest to it: ${weakest.path} at ${weakest.pct}%.`,
+            }
+      },
+    },
+
+    // `dependsOn` orders execution and hands this policy that check's
+    // evidence in `ctx.dependencies`. A dependency must be declared before
+    // the check that names it -- a forward reference is a config error.
+    mutation: {
+      run: ["npm", "run", "mutation"],
+      dependsOn: ["tests"],
+      policy: async ({ dependencies }) => {
+        if (dependencies.tests?.exitCode !== 0) {
+          return {
+            outcome: "fail",
+            rationale:
+              "Mutation score is not meaningful while the suite is red. Fix the failures named " +
+              "by the `tests` check, then rerun -- no mutation threshold was evaluated.",
+          }
+        }
+
+        const { score, survivors } = await readSurvivingMutants()
+
+        return survivors.length === 0
+          ? {
+              outcome: "pass",
+              rationale: `Mutation score is ${score}% (floor ${MUTATION_FLOOR}%). 0 mutants survived.`,
+            }
+          : {
+              outcome: "fail",
+              rationale: [
+                `Mutation score is ${score}% (floor ${MUTATION_FLOOR}%). ${survivors.length} mutants ` +
+                  `survived -- lines your tests execute but never assert on:`,
+                ...survivors.map((mutant) => `- ${describeMutant(mutant)}`),
+                "Add an assertion that fails when each replacement is applied, or delete the branch if it is unreachable.",
+              ].join("\n"),
+            }
+      },
+    },
+  },
+})
+```
+
+This is illustrative — `./contract/reports.js` is your own code, not something repo-contract ships. That's the point: `readSurvivingMutants()` reads a report file from disk, exactly as `checks/mutation.ts` does in this repository's own contract. The resulting verdict:
+
+```ts
+verdict.checks
+// {
+//   typecheck: { outcome: "pass", rationale: "tsc reported no type errors." },
+//   tests:     { outcome: "pass", rationale: "Vitest completed 412 test(s) with 0 failures across 38 suite(s)." },
+//   coverage:  { outcome: "warn", rationale:
+//     "Line coverage is 91.4%, above the 85% floor. src/http/retry.ts is at 78.2% and is being
+//      carried by the rest of the repository; its 12 uncovered lines are the highest-value tests
+//      left to write." },
+//   mutation:  { outcome: "fail", rationale:
+//     "Mutation score is 82% (floor 90%). 3 mutants survived -- lines your tests execute but never
+//      assert on:
+//      - src/auth/session.ts:42:11 - ConditionalExpression: replaced `expiresAt > now` with `true`
+//      - src/auth/session.ts:57:3 - BooleanLiteral: replaced `false` with `true`
+//      - src/http/retry.ts:19:22 - ArithmeticOperator: replaced `attempt * 2` with `attempt / 2`
+//      Add an assertion that fails when each replacement is applied, or delete the branch if it is
+//      unreachable." },
+// }
+```
+
+`warn` did not fail the run. `mutation` did — `"fail"` is the only outcome that fails `verdict.passed`. Two passes, one warning, one failure, and every one of them names something specific: a metric, a file, a line, a fix.
+
 ## The model
 
 ```text
@@ -275,7 +439,7 @@ Evidence never decides whether the result was acceptable.
 
 `rationale` is mandatory for every outcome, including `"pass"`. It should contain enough actionable detail — file/line locations, rule IDs, test names, counts, or other relevant information — that a human, CI system, or AI agent can understand the result without rerunning the check.
 
-`"warn"` is non-blocking. It means the policy's requirements were satisfied but the evidence is worth surfacing for review.
+`"warn"` is non-blocking. It means the policy's requirements were satisfied but the evidence is worth surfacing for review. Whether a given observation deserves `"warn"` or a plain `"pass"` is a repository-owned policy decision — repo-contract gives you the outcome and the mandatory rationale; it doesn't compute "margin" or "headroom" on your behalf.
 
 ## AI guardrails
 
@@ -338,21 +502,7 @@ fix
 verify again
 ```
 
-The policy rationale is important here. A result such as:
-
-```text
-FAIL: mutation score must be at least 90% (got 82%)
-```
-
-is useful to a human.
-
-A result such as:
-
-```text
-FAIL: 3 mutants survived in src/auth/session.ts;
-```
-
-is useful to both a human and an AI agent.
+The policy rationale is what makes the loop work — see [the real example above](#see-what-the-output-looks-like): a rationale that names the file, the line, and the fix is useful to both a human and an AI agent, in exactly the way "CI failed" is not.
 
 repo-contract does not attempt to become an AI coding agent. It provides the executable boundary against which an agent's work can be evaluated.
 
@@ -614,7 +764,7 @@ checks: {
 }
 ```
 
-Independent checks run concurrently. `dependsOn` allows checks to express ordering only when ordering is actually required.
+Independent checks run concurrently. `dependsOn` allows checks to express ordering only when ordering is actually required. A dependency must be declared before the check that names it — naming a check declared later in the same `checks` record is a configuration error, not a forward reference.
 
 `dependsOn` does not cause repo-contract to decide whether the dependent check should run based on the dependency's policy result. That decision belongs to the dependent check's command or policy.
 
@@ -817,7 +967,7 @@ bun add -d prettier
 
 Not every test runner has a preset. Jest, Cypress, and Mocha have different reporter formats and may require bespoke presets. The underlying pattern remains the same: execute the tool, capture evidence, interpret its output, and apply your repository's policy.
 
-Unlike its neighbors, `format` auto-fixes (`--write`) and therefore cannot itself fail on unformatted input — `prettier --write` reports success once it finishes rewriting files. If you want a hard gate on formatting (in CI, for example), run `prettier --check .` directly instead of this preset.
+Unlike its neighbors, `format` auto-fixes (`--write`) and therefore cannot itself fail on unformatted input — `prettier --write` reports success once it finishes rewriting files. If you want a hard gate on formatting (in CI, for example), run `prettier --check .` directly instead of this preset — exactly the substitution the [demo above](#see-what-the-output-looks-like) makes.
 
 ## Helpers
 
@@ -999,7 +1149,7 @@ process.exitCode = verdict.passed ? 0 : 1
 }
 ```
 
-The same contract can then be used by local development and CI:
+The same contract definition can then be used by local development and CI:
 
 ```sh
 npm run contract
@@ -1092,6 +1242,10 @@ repo-contract is pre-1.0.
 Per [VERSIONING.md](VERSIONING.md), minor versions may include breaking changes to the Stable tier before 1.0.
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.
+
+## If this is useful
+
+If this model matches how you think about repository standards, [star it on GitHub](https://github.com/MaverickCER/repo-contract) — it's the main way other maintainers find it. If it doesn't fit your repo, [open an issue](https://github.com/MaverickCER/repo-contract/issues) and say why instead; that's more useful than a star.
 
 ## Contributing
 
