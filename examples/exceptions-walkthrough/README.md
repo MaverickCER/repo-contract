@@ -81,9 +81,9 @@ without anyone having touched the check's own code.
 
 ## See also
 
-- The `repo-contract` README's **Helpers** section — the full helper surface
-  (`loadExceptionRegistry`, `resolveExceptionPolicy`, `evaluateExceptionRecord`,
-  `reconcileExceptions`, `hashRequirementFields`).
+- [The guide's **Advanced: governed exceptions** section](../../GUIDE.md#advanced-governed-exceptions)
+  — the full helper surface (`loadExceptionRegistry`, `resolveExceptionPolicy`,
+  `evaluateExceptionRecord`, `reconcileExceptions`, `hashRequirementFields`).
 - [`../day-one-walkthrough`](../day-one-walkthrough) — the companion mainline
   example: rolling out a new shared requirement as a dated `warn` → `fail`.
 - [`../README.md`](../README.md) — the layered organizational governance model.

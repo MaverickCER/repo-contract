@@ -1,8 +1,8 @@
 # repo-contract guide
 
-Everything past "should I adopt this?" The [README](README.md) covers the pitch and the
-30-second start; this covers integrating it properly, defining your own checks, and the
-full behavior of every moving part.
+Everything past "should I adopt this?" The [README](README.md) covers the pitch and a
+minimal first contract; this covers integrating it properly, defining your own checks, and
+the full behavior of every moving part.
 
 - [The model: evidence, policy, verdict](#the-model)
 - [Supplying `spawn` and `env`](#supplying-spawn-and-env)
@@ -146,7 +146,7 @@ tools. The cost is one small file you write once (below); everything after that 
 do with the result. That file is the whole integration:
 
 ```ts
-// scripts/run-contract.mjs
+// scripts/contract.mjs
 import { runRepoContract } from "repo-contract"
 import config from "../repo-contract.config.js"
 
@@ -162,12 +162,14 @@ process.exitCode = verdict.passed ? 0 : 1
 ```json
 {
   "scripts": {
-    "contract": "tsx scripts/run-contract.mjs"
+    "contract": "tsx scripts/contract.mjs"
   }
 }
 ```
 
-The same contract definition runs locally and in CI:
+`tsx` loads the TypeScript config and runner; add it as a devDependency alongside the CLIs
+your own checks invoke (repo-contract bundles none of them). The same contract definition
+then runs locally and in CI:
 
 ```sh
 npm run contract
@@ -589,7 +591,7 @@ interpret its output, apply your policy.
 
 Unlike its neighbors, `format` auto-fixes (`--write`) and therefore cannot itself fail on
 unformatted input. If you want a hard gate on formatting, run `prettier --check .` directly
-instead of this preset — exactly the substitution the [demo](README.md#see-real-output)
+instead of this preset — exactly the substitution the [demo](README.md#see-it-run)
 makes.
 
 ## Regression detection
