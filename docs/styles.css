@@ -1050,6 +1050,25 @@ section[id] {
   border-radius: 0;
 }
 
+/* The generated API pages (scripts/api-docs-html/render.ts) reuse .site-header / .site-footer
+   but their header ("API reference") and footer ("repo-contract") links carry no class, so
+   without this they fall through to the default light-background link colour and fail WCAG AA
+   contrast on the navy bar. Match the treatment the main site's own nav links already get on
+   the same background. */
+.site-header .header-actions a:not(.github-link):not(.button),
+.site-footer .container > p a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+}
+
+.site-header .header-actions a:not(.github-link):not(.button):hover,
+.site-header .header-actions a:not(.github-link):not(.button):focus-visible,
+.site-footer .container > p a:hover,
+.site-footer .container > p a:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+}
+
 /* Footer */
 
 .site-footer {
