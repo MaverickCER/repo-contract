@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.0](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.4.0...repo-contract-v0.5.0) (2026-09-12)
+
+Administrative republish -- 0.4.0 is already published on npm at its current content hash, so a fresh version number is needed to publish again. No functional change beyond the previous release.
+
 ## [0.4.0](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.3.2...repo-contract-v0.4.0) (2026-09-09)
 
 
