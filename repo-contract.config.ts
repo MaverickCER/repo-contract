@@ -73,10 +73,9 @@
  * place every check id is actually in scope to depend on.
  *
  * `typecheck`, `format`, `license`, `publint`, `arethetypeswrong`,
- * `security-deps`, `security-secrets`, and `duplication` are NOT defined
- * under checks/ -- they're consumed directly from `src/presets/`, the same
- * published preset catalog an outside consumer would import via
- * `repo-contract/presets` (see
+ * `security-secrets`, and `duplication` are NOT defined under checks/ --
+ * they're consumed directly from `src/presets/`, the same published preset
+ * catalog an outside consumer would import via `repo-contract/presets` (see
  * specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). This repository dogfoods
  * its own public presets rather than maintaining a parallel private copy;
  * where a value needs to differ from a preset's generic default
@@ -86,17 +85,26 @@
  * entrypoints trigger a real upstream attw bug no `run`-spread override
  * alone could work around.
  *
- * `dead-code` is the one deliberate exception: this repository's own run
- * does NOT use the published `deadCode` preset (still published, unchanged,
- * for external consumers) -- it self-hosts `checks/dead-code.ts` /
- * `scripts/dead-code/check.ts` instead, running knip with no config-time
- * exempt list at all and reconciling `.repo-contract/exceptions/dead-code.json`
- * against every raw finding afterward. See that check's own doc comment and
- * specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's amendment for why: a
- * preset's `exemptUnusedDevDependencies` option needs its exempt list before
- * knip ever runs, which a *reconciled* registry structurally cannot supply
- * (the registry that would suppress a finding can only be built from
- * findings that already ran unsuppressed).
+ * `dead-code` and `security-deps` are the two deliberate exceptions: neither
+ * uses its own published preset (both still published, unchanged, for
+ * external consumers) -- each self-hosts a `checks/*.ts` instead, reconciling
+ * a `.repo-contract/exceptions/*.json` registry against every raw finding.
+ * `dead-code` (`checks/dead-code.ts` / `scripts/dead-code/check.ts`) runs
+ * knip with no config-time exempt list at all; see that check's own doc
+ * comment and specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's
+ * amendment for why: a preset's `exemptUnusedDevDependencies` option needs
+ * its exempt list before knip ever runs, which a *reconciled* registry
+ * structurally cannot supply (the registry that would suppress a finding can
+ * only be built from findings that already ran unsuppressed). `security-deps`
+ * (`checks/security-deps.ts`) exists for the identical structural reason,
+ * generalized: the published `securityDeps` preset only ever reports a raw
+ * `npm audit` count, with no way to accept a specific, justified, reviewable
+ * finding at all -- the earlier alternative (silently filtering a
+ * hardcoded in-source package-name Set before the preset ever saw the
+ * report) is exactly the unreviewable shortcut `security-socket.ts`'s own
+ * exception-policy model exists to replace; `security-deps.ts` reuses that
+ * identical model (see specs/decisions/0013-reusable-exception-policy-helper.md)
+ * instead of a second one-off.
  */
 import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
 import { accessibility } from "./checks/accessibility.js"
@@ -115,6 +123,7 @@ import { lint } from "./checks/lint.js"
 import { mutation } from "./checks/mutation.js"
 import { presetCommands } from "./checks/preset-commands.js"
 import { schema } from "./checks/schema.js"
+import { securityDeps } from "./checks/security-deps.js"
 import { securityNetwork } from "./checks/security-network.js"
 import { securitySocket } from "./checks/security-socket.js"
 import { size } from "./checks/size.js"
@@ -134,7 +143,6 @@ import {
   format,
   license,
   publint,
-  securityDeps,
   securitySecrets,
   typecheck,
 } from "./src/presets/index.js"
@@ -290,7 +298,7 @@ export default defineRepoContract({
     },
     docs,
     accessibility,
-    "security-deps": securityDeps,
+    "security-deps": securityDeps(),
     "security-secrets": securitySecrets,
     "dead-code": deadCode,
     "adr-governance": adrGovernance,
