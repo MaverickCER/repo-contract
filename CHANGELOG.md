@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.5.0...repo-contract-v0.5.1) (2026-09-12)
+
+
+### Bug Fixes
+
+* correct repository/bugs URL casing to match GitHub (MaverickCER) ([55d563c](https://github.com/MaverickCER/repo-contract/commit/55d563c06ec7b9fe1b26c73239e693f189aa31c8))
+
 ## [0.5.0](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.4.0...repo-contract-v0.5.0) (2026-09-12)
 
 Administrative republish -- 0.4.0 is already published on npm at its current content hash, so a fresh version number is needed to publish again. No functional change beyond the previous release.
