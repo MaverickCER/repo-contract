@@ -157,13 +157,13 @@
       "verificationMethod": "static-reasoning"
     },
     {
-      "id": "suppression:eslint:n/no-process-env:repo-contract.config.ts:150",
+      "id": "suppression:eslint:n/no-process-env:repo-contract.config.ts:158",
       "version": 1,
       "justification": "This is repo-contract's own top-level self-hosting config (repo-contract.config.ts), not published library code -- src/ never reads process.env itself (see specs/decisions/0011), and RepoContractConfig.env is a required, consumer-supplied field. Here, repo-contract is the consumer of its own library, and supplying the real ambient environment to its own checks is exactly the responsibility ADR 0011 places on a consumer, not a config smell.\n\nAlternatives considered: Route environment access through a wrapper/config module instead of reading process.env inline.\n\nRemediation: A wrapper would only relocate this same read one file over, not remove it -- n/no-process-env exists to catch config values read ad hoc instead of through an app's config layer, which doesn't apply to a top-level consumer script whose entire job is supplying the ambient environment to the library it configures.",
       "category": "rule-not-applicable",
       "domain": "eslint",
       "file": "repo-contract.config.ts",
-      "line": 150,
+      "line": 158,
       "rule": [
         "n/no-process-env"
       ],
