@@ -44,7 +44,9 @@
  *    against the now-built, now-written state. `coverage`, `crap`, and `mutation` still attach
  *    their own genuine evidence dependencies via `dependsOn` (see each one's own note below) --
  *    `isolated`/declaration order alone only ever expresses "wait for the build," never a specific
- *    sibling's evidence.
+ *    sibling's evidence. `test-unit` and `test-integration` are also `isolated: true`, for the same
+ *    pure-scheduling, resource-contention reason as `mutation` below -- see their own note at their
+ *    declaration site.
  *
  * - `coverage` depends on `test-unit`/`test-integration`/`test-property` --
  *   it only aggregates+reports the coverage artifacts those three already
@@ -67,6 +69,12 @@
  *   dependency on any other check's evidence -- see
  *   specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md. `mutation` is declared near the
  *   end of the readers so its barrier blocks as little as possible.
+ *   `test-unit`/`test-integration` earn the identical `isolated: true` treatment for the identical
+ *   reason -- both spawn real, heavy child processes per test (`tsc`, `api-extractor`) on top of
+ *   Vitest's own internal worker pool, and running either concurrently with the rest of this
+ *   phase's reader fleet reproduced the same class of flake `mutation` was isolated for, this time
+ *   surfacing as a generic Vitest `STACK_TRACE_ERROR` on a different, unrelated handful of cases
+ *   each run -- see their own declaration-site comment.
  *
  * `coverage`, `crap`, and `mutation` therefore attach their `dependsOn`
  * here, at assembly, rather than in their own check file -- this is the one
@@ -194,7 +202,20 @@ export default defineRepoContract({
 
     // -- Readers --
     typecheck,
-    "test-unit": testUnit,
+    // `isolated: true` on both `test-unit` and `test-integration` below is the same pure-scheduling
+    // fix already applied to `mutation` (see that check's own comment and
+    // specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md), extended here
+    // once this repository's own local runs started reproducing the identical symptom: both spawn
+    // real, heavy child processes per test (`tsc`, `api-extractor`) on top of Vitest's own internal
+    // worker pool, and running either concurrently with the rest of this phase's reader fleet
+    // (`accessibility`'s real headless Chrome, `dead-code`'s whole-project `knip` walk,
+    // `coderabbitai`'s and `arethetypeswrong`'s own real subprocess spawns, etc.) oversubscribes the
+    // machine -- confirmed by three consecutive full `npm run contract` runs each failing a
+    // different, unrelated handful of `test-unit`/`test-integration` cases with a generic
+    // `STACK_TRACE_ERROR`, every one of which passed cleanly when the same file was run alone.
+    // Isolating both removes that contention exactly the way it already does for `mutation`; it
+    // says nothing about either needing any other check's evidence.
+    "test-unit": { ...testUnit, isolated: true },
     // `test/integration/suppression-governance/real-source.integration.test.ts`
     // reads disable-comments.json and asserts it's already synchronized with
     // real source; `suppression-governance`'s own check writes that same
@@ -205,7 +226,16 @@ export default defineRepoContract({
     // This dependsOn makes the registry write settle first, always, instead
     // of by scheduling luck -- the same fix already applied for `mutation`
     // below, which reads this same check's evidence for the same reason.
-    "test-integration": { ...testIntegration, dependsOn: ["suppression-governance"] },
+    // `dependsOn` stays even though `isolated` below already forces this check to run after every
+    // earlier one (including `suppression-governance`) in a *full* run: `isolated` alone gives no
+    // such guarantee on a partial `options.checks` run (e.g. `npm run contract -- test-integration`
+    // by itself) -- only `dependsOn` pulls a required check into that run's transitive closure. See
+    // this same distinction in `mutation`'s own comment below.
+    "test-integration": {
+      ...testIntegration,
+      dependsOn: ["suppression-governance"],
+      isolated: true,
+    },
     "test-property": testProperty,
     architecture,
     // GitHub Actions correctness + security via actionlint (see checks/github-actions.ts). A pure
