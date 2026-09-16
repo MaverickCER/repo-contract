@@ -261,17 +261,31 @@ function runSocketCli(): SocketCliResult {
     return { status: "error", message: detail }
   }
 
-  // `ok: true` -- the scan completed. A real report's own alerts field (once confirmed against an
-  // authenticated org -- see this module's own doc comment) is expected under `data.alerts` or
-  // `alerts`; either shape (or its absence, meaning a clean scan) is accepted here, but any
-  // present value that isn't an array of individually-recognized alert entries fails closed.
+  // `ok: true` -- the scan completed. Confirmed directly against a real authenticated org
+  // (2026-09-16): `alerts` is never an array -- it's the CLI's own `mapToObject()` serialization
+  // of an internal, possibly multi-level nested `Map` (`walkNestedMap()` in
+  // @socketsecurity/cli's own utils.js). A genuinely clean scan reports `"alerts": {}` (an empty
+  // object, `healthy: true`), which is unambiguous: zero keys is zero alerts, regardless of the
+  // nested shape a *populated* result would have. That populated shape uses its own
+  // policy/type/manifest/url vocabulary (keyed by `[policyKey, package, introducedBy]` per
+  // `walkNestedMap`'s own output -- see `toMarkdownReport()` in the CLI's cli.js), not the
+  // `severity: critical|high|middle|low` shape `normalizeAlert` below expects -- guessing at that
+  // mapping without a real populated example to verify against risks silently misclassifying a
+  // genuine critical alert, worse than failing loudly. So: an empty object is trusted; anything
+  // else (a non-empty object, or any other non-array shape) fails closed with a message pointing
+  // at the real gap.
   const rawAlerts =
     (isPlainObject(parsed.data) ? parsed.data.alerts : undefined) ?? parsed.alerts ?? []
+
+  if (isPlainObject(rawAlerts) && Object.keys(rawAlerts).length === 0) {
+    return { status: "passed" }
+  }
 
   if (!Array.isArray(rawAlerts)) {
     return {
       status: "error",
-      message: '`socket ci --json` reported `ok: true` with a non-array "alerts" field.',
+      message:
+        "`socket ci --json` reported one or more alerts, in the CLI's real nested-object shape this check does not yet parse (only the always-empty \"{}\" case is handled -- see this function's own comment). Run `socket ci --json` directly to see the raw alerts and update this parser against real data before trusting this result.",
     }
   }
 
