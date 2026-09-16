@@ -50,6 +50,41 @@
       "name": "publint"
     },
     {
+      "id": "dead-code:unused-file:scripts/iso-12207-alignment/gather-evidence.ts",
+      "version": 1,
+      "justification": "Imported only by scripts/iso-12207-alignment/run.ts, itself reachable solely by being spawned via `tsx` from checks/iso-12207-alignment.ts's `run: [...]` -- knip's static import graph never resolves a spawned-not-imported entry point, so this whole file's own reachability is invisible to it, the same class of gap as every scripts/openssf-scorecard/*.ts entry above.",
+      "kind": "unused-file",
+      "name": "scripts/iso-12207-alignment/gather-evidence.ts"
+    },
+    {
+      "id": "dead-code:unused-file:scripts/iso-12207-alignment/process-map.ts",
+      "version": 1,
+      "justification": "Imported only by scripts/iso-12207-alignment/render-markdown.ts, itself reachable solely by being spawned via `tsx` from checks/iso-12207-alignment.ts's `run: [...]` -- see gather-evidence.ts's identical entry above.",
+      "kind": "unused-file",
+      "name": "scripts/iso-12207-alignment/process-map.ts"
+    },
+    {
+      "id": "dead-code:unused-file:scripts/iso-12207-alignment/render-markdown.ts",
+      "version": 1,
+      "justification": "Imported only by scripts/iso-12207-alignment/run.ts, itself reachable solely by being spawned via `tsx` from checks/iso-12207-alignment.ts's `run: [...]` -- see gather-evidence.ts's identical entry above.",
+      "kind": "unused-file",
+      "name": "scripts/iso-12207-alignment/render-markdown.ts"
+    },
+    {
+      "id": "dead-code:unused-file:scripts/iso-12207-alignment/run.ts",
+      "version": 1,
+      "justification": "The iso-12207-alignment check's own entrypoint, spawned by literal path via checks/iso-12207-alignment.ts's `run: [\"tsx\", \"scripts/iso-12207-alignment/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/openssf-scorecard/run.ts).",
+      "kind": "unused-file",
+      "name": "scripts/iso-12207-alignment/run.ts"
+    },
+    {
+      "id": "dead-code:unused-file:scripts/iso-12207-alignment/types.ts",
+      "version": 1,
+      "justification": "Imported only by scripts/iso-12207-alignment/gather-evidence.ts and render-markdown.ts, both themselves reachable solely by being spawned via `tsx` from checks/iso-12207-alignment.ts's `run: [...]` -- see gather-evidence.ts's identical entry above.",
+      "kind": "unused-file",
+      "name": "scripts/iso-12207-alignment/types.ts"
+    },
+    {
       "id": "dead-code:unused-file:scripts/openssf-scorecard/gh-api.ts",
       "version": 1,
       "justification": "Imported only by scripts/openssf-scorecard/run.ts and github-checks.ts, both themselves reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- knip's static import graph never resolves a spawned-not-imported entry point, so this whole file's own reachability is invisible to it, the same class of gap as every `unused-dev-dependency` entry above.",

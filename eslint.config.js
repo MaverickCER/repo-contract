@@ -849,6 +849,7 @@ export default tseslint.config(
       "scripts/api-docs-html/generate.ts",
       "scripts/coderabbitai/review.ts",
       "scripts/dead-code/check.ts",
+      "scripts/iso-12207-alignment/run.ts",
       "scripts/openssf-scorecard/run.ts",
       "scripts/preset-commands/scan.ts",
       "scripts/security-network/scan.ts",
