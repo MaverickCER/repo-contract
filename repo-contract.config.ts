@@ -113,6 +113,7 @@ import { docs } from "./checks/docs.js"
 import { githubActions } from "./checks/github-actions.js"
 import { lint } from "./checks/lint.js"
 import { mutation } from "./checks/mutation.js"
+import { openssfScorecard } from "./checks/openssf-scorecard.js"
 import { presetCommands } from "./checks/preset-commands.js"
 import { schema } from "./checks/schema.js"
 import { securityNetwork } from "./checks/security-network.js"
@@ -316,6 +317,13 @@ export default defineRepoContract({
     // checkout) is a warn on every single run, by design: a local skip must surface the exact same
     // warning CI always shows, never a silent pass.
     coderabbitai,
+    // `dependsOn: ["security-deps"]` here (not in checks/openssf-scorecard.ts) --
+    // see this file's own doc comment on why `coverage`/`crap`/`mutation`
+    // attach `dependsOn` at assembly instead of in their own check file. A
+    // genuine evidence dependency: `policy` reads
+    // `dependencies["security-deps"]` for the Vulnerabilities sub-check
+    // rather than re-running `npm audit` a second, potentially-divergent time.
+    "openssf-scorecard": { ...openssfScorecard, dependsOn: ["security-deps"] },
     // Declared last among the readers so its own scheduling barrier (see checks/mutation.ts and
     // this file's own doc comment) blocks as little else as possible.
     mutation: { ...mutation, dependsOn: ["suppression-governance"] },

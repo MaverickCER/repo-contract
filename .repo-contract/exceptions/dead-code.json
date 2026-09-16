@@ -48,6 +48,41 @@
       "justification": "Spawned by literal command name via the publint preset's `run: [\"publint\", \"run\"]` (src/presets/publint.ts) -- nothing `import`s the package, so knip cannot see the use.",
       "kind": "unused-dev-dependency",
       "name": "publint"
+    },
+    {
+      "id": "dead-code:unused-file:scripts/openssf-scorecard/gh-api.ts",
+      "version": 1,
+      "justification": "Imported only by scripts/openssf-scorecard/run.ts and github-checks.ts, both themselves reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- knip's static import graph never resolves a spawned-not-imported entry point, so this whole file's own reachability is invisible to it, the same class of gap as every `unused-dev-dependency` entry above.",
+      "kind": "unused-file",
+      "name": "scripts/openssf-scorecard/gh-api.ts"
+    },
+    {
+      "id": "dead-code:unused-file:scripts/openssf-scorecard/github-checks.ts",
+      "version": 1,
+      "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see gh-api.ts's identical entry above.",
+      "kind": "unused-file",
+      "name": "scripts/openssf-scorecard/github-checks.ts"
+    },
+    {
+      "id": "dead-code:unused-file:scripts/openssf-scorecard/local-checks.ts",
+      "version": 1,
+      "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see gh-api.ts's identical entry above.",
+      "kind": "unused-file",
+      "name": "scripts/openssf-scorecard/local-checks.ts"
+    },
+    {
+      "id": "dead-code:unused-file:scripts/openssf-scorecard/run.ts",
+      "version": 1,
+      "justification": "The openssf-scorecard check's own entrypoint, spawned by literal path via checks/openssf-scorecard.ts's `run: [\"tsx\", \"scripts/openssf-scorecard/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
+      "kind": "unused-file",
+      "name": "scripts/openssf-scorecard/run.ts"
+    },
+    {
+      "id": "dead-code:unused-type:GhApiResult",
+      "version": 1,
+      "justification": "The return type of ghApiJson() (gh-api.ts), consumed structurally by every caller in github-checks.ts without ever naming the type directly (each caller narrows `.ok` and reads `.value`/`.message` rather than annotating a variable with `GhApiResult<T>`) -- genuinely used as a type, just never referenced by name outside the file that declares it.",
+      "kind": "unused-type",
+      "name": "GhApiResult"
     }
   ]
 }
