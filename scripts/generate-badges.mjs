@@ -64,16 +64,22 @@ if (!existsSync(mutationPath)) {
 } else {
   const report = JSON.parse(readFileSync(mutationPath, "utf8"))
   const mutants = Object.values(report.files ?? {}).flatMap((f) => f.mutants ?? [])
-  // Same detected/valid split this repo's own checks/mutation.ts uses:
-  // Timeout counts as detected; Ignored (and RuntimeError/CompileError) are
-  // excluded from the denominator entirely, never counted as either killed
-  // or survived.
+  // The exact same detected/applicable split this repo's own checks/mutation.ts
+  // uses -- confirmed by reading that file directly, not assumed: Killed,
+  // RuntimeError, and CompileError are "detected" (the numerator); Ignored and
+  // static-ignored mutants are excluded from the denominator entirely; every
+  // other status -- Survived, NoCoverage, and (this repo's policy is a real,
+  // deliberate zero-tolerance one) Timeout -- stays IN the denominator but
+  // never counts toward "detected", so a real timeout genuinely lowers this
+  // score, the same as a survived mutant would.
   const killed = mutants.filter((m) => m.status === "Killed").length
-  const timeout = mutants.filter((m) => m.status === "Timeout").length
+  const runtimeError = mutants.filter((m) => m.status === "RuntimeError").length
+  const compileError = mutants.filter((m) => m.status === "CompileError").length
   const survived = mutants.filter((m) => m.status === "Survived").length
   const noCoverage = mutants.filter((m) => m.status === "NoCoverage").length
-  const detected = killed + timeout
-  const valid = detected + survived + noCoverage
+  const timeout = mutants.filter((m) => m.status === "Timeout").length
+  const detected = killed + runtimeError + compileError
+  const valid = detected + survived + noCoverage + timeout
   if (valid === 0) {
     console.error("[badges] mutation.json has 0 valid (non-ignored) mutants -- nothing to score.")
     process.exitCode = 1

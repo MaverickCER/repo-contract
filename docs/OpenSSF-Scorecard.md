@@ -2,7 +2,7 @@
 
 > **Informational evidence, not a certification.** This document is `repo-contract`'s own evaluation of `MaverickCER/repo-contract`, informed by [OpenSSF Scorecard's published check methodology](https://github.com/ossf/scorecard/blob/main/docs/checks.md) (Apache-2.0) -- it is **not** a run of the upstream `scorecard` binary, does not claim numeric parity with it, and is not an OpenSSF certification of any kind. Every score below traces to a specific, cited piece of evidence (a file, a GitHub API field, or another check's own result from this same run) gathered by [`scripts/openssf-scorecard/`](../scripts/openssf-scorecard/) -- generated automatically by `repo-contract`'s own `npm run contract`, dogfooding this repository's own contract/evidence mechanism rather than a separate, bespoke script.
 
-_Generated 2026-09-16T09:42:56.202Z against `MaverickCER/repo-contract`._
+_Generated 2026-09-16T14:56:05.633Z against `MaverickCER/repo-contract`._
 
 ## Checks
 

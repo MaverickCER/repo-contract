@@ -239,7 +239,7 @@ export function gatherProcessEvidence(root: string): readonly ProcessEvidence[] 
       status: "evidence-found",
       summary:
         coverage && mutation
-          ? `Coverage thresholds (this run: lines ${coverage.lines.toFixed(1)}%, statements ${coverage.statements.toFixed(1)}%, functions ${coverage.functions.toFixed(1)}%, branches ${coverage.branches.toFixed(1)}%) and mutation testing (this run: ${String(mutation.detected)}/${String(mutation.valid)} mutants detected, policy requires zero survived/no-coverage/unjustified-ignored) are both enforced every contract run -- see this repository's own "coverage" and "mutation" checks.`
+          ? `Coverage thresholds (this run: lines ${coverage.lines.toFixed(1)}%, statements ${coverage.statements.toFixed(1)}%, functions ${coverage.functions.toFixed(1)}%, branches ${coverage.branches.toFixed(1)}%) and mutation testing (this run: ${String(mutation.detected)}/${String(mutation.valid)} mutants detected, policy requires zero survived/no-coverage/timeout/unjustified-ignored) are both enforced every contract run -- see this repository's own "coverage" and "mutation" checks.`
           : 'This repository\'s own "coverage" and "mutation" checks enforce verification thresholds every run (coverage/mutation report files were not present for this specific generation -- run the full `npm run contract` first for the numeric detail).',
     },
     noEvidence(
@@ -306,9 +306,20 @@ function readMutationReport(root: string): { detected: number; valid: number } |
   try {
     const report = JSON.parse(readFileSync(reportPath, "utf8")) as MutationReport
     const mutants = Object.values(report.files).flatMap((f) => f.mutants)
-    const detected = mutants.filter((m) => m.status === "Killed" || m.status === "Timeout").length
+    // The exact same detected/applicable split this repo's own
+    // checks/mutation.ts uses -- confirmed by reading that file directly:
+    // Killed, RuntimeError, and CompileError are "detected"; Survived,
+    // NoCoverage, and Timeout all stay in the denominator but never count as
+    // detected (this repository's policy requires zero of each, Timeout
+    // included -- a real timeout is not tolerated the way it might be
+    // elsewhere).
+    const detected = mutants.filter((m) =>
+      ["Killed", "RuntimeError", "CompileError"].includes(m.status),
+    ).length
     const valid = mutants.filter((m) =>
-      ["Killed", "Timeout", "Survived", "NoCoverage"].includes(m.status),
+      ["Killed", "RuntimeError", "CompileError", "Survived", "NoCoverage", "Timeout"].includes(
+        m.status,
+      ),
     ).length
     return { detected, valid }
   } catch {
