@@ -321,6 +321,62 @@ jobs:
             exit 1
           fi
 
+      # Handed to `badges` below so it can regenerate docs/*-badge.json
+      # without re-running mutation testing -- the single most expensive
+      # thing this job does (see the job-level comment above). Uploaded
+      # unconditionally (cheap) even though only the push-to-main run ever
+      # consumes it, since a job condition can't see whether a later job
+      # will need it.
+      - name: Upload coverage and mutation reports for badge generation
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: badge-source-reports
+          path: |
+            coverage/aggregate/coverage-summary.json
+            reports/mutation/mutation.json
+          retention-days: 1
+          if-no-files-found: error
+
+  # Regenerates docs/coverage-badge.json and docs/mutation-badge.json from the
+  # same coverage/mutation reports `contract` just produced (reused via
+  # upload/download-artifact above rather than re-run). This repo's GitHub
+  # Pages deployment is the legacy branch-deploy mechanism -- serves docs/
+  # directly from committed content on main (confirmed via `gh api
+  # repos/.../pages`), unlike env-cap/data-cap's actions/deploy-pages artifact
+  # upload -- so the badge JSON has to actually land as a commit on main, not
+  # just a build artifact. Push-to-main only: a PR's badge numbers are exactly
+  # `contract`'s report-only concern, and this job also needs write access
+  # `contract` deliberately doesn't have.
+  badges:
+    needs: contract
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: badge-source-reports
+
+      - run: node scripts/generate-badges.mjs
+
+      - name: Commit the regenerated badges
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # `git add` first, then diff the INDEX -- see api-baseline.yml's
+          # identical guard for why (plain `git diff --quiet` misses
+          # untracked files, which these are on the very first run).
+          git add -A -- docs/coverage-badge.json docs/mutation-badge.json
+          if git diff --cached --quiet -- docs/coverage-badge.json docs/mutation-badge.json; then
+            echo "Badges already current; nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore: sync generated coverage/mutation badges"
+          git push origin HEAD:main
+
   # Belt-and-suspenders for the squash-merge case (see
   # specs/decisions/0009-conventional-commits-versioning-and-local-gates.md): the merge-commit /
   # rebase policy keeps every commit conforming, but if a squash ever slips
