@@ -312,12 +312,22 @@ jobs:
       # it ride along with a green run -- see
       # specs/decisions/0013-reusable-exception-policy-helper.md's "review
       # surface" amendment (invariant 8).
+      #
+      # docs/OpenSSF-Scorecard.md and docs/ISO-IEC-IEEE-12207-2017.md are
+      # excluded on purpose, not an oversight: both checks stamp a fresh
+      # `_Generated <timestamp>_` line into the doc on every single run by
+      # design (see each generator's own render-markdown.ts), so their content
+      # NEVER reproduces byte-identical against whatever's already committed --
+      # unlike every other file this guard watches, no local `npm run
+      # contract` + commit could ever make this diff disappear. Their
+      # regenerate-and-commit lifecycle is the `docs-evidence` job below,
+      # mirroring `badges`' identical push-to-main-only pattern.
       - name: Working tree is clean after the contract run
         run: |
-          if [ -n "$(git status --porcelain)" ]; then
+          if [ -n "$(git status --porcelain -- . ':!docs/OpenSSF-Scorecard.md' ':!docs/ISO-IEC-IEEE-12207-2017.md')" ]; then
             echo "::error::The contract run left the working tree dirty. A new disable directive needs its exception stub filled in and committed (.repo-contract/exceptions/), a file needs formatting, or a stale exception record needs deleting. Run 'npm run contract' locally and commit the result."
-            git status --porcelain
-            git diff
+            git status --porcelain -- . ':!docs/OpenSSF-Scorecard.md' ':!docs/ISO-IEC-IEEE-12207-2017.md'
+            git diff -- . ':!docs/OpenSSF-Scorecard.md' ':!docs/ISO-IEC-IEEE-12207-2017.md'
             exit 1
           fi
 
@@ -334,6 +344,26 @@ jobs:
           path: |
             coverage/aggregate/coverage-summary.json
             reports/mutation/mutation.json
+          retention-days: 1
+          if-no-files-found: error
+
+      # Handed to `docs-evidence` below. The `npm run contract` step above
+      # already wrote these two files fresh (as a side effect of the
+      # `openssf-scorecard`/`iso-12207-alignment` checks actually running) --
+      # uploading the already-generated files, rather than having
+      # `docs-evidence` regenerate them itself, is what lets that job skip
+      # `iso-12207-alignment`'s own `dependsOn: ["coverage", "mutation"]`
+      # entirely: re-running it through `npm run contract` a second time
+      # would re-run the full mutation suite too (dependsOn is a scheduling
+      # barrier the runner always honors, not something a `checks` filter can
+      # skip), doubling this workflow's most expensive step for no reason.
+      - name: Upload generated evidence docs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: generated-evidence-docs
+          path: |
+            docs/OpenSSF-Scorecard.md
+            docs/ISO-IEC-IEEE-12207-2017.md
           retention-days: 1
           if-no-files-found: error
 
@@ -375,6 +405,45 @@ jobs:
             exit 0
           fi
           git commit -m "chore: sync generated coverage/mutation badges"
+          git push origin HEAD:main
+
+  # Commits the docs/OpenSSF-Scorecard.md and docs/ISO-IEC-IEEE-12207-2017.md
+  # that `contract` already generated and uploaded above -- the idempotent
+  # diff-and-commit pattern api-baseline.yml and `badges` above both already
+  # use, for the same underlying reason `badges` is push-to-main-only and
+  # decoupled from `contract`'s own blocking gate: both docs stamp a fresh
+  # `_Generated <timestamp>_` line on every run by design (see each
+  # generator's own render-markdown.ts), so they can never reproduce
+  # byte-identical against committed content -- `contract`'s "Working tree is
+  # clean" step excludes them from its dirty-check for exactly this reason,
+  # and this job is their real freshness mechanism instead. Deliberately just
+  # downloads-and-commits the already-generated files rather than
+  # regenerating them (see the "Upload generated evidence docs" step's own
+  # comment for why re-running through `npm run contract` a second time here
+  # would double-pay the mutation suite).
+  docs-evidence:
+    needs: contract
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: generated-evidence-docs
+
+      - name: Commit the regenerated docs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- docs/OpenSSF-Scorecard.md docs/ISO-IEC-IEEE-12207-2017.md
+          if git diff --cached --quiet -- docs/OpenSSF-Scorecard.md docs/ISO-IEC-IEEE-12207-2017.md; then
+            echo "Docs already current; nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore: sync generated OpenSSF Scorecard and ISO 12207 evidence docs"
           git push origin HEAD:main
 
   # Belt-and-suspenders for the squash-merge case (see
