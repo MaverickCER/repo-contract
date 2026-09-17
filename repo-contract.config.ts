@@ -44,7 +44,9 @@
  *    against the now-built, now-written state. `coverage`, `crap`, and `mutation` still attach
  *    their own genuine evidence dependencies via `dependsOn` (see each one's own note below) --
  *    `isolated`/declaration order alone only ever expresses "wait for the build," never a specific
- *    sibling's evidence.
+ *    sibling's evidence. `test-unit` and `test-integration` are also `isolated: true`, for the same
+ *    pure-scheduling, resource-contention reason as `mutation` below -- see their own note at their
+ *    declaration site.
  *
  * - `coverage` depends on `test-unit`/`test-integration`/`test-property` --
  *   it only aggregates+reports the coverage artifacts those three already
@@ -67,16 +69,21 @@
  *   dependency on any other check's evidence -- see
  *   specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md. `mutation` is declared near the
  *   end of the readers so its barrier blocks as little as possible.
+ *   `test-unit`/`test-integration` earn the identical `isolated: true` treatment for the identical
+ *   reason -- both spawn real, heavy child processes per test (`tsc`, `api-extractor`) on top of
+ *   Vitest's own internal worker pool, and running either concurrently with the rest of this
+ *   phase's reader fleet reproduced the same class of flake `mutation` was isolated for, this time
+ *   surfacing as a generic Vitest `STACK_TRACE_ERROR` on a different, unrelated handful of cases
+ *   each run -- see their own declaration-site comment.
  *
  * `coverage`, `crap`, and `mutation` therefore attach their `dependsOn`
  * here, at assembly, rather than in their own check file -- this is the one
  * place every check id is actually in scope to depend on.
  *
  * `typecheck`, `format`, `license`, `publint`, `arethetypeswrong`,
- * `security-deps`, `security-secrets`, and `duplication` are NOT defined
- * under checks/ -- they're consumed directly from `src/presets/`, the same
- * published preset catalog an outside consumer would import via
- * `repo-contract/presets` (see
+ * `security-secrets`, and `duplication` are NOT defined under checks/ --
+ * they're consumed directly from `src/presets/`, the same published preset
+ * catalog an outside consumer would import via `repo-contract/presets` (see
  * specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). This repository dogfoods
  * its own public presets rather than maintaining a parallel private copy;
  * where a value needs to differ from a preset's generic default
@@ -86,17 +93,26 @@
  * entrypoints trigger a real upstream attw bug no `run`-spread override
  * alone could work around.
  *
- * `dead-code` is the one deliberate exception: this repository's own run
- * does NOT use the published `deadCode` preset (still published, unchanged,
- * for external consumers) -- it self-hosts `checks/dead-code.ts` /
- * `scripts/dead-code/check.ts` instead, running knip with no config-time
- * exempt list at all and reconciling `.repo-contract/exceptions/dead-code.json`
- * against every raw finding afterward. See that check's own doc comment and
- * specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's amendment for why: a
- * preset's `exemptUnusedDevDependencies` option needs its exempt list before
- * knip ever runs, which a *reconciled* registry structurally cannot supply
- * (the registry that would suppress a finding can only be built from
- * findings that already ran unsuppressed).
+ * `dead-code` and `security-deps` are the two deliberate exceptions: neither
+ * uses its own published preset (both still published, unchanged, for
+ * external consumers) -- each self-hosts a `checks/*.ts` instead, reconciling
+ * a `.repo-contract/exceptions/*.json` registry against every raw finding.
+ * `dead-code` (`checks/dead-code.ts` / `scripts/dead-code/check.ts`) runs
+ * knip with no config-time exempt list at all; see that check's own doc
+ * comment and specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's
+ * amendment for why: a preset's `exemptUnusedDevDependencies` option needs
+ * its exempt list before knip ever runs, which a *reconciled* registry
+ * structurally cannot supply (the registry that would suppress a finding can
+ * only be built from findings that already ran unsuppressed). `security-deps`
+ * (`checks/security-deps.ts`) exists for the identical structural reason,
+ * generalized: the published `securityDeps` preset only ever reports a raw
+ * `npm audit` count, with no way to accept a specific, justified, reviewable
+ * finding at all -- the earlier alternative (silently filtering a
+ * hardcoded in-source package-name Set before the preset ever saw the
+ * report) is exactly the unreviewable shortcut `security-socket.ts`'s own
+ * exception-policy model exists to replace; `security-deps.ts` reuses that
+ * identical model (see specs/decisions/0013-reusable-exception-policy-helper.md)
+ * instead of a second one-off.
  */
 import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
 import { accessibility } from "./checks/accessibility.js"
@@ -117,6 +133,7 @@ import { mutation } from "./checks/mutation.js"
 import { openssfScorecard } from "./checks/openssf-scorecard.js"
 import { presetCommands } from "./checks/preset-commands.js"
 import { schema } from "./checks/schema.js"
+import { securityDeps } from "./checks/security-deps.js"
 import { securityNetwork } from "./checks/security-network.js"
 import { securitySocket } from "./checks/security-socket.js"
 import { size } from "./checks/size.js"
@@ -136,7 +153,6 @@ import {
   format,
   license,
   publint,
-  securityDeps,
   securitySecrets,
   typecheck,
 } from "./src/presets/index.js"
@@ -188,7 +204,20 @@ export default defineRepoContract({
 
     // -- Readers --
     typecheck,
-    "test-unit": testUnit,
+    // `isolated: true` on both `test-unit` and `test-integration` below is the same pure-scheduling
+    // fix already applied to `mutation` (see that check's own comment and
+    // specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md), extended here
+    // once this repository's own local runs started reproducing the identical symptom: both spawn
+    // real, heavy child processes per test (`tsc`, `api-extractor`) on top of Vitest's own internal
+    // worker pool, and running either concurrently with the rest of this phase's reader fleet
+    // (`accessibility`'s real headless Chrome, `dead-code`'s whole-project `knip` walk,
+    // `coderabbitai`'s and `arethetypeswrong`'s own real subprocess spawns, etc.) oversubscribes the
+    // machine -- confirmed by three consecutive full `npm run contract` runs each failing a
+    // different, unrelated handful of `test-unit`/`test-integration` cases with a generic
+    // `STACK_TRACE_ERROR`, every one of which passed cleanly when the same file was run alone.
+    // Isolating both removes that contention exactly the way it already does for `mutation`; it
+    // says nothing about either needing any other check's evidence.
+    "test-unit": { ...testUnit, isolated: true },
     // `test/integration/suppression-governance/real-source.integration.test.ts`
     // reads disable-comments.json and asserts it's already synchronized with
     // real source; `suppression-governance`'s own check writes that same
@@ -199,7 +228,16 @@ export default defineRepoContract({
     // This dependsOn makes the registry write settle first, always, instead
     // of by scheduling luck -- the same fix already applied for `mutation`
     // below, which reads this same check's evidence for the same reason.
-    "test-integration": { ...testIntegration, dependsOn: ["suppression-governance"] },
+    // `dependsOn` stays even though `isolated` below already forces this check to run after every
+    // earlier one (including `suppression-governance`) in a *full* run: `isolated` alone gives no
+    // such guarantee on a partial `options.checks` run (e.g. `npm run contract -- test-integration`
+    // by itself) -- only `dependsOn` pulls a required check into that run's transitive closure. See
+    // this same distinction in `mutation`'s own comment below.
+    "test-integration": {
+      ...testIntegration,
+      dependsOn: ["suppression-governance"],
+      isolated: true,
+    },
     "test-property": testProperty,
     architecture,
     // GitHub Actions correctness + security via actionlint (see checks/github-actions.ts). A pure
@@ -292,7 +330,7 @@ export default defineRepoContract({
     },
     docs,
     accessibility,
-    "security-deps": securityDeps,
+    "security-deps": securityDeps(),
     "security-secrets": securitySecrets,
     "dead-code": deadCode,
     "adr-governance": adrGovernance,
