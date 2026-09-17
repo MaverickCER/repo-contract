@@ -56,6 +56,7 @@ export function renderAlignmentMarkdown(input: {
       )
       const status = entry?.status === "evidence-found" ? "Evidence found" : "No evidence"
       const summary = (entry?.summary ?? "Not evaluated by this generator.")
+        .replace(/\\/g, "\\\\")
         .replace(/\|/g, "\\|")
         .replace(/\n/g, " ")
       lines.push(`| ${processDef.name} | ${status} | ${summary} |`)

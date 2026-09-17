@@ -42,7 +42,10 @@ export function renderScorecardMarkdown(input: {
   lines.push("| Check | Score | Why |")
   lines.push("| --- | --- | --- |")
   for (const result of results) {
-    const escapedReason = result.reason.replace(/\|/g, "\\|").replace(/\n/g, " ")
+    const escapedReason = result.reason
+      .replace(/\\/g, "\\\\")
+      .replace(/\|/g, "\\|")
+      .replace(/\n/g, " ")
     lines.push(`| ${result.name} | ${scoreCell(result.score)} | ${escapedReason} |`)
   }
   lines.push("")
