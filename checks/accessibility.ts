@@ -48,6 +48,12 @@ export const accessibility: CheckDefinitionConfig = {
     const evidence = parsed.value
 
     if (!evidence.ok) {
+      // A missing system Chrome/Chromium is an environment gap, not a defect in this
+      // repository's own pages -- warn rather than fail closed on absence alone, matching
+      // internal-package-contract's own generalized copy of this check.
+      if (evidence.error.startsWith("no system Chrome/Chromium executable found")) {
+        return { outcome: "warn", rationale: `Accessibility: ${evidence.error}` }
+      }
       return { outcome: "fail", rationale: `pa11y could not be evaluated: ${evidence.error}` }
     }
 
