@@ -3,6 +3,8 @@
 [![CI](https://github.com/MaverickCER/repo-contract/actions/workflows/ci.yml/badge.svg)](https://github.com/MaverickCER/repo-contract/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
 [![Node](https://img.shields.io/node/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
+[![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/coverage-badge.json)](scripts/run-coverage.mjs)
+[![Mutation](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/mutation-badge.json)](checks/mutation.ts)
 [![License](https://img.shields.io/npm/l/repo-contract.svg)](LICENSE)
 
 **Define your engineering standards once. Share them across repositories. Get actionable rationale for every outcome.**

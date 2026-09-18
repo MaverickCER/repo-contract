@@ -6,14 +6,18 @@ import { runSecuritySocketScan } from "../../../scripts/security-socket/scan.js"
  * Runs `runSecuritySocketScan()` for real -- no mocking of `cross-spawn` or the `socket` binary --
  * against whatever `@socketsecurity/cli` install and Socket org credentials the running
  * environment actually has. This is real-behavior-over-mocking, this repository's own house style
- * (see `test/integration/suppression-governance/check.integration.test.ts`), applied to the one
- * outcome this environment can actually produce deterministically: an installed-but-unauthenticated
- * CLI (CI, and every contributor machine absent an explicit `socket login`, holds no Socket org
- * token), or -- if the binary genuinely isn't resolvable -- a spawn failure.
+ * (see `test/integration/suppression-governance/check.integration.test.ts`).
  *
- * The distinction is asserted deterministically rather than accepting either reason: when a
- * `socket` executable does resolve, `"cli-not-installed"` would mean a *broken* spawn resolution
- * path -- a real regression this test must catch, not mask.
+ * Two real environments are both legitimate and both asserted here, not just tolerated: CI and
+ * most contributor machines hold no Socket org token at all (an installed-but-unauthenticated CLI,
+ * or -- if the binary genuinely isn't resolvable -- a spawn failure); a machine with a real
+ * `socket login` session (confirmed directly, 2026-09-16) instead gets a real `"passed"`/`"failed"`
+ * result, which is exactly the path this scanner's own alerts-shape parsing needs a live target to
+ * exercise at all (see this scanner's own `rawAlerts` handling -- its "populated alerts" branch has
+ * never been reachable except against a real authenticated org). Asserting *both* outcomes here,
+ * rather than only the unauthenticated one, means this test starts actually validating the parser
+ * against Socket's real response shape whenever it's run somewhere that can, instead of silently
+ * skipping that coverage forever.
  */
 
 /**
@@ -33,19 +37,41 @@ function socketExecutableResolves(): boolean {
 
 describe("runSecuritySocketScan -- real @socketsecurity/cli", () => {
   it(
-    "reports the deterministic unavailable reason for this environment",
+    "reports a well-formed result for whichever real environment this actually is",
     async () => {
       const evidence = await runSecuritySocketScan(process.cwd())
 
-      expect(evidence.status).toBe("unavailable")
-      if (evidence.status !== "unavailable") throw new Error("expected status: unavailable")
+      if (evidence.status === "unavailable") {
+        // No Socket org credentials here -- CI, and most contributor machines absent an explicit
+        // `socket login`. The reason is still asserted deterministically: when a `socket`
+        // executable does resolve, "cli-not-installed" would mean a *broken* spawn resolution
+        // path, a real regression this test must catch, not mask.
+        expect(evidence.reason).toBe(
+          socketExecutableResolves() ? "not-authenticated" : "cli-not-installed",
+        )
+        return
+      }
 
-      // Anything other than "unavailable" would mean this environment unexpectedly holds live
-      // Socket org credentials (a real "failed"/"passed"/"error"), worth knowing about, not
-      // silently accepting.
-      expect(evidence.reason).toBe(
-        socketExecutableResolves() ? "not-authenticated" : "cli-not-installed",
-      )
+      // A real authenticated session (confirmed directly on this machine, 2026-09-16) --
+      // exercises the parser's actual response-shape handling for real, something no
+      // unauthenticated environment ever could. `error` here would mean the parser rejected a
+      // shape it should have recognized -- surface exactly what it saw.
+      if (evidence.status === "error") {
+        throw new Error(`runSecuritySocketScan reported "error": ${evidence.message}`)
+      }
+      expect(["passed", "failed"]).toContain(evidence.status)
+      if (evidence.status === "failed") {
+        // Real alerts reached this branch (Socket found something for real) -- confirm every one
+        // is a genuinely well-formed NormalizedSocketAlert, not just that the array exists.
+        expect(evidence.alerts.length).toBeGreaterThan(0)
+        for (const alert of evidence.alerts) {
+          expect(alert.id).toMatch(/^socket:.+@.+:.+$/)
+          expect(alert.package.length).toBeGreaterThan(0)
+          expect(alert.version.length).toBeGreaterThan(0)
+          expect(alert.type.length).toBeGreaterThan(0)
+          expect(["critical", "high", "middle", "low", "unknown"]).toContain(alert.severity)
+        }
+      }
     },
     // `runSecuritySocketScan` calls `spawnSync` with its own 5-minute deadline; an
     // unauthenticated CLI returns near-instantly in practice, but the test's own timeout must

@@ -65,6 +65,8 @@ interface NpmAuditVulnerability {
 }
 interface NpmAuditReport {
   readonly vulnerabilities?: Record<string, NpmAuditVulnerability>
+  /** Present instead of `vulnerabilities` when `npm audit` itself failed to run the scan (e.g. a registry/network error) -- npm's own documented shape for that case, `{ error: { code, summary, ... } }`, carries no `vulnerabilities` key at all. */
+  readonly error?: { readonly code?: string; readonly summary?: string }
 }
 
 /** One normalized `npm audit` finding -- one per vulnerable top-level package name, exactly as npm audit's own report already groups them (a single entry can cover several distinct advisories at once). */
@@ -324,8 +326,51 @@ const registrySchema: StandardSchemaV1<unknown, readonly SecurityDepsExceptionRe
 }
 
 /**
+ * Confirms `parsed` is a genuinely completed `npm audit --json` report -- a present,
+ * object-valued, non-array `vulnerabilities` field -- rather than accepting anything
+ * object-shaped and silently defaulting an absent/malformed field to "0 findings". `npm audit`
+ * itself reports a scan it could not run (a registry/network error, most commonly) as `{ "error":
+ * { "code": ..., "summary": ... } }`, with no `vulnerabilities` key at all: treating that as an
+ * empty map would report a failed scan as a clean one, exactly the false-negative a security gate
+ * must never produce.
+ * @param parsed - `result.output.value`, already confirmed to be a non-null object.
+ * @returns The validated report, or a rejection reason for the caller's rationale.
+ */
+export function validateAuditReport(
+  parsed: object,
+):
+  | { readonly ok: true; readonly report: NpmAuditReport }
+  | { readonly ok: false; readonly reason: string } {
+  if (Array.isArray(parsed)) {
+    return { ok: false, reason: "npm audit produced an array, not a report object." }
+  }
+  const record = parsed as Record<string, unknown>
+  if ("error" in record && record.error !== undefined && record.error !== null) {
+    const error = record.error as { readonly code?: unknown; readonly summary?: unknown }
+    const detail = [error.code, error.summary].filter((v) => typeof v === "string").join(": ")
+    return {
+      ok: false,
+      reason: `npm audit could not complete the scan${detail.length > 0 ? `: ${detail}` : ""}.`,
+    }
+  }
+  const vulnerabilities = record.vulnerabilities
+  if (
+    typeof vulnerabilities !== "object" ||
+    vulnerabilities === null ||
+    Array.isArray(vulnerabilities)
+  ) {
+    return {
+      ok: false,
+      reason:
+        'npm audit\'s report has no valid "vulnerabilities" object -- the scan may not have completed.',
+    }
+  }
+  return { ok: true, report: record }
+}
+
+/**
  * Normalizes `npm audit --json`'s own `vulnerabilities` object into one finding per package.
- * @param report - The parsed `npm audit --json` report.
+ * @param report - The parsed, already-validated `npm audit --json` report.
  * @returns One normalized finding per vulnerable package.
  */
 function normalizeFindings(report: NpmAuditReport): readonly NormalizedDepFinding[] {
@@ -366,8 +411,12 @@ export function securityDeps(): CheckDefinitionConfig {
       if (typeof parsed !== "object" || parsed === null) {
         return { outcome: "fail", rationale: "npm audit produced invalid JSON report data." }
       }
+      const validated = validateAuditReport(parsed)
+      if (!validated.ok) {
+        return { outcome: "fail", rationale: validated.reason }
+      }
 
-      const findings = normalizeFindings(parsed)
+      const findings = normalizeFindings(validated.report)
 
       const registryPath = path.join(process.cwd(), REGISTRY_RELATIVE_PATH)
       const loaded = await loadExceptionRegistry({ path: registryPath, schema: registrySchema })
