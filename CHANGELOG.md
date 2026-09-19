@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.5.1...repo-contract-v0.5.2) (2026-09-18)
+
+
+### Features
+
+* OpenSSF Scorecard + ISO 12207 alignment, mutation zero-tolerance ([#68](https://github.com/MaverickCER/repo-contract/issues/68)) ([76de4af](https://github.com/MaverickCER/repo-contract/commit/76de4af16cc681e88e3fe85439537848aad096ad))
+
 ## [0.5.1](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.5.0...repo-contract-v0.5.1) (2026-09-14)
 
 
