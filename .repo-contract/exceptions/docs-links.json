@@ -1,0 +1,22 @@
+{
+  "exceptions": [
+    {
+      "id": "docs-links:https://github.com/mozilla/diversity",
+      "version": 1,
+      "justification": "Confirmed live via direct curl (redirects to https://github.com/mozilla/inclusion with a final HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0, a connection-level failure distinct from the redirect) during CI's crawl, a transient GitHub network blip, not a genuine broken link.",
+      "url": "https://github.com/mozilla/diversity"
+    },
+    {
+      "id": "docs-links:https://github.com/rhysd/actionlint",
+      "version": 1,
+      "justification": "Confirmed live via direct curl (HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient GitHub network blip, not a genuine broken link.",
+      "url": "https://github.com/rhysd/actionlint"
+    },
+    {
+      "id": "docs-links:https://standardschema.dev/",
+      "version": 1,
+      "justification": "Confirmed live via direct curl (HTTP 200, 2026-09-18); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient network/TLS blip, not a genuine broken link.",
+      "url": "https://standardschema.dev/"
+    }
+  ]
+}

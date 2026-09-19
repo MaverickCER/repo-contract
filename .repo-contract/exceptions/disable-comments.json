@@ -209,6 +209,32 @@
       "verificationMethod": "static-reasoning"
     },
     {
+      "id": "suppression:stryker:ArithmeticOperator:checks/docs.ts:318",
+      "version": 1,
+      "justification": "waivedCount is only ever read inside the `externalOffenders.length === 0` branch of evaluateDocsPolicy's own top-level guard a few lines below -- at that point externalOffenders.length is always 0 by construction, so `externalBroken.length - externalOffenders.length` and `externalBroken.length + externalOffenders.length` compute the identical value every time this line actually executes.\n\nAlternatives considered: Compute waivedCount only inside the pass branch itself (after the guard), where externalOffenders.length being 0 would be locally obvious without a comment.\n\nRemediation: Rejected as unnecessary churn: hoisting the computation above the guard (matching this file's own existing style of computing every derived count up front, alongside staleLines) is clearer than duplicating it inline in two different return branches, and the equivalence holds regardless of where the line lives. Confirmed empirically: un-exempting this mutant and running Stryker scoped to checks/docs.ts showed it Survived every test in policy.test.ts, exactly as this reasoning predicts.",
+      "category": "equivalent-mutant",
+      "domain": "stryker",
+      "file": "checks/docs.ts",
+      "line": 318,
+      "rule": [
+        "ArithmeticOperator"
+      ],
+      "verificationMethod": "mutation-run"
+    },
+    {
+      "id": "suppression:stryker:ArrayDeclaration:checks/docs.ts:213",
+      "version": 1,
+      "justification": "This is evaluateExternalLink's early return for `record === undefined` (the \"unmatched\" verdict). Its `missing` array is never read by any real caller: evaluateDocsPolicy's own message-building only reads `.missing` inside the sibling \"insufficient\" branch (`exception incomplete (missing: ...)`), never for \"unmatched\", which instead renders a fixed \"no exception record\" string that doesn't reference `.missing` at all.\n\nAlternatives considered: Omit `missing` from the \"unmatched\" return entirely, typing it as optional.\n\nRemediation: Rejected: the function's own return type declares `missing: readonly string[]` unconditionally so both branches share one shape, matching evaluateExceptionRecord's own ExceptionDeterminant convention this function otherwise mirrors -- making it optional here would diverge from that shared shape purely to document a value already proven unobservable. Confirmed empirically: un-exempting this mutant and running Stryker scoped to checks/docs.ts showed it Survived every test in policy.test.ts.",
+      "category": "equivalent-mutant",
+      "domain": "stryker",
+      "file": "checks/docs.ts",
+      "line": 213,
+      "rule": [
+        "ArrayDeclaration"
+      ],
+      "verificationMethod": "mutation-run"
+    },
+    {
       "id": "suppression:stryker:ArrayDeclaration:src/evidence/build-evidence.ts:59",
       "version": 1,
       "justification": "This tuple is never read: both branches below that can run when `thrown` is non-empty (thrown.length === 1, or > 1) throw before `entries` -- the array this return value feeds into -- is ever returned to buildEvidence's own caller. Mutating this tuple to an empty array therefore cannot change any observable output.\n\nAlternatives considered: Return `undefined`/omit the return value entirely instead of a placeholder tuple.\n\nRemediation: Rejected: the surrounding `.map()` callback is typed to return `Promise<ParsedCheckEntry>`, a 3-element tuple, for every branch -- returning `undefined` here would require weakening that return type (e.g. to `ParsedCheckEntry | undefined`) throughout the rest of the function purely to describe a value that is provably never observed, trading a real type guarantee for no actual safety benefit.",
@@ -481,6 +507,34 @@
       "rule": [
         "ConditionalExpression",
         "EqualityOperator"
+      ],
+      "verificationMethod": "mutation-run"
+    },
+    {
+      "id": "suppression:stryker:ConditionalExpression,StringLiteral:checks/docs.ts:228",
+      "version": 1,
+      "justification": "DOCS_LINKS_POLICY and DOCS_LINKS_GLOBAL_DEFAULT are both fixed module constants, always `{ mode: \"exception\", ... }` -- evaluateExceptionRecord can structurally never return a \"forbidden\" verdict from this call site, since that verdict only exists for a policy with a \"forbidden\" tier configured (e.g. security-socket.ts's above-medium-severity exclusion), which this file's own policy never declares. Same reasoning as internal-package-contract's checks/mutation.ts's identical guard around its own evaluateExceptionRecord call.\n\nAlternatives considered: Delete this defensive branch entirely, narrowing evaluateExternalLink's own return type to omit \"forbidden\" handling.\n\nRemediation: Kept as defense-in-depth against a future editing mistake in DOCS_LINKS_POLICY itself (e.g. someone later adding a forbidden tier without updating this function) -- removing it would trade a cheap safety net for no real coverage gain, since no test can reach it without literally breaking those constants. Confirmed empirically: un-exempting these mutants and running Stryker scoped to checks/docs.ts showed both Survived every test in policy.test.ts.",
+      "category": "equivalent-mutant",
+      "domain": "stryker",
+      "file": "checks/docs.ts",
+      "line": 228,
+      "rule": [
+        "ConditionalExpression",
+        "StringLiteral"
+      ],
+      "verificationMethod": "mutation-run"
+    },
+    {
+      "id": "suppression:stryker:ConditionalExpression,StringLiteral:checks/docs.ts:87",
+      "version": 1,
+      "justification": "The WHATWG URL spec treats http/https as \"special schemes,\" which the standard `URL` parser itself refuses to produce with an empty host: `new URL(\"https://\")` (or any other authority-less form) throws rather than yielding `hostname: \"\"`, confirmed directly against every construction tried (bare scheme, triple-slash, user-info-only, port-only). `hasHostname` is kept as an explicit belt-and-suspenders check against that spec guarantee, not one this engine's own parser can be observed violating.\n\nAlternatives considered: Drop the `hasHostname` check entirely, relying solely on the protocol check.\n\nRemediation: Kept as defense-in-depth against a runtime whose URL parser doesn't fully conform to the WHATWG spec's special-scheme host requirement -- removing it would trade a cheap safety net for no real coverage gain, since no input constructible against Node's own URL parser can reach the branch it guards. Confirmed empirically: un-exempting this mutant and running Stryker scoped to checks/docs.ts showed it Survived every test in policy.test.ts.",
+      "category": "equivalent-mutant",
+      "domain": "stryker",
+      "file": "checks/docs.ts",
+      "line": 87,
+      "rule": [
+        "ConditionalExpression",
+        "StringLiteral"
       ],
       "verificationMethod": "mutation-run"
     },
@@ -859,6 +913,19 @@
         "CallExpression"
       ],
       "verificationMethod": "untestable"
+    },
+    {
+      "id": "suppression:stryker:StringLiteral:checks/docs.ts:362",
+      "version": 1,
+      "justification": "DOCS_LINKS_POLICY's only requirement is the single field \"justification\" -- evaluateExceptionRecord's `missing` array can therefore never hold more than one entry for this policy, making the `\", \"` separator in `d.missing.join(\", \")` unobservable: `Array.prototype.join` never has a second element to separate when the array has 0 or 1 items.\n\nAlternatives considered: Add a second requirement to DOCS_LINKS_POLICY (e.g. an \"alternatives\" field, matching security-deps.ts's fuller field set) so `missing` could genuinely hold multiple entries and the separator would matter.\n\nRemediation: Rejected as scope creep: a docs-link waiver is a much narrower judgment call than a security-severity exception -- \"this specific external URL is known-good but flaky\" needs only a justification, not the fuller alternatives/remediation/method/exceptionType field set security findings require. Confirmed empirically: un-exempting this mutant and running Stryker scoped to checks/docs.ts showed it Survived every test in policy.test.ts.",
+      "category": "equivalent-mutant",
+      "domain": "stryker",
+      "file": "checks/docs.ts",
+      "line": 362,
+      "rule": [
+        "StringLiteral"
+      ],
+      "verificationMethod": "mutation-run"
     },
     {
       "id": "suppression:stryker:StringLiteral:src/execution/spawn-check.ts:76",
