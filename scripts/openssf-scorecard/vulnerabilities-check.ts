@@ -8,7 +8,11 @@ interface NpmAuditVulnerabilityCounts {
   readonly low: number
 }
 interface NpmAuditReport {
-  readonly metadata: { readonly vulnerabilities: NpmAuditVulnerabilityCounts }
+  // Optional, not required: this type describes untrusted JSON cast from `unknown`, and npm
+  // audit's own documented failure shape when it can't complete the scan (a registry/network
+  // error) is `{ "error": {...} }` -- no "metadata" key at all. A required field here would assert
+  // a guarantee this cast doesn't actually have.
+  readonly metadata?: { readonly vulnerabilities: NpmAuditVulnerabilityCounts }
 }
 
 /**
@@ -37,7 +41,13 @@ export function evaluateVulnerabilities(
     }
   }
   const report = securityDepsEvidence.output.value as NpmAuditReport | undefined
-  const counts = report?.metadata.vulnerabilities
+  // `report` can be truthy but carry no "metadata" at all -- npm audit's own documented failure
+  // shape when it can't complete the scan (a registry/network error) is `{ "error": {...} }`, with
+  // neither "metadata" nor "vulnerabilities". Confirmed live: a real transient npm-registry outage
+  // produced exactly this shape and crashed this function with an unhandled TypeError before this
+  // fix, instead of falling through to the "not-applicable" branch below like every other
+  // malformed-report case already does.
+  const counts = report?.metadata?.vulnerabilities
   if (!counts) {
     return {
       name: "Vulnerabilities",
