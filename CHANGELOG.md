@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.5.2...repo-contract-v0.6.0) (2026-09-20)
+
+
+### Features
+
+* **docs:** waive known-good-but-flaky external links; release as 0.6.0 ([2ffdd8f](https://github.com/MaverickCER/repo-contract/commit/2ffdd8fbf9d767f537939da40cd750af2fb5d0b7))
+
+
+### Miscellaneous Chores
+
+* release repo-contract as 0.6.0 ([8282f70](https://github.com/MaverickCER/repo-contract/commit/8282f70f7727ee7f2c517acf7e65e93fc51388c9))
+
 ## [0.5.2](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.5.1...repo-contract-v0.5.2) (2026-09-18)
 
 
