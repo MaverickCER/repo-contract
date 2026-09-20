@@ -7,6 +7,12 @@
       "url": "https://github.com/MaverickCER/repo-contract/commit/71c92306fcf00e3858f0596c2d56f3272199339d"
     },
     {
+      "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/f56ea342606cfc92a09943ea5eb787936e7b7ba9",
+      "version": 1,
+      "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via direct curl, 2026-09-19) to the exact commit CHANGELOG.md cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a 40+-link bulk crawl of the same host), not a defect in the link itself.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/f56ea342606cfc92a09943ea5eb787936e7b7ba9"
+    },
+    {
       "id": "docs-links:https://github.com/mozilla/diversity",
       "version": 1,
       "justification": "Confirmed live via direct curl (redirects to https://github.com/mozilla/inclusion with a final HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0, a connection-level failure distinct from the redirect) during CI's crawl, a transient GitHub network blip, not a genuine broken link.",
@@ -17,6 +23,12 @@
       "version": 1,
       "justification": "Confirmed live via direct curl (HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient GitHub network blip, not a genuine broken link.",
       "url": "https://github.com/rhysd/actionlint"
+    },
+    {
+      "id": "docs-links:https://knip.dev/",
+      "version": 1,
+      "justification": "Confirmed live via direct curl (HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient network/TLS blip, not a genuine broken link.",
+      "url": "https://knip.dev/"
     },
     {
       "id": "docs-links:https://standardschema.dev/",
