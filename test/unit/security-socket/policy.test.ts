@@ -176,13 +176,29 @@ describe("evaluateSecuritySocketPolicy", () => {
     expect(result.rationale).toContain("supply-chain-risk alerts are never waivable")
   })
 
-  it("uses the generic (not supply-chain-specific) forbidden message for a critical, unshipped supplyChainRisk alert", () => {
+  it("fails a low-severity supplyChainRisk alert outright on a real peerDependency too -- declaring a peer range is itself a shipped supply-chain choice", () => {
+    const a = alert({
+      severity: "low",
+      category: "supplyChainRisk",
+      shipped: true,
+      package: "eslint",
+      version: "10.9.0",
+      type: "envVars",
+    })
+    const result = evaluateSecuritySocketPolicy({
+      evidence: failedEvidence([{ alert: a, record: record(a, COMPLETE) }]),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("supply-chain-risk alerts are never waivable")
+  })
+
+  it("uses the generic (not supply-chain-specific) forbidden message for a critical, unshipped (devDependencies-only) supplyChainRisk alert", () => {
     const a = alert({
       severity: "critical",
       category: "supplyChainRisk",
       shipped: false,
-      package: "eslint",
-      version: "10.9.0",
+      package: "vitest",
+      version: "4.1.11",
       type: "shellAccess",
     })
     const result = evaluateSecuritySocketPolicy({
@@ -193,13 +209,13 @@ describe("evaluateSecuritySocketPolicy", () => {
     expect(result.rationale).not.toContain("supply-chain-risk alerts are never waivable")
   })
 
-  it("permits a low-severity supplyChainRisk alert with a complete record when NOT shipped (a peer-only dependency)", () => {
+  it("permits a low-severity supplyChainRisk alert with a complete record when NOT shipped (a devDependencies-only package)", () => {
     const a = alert({
       severity: "low",
       category: "supplyChainRisk",
       shipped: false,
-      package: "eslint",
-      version: "10.9.0",
+      package: "vitest",
+      version: "4.1.11",
       type: "envVars",
     })
     const result = evaluateSecuritySocketPolicy({
@@ -208,13 +224,13 @@ describe("evaluateSecuritySocketPolicy", () => {
     expect(result.outcome).toBe("pass")
   })
 
-  it("still requires a complete exception for a middle-severity supplyChainRisk alert that isn't shipped", () => {
+  it("still requires a complete exception for a middle-severity supplyChainRisk alert that isn't shipped (devDependencies-only)", () => {
     const a = alert({
       severity: "middle",
       category: "supplyChainRisk",
       shipped: false,
-      package: "typescript",
-      version: "5.9.0",
+      package: "vitest",
+      version: "4.1.11",
     })
     const blankResult = evaluateSecuritySocketPolicy({
       evidence: failedEvidence([{ alert: a, record: record(a) }]),
