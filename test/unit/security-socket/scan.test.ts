@@ -35,10 +35,10 @@ describe("loadShippedPackageVersions", () => {
     expect(shipped).toEqual(new Set())
   })
 
-  it("excludes a peerDependencies-only package", async () => {
+  it("includes a peerDependencies-only package -- declaring a peer range is itself a shipped supply-chain choice, unlike a devDependency", async () => {
     await writeLock({ "node_modules/eslint": { version: "10.9.0", peer: true } })
     const shipped = await loadShippedPackageVersions(root)
-    expect(shipped).toEqual(new Set())
+    expect(shipped).toEqual(new Set(["eslint@10.9.0"]))
   })
 
   it("includes a strictly-optional package (a real optionalDependencies edge, still installed for a consumer)", async () => {
@@ -97,13 +97,15 @@ describe("loadShippedPackageVersions", () => {
     expect(await loadShippedPackageVersions(root)).toBeUndefined()
   })
 
-  it("does NOT fail closed on a dev/peer entry with a missing or malformed version -- it was never going to count as shipped", async () => {
-    await writeLock({
-      "node_modules/dev-no-version": { dev: true },
-      "node_modules/peer-bad-version": { peer: true, version: 42 },
-    })
+  it("does NOT fail closed on a dev entry with a missing or malformed version -- it was never going to count as shipped", async () => {
+    await writeLock({ "node_modules/dev-no-version": { dev: true } })
     const shipped = await loadShippedPackageVersions(root)
     expect(shipped).toEqual(new Set())
+  })
+
+  it("fails closed (returns undefined) on a peer entry with a malformed version -- peer entries are shipped, so their version must be valid", async () => {
+    await writeLock({ "node_modules/peer-bad-version": { peer: true, version: 42 } })
+    expect(await loadShippedPackageVersions(root)).toBeUndefined()
   })
 
   it("resolves an npm workspace/file: link entry to its target's real version (a production workspace dependency)", async () => {
@@ -115,7 +117,7 @@ describe("loadShippedPackageVersions", () => {
     expect(shipped).toEqual(new Set(["foo@1.0.0"]))
   })
 
-  it("excludes a link entry whose resolved target is dev/peer-only", async () => {
+  it("excludes a link entry whose resolved target is dev-only", async () => {
     await writeLock({
       "node_modules/foo": { resolved: "packages/foo", link: true },
       "packages/foo": { version: "1.0.0", dev: true },
@@ -124,7 +126,16 @@ describe("loadShippedPackageVersions", () => {
     expect(shipped).toEqual(new Set())
   })
 
-  it("excludes a link entry that is itself marked dev/peer without needing to resolve it", async () => {
+  it("includes a link entry whose resolved target is peer-only", async () => {
+    await writeLock({
+      "node_modules/foo": { resolved: "packages/foo", link: true },
+      "packages/foo": { version: "1.0.0", peer: true },
+    })
+    const shipped = await loadShippedPackageVersions(root)
+    expect(shipped).toEqual(new Set(["foo@1.0.0"]))
+  })
+
+  it("excludes a link entry that is itself marked dev without needing to resolve it", async () => {
     await writeLock({
       "node_modules/foo": { resolved: "does/not/exist", link: true, dev: true },
     })

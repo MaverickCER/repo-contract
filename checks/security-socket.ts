@@ -31,11 +31,12 @@ function socketFieldValue(record: SocketExceptionRecord, requirement: string): s
  * `shipped`, independently on its `category` too -- `evaluateExceptionRecord` resolves the
  * strictest verdict across every classification, so a `supplyChainRisk` alert on a genuinely
  * shipped dependency is `forbidden` outright regardless of severity (see `policy-config.ts`'s
- * `"socket-category"` group). `shipped: false` (a `peerDependencies`-only or `devDependencies`-only
- * package -- see `NormalizedSocketAlert.shipped`'s own doc comment) never contributes this second
- * classification: the user's own scoping decision is "only dependencies we ship/install, not
- * peers," so such an alert is still evaluated (and still real evidence), just purely on severity
- * like every other non-supply-chain-risk alert.
+ * `"socket-category"` group). `shipped: false` (a strictly `devDependencies`-only package -- see
+ * `NormalizedSocketAlert.shipped`'s own doc comment) never contributes this second classification:
+ * such an alert is still evaluated (and still real evidence), just purely on severity like every
+ * other non-supply-chain-risk alert. A real `peerDependencies` package IS `shipped` -- declaring a
+ * peer range is itself a supply-chain choice this package makes for the consumer, removing their
+ * own choice of alternative, the opposite of a devDependency which never surfaces to them at all.
  * @param alert - The alert.
  * @param record - The reconciled live record for it, or `undefined` if the bijection broke.
  * @returns The verdict and any still-missing required fields.
@@ -193,10 +194,10 @@ export function evaluateSecuritySocketPolicy(input: {
 }
 
 // Rejects any alert above a medium ("middle") rating outright, rejects any supplyChainRisk alert
-// on a genuinely SHIPPED dependency outright regardless of severity (never a peer-only/dev-only
-// one -- see NormalizedSocketAlert.shipped's own doc comment), and requires a complete
-// finding-specific exception for everything else -- see
-// specs/decisions/0013-reusable-exception-policy-helper.md.
+// on a genuinely SHIPPED dependency outright regardless of severity (a peerDependency counts as
+// shipped -- only a strictly devDependencies-only package doesn't; see
+// NormalizedSocketAlert.shipped's own doc comment), and requires a complete finding-specific
+// exception for everything else -- see specs/decisions/0013-reusable-exception-policy-helper.md.
 export const securitySocket: CheckDefinitionConfig = {
   run: ["tsx", "scripts/security-socket/scan.ts"],
   output: { format: "json" },

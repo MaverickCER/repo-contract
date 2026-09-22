@@ -322,25 +322,27 @@ function runSocketCli(): SocketCliResult {
 /**
  * Reads package-lock.json's own per-resolved-path `dev`/`peer`/`optional`/`devOptional` flags
  * (npm lockfile v2/v3's own dependency-type bookkeeping -- see `npm help package-lock.json`'s own
- * "dev, optional, devOptional" section) to determine which `name@version` pairs are reachable via
- * at least one real production edge -- i.e. actually installed for a consumer of THIS package
- * (`dependencies`, transitively, optional or not) -- as opposed to reachable only through
- * `devDependencies` (this repo's own build/test tooling, never shipped) or `peerDependencies`
- * (supplied by the CONSUMER's own project, never bundled by this one). Only `dev`/`peer` exclude a
- * path: `optional` alone (`optionalDependencies`, direct or transitive) is still a real production
- * edge -- npm attempts to install it for every consumer, it's merely allowed to fail -- and
- * `devOptional` (per npm's own docs: set only when a package is BOTH a dev dependency AND an
- * optional dependency of a *non-dev* dependency) proves a genuine non-dev path reaches it too, via
- * that optional edge. Confirmed directly against a real lockfile with genuine `devDependencies`
- * (this repository's own `@esbuild/*` platform binaries, reachable only through the `tsup`
- * devDependency's own `optionalDependencies`): npm correctly cascades `dev: true` alongside
- * `optional: true` there, so excluding only `dev`/`peer` does not let a genuinely dev-only optional
- * package through as a false "shipped" positive. The same resolved `name@version` can appear at
- * multiple lockfile paths with different flags when required by both a production and a
- * dev-only/peer-only parent -- it's counted "shipped" if ANY path reaches it without `dev`/`peer`,
- * since that path alone proves it really is installed for a consumer. An npm workspace/`file:`-link
- * entry (`{ link: true, resolved }`) is resolved to its target entry for its own `version`/`dev`/
- * `peer` rather than treated as a parse failure -- see this function's own `pendingLinks` comment.
+ * "dev, optional, devOptional" section) to determine which `name@version` pairs are "shipped" --
+ * per the user's own direction, that means reachable via anything OTHER than a strictly
+ * `devDependencies`-only path. `devDependencies` (this repo's own build/test tooling) never reach
+ * a consumer at all. `peerDependencies`, by contrast, ARE a real product/supply-chain decision this
+ * package makes on the consumer's behalf: declaring a peer range dictates exactly which
+ * version(s) of that dependency the consumer is allowed to use, removing their own choice of
+ * alternative -- it is shipped in the sense that matters here even though npm doesn't literally
+ * bundle it. So only `dev` excludes a path: `peer` alone no longer does, and neither does
+ * `optional` (`optionalDependencies`, direct or transitive, is still a real edge -- npm attempts to
+ * install it for every consumer, it's merely allowed to fail) or `devOptional` (per npm's own docs:
+ * set only when a package is BOTH a dev dependency AND an optional dependency of a *non-dev*
+ * dependency, proving a genuine non-dev path reaches it too). Confirmed directly against a real
+ * lockfile with genuine `devDependencies` (this repository's own `@esbuild/*` platform binaries,
+ * reachable only through the `tsup` devDependency's own `optionalDependencies`): npm correctly
+ * cascades `dev: true` alongside `optional: true` there, so excluding only `dev` does not let a
+ * genuinely dev-only optional package through as a false "shipped" positive. The same resolved
+ * `name@version` can appear at multiple lockfile paths with different flags when required by both
+ * a production/peer and a dev-only parent -- it's counted "shipped" if ANY path reaches it without
+ * `dev`, since that path alone proves it isn't strictly dev-only. An npm workspace/`file:`-link
+ * entry (`{ link: true, resolved }`) is resolved to its target entry for its own `version`/`dev`
+ * rather than treated as a parse failure -- see this function's own `pendingLinks` comment.
  *
  * Returns `undefined` if package-lock.json can't be read or doesn't have the expected shape --
  * `runSecuritySocketScan` fails closed on this (treats every alert as `shipped: true`) rather than
@@ -350,7 +352,7 @@ function runSocketCli(): SocketCliResult {
  * goes unenforced.
  * Exported for direct unit coverage -- not part of this script's own CLI/stdout contract.
  * @param root - Absolute path to the repository being checked.
- * @returns The set of `"<name>@<version>"` pairs reachable via a real production edge, or `undefined`.
+ * @returns The set of `"<name>@<version>"` pairs shipped (not strictly `devDependencies`-only), or `undefined`.
  * @internal
  */
 export async function loadShippedPackageVersions(root: string): Promise<Set<string> | undefined> {
@@ -397,12 +399,12 @@ export async function loadShippedPackageVersions(root: string): Promise<Set<stri
     // comment above).
     if (!isPlainObject(value)) return undefined
     const name = key.slice(markerIndex + nodeModulesMarker.length)
-    // dev/peer-only entries are excluded regardless of their `version`/`link`/`resolved` fields'
-    // validity -- they were never going to be counted as shipped, so a malformed descriptor on one
-    // of them is not a reason to distrust the whole lockfile. Checked defensively even on a `link`
-    // entry, since npm's own docs promise it carries no other fields today, not that a future
-    // lockfile version never will.
-    if (value.dev === true || value.peer === true) continue
+    // A strictly-dev entry is excluded regardless of its `version`/`link`/`resolved` fields'
+    // validity -- it was never going to be counted as shipped, so a malformed descriptor on one
+    // is not a reason to distrust the whole lockfile. Checked defensively even on a `link` entry,
+    // since npm's own docs promise it carries no other fields today, not that a future lockfile
+    // version never will.
+    if (value.dev === true) continue
     if (value.link === true) {
       if (typeof value.resolved !== "string" || value.resolved.length === 0) return undefined
       pendingLinks.push({ name, resolved: value.resolved })
@@ -419,7 +421,7 @@ export async function loadShippedPackageVersions(root: string): Promise<Set<stri
     // that still fails closed -- retaining the same distrust-the-whole-lockfile posture as every
     // other malformed entry above, not silently treating an unresolvable link as unshipped.
     if (!isPlainObject(target)) return undefined
-    if (target.dev === true || target.peer === true) continue
+    if (target.dev === true) continue
     const version = target.version
     if (typeof version !== "string" || version.length === 0) return undefined
     shipped.add(`${name}@${version}`)

@@ -38,16 +38,18 @@ export interface NormalizedSocketAlert {
   /** Socket's own policy action for this alert (`"block"`/`"warn"`/`"monitor"`/`"ignore"`), if the report carries one -- evidence only. */
   readonly action?: string
   /**
-   * `true` when `package@version` is reachable via at least one real production edge in
-   * package-lock.json (this package's own `dependencies`, transitively) -- i.e. actually installed
-   * for a consumer of this package. `false` when it's reachable only through `devDependencies`
-   * (this repo's own build/test tooling, never shipped) or `peerDependencies` (supplied by the
-   * CONSUMER's own project, never bundled by this one) -- computed by `scan.ts`'s
-   * `loadShippedPackageVersions`. This is the scope of the user's own zero-tolerance rule: "only
-   * dependencies we ship/install, not peers" -- a `supplyChainRisk` alert on an unshipped
-   * peer-only package (e.g. `eslint`/`typescript` in a package that only lists them as peers) is
-   * real evidence, kept here, but never forbidden by `checks/security-socket.ts`'s
-   * `"socket-category"` policy the way a shipped one is.
+   * `true` when `package@version` is reachable via anything OTHER than a strictly
+   * `devDependencies`-only edge in package-lock.json -- i.e. a real `dependencies` edge (installed
+   * for a consumer) OR a `peerDependencies` edge. `false` only when it's reachable strictly through
+   * `devDependencies` (this repo's own build/test tooling, never reaches a consumer at all) --
+   * computed by `scan.ts`'s `loadShippedPackageVersions`. Per the user's own direction, a
+   * peerDependency counts as shipped even though npm doesn't literally bundle it: declaring a peer
+   * range is itself a supply-chain decision this package makes for the consumer, dictating exactly
+   * which version(s) they're allowed to use and removing their own choice of alternative -- the
+   * opposite of a devDependency, which never surfaces to a consumer at all. So a `supplyChainRisk`
+   * alert on a real peerDependency (e.g. `eslint`/`typescript`) is `forbidden` by
+   * `checks/security-socket.ts`'s `"socket-category"` policy exactly like one on an installed
+   * `dependencies` entry; only a strictly-dev-only package's alert escapes this rule.
    */
   readonly shipped: boolean
 }

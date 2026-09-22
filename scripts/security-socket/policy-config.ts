@@ -38,11 +38,12 @@ export const socketPolicy: ExceptionPolicyConfig = {
   // finding on a genuinely SHIPPED dependency is ever waivable, at any severity -- a
   // "low"-severity supplyChainRisk alert on a shipped package (e.g. envVars/gptAnomaly access,
   // both confirmed against real Socket.dev package scores) is exactly the class this exists to
-  // reject outright, never merely require a fuller justification for. A `peerDependencies`-only or
-  // `devDependencies`-only package's supplyChainRisk alert never reaches this rule at all (the
-  // classification is omitted, not merely satisfied) -- it's governed purely by the severity
-  // classification above, the same as every other alert category (quality, vulnerability,
-  // license, maintenance, ...).
+  // reject outright, never merely require a fuller justification for. A real `peerDependencies`
+  // package counts as shipped here too -- declaring a peer range is itself a supply-chain choice
+  // this package makes for the consumer -- so only a strictly `devDependencies`-only package's
+  // supplyChainRisk alert never reaches this rule at all (the classification is omitted, not
+  // merely satisfied); it's governed purely by the severity classification above, the same as
+  // every other alert category (quality, vulnerability, license, maintenance, ...).
   "socket-category": {
     rules: {
       supplyChainRisk: { mode: "forbidden" },
