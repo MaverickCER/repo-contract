@@ -16,6 +16,8 @@ function alert(overrides: Partial<NormalizedSocketAlert> = {}): NormalizedSocket
     version: "4.17.20",
     type: "envVars",
     severity: "low" as NormalizedSocketAlert["severity"],
+    category: "quality",
+    shipped: true,
     ...overrides,
   }
   return { ...base, id: deriveSocketExceptionId({ ...base, packageVersion: base.version }) }
@@ -156,6 +158,74 @@ describe("evaluateSecuritySocketPolicy", () => {
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("Stale exception")
     expect(result.rationale).toContain(gone.id)
+  })
+
+  it("fails a low-severity supplyChainRisk alert outright when shipped, even with a complete record", () => {
+    const a = alert({
+      severity: "low",
+      category: "supplyChainRisk",
+      shipped: true,
+      package: "minimatch",
+      version: "10.2.6",
+      type: "envVars",
+    })
+    const result = evaluateSecuritySocketPolicy({
+      evidence: failedEvidence([{ alert: a, record: record(a, COMPLETE) }]),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("supply-chain-risk alerts are never waivable")
+  })
+
+  it("uses the generic (not supply-chain-specific) forbidden message for a critical, unshipped supplyChainRisk alert", () => {
+    const a = alert({
+      severity: "critical",
+      category: "supplyChainRisk",
+      shipped: false,
+      package: "eslint",
+      version: "10.9.0",
+      type: "shellAccess",
+    })
+    const result = evaluateSecuritySocketPolicy({
+      evidence: failedEvidence([{ alert: a, record: record(a, COMPLETE) }]),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("forbidden by policy (above medium severity)")
+    expect(result.rationale).not.toContain("supply-chain-risk alerts are never waivable")
+  })
+
+  it("permits a low-severity supplyChainRisk alert with a complete record when NOT shipped (a peer-only dependency)", () => {
+    const a = alert({
+      severity: "low",
+      category: "supplyChainRisk",
+      shipped: false,
+      package: "eslint",
+      version: "10.9.0",
+      type: "envVars",
+    })
+    const result = evaluateSecuritySocketPolicy({
+      evidence: failedEvidence([{ alert: a, record: record(a, COMPLETE) }]),
+    })
+    expect(result.outcome).toBe("pass")
+  })
+
+  it("still requires a complete exception for a middle-severity supplyChainRisk alert that isn't shipped", () => {
+    const a = alert({
+      severity: "middle",
+      category: "supplyChainRisk",
+      shipped: false,
+      package: "typescript",
+      version: "5.9.0",
+    })
+    const blankResult = evaluateSecuritySocketPolicy({
+      evidence: failedEvidence([{ alert: a, record: record(a) }]),
+    })
+    expect(blankResult.outcome).toBe("fail")
+    expect(blankResult.rationale).toContain("missing:")
+
+    const completeResult = evaluateSecuritySocketPolicy({
+      evidence: failedEvidence([{ alert: a, record: record(a, COMPLETE) }]),
+    })
+    expect(completeResult.outcome).toBe("pass")
   })
 
   it("fails on a broken alerts <-> activeExceptions bijection", () => {

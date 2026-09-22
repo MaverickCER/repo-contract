@@ -27,7 +27,15 @@ function socketFieldValue(record: SocketExceptionRecord, requirement: string): s
 }
 
 /**
- * Evaluates one alert against `socketPolicy`, classified purely on its `severity`.
+ * Evaluates one alert against `socketPolicy`, classified on its `severity` and, when it's also
+ * `shipped`, independently on its `category` too -- `evaluateExceptionRecord` resolves the
+ * strictest verdict across every classification, so a `supplyChainRisk` alert on a genuinely
+ * shipped dependency is `forbidden` outright regardless of severity (see `policy-config.ts`'s
+ * `"socket-category"` group). `shipped: false` (a `peerDependencies`-only or `devDependencies`-only
+ * package -- see `NormalizedSocketAlert.shipped`'s own doc comment) never contributes this second
+ * classification: the user's own scoping decision is "only dependencies we ship/install, not
+ * peers," so such an alert is still evaluated (and still real evidence), just purely on severity
+ * like every other non-supply-chain-risk alert.
  * @param alert - The alert.
  * @param record - The reconciled live record for it, or `undefined` if the bijection broke.
  * @returns The verdict and any still-missing required fields.
@@ -42,6 +50,7 @@ function evaluateAlert(
   if (record === undefined) return { verdict: "unmatched", missing: [] }
   const classifications: readonly [ExceptionClassification, ...ExceptionClassification[]] = [
     { group: "socket", category: alert.severity },
+    ...(alert.shipped ? ([{ group: "socket-category", category: alert.category }] as const) : []),
   ]
   const determinant = evaluateExceptionRecord({
     record,
@@ -164,7 +173,9 @@ export function evaluateSecuritySocketPolicy(input: {
   const offenderLines = offenders.map((d) => {
     const detail =
       d.verdict === "forbidden"
-        ? "forbidden by policy (above medium severity)"
+        ? d.alert.category === "supplyChainRisk" && d.alert.shipped
+          ? "forbidden by policy (supply-chain-risk alerts are never waivable)"
+          : "forbidden by policy (above medium severity)"
         : d.verdict === "unmatched"
           ? "no reconciled exception record (registry integrity failure)"
           : `exception incomplete (missing: ${d.missing.join(", ")})`
@@ -181,7 +192,9 @@ export function evaluateSecuritySocketPolicy(input: {
   }
 }
 
-// Rejects any alert above a medium ("middle") rating outright, and requires a complete
+// Rejects any alert above a medium ("middle") rating outright, rejects any supplyChainRisk alert
+// on a genuinely SHIPPED dependency outright regardless of severity (never a peer-only/dev-only
+// one -- see NormalizedSocketAlert.shipped's own doc comment), and requires a complete
 // finding-specific exception for everything else -- see
 // specs/decisions/0013-reusable-exception-policy-helper.md.
 export const securitySocket: CheckDefinitionConfig = {

@@ -25,8 +25,31 @@ export interface NormalizedSocketAlert {
   readonly type: string
   /** A recognized report shape whose severity value isn't one of the four known tiers -> `"unknown"` (still evaluated). A structurally malformed report is `status: "error"` instead. */
   readonly severity: "critical" | "high" | "middle" | "low" | "unknown"
+  /**
+   * Socket's own alert category, verbatim (e.g. `"supplyChainRisk"`, `"quality"`, `"vulnerability"`)
+   * -- confirmed against `@socketsecurity/cli`'s own `SocketSdk.#normalizeArtifact` (`vendor.js`),
+   * which always includes `category` alongside `severity`/`type` on a real alert; `normalizeAlert`
+   * (`scan.ts`) rejects an entry missing it the same way it rejects one missing `package`/
+   * `version`/`type`, consistent with that confirmed guarantee. A `supplyChainRisk` alert is
+   * unwaivable regardless of severity -- see `policy-config.ts`'s own doc comment -- but only when
+   * `shipped` is also `true`.
+   */
+  readonly category: string
   /** Socket's own policy action for this alert (`"block"`/`"warn"`/`"monitor"`/`"ignore"`), if the report carries one -- evidence only. */
   readonly action?: string
+  /**
+   * `true` when `package@version` is reachable via at least one real production edge in
+   * package-lock.json (this package's own `dependencies`, transitively) -- i.e. actually installed
+   * for a consumer of this package. `false` when it's reachable only through `devDependencies`
+   * (this repo's own build/test tooling, never shipped) or `peerDependencies` (supplied by the
+   * CONSUMER's own project, never bundled by this one) -- computed by `scan.ts`'s
+   * `loadShippedPackageVersions`. This is the scope of the user's own zero-tolerance rule: "only
+   * dependencies we ship/install, not peers" -- a `supplyChainRisk` alert on an unshipped
+   * peer-only package (e.g. `eslint`/`typescript` in a package that only lists them as peers) is
+   * real evidence, kept here, but never forbidden by `checks/security-socket.ts`'s
+   * `"socket-category"` policy the way a shipped one is.
+   */
+  readonly shipped: boolean
 }
 
 /** One row of socket.json -- the on-disk exception record shape. */

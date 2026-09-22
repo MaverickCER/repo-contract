@@ -9,7 +9,7 @@
 // `status: "unavailable"`/`"error"`.
 
 import { sync as spawnSync } from "cross-spawn"
-import { mkdir } from "node:fs/promises"
+import { mkdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import {
@@ -28,10 +28,19 @@ import { SOCKET_EXCEPTION_SCHEMA, createSocketStub } from "./registry.js"
 
 const REGISTRY_RELATIVE_PATH = ".repo-contract/exceptions/socket.json"
 
+/**
+ * `NormalizedSocketAlert` minus `shipped` -- what `normalizeAlert`/`runSocketCli` can determine
+ * from the CLI's own report alone. `shipped` needs package-lock.json (`loadShippedPackageVersions`,
+ * an async read), so it's attached afterward in `runSecuritySocketScan`, the one place that already
+ * has `root` and is already `async`; keeping `normalizeAlert`/`runSocketCli` synchronous and
+ * filesystem-free preserves their existing, purely-CLI-output-driven unit-test surface.
+ */
+type RawNormalizedAlert = Omit<NormalizedSocketAlert, "shipped">
+
 /** The raw result of running the Socket CLI, before any registry reconciliation. */
 type SocketCliResult =
   | { readonly status: "passed" }
-  | { readonly status: "failed"; readonly alerts: readonly NormalizedSocketAlert[] }
+  | { readonly status: "failed"; readonly alerts: readonly RawNormalizedAlert[] }
   | {
       readonly status: "unavailable"
       readonly reason: "cli-not-installed" | "not-authenticated" | "network-unreachable"
@@ -152,23 +161,27 @@ function isNetworkUnreachable(stderr: string, parsed: unknown): boolean {
 
 /**
  * Normalizes one raw alert entry from a real, authenticated scan's report. Deliberately
- * conservative: an entry missing any of `package`/`version`/`type` is rejected outright (the
- * caller treats any rejection as `status: "error"` for the whole report -- see this module's own
- * doc comment on why the authenticated-alert shape is unverified in this environment and this
- * parsing path stays maximally defensive).
+ * conservative: an entry missing any of `package`/`version`/`type`/`category` is rejected outright
+ * (the caller treats any rejection as `status: "error"` for the whole report -- see this module's
+ * own doc comment on why the authenticated-alert shape is unverified in this environment and this
+ * parsing path stays maximally defensive). `category` is validated the same way as the other three:
+ * `NormalizedSocketAlert.category`'s own doc comment records that a real alert always carries one
+ * (confirmed against `@socketsecurity/cli`'s own `vendor.js`), so an entry without one is exactly as
+ * suspect as one missing its `type`.
  * @param raw - One candidate alert entry from the parsed report.
  * @returns The normalized alert, or `undefined` if `raw` doesn't match the minimum recognized shape.
  */
-function normalizeAlert(raw: unknown): NormalizedSocketAlert | undefined {
+function normalizeAlert(raw: unknown): RawNormalizedAlert | undefined {
   if (!isPlainObject(raw)) return undefined
 
   const packageName = raw.package ?? raw.name
-  const { version, type } = raw
+  const { version, type, category } = raw
   const severityRaw = raw.severity
 
   if (typeof packageName !== "string" || packageName.length === 0) return undefined
   if (typeof version !== "string" || version.length === 0) return undefined
   if (typeof type !== "string" || type.length === 0) return undefined
+  if (typeof category !== "string" || category.length === 0) return undefined
 
   const severity =
     typeof severityRaw === "string" && SEVERITY_VALUES.has(severityRaw.toLowerCase())
@@ -183,6 +196,7 @@ function normalizeAlert(raw: unknown): NormalizedSocketAlert | undefined {
     version,
     type,
     severity,
+    category,
     ...(action !== undefined ? { action } : {}),
   }
 }
@@ -298,18 +312,130 @@ function runSocketCli(): SocketCliResult {
   if (malformedIndex !== -1) {
     return {
       status: "error",
-      message: `\`socket ci --json\` reported an alert entry (index ${String(malformedIndex)}) missing a required field (package/version/type).`,
+      message: `\`socket ci --json\` reported an alert entry (index ${String(malformedIndex)}) missing a required field (package/version/type/category).`,
     }
   }
 
-  return { status: "failed", alerts: normalized as NormalizedSocketAlert[] }
+  return { status: "failed", alerts: normalized as RawNormalizedAlert[] }
+}
+
+/**
+ * Reads package-lock.json's own per-resolved-path `dev`/`peer`/`optional`/`devOptional` flags
+ * (npm lockfile v2/v3's own dependency-type bookkeeping -- see `npm help package-lock.json`'s own
+ * "dev, optional, devOptional" section) to determine which `name@version` pairs are reachable via
+ * at least one real production edge -- i.e. actually installed for a consumer of THIS package
+ * (`dependencies`, transitively, optional or not) -- as opposed to reachable only through
+ * `devDependencies` (this repo's own build/test tooling, never shipped) or `peerDependencies`
+ * (supplied by the CONSUMER's own project, never bundled by this one). Only `dev`/`peer` exclude a
+ * path: `optional` alone (`optionalDependencies`, direct or transitive) is still a real production
+ * edge -- npm attempts to install it for every consumer, it's merely allowed to fail -- and
+ * `devOptional` (per npm's own docs: set only when a package is BOTH a dev dependency AND an
+ * optional dependency of a *non-dev* dependency) proves a genuine non-dev path reaches it too, via
+ * that optional edge. Confirmed directly against a real lockfile with genuine `devDependencies`
+ * (this repository's own `@esbuild/*` platform binaries, reachable only through the `tsup`
+ * devDependency's own `optionalDependencies`): npm correctly cascades `dev: true` alongside
+ * `optional: true` there, so excluding only `dev`/`peer` does not let a genuinely dev-only optional
+ * package through as a false "shipped" positive. The same resolved `name@version` can appear at
+ * multiple lockfile paths with different flags when required by both a production and a
+ * dev-only/peer-only parent -- it's counted "shipped" if ANY path reaches it without `dev`/`peer`,
+ * since that path alone proves it really is installed for a consumer. An npm workspace/`file:`-link
+ * entry (`{ link: true, resolved }`) is resolved to its target entry for its own `version`/`dev`/
+ * `peer` rather than treated as a parse failure -- see this function's own `pendingLinks` comment.
+ *
+ * Returns `undefined` if package-lock.json can't be read or doesn't have the expected shape --
+ * `runSecuritySocketScan` fails closed on this (treats every alert as `shipped: true`) rather than
+ * silently under-scoping the zero-tolerance `supplyChainRisk` policy this feeds (see
+ * `checks/security-socket.ts`'s `"socket-category"` classification): a broken/missing lockfile
+ * read must never be the reason a real supply-chain-risk alert on a genuinely shipped dependency
+ * goes unenforced.
+ * Exported for direct unit coverage -- not part of this script's own CLI/stdout contract.
+ * @param root - Absolute path to the repository being checked.
+ * @returns The set of `"<name>@<version>"` pairs reachable via a real production edge, or `undefined`.
+ * @internal
+ */
+export async function loadShippedPackageVersions(root: string): Promise<Set<string> | undefined> {
+  let raw: string
+  try {
+    raw = await readFile(path.join(root, "package-lock.json"), "utf8")
+  } catch {
+    return undefined
+  }
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return undefined
+  }
+  if (!isPlainObject(parsed) || !isPlainObject(parsed.packages)) return undefined
+
+  const packages = parsed.packages
+  const shipped = new Set<string>()
+  // npm workspaces / `file:`-linked local packages get a `node_modules/<name>` entry with only
+  // `{ link: true, resolved: "<target key>" }` -- confirmed directly against a real `npm install
+  // --package-lock-only` on a minimal workspace -- never a `version`/`dev`/`peer` of its own ("no
+  // other fields are specified", per `npm help package-lock.json`'s own "link" bullet); the real
+  // version and dev/peer/optional bookkeeping lives on the SEPARATE entry `resolved` points at
+  // (e.g. `"packages/foo"`, itself a key into this same `packages` object, not under
+  // `node_modules/`). Resolving links is deferred to a second pass so the first pass's `name` can
+  // still come from the link's own `node_modules/<name>` key (the target entry's own key is a
+  // workspace-relative path, not a package name).
+  const pendingLinks: { readonly name: string; readonly resolved: string }[] = []
+
+  for (const [key, value] of Object.entries(packages)) {
+    // The root package's own entry (key `""`) describes this repository itself, not a dependency;
+    // any other key without a `node_modules/` segment is some other top-level lockfile field, not
+    // a dependency entry either -- both are skipped, never treated as a parse failure.
+    if (key === "") continue
+    const nodeModulesMarker = "node_modules/"
+    const markerIndex = key.lastIndexOf(nodeModulesMarker)
+    if (markerIndex === -1) continue
+    // A genuine dependency-path entry whose value isn't even a plain object is a lockfile this
+    // function cannot trust at all -- fail closed (return undefined) rather than silently `continue`
+    // past it, which would otherwise leave this exact package missing from `shipped` and let a real
+    // supply-chain-risk alert on it go unenforced (see this function's own "fails closed" doc
+    // comment above).
+    if (!isPlainObject(value)) return undefined
+    const name = key.slice(markerIndex + nodeModulesMarker.length)
+    // dev/peer-only entries are excluded regardless of their `version`/`link`/`resolved` fields'
+    // validity -- they were never going to be counted as shipped, so a malformed descriptor on one
+    // of them is not a reason to distrust the whole lockfile. Checked defensively even on a `link`
+    // entry, since npm's own docs promise it carries no other fields today, not that a future
+    // lockfile version never will.
+    if (value.dev === true || value.peer === true) continue
+    if (value.link === true) {
+      if (typeof value.resolved !== "string" || value.resolved.length === 0) return undefined
+      pendingLinks.push({ name, resolved: value.resolved })
+      continue
+    }
+    const version = value.version
+    if (typeof version !== "string" || version.length === 0) return undefined
+    shipped.add(`${name}@${version}`)
+  }
+
+  for (const { name, resolved } of pendingLinks) {
+    const target = packages[resolved]
+    // An unresolvable or malformed link target is exactly the "genuinely invalid descriptor" case
+    // that still fails closed -- retaining the same distrust-the-whole-lockfile posture as every
+    // other malformed entry above, not silently treating an unresolvable link as unshipped.
+    if (!isPlainObject(target)) return undefined
+    if (target.dev === true || target.peer === true) continue
+    const version = target.version
+    if (typeof version !== "string" || version.length === 0) return undefined
+    shipped.add(`${name}@${version}`)
+  }
+
+  return shipped
 }
 
 /**
  * Runs the Socket CLI, then -- only when the CLI actually produced an alert assessment
  * (`passed`/`failed`) -- reconciles `.repo-contract/exceptions/socket.json` against the alerts it
  * found and writes it back. On `unavailable`/`error` the registry is validated but not reconciled
- * (the CLI produced no alert list, so no record can be concluded stale).
+ * (the CLI produced no alert list, so no record can be concluded stale). A `"failed"` CLI result
+ * whose `shipped` status can't be determined (`loadShippedPackageVersions` returned `undefined`)
+ * becomes `status: "error"` instead -- see that early return's own comment for why this fails
+ * closed with an explicit reason rather than guessing.
  * @param root - Absolute path to the repository being checked.
  * @returns The full `SecuritySocketEvidence` for `output: { format: "json" }`.
  */
@@ -329,7 +455,39 @@ export async function runSecuritySocketScan(root: string): Promise<SecuritySocke
       : { ...base, existingRecordCount: 0, registryError: loaded.errors }
   }
 
-  const alerts = cli.status === "failed" ? cli.alerts : []
+  let alerts: readonly NormalizedSocketAlert[] = []
+  if (cli.status === "failed") {
+    const shippedVersions = await loadShippedPackageVersions(root)
+    if (shippedVersions === undefined) {
+      // Fail the whole scan closed rather than silently guessing `shipped: true` for every alert:
+      // a guess (even the maximally-strict direction) can produce a misleading "supply-chain-risk
+      // alerts are never waivable" verdict on a genuinely peer-only/dev-only package, sending
+      // whoever's debugging it chasing the wrong thing instead of the real problem (an unreadable
+      // or malformed package-lock.json). An explicit `status: "error"` still fails the check just
+      // as strictly, but with an accurate reason.
+      const message =
+        "package-lock.json could not be read or parsed -- refusing to guess whether alerted " +
+        "dependencies are actually shipped for the zero-tolerance supplyChainRisk policy."
+      return loaded.ok
+        ? {
+            status: "error",
+            message,
+            registryPath: REGISTRY_RELATIVE_PATH,
+            existingRecordCount: loaded.records.length,
+          }
+        : {
+            status: "error",
+            message,
+            registryPath: REGISTRY_RELATIVE_PATH,
+            existingRecordCount: 0,
+            registryError: loaded.errors,
+          }
+    }
+    alerts = cli.alerts.map((a) => ({
+      ...a,
+      shipped: shippedVersions.has(`${a.package}@${a.version}`),
+    }))
+  }
   const empty = {
     status: cli.status,
     registryPath: REGISTRY_RELATIVE_PATH,
