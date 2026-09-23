@@ -112,8 +112,8 @@ already a long-standing, zero-dependency, extremely widely used devDependency of
 (used internally by `scripts/suppression-governance/resolve-policy.ts`) — promoting the exact same
 pinned version to a real dependency, rather than hand-vendoring a glob matcher's actual algorithmic
 logic (a real correctness risk a thin vendor copy would not meaningfully reduce, unlike a pure-type
-interface), is the honest choice here. `tsup.config.ts` marks it `external` (never bundled into
-`dist/`), the same explicit treatment `yaml` already gets.
+interface), is the honest choice here. `tsup.config.ts` marks it `external`, never bundled into
+`dist/` -- a consumer's own installed copy is what should resolve at runtime.
 
 ## Verification, not attestation
 

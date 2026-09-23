@@ -94,39 +94,12 @@ export class DependencyDeclaredLaterError extends RepoContractError {
   }
 }
 
-/** A check requested `output: { format: "yaml" }` but the optional `yaml` peer dependency is not installed. Thrown when that check's output is parsed, not at config-validation time (parsing only happens after the process has already run). */
-export class ParserDependencyMissingError extends RepoContractError {
-  /** Always `"REPO_CONTRACT_PARSER_DEPENDENCY_MISSING"`. */
-  readonly code = "REPO_CONTRACT_PARSER_DEPENDENCY_MISSING"
-  /** The id of the check whose output could not be parsed. */
-  readonly checkId: string
-  /** The output format that was requested but whose optional peer dependency is missing. */
-  readonly format: OutputFormatForError
-
-  constructor(checkId: string, format: OutputFormatForError, cause: unknown) {
-    super(
-      `Check "${checkId}" requested output.format: "${format}", but the optional "${format}" ` +
-        `peer dependency is not installed -- run \`npm install ${format}\` to enable it.`,
-      { cause },
-    )
-    this.name = "ParserDependencyMissingError"
-    this.checkId = checkId
-    this.format = format
-  }
-}
-
-// Kept narrow and local rather than importing OutputFormat from types.ts --
-// only "yaml" can ever produce this error today (json/text have no external
-// dependency to be missing), but the field stays named/typed generically in
-// case a future optional format needs the same treatment.
-type OutputFormatForError = "yaml"
-
 /**
  * A check's `output.schema["~standard"].validate()` threw synchronously, or returned a `Promise`
  * that rejected, instead of returning a `Result`. This is a bug in the consumer-supplied schema
  * object, not malformed check output -- the same distinction `PolicyThrewError` below draws for a
  * throwing policy: a schema *returning* failure `issues` becomes an ordinary
- * `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON/YAML parse failure), but
+ * `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON parse failure), but
  * a schema *throwing* means the validator itself is broken, so it propagates as a rejected
  * `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim
  * via the native `Error` `cause` chain.
@@ -208,7 +181,7 @@ export class PolicyReadUnrequestedOutputError extends RepoContractError {
     super(
       `Policy for check "${checkId}" read \`result.output.${property}\`, but "${checkId}" never ` +
         `requested an output format, so \`result.output\` is undefined -- add ` +
-        `\`output: { format: "json" }\` (or "yaml"/"text") to check "${checkId}"'s definition to ` +
+        `\`output: { format: "json" }\` (or "text") to check "${checkId}"'s definition to ` +
         `parse its stdout, then narrow with \`result.output?.success\` before reading ` +
         `\`.value\`/\`.error\`.`,
       { cause },

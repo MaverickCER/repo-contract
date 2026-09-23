@@ -64,25 +64,6 @@ describe("defineRepoContract", () => {
       })
     })
 
-    it("types result.output.value as unknown for a check with output.format: 'yaml'", () => {
-      defineRepoContract({
-        checks: {
-          report: {
-            run: "some-tool",
-            output: { format: "yaml" },
-            policy: (ctx) => {
-              if (ctx.result.output?.success === true) {
-                expectTypeOf(ctx.result.output.value).toEqualTypeOf<unknown>()
-              }
-              return { outcome: "pass", rationale: "ok" }
-            },
-          },
-        },
-        spawn: testSpawn,
-        env: testEnv,
-      })
-    })
-
     it("types result.output.value as unknown for a check with output.format: 'text' too", () => {
       defineRepoContract({
         checks: {
@@ -110,12 +91,12 @@ describe("defineRepoContract", () => {
             policy: (ctx) => {
               expectTypeOf(ctx.result.output).toEqualTypeOf<
                 | {
-                    readonly format: "json" | "yaml" | "text"
+                    readonly format: "json" | "text"
                     readonly success: true
                     readonly value: unknown
                   }
                 | {
-                    readonly format: "json" | "yaml" | "text"
+                    readonly format: "json" | "text"
                     readonly success: false
                     readonly error: string
                   }

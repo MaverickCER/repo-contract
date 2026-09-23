@@ -433,10 +433,10 @@ describe("validateRepoContractConfig", () => {
       validateRepoContractConfig(
         configWith({ run: "echo a", output: { format: "xml" }, policy: okPolicy }),
       )
-    }).toThrow('output.format must be one of "json", "yaml", "text".')
+    }).toThrow('output.format must be one of "json", "text".')
   })
 
-  it.each(["json", "yaml", "text"] as const)("accepts output.format: %s", (format) => {
+  it.each(["json", "text"] as const)("accepts output.format: %s", (format) => {
     expect(() => {
       validateRepoContractConfig(
         configWith({ run: "echo a", output: { format }, policy: okPolicy }),

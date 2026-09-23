@@ -32,18 +32,16 @@ export default defineConfig({
   // `cross-spawn` is not a dependency of this package at all anymore (only a
   // devDependency, used by scripts/npm-pack.mjs and this repo's own tests);
   // it never appears in src/'s import graph, so there's nothing to mark
-  // external for it. yaml remains an optional peerDependency, dynamically
-  // imported only when a check requests output.format:"yaml" -- it must
-  // never be inlined into dist/index.js even though it's present in
-  // node_modules as a devDependency for our own tests, so it's marked
-  // external explicitly rather than relying on tsup's implicit
-  // externalization of package.json dependencies, since that behavior
-  // differs between esm/cjs output and isn't worth trusting silently for a
-  // security-relevant boundary like this. `minimatch` is the one real,
-  // always-on runtime `dependencies` entry (see package.json) -- introduced by
+  // external for it. `minimatch` is the one real, always-on runtime
+  // `dependencies` entry (see package.json) -- introduced by
   // src/helpers/exception-policy.ts's glob-pattern matching (specs/decisions/
-  // 0013-reusable-exception-policy-helper.md) -- and is marked external for
-  // the same explicitness reason as yaml: a consumer's own installed copy is
-  // what should resolve at runtime, never a bundled-in duplicate.
-  external: ["yaml", "minimatch"],
+  // 0013-reusable-exception-policy-helper.md) -- and is marked external
+  // explicitly rather than relying on tsup's implicit externalization of
+  // package.json dependencies, since that behavior differs between esm/cjs
+  // output and isn't worth trusting silently for a security-relevant
+  // boundary like this: a consumer's own installed copy is what should
+  // resolve at runtime, never a bundled-in duplicate. (Format conversion --
+  // e.g. YAML -- is deliberately not a core concern of this package; see
+  // OutputFormat's own doc comment in src/types.ts.)
+  external: ["minimatch"],
 })
