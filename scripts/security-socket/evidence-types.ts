@@ -25,8 +25,33 @@ export interface NormalizedSocketAlert {
   readonly type: string
   /** A recognized report shape whose severity value isn't one of the four known tiers -> `"unknown"` (still evaluated). A structurally malformed report is `status: "error"` instead. */
   readonly severity: "critical" | "high" | "middle" | "low" | "unknown"
+  /**
+   * Socket's own alert category, verbatim (e.g. `"supplyChainRisk"`, `"quality"`, `"vulnerability"`)
+   * -- confirmed against `@socketsecurity/cli`'s own `SocketSdk.#normalizeArtifact` (`vendor.js`),
+   * which always includes `category` alongside `severity`/`type` on a real alert; `normalizeAlert`
+   * (`scan.ts`) rejects an entry missing it the same way it rejects one missing `package`/
+   * `version`/`type`, consistent with that confirmed guarantee. A `supplyChainRisk` alert is
+   * unwaivable regardless of severity -- see `policy-config.ts`'s own doc comment -- but only when
+   * `shipped` is also `true`.
+   */
+  readonly category: string
   /** Socket's own policy action for this alert (`"block"`/`"warn"`/`"monitor"`/`"ignore"`), if the report carries one -- evidence only. */
   readonly action?: string
+  /**
+   * `true` when `package@version` is reachable via anything OTHER than a strictly
+   * `devDependencies`-only edge in package-lock.json -- i.e. a real `dependencies` edge (installed
+   * for a consumer) OR a `peerDependencies` edge. `false` only when it's reachable strictly through
+   * `devDependencies` (this repo's own build/test tooling, never reaches a consumer at all) --
+   * computed by `scan.ts`'s `loadShippedPackageVersions`. Per the user's own direction, a
+   * peerDependency counts as shipped even though npm doesn't literally bundle it: declaring a peer
+   * range is itself a supply-chain decision this package makes for the consumer, dictating exactly
+   * which version(s) they're allowed to use and removing their own choice of alternative -- the
+   * opposite of a devDependency, which never surfaces to a consumer at all. So a `supplyChainRisk`
+   * alert on a real peerDependency (e.g. `eslint`/`typescript`) is `forbidden` by
+   * `checks/security-socket.ts`'s `"socket-category"` policy exactly like one on an installed
+   * `dependencies` entry; only a strictly-dev-only package's alert escapes this rule.
+   */
+  readonly shipped: boolean
 }
 
 /** One row of socket.json -- the on-disk exception record shape. */

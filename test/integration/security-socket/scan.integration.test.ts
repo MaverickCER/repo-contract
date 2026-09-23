@@ -70,6 +70,8 @@ describe("runSecuritySocketScan -- real @socketsecurity/cli", () => {
           expect(alert.version.length).toBeGreaterThan(0)
           expect(alert.type.length).toBeGreaterThan(0)
           expect(["critical", "high", "middle", "low", "unknown"]).toContain(alert.severity)
+          expect(alert.category.length).toBeGreaterThan(0)
+          expect(typeof alert.shipped).toBe("boolean")
         }
       }
     },

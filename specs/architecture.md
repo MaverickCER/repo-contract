@@ -280,11 +280,13 @@ assembled object contains one entry for every configured check. See the
 
 ### Output parsing
 
-`parsing/parse-output.ts` dispatches a requested `output.format` to one of three parsers:
+`parsing/parse-output.ts` dispatches a requested `output.format` to one of two parsers:
 `parse-json.ts` (`JSON.parse`; a malformed result is preserved as `{ success: false, error }`,
-never thrown), `parse-text.ts` (trimmed passthrough, always succeeds), and `parse-yaml.ts` (via
-the optional `yaml` peer dependency, only loaded when YAML is requested). A policy therefore
-receives explicit evidence about a parse failure rather than fabricated or ambiguous output.
+never thrown) and `parse-text.ts` (trimmed passthrough, always succeeds). Format conversion beyond
+that is deliberately not a core concern of this package -- see `OutputFormat`'s own doc comment
+(src/types.ts) -- a check whose tool emits another format converts it in its own `run` step or
+reads it directly in its `policy` function. A policy therefore receives explicit evidence about a
+parse failure rather than fabricated or ambiguous output.
 `output.schema` (any [Standard Schema](https://standardschema.dev)) can additionally validate and
 reshape the parsed value; a schema _returning_ failure issues becomes an ordinary
 parser-error-shaped result, while a schema that itself _throws_ rejects the run with
@@ -406,10 +408,9 @@ src/
     abort-signals.ts         composeSignals() -- native AbortSignal.any with a manual fallback
     run-checks.ts            fans spawn-check.ts out over every configured check
   parsing/
-    parse-output.ts          dispatches to one of the three parsers below by OutputFormat
+    parse-output.ts          dispatches to one of the two parsers below by OutputFormat
     parse-json.ts            stdout -> JSON, failure preserved as data, never throws
     parse-text.ts            stdout -> trimmed string, always succeeds
-    parse-yaml.ts            stdout -> YAML via the optional `yaml` peer dependency
   evidence/
     build-evidence.ts        attaches parsed output; assembles the versioned Evidence object
   policy/

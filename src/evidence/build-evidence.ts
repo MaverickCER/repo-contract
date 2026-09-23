@@ -1,5 +1,5 @@
 import type { CheckExecutionEntry } from "../execution/run-checks.js"
-import type { ParserDependencyMissingError } from "../errors.js"
+import type { StandardSchemaValidateThrewError } from "../errors.js"
 import { parseOutput } from "../parsing/parse-output.js"
 import type { CheckDefinition, CheckEvidence, Evidence } from "../types.js"
 
@@ -35,10 +35,10 @@ export async function buildEvidence(
 ): Promise<BuiltEvidence> {
   // Mirrors src/policy/run-policies.ts's own thrown-error aggregation: each
   // mapped entry catches its own failure and records it rather than letting
-  // it reject `Promise.all` directly, so that two checks concurrently
-  // requesting an output format whose parser dependency is missing (e.g.
-  // "yaml" without the optional peer dependency installed) are both
-  // reported, not just whichever rejected first.
+  // it reject `Promise.all` directly, so that two checks whose `output.schema`
+  // both throw during validation (`StandardSchemaValidateThrewError` -- the
+  // only error `parseOutput` can still throw) are both reported, not just
+  // whichever rejected first.
   const thrown: unknown[] = []
 
   const entries = await Promise.all(
@@ -63,7 +63,7 @@ export async function buildEvidence(
   )
 
   if (thrown.length === 1) {
-    const [only] = thrown as [ParserDependencyMissingError]
+    const [only] = thrown as [StandardSchemaValidateThrewError]
     throw only
   }
   // "> 1" vs. ">= 1" are equivalent here for the same reason as the

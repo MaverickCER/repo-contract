@@ -14,8 +14,15 @@ import type {
 
 import type { StandardSchemaV1 } from "./standard-schema/types.js"
 
-/** Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only. */
-export type OutputFormat = "json" | "yaml" | "text"
+/**
+ * Output interpretation a check can explicitly request. No format requested means no parsing --
+ * the consumer gets raw stdout/stderr only. Format conversion (e.g. YAML) is deliberately not a
+ * core concern of this package -- JSON and plain text cover every check this package or its
+ * consumers actually run; a check whose tool emits another format converts it in its own `run`
+ * step or reads it directly in its `policy` function, using whatever library it already depends
+ * on, rather than this package carrying an optional peer dependency on everyone's behalf.
+ */
+export type OutputFormat = "json" | "text"
 
 /**
  * Why a check's process ended up in its terminal state. `"completed"` means
@@ -82,7 +89,7 @@ export type ParsedOutput<T> = ParsedOutputSuccess<T> | ParsedOutputFailure
  * is attempting to close: a schema still gives its own author real compile-time input/output
  * typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this
  * shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as
- * they already must for `"json"`/`"yaml"` with no schema supplied.
+ * they already must for `"json"`/`"text"` with no schema supplied.
  */
 export interface CheckEvidence {
   /** The executable that was actually spawned (after tokenization, if `run` was a string). */

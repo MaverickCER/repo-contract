@@ -260,9 +260,6 @@ output: {
   format: "json"
 } // JSON.parse; malformed output produces { success: false, error } and never throws
 output: {
-  format: "yaml"
-} // requires the optional `yaml` peer dependency
-output: {
   format: "text"
 } // trimmed text passthrough; always succeeds
 ```
@@ -270,6 +267,14 @@ output: {
 `result.output.value` is `unknown` for every format. repo-contract has no schema knowledge
 of what an external tool prints, so your policy narrows or casts it according to the tool's
 actual output.
+
+Format conversion beyond JSON/plain text is deliberately not a core concern of this package. A
+check whose tool emits, say, YAML should prefer having the tool itself emit `--json` (most tools
+that support YAML output support a JSON flag too) or parsing `result.stdout` directly inside its
+`policy` function using whatever library it already depends on. Piping through a separate converter
+in `run` (`tool | yaml-to-json`) also works, but only with `shell: true` set (see the `run` section
+above and [SECURITY.md](SECURITY.md) before enabling it) -- repo-contract doesn't carry an optional
+peer dependency on everyone's behalf for a format most checks never need.
 
 `result.output` is `undefined` when a check does not request a format. If a policy reads
 `result.output.value` (or `.success`/`.error`/`.format`) without narrowing first, and that
@@ -613,7 +618,7 @@ makes.
 repo-contract has no built-in baseline system and no persistence layer. The core engine
 does not read or write files on its own initiative beyond spawning the commands you
 configure and parsing that command's own captured stdout when you set
-`output: { format: "json" | "yaml" }`. A handful of published presets (`securitySecrets`,
+`output: { format: "json" | "text" }`. A handful of published presets (`securitySecrets`,
 `duplication`, `markdownlint`) additionally read back a fixed report file their own `run`
 command was told to write — always that preset's own single, hardcoded path, never a scan
 of arbitrary files.

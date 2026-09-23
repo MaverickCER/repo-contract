@@ -46,6 +46,8 @@ describe("createSocketStub", () => {
       version: "1.3.0",
       type: "shellAccess",
       severity: "low" as const,
+      category: "quality",
+      shipped: true,
     }
     expect(createSocketStub(alert, alert.id)).toEqual({
       id: alert.id,
