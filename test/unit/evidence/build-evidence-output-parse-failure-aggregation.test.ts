@@ -2,11 +2,11 @@ import { describe, expect, it, vi } from "vitest"
 import type { CheckExecutionEntry } from "../../../src/execution/run-checks.js"
 import type { CheckDefinition, CheckEvidence, PolicyResult } from "../../../src/types.js"
 
-// File-scoped: mocks parseOutput itself (rather than a real "yaml"
-// import-time failure, as in build-evidence-yaml-missing-dependency.test.ts)
-// so this test can deterministically make every requested entry fail
-// concurrently -- isolating buildEvidence's own aggregation logic from
-// exactly which parser or failure mode triggered it.
+// File-scoped: mocks parseOutput itself (rather than a real
+// StandardSchemaValidateThrewError from a throwing schema) so this test can
+// deterministically make every requested entry fail concurrently --
+// isolating buildEvidence's own aggregation logic from exactly which
+// failure mode triggered it.
 vi.mock("../../../src/parsing/parse-output.js", () => ({
   parseOutput: vi.fn((_format: string, _stdout: string, checkId: string) =>
     Promise.reject(new Error(`boom-${checkId}`)),

@@ -4,12 +4,9 @@ import { parseJson } from "../../src/parsing/parse-json.js"
 import { parseText } from "../../src/parsing/parse-text.js"
 
 /**
- * Round-trip properties for parseJson/parseText -- scoped to these two
- * specifically because their own contract explicitly promises round-tripping
- * (parseJson: "parses stdout as JSON"; parseText: an always-succeeding
- * trimmed passthrough), not a blanket claim about every parser in the
- * package (parseYaml is excluded -- its optional-peer-dependency contract is
- * exercised by test/unit/parsing/parse-yaml*.test.ts instead).
+ * Round-trip properties for parseJson/parseText -- repo-contract's only two output parsers
+ * (format conversion beyond JSON/plain text is deliberately not a core concern of this package;
+ * see `OutputFormat`'s own doc comment in src/types.ts).
  */
 // `-0` stringifies to the JSON literal `0` and parses back as `+0` -- JSON
 // itself has no notation for negative zero, so a value containing `-0`

@@ -8,8 +8,8 @@ Accepted. Implemented in `src/standard-schema/types.ts`, `src/types.ts`,
 
 ## Context
 
-`CheckDefinitionConfig.output` lets a check request its stdout be parsed as `"json"`, `"yaml"`, or
-`"text"`, landing on `CheckEvidence.output.value` -- but that value is always `unknown`, and
+`CheckDefinitionConfig.output` lets a check request its stdout be parsed as `"json"` or `"text"`,
+landing on `CheckEvidence.output.value` -- but that value is always `unknown`, and
 nothing in repo-contract validates its shape. A malformed report (a linter's JSON output missing a
 field a policy expects, an unexpected `null`, a differently-shaped array) surfaces only as
 undefined behavior deep inside that policy function -- a `TypeError` on some property read, not a
@@ -59,15 +59,14 @@ own -- structurally identical for any real schema object assigned to it. Re-diff
 ## Decision
 
 `CheckDefinitionConfig.output` gains an optional `schema?: StandardSchemaV1` field. `parseOutput`
-(the sole orchestration point -- `parse-json.ts`/`parse-yaml.ts`/`parse-text.ts` stay entirely
-schema-unaware) runs `schema["~standard"].validate()` once a requested format's parse itself
-succeeds:
+(the sole orchestration point -- `parse-json.ts`/`parse-text.ts` stay entirely schema-unaware) runs
+`schema["~standard"].validate()` once a requested format's parse itself succeeds:
 
 - A successful `Result` (`issues === undefined`) _replaces_ `CheckEvidence.output.value` with the
   schema's own, possibly transformed/coerced output -- one of the most useful aspects of Standard
   Schema, not merely a boolean check.
 - A failing `Result` becomes an ordinary `ParsedOutputFailure` -- indistinguishable in shape from a
-  malformed-JSON/YAML parse failure, since from a policy's perspective "the tool's JSON parsed but
+  malformed-JSON parse failure, since from a policy's perspective "the tool's JSON parsed but
   doesn't match the expected shape" and "the tool's JSON was malformed" are the same category of
   problem: this check's output isn't what was expected, reported as data, never a throw. The
   `error` string is built by `format-schema-issues.ts`'s `formatSchemaIssues`, joining every issue's
@@ -76,8 +75,8 @@ succeeds:
   case entirely -- a bug in the _schema_, not malformed output, mirroring exactly how
   `PolicyThrewError` already treats a throwing policy as a bug in consumer code rather than a check
   failing its contract. It propagates as `StandardSchemaValidateThrewError` (or an `AggregateError`
-  when multiple checks' schemas throw in the same run, via the same aggregation `build-evidence.ts`
-  already performs for parser-dependency failures).
+  when multiple checks' schemas throw in the same run -- `build-evidence.ts` aggregates rather than
+  letting `Promise.all` reject on whichever throws first).
 
 `validate-config.ts`'s `validateOutputSchema` checks only the three fields every
 `StandardSchemaV1.Props` object must have -- `schema` is opaque, consumer-supplied, and anything
@@ -103,7 +102,7 @@ change is attempting to close: runtime output transformation/validation is fully
 independently of statically narrowing `CheckEvidence.output.value`; a schema still gives its own
 author real compile-time input/output typing via `StandardSchemaV1<Input, Output>` for their own
 code, just not threaded through this shared, cross-check `CheckEvidence` shape. A policy author
-narrows or casts `.value` themselves, exactly as they already must for `"json"`/`"yaml"` with no
+narrows or casts `.value` themselves, exactly as they already must for `"json"`/`"text"` with no
 schema supplied.
 
 `RepoContractConfig`'s own shape (validated separately in `validate-config.ts`) stays entirely out

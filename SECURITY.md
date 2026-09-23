@@ -87,9 +87,9 @@ the most security-sensitive part of the package.
     (`--output report.json`) and keep stdout small — every preset in this package that emits
     bulk data already does. `history.json`-style local logging is the consumer's own code; cap
     it yourself.
-- **Parsing failures never execute anything.** `output: { format: "json" | "yaml" }` only ever
-  calls `JSON.parse`/a YAML parser on captured text — a malformed or even maliciously-crafted
-  string cannot cause repo-contract to execute code, only to fail to parse
+- **Parsing failures never execute anything.** `output: { format: "json" | "text" }` only ever
+  calls `JSON.parse` (or a trimmed passthrough) on captured text — a malformed or even
+  maliciously-crafted string cannot cause repo-contract to execute code, only to fail to parse
   (`{ success: false, error }`).
 - **No `eval`, no `Function` construction, no dynamic code execution anywhere in the package.**
   This is enforced by CI (`no-eval`/`no-implied-eval`/`no-new-func` are lint errors, not just

@@ -2,7 +2,7 @@
 
 > **Informational evidence, not a certification.** This document is `repo-contract`'s own evaluation of `MaverickCER/repo-contract`, informed by [OpenSSF Scorecard's published check methodology](https://github.com/ossf/scorecard/blob/main/docs/checks.md) (Apache-2.0) -- it is **not** a run of the upstream `scorecard` binary, does not claim numeric parity with it, and is not an OpenSSF certification of any kind. Every score below traces to a specific, cited piece of evidence (a file, a GitHub API field, or another check's own result from this same run) gathered by [`scripts/openssf-scorecard/`](../scripts/openssf-scorecard/) -- generated automatically by `repo-contract`'s own `npm run contract`, dogfooding this repository's own contract/evidence mechanism rather than a separate, bespoke script.
 
-_Generated 2026-09-20T06:03:44.871Z against `MaverickCER/repo-contract`._
+_Generated 2026-09-22T18:49:17.609Z against `MaverickCER/repo-contract`._
 
 ## Checks
 
@@ -19,14 +19,14 @@ _Generated 2026-09-20T06:03:44.871Z against `MaverickCER/repo-contract`._
 | Code-Review         | 0/10  | Branch "main" has no branch protection, so no review requirement is enforced.                                                                                                                  |
 | Signed-Releases     | 9/10  | GitHub releases carry no signature assets, but the published npm package has real SLSA provenance attestation (predicateType `https://slsa.dev/provenance/v1`) via `npm publish --provenance`. |
 | Contributors        | 0/10  | 1 distinct human contributor(s) found -- upstream's >=3-organization bar is not met.                                                                                                           |
-| Maintained          | N/A   | Repository is 26 day(s) old -- upstream's Maintained check requires >90 days of history to assess.                                                                                             |
+| Maintained          | N/A   | Repository is 28 day(s) old -- upstream's Maintained check requires >90 days of history to assess.                                                                                             |
 | Vulnerabilities     | 10/10 | This run's security-deps check (npm audit) found 0 critical/high/moderate/low vulnerabilities.                                                                                                 |
 
 ## Details
 
 ### Signed-Releases
 
-- npm registry attestation URL: `https://registry.npmjs.org/-/npm/v1/attestations/repo-contract@0.5.2`
+- npm registry attestation URL: `https://registry.npmjs.org/-/npm/v1/attestations/repo-contract@0.6.0`
 
 ### Contributors
 

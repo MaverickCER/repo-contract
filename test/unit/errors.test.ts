@@ -3,7 +3,6 @@ import {
   DependencyDeclaredLaterError,
   InvalidCheckConfigError,
   InvalidRepoContractConfigError,
-  ParserDependencyMissingError,
   PolicyReadFailedParseValueError,
   PolicyReadUnrequestedOutputError,
   PolicyThrewError,
@@ -17,7 +16,6 @@ describe("error hierarchy", () => {
     const errors = [
       new InvalidRepoContractConfigError("reason"),
       new InvalidCheckConfigError("check-id", "reason"),
-      new ParserDependencyMissingError("check-id", "yaml", new Error("boom")),
       new PolicyThrewError("check-id", new Error("boom")),
       new PolicyReadUnrequestedOutputError("check-id", "value", new TypeError("boom")),
       new PolicyReadFailedParseValueError("check-id", "score", new TypeError("boom")),
@@ -34,9 +32,6 @@ describe("error hierarchy", () => {
   it("each error class has a distinct, stable code", () => {
     expect(new InvalidRepoContractConfigError("x").code).toBe("REPO_CONTRACT_INVALID_CONFIG")
     expect(new InvalidCheckConfigError("id", "x").code).toBe("REPO_CONTRACT_INVALID_CHECK_CONFIG")
-    expect(new ParserDependencyMissingError("id", "yaml", undefined).code).toBe(
-      "REPO_CONTRACT_PARSER_DEPENDENCY_MISSING",
-    )
     expect(new PolicyThrewError("id", undefined).code).toBe("REPO_CONTRACT_POLICY_THREW")
     expect(new PolicyReadUnrequestedOutputError("id", "value", undefined).code).toBe(
       "REPO_CONTRACT_POLICY_READ_UNREQUESTED_OUTPUT",
@@ -57,7 +52,6 @@ describe("error hierarchy", () => {
     const codes = [
       new InvalidRepoContractConfigError("x").code,
       new InvalidCheckConfigError("id", "x").code,
-      new ParserDependencyMissingError("id", "yaml", undefined).code,
       new PolicyThrewError("id", undefined).code,
       new PolicyReadUnrequestedOutputError("id", "value", undefined).code,
       new PolicyReadFailedParseValueError("id", "score", undefined).code,
@@ -71,9 +65,6 @@ describe("error hierarchy", () => {
   it("each error class sets .name to its own exact class name (not the generic 'Error')", () => {
     expect(new InvalidRepoContractConfigError("x").name).toBe("InvalidRepoContractConfigError")
     expect(new InvalidCheckConfigError("id", "x").name).toBe("InvalidCheckConfigError")
-    expect(new ParserDependencyMissingError("id", "yaml", undefined).name).toBe(
-      "ParserDependencyMissingError",
-    )
     expect(new PolicyThrewError("id", undefined).name).toBe("PolicyThrewError")
     expect(new PolicyReadUnrequestedOutputError("id", "value", undefined).name).toBe(
       "PolicyReadUnrequestedOutputError",
@@ -114,24 +105,6 @@ describe("error hierarchy", () => {
       const error = new InvalidCheckConfigError("my-check", secretLikeReason)
       expect(error.message).toContain("my-check")
       expect(error.message).toContain(secretLikeReason)
-    })
-  })
-
-  describe("ParserDependencyMissingError", () => {
-    it("carries checkId and format, and preserves the original failure as cause", () => {
-      const cause = new Error("Cannot find module 'yaml'")
-      const error = new ParserDependencyMissingError("mutation", "yaml", cause)
-      expect(error.checkId).toBe("mutation")
-      expect(error.format).toBe("yaml")
-      expect(error.cause).toBe(cause)
-    })
-
-    it("message names the check, the format, and the exact install command", () => {
-      const error = new ParserDependencyMissingError("mutation", "yaml", undefined)
-      expect(error.message).toBe(
-        'Check "mutation" requested output.format: "yaml", but the optional "yaml" peer ' +
-          "dependency is not installed -- run `npm install yaml` to enable it.",
-      )
     })
   })
 

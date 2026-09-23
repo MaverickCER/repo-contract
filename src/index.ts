@@ -14,7 +14,6 @@ export {
   DependencyDeclaredLaterError,
   InvalidCheckConfigError,
   InvalidRepoContractConfigError,
-  ParserDependencyMissingError,
   PolicyReadFailedParseValueError,
   PolicyReadUnrequestedOutputError,
   PolicyThrewError,
