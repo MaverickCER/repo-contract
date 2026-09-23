@@ -544,7 +544,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!CheckEvidence:interface",
-          "docComment": "/**\n * What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n *\n * `output.value` is the value produced by the configured `format` parser, optionally validated and (if a schema transforms/coerces it) replaced by `output.schema` (see `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a check's config supplies a schema. It is typed `unknown` for every format regardless, including `\"text\"` (even though `parseText` always produces a `string` at runtime) and regardless of whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own inferred output type) through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package is attempting to close: a schema still gives its own author real compile-time input/output typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"yaml\"` with no schema supplied.\n */\n",
+          "docComment": "/**\n * What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n *\n * `output.value` is the value produced by the configured `format` parser, optionally validated and (if a schema transforms/coerces it) replaced by `output.schema` (see `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a check's config supplies a schema. It is typed `unknown` for every format regardless, including `\"text\"` (even though `parseText` always produces a `string` at runtime) and regardless of whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own inferred output type) through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package is attempting to close: a schema still gives its own author real compile-time input/output typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"text\"` with no schema supplied.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1685,7 +1685,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!OutputFormat:type",
-          "docComment": "/**\n * Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only.\n */\n",
+          "docComment": "/**\n * Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only. Format conversion (e.g. YAML) is deliberately not a core concern of this package -- JSON and plain text cover every check this package or its consumers actually run; a check whose tool emits another format converts it in its own `run` step or reads it directly in its `policy` function, using whatever library it already depends on, rather than this package carrying an optional peer dependency on everyone's behalf.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1693,7 +1693,7 @@
             },
             {
               "kind": "Content",
-              "text": "\"json\" | \"yaml\" | \"text\""
+              "text": "\"json\" | \"text\""
             },
             {
               "kind": "Content",
@@ -1969,198 +1969,6 @@
             }
           ],
           "extendsTokenRanges": []
-        },
-        {
-          "kind": "Class",
-          "canonicalReference": "repo-contract!ParserDependencyMissingError:class",
-          "docComment": "/**\n * A check requested `output: { format: \"yaml\" }` but the optional `yaml` peer dependency is not installed. Thrown when that check's output is parsed, not at config-validation time (parsing only happens after the process has already run).\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare class ParserDependencyMissingError extends "
-            },
-            {
-              "kind": "Reference",
-              "text": "RepoContractError",
-              "canonicalReference": "repo-contract!RepoContractError:class"
-            },
-            {
-              "kind": "Content",
-              "text": " "
-            }
-          ],
-          "fileUrlPath": "src/errors.ts",
-          "releaseTag": "Public",
-          "isAbstract": false,
-          "name": "ParserDependencyMissingError",
-          "preserveMemberOrder": false,
-          "members": [
-            {
-              "kind": "Constructor",
-              "canonicalReference": "repo-contract!ParserDependencyMissingError:constructor(1)",
-              "docComment": "/**\n * Constructs a new instance of the `ParserDependencyMissingError` class\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "constructor(checkId: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", format: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "OutputFormatForError",
-                  "canonicalReference": "repo-contract!~OutputFormatForError:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", cause: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "unknown"
-                },
-                {
-                  "kind": "Content",
-                  "text": ");"
-                }
-              ],
-              "releaseTag": "Public",
-              "isProtected": false,
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "checkId",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "format",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
-                    "endIndex": 4
-                  },
-                  "isOptional": false
-                },
-                {
-                  "parameterName": "cause",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 5,
-                    "endIndex": 6
-                  },
-                  "isOptional": false
-                }
-              ]
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "repo-contract!ParserDependencyMissingError#checkId:member",
-              "docComment": "/**\n * The id of the check whose output could not be parsed.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly checkId: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "checkId",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "repo-contract!ParserDependencyMissingError#code:member",
-              "docComment": "/**\n * Always `\"REPO_CONTRACT_PARSER_DEPENDENCY_MISSING\"`.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly code = "
-                },
-                {
-                  "kind": "Content",
-                  "text": "\"REPO_CONTRACT_PARSER_DEPENDENCY_MISSING\""
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "code",
-              "propertyTypeTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              },
-              "initializerTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "repo-contract!ParserDependencyMissingError#format:member",
-              "docComment": "/**\n * The output format that was requested but whose optional peer dependency is missing.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly format: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "OutputFormatForError",
-                  "canonicalReference": "repo-contract!~OutputFormatForError:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "format",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false,
-              "isProtected": false,
-              "isAbstract": false
-            }
-          ],
-          "extendsTokenRange": {
-            "startIndex": 1,
-            "endIndex": 2
-          },
-          "implementsTokenRanges": []
         },
         {
           "kind": "TypeAlias",
@@ -4377,7 +4185,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!StandardSchemaValidateThrewError:class",
-          "docComment": "/**\n * A check's `output.schema[\"~standard\"].validate()` threw synchronously, or returned a `Promise` that rejected, instead of returning a `Result`. This is a bug in the consumer-supplied schema object, not malformed check output -- the same distinction `PolicyThrewError` below draws for a throwing policy: a schema *returning* failure `issues` becomes an ordinary `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON/YAML parse failure), but a schema *throwing* means the validator itself is broken, so it propagates as a rejected `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim via the native `Error` `cause` chain.\n */\n",
+          "docComment": "/**\n * A check's `output.schema[\"~standard\"].validate()` threw synchronously, or returned a `Promise` that rejected, instead of returning a `Result`. This is a bug in the consumer-supplied schema object, not malformed check output -- the same distinction `PolicyThrewError` below draws for a throwing policy: a schema *returning* failure `issues` becomes an ordinary `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON parse failure), but a schema *throwing* means the validator itself is broken, so it propagates as a rejected `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim via the native `Error` `cause` chain.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

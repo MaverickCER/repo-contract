@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.7.0](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.6.0...repo-contract-v0.7.0) (2026-09-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* OutputFormat no longer includes "yaml", and ParserDependencyMissingError (thrown only for a missing "yaml" peer dependency) is removed from the public API. A config using output.format: "yaml" will now fail config validation.
+
+### Features
+
+* drop first-class YAML output-format support ([99f7b6d](https://github.com/MaverickCER/repo-contract/commit/99f7b6db13ef60e159b2eb589317fdf0e99f0726))
+* **security-socket:** reject supplyChainRisk alerts on shipped dependencies outright ([bf7f2b3](https://github.com/MaverickCER/repo-contract/commit/bf7f2b32ed47c496aea4877b20adb474592b85ad))
+* **security-socket:** reject supplyChainRisk alerts on shipped dependencies outright ([d0a0563](https://github.com/MaverickCER/repo-contract/commit/d0a0563eb7f783577333291e94383408bb9e8c53))
+
+
+### Bug Fixes
+
+* **security-socket:** peerDependencies also count as shipped for supplyChainRisk ([e5db3cd](https://github.com/MaverickCER/repo-contract/commit/e5db3cd443c46c131ab0afc076451484132edede))
+
 ## [0.6.0](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.5.2...repo-contract-v0.6.0) (2026-09-20)
 
 
