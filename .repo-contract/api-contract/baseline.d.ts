@@ -124,7 +124,7 @@ export declare interface CheckDefinitionConfig {
  * is attempting to close: a schema still gives its own author real compile-time input/output
  * typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this
  * shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as
- * they already must for `"json"`/`"yaml"` with no schema supplied.
+ * they already must for `"json"`/`"text"` with no schema supplied.
  */
 export declare interface CheckEvidence {
     /** The executable that was actually spawned (after tokenization, if `run` was a string). */
@@ -270,10 +270,15 @@ export declare class InvalidRepoContractConfigError extends RepoContractError {
     constructor(reason: string);
 }
 
-/** Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only. */
-export declare type OutputFormat = "json" | "yaml" | "text";
-
-declare type OutputFormatForError = "yaml";
+/**
+ * Output interpretation a check can explicitly request. No format requested means no parsing --
+ * the consumer gets raw stdout/stderr only. Format conversion (e.g. YAML) is deliberately not a
+ * core concern of this package -- JSON and plain text cover every check this package or its
+ * consumers actually run; a check whose tool emits another format converts it in its own `run`
+ * step or reads it directly in its `policy` function, using whatever library it already depends
+ * on, rather than this package carrying an optional peer dependency on everyone's behalf.
+ */
+export declare type OutputFormat = "json" | "text";
 
 /** The result of a check's requested output-format parse: either a successful `ParsedOutputSuccess`, or a `ParsedOutputFailure`. */
 export declare type ParsedOutput<T> = ParsedOutputSuccess<T> | ParsedOutputFailure;
@@ -300,17 +305,6 @@ export declare interface ParsedOutputSuccess<T> {
     readonly success: true;
     /** The parsed value. */
     readonly value: T;
-}
-
-/** A check requested `output: { format: "yaml" }` but the optional `yaml` peer dependency is not installed. Thrown when that check's output is parsed, not at config-validation time (parsing only happens after the process has already run). */
-export declare class ParserDependencyMissingError extends RepoContractError {
-    /** Always `"REPO_CONTRACT_PARSER_DEPENDENCY_MISSING"`. */
-    readonly code = "REPO_CONTRACT_PARSER_DEPENDENCY_MISSING";
-    /** The id of the check whose output could not be parsed. */
-    readonly checkId: string;
-    /** The output format that was requested but whose optional peer dependency is missing. */
-    readonly format: OutputFormatForError;
-    constructor(checkId: string, format: OutputFormatForError, cause: unknown);
 }
 
 /**
@@ -683,7 +677,7 @@ export declare namespace StandardSchemaV1 {
  * that rejected, instead of returning a `Result`. This is a bug in the consumer-supplied schema
  * object, not malformed check output -- the same distinction `PolicyThrewError` below draws for a
  * throwing policy: a schema *returning* failure `issues` becomes an ordinary
- * `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON/YAML parse failure), but
+ * `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON parse failure), but
  * a schema *throwing* means the validator itself is broken, so it propagates as a rejected
  * `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim
  * via the native `Error` `cause` chain.
