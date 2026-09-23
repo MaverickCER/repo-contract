@@ -16,9 +16,9 @@ interface SizeBudget {
 // These are regression tripwires, not a hard external constraint: nothing
 // ships this package to a browser and npm imposes no meaningful size limit
 // on a Node dev dependency. The number the check exists to catch is a
-// dependency accidentally being inlined -- un-externalizing cross-spawn
-// (~5KB gzip) or yaml (~40KB) in tsup.config.ts -- which blows past any sane
-// budget. So each budget is set ~25-30% above the current gzip size: loose
+// dependency accidentally being inlined -- un-externalizing minimatch in
+// tsup.config.ts -- which blows past any sane budget. So each budget is set
+// ~25-30% above the current gzip size: loose
 // enough that ordinary feature work (a new error class, another validation
 // branch) doesn't trip CI, tight enough that an inlined dependency still
 // does. Bump these deliberately when a real capability addition grows the
@@ -30,10 +30,9 @@ interface SizeBudget {
 // interop wrappers -- `__toCommonJS`, a getter per named export), so the two
 // formats share one budget sized for the larger.
 export const SIZE_BUDGETS: readonly SizeBudget[] = [
-  // Budgets only this package's own compiled source: cross-spawn (the one
-  // runtime dependency) and yaml (optional peer, dynamically imported) are
-  // both `external` in tsup.config.ts and resolved from node_modules at
-  // install time, never inlined here.
+  // Budgets only this package's own compiled source: minimatch (the one
+  // real runtime `dependencies` entry) is `external` in tsup.config.ts and
+  // resolved from node_modules at install time, never inlined here.
   // Both `.` entrypoint formats: ESM and CJS share one budget sized for the
   // larger (CJS -- see the comment above). Without the ESM entry a regression
   // in `dist/index.js` alone was undetectable by this check.

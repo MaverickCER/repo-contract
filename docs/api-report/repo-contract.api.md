@@ -91,7 +91,7 @@ export class InvalidRepoContractConfigError extends RepoContractError {
 }
 
 // @public
-export type OutputFormat = "json" | "yaml" | "text";
+export type OutputFormat = "json" | "text";
 
 // @public
 export type ParsedOutput<T> = ParsedOutputSuccess<T> | ParsedOutputFailure;
@@ -108,14 +108,6 @@ export interface ParsedOutputSuccess<T> {
     readonly format: OutputFormat;
     readonly success: true;
     readonly value: T;
-}
-
-// @public
-export class ParserDependencyMissingError extends RepoContractError {
-    constructor(checkId: string, format: OutputFormatForError, cause: unknown);
-    readonly checkId: string;
-    readonly code = "REPO_CONTRACT_PARSER_DEPENDENCY_MISSING";
-    readonly format: OutputFormatForError;
 }
 
 // @public

@@ -50,6 +50,13 @@
       "name": "publint"
     },
     {
+      "id": "dead-code:unused-dev-dependency:yaml",
+      "version": 1,
+      "justification": "Genuinely `import`ed (`import { parse as parseYaml } from \"yaml\"`) by scripts/openssf-scorecard/local-checks.ts, to parse .github/workflows/*.yml for the Pinned-Dependencies/Token-Permissions/Dangerous-Workflow sub-checks -- but that file is reachable only by being imported by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use (the same class of gap as local-checks.ts's own `unused-file` entry below). repo-contract's public output-format API dropped first-class YAML support (see src/types.ts's OutputFormat) -- this is `yaml`'s sole remaining, internal-tooling-only use, no longer a `peerDependencies` entry.",
+      "kind": "unused-dev-dependency",
+      "name": "yaml"
+    },
+    {
       "id": "dead-code:unused-file:scripts/iso-12207-alignment/gather-evidence.ts",
       "version": 1,
       "justification": "Imported only by scripts/iso-12207-alignment/run.ts, itself reachable solely by being spawned via `tsx` from checks/iso-12207-alignment.ts's `run: [...]` -- knip's static import graph never resolves a spawned-not-imported entry point, so this whole file's own reachability is invisible to it, the same class of gap as every scripts/openssf-scorecard/*.ts entry above.",

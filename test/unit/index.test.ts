@@ -20,7 +20,6 @@ describe("public API barrel (src/index.ts)", () => {
     expect(typeof repoContract.RepoContractError).toBe("function")
     expect(typeof repoContract.InvalidRepoContractConfigError).toBe("function")
     expect(typeof repoContract.InvalidCheckConfigError).toBe("function")
-    expect(typeof repoContract.ParserDependencyMissingError).toBe("function")
     expect(typeof repoContract.PolicyThrewError).toBe("function")
     expect(typeof repoContract.PolicyReadUnrequestedOutputError).toBe("function")
     expect(typeof repoContract.PolicyReadFailedParseValueError).toBe("function")

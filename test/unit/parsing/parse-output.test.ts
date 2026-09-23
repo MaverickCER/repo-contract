@@ -16,11 +16,6 @@ describe("parseOutput", () => {
     expect(result).toEqual({ format: "json", success: true, value: { a: 1 } })
   })
 
-  it("dispatches to YAML parsing for format: yaml", async () => {
-    const result = await parseOutput("yaml", "a: 1", "check-id")
-    expect(result).toEqual({ format: "yaml", success: true, value: { a: 1 } })
-  })
-
   it("dispatches to text parsing for format: text", async () => {
     const result = await parseOutput("text", "  hi  ", "check-id")
     expect(result).toEqual({ format: "text", success: true, value: "hi" })
@@ -99,14 +94,14 @@ describe("parseOutput", () => {
       })
     })
 
-    it.each(["json", "yaml", "text"] as const)(
+    it.each(["json", "text"] as const)(
       "honors a schema identically for format: %s",
       async (format) => {
-        const stdout = format === "yaml" ? "a: 1" : format === "json" ? '{"a":1}' : "hi"
+        const stdout = format === "json" ? '{"a":1}' : "hi"
         const result = await parseOutput(format, stdout, "check-id", transformSchema())
-        // transformSchema() computes Number(value) * 2 -- text/json/yaml each parse to a
-        // non-numeric value here, so Number(...) is NaN; the point of this case is only that
-        // schema.validate() runs identically regardless of which parser produced `value`.
+        // transformSchema() computes Number(value) * 2 -- text/json each parse to a non-numeric
+        // value here, so Number(...) is NaN; the point of this case is only that schema.validate()
+        // runs identically regardless of which parser produced `value`.
         expect(result.success).toBe(true)
       },
     )

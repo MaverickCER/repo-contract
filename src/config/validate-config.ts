@@ -6,7 +6,7 @@ import {
 import type { OutputFormat, RepoContractConfig } from "../types.js"
 import { tokenizeRunString } from "./tokenize-command.js"
 
-const OUTPUT_FORMATS: readonly OutputFormat[] = ["json", "yaml", "text"]
+const OUTPUT_FORMATS: readonly OutputFormat[] = ["json", "text"]
 
 /**
  * Validates a `RepoContractConfig` structurally and throws before any

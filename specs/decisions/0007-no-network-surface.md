@@ -70,8 +70,8 @@ tooling by dynamic path, read arbitrary files) this guarantee does not apply to.
   capability in repo-contract's own code, not about whether a consumer-chosen external tool can
   reach the network on the consumer's own explicit behalf.
 - Explicitly **not** attempted: verifying that a _dependency's own internal code_ never makes a
-  network call. `cross-spawn` (the only runtime dependency) and `yaml` (the only peer dependency)
-  were reviewed and are not network-capable. A new runtime dependency is already a highly visible
+  network call. `minimatch` (the only runtime dependency; there are no peer dependencies) was
+  reviewed and is not network-capable. A new runtime dependency is already a highly visible
   `package.json` diff, reviewed by the existing `security-deps`/`license` checks for other
   properties; a full transitive supply-chain network-behavior audit is a materially different,
   larger problem this ADR does not solve.
