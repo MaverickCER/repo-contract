@@ -986,6 +986,67 @@ describe("runPolicies", () => {
       }
     })
 
+    it.each([
+      ["see output above", "See output above.", `"see output above"`],
+      [
+        "check the logs above (case-insensitive)",
+        "Failed -- CHECK THE LOGS ABOVE for why.",
+        `"check the log(s) above"`,
+      ],
+      [
+        "check the report for details",
+        "Something went wrong; check the report for details.",
+        `"check the report for details"`,
+      ],
+      [
+        "see the logs for details",
+        "See the logs for details on the failure.",
+        `"check the report for details"`,
+      ],
+      [
+        "see above for details",
+        "3 issues found -- see above for details.",
+        `"see above for details"`,
+      ],
+    ])(
+      'rejects with PolicyThrewError when rationale is the vague deferral %j ("%s")',
+      async (_label, rationale, expectedLabelFragment) => {
+        const raw = rawEvidence()
+        const evidence = makeEvidence({ tests: raw })
+        const check: CheckDefinition = {
+          run: "npm test",
+          policy: () => ({ outcome: "fail", rationale }),
+        }
+
+        try {
+          await runPolicies([["tests", check, raw]], evidence)
+          expect.unreachable("expected runPolicies to reject")
+        } catch (error) {
+          expect(error).toBeInstanceOf(PolicyThrewError)
+          const message = ((error as PolicyThrewError).cause as Error).message
+          expect(message).toContain("defers a reader back to raw, unstructured output")
+          expect(message).toContain(expectedLabelFragment)
+          expect(message).toContain('State the specific finding directly in "rationale" instead.')
+        }
+      },
+    )
+
+    it('does not reject a specific rationale that merely mentions "report"/"logs" as part of a real sentence, not as a deferral', async () => {
+      const raw = rawEvidence()
+      const evidence = makeEvidence({ tests: raw })
+      const check: CheckDefinition = {
+        run: "npm test",
+        policy: () => ({
+          outcome: "pass",
+          rationale:
+            "sum.test.ts:4:40 sum > adds -- 3 assertions passed. The coverage report shows 98% line coverage, and the audit logs directory was created at reports/audit/.",
+        }),
+      }
+
+      const verdict = await runPolicies([["tests", check, raw]], evidence)
+      expect(verdict.checks.tests?.outcome).toBe("pass")
+    })
+
     it("a malformed result from one policy does not stop any other check's policy from running", async () => {
       const raw = rawEvidence()
       const evidence = makeEvidence({ a: raw, b: raw })

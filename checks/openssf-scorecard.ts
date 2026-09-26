@@ -80,9 +80,34 @@ export const openssfScorecard: CheckDefinitionConfig = {
     }
 
     const average = evaluated.reduce((sum, r) => sum + r.score, 0) / evaluated.length
+    const breakdown = formatNeedsAttention(evaluated)
     return {
       outcome: "pass",
-      rationale: `Wrote docs/OpenSSF-Scorecard.md: ${String(evaluated.length)} check(s) evaluated (average score ${average.toFixed(1)}/10), ${String(notApplicable.length)} not-applicable. This check passes on successful evidence-gathering and document regeneration, not on the score itself -- see docs/OpenSSF-Scorecard.md for the real results.`,
+      rationale:
+        `Wrote docs/OpenSSF-Scorecard.md: ${String(evaluated.length)} check(s) evaluated (average score ${average.toFixed(1)}/10), ${String(notApplicable.length)} not-applicable. ` +
+        `This check passes on successful evidence-gathering and document regeneration, not on the score itself -- a low score is information for a human reader, never a reason to fail this repository's own contract (see this file's own module doc comment for why).\n\n` +
+        breakdown,
     }
   },
+}
+
+/**
+ * Every evaluated (non-`"not-applicable"`) sub-check that isn't a perfect
+ * 10, worst first, each with its own `name`/`score`/`reason` inlined --
+ * so a reader learns exactly which OpenSSF Scorecard categories need
+ * attention, and why, directly from this check's own rationale, without
+ * opening `docs/OpenSSF-Scorecard.md` first. A perfect run says so plainly
+ * instead of an empty section.
+ * @param evaluated - Every sub-check result already narrowed to a real numeric score.
+ * @returns The rationale's "needs attention" section, ready to append.
+ */
+function formatNeedsAttention(
+  evaluated: readonly (ScorecardCheckResult & { score: number })[],
+): string {
+  const needsAttention = evaluated.filter((r) => r.score < 10).sort((a, b) => a.score - b.score)
+  if (needsAttention.length === 0) {
+    return "Every evaluated check already scores a perfect 10/10 -- nothing further to act on this run."
+  }
+  const lines = needsAttention.map((r) => `- ${r.name} ${String(r.score)}/10 -- ${r.reason}`)
+  return `Needs attention, worst first:\n${lines.join("\n")}`
 }

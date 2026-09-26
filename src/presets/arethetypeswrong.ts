@@ -93,7 +93,10 @@ export function evaluateAttwReport(report: unknown): PolicyResult {
 // specific to whichever of a consumer's own `exports` subpaths are
 // non-code (e.g. a bare JSON schema export), so it's left as a `run`
 // override for the consumer to add, rather than guessed at generically here.
-/** Published-package type-resolution correctness via `@arethetypeswrong/cli`. */
+/**
+ * Published-package type-resolution correctness via `@arethetypeswrong/cli`.
+ * @beta
+ */
 export const arethetypeswrong: CheckDefinitionConfig = {
   run: ["attw", "--pack", ".", "--format", "json"],
   output: { format: "json" },

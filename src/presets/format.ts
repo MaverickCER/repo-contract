@@ -3,7 +3,10 @@ import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 import { exitCodeFailRationale } from "./shared/exit-code-fail-rationale.js"
 
-/** Code formatting via Prettier, applied in place. */
+/**
+ * Code formatting via Prettier, applied in place.
+ * @beta
+ */
 export const format: CheckDefinitionConfig = {
   run: ["prettier", "--write", "."],
   policy: ({ result }) => {

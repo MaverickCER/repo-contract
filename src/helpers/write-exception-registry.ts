@@ -55,6 +55,7 @@ function isEnoent(error: unknown): boolean {
  * @param input.rename - Replaces the target with the temp file. Default: `node:fs/promises` `rename`.
  * @param input.isSymlink - Whether `path` is a symlink. Default: `lstat(path).isSymbolicLink()`, treating a missing path as not a symlink.
  * @returns `{ ok: true, written }` on success, or `{ ok: false, error }` for a symlink, an unreadable target, or a failed write/rename.
+ * @beta
  */
 export async function writeExceptionRegistry(input: {
   readonly path: string

@@ -36,6 +36,7 @@ function formatBrokenLink(link: LinkinatorLink): string {
  * wasting the crawl on vendored files that were never authored content.
  * @param options - configuration for this check; see {@link BrokenLinksOptions}.
  * @returns the configured check.
+ * @beta
  */
 export function brokenLinks(options: BrokenLinksOptions = {}): CheckDefinitionConfig {
   const { start = "." } = options

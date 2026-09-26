@@ -58,6 +58,7 @@ function renderMessages(results: readonly EslintResult[], severity: 1 | 2): stri
  * finding as equally blocking.
  * @param options - configuration for this check; see {@link LintOptions}.
  * @returns the configured check.
+ * @beta
  */
 export function lint(options: LintOptions = {}): CheckDefinitionConfig {
   const { path = "." } = options
