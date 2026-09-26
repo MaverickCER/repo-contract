@@ -15,6 +15,50 @@ import type {
 
 const POLICY_OUTCOMES: readonly PolicyOutcome[] = ["pass", "fail", "warn"]
 
+/**
+ * Exact phrases `PolicyResult.rationale`'s own doc comment names as
+ * defeating the whole point of a structured rationale -- deferring a reader
+ * back to raw, unstructured output instead of stating what happened. A
+ * fixed, deliberately narrow blocklist, not a general vagueness detector:
+ * catching every genuinely non-specific rationale is undecidable, but these
+ * exact phrases (and the close variants a check author reaches for first)
+ * are common enough, and specific enough, to catch soundly with zero false
+ * positives on a legitimate rationale that happens to mention "the report"
+ * or "the log" as part of a real, specific sentence -- each pattern requires
+ * "see"/"check" immediately before it, not just co-occurrence anywhere in
+ * the string.
+ */
+// Flat, fully-enumerated phrase alternatives -- no nested or back-to-back
+// optional-quantified groups (e.g. `(?:the\s+)?` followed by another `\s+`),
+// which trip this project's own `security/detect-unsafe-regex` ReDoS
+// guard even when not genuinely exponential. Enumerating the handful of
+// real phrase variants directly keeps every pattern provably linear,
+// matching the same "no nested quantifiers" discipline this repository's
+// own dependency-cruiser config already applies to `no-orphans`.
+const VAGUE_RATIONALE_PATTERNS: readonly { readonly label: string; readonly pattern: RegExp }[] = [
+  {
+    label: `"see output above" (or "check the log(s) above")`,
+    pattern: /\b(?:see output|see the output|check the log|check the logs) above\b/i,
+  },
+  {
+    label: `"check the report for details" (or "see the log(s)/output for details")`,
+    pattern:
+      /\b(?:check the report|see the report|see the log|see the logs|see the output) for details\b/i,
+  },
+  { label: `"see above for details"`, pattern: /\bsee above for details\b/i },
+]
+
+/**
+ * Whether `rationale` matches one of `VAGUE_RATIONALE_PATTERNS` -- see that
+ * constant's own doc comment for what this deliberately does and doesn't
+ * catch.
+ * @param rationale - a candidate `PolicyResult.rationale` string, already known to be a string
+ * @returns the first matching pattern's human-readable label, for a specific, quotable error message, or `undefined` if none match
+ */
+function matchedVagueRationalePattern(rationale: string): string | undefined {
+  return VAGUE_RATIONALE_PATTERNS.find(({ pattern }) => pattern.test(rationale))?.label
+}
+
 /** `ParsedOutput`'s own field names -- the only properties reading `result.output` when it's `undefined` can throw on, so only these can trigger `PolicyReadUnrequestedOutputError` below. */
 const OUTPUT_PROPERTIES: ReadonlySet<string> = new Set(["success", "value", "error", "format"])
 
@@ -109,12 +153,19 @@ function wrapPolicyFailure(
 
 /**
  * Describes why `value` is not a valid `PolicyResult`, or `undefined` if it
- * is one. A TypeScript-authored policy can never fail this (the type
- * checker already guarantees it), but nothing stops a JavaScript consumer,
- * or a typo'd literal (`"failed"` instead of `"fail"`), from returning
- * something else at runtime -- and `passed` below is computed by comparing
- * `outcome` against `"fail"`, so an unvalidated garbage value would
- * otherwise be silently treated as non-failing.
+ * is one. A TypeScript-authored policy can never fail the shape checks below
+ * (the type checker already guarantees `outcome`/`rationale`'s own types),
+ * but nothing stops a JavaScript consumer, or a typo'd literal (`"failed"`
+ * instead of `"fail"`), from returning something else at runtime -- and
+ * `passed` below is computed by comparing `outcome` against `"fail"`, so an
+ * unvalidated garbage value would otherwise be silently treated as
+ * non-failing. The one check TypeScript genuinely cannot enforce --
+ * `rationale` being specific rather than a vague deferral to raw output --
+ * IS caught here too, against `VAGUE_RATIONALE_PATTERNS` (ADR 0016): a real, structural
+ * backstop for the "never 'see output above'" rule `PolicyResult`'s own doc
+ * comment states, previously asserted only in prose and CODE_REVIEW.md,
+ * enforced nowhere a JavaScript consumer or a future check could regress
+ * against without CI catching it.
  * @param value - the raw, `await`-ed return value of a check's `policy` call
  * @returns a human-readable reason `value` is invalid, or `undefined` if it is a valid `PolicyResult`
  */
@@ -131,6 +182,14 @@ function invalidPolicyResultReason(value: unknown): string | undefined {
   const rationale = (value as { rationale?: unknown }).rationale
   if (typeof rationale !== "string") {
     return `"rationale" must be a string, got ${typeof rationale}`
+  }
+  const vaguePattern = matchedVagueRationalePattern(rationale)
+  if (vaguePattern !== undefined) {
+    return (
+      `"rationale" defers a reader back to raw, unstructured output instead of stating what ` +
+      `happened (matched the ${vaguePattern} pattern) -- see PolicyResult's own doc comment. ` +
+      `State the specific finding directly in "rationale" instead.`
+    )
   }
   return undefined
 }
