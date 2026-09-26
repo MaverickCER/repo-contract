@@ -42,6 +42,23 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
+/**
+ * The original (pre-mutation) source line a mutant's `location.start.line`
+ * points at, trimmed of leading/trailing whitespace for display -- or
+ * `undefined` if `source` doesn't have that many lines (a stale/mismatched
+ * report entry this pass declines to guess at). 1-indexed, matching every
+ * other line number this policy already reports.
+ * @param source - the mutated file's real, original source text (`StrykerFileResult.source`)
+ * @param line - 1-indexed line number to extract
+ * @returns the trimmed original line text, or `undefined` if out of range
+ */
+function originalLineAt(source: string, line: number): string | undefined {
+  return source
+    .split("\n")
+    .at(line - 1)
+    ?.trim()
+}
+
 // Stryker's own hardcoded statusReason for a mutant ignored via an inline
 // `// Stryker disable` comment (see @stryker-mutator/instrumenter's
 // directive-bookkeeper.ts). A comment-ignored mutant is trusted only because
@@ -195,6 +212,16 @@ export const mutation: CheckDefinitionConfig = {
         file,
         mutant,
       })),
+    )
+
+    // Stryker's own JSON report already carries each mutated file's real,
+    // original (pre-mutation) source text -- reading it back out here to
+    // show a survived mutant's actual "was X, replaced with Y" line, instead
+    // of only the replacement in isolation, needs no second, separate file
+    // read and no re-derivation: it's the same captured evidence this policy
+    // already trusts for everything else.
+    const originalSourceByFile = new Map(
+      Object.entries(report.files).map(([file, data]) => [file, data.source]),
     )
 
     if (mutants.length === 0) {
@@ -351,8 +378,17 @@ export const mutation: CheckDefinitionConfig = {
       const location = mutant.location
         ? `${file}:${String(mutant.location.start.line)}:${String(mutant.location.start.column)}`
         : file
+      const original =
+        mutant.location !== undefined
+          ? originalLineAt(originalSourceByFile.get(file) ?? "", mutant.location.start.line)
+          : undefined
 
-      return `${location} — ${mutant.mutatorName}: ${mutant.replacement}`
+      const change =
+        original !== undefined
+          ? `${mutant.mutatorName}: \`${original}\` → \`${mutant.replacement}\``
+          : `${mutant.mutatorName}: ${mutant.replacement}`
+
+      return `${location} — ${change}`
     }
 
     const passingBreakdown = [
@@ -379,21 +415,28 @@ export const mutation: CheckDefinitionConfig = {
 
     if (survived.length > 0) {
       sections.push(
-        `Survived (${String(survived.length)}):`,
+        `Survived (${String(survived.length)}) -- every test still passed against the mutated ` +
+          `code shown ("was" → "became"); add or strengthen a test that exercises this exact ` +
+          `line and would fail against the change shown:`,
         ...survived.map(({ file, mutant }) => `- ${formatMutant({ file, mutant })}`),
       )
     }
 
     if (noCoverage.length > 0) {
       sections.push(
-        `No coverage (${String(noCoverage.length)}):`,
+        `No coverage (${String(noCoverage.length)}) -- no test ran this line at all; add a ` +
+          `test that executes this code path, then re-run to see whether it also kills the ` +
+          `mutation shown:`,
         ...noCoverage.map(({ file, mutant }) => `- ${formatMutant({ file, mutant })}`),
       )
     }
 
     if (timedOut.length > 0) {
       sections.push(
-        `Timed out (${String(timedOut.length)}):`,
+        `Timed out (${String(timedOut.length)}) -- the mutated version shown ran past the ` +
+          `configured timeout (often an infinite loop this change introduced); add a test that ` +
+          `would fail fast against it, or confirm this specific timeout is itself a legitimate ` +
+          `detection (see stryker.config.mjs):`,
         ...timedOut.map(({ file, mutant }) => `- ${formatMutant({ file, mutant })}`),
       )
     }

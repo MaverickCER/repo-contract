@@ -123,10 +123,10 @@ function fullyJustifiedPair(): {
   return { finding, record: strykerRecord(finding) }
 }
 
-function strykerReport(mutants: readonly Record<string, unknown>[]): unknown {
+function strykerReport(mutants: readonly Record<string, unknown>[], source = ""): unknown {
   return {
     schemaVersion: "1",
-    files: { "src/example.ts": { language: "typescript", source: "", mutants } },
+    files: { "src/example.ts": { language: "typescript", source, mutants } },
   }
 }
 
@@ -202,6 +202,70 @@ describe("mutation policy", () => {
     const result = await mutation.policy(contextWithDependencies({}))
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("Survived")
+  })
+
+  it("inlines the real original line alongside the mutated replacement for a Survived mutant, not the replacement alone", async () => {
+    const source = [
+      "export function add(a: number, b: number): number {",
+      "  return a + b",
+      "}",
+    ].join("\n")
+    readFile.mockResolvedValue(
+      JSON.stringify(
+        strykerReport(
+          [
+            {
+              id: 3,
+              mutatorName: "ArithmeticOperator",
+              replacement: "a - b",
+              status: "Survived",
+              location: { start: { line: 2, column: 10 }, end: { line: 2, column: 15 } },
+            },
+          ],
+          source,
+        ),
+      ),
+    )
+    const result = await mutation.policy(contextWithDependencies({}))
+    expect(result.rationale).toContain("src/example.ts:2:10")
+    expect(result.rationale).toContain("`return a + b` → `a - b`")
+  })
+
+  it("falls back to the replacement alone when a mutant's location is out of the file's real line range", async () => {
+    readFile.mockResolvedValue(
+      JSON.stringify(
+        strykerReport(
+          [
+            {
+              id: 3,
+              mutatorName: "X",
+              replacement: "y",
+              status: "Survived",
+              location: { start: { line: 999, column: 1 }, end: { line: 999, column: 2 } },
+            },
+          ],
+          "one line only",
+        ),
+      ),
+    )
+    const result = await mutation.policy(contextWithDependencies({}))
+    expect(result.rationale).toContain("- src/example.ts:999:1 — X: y")
+  })
+
+  it("tells the reader what to do for each failing category -- Survived, No coverage, and Timed out each get their own actionable instruction, not just a bare label", async () => {
+    readFile.mockResolvedValue(
+      JSON.stringify(
+        strykerReport([
+          { id: 3, mutatorName: "X", replacement: "y", status: "Survived" },
+          { id: 7, mutatorName: "X", replacement: "y", status: "NoCoverage" },
+          { id: 8, mutatorName: "X", replacement: "y", status: "Timeout" },
+        ]),
+      ),
+    )
+    const result = await mutation.policy(contextWithDependencies({}))
+    expect(result.rationale).toContain("add or strengthen a test that exercises this exact line")
+    expect(result.rationale).toContain("add a test that executes this code path")
+    expect(result.rationale).toContain("add a test that would fail fast against it")
   })
 
   it("fails on an Ignored mutant whose statusReason is not the comment-ignore marker", async () => {
