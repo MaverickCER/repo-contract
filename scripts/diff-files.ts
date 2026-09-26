@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
+import { gitSpawnEnv } from "./git-env.js"
 
 const execFileAsync = promisify(execFile)
 
@@ -35,13 +36,18 @@ interface RawDiffFile {
  * indistinguishable from "no baseline committed yet" and treated identically -- accepted as a
  * narrow, rare edge case rather than a defect worth this function's generality for).
  * @param args - Arguments to pass to the `git` executable.
- * @param cwd - Directory to run the command in.
+ * @param cwd - Directory to run the command in -- authoritative regardless of the calling
+ * process's own ambient git context: `gitSpawnEnv()` (see git-env.ts) strips any inherited
+ * `GIT_DIR`/`GIT_WORK_TREE`, which would otherwise override `cwd`-based repository resolution
+ * entirely (confirmed directly: git sets `GIT_DIR` when invoking a hook from a worktree of a bare
+ * repository, exactly this repository's own pre-push setup).
  * @returns The command's stdout, or `undefined` if it exits non-zero (e.g. an unresolvable ref).
  */
 export async function runGit(args: readonly string[], cwd: string): Promise<string | undefined> {
   try {
     const { stdout } = await execFileAsync("git", args as string[], {
       cwd,
+      env: gitSpawnEnv(),
       maxBuffer: 512 * 1024 * 1024,
     })
     return stdout

@@ -257,6 +257,31 @@ jobs:
 
       - run: node scripts/smoke-consumer.mjs artifacts
 
+  # Proves the shipped .d.ts files actually compile under a real consumer's
+  # own toolchain, including a TypeScript release newer than this repo's own
+  # build ever runs against (this repo's own tsconfig uses
+  # moduleResolution: "Bundler" and a pinned typescript devDependency --
+  # neither exercises nodenext resolution or a future major). See
+  # scripts/typescript-compat.mjs.
+  typescript-compat:
+    needs: package-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: package-tarball
+          path: artifacts
+
+      - run: node scripts/typescript-compat.mjs artifacts
+
   # The slow, self-hosting proof: runs this repository's own
   # repo-contract.config.ts through the real, just-built public API -- see
   # that file's own `checks` record for the current, authoritative list of
@@ -377,12 +402,21 @@ jobs:
   # just a build artifact. Push-to-main only: a PR's badge numbers are exactly
   # `contract`'s report-only concern, and this job also needs write access
   # `contract` deliberately doesn't have.
+  #
+  # Lands via a branch + PR + immediate squash-merge, not a direct push to
+  # main: main's own ruleset requires every merge go through a PR (see
+  # BranchProtection in internal-package-contract), which blocks a bare
+  # `git push origin HEAD:main` outright. No required status check gates this
+  # PR, so the merge happens immediately -- `contract` already validated the
+  # actual source that produced these artifacts; re-running CI against a
+  # docs-only diff would be redundant.
   badges:
     needs: contract
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -392,7 +426,9 @@ jobs:
 
       - run: node scripts/generate-badges.mjs
 
-      - name: Commit the regenerated badges
+      - name: Open and merge a PR with the regenerated badges
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -404,8 +440,14 @@ jobs:
             echo "Badges already current; nothing to commit."
             exit 0
           fi
+          BRANCH="chore/sync-badges-${GITHUB_RUN_ID}"
+          git checkout -b "$BRANCH"
           git commit -m "chore: sync generated coverage/mutation badges"
-          git push origin HEAD:main
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" \
+            --title "chore: sync generated coverage/mutation badges" \
+            --body "Automated badge sync from the \`contract\` job on ${GITHUB_SHA}."
+          gh pr merge --squash "$BRANCH"
 
   # Commits the docs/OpenSSF-Scorecard.md and docs/ISO-IEC-IEEE-12207-2017.md
   # that `contract` already generated and uploaded above -- the idempotent
@@ -421,12 +463,16 @@ jobs:
   # regenerating them (see the "Upload generated evidence docs" step's own
   # comment for why re-running through `npm run contract` a second time here
   # would double-pay the mutation suite).
+  #
+  # Same branch + PR + immediate squash-merge as `badges` above, for the same
+  # reason: main's ruleset requires every merge go through a PR.
   docs-evidence:
     needs: contract
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -434,7 +480,9 @@ jobs:
         with:
           name: generated-evidence-docs
 
-      - name: Commit the regenerated docs
+      - name: Open and merge a PR with the regenerated docs
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -443,8 +491,14 @@ jobs:
             echo "Docs already current; nothing to commit."
             exit 0
           fi
+          BRANCH="chore/sync-evidence-docs-${GITHUB_RUN_ID}"
+          git checkout -b "$BRANCH"
           git commit -m "chore: sync generated OpenSSF Scorecard and ISO 12207 evidence docs"
-          git push origin HEAD:main
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" \
+            --title "chore: sync generated OpenSSF Scorecard and ISO 12207 evidence docs" \
+            --body "Automated evidence-docs sync from the \`contract\` job on ${GITHUB_SHA}."
+          gh pr merge --squash "$BRANCH"
 
   # Belt-and-suspenders for the squash-merge case (see
   # specs/decisions/0009-conventional-commits-versioning-and-local-gates.md): the merge-commit /

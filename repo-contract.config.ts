@@ -238,7 +238,30 @@ export default defineRepoContract({
       dependsOn: ["suppression-governance"],
       isolated: true,
     },
-    "test-property": testProperty,
+    // `isolated: true` here too, for a distinct but related reason discovered
+    // running this repository's own contract end to end: `test-property` and
+    // `test-integration` both real-git-fixture-test src/adr-governance,
+    // src/api-contract, and diff-files.ts (mkdtemp'd, disposable repos, real
+    // `execFileSync("git", ...)` calls -- see each test file's own doc
+    // comment) -- concurrently-scheduled real git subprocess spawning was
+    // observed, once, to write a fixture's own commits onto this checkout's
+    // actual local branch instead of its intended scratch directory (a
+    // handful of "establish baseline"/"add baseline"-style commits authored
+    // `Test <test@example.com>`, never pushed, fully reproducible only under
+    // a full, unfiltered `npm run contract` -- every individual check and
+    // every partial combination tried in isolation, including `mutation`
+    // alone despite its own concurrency: 4 Stryker workers, ran clean). Exact
+    // mechanism unconfirmed (a real OS/Node-level `cwd` race under extreme
+    // concurrent subprocess load is suspected, not a single fixture's own
+    // isolation bug -- test/integration/install-hooks/install-hooks.integration.test.ts's
+    // two calls missing GIT_CEILING_DIRECTORIES were a real, separate,
+    // already-fixed bug, and every git-fixture test's own git() helper now
+    // sets it too, but the corruption still reproduced afterward). Isolating
+    // every real-git-fixture-spawning check removes the concurrent-subprocess
+    // load implicated either way, the same defense already applied to
+    // `test-unit`/`test-integration`/`mutation` for their own oversubscription
+    // symptom above.
+    "test-property": { ...testProperty, isolated: true },
     architecture,
     // GitHub Actions correctness + security via actionlint (see checks/github-actions.ts). A pure
     // reader -- lints `.github/workflows/*` and touches nothing; needs no build, declared here only
@@ -246,7 +269,7 @@ export default defineRepoContract({
     "github-actions": githubActions,
     coverage: { ...coverage, dependsOn: ["test-unit", "test-integration", "test-property"] },
     crap: { ...crap, dependsOn: ["coverage"] },
-    "test-e2e": testE2e,
+    "test-e2e": { ...testE2e, isolated: true },
     size,
     duplication: duplication({ path: "src" }),
     publint,
