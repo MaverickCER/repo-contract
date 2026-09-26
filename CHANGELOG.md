@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.7.0...repo-contract-v0.7.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* branch-protection-compatible CI, TS-compat check, dev-audit cleanup ([#78](https://github.com/MaverickCER/repo-contract/issues/78)) ([076461b](https://github.com/MaverickCER/repo-contract/commit/076461bb45b59a5859a3f4bef0da9828c95d10e6))
+
 ## [0.7.0](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.6.0...repo-contract-v0.7.0) (2026-09-23)
 
 
