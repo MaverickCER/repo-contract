@@ -12,13 +12,24 @@
  * interface, since repo-contract has no use for the shared base on its own -- structurally
  * identical for any real schema object assigned to it. Re-diff against
  * `@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.
+ *
+ * Tagged `@public`, not tied to either re-exporting barrel's own stability tier (this type is
+ * re-exported from both the Stable root barrel, for `output.schema`, and the Experimental
+ * `repo-contract/helpers` barrel): this vendored copy's own shape only ever changes via a
+ * deliberate re-diff against the pinned upstream spec version above, never as a side effect of
+ * either barrel's own stability classification.
+ * @public
  */
 export interface StandardSchemaV1<Input = unknown, Output = Input> {
   /** The Standard Schema properties. */
   readonly "~standard": StandardSchemaV1.Props<Input, Output>
 }
 
-/** Namespaced members of {@link StandardSchemaV1}: `Props`, `Result`, `SuccessResult`, `FailureResult`, `Issue`, `PathSegment`, `Types`, `InferInput`, `InferOutput`. */
+/**
+ * Namespaced members of `StandardSchemaV1`: `Props`, `Result`, `SuccessResult`, `FailureResult`,
+ * `Issue`, `PathSegment`, `Types`, `InferInput`, `InferOutput`.
+ * @public
+ */
 // eslint-disable-next-line @typescript-eslint/no-namespace -- the interface+namespace declaration-merging pattern is required here to mirror @standard-schema/spec's own published shape (StandardSchemaV1.Props/.Result/.Issue/... nested under the interface's own name) -- an ES2015 module can't merge with an interface of the same name the way a namespace does, and diverging from upstream's exact shape would defeat this file's whole purpose of being a faithful, re-diffable vendor copy (see this file's own top comment).
 export declare namespace StandardSchemaV1 {
   /** The Standard Schema properties interface. */

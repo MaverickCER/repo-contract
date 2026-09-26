@@ -4,52 +4,52 @@
 
 ```ts
 
-// @public
+// @beta
 export const arethetypeswrong: CheckDefinitionConfig;
 
-// @public
+// @beta
 export function brokenLinks(options?: BrokenLinksOptions): CheckDefinitionConfig;
 
-// @public
+// @beta
 export function commitlint(options?: CommitlintOptions): CheckDefinitionConfig;
 
-// @public
+// @beta
 export function deadCode(options?: DeadCodeOptions): CheckDefinitionConfig;
 
-// @public
+// @beta
 export function duplication(options?: DuplicationOptions): CheckDefinitionConfig;
 
-// @public
+// @beta
 export const e2e: CheckDefinitionConfig;
 
-// @public
+// @beta
 export const format: CheckDefinitionConfig;
 
-// @public
+// @beta
 export const license: CheckDefinitionConfig;
 
-// @public
+// @beta
 export function lint(options?: LintOptions): CheckDefinitionConfig;
 
-// @public
+// @beta
 export function markdownlint(options?: MarkdownlintOptions): CheckDefinitionConfig;
 
-// @public
+// @beta
 export const publint: CheckDefinitionConfig;
 
-// @public
+// @beta
 export const securityDeps: CheckDefinitionConfig;
 
-// @public
+// @beta
 export const securitySecrets: CheckDefinitionConfig;
 
-// @public
+// @beta
 export function stylelint(options?: StylelintOptions): CheckDefinitionConfig;
 
-// @public
+// @beta
 export const test: CheckDefinitionConfig;
 
-// @public
+// @beta
 export const typecheck: CheckDefinitionConfig;
 
 ```

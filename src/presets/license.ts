@@ -21,7 +21,10 @@ interface LicenseeEntry {
 // keeps the ndjson evidence limited to the packages actually driving the
 // verdict, matching the deadCode/duplication presets' report-issues-only
 // shape.
-/** Dependency license compliance via licensee. */
+/**
+ * Dependency license compliance via licensee.
+ * @beta
+ */
 export const license: CheckDefinitionConfig = {
   run: ["licensee", "--production", "--osi", "--errors-only", "--ndjson"],
   policy: ({ result }) => {

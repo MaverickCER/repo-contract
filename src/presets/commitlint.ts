@@ -46,6 +46,7 @@ function remediation(from: string): string {
  * rather than relying on an unconfirmed flag.
  * @param options - configuration for this check; see {@link CommitlintOptions}.
  * @returns the configured check.
+ * @beta
  */
 export function commitlint(options: CommitlintOptions = {}): CheckDefinitionConfig {
   const { from = "origin/main", to = "HEAD" } = options

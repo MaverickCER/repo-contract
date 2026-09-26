@@ -64,6 +64,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
  * @param input.schema - Validates (and may transform) the envelope's `exceptions` array once this function's own envelope checks pass.
  * @param input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' own `readFile(path, "utf8")`.
  * @returns Every valid record (`ok: true`), or every problem found reading/parsing/validating the file (`ok: false`).
+ * @beta
  */
 export async function loadExceptionRegistry<T>(input: {
   readonly path: string

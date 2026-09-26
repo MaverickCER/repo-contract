@@ -21,7 +21,10 @@ interface SecretlintResult {
 // location and rule identify the remediation target without turning the
 // contract result itself into another secret-disclosure channel. Requires
 // the consumer's own secretlint config (secretlint has no built-in rules).
-/** Secret-leak scanning via secretlint. */
+/**
+ * Secret-leak scanning via secretlint.
+ * @beta
+ */
 export const securitySecrets: CheckDefinitionConfig = {
   run: ["secretlint", "--format", "json", "--output", "reports/secretlint.json", "**/*"],
   policy: async ({ result }) => {

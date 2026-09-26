@@ -15,13 +15,21 @@
  *     a check failing its contract -- it propagates as a rejected
  *     `runRepoContract()` promise (`PolicyThrewError`), never silently
  *     turned into a failed verdict entry.
+ * @public
  */
 export abstract class RepoContractError extends Error {
   /** Stable, machine-readable identifier for this error's specific failure mode. */
   abstract readonly code: string
 }
 
-/** The top-level `RepoContractConfig` itself is structurally invalid -- e.g. `checks` is not an object, or `concurrency` is not a positive integer. (A `checks` object with zero entries is deliberately valid: the run produces an empty, passing `Verdict`.) Thrown synchronously by `runRepoContract`, before anything spawns -- not by `defineRepoContract`, which performs no runtime validation of its own (see its own doc comment). */
+/**
+ * The top-level `RepoContractConfig` itself is structurally invalid -- e.g. `checks` is not an
+ * object, or `concurrency` is not a positive integer. (A `checks` object with zero entries is
+ * deliberately valid: the run produces an empty, passing `Verdict`.) Thrown synchronously by
+ * `runRepoContract`, before anything spawns -- not by `defineRepoContract`, which performs no
+ * runtime validation of its own (see its own doc comment).
+ * @public
+ */
 export class InvalidRepoContractConfigError extends RepoContractError {
   /** Always `"REPO_CONTRACT_INVALID_CONFIG"`. */
   readonly code = "REPO_CONTRACT_INVALID_CONFIG"
@@ -32,7 +40,12 @@ export class InvalidRepoContractConfigError extends RepoContractError {
   }
 }
 
-/** One check's `CheckDefinition` is structurally invalid -- e.g. an empty `run`, a `run` string containing an unquoted shell operator without `shell: true`, or a missing `policy`. Thrown synchronously, before that check (or any other) spawns. */
+/**
+ * One check's `CheckDefinition` is structurally invalid -- e.g. an empty `run`, a `run` string
+ * containing an unquoted shell operator without `shell: true`, or a missing `policy`. Thrown
+ * synchronously, before that check (or any other) spawns.
+ * @public
+ */
 export class InvalidCheckConfigError extends RepoContractError {
   /** Always `"REPO_CONTRACT_INVALID_CHECK_CONFIG"`. */
   readonly code = "REPO_CONTRACT_INVALID_CHECK_CONFIG"
@@ -51,6 +64,7 @@ export class InvalidCheckConfigError extends RepoContractError {
  * the configured `checks`. Unlike a `dependsOn` id (already validated to exist by
  * `validateRepoContractConfig` before any run starts), `options.checks` is only ever checked once
  * `runChecks` actually resolves it -- there is no earlier structural-validation pass for it.
+ * @public
  */
 export class UnknownCheckIdError extends RepoContractError {
   /** Always `"REPO_CONTRACT_UNKNOWN_CHECK_ID"`. */
@@ -73,6 +87,7 @@ export class UnknownCheckIdError extends RepoContractError {
  * doc comment. Declaration order doubles as the required topological order, so this is the only
  * way an invalid dependency graph can arise; a real cycle is structurally impossible once every
  * edge points backward. Thrown synchronously, before any check spawns.
+ * @public
  */
 export class DependencyDeclaredLaterError extends RepoContractError {
   /** Always `"REPO_CONTRACT_DEPENDENCY_DECLARED_LATER"`. */
@@ -103,6 +118,7 @@ export class DependencyDeclaredLaterError extends RepoContractError {
  * a schema *throwing* means the validator itself is broken, so it propagates as a rejected
  * `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim
  * via the native `Error` `cause` chain.
+ * @public
  */
 export class StandardSchemaValidateThrewError extends RepoContractError {
   /** Always `"REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW"`. */
@@ -136,6 +152,7 @@ export class StandardSchemaValidateThrewError extends RepoContractError {
  * or one of its two narrower siblings below (`PolicyReadUnrequestedOutputError`,
  * `PolicyReadFailedParseValueError`) when the failure matches one of their
  * more specific shapes -- rather than surfacing only the first one found.
+ * @public
  */
 export class PolicyThrewError extends RepoContractError {
   /** Always `"REPO_CONTRACT_POLICY_THREW"`. */
@@ -170,6 +187,7 @@ export class PolicyThrewError extends RepoContractError {
  * original `TypeError` verbatim, exactly as `PolicyThrewError` guarantees
  * for every other policy failure, so the true cause remains recoverable
  * either way.
+ * @public
  */
 export class PolicyReadUnrequestedOutputError extends RepoContractError {
   /** Always `"REPO_CONTRACT_POLICY_READ_UNREQUESTED_OUTPUT"`. */
@@ -208,6 +226,7 @@ export class PolicyReadUnrequestedOutputError extends RepoContractError {
  * necessarily a little broader. `cause` still holds the original `TypeError`
  * verbatim; the message never repeats `result.output.error`'s own text, which may
  * contain raw stdout content (see SECURITY.md).
+ * @public
  */
 export class PolicyReadFailedParseValueError extends RepoContractError {
   /** Always `"REPO_CONTRACT_POLICY_READ_FAILED_PARSE_VALUE"`. */

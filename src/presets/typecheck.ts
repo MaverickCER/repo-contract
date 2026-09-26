@@ -3,7 +3,10 @@ import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 import { exitCodeFailRationale } from "./shared/exit-code-fail-rationale.js"
 
-/** Type checking via `tsc --noEmit`. */
+/**
+ * Type checking via `tsc --noEmit`.
+ * @beta
+ */
 export const typecheck: CheckDefinitionConfig = {
   run: ["tsc", "--noEmit", "-p", "tsconfig.json"],
   policy: ({ result }) => {

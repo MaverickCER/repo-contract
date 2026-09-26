@@ -587,7 +587,7 @@ its CLI is already a devDependency of your repository.
 
 | Category            | Preset                   | Wraps                                                                          |
 | ------------------- | ------------------------ | ------------------------------------------------------------------------------ |
-| Testing             | `test`                   | `vitest run --reporter=json`                                                   |
+| Testing             | `test`                   | `vitest run --reporter=json --outputFile=reports/vitest/vitest-report.json`    |
 | Testing             | `e2e`                    | `playwright test --reporter=json`                                              |
 | Code quality        | `lint(options?)`         | `eslint <path> --format json`                                                  |
 | Code quality        | `format`                 | `prettier --write .`                                                           |

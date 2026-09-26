@@ -21,6 +21,7 @@ import type { StandardSchemaV1 } from "./standard-schema/types.js"
  * consumers actually run; a check whose tool emits another format converts it in its own `run`
  * step or reads it directly in its `policy` function, using whatever library it already depends
  * on, rather than this package carrying an optional peer dependency on everyone's behalf.
+ * @public
  */
 export type OutputFormat = "json" | "text"
 
@@ -38,11 +39,15 @@ export type OutputFormat = "json" | "text"
  * `"host_terminated"`: repo-contract did request that signal, just not via `options.signal` or
  * `timeoutMs` (see `"aborted"`/`"timed_out"`), so it must not be conflated with an externally-caused
  * `"signaled"`.
+ * @public
  */
 export type CheckStatus =
   "completed" | "timed_out" | "signaled" | "host_terminated" | "spawn_error" | "aborted"
 
-/** A requested parse of a check's stdout succeeded. */
+/**
+ * A requested parse of a check's stdout succeeded.
+ * @public
+ */
 export interface ParsedOutputSuccess<T> {
   /** The format that was requested and successfully parsed. */
   readonly format: OutputFormat
@@ -56,6 +61,7 @@ export interface ParsedOutputSuccess<T> {
  * A requested parse of a check's stdout failed. The raw stdout on the
  * parent `CheckEvidence` is preserved unchanged -- a parse failure is never
  * silently reinterpreted or discarded.
+ * @public
  */
 export interface ParsedOutputFailure {
   /** The format that was requested (and failed to parse). */
@@ -66,7 +72,10 @@ export interface ParsedOutputFailure {
   readonly error: string
 }
 
-/** The result of a check's requested output-format parse: either a successful `ParsedOutputSuccess`, or a `ParsedOutputFailure`. */
+/**
+ * The result of a check's requested output-format parse: either a successful `ParsedOutputSuccess`, or a `ParsedOutputFailure`.
+ * @public
+ */
 export type ParsedOutput<T> = ParsedOutputSuccess<T> | ParsedOutputFailure
 
 /**
@@ -90,6 +99,7 @@ export type ParsedOutput<T> = ParsedOutputSuccess<T> | ParsedOutputFailure
  * typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this
  * shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as
  * they already must for `"json"`/`"text"` with no schema supplied.
+ * @public
  */
 export interface CheckEvidence {
   /** The executable that was actually spawned (after tokenization, if `run` was a string). */
@@ -131,6 +141,7 @@ export interface CheckEvidence {
  * Says nothing about whether any of it was acceptable; see `Verdict`.
  * Additive fields are a compatible change; changing or removing an existing
  * field requires bumping this version number (see VERSIONING.md).
+ * @public
  */
 export interface Evidence<TChecks extends CheckSchema = CheckSchema> {
   /** Schema version of this shape; see VERSIONING.md. */
@@ -153,6 +164,7 @@ export interface Evidence<TChecks extends CheckSchema = CheckSchema> {
  * By the time any policy runs, every check has already finished executing
  * and every check's evidence has already been assembled -- no policy ever
  * observes a partially-populated `evidence` (see specs/architecture.md).
+ * @public
  */
 export interface PolicyContext<TChecks extends CheckSchema = CheckSchema> {
   /** This check's own evidence. */
@@ -182,6 +194,7 @@ export interface PolicyContext<TChecks extends CheckSchema = CheckSchema> {
  * condition is materially relevant and wants it surfaced -- not a synonym
  * for "minor failure"; a `warn` never fails `Verdict.passed` (see
  * `runPolicies` in `src/policy/run-policies.ts`).
+ * @public
  */
 export type PolicyOutcome = "pass" | "fail" | "warn"
 
@@ -197,12 +210,18 @@ export type PolicyOutcome = "pass" | "fail" | "warn"
  * consumer to understand *why* the policy reached its outcome from this
  * value alone. A rationale like "see output above" or "check the report for
  * details" defeats the purpose: it forces the consumer back to raw,
- * unstructured command output, exactly what this type exists to avoid. See
- * specs/architecture.md for the evidence/rationale/judgment distinction this
+ * unstructured command output, exactly what this type exists to avoid.
+ * That specific anti-pattern is not just documented here -- `runPolicies`
+ * (`src/policy/run-policies.ts`'s `VAGUE_RATIONALE_PATTERNS`, ADR 0016) rejects a
+ * rationale matching it at runtime, the same as any other malformed
+ * `PolicyResult`, so a check (repo-contract's own, or a consumer's) that
+ * regresses to a vague deferral fails loudly instead of silently shipping.
+ * See specs/architecture.md for the evidence/rationale/judgment distinction this
  * type is built around: evidence answers "what happened?", `rationale`
  * answers "what does the repository's policy conclude about what
  * happened?", and a policy's `outcome` is not the final word -- a human or
  * AI consumer still makes the final judgment call using both.
+ * @public
  */
 export interface PolicyResult {
   /** The policy's pass/fail/warn decision. */
@@ -219,12 +238,16 @@ export interface PolicyResult {
  * synchronous or return a `Promise`. repo-contract does not interpret
  * `rationale` beyond storing and surfacing it verbatim; the package has no
  * opinion about what makes a check pass, fail, or warrant a `warn`.
+ * @public
  */
 export type Policy<TChecks extends CheckSchema = CheckSchema> = (
   ctx: PolicyContext<TChecks>,
 ) => PolicyResult | Promise<PolicyResult>
 
-/** One partially configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable. */
+/**
+ * One partially configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.
+ * @public
+ */
 export interface CheckDefinitionConfig {
   /**
    * The command to run. A `string` is tokenized into executable + arguments
@@ -303,7 +326,10 @@ export interface CheckDefinitionConfig {
   readonly policy: Policy
 }
 
-/** One fully configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable. */
+/**
+ * One fully configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.
+ * @public
+ */
 export interface CheckDefinition extends CheckDefinitionConfig {
   /**
    * Other check ids (from this same `checks` record) that must reach a
@@ -325,7 +351,10 @@ export interface CheckDefinition extends CheckDefinitionConfig {
   readonly dependsOn?: readonly string[]
 }
 
-/** The full set of checks in a `RepoContractConfig`, keyed by check id. */
+/**
+ * The full set of checks in a `RepoContractConfig`, keyed by check id.
+ * @public
+ */
 export type CheckSchema = Record<string, CheckDefinition>
 
 /**
@@ -345,6 +374,7 @@ export type CheckSchema = Record<string, CheckDefinition>
  * `TChecks` directly from a mapped/conditional type over itself, as this
  * type is, loses that contextual typing -- confirmed during implementation,
  * not a hypothetical).
+ * @public
  */
 export type ValidatedCheckSchema<T> = {
   readonly [K in keyof T]: T[K] extends CheckDefinitionConfig
@@ -364,6 +394,7 @@ export type ValidatedCheckSchema<T> = {
  * capability: it calls it with a resolved command/argv/options and does not
  * inspect, wrap, or sanitize it -- the security properties of the spawned
  * process are entirely the supplied function's own.
+ * @public
  */
 export type Spawner = (
   command: string,
@@ -379,6 +410,7 @@ export type Spawner = (
  * a signal-handling context that cannot `await` anything else -- see
  * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
  * `node:child_process.spawnSync` and cross-spawn's exported `sync` are both valid, drop-in values.
+ * @public
  */
 export type SyncSpawner = (
   command: string,
@@ -386,7 +418,10 @@ export type SyncSpawner = (
   options: SpawnSyncOptions,
 ) => SpawnSyncReturns<Buffer | string>
 
-/** Top-level configuration passed to `defineRepoContract`/`runRepoContract`. */
+/**
+ * Top-level configuration passed to `defineRepoContract`/`runRepoContract`.
+ * @public
+ */
 export interface RepoContractConfig<TChecks extends CheckSchema = CheckSchema> {
   /** Every check to run, keyed by check id. */
   readonly checks: TChecks
@@ -436,7 +471,10 @@ export interface RepoContractConfig<TChecks extends CheckSchema = CheckSchema> {
   readonly killProcessTree?: SyncSpawner
 }
 
-/** Optional per-run controls for `runRepoContract`. */
+/**
+ * Optional per-run controls for `runRepoContract`.
+ * @public
+ */
 export interface RunRepoContractOptions {
   /** Abort the entire run. Checks already in flight are terminated; checks not yet started never spawn. Every configured check still receives a well-formed evidence entry (`status: "aborted"`) and still has its policy invoked. */
   readonly signal?: AbortSignal
@@ -455,6 +493,7 @@ export interface RunRepoContractOptions {
  * schema-versioning policy) -- `version: 2` reflects `checks[id]` changing
  * shape from `{ passed, reason? }` to a full `PolicyResult`
  * (`{ outcome, rationale }`); see ADR 0001.
+ * @public
  */
 export interface Verdict<TChecks extends CheckSchema = CheckSchema> {
   /** Schema version of this shape; see VERSIONING.md. */

@@ -57,6 +57,7 @@ const REPORT_PATH = "reports/jscpd/jscpd-report.json"
  * Duplicated-code detection via jscpd.
  * @param options - configuration for this check; see {@link DuplicationOptions}.
  * @returns the configured check.
+ * @beta
  */
 export function duplication(options: DuplicationOptions = {}): CheckDefinitionConfig {
   const { path = "." } = options

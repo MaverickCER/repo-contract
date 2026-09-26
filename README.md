@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/MaverickCER/repo-contract/actions/workflows/ci.yml/badge.svg)](https://github.com/MaverickCER/repo-contract/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
+[![Socket Badge](https://badge.socket.dev/npm/package/repo-contract/latest)](https://socket.dev/npm/package/repo-contract)
 [![Node](https://img.shields.io/node/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
 [![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/coverage-badge.json)](scripts/run-coverage.mjs)
 [![Mutation](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/mutation-badge.json)](checks/mutation.ts)
@@ -65,6 +66,12 @@ npm install --save-dev repo-contract tsx typescript vitest eslint
 npx repo-contract init
 npm run contract
 ```
+
+This assumes an existing project: a `tsconfig.json`, an ESLint flat config, and at least one test
+file already in place. `init` only wires up checks for tools it finds as devDependencies — it does
+not scaffold the tools' own configuration, so in a truly empty project (e.g. straight off `npm init`)
+`typecheck`, `lint`, and `test` will each fail with that tool's own "no config found" error until you
+add one, exactly as running `tsc`/`eslint`/`vitest` directly would.
 
 `init` reads your `package.json`'s existing devDependencies (`typescript`, `vitest`, and `eslint`
 above — install whichever of the [presets](GUIDE.md#presets) apply to you, `init` only wires up
@@ -203,6 +210,7 @@ Pre-1.0. Per [VERSIONING.md](VERSIONING.md), a `0.x` minor may carry a breaking 
 ## Learn more
 
 - **[Guide](GUIDE.md)** — how to integrate it, define checks, parse output, write cross-check policies, use presets, and handle errors.
+- **[Adoption guide](ADOPTION.md)** — decision-maker summary covering security posture, versioning/stability tiers, and architectural guarantees.
 - **[Security](SECURITY.md)** — how commands run, which capabilities the consumer supplies, and the enforced no-network guarantee.
 - **[API reference](https://maverickcer.github.io/repo-contract/api/)** — every exported type, field, and error code, generated from source so it cannot drift.
 - **[Architecture](specs/architecture.md)** and the **[ADRs](https://github.com/MaverickCER/repo-contract/tree/main/specs/decisions)** — why it is built this way.

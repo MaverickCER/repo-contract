@@ -40,7 +40,10 @@ interface NpmAuditReport {
 // doc comment): this preset shells out to `npm` itself, which cannot be
 // "missing" in any environment capable of running `npm run <script>` at
 // all -- the exception is intentional, not an oversight.
-/** Dependency vulnerability scanning via `npm audit`. */
+/**
+ * Dependency vulnerability scanning via `npm audit`.
+ * @beta
+ */
 export const securityDeps: CheckDefinitionConfig = {
   run: ["npm", "audit", "--omit=dev", "--json"],
   output: { format: "json" },

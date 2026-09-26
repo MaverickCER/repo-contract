@@ -1,13 +1,13 @@
 {
   "exceptions": [
     {
-      "id": "suppression:eslint:@typescript-eslint/no-namespace:src/standard-schema/types.ts:22",
+      "id": "suppression:eslint:@typescript-eslint/no-namespace:src/standard-schema/types.ts:33",
       "version": 1,
       "justification": "Preserves an exact, re-diffable structural match to @standard-schema/spec's own published dist/index.d.ts, which uses this same interface+namespace merge for StandardSchemaV1.Props/.Result/.Issue/etc. -- an ES2015-module-only alternative cannot express a member nested under the interface's own name, so a namespace here isn't a stylistic choice, it's what keeps this file diffable against upstream verbatim.\n\nAlternatives considered: A separately-named type/module (e.g. StandardSchemaV1Props, StandardSchemaV1Result) instead of StandardSchemaV1.Props/StandardSchemaV1.Result would satisfy the rule, but every real Standard-Schema-compliant consumer -- and the spec itself -- references these as StandardSchemaV1.<Member>; diverging from that referencing convention would make this vendored file harder to recognize as a faithful copy and harder to re-diff against a future spec version.\n\nRemediation: None needed: declare namespace here compiles to zero runtime code (an ambient, type-only declaration merged with the interface of the same name) -- the rule's actual concern (the runtime IIFE-style namespace object TypeScript emits for a non-declare namespace) does not apply, since nothing here is emitted at all.",
       "category": "rule-not-applicable",
       "domain": "eslint",
       "file": "src/standard-schema/types.ts",
-      "line": 22,
+      "line": 33,
       "rule": [
         "@typescript-eslint/no-namespace"
       ],
@@ -300,26 +300,26 @@
       "verificationMethod": "differential-testing"
     },
     {
-      "id": "suppression:stryker:ArrayDeclaration:src/policy/run-policies.ts:199",
+      "id": "suppression:stryker:ArrayDeclaration:src/policy/run-policies.ts:258",
       "version": 1,
       "justification": "`check.dependsOn` is undefined exactly when a check has no declared dependencies, in which case this fallback's own contents are unobservable regardless of what they are: any id it iterated would be looked up via evidence.checks[depId], find nothing (no real check has a garbage id), and get filtered out by the `depEvidence !== undefined` guard immediately below anyway.\n\nAlternatives considered: Use a non-null assertion or restructure the loop to check `check.dependsOn !== undefined` before iterating, instead of a fallback default.\n\nRemediation: Confirmed by the existing \"a policy with no dependsOn sees ctx.dependencies as an empty object\" test in run-policies.test.ts, which passes regardless of this fallback's specific value, matching this reasoning. Kept the `?? []` fallback anyway since it's the simplest way to express \"iterate zero or more dependency ids\" without a separate branch, and its behavioral equivalence to any other fallback value is exactly what makes this suppression safe.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/policy/run-policies.ts",
-      "line": 199,
+      "line": 258,
       "rule": [
         "ArrayDeclaration"
       ],
       "verificationMethod": "existing-test-suite"
     },
     {
-      "id": "suppression:stryker:ArrayDeclaration:src/presets/e2e.ts:127",
+      "id": "suppression:stryker:ArrayDeclaration:src/presets/e2e.ts:130",
       "version": 1,
       "justification": "collectFailingSpecs itself only ever reads .specs/.suites off each element it's given via its own safe optional chaining (suite.specs ?? [], if (suite.suites)), so substituting any non-suite garbage for a genuinely absent report.suites still yields zero collected detail lines either way -- the fallback's specific contents never reach anything that would distinguish it from a real empty array.\n\nAlternatives considered: Use a non-null assertion instead of the nullish-coalescing fallback, since a Playwright report with stats.unexpected > 0 should always include a suites array in practice.\n\nRemediation: Rejected for the same reason as collectFailingSpecs's own internal fallback (see this file's other suppression): Playwright's report is external, untrusted output this codebase doesn't control the shape of, so a malformed report degrading to \"no failure detail available\" is safer than asserting a shape that isn't actually guaranteed. Kept the fallback despite its contents being unobservable given collectFailingSpecs's own defensive reads.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/presets/e2e.ts",
-      "line": 127,
+      "line": 130,
       "rule": [
         "ArrayDeclaration"
       ],
@@ -497,13 +497,13 @@
       "verificationMethod": "existing-test-suite"
     },
     {
-      "id": "suppression:stryker:ConditionalExpression,EqualityOperator:src/helpers/reconcile-exceptions.ts:167",
+      "id": "suppression:stryker:ConditionalExpression,EqualityOperator:src/helpers/reconcile-exceptions.ts:173",
       "version": 1,
       "justification": "serializeExceptionRegistry receives reconciled records whose ids are guaranteed unique (reconcileExceptions produces one active record per finding, and stale records are disjoint from those), so this id comparator's `<`-vs-`<=` and `>`-vs-`>=` mutants and its unreachable `: 0` tie branch are all equivalent -- no two ids ever compare equal.\n\nAlternatives considered: Sort by mapping each record to `[id, record]` and calling the comparator-free `Array.prototype.sort()`, whose default `String(element)` comparison would order by the id prefix.\n\nRemediation: That alternative was implemented and rejected: `String([id, record])` throws `Cannot convert object to primitive value` for a null-prototype record object (which a caller can legitimately pass and fast-check generates), so a real id-string comparator is required. Its remaining equivalent mutants are inherent to comparing a set of values known to be distinct; the reversing mutants are all killed by the order-independence property test.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/helpers/reconcile-exceptions.ts",
-      "line": 167,
+      "line": 173,
       "rule": [
         "ConditionalExpression",
         "EqualityOperator"
@@ -643,26 +643,26 @@
       "verificationMethod": "mutation-run"
     },
     {
-      "id": "suppression:stryker:ConditionalExpression:src/helpers/exception-policy.ts:166",
+      "id": "suppression:stryker:ConditionalExpression:src/helpers/exception-policy.ts:181",
       "version": 1,
       "justification": "By the time this filter runs, the preceding `exactMatch = rules.find(([pattern]) => pattern === category); if (exactMatch) return exactMatch[1]` has already returned for any entry whose pattern literally equals category -- so no remaining entry in rules can ever have pattern === category at this point. `pattern !== category` is therefore provably always true here, making it observationally identical to the literal `true` this mutant substitutes; no input could ever make the two branches diverge.\n\nAlternatives considered: No test can distinguish the two forms by resolveExceptionPolicy's return value, since both produce the exact same glob-matching result for every possible input -- there is no alternative test to write here, unlike a genuine coverage gap.\n\nRemediation: None needed: removing the `pattern !== category &&` guard entirely would be behaviorally identical and was considered, but keeping it documents the intent (never re-consider an already-exact-matched entry as a glob candidate) even though it is not behaviorally load-bearing at this exact call site.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/helpers/exception-policy.ts",
-      "line": 166,
+      "line": 181,
       "rule": [
         "ConditionalExpression"
       ],
       "verificationMethod": "static-reasoning"
     },
     {
-      "id": "suppression:stryker:ConditionalExpression:src/helpers/load-exception-registry.ts:103",
+      "id": "suppression:stryker:ConditionalExpression:src/helpers/load-exception-registry.ts:104",
       "version": 1,
       "justification": "`code` (the ternary's result) is consumed only by the `code === \"ENOENT\"` comparison two lines below -- an exact primitive-string equality check. Mutating `typeof error.code === \"string\"` to literal `true` changes what gets assigned to `code` for a non-string `.code` value (a number, or `undefined`), but there is no value for which the original `typeof` check is false yet that same value `=== \"ENOENT\"` is true: any value that literally equals the primitive string \"ENOENT\" always has `typeof value === \"string\"`. Confirmed directly with two covering test cases (a numeric `.code`, an absent `.code`) that both original and mutated code produce the identical not-ENOENT branch and final error message.\n\nAlternatives considered: A test asserting on `code`'s own value directly (rather than only observing it through the ENOENT branch decision) was considered, but `code` is a function-local variable with no other observable effect -- there is nothing outside this one comparison a test could assert against to distinguish the two.\n\nRemediation: None needed: the `typeof` check still documents the real intent (only trust a genuinely string-typed `.code`) even though its removal is unobservable at this exact call site, the same reasoning already justified for this same file's StringLiteral suppression at src/helpers/load-exception-registry.ts:82 (id suppression:stryker:StringLiteral:src/helpers/load-exception-registry.ts:82).",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/helpers/load-exception-registry.ts",
-      "line": 103,
+      "line": 104,
       "rule": [
         "ConditionalExpression"
       ],
@@ -695,26 +695,26 @@
       "verificationMethod": "static-reasoning"
     },
     {
-      "id": "suppression:stryker:ConditionalExpression:src/policy/run-policies.ts:207",
+      "id": "suppression:stryker:ConditionalExpression:src/policy/run-policies.ts:108",
       "version": 1,
-      "justification": "validate-config.ts already guarantees every dependsOn id names a check that exists in this run, and this function's own phasing invariant (every check's evidence is fully assembled before any policy runs) guarantees evidence.checks[depId] is already populated by the time this line runs -- this guard exists only to satisfy noUncheckedIndexedAccess's typing of the indexed read, not because depEvidence can genuinely be undefined here.\n\nAlternatives considered: Use a non-null assertion (`evidence.checks[depId]!`) instead of the runtime guard.\n\nRemediation: Rejected the assertion for the same \"fail safely instead of crashing if an invariant is ever broken\" reason used throughout this codebase: if either upstream guarantee (validate-config.ts's dependsOn validation, or this function's own phasing) were ever violated by a future change, the current guarded form would just silently omit one entry from `dependencies` instead of throwing from inside a policy-invocation loop. Kept as defense in depth even though no test can currently make depEvidence actually undefined here.",
-      "category": "unreachable-invariant",
+      "justification": "`OUTPUT_PROPERTIES` is declared `ReadonlySet<string>` and only ever populated with the four literal strings \"success\"/\"value\"/\"error\"/\"format\" -- `Set.prototype.has(undefined)` therefore always evaluates to `false`, for any Set, regardless of its contents. That makes `property !== undefined && OUTPUT_PROPERTIES.has(property)` mathematically identical to `OUTPUT_PROPERTIES.has(property)` alone: the left operand can never change the ternary's result, so Stryker's `ConditionalExpression: true` mutant (forcing the left operand to `true`) produces byte-identical behavior to the unmutated code on every possible input.\n\nAlternatives considered: Drop the `property !== undefined &&` guard entirely and call `OUTPUT_PROPERTIES.has(property)` directly.\n\nRemediation: Kept the guard rather than simplifying it away: it documents the intent (\"only a recognized property name counts\") for a reader who would otherwise have to independently know that `Set.has(undefined)` is always false, and TypeScript's own control-flow narrowing already gets a real, if not runtime-observable, benefit from it (the ternary's `? property` branch is typed `string`, not `string | undefined`, only because of this check). No test can distinguish the two forms since they are behaviorally identical for every input, not merely difficult to exercise.",
+      "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/policy/run-policies.ts",
-      "line": 207,
+      "line": 108,
       "rule": [
         "ConditionalExpression"
       ],
       "verificationMethod": "static-reasoning"
     },
     {
-      "id": "suppression:stryker:ConditionalExpression:src/policy/run-policies.ts:64",
+      "id": "suppression:stryker:ConditionalExpression:src/policy/run-policies.ts:266",
       "version": 1,
-      "justification": "`OUTPUT_PROPERTIES` is declared `ReadonlySet<string>` and only ever populated with the four literal strings \"success\"/\"value\"/\"error\"/\"format\" -- `Set.prototype.has(undefined)` therefore always evaluates to `false`, for any Set, regardless of its contents. That makes `property !== undefined && OUTPUT_PROPERTIES.has(property)` mathematically identical to `OUTPUT_PROPERTIES.has(property)` alone: the left operand can never change the ternary's result, so Stryker's `ConditionalExpression: true` mutant (forcing the left operand to `true`) produces byte-identical behavior to the unmutated code on every possible input.\n\nAlternatives considered: Drop the `property !== undefined &&` guard entirely and call `OUTPUT_PROPERTIES.has(property)` directly.\n\nRemediation: Kept the guard rather than simplifying it away: it documents the intent (\"only a recognized property name counts\") for a reader who would otherwise have to independently know that `Set.has(undefined)` is always false, and TypeScript's own control-flow narrowing already gets a real, if not runtime-observable, benefit from it (the ternary's `? property` branch is typed `string`, not `string | undefined`, only because of this check). No test can distinguish the two forms since they are behaviorally identical for every input, not merely difficult to exercise.",
-      "category": "equivalent-mutant",
+      "justification": "validate-config.ts already guarantees every dependsOn id names a check that exists in this run, and this function's own phasing invariant (every check's evidence is fully assembled before any policy runs) guarantees evidence.checks[depId] is already populated by the time this line runs -- this guard exists only to satisfy noUncheckedIndexedAccess's typing of the indexed read, not because depEvidence can genuinely be undefined here.\n\nAlternatives considered: Use a non-null assertion (`evidence.checks[depId]!`) instead of the runtime guard.\n\nRemediation: Rejected the assertion for the same \"fail safely instead of crashing if an invariant is ever broken\" reason used throughout this codebase: if either upstream guarantee (validate-config.ts's dependsOn validation, or this function's own phasing) were ever violated by a future change, the current guarded form would just silently omit one entry from `dependencies` instead of throwing from inside a policy-invocation loop. Kept as defense in depth even though no test can currently make depEvidence actually undefined here.",
+      "category": "unreachable-invariant",
       "domain": "stryker",
       "file": "src/policy/run-policies.ts",
-      "line": 64,
+      "line": 266,
       "rule": [
         "ConditionalExpression"
       ],
@@ -797,26 +797,26 @@
       "verificationMethod": "static-reasoning"
     },
     {
-      "id": "suppression:stryker:EqualityOperator:src/policy/run-policies.ts:244",
+      "id": "suppression:stryker:EqualityOperator:src/policy/run-policies.ts:303",
       "version": 1,
       "justification": "\"> 1\" and \">= 1\" are equivalent at this specific point in the function given the early return just above it (`if (thrown.length === 1) throw only`): by the time this line can run, thrown.length is never exactly 1 -- it's either 0 (falling through to the success path below either way) or >= 2 (taking the AggregateError branch either way) -- so both comparisons partition the remaining possibilities identically.\n\nAlternatives considered: Remove the earlier `=== 1` early return and rely solely on this `>= 1` (or `> 0`) check to decide between throwing a single error and an AggregateError.\n\nRemediation: Restructuring to a single check was considered but rejected: throwing the lone PolicyThrewError directly (rather than wrapping a single error in an AggregateError) is deliberate, documented behavior a caller catching a specific error type depends on, so the two-branch structure with its now-redundant second comparison is intentional. Documented this equivalence explicitly (rather than silently accepting it) so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/policy/run-policies.ts",
-      "line": 244,
+      "line": 303,
       "rule": [
         "EqualityOperator"
       ],
       "verificationMethod": "static-reasoning"
     },
     {
-      "id": "suppression:stryker:LogicalOperator:src/run-repo-contract.ts:70",
+      "id": "suppression:stryker:LogicalOperator:src/run-repo-contract.ts:71",
       "version": 1,
       "justification": "validateRepoContractConfig (called immediately above, at the top of runRepoContract) already rejects any config.concurrency that is not a positive integer (validate-config.ts requires concurrency >= 1) before this line can ever run. So by the time `config.concurrency ?? os.availableParallelism()` executes, config.concurrency is always either undefined or an already-truthy positive integer -- there is no valid, validated value for which `??` and `&&` would select a different branch.\n\nAlternatives considered: Rewrite the expression using `&&` instead of `??`, or add an explicit `typeof`/truthiness re-check immediately before this line to make the invariant locally visible without relying on the earlier validation call.\n\nRemediation: Considered re-deriving the guarantee locally (e.g. asserting concurrency > 0 again right before this line), but that would just duplicate validate-config.ts's own check for a property it already guarantees before runRepoContract's caller can reach this line -- validateRepoContractConfig is not optional and always runs first, so the invariant already holds unconditionally by construction, not merely by convention.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/run-repo-contract.ts",
-      "line": 70,
+      "line": 71,
       "rule": [
         "LogicalOperator"
       ],
@@ -941,65 +941,65 @@
       "verificationMethod": "differential-testing"
     },
     {
-      "id": "suppression:stryker:StringLiteral:src/helpers/exception-policy.ts:419",
+      "id": "suppression:stryker:StringLiteral:src/helpers/exception-policy.ts:439",
       "version": 1,
       "justification": "Node's Hash.update(data, inputEncoding) treats a falsy/empty inputEncoding identically to \"utf8\" for a string data argument -- confirmed directly: createHash(\"sha256\").update(x, \"utf8\").digest(\"hex\") === createHash(\"sha256\").update(x, \"\").digest(\"hex\") for every input tried, including multi-byte UTF-8 content. The two encodings are observationally identical at this exact call site.\n\nAlternatives considered: No test can distinguish \"utf8\" from \"\" by hashRequirementFields's return value, since both produce the exact same digest for every possible input -- there is no alternative test to write here, unlike a genuine coverage gap.\n\nRemediation: None needed: passing \"utf8\" explicitly (rather than omitting the argument) documents the intent even though Node's own default behavior already makes it redundant.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/helpers/exception-policy.ts",
-      "line": 419,
+      "line": 439,
       "rule": [
         "StringLiteral"
       ],
       "verificationMethod": "static-reasoning"
     },
     {
-      "id": "suppression:stryker:StringLiteral:src/helpers/load-exception-registry.ts:82",
+      "id": "suppression:stryker:StringLiteral:src/helpers/load-exception-registry.ts:83",
       "version": 1,
       "justification": "node:fs/promises's readFile(path, \"\") returns a raw Buffer rather than a decoded string (unlike Hash.update, an empty inputEncoding is not treated the same as \"utf8\" here) -- but this function's only use of the result is JSON.parse(raw) immediately below, and JSON.parse's own ToString coercion on a Buffer calls Buffer.prototype.toString() with no arguments, whose own default encoding is \"utf8\". Confirmed directly, including with multi-byte UTF-8 content, that JSON.parse(bufferReadWithEmptyEncoding) produces byte-identical results to JSON.parse(stringReadWithUtf8Encoding) every time.\n\nAlternatives considered: No test can distinguish \"utf8\" from \"\" through this function's own return value, since both produce the exact same parsed JSON for every possible input -- there is no alternative test to write here, unlike a genuine coverage gap.\n\nRemediation: None needed: passing \"utf8\" explicitly documents the intent (a decoded string, not a raw Buffer) even though JSON.parse's own coercion happens to make the distinction unobservable at this exact call site.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/helpers/load-exception-registry.ts",
-      "line": 82,
+      "line": 83,
       "rule": [
         "StringLiteral"
       ],
       "verificationMethod": "static-reasoning"
     },
     {
-      "id": "suppression:stryker:StringLiteral:src/presets/duplication.ts:81",
+      "id": "suppression:stryker:StringLiteral:src/presets/duplication.ts:82",
       "version": 1,
       "justification": "JSON.parse coerces whatever readFile returns via that value's own toString() method -- and confirmed empirically that a Buffer (what a mutated or unrecognized encoding argument produces instead of a string) defaults its own toString() to UTF-8, the exact same encoding \"utf8\" requests explicitly -- so parsing this file's JSON content succeeds identically either way; no test can observe a difference through this policy's output.\n\nAlternatives considered: Read the file without specifying an encoding at all (letting readFile return a Buffer) and pass that directly to JSON.parse, relying on Buffer's own default UTF-8 toString() instead of naming the encoding explicitly.\n\nRemediation: Considered omitting the encoding argument, but kept it explicit: naming \"utf8\" documents the actual expected file encoding for a future reader, even though Buffer's coercion happens to default to the same encoding today -- relying on that coincidence implicitly would make a future change to jscpd's own report encoding a silent, hard-to-diagnose bug instead of an explicit mismatch.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/presets/duplication.ts",
-      "line": 81,
+      "line": 82,
       "rule": [
         "StringLiteral"
       ],
       "verificationMethod": "differential-testing"
     },
     {
-      "id": "suppression:stryker:StringLiteral:src/presets/markdownlint.ts:69",
+      "id": "suppression:stryker:StringLiteral:src/presets/markdownlint.ts:70",
       "version": 1,
       "justification": "Same reasoning as the identical pattern in src/presets/duplication.ts: JSON.parse coerces whatever readFile returns via that value's own toString(), and a Buffer (what a mutated encoding argument produces) defaults its own toString() to UTF-8 -- the same encoding \"utf8\" requests explicitly -- so parsing markdownlint-cli2's JSON report succeeds identically either way.\n\nAlternatives considered: Read the file without specifying an encoding, relying on Buffer's own default UTF-8 toString() instead of naming \"utf8\" explicitly, matching duplication.ts's own alternative.\n\nRemediation: Same conclusion as duplication.ts's identical case: kept the explicit \"utf8\" argument to document the expected report encoding for a future reader rather than relying on Buffer's coercion default coinciding with it by coincidence, even though no test can currently observe a difference between the two forms.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/presets/markdownlint.ts",
-      "line": 69,
+      "line": 70,
       "rule": [
         "StringLiteral"
       ],
       "verificationMethod": "differential-testing"
     },
     {
-      "id": "suppression:stryker:StringLiteral:src/presets/security-secrets.ts:37",
+      "id": "suppression:stryker:StringLiteral:src/presets/security-secrets.ts:40",
       "version": 1,
       "justification": "Same reasoning as the identical pattern in src/presets/duplication.ts: JSON.parse coerces whatever readFile returns via that value's own toString(), and a Buffer (what a mutated encoding argument produces) defaults its own toString() to UTF-8 -- the same encoding \"utf8\" requests explicitly -- so parsing secretlint's JSON report succeeds identically either way.\n\nAlternatives considered: Read the file without specifying an encoding, relying on Buffer's own default UTF-8 toString(), matching duplication.ts's own alternative.\n\nRemediation: Same conclusion as duplication.ts's identical case: kept the explicit \"utf8\" argument to document the expected report encoding for a future reader rather than relying on Buffer's coercion default coinciding with it by coincidence, even though no test can currently observe a difference between the two forms.",
       "category": "equivalent-mutant",
       "domain": "stryker",
       "file": "src/presets/security-secrets.ts",
-      "line": 37,
+      "line": 40,
       "rule": [
         "StringLiteral"
       ],

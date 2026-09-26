@@ -4,32 +4,32 @@
 
 ```ts
 
-// @public
+// @beta
 export function evaluateExceptionRecord<TRecord>(input: ExceptionRecordEvaluation<TRecord>): ExceptionDeterminant<TRecord>;
 
-// @public
+// @beta
 export function evaluateExceptionRecords<TRecord>(inputs: readonly ExceptionRecordEvaluation<TRecord>[]): readonly ExceptionDeterminant<TRecord>[];
 
-// @public
+// @beta
 export interface ExceptionCategoryGroup {
     readonly default?: ExceptionPolicy;
     readonly rules?: Readonly<Record<string, ExceptionPolicy>>;
 }
 
-// @public
+// @beta
 export interface ExceptionClassification {
     readonly category: string;
     readonly group: string;
 }
 
-// @public
+// @beta
 export interface ExceptionDeterminant<TRecord> {
     readonly missing: readonly string[];
     readonly record: TRecord;
     readonly verdict: ExceptionVerdict;
 }
 
-// @public
+// @beta
 export type ExceptionPolicy = {
     readonly mode: "forbidden";
 } | {
@@ -39,10 +39,10 @@ export type ExceptionPolicy = {
     readonly requirements: readonly string[];
 };
 
-// @public
+// @beta
 export type ExceptionPolicyConfig = Readonly<Record<string, ExceptionCategoryGroup>>;
 
-// @public
+// @beta
 export interface ExceptionReconciliation<TFinding, TRecord> {
     readonly activeRecords: readonly TRecord[];
     readonly matchedPairs: readonly {
@@ -53,14 +53,14 @@ export interface ExceptionReconciliation<TFinding, TRecord> {
     readonly staleRecords: readonly TRecord[];
 }
 
-// @public
+// @beta
 export interface ExceptionRecordCore {
     readonly id: string;
     readonly justification: string;
     readonly version: number;
 }
 
-// @public
+// @beta
 export interface ExceptionRecordEvaluation<TRecord> {
     readonly classifications: readonly [ExceptionClassification, ...ExceptionClassification[]];
     readonly config: ExceptionPolicyConfig;
@@ -69,13 +69,13 @@ export interface ExceptionRecordEvaluation<TRecord> {
     readonly record: TRecord;
 }
 
-// @public
+// @beta
 export type ExceptionVerdict = "forbidden" | "insufficient" | "permitted";
 
-// @public
+// @beta
 export function hashRequirementFields<TRecord>(record: TRecord, fields: readonly string[], fieldValue: (record: TRecord, requirement: string) => string): string;
 
-// @public
+// @beta
 export function loadExceptionRegistry<T>(input: {
     readonly path: string;
     readonly schema: StandardSchemaV1<unknown, readonly T[]>;
@@ -88,7 +88,7 @@ export function loadExceptionRegistry<T>(input: {
     errors: readonly string[];
 }>;
 
-// @public
+// @beta
 export function reconcileExceptions<TFinding, TRecord extends {
     readonly id: string;
 }>(input: {
@@ -104,10 +104,10 @@ export function reconcileExceptions<TFinding, TRecord extends {
     readonly error: string;
 };
 
-// @public
+// @beta
 export function resolveExceptionPolicy(classification: ExceptionClassification, config: ExceptionPolicyConfig, globalDefault: ExceptionPolicy): ExceptionPolicy;
 
-// @public
+// @beta
 export function serializeExceptionRegistry(records: readonly (Record<string, unknown> & {
     readonly id: string;
 })[]): string;
@@ -151,10 +151,10 @@ export namespace StandardSchemaV1 {
     }
 }
 
-// @public
+// @beta
 export function validateExceptionPolicyConfig(config: ExceptionPolicyConfig, validRequirements?: readonly string[]): readonly string[];
 
-// @public
+// @beta
 export function writeExceptionRegistry(input: {
     readonly path: string;
     readonly records: readonly (Record<string, unknown> & {

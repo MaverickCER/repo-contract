@@ -43,6 +43,7 @@ import type {
  * @param config - the repo-contract configuration to run: its checks, concurrency, and their policies
  * @param options - run options; `options.checks` restricts execution to specific check ids, `options.signal` allows cancelling the run
  * @returns the assembled `evidence` for every check together with the aggregated `verdict`
+ * @public
  */
 export function runRepoContract<const TChecks extends CheckSchema>(
   config: RepoContractConfig<TChecks>,

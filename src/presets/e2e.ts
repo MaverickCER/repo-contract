@@ -77,7 +77,10 @@ function collectFailingSpecs(suites: readonly PlaywrightSuite[]): string[] {
   return details
 }
 
-/** End-to-end test execution via Playwright, reading its JSON reporter output. */
+/**
+ * End-to-end test execution via Playwright, reading its JSON reporter output.
+ * @beta
+ */
 export const e2e: CheckDefinitionConfig = {
   run: ["playwright", "test", "--reporter=json"],
   output: { format: "json" },
