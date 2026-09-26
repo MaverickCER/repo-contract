@@ -122,6 +122,7 @@ function formatEntry(entry: KnipIssueEntry | readonly KnipIssueEntry[]): {
  * Dead/unused-code detection via knip.
  * @param options - configuration for this check; see {@link DeadCodeOptions}.
  * @returns the configured check.
+ * @beta
  */
 export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
   const { exemptUnusedDevDependencies = [] } = options

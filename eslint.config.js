@@ -870,6 +870,20 @@ export default tseslint.config(
     // (params, descriptions, etc. line up with the real signature).
     ...jsdocConfigs["flat/recommended-typescript-error"],
     files: ["src/**/*.ts", "checks/**/*.ts", "scripts/**/*.ts"],
+    rules: {
+      ...jsdocConfigs["flat/recommended-typescript-error"].rules,
+      // `check-tag-names`'s own `typed: true` (the preset's default) treats
+      // `@public`/`@private`/`@protected` as redundant with TypeScript's own
+      // visibility keywords -- true for a class member, but these tags are
+      // used here for a different purpose entirely: API Extractor's
+      // release-tag requirement on every exported symbol (`@alpha`/`@beta`/
+      // `@public`/`@internal`, per api-extractor.com's own doc-model
+      // convention), which TypeScript has no equivalent concept for at all.
+      // `typed: false` keeps every other structural check this rule
+      // performs (unknown tag names, etc.) -- only the TS-redundancy
+      // opinion is off, since it doesn't apply to this specific tag usage.
+      "jsdoc/check-tag-names": ["error", { typed: false }],
+    },
   },
   {
     files: ["src/**/*.ts", "test/**/*.ts"],

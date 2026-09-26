@@ -14,6 +14,7 @@
  * the owning check. A registry adds its own typed fields on top; this is the shared core the
  * generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,
  * `validateExceptionRegistry` in the check-owned layer) relies on.
+ * @beta
  */
 export interface ExceptionRecordCore {
   /** The check-namespaced semantic identity of the finding this record waives (e.g. `"suppression:eslint:no-console:src/foo.ts:<module>"`). Equals the finding id; a record whose id matches no current finding is stale. Never derived from prose. */
@@ -24,7 +25,10 @@ export interface ExceptionRecordCore {
   readonly justification: string
 }
 
-/** The outcome of reconciling one run's findings against one exception registry. */
+/**
+ * The outcome of reconciling one run's findings against one exception registry.
+ * @beta
+ */
 export interface ExceptionReconciliation<TFinding, TRecord> {
   /** Each finding paired with the existing record it matched, in `findings` order. */
   readonly matchedPairs: readonly { readonly finding: TFinding; readonly record: TRecord }[]
@@ -59,6 +63,7 @@ export interface ExceptionReconciliation<TFinding, TRecord> {
  * @param input.deriveId - The finding's check-namespaced semantic id. Must be injective over `findings`.
  * @param input.createStub - Builds a fresh record for an unmatched finding; receives the canonical id and must return a record carrying it.
  * @returns The reconciliation, or the first integrity problem found.
+ * @beta
  */
 export function reconcileExceptions<TFinding, TRecord extends { readonly id: string }>(input: {
   readonly existing: readonly TRecord[]
@@ -154,6 +159,7 @@ function canonicalRecord(
  * Assumes `records` have unique ids (the caller reconciled them and validated its registry).
  * @param records - The reconciled records (`activeRecords` plus any `staleRecords`, in any order).
  * @returns The exact file contents to persist.
+ * @beta
  */
 export function serializeExceptionRegistry(
   records: readonly (Record<string, unknown> & { readonly id: string })[],

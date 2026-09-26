@@ -12,6 +12,7 @@ import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
  * to distinguish blocking findings from non-blocking ones, without
  * depending on any per-message structure publint doesn't expose. Relevant
  * only to repositories that publish an npm package.
+ * @beta
  */
 export const publint: CheckDefinitionConfig = {
   run: ["publint", "run"],

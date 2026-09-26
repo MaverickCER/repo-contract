@@ -25,10 +25,11 @@ the package reaches 1.0 — see [Pre-1.0 status](#pre-10-status) below):
   runtime despite what the type alone suggests.
 - **The exported error classes** (`RepoContractError`, `InvalidRepoContractConfigError`,
   `InvalidCheckConfigError`, `DependencyDeclaredLaterError`, `UnknownCheckIdError`,
-  `ParserDependencyMissingError`, `PolicyThrewError`, `PolicyReadUnrequestedOutputError`,
+  `StandardSchemaValidateThrewError`, `PolicyThrewError`, `PolicyReadUnrequestedOutputError`,
   `PolicyReadFailedParseValueError`) and their `code`/`checkId`/`cause`/`dependencyId` fields,
-  plus `ParserDependencyMissingError`'s own additional `format` field (which optional output
-  format was requested but missing its peer dependency).
+  plus `StandardSchemaValidateThrewError`'s own additional `checkId` field and native `cause`
+  chain (a supplied `output.schema`'s own `~standard.validate()` throwing or rejecting, distinct
+  from an ordinary parse/validation failure — see that error class's own doc comment).
 - **The `run` string tokenization contract**: which characters are rejected as shell operators,
   which are deliberately allowed through (glob characters, a bare `$`), and that no shell is
   ever invoked without `shell: true`.

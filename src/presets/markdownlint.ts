@@ -50,6 +50,7 @@ function formatFinding(finding: MarkdownlintFinding): string {
  * alongside `markdownlint-cli2` itself.
  * @param options - configuration for this check; see {@link MarkdownlintOptions}.
  * @returns the configured check.
+ * @beta
  */
 export function markdownlint(options: MarkdownlintOptions = {}): CheckDefinitionConfig {
   const { glob = "**/*.md" } = options

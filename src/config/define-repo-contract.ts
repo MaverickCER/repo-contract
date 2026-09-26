@@ -30,6 +30,7 @@ import type { CheckSchema, RepoContractConfig, ValidatedCheckSchema } from "../t
  * the `output`-to-`policy` one above.
  * @param config - the config to type-check and return unchanged.
  * @returns the same `config` object, untouched and uncloned.
+ * @public
  */
 export function defineRepoContract<const TChecks extends CheckSchema>(
   config: RepoContractConfig<TChecks> & { readonly checks: ValidatedCheckSchema<TChecks> },

@@ -32,6 +32,7 @@ interface StylelintOptions {
  * `lint` preset treats ESLint's own severities.
  * @param options - configuration for this check; see {@link StylelintOptions}.
  * @returns the configured check.
+ * @beta
  */
 export function stylelint(options: StylelintOptions = {}): CheckDefinitionConfig {
   const { glob = "**/*.{css,scss}" } = options
