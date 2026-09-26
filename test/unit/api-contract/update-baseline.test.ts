@@ -6,22 +6,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { runApiContractCheck } from "../../../scripts/api-contract/check.js"
 import { runUpdateBaseline } from "../../../scripts/api-contract/update-baseline.js"
 import { writeFixtureSource } from "../../helpers/api-contract/build-fixture-package.js"
+import { isolatedGitEnv } from "../../helpers/isolated-git-env.js"
 import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 
 let root: string
 
-// `GIT_CEILING_DIRECTORIES` stops git's own repository discovery from walking
-// out of `root` into whatever ancestor repo the OS temp dir happens to live
-// under (see test/integration/install-hooks/install-hooks.integration.test.ts's
-// identical rationale) -- without it, a `git config`/`commit` call issued
-// before `root`'s own `.git` is fully visible to a concurrently-heavy-loaded
-// filesystem could otherwise resolve against an unrelated real repository.
 function git(...args: string[]): string {
-  return execFileSync("git", args, {
-    cwd: root,
-    encoding: "utf8",
-    env: { ...process.env, GIT_CEILING_DIRECTORIES: root },
-  })
+  return execFileSync("git", args, { cwd: root, encoding: "utf8", env: isolatedGitEnv(root) })
 }
 
 function commitAll(message: string): void {
