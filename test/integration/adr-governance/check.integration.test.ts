@@ -4,6 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { runAdrGovernanceCheck } from "../../../scripts/adr-governance/check.js"
+import { isolatedGitEnv } from "../../helpers/isolated-git-env.js"
 
 /**
  * The complete real path: a real scratch git repository, a real `git diff` against a real base
@@ -15,7 +16,7 @@ import { runAdrGovernanceCheck } from "../../../scripts/adr-governance/check.js"
 let root: string
 
 function git(...args: string[]): string {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8" })
+  return execFileSync("git", args, { cwd: root, encoding: "utf8", env: isolatedGitEnv(root) })
 }
 
 function commitAll(message: string): void {

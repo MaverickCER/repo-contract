@@ -19,6 +19,16 @@
     // unconfigured check id), and this codebase's defensive runtime checks
     // for that must be checked by the compiler too, not just trusted.
     "noUncheckedIndexedAccess": true,
+    // exactOptionalPropertyTypes considered and deliberately left off: it
+    // surfaces 15+ real call sites across the public evidence/policy types
+    // (CheckEvidence.output, ApiContractEvidence.requiredLevel,
+    // ExecutionCapability.killProcessTree, ...) and their test fixtures that
+    // all currently assign `undefined` to an optional field on purpose. Each
+    // one is a legitimate "explicitly absent" value, not a bug -- fixing this
+    // properly means auditing every public interface's optional fields one by
+    // one and deciding `field?: T` vs `field?: T | undefined` intentionally,
+    // not a mechanical `| undefined` append. Worth doing as its own reviewed
+    // change, not a drive-by toggle.
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,

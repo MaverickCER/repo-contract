@@ -4,6 +4,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { promisify } from "node:util"
 import { runGit } from "../diff-files.js"
+import { gitSpawnEnv } from "../git-env.js"
 
 const execFileAsync = promisify(execFile)
 
@@ -128,7 +129,10 @@ export async function readPackageJson(root: string): Promise<{ name: string; ver
  */
 async function assertInsideGitWorkTree(root: string): Promise<void> {
   try {
-    await execFileAsync("git", ["rev-parse", "--is-inside-work-tree"], { cwd: root })
+    await execFileAsync("git", ["rev-parse", "--is-inside-work-tree"], {
+      cwd: root,
+      env: gitSpawnEnv(),
+    })
   } catch (error) {
     throw new Error(
       `"${root}" is not inside a git working tree -- the committed baseline can only be read from git, ` +

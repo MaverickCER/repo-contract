@@ -4,6 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { isolatedGitEnv } from "../../helpers/isolated-git-env.js"
 
 /**
  * Real-path coverage for scripts/install-hooks.mjs: it runs from `npm run setup`
@@ -19,12 +20,8 @@ const SCRIPT = path.join(
 
 let dir: string
 
-// `GIT_CEILING_DIRECTORIES` stops git's repository discovery from walking out of
-// the throwaway dir into whatever ancestor repo the OS temp dir may live under --
-// otherwise `git config --local` (here and in the script) could read an
-// unrelated repo's config and the "outside a git checkout" case would be bogus.
 function gitEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
-  return { ...process.env, GIT_CEILING_DIRECTORIES: dir, ...extra }
+  return { ...isolatedGitEnv(dir), ...extra }
 }
 
 function runScript(env: NodeJS.ProcessEnv = {}) {
@@ -98,7 +95,10 @@ describe("install-hooks in a git checkout", () => {
   })
 
   it("leaves a contributor's own core.hooksPath untouched", () => {
-    execFileSync("git", ["config", "--local", "core.hooksPath", ".my-hooks"], { cwd: dir })
+    execFileSync("git", ["config", "--local", "core.hooksPath", ".my-hooks"], {
+      cwd: dir,
+      env: gitEnv(),
+    })
     const result = runScript()
     expect(result.status).toBe(0)
     expect(result.stderr).toMatch(/leaving it/)
@@ -106,7 +106,10 @@ describe("install-hooks in a git checkout", () => {
   })
 
   it("leaves a contributor's own commit.template untouched", () => {
-    execFileSync("git", ["config", "--local", "commit.template", ".my-message"], { cwd: dir })
+    execFileSync("git", ["config", "--local", "commit.template", ".my-message"], {
+      cwd: dir,
+      env: gitEnv(),
+    })
     const result = runScript()
     expect(result.status).toBe(0)
     expect(result.stderr).toMatch(/leaving it/)

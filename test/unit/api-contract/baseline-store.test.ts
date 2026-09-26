@@ -10,6 +10,7 @@ import {
   sha256,
   writeBaselineFiles,
 } from "../../../scripts/api-contract/baseline-store.js"
+import { isolatedGitEnv } from "../../helpers/isolated-git-env.js"
 import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 
 /**
@@ -21,7 +22,11 @@ import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 let repoDir: string
 
 function git(...args: string[]): string {
-  return execFileSync("git", args, { cwd: repoDir, encoding: "utf8" })
+  return execFileSync("git", args, {
+    cwd: repoDir,
+    encoding: "utf8",
+    env: isolatedGitEnv(repoDir),
+  })
 }
 
 async function writeAndCommitBaseline(): Promise<{ apiJsonText: string; dtsText: string }> {

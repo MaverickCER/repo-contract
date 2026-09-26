@@ -4,11 +4,12 @@ import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { listChangedFiles } from "../../scripts/diff-files.js"
+import { isolatedGitEnv } from "../helpers/isolated-git-env.js"
 
 let root: string
 
 function git(...args: string[]): string {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8" })
+  return execFileSync("git", args, { cwd: root, encoding: "utf8", env: isolatedGitEnv(root) })
 }
 
 function commitAll(message: string): void {

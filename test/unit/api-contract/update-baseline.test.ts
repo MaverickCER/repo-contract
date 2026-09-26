@@ -6,12 +6,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { runApiContractCheck } from "../../../scripts/api-contract/check.js"
 import { runUpdateBaseline } from "../../../scripts/api-contract/update-baseline.js"
 import { writeFixtureSource } from "../../helpers/api-contract/build-fixture-package.js"
+import { isolatedGitEnv } from "../../helpers/isolated-git-env.js"
 import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 
 let root: string
 
 function git(...args: string[]): string {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8" })
+  return execFileSync("git", args, { cwd: root, encoding: "utf8", env: isolatedGitEnv(root) })
 }
 
 function commitAll(message: string): void {
