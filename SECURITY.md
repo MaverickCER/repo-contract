@@ -5,8 +5,9 @@
 - Commands run with **no shell interpretation** unless a check opts in with `shell: true`.
 - Process spawning and environment access are capabilities **the consumer supplies**, not
   owned by the package.
-- The shipped surface has no CLI, no network calls, and no telemetry — and the no-network
-  property is enforced by a check, not merely documented.
+- The `init` CLI only scaffolds local config/hook files; neither it nor the library engine
+  makes network calls or collects telemetry — and the no-network property is enforced by a
+  check, not merely documented.
 
 The rest of this document defines the security boundaries and threat model for
 `repo-contract`: what protections the package intentionally provides, what responsibilities
@@ -137,7 +138,26 @@ particular:
 
 ## Supported versions
 
-repo-contract is pre-1.0. Security fixes target only the latest published `0.x` release; there
-is no long-term-support branch yet. Once 1.0 ships, this document will be updated with a
-longer-term support policy — see [VERSIONING.md](VERSIONING.md) in the meantime for how the
-Stable/Experimental/Private tiers will carry forward.
+This project has not reached a `1.0` release.
+
+**Today, before `1.0`:** security fixes are provided on the latest published
+`0.x` version only. There is no separate long-term-support branch and no
+extended security-support policy yet — an application pinned to an older
+`0.x` release does not receive backported fixes; upgrading to the latest
+`0.x` is the only supported remediation path. See [VERSIONING.md](VERSIONING.md)
+for how the Stable/Experimental/Private tiers carry forward.
+
+**Starting at `1.0`:** once this project ships a `1.0` release, security
+fixes will be backported to the latest minor release of the previous major
+version for a minimum of six months after a new major version ships. This
+window may be extended at the maintainer's discretion — for example, to
+give large downstream consumers more migration time — but once a minimum
+end date has been stated for a given major version's backport window, it
+will never be shortened. Fixes for the current major version continue to
+target its latest published minor/patch release, exactly as fixes do today
+for `0.x`; the backport commitment only extends that same treatment one
+major version back, for a bounded time. See
+[ADR 0015](specs/decisions/0015-security-backport-window.md).
+
+This is a forward commitment about a future release line, not a claim that
+backporting has already been exercised.
