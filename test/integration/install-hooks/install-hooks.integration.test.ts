@@ -98,7 +98,10 @@ describe("install-hooks in a git checkout", () => {
   })
 
   it("leaves a contributor's own core.hooksPath untouched", () => {
-    execFileSync("git", ["config", "--local", "core.hooksPath", ".my-hooks"], { cwd: dir })
+    execFileSync("git", ["config", "--local", "core.hooksPath", ".my-hooks"], {
+      cwd: dir,
+      env: gitEnv(),
+    })
     const result = runScript()
     expect(result.status).toBe(0)
     expect(result.stderr).toMatch(/leaving it/)
@@ -106,7 +109,10 @@ describe("install-hooks in a git checkout", () => {
   })
 
   it("leaves a contributor's own commit.template untouched", () => {
-    execFileSync("git", ["config", "--local", "commit.template", ".my-message"], { cwd: dir })
+    execFileSync("git", ["config", "--local", "commit.template", ".my-message"], {
+      cwd: dir,
+      env: gitEnv(),
+    })
     const result = runScript()
     expect(result.status).toBe(0)
     expect(result.stderr).toMatch(/leaving it/)
