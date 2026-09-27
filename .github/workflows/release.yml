@@ -1,135 +1,54 @@
+# internal-package-contract caller workflow. Runs the shared Changesets + npm OIDC
+# trusted-publishing release flow on every push to main. Replace nothing -- the real
+# logic lives in the shared, centrally-maintained reusable workflow this calls; a fix
+# or improvement there reaches every consumer without a per-repo edit. See
+# https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml
+#
+# Migrated off release-please (see RELEASING.md) -- same shape data-cap/env-cap
+# already use, dropping this repo's own former verify/publish jobs and
+# workflow_dispatch recovery input (no equivalent exists in the shared workflow;
+# neither sibling repo has one either -- recovery now follows the shared workflow's
+# own conventions, same as any other consumer).
 name: Release
 
 on:
   push:
     branches: [main]
-  # Manual recovery path: re-run verify+publish against an already-tagged
-  # release without cutting a new release-please cycle. Needed because a
-  # `gh run rerun` of a failed `publish` job replays that run's *original*
-  # workflow YAML, frozen at trigger time -- it can never pick up a fix to
-  # this file, only a brand new push-triggered run can. See RELEASING.md's
-  # "Recovering when the automated publish job fails".
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Release tag to (re)publish, e.g. repo-contract-v0.3.1"
-        required: true
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
-permissions:
-  contents: read
-
 jobs:
-  # release-please maintains the "Release PR" (bumps package.json + CHANGELOG.md
-  # from the Conventional Commits on main). When that PR is merged it tags the
-  # release and creates a GitHub Release, and `release_created` becomes true --
-  # which is the only thing that triggers the verify + publish jobs below.
-  release-please:
-    # Skipped on workflow_dispatch (the manual recovery path above) -- that
-    # trigger exists to re-publish an already-tagged release, never to open
-    # or update the Release PR.
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+  release:
     permissions:
       contents: write
       pull-requests: write
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-    steps:
-      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
-        id: release
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-  # Runs the full self-hosting contract with NO credentials in scope --
-  # deliberately a separate job from `publish`, because GitHub Actions grants
-  # `permissions:` / injects the OIDC ACTIONS_ID_TOKEN_REQUEST_* env vars
-  # per-job, not per-step. Every third-party CLI repo-contract's checks spawn
-  # (eslint, stryker, `npm audit`, ...) inherits the *full* process environment
-  # (`inheritEnv: true` -- see SECURITY.md), so this job is where the slow,
-  # most-likely-to-fail verification actually happens -- with `contents: read`
-  # only. `publish` below then runs `npm publish --ignore-scripts`: it does NOT
-  # re-run the contract via `prepublishOnly`, precisely so no spawned tool ever
-  # sees the `id-token: write` env this file grants that job. The artifact
-  # `publish` ships is the one this job already blessed.
-  verify:
-    needs: release-please
-    if: always() && (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.release-please.outputs.tag_name }}
-          fetch-depth: 0
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          # The verification-toolchain line (.nvmrc / ci.yml's `verify` and
-          # `contract` jobs) -- `npm run contract` pulls the same modern dev
-          # toolchain those jobs do (Stryker requires >=22, other tools have
-          # moved past 20), so this must track that line, NOT the published
-          # package's `engines.node` floor. The floor is proven separately by
-          # ci.yml's `published-floor` job against the packed tarball.
-          node-version: 24.x
-          cache: npm
-
-      - run: npm ci
-      - run: npm run build
-      - run: npm run contract
-
-  publish:
-    needs: [release-please, verify]
-    if: always() && needs.verify.result == 'success' && (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      # Enables npm's OIDC trusted publishing -- no NPM_TOKEN secret exists or
-      # is needed. npm verifies this exact workflow/repo against a
-      # trusted-publisher registration made once, manually, on npmjs.com
-      # (see RELEASING.md).
+      # Enables npm's OIDC trusted publishing -- see the called workflow's own
+      # comment. Required here too: GitHub caps the called workflow's effective
+      # permissions at the intersection of what this caller grants and what it
+      # itself declares.
       id-token: write
+    # TODO(part H): pin to internal-package-contract's merge-commit SHA once parts
+    # B/C/E/F have landed there and this branch is pushed -- see RELEASING.md's
+    # "Standardize npm release + Pages deploy" note.
+    uses: MaverickCER/internal-package-contract/.github/workflows/release-npm-changesets.yml@main
+
+  # Propagates this release to internal-package-contract (part E of the
+  # "Standardize npm release + Pages deploy" plan): internal-package-contract
+  # depends on repo-contract as a real functional/engine coupling (not just a
+  # devDependency version tick), so its own version needs to move by a matching
+  # severity whenever repo-contract publishes. Requires a fine-grained PAT
+  # (CROSS_REPO_PAT) -- the default GITHUB_TOKEN cannot dispatch to another
+  # repository at all. See RELEASING.md's one-time bootstrap step.
+  notify-internal-package-contract:
+    needs: release
+    if: needs.release.outputs.version != ''
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.release-please.outputs.tag_name }}
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          # Matches the `verify` job above -- same reasoning (see its comment).
-          node-version: 24.x
-          cache: npm
-
-      - run: npm ci
-
-      # Build the artifact explicitly -- the package has no `prepare` (or any
-      # other install) lifecycle script, so `npm ci` above does not produce
-      # `dist/`. `npm publish --ignore-scripts` below won't build it either.
-      - run: npm run build
-
-      # OIDC trusted publishing requires a current npm CLI -- don't rely on
-      # whatever version happens to be bundled.
-      - run: npm install -g npm@latest
-
-      # `--ignore-scripts`: the `verify` job immediately above already ran the
-      # byte-identical `npm run contract` with NO credentials in scope, so
-      # re-running it here via the `prepublishOnly` hook would only widen the
-      # window in which every spawned tool (eslint, Stryker, `npm audit`, ...)
-      # can see the OIDC `id-token` request env vars this job grants -- for a
-      # full, slow re-verification whose result is already known. The
-      # credential-free `verify` job is the gate; this step just publishes the
-      # artifact it already blessed. A manual `npm publish` from a laptop still
-      # runs `prepublishOnly` normally (that path has no `--ignore-scripts`).
-      # `--provenance` is explicit here (not left to .npmrc's `provenance=true`
-      # alone) -- it's what actually drives npm's OIDC trusted-publishing
-      # token exchange; without it npm has been observed to skip OIDC
-      # entirely and fall straight through to expecting a classic login.
-      - run: npm publish --ignore-scripts --provenance
+      - name: Dispatch repo-contract-released
         env:
-          # Verbose only on the manual recovery path -- this is where OIDC
-          # auth failures actually need debugging; the normal automated path
-          # stays quiet.
-          NPM_CONFIG_LOGLEVEL: ${{ github.event_name == 'workflow_dispatch' && 'verbose' || 'notice' }}
+          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+        run: |
+          gh api repos/MaverickCER/internal-package-contract/dispatches \
+            -f event_type=repo-contract-released \
+            -f "client_payload[version]=${{ needs.release.outputs.version }}" \
+            -f "client_payload[bump-type]=${{ needs.release.outputs.bump-type }}"
