@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.7.1...repo-contract-v0.7.2) (2026-09-27)
+
+
+### Bug Fixes
+
+* badges/docs-evidence carry forward checks instead of failing every push ([#83](https://github.com/MaverickCER/repo-contract/issues/83)) ([215db16](https://github.com/MaverickCER/repo-contract/commit/215db1666ec334a2cc341a8eedba38cc343abd7c))
+
 ## [0.7.1](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.7.0...repo-contract-v0.7.1) (2026-09-26)
 
 
