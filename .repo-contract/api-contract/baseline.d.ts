@@ -3,7 +3,10 @@ import type { SpawnOptions } from 'node:child_process';
 import type { SpawnSyncOptions } from 'node:child_process';
 import type { SpawnSyncReturns } from 'node:child_process';
 
-/** One fully configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable. */
+/**
+ * One fully configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.
+ * @public
+ */
 export declare interface CheckDefinition extends CheckDefinitionConfig {
     /**
      * Other check ids (from this same `checks` record) that must reach a
@@ -25,7 +28,10 @@ export declare interface CheckDefinition extends CheckDefinitionConfig {
     readonly dependsOn?: readonly string[];
 }
 
-/** One partially configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable. */
+/**
+ * One partially configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.
+ * @public
+ */
 export declare interface CheckDefinitionConfig {
     /**
      * The command to run. A `string` is tokenized into executable + arguments
@@ -125,6 +131,7 @@ export declare interface CheckDefinitionConfig {
  * typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this
  * shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as
  * they already must for `"json"`/`"text"` with no schema supplied.
+ * @public
  */
 export declare interface CheckEvidence {
     /** The executable that was actually spawned (after tokenization, if `run` was a string). */
@@ -160,7 +167,10 @@ export declare interface CheckEvidence {
     readonly output?: ParsedOutput<unknown>;
 }
 
-/** The full set of checks in a `RepoContractConfig`, keyed by check id. */
+/**
+ * The full set of checks in a `RepoContractConfig`, keyed by check id.
+ * @public
+ */
 export declare type CheckSchema = Record<string, CheckDefinition>;
 
 /**
@@ -177,6 +187,7 @@ export declare type CheckSchema = Record<string, CheckDefinition>;
  * `"host_terminated"`: repo-contract did request that signal, just not via `options.signal` or
  * `timeoutMs` (see `"aborted"`/`"timed_out"`), so it must not be conflated with an externally-caused
  * `"signaled"`.
+ * @public
  */
 export declare type CheckStatus = "completed" | "timed_out" | "signaled" | "host_terminated" | "spawn_error" | "aborted";
 
@@ -210,6 +221,7 @@ export declare type CheckStatus = "completed" | "timed_out" | "signaled" | "host
  * the `output`-to-`policy` one above.
  * @param config - the config to type-check and return unchanged.
  * @returns the same `config` object, untouched and uncloned.
+ * @public
  */
 export declare function defineRepoContract<const TChecks extends CheckSchema>(config: RepoContractConfig<TChecks> & {
     readonly checks: ValidatedCheckSchema<TChecks>;
@@ -221,6 +233,7 @@ export declare function defineRepoContract<const TChecks extends CheckSchema>(co
  * doc comment. Declaration order doubles as the required topological order, so this is the only
  * way an invalid dependency graph can arise; a real cycle is structurally impossible once every
  * edge points backward. Thrown synchronously, before any check spawns.
+ * @public
  */
 export declare class DependencyDeclaredLaterError extends RepoContractError {
     /** Always `"REPO_CONTRACT_DEPENDENCY_DECLARED_LATER"`. */
@@ -238,6 +251,7 @@ export declare class DependencyDeclaredLaterError extends RepoContractError {
  * Says nothing about whether any of it was acceptable; see `Verdict`.
  * Additive fields are a compatible change; changing or removing an existing
  * field requires bumping this version number (see VERSIONING.md).
+ * @public
  */
 export declare interface Evidence<TChecks extends CheckSchema = CheckSchema> {
     /** Schema version of this shape; see VERSIONING.md. */
@@ -254,7 +268,12 @@ export declare interface Evidence<TChecks extends CheckSchema = CheckSchema> {
     };
 }
 
-/** One check's `CheckDefinition` is structurally invalid -- e.g. an empty `run`, a `run` string containing an unquoted shell operator without `shell: true`, or a missing `policy`. Thrown synchronously, before that check (or any other) spawns. */
+/**
+ * One check's `CheckDefinition` is structurally invalid -- e.g. an empty `run`, a `run` string
+ * containing an unquoted shell operator without `shell: true`, or a missing `policy`. Thrown
+ * synchronously, before that check (or any other) spawns.
+ * @public
+ */
 export declare class InvalidCheckConfigError extends RepoContractError {
     /** Always `"REPO_CONTRACT_INVALID_CHECK_CONFIG"`. */
     readonly code = "REPO_CONTRACT_INVALID_CHECK_CONFIG";
@@ -263,7 +282,14 @@ export declare class InvalidCheckConfigError extends RepoContractError {
     constructor(checkId: string, reason: string);
 }
 
-/** The top-level `RepoContractConfig` itself is structurally invalid -- e.g. `checks` is not an object, or `concurrency` is not a positive integer. (A `checks` object with zero entries is deliberately valid: the run produces an empty, passing `Verdict`.) Thrown synchronously by `runRepoContract`, before anything spawns -- not by `defineRepoContract`, which performs no runtime validation of its own (see its own doc comment). */
+/**
+ * The top-level `RepoContractConfig` itself is structurally invalid -- e.g. `checks` is not an
+ * object, or `concurrency` is not a positive integer. (A `checks` object with zero entries is
+ * deliberately valid: the run produces an empty, passing `Verdict`.) Thrown synchronously by
+ * `runRepoContract`, before anything spawns -- not by `defineRepoContract`, which performs no
+ * runtime validation of its own (see its own doc comment).
+ * @public
+ */
 export declare class InvalidRepoContractConfigError extends RepoContractError {
     /** Always `"REPO_CONTRACT_INVALID_CONFIG"`. */
     readonly code = "REPO_CONTRACT_INVALID_CONFIG";
@@ -277,16 +303,21 @@ export declare class InvalidRepoContractConfigError extends RepoContractError {
  * consumers actually run; a check whose tool emits another format converts it in its own `run`
  * step or reads it directly in its `policy` function, using whatever library it already depends
  * on, rather than this package carrying an optional peer dependency on everyone's behalf.
+ * @public
  */
 export declare type OutputFormat = "json" | "text";
 
-/** The result of a check's requested output-format parse: either a successful `ParsedOutputSuccess`, or a `ParsedOutputFailure`. */
+/**
+ * The result of a check's requested output-format parse: either a successful `ParsedOutputSuccess`, or a `ParsedOutputFailure`.
+ * @public
+ */
 export declare type ParsedOutput<T> = ParsedOutputSuccess<T> | ParsedOutputFailure;
 
 /**
  * A requested parse of a check's stdout failed. The raw stdout on the
  * parent `CheckEvidence` is preserved unchanged -- a parse failure is never
  * silently reinterpreted or discarded.
+ * @public
  */
 export declare interface ParsedOutputFailure {
     /** The format that was requested (and failed to parse). */
@@ -297,7 +328,10 @@ export declare interface ParsedOutputFailure {
     readonly error: string;
 }
 
-/** A requested parse of a check's stdout succeeded. */
+/**
+ * A requested parse of a check's stdout succeeded.
+ * @public
+ */
 export declare interface ParsedOutputSuccess<T> {
     /** The format that was requested and successfully parsed. */
     readonly format: OutputFormat;
@@ -315,6 +349,7 @@ export declare interface ParsedOutputSuccess<T> {
  * synchronous or return a `Promise`. repo-contract does not interpret
  * `rationale` beyond storing and surfacing it verbatim; the package has no
  * opinion about what makes a check pass, fail, or warrant a `warn`.
+ * @public
  */
 export declare type Policy<TChecks extends CheckSchema = CheckSchema> = (ctx: PolicyContext<TChecks>) => PolicyResult | Promise<PolicyResult>;
 
@@ -326,6 +361,7 @@ export declare type Policy<TChecks extends CheckSchema = CheckSchema> = (ctx: Po
  * By the time any policy runs, every check has already finished executing
  * and every check's evidence has already been assembled -- no policy ever
  * observes a partially-populated `evidence` (see specs/architecture.md).
+ * @public
  */
 export declare interface PolicyContext<TChecks extends CheckSchema = CheckSchema> {
     /** This check's own evidence. */
@@ -355,6 +391,7 @@ export declare interface PolicyContext<TChecks extends CheckSchema = CheckSchema
  * condition is materially relevant and wants it surfaced -- not a synonym
  * for "minor failure"; a `warn` never fails `Verdict.passed` (see
  * `runPolicies` in `src/policy/run-policies.ts`).
+ * @public
  */
 export declare type PolicyOutcome = "pass" | "fail" | "warn";
 
@@ -375,6 +412,7 @@ export declare type PolicyOutcome = "pass" | "fail" | "warn";
  * necessarily a little broader. `cause` still holds the original `TypeError`
  * verbatim; the message never repeats `result.output.error`'s own text, which may
  * contain raw stdout content (see SECURITY.md).
+ * @public
  */
 export declare class PolicyReadFailedParseValueError extends RepoContractError {
     /** Always `"REPO_CONTRACT_POLICY_READ_FAILED_PARSE_VALUE"`. */
@@ -404,6 +442,7 @@ export declare class PolicyReadFailedParseValueError extends RepoContractError {
  * original `TypeError` verbatim, exactly as `PolicyThrewError` guarantees
  * for every other policy failure, so the true cause remains recoverable
  * either way.
+ * @public
  */
 export declare class PolicyReadUnrequestedOutputError extends RepoContractError {
     /** Always `"REPO_CONTRACT_POLICY_READ_UNREQUESTED_OUTPUT"`. */
@@ -425,12 +464,18 @@ export declare class PolicyReadUnrequestedOutputError extends RepoContractError 
  * consumer to understand *why* the policy reached its outcome from this
  * value alone. A rationale like "see output above" or "check the report for
  * details" defeats the purpose: it forces the consumer back to raw,
- * unstructured command output, exactly what this type exists to avoid. See
- * specs/architecture.md for the evidence/rationale/judgment distinction this
+ * unstructured command output, exactly what this type exists to avoid.
+ * That specific anti-pattern is not just documented here -- `runPolicies`
+ * (`src/policy/run-policies.ts`'s `VAGUE_RATIONALE_PATTERNS`, ADR 0016) rejects a
+ * rationale matching it at runtime, the same as any other malformed
+ * `PolicyResult`, so a check (repo-contract's own, or a consumer's) that
+ * regresses to a vague deferral fails loudly instead of silently shipping.
+ * See specs/architecture.md for the evidence/rationale/judgment distinction this
  * type is built around: evidence answers "what happened?", `rationale`
  * answers "what does the repository's policy conclude about what
  * happened?", and a policy's `outcome` is not the final word -- a human or
  * AI consumer still makes the final judgment call using both.
+ * @public
  */
 export declare interface PolicyResult {
     /** The policy's pass/fail/warn decision. */
@@ -455,6 +500,7 @@ export declare interface PolicyResult {
  * or one of its two narrower siblings below (`PolicyReadUnrequestedOutputError`,
  * `PolicyReadFailedParseValueError`) when the failure matches one of their
  * more specific shapes -- rather than surfacing only the first one found.
+ * @public
  */
 export declare class PolicyThrewError extends RepoContractError {
     /** Always `"REPO_CONTRACT_POLICY_THREW"`. */
@@ -464,7 +510,10 @@ export declare class PolicyThrewError extends RepoContractError {
     constructor(checkId: string, cause: unknown);
 }
 
-/** Top-level configuration passed to `defineRepoContract`/`runRepoContract`. */
+/**
+ * Top-level configuration passed to `defineRepoContract`/`runRepoContract`.
+ * @public
+ */
 export declare interface RepoContractConfig<TChecks extends CheckSchema = CheckSchema> {
     /** Every check to run, keyed by check id. */
     readonly checks: TChecks;
@@ -531,6 +580,7 @@ export declare interface RepoContractConfig<TChecks extends CheckSchema = CheckS
  *     a check failing its contract -- it propagates as a rejected
  *     `runRepoContract()` promise (`PolicyThrewError`), never silently
  *     turned into a failed verdict entry.
+ * @public
  */
 export declare abstract class RepoContractError extends Error {
     /** Stable, machine-readable identifier for this error's specific failure mode. */
@@ -568,13 +618,17 @@ export declare abstract class RepoContractError extends Error {
  * @param config - the repo-contract configuration to run: its checks, concurrency, and their policies
  * @param options - run options; `options.checks` restricts execution to specific check ids, `options.signal` allows cancelling the run
  * @returns the assembled `evidence` for every check together with the aggregated `verdict`
+ * @public
  */
 export declare function runRepoContract<const TChecks extends CheckSchema>(config: RepoContractConfig<TChecks>, options?: RunRepoContractOptions): Promise<{
     evidence: Evidence<TChecks>;
     verdict: Verdict<TChecks>;
 }>;
 
-/** Optional per-run controls for `runRepoContract`. */
+/**
+ * Optional per-run controls for `runRepoContract`.
+ * @public
+ */
 export declare interface RunRepoContractOptions {
     /** Abort the entire run. Checks already in flight are terminated; checks not yet started never spawn. Every configured check still receives a well-formed evidence entry (`status: "aborted"`) and still has its policy invoked. */
     readonly signal?: AbortSignal;
@@ -592,6 +646,7 @@ export declare interface RunRepoContractOptions {
  * capability: it calls it with a resolved command/argv/options and does not
  * inspect, wrap, or sanitize it -- the security properties of the spawned
  * process are entirely the supplied function's own.
+ * @public
  */
 export declare type Spawner = (command: string, args: readonly string[], options: SpawnOptions) => ChildProcess;
 
@@ -609,13 +664,24 @@ export declare type Spawner = (command: string, args: readonly string[], options
  * interface, since repo-contract has no use for the shared base on its own -- structurally
  * identical for any real schema object assigned to it. Re-diff against
  * `@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.
+ *
+ * Tagged `@public`, not tied to either re-exporting barrel's own stability tier (this type is
+ * re-exported from both the Stable root barrel, for `output.schema`, and the Experimental
+ * `repo-contract/helpers` barrel): this vendored copy's own shape only ever changes via a
+ * deliberate re-diff against the pinned upstream spec version above, never as a side effect of
+ * either barrel's own stability classification.
+ * @public
  */
 export declare interface StandardSchemaV1<Input = unknown, Output = Input> {
     /** The Standard Schema properties. */
     readonly "~standard": StandardSchemaV1.Props<Input, Output>;
 }
 
-/** Namespaced members of {@link StandardSchemaV1}: `Props`, `Result`, `SuccessResult`, `FailureResult`, `Issue`, `PathSegment`, `Types`, `InferInput`, `InferOutput`. */
+/**
+ * Namespaced members of `StandardSchemaV1`: `Props`, `Result`, `SuccessResult`, `FailureResult`,
+ * `Issue`, `PathSegment`, `Types`, `InferInput`, `InferOutput`.
+ * @public
+ */
 export declare namespace StandardSchemaV1 {
     /** The Standard Schema properties interface. */
     export interface Props<Input = unknown, Output = Input> {
@@ -681,6 +747,7 @@ export declare namespace StandardSchemaV1 {
  * a schema *throwing* means the validator itself is broken, so it propagates as a rejected
  * `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim
  * via the native `Error` `cause` chain.
+ * @public
  */
 export declare class StandardSchemaValidateThrewError extends RepoContractError {
     /** Always `"REPO_CONTRACT_STANDARD_SCHEMA_VALIDATE_THREW"`. */
@@ -698,6 +765,7 @@ export declare class StandardSchemaValidateThrewError extends RepoContractError 
  * a signal-handling context that cannot `await` anything else -- see
  * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
  * `node:child_process.spawnSync` and cross-spawn's exported `sync` are both valid, drop-in values.
+ * @public
  */
 export declare type SyncSpawner = (command: string, args: readonly string[], options: SpawnSyncOptions) => SpawnSyncReturns<Buffer | string>;
 
@@ -706,6 +774,7 @@ export declare type SyncSpawner = (command: string, args: readonly string[], opt
  * the configured `checks`. Unlike a `dependsOn` id (already validated to exist by
  * `validateRepoContractConfig` before any run starts), `options.checks` is only ever checked once
  * `runChecks` actually resolves it -- there is no earlier structural-validation pass for it.
+ * @public
  */
 export declare class UnknownCheckIdError extends RepoContractError {
     /** Always `"REPO_CONTRACT_UNKNOWN_CHECK_ID"`. */
@@ -732,6 +801,7 @@ export declare class UnknownCheckIdError extends RepoContractError {
  * `TChecks` directly from a mapped/conditional type over itself, as this
  * type is, loses that contextual typing -- confirmed during implementation,
  * not a hypothetical).
+ * @public
  */
 export declare type ValidatedCheckSchema<T> = {
     readonly [K in keyof T]: T[K] extends CheckDefinitionConfig ? Omit<T[K], "dependsOn"> & {
@@ -750,6 +820,7 @@ export declare type ValidatedCheckSchema<T> = {
  * schema-versioning policy) -- `version: 2` reflects `checks[id]` changing
  * shape from `{ passed, reason? }` to a full `PolicyResult`
  * (`{ outcome, rationale }`); see ADR 0001.
+ * @public
  */
 export declare interface Verdict<TChecks extends CheckSchema = CheckSchema> {
     /** Schema version of this shape; see VERSIONING.md. */
