@@ -191,7 +191,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!CheckDefinition:interface",
-          "docComment": "/**\n * One fully configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.\n */\n",
+          "docComment": "/**\n * One fully configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -250,7 +250,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!CheckDefinitionConfig:interface",
-          "docComment": "/**\n * One partially configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.\n */\n",
+          "docComment": "/**\n * One partially configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -544,7 +544,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!CheckEvidence:interface",
-          "docComment": "/**\n * What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n *\n * `output.value` is the value produced by the configured `format` parser, optionally validated and (if a schema transforms/coerces it) replaced by `output.schema` (see `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a check's config supplies a schema. It is typed `unknown` for every format regardless, including `\"text\"` (even though `parseText` always produces a `string` at runtime) and regardless of whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own inferred output type) through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package is attempting to close: a schema still gives its own author real compile-time input/output typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"text\"` with no schema supplied.\n */\n",
+          "docComment": "/**\n * What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n *\n * `output.value` is the value produced by the configured `format` parser, optionally validated and (if a schema transforms/coerces it) replaced by `output.schema` (see `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a check's config supplies a schema. It is typed `unknown` for every format regardless, including `\"text\"` (even though `parseText` always produces a `string` at runtime) and regardless of whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own inferred output type) through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package is attempting to close: a schema still gives its own author real compile-time input/output typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"text\"` with no schema supplied.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -924,7 +924,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!CheckSchema:type",
-          "docComment": "/**\n * The full set of checks in a `RepoContractConfig`, keyed by check id.\n */\n",
+          "docComment": "/**\n * The full set of checks in a `RepoContractConfig`, keyed by check id.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -964,7 +964,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!CheckStatus:type",
-          "docComment": "/**\n * Why a check's process ended up in its terminal state. `\"completed\"` means the process ran to exit on its own -- the exit code may still be non-zero, and that is for the check's policy to interpret, never this package. The other five values all mean the process did not exit on its own; repo-contract terminated it, or it was terminated for a reason repo-contract can observe but did not cause.\n *\n * `\"signaled\"` specifically means a signal repo-contract did *not* itself request -- an externally-caused termination. A check killed because the *host* process running repo-contract received its own SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler cleanup) is instead `\"host_terminated\"`: repo-contract did request that signal, just not via `options.signal` or `timeoutMs` (see `\"aborted\"`/`\"timed_out\"`), so it must not be conflated with an externally-caused `\"signaled\"`.\n */\n",
+          "docComment": "/**\n * Why a check's process ended up in its terminal state. `\"completed\"` means the process ran to exit on its own -- the exit code may still be non-zero, and that is for the check's policy to interpret, never this package. The other five values all mean the process did not exit on its own; repo-contract terminated it, or it was terminated for a reason repo-contract can observe but did not cause.\n *\n * `\"signaled\"` specifically means a signal repo-contract did *not* itself request -- an externally-caused termination. A check killed because the *host* process running repo-contract received its own SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler cleanup) is instead `\"host_terminated\"`: repo-contract did request that signal, just not via `options.signal` or `timeoutMs` (see `\"aborted\"`/`\"timed_out\"`), so it must not be conflated with an externally-caused `\"signaled\"`.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -990,7 +990,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!defineRepoContract:function(1)",
-          "docComment": "/**\n * Identity function whose only job is type inference: authoring a config through `defineRepoContract` lets each check's `output` (present or absent, and which format) flow into that same check's `policy` parameter type, without the consumer writing any type annotations themselves. It also statically validates every check's `dependsOn` against its sibling check ids (see `ValidatedCheckSchema`) -- a typo'd or self-referencing id fails to compile here rather than only failing at runtime. Performs no other validation and no cloning -- `runRepoContract` validates whatever config it is ultimately given, whether or not it passed through this function first.\n *\n * `const TChecks` (TypeScript 5.0's `const` type parameter modifier) keeps each check's own configuration -- notably whether `output` is present at all -- from being widened during inference; without it, TypeScript's inference for a `Record` of heterogeneous generic entries does not reliably preserve that per-check shape once a callback property (`policy`) is also present. See `InferParsedValue` in types.ts for the related limitation this does not fully solve.\n *\n * `TChecks` is inferred from the plain, unwrapped `RepoContractConfig<TChecks>` position -- the `ValidatedCheckSchema<TChecks>` constraint on `checks` is intersected in afterward, computed from that already-inferred `TChecks`, rather than substituted in its place. Inferring `TChecks` directly from a mapped/conditional type over itself (as `ValidatedCheckSchema` is) loses the contextual typing every check's `policy` callback otherwise gets -- another real, confirmed TypeScript inference limitation, distinct from the `output`-to-`policy` one above.\n *\n * @param config - the config to type-check and return unchanged.\n *\n * @returns the same `config` object, untouched and uncloned.\n */\n",
+          "docComment": "/**\n * Identity function whose only job is type inference: authoring a config through `defineRepoContract` lets each check's `output` (present or absent, and which format) flow into that same check's `policy` parameter type, without the consumer writing any type annotations themselves. It also statically validates every check's `dependsOn` against its sibling check ids (see `ValidatedCheckSchema`) -- a typo'd or self-referencing id fails to compile here rather than only failing at runtime. Performs no other validation and no cloning -- `runRepoContract` validates whatever config it is ultimately given, whether or not it passed through this function first.\n *\n * `const TChecks` (TypeScript 5.0's `const` type parameter modifier) keeps each check's own configuration -- notably whether `output` is present at all -- from being widened during inference; without it, TypeScript's inference for a `Record` of heterogeneous generic entries does not reliably preserve that per-check shape once a callback property (`policy`) is also present. See `InferParsedValue` in types.ts for the related limitation this does not fully solve.\n *\n * `TChecks` is inferred from the plain, unwrapped `RepoContractConfig<TChecks>` position -- the `ValidatedCheckSchema<TChecks>` constraint on `checks` is intersected in afterward, computed from that already-inferred `TChecks`, rather than substituted in its place. Inferring `TChecks` directly from a mapped/conditional type over itself (as `ValidatedCheckSchema` is) loses the contextual typing every check's `policy` callback otherwise gets -- another real, confirmed TypeScript inference limitation, distinct from the `output`-to-`policy` one above.\n *\n * @param config - the config to type-check and return unchanged.\n *\n * @returns the same `config` object, untouched and uncloned.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1076,7 +1076,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!DependencyDeclaredLaterError:class",
-          "docComment": "/**\n * A check's `dependsOn` names a check declared *later* in the same `checks` object. `dependsOn` may only reference a check declared earlier -- see `CheckDefinition.dependsOn`'s own doc comment. Declaration order doubles as the required topological order, so this is the only way an invalid dependency graph can arise; a real cycle is structurally impossible once every edge points backward. Thrown synchronously, before any check spawns.\n */\n",
+          "docComment": "/**\n * A check's `dependsOn` names a check declared *later* in the same `checks` object. `dependsOn` may only reference a check declared earlier -- see `CheckDefinition.dependsOn`'s own doc comment. Declaration order doubles as the required topological order, so this is the only way an invalid dependency graph can arise; a real cycle is structurally impossible once every edge points backward. Thrown synchronously, before any check spawns.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1250,7 +1250,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!Evidence:interface",
-          "docComment": "/**\n * Versioned, immutable record of one complete `runRepoContract` execution -- every configured check's evidence, plus timing for the run as a whole. Says nothing about whether any of it was acceptable; see `Verdict`. Additive fields are a compatible change; changing or removing an existing field requires bumping this version number (see VERSIONING.md).\n */\n",
+          "docComment": "/**\n * Versioned, immutable record of one complete `runRepoContract` execution -- every configured check's evidence, plus timing for the run as a whole. Says nothing about whether any of it was acceptable; see `Verdict`. Additive fields are a compatible change; changing or removing an existing field requires bumping this version number (see VERSIONING.md).\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1443,7 +1443,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!InvalidCheckConfigError:class",
-          "docComment": "/**\n * One check's `CheckDefinition` is structurally invalid -- e.g. an empty `run`, a `run` string containing an unquoted shell operator without `shell: true`, or a missing `policy`. Thrown synchronously, before that check (or any other) spawns.\n */\n",
+          "docComment": "/**\n * One check's `CheckDefinition` is structurally invalid -- e.g. an empty `run`, a `run` string containing an unquoted shell operator without `shell: true`, or a missing `policy`. Thrown synchronously, before that check (or any other) spawns.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1587,7 +1587,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!InvalidRepoContractConfigError:class",
-          "docComment": "/**\n * The top-level `RepoContractConfig` itself is structurally invalid -- e.g. `checks` is not an object, or `concurrency` is not a positive integer. (A `checks` object with zero entries is deliberately valid: the run produces an empty, passing `Verdict`.) Thrown synchronously by `runRepoContract`, before anything spawns -- not by `defineRepoContract`, which performs no runtime validation of its own (see its own doc comment).\n */\n",
+          "docComment": "/**\n * The top-level `RepoContractConfig` itself is structurally invalid -- e.g. `checks` is not an object, or `concurrency` is not a positive integer. (A `checks` object with zero entries is deliberately valid: the run produces an empty, passing `Verdict`.) Thrown synchronously by `runRepoContract`, before anything spawns -- not by `defineRepoContract`, which performs no runtime validation of its own (see its own doc comment).\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1685,7 +1685,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!OutputFormat:type",
-          "docComment": "/**\n * Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only. Format conversion (e.g. YAML) is deliberately not a core concern of this package -- JSON and plain text cover every check this package or its consumers actually run; a check whose tool emits another format converts it in its own `run` step or reads it directly in its `policy` function, using whatever library it already depends on, rather than this package carrying an optional peer dependency on everyone's behalf.\n */\n",
+          "docComment": "/**\n * Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only. Format conversion (e.g. YAML) is deliberately not a core concern of this package -- JSON and plain text cover every check this package or its consumers actually run; a check whose tool emits another format converts it in its own `run` step or reads it directly in its `policy` function, using whatever library it already depends on, rather than this package carrying an optional peer dependency on everyone's behalf.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1711,7 +1711,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!ParsedOutput:type",
-          "docComment": "/**\n * The result of a check's requested output-format parse: either a successful `ParsedOutputSuccess`, or a `ParsedOutputFailure`.\n */\n",
+          "docComment": "/**\n * The result of a check's requested output-format parse: either a successful `ParsedOutputSuccess`, or a `ParsedOutputFailure`.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1760,7 +1760,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!ParsedOutputFailure:interface",
-          "docComment": "/**\n * A requested parse of a check's stdout failed. The raw stdout on the parent `CheckEvidence` is preserved unchanged -- a parse failure is never silently reinterpreted or discarded.\n */\n",
+          "docComment": "/**\n * A requested parse of a check's stdout failed. The raw stdout on the parent `CheckEvidence` is preserved unchanged -- a parse failure is never silently reinterpreted or discarded.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1860,7 +1860,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!ParsedOutputSuccess:interface",
-          "docComment": "/**\n * A requested parse of a check's stdout succeeded.\n */\n",
+          "docComment": "/**\n * A requested parse of a check's stdout succeeded.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1973,7 +1973,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!Policy:type",
-          "docComment": "/**\n * A repository-owned decision about whether one check's evidence is acceptable. Returns a `PolicyResult` -- never a bare boolean or string -- so a policy can communicate more than pass/fail even when the run is otherwise acceptable (see `PolicyResult`/`PolicyOutcome`). May be synchronous or return a `Promise`. repo-contract does not interpret `rationale` beyond storing and surfacing it verbatim; the package has no opinion about what makes a check pass, fail, or warrant a `warn`.\n */\n",
+          "docComment": "/**\n * A repository-owned decision about whether one check's evidence is acceptable. Returns a `PolicyResult` -- never a bare boolean or string -- so a policy can communicate more than pass/fail even when the run is otherwise acceptable (see `PolicyResult`/`PolicyOutcome`). May be synchronous or return a `Promise`. repo-contract does not interpret `rationale` beyond storing and surfacing it verbatim; the package has no opinion about what makes a check pass, fail, or warrant a `warn`.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2066,7 +2066,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!PolicyContext:interface",
-          "docComment": "/**\n * What a check's `policy` function is called with. `result` is that check's own evidence; `evidence` is the complete run's evidence, including every sibling check -- present so a policy can make cross-check decisions (e.g. \"only enforce the mutation-score threshold if the tests check passed\"). By the time any policy runs, every check has already finished executing and every check's evidence has already been assembled -- no policy ever observes a partially-populated `evidence` (see specs/architecture.md).\n */\n",
+          "docComment": "/**\n * What a check's `policy` function is called with. `result` is that check's own evidence; `evidence` is the complete run's evidence, including every sibling check -- present so a policy can make cross-check decisions (e.g. \"only enforce the mutation-score threshold if the tests check passed\"). By the time any policy runs, every check has already finished executing and every check's evidence has already been assembled -- no policy ever observes a partially-populated `evidence` (see specs/architecture.md).\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2225,7 +2225,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!PolicyOutcome:type",
-          "docComment": "/**\n * `\"pass\"`: the repository-owned policy evaluated the captured evidence as satisfying its configured requirements. `\"fail\"`: the evidence did not satisfy them. `\"warn\"`: the evidence does not violate the policy's blocking requirements, but the policy has intentionally decided the condition is materially relevant and wants it surfaced -- not a synonym for \"minor failure\"; a `warn` never fails `Verdict.passed` (see `runPolicies` in `src/policy/run-policies.ts`).\n */\n",
+          "docComment": "/**\n * `\"pass\"`: the repository-owned policy evaluated the captured evidence as satisfying its configured requirements. `\"fail\"`: the evidence did not satisfy them. `\"warn\"`: the evidence does not violate the policy's blocking requirements, but the policy has intentionally decided the condition is materially relevant and wants it surfaced -- not a synonym for \"minor failure\"; a `warn` never fails `Verdict.passed` (see `runPolicies` in `src/policy/run-policies.ts`).\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2251,7 +2251,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!PolicyReadFailedParseValueError:class",
-          "docComment": "/**\n * `PolicyThrewError`'s other special case, alongside `PolicyReadUnrequestedOutputError`: this check *did* request `output: { format: ... }`, but that parse itself failed (`result.output.success === false` -- see `ParsedOutputFailure` in types.ts, which has no `value` field, only `error`), and the policy read a property off `result.output.value` anyway without checking `.success` first. Detected the same way `runPolicies` detects the sibling case -- a thrown `TypeError` whose own message shows a property read off `undefined` -- cross-checked against this check's own evidence having `output.success === false`, so a genuinely unrelated `TypeError`, or a check whose parse actually succeeded, still becomes a plain `PolicyThrewError`. Unlike `PolicyReadUnrequestedOutputError`, the read property isn't restricted to a known list here -- `result.output.value`'s shape is whatever the external tool printed, entirely unknown to repo-contract -- so this match is necessarily a little broader. `cause` still holds the original `TypeError` verbatim; the message never repeats `result.output.error`'s own text, which may contain raw stdout content (see SECURITY.md).\n */\n",
+          "docComment": "/**\n * `PolicyThrewError`'s other special case, alongside `PolicyReadUnrequestedOutputError`: this check *did* request `output: { format: ... }`, but that parse itself failed (`result.output.success === false` -- see `ParsedOutputFailure` in types.ts, which has no `value` field, only `error`), and the policy read a property off `result.output.value` anyway without checking `.success` first. Detected the same way `runPolicies` detects the sibling case -- a thrown `TypeError` whose own message shows a property read off `undefined` -- cross-checked against this check's own evidence having `output.success === false`, so a genuinely unrelated `TypeError`, or a check whose parse actually succeeded, still becomes a plain `PolicyThrewError`. Unlike `PolicyReadUnrequestedOutputError`, the read property isn't restricted to a known list here -- `result.output.value`'s shape is whatever the external tool printed, entirely unknown to repo-contract -- so this match is necessarily a little broader. `cause` still holds the original `TypeError` verbatim; the message never repeats `result.output.error`'s own text, which may contain raw stdout content (see SECURITY.md).\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2411,7 +2411,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!PolicyReadUnrequestedOutputError:class",
-          "docComment": "/**\n * A narrower `runPolicies` throws instead of `PolicyThrewError` when the thrown `TypeError`'s own message shows it came from reading a `result.output` property (`.success`, `.value`, `.error`, or `.format`), and this check's `CheckEvidence.output` really is `undefined` -- which happens only when its config never requested `output: { format: ... }` in the first place (see `CheckEvidence.output` in types.ts). Detected from the `TypeError`'s exact V8-produced message (\"Cannot read properties of undefined (reading '...')\") cross-checked against that `undefined` fact, so it is thrown only for a policy that plausibly hit this exact mistake -- any other `TypeError`, or a check that did request a format, still becomes a plain `PolicyThrewError`. This is best-effort inference from the `TypeError`'s message text, not a verified trace back to `result.output` itself -- V8's message carries only the property name, so an unrelated bug that happens to read the same property name off some other `undefined` value can still be misclassified this way (see `unrequestedOutputProperty` in run-policies.ts). `cause` still holds the original `TypeError` verbatim, exactly as `PolicyThrewError` guarantees for every other policy failure, so the true cause remains recoverable either way.\n */\n",
+          "docComment": "/**\n * A narrower `runPolicies` throws instead of `PolicyThrewError` when the thrown `TypeError`'s own message shows it came from reading a `result.output` property (`.success`, `.value`, `.error`, or `.format`), and this check's `CheckEvidence.output` really is `undefined` -- which happens only when its config never requested `output: { format: ... }` in the first place (see `CheckEvidence.output` in types.ts). Detected from the `TypeError`'s exact V8-produced message (\"Cannot read properties of undefined (reading '...')\") cross-checked against that `undefined` fact, so it is thrown only for a policy that plausibly hit this exact mistake -- any other `TypeError`, or a check that did request a format, still becomes a plain `PolicyThrewError`. This is best-effort inference from the `TypeError`'s message text, not a verified trace back to `result.output` itself -- V8's message carries only the property name, so an unrelated bug that happens to read the same property name off some other `undefined` value can still be misclassified this way (see `unrequestedOutputProperty` in run-policies.ts). `cause` still holds the original `TypeError` verbatim, exactly as `PolicyThrewError` guarantees for every other policy failure, so the true cause remains recoverable either way.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2571,7 +2571,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!PolicyResult:interface",
-          "docComment": "/**\n * A repository-owned policy's interpretation of one check's captured evidence -- fully JSON-serializable (a plain object of primitives only, never an `Error`, class instance, function, or tool-specific object) so it can be persisted, transmitted, aggregated across parallel checks, and consumed directly by a human or an AI without rerunning anything.\n *\n * `rationale` is mandatory and must contain enough actionable detail -- specific file/line locations, rule ids, test names, counts -- for a consumer to understand *why* the policy reached its outcome from this value alone. A rationale like \"see output above\" or \"check the report for details\" defeats the purpose: it forces the consumer back to raw, unstructured command output, exactly what this type exists to avoid. See specs/architecture.md for the evidence/rationale/judgment distinction this type is built around: evidence answers \"what happened?\", `rationale` answers \"what does the repository's policy conclude about what happened?\", and a policy's `outcome` is not the final word -- a human or AI consumer still makes the final judgment call using both.\n */\n",
+          "docComment": "/**\n * A repository-owned policy's interpretation of one check's captured evidence -- fully JSON-serializable (a plain object of primitives only, never an `Error`, class instance, function, or tool-specific object) so it can be persisted, transmitted, aggregated across parallel checks, and consumed directly by a human or an AI without rerunning anything.\n *\n * `rationale` is mandatory and must contain enough actionable detail -- specific file/line locations, rule ids, test names, counts -- for a consumer to understand *why* the policy reached its outcome from this value alone. A rationale like \"see output above\" or \"check the report for details\" defeats the purpose: it forces the consumer back to raw, unstructured command output, exactly what this type exists to avoid. That specific anti-pattern is not just documented here -- `runPolicies` (`src/policy/run-policies.ts`'s `VAGUE_RATIONALE_PATTERNS`, ADR 0016) rejects a rationale matching it at runtime, the same as any other malformed `PolicyResult`, so a check (repo-contract's own, or a consumer's) that regresses to a vague deferral fails loudly instead of silently shipping. See specs/architecture.md for the evidence/rationale/judgment distinction this type is built around: evidence answers \"what happened?\", `rationale` answers \"what does the repository's policy conclude about what happened?\", and a policy's `outcome` is not the final word -- a human or AI consumer still makes the final judgment call using both.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2644,7 +2644,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!PolicyThrewError:class",
-          "docComment": "/**\n * A check's `policy` function threw synchronously, or returned a `Promise` that later rejected. Both failure modes are wrapped identically. The original thrown/rejected value is preserved verbatim via the native `Error` `cause` chain -- never stringified, summarized, or discarded -- so a consumer catching this can still inspect exactly what their own policy code did wrong.\n *\n * A policy throwing never stops any other check's policy from running -- every configured check's policy is invoked exactly once regardless of what any other policy does. If more than one policy fails this way in the same run, `runRepoContract()` rejects with a native `AggregateError` whose `errors` array holds one error per failing check -- `PolicyThrewError`, or one of its two narrower siblings below (`PolicyReadUnrequestedOutputError`, `PolicyReadFailedParseValueError`) when the failure matches one of their more specific shapes -- rather than surfacing only the first one found.\n */\n",
+          "docComment": "/**\n * A check's `policy` function threw synchronously, or returned a `Promise` that later rejected. Both failure modes are wrapped identically. The original thrown/rejected value is preserved verbatim via the native `Error` `cause` chain -- never stringified, summarized, or discarded -- so a consumer catching this can still inspect exactly what their own policy code did wrong.\n *\n * A policy throwing never stops any other check's policy from running -- every configured check's policy is invoked exactly once regardless of what any other policy does. If more than one policy fails this way in the same run, `runRepoContract()` rejects with a native `AggregateError` whose `errors` array holds one error per failing check -- `PolicyThrewError`, or one of its two narrower siblings below (`PolicyReadUnrequestedOutputError`, `PolicyReadFailedParseValueError`) when the failure matches one of their more specific shapes -- rather than surfacing only the first one found.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2788,7 +2788,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!RepoContractConfig:interface",
-          "docComment": "/**\n * Top-level configuration passed to `defineRepoContract`/`runRepoContract`.\n */\n",
+          "docComment": "/**\n * Top-level configuration passed to `defineRepoContract`/`runRepoContract`.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3002,7 +3002,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!RepoContractError:class",
-          "docComment": "/**\n * Error hierarchy for repo-contract. Every concrete error carries a stable `code` string for programmatic handling, and never embeds raw stdout/stderr/env values in its message -- only check ids and field names (see SECURITY.md).\n *\n * Three distinct failure classes are kept deliberately separate (see specs/architecture.md): - Structural config problems throw synchronously, before any process spawns (`InvalidRepoContractConfigError`, `InvalidCheckConfigError`). - Anything only discoverable by attempting execution becomes evidence, never a throw (a bad `cwd`, a missing binary -- recorded as `status: \"spawn_error\"` on that check's `CheckEvidence`). - A policy function throwing or rejecting is a bug in consumer code, not a check failing its contract -- it propagates as a rejected `runRepoContract()` promise (`PolicyThrewError`), never silently turned into a failed verdict entry.\n */\n",
+          "docComment": "/**\n * Error hierarchy for repo-contract. Every concrete error carries a stable `code` string for programmatic handling, and never embeds raw stdout/stderr/env values in its message -- only check ids and field names (see SECURITY.md).\n *\n * Three distinct failure classes are kept deliberately separate (see specs/architecture.md): - Structural config problems throw synchronously, before any process spawns (`InvalidRepoContractConfigError`, `InvalidCheckConfigError`). - Anything only discoverable by attempting execution becomes evidence, never a throw (a bad `cwd`, a missing binary -- recorded as `status: \"spawn_error\"` on that check's `CheckEvidence`). - A policy function throwing or rejecting is a bug in consumer code, not a check failing its contract -- it propagates as a rejected `runRepoContract()` promise (`PolicyThrewError`), never silently turned into a failed verdict entry.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3064,7 +3064,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!runRepoContract:function(1)",
-          "docComment": "/**\n * Executes every configured check, collects its evidence, optionally parses its output, evaluates every check's repository-owned policy against the complete evidence, and aggregates a verdict. Never calls `process.exit()` -- returns data; the caller decides what to do with `verdict.passed`.\n *\n * Structural configuration problems throw synchronously before any process spawns. Anything only discoverable by attempting execution (a missing binary, a bad `cwd`) becomes evidence on that check (`status: \"spawn_error\"`), never a throw. A policy function throwing or rejecting rejects this function's own returned promise (`PolicyThrewError`, or an `AggregateError` of them if more than one policy failed this way) -- distinct from a policy that ran fine and simply returned a failure string. See `src/errors.ts` for the full distinction.\n *\n * Execution and policy evaluation are strictly phased: every check finishes running and every check's evidence is fully assembled before any policy is invoked (see specs/architecture.md) -- a policy can safely read `ctx.evidence` for any sibling check's result.\n *\n * Deliberately not declared `async`: validation runs and can throw before this function returns anything at all, so a config problem is a genuine synchronous exception to the caller (as documented above and on `InvalidRepoContractConfigError`/`InvalidCheckConfigError`/ `DependencyDeclaredLaterError`) -- an `async function`'s body runs to its first `await` still inside the caller's own call stack, but any throw before that point is nonetheless converted by the language into a rejected `Promise`, never surfaced as a synchronous exception. Splitting validation out into this synchronous wrapper, with the rest of the work in the `async` function below, keeps the documented synchronous-throw guarantee actually true rather than aspirational.\n *\n * @param config - the repo-contract configuration to run: its checks, concurrency, and their policies\n *\n * @param options - run options; `options.checks` restricts execution to specific check ids, `options.signal` allows cancelling the run\n *\n * @returns the assembled `evidence` for every check together with the aggregated `verdict`\n */\n",
+          "docComment": "/**\n * Executes every configured check, collects its evidence, optionally parses its output, evaluates every check's repository-owned policy against the complete evidence, and aggregates a verdict. Never calls `process.exit()` -- returns data; the caller decides what to do with `verdict.passed`.\n *\n * Structural configuration problems throw synchronously before any process spawns. Anything only discoverable by attempting execution (a missing binary, a bad `cwd`) becomes evidence on that check (`status: \"spawn_error\"`), never a throw. A policy function throwing or rejecting rejects this function's own returned promise (`PolicyThrewError`, or an `AggregateError` of them if more than one policy failed this way) -- distinct from a policy that ran fine and simply returned a failure string. See `src/errors.ts` for the full distinction.\n *\n * Execution and policy evaluation are strictly phased: every check finishes running and every check's evidence is fully assembled before any policy is invoked (see specs/architecture.md) -- a policy can safely read `ctx.evidence` for any sibling check's result.\n *\n * Deliberately not declared `async`: validation runs and can throw before this function returns anything at all, so a config problem is a genuine synchronous exception to the caller (as documented above and on `InvalidRepoContractConfigError`/`InvalidCheckConfigError`/ `DependencyDeclaredLaterError`) -- an `async function`'s body runs to its first `await` still inside the caller's own call stack, but any throw before that point is nonetheless converted by the language into a rejected `Promise`, never surfaced as a synchronous exception. Splitting validation out into this synchronous wrapper, with the rest of the work in the `async` function below, keeps the documented synchronous-throw guarantee actually true rather than aspirational.\n *\n * @param config - the repo-contract configuration to run: its checks, concurrency, and their policies\n *\n * @param options - run options; `options.checks` restricts execution to specific check ids, `options.signal` allows cancelling the run\n *\n * @returns the assembled `evidence` for every check together with the aggregated `verdict`\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3176,7 +3176,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!RunRepoContractOptions:interface",
-          "docComment": "/**\n * Optional per-run controls for `runRepoContract`.\n */\n",
+          "docComment": "/**\n * Optional per-run controls for `runRepoContract`.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3249,7 +3249,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!Spawner:type",
-          "docComment": "/**\n * Spawns a child process, given a resolved command, argv, and options -- modeled directly on `node:child_process`'s own `spawn(command, args, options)` signature so both `node:child_process.spawn` and cross-spawn's exported `spawn` are valid, drop-in values with no adapter code required (see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md). repo-contract treats whatever function is supplied as a trusted capability: it calls it with a resolved command/argv/options and does not inspect, wrap, or sanitize it -- the security properties of the spawned process are entirely the supplied function's own.\n */\n",
+          "docComment": "/**\n * Spawns a child process, given a resolved command, argv, and options -- modeled directly on `node:child_process`'s own `spawn(command, args, options)` signature so both `node:child_process.spawn` and cross-spawn's exported `spawn` are valid, drop-in values with no adapter code required (see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md). repo-contract treats whatever function is supplied as a trusted capability: it calls it with a resolved command/argv/options and does not inspect, wrap, or sanitize it -- the security properties of the spawned process are entirely the supplied function's own.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3289,7 +3289,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!StandardSchemaV1:interface",
-          "docComment": "/**\n * Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension (https://standardschema.dev/json-schema) is out of scope; see the ADR.\n *\n * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat interface, since repo-contract has no use for the shared base on its own -- structurally identical for any real schema object assigned to it. Re-diff against `@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.\n */\n",
+          "docComment": "/**\n * Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension (https://standardschema.dev/json-schema) is out of scope; see the ADR.\n *\n * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat interface, since repo-contract has no use for the shared base on its own -- structurally identical for any real schema object assigned to it. Re-diff against `@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.\n *\n * Tagged `@public`, not tied to either re-exporting barrel's own stability tier (this type is re-exported from both the Stable root barrel, for `output.schema`, and the Experimental `repo-contract/helpers` barrel): this vendored copy's own shape only ever changes via a deliberate re-diff against the pinned upstream spec version above, never as a side effect of either barrel's own stability classification.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3379,7 +3379,7 @@
         {
           "kind": "Namespace",
           "canonicalReference": "repo-contract!StandardSchemaV1:namespace",
-          "docComment": "/**\n * Namespaced members of {@link StandardSchemaV1}: `Props`, `Result`, `SuccessResult`, `FailureResult`, `Issue`, `PathSegment`, `Types`, `InferInput`, `InferOutput`.\n */\n",
+          "docComment": "/**\n * Namespaced members of `StandardSchemaV1`: `Props`, `Result`, `SuccessResult`, `FailureResult`, `Issue`, `PathSegment`, `Types`, `InferInput`, `InferOutput`.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4185,7 +4185,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!StandardSchemaValidateThrewError:class",
-          "docComment": "/**\n * A check's `output.schema[\"~standard\"].validate()` threw synchronously, or returned a `Promise` that rejected, instead of returning a `Result`. This is a bug in the consumer-supplied schema object, not malformed check output -- the same distinction `PolicyThrewError` below draws for a throwing policy: a schema *returning* failure `issues` becomes an ordinary `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON parse failure), but a schema *throwing* means the validator itself is broken, so it propagates as a rejected `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim via the native `Error` `cause` chain.\n */\n",
+          "docComment": "/**\n * A check's `output.schema[\"~standard\"].validate()` threw synchronously, or returned a `Promise` that rejected, instead of returning a `Result`. This is a bug in the consumer-supplied schema object, not malformed check output -- the same distinction `PolicyThrewError` below draws for a throwing policy: a schema *returning* failure `issues` becomes an ordinary `ParsedOutputFailure` (reported as data, exactly like a malformed-JSON parse failure), but a schema *throwing* means the validator itself is broken, so it propagates as a rejected `runRepoContract()` promise instead. The original thrown/rejected value is preserved verbatim via the native `Error` `cause` chain.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4329,7 +4329,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!SyncSpawner:type",
-          "docComment": "/**\n * Synchronously spawns a child process and waits for it to exit -- modeled directly on `node:child_process`'s own `spawnSync(command, args, options)` signature, the same drop-in-compatibility approach as `Spawner`. Used only for `RepoContractConfig.killProcessTree` (Windows process-tree cleanup via `taskkill`, which fundamentally needs to run synchronously from a signal-handling context that cannot `await` anything else -- see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md). `node:child_process.spawnSync` and cross-spawn's exported `sync` are both valid, drop-in values.\n */\n",
+          "docComment": "/**\n * Synchronously spawns a child process and waits for it to exit -- modeled directly on `node:child_process`'s own `spawnSync(command, args, options)` signature, the same drop-in-compatibility approach as `Spawner`. Used only for `RepoContractConfig.killProcessTree` (Windows process-tree cleanup via `taskkill`, which fundamentally needs to run synchronously from a signal-handling context that cannot `await` anything else -- see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md). `node:child_process.spawnSync` and cross-spawn's exported `sync` are both valid, drop-in values.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4382,7 +4382,7 @@
         {
           "kind": "Class",
           "canonicalReference": "repo-contract!UnknownCheckIdError:class",
-          "docComment": "/**\n * `RunRepoContractOptions.checks` (a partial-run request) names a check id that doesn't exist in the configured `checks`. Unlike a `dependsOn` id (already validated to exist by `validateRepoContractConfig` before any run starts), `options.checks` is only ever checked once `runChecks` actually resolves it -- there is no earlier structural-validation pass for it.\n */\n",
+          "docComment": "/**\n * `RunRepoContractOptions.checks` (a partial-run request) names a check id that doesn't exist in the configured `checks`. Unlike a `dependsOn` id (already validated to exist by `validateRepoContractConfig` before any run starts), `options.checks` is only ever checked once `runChecks` actually resolves it -- there is no earlier structural-validation pass for it.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4510,7 +4510,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!ValidatedCheckSchema:type",
-          "docComment": "/**\n * Same shape as a check schema `T`, except each check's own `dependsOn` is narrowed from `readonly string[]` to only the *other* keys of that same `T` -- so a typo'd or self-referencing id fails to compile instead of only failing at runtime (`validate-config.ts` still enforces this at runtime too, for any config that reaches `runRepoContract` without having gone through `defineRepoContract`'s static checking first, e.g. one assembled dynamically from untyped data).\n *\n * Used as an additional constraint on `defineRepoContract`'s parameter, intersected with `RepoContractConfig<TChecks>` rather than substituted for it -- inferring `TChecks` from the *unwrapped* `RepoContractConfig<TChecks>` position first is what keeps every check's own `policy` callback contextually typed (a real TypeScript inference limitation: inferring `TChecks` directly from a mapped/conditional type over itself, as this type is, loses that contextual typing -- confirmed during implementation, not a hypothetical).\n */\n",
+          "docComment": "/**\n * Same shape as a check schema `T`, except each check's own `dependsOn` is narrowed from `readonly string[]` to only the *other* keys of that same `T` -- so a typo'd or self-referencing id fails to compile instead of only failing at runtime (`validate-config.ts` still enforces this at runtime too, for any config that reaches `runRepoContract` without having gone through `defineRepoContract`'s static checking first, e.g. one assembled dynamically from untyped data).\n *\n * Used as an additional constraint on `defineRepoContract`'s parameter, intersected with `RepoContractConfig<TChecks>` rather than substituted for it -- inferring `TChecks` from the *unwrapped* `RepoContractConfig<TChecks>` position first is what keeps every check's own `policy` callback contextually typed (a real TypeScript inference limitation: inferring `TChecks` directly from a mapped/conditional type over itself, as this type is, loses that contextual typing -- confirmed during implementation, not a hypothetical).\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4576,7 +4576,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!Verdict:interface",
-          "docComment": "/**\n * Versioned, immutable aggregate result of evaluating every configured check's policy against its evidence -- each check's own `PolicyResult`, verbatim, keyed by check id. `passed` is `true` only if every check's `outcome` is `\"pass\"` or `\"warn\"` -- `\"fail\"` is the only outcome that fails the run; one failing check never collapses into a single generic message, every check remains individually inspectable under `checks`. Versioned independently of `Evidence` (see VERSIONING.md's schema-versioning policy) -- `version: 2` reflects `checks[id]` changing shape from `{ passed, reason? }` to a full `PolicyResult` (`{ outcome, rationale }`); see ADR 0001.\n */\n",
+          "docComment": "/**\n * Versioned, immutable aggregate result of evaluating every configured check's policy against its evidence -- each check's own `PolicyResult`, verbatim, keyed by check id. `passed` is `true` only if every check's `outcome` is `\"pass\"` or `\"warn\"` -- `\"fail\"` is the only outcome that fails the run; one failing check never collapses into a single generic message, every check remains individually inspectable under `checks`. Versioned independently of `Evidence` (see VERSIONING.md's schema-versioning policy) -- `version: 2` reflects `checks[id]` changing shape from `{ passed, reason? }` to a full `PolicyResult` (`{ outcome, rationale }`); see ADR 0001.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
