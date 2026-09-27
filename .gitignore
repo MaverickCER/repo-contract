@@ -67,3 +67,15 @@ examples/package-lock.json
 # MAX_HISTORY_ENTRIES in that script). A local audit trail for a developer's
 # own machine, not committed source.
 history.json
+
+# GitHub Pages is now the actions/deploy-pages artifact-based flow (see
+# RELEASING.md's "GitHub Pages" section) -- these regenerate fresh on every
+# push to main and are handed to the deploy job as build artifacts, never
+# committed. docs/api-report/*.api.md stays committed (the always-fresh
+# Markdown report an `api-docs` check gates on every PR); only the browsable
+# HTML tree and the release-only badge/evidence-doc JSON+Markdown are ignored.
+/docs/api/
+/docs/coverage-badge.json
+/docs/mutation-badge.json
+/docs/OpenSSF-Scorecard.md
+/docs/ISO-IEC-IEEE-12207-2017.md

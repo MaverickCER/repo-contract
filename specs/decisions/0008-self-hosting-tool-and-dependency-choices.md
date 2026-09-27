@@ -202,3 +202,23 @@ nothing not already in the tree via API Extractor/other tooling) at the accepted
 **release-cadence, not every-commit, freshness** -- an explicit limitation, stated on
 `docs/api/index.html` itself, with the always-fresh `docs/api-report/*.api.md` linked as the
 fallback for anyone checking against an unreleased commit.
+
+## Amendment (2026-09): `docs/api/` moves to every-push generation, uncommitted
+
+The previous amendment's "release-cadence, not every-commit" tradeoff was a direct consequence of
+this repository's Pages source being "Deploy from a branch" (serving `docs/` straight from `main`
+with no build step), which made committing `docs/api/` at release time the only way to get it onto
+the live site at all. That constraint is gone: this repository's GitHub Pages deployment moved to
+the modern, artifact-based `actions/deploy-pages` flow (matching env-cap/data-cap, via a shared
+reusable workflow hosted in `internal-package-contract` -- see the "Standardize npm release +
+GitHub Pages deploy" plan and `RELEASING.md`'s "GitHub Pages" section), which builds and uploads
+`docs/` as a deploy artifact on every push to `main`, with nothing ever committed back to the repo
+for Pages' sake.
+
+`docs/api/` now regenerates as part of that same deploy, on every push to `main` -- every-commit
+freshness, not release-cadence, and no longer tracked in git at all (`git rm --cached` plus a
+matching `.gitignore` entry). The tool choice above (API Extractor's Doc Model +
+`@microsoft/api-documenter` + `marked`, not TypeDoc) is unaffected; only the "generated and
+committed" half of that decision changes to "generated and deployed, never committed."
+`.github/workflows/api-baseline.yml` keeps its Release-PR-branch job for
+`.repo-contract/api-contract/baseline.*` alone -- `docs/api/` is no longer its concern.

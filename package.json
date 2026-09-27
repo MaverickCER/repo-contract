@@ -107,6 +107,7 @@
     "prepublishOnly": "npm run contract && npm run verify-no-ambient-capabilities",
     "prepush": "npm run contract",
     "publint": "npm run contract -- publint",
+    "release": "changeset publish",
     "schema": "npm run contract -- schema",
     "security:deps": "npm run contract -- security-deps",
     "security:network": "npm run contract -- security-network",
@@ -126,7 +127,8 @@
     "test:watch": "vitest --watch",
     "typecheck": "npm run contract -- typecheck",
     "verify": "npm run contract",
-    "verify-no-ambient-capabilities": "node scripts/verify-no-ambient-capabilities.mjs"
+    "verify-no-ambient-capabilities": "node scripts/verify-no-ambient-capabilities.mjs",
+    "version": "changeset version && npm run build"
   },
   "overrides": {
     "@microsoft/api-extractor-model": "^7.33.12",
@@ -141,6 +143,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
+    "@changesets/cli": "^2.31.1",
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
     "@danibram/crap4ts": "^0.6.0",
