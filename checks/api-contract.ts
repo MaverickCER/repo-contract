@@ -93,7 +93,7 @@ function remediationForLevel(level: RequiredReleaseLevel | undefined): string {
 }
 
 /**
- * Versioning is Conventional-Commits-driven (ADR 0009): release-please derives the version from
+ * Versioning is Conventional-Commits-driven (ADR 0009): Changesets derives the version from
  * the commit types, so this check can and does **gate** -- it fails a PR whose commits declare a
  * smaller bump than the public-API diff requires (a breaking API change committed as `fix:`,
  * etc.). It also fails on an internal schema-version literal that changed shape without its own
@@ -136,7 +136,7 @@ export function evaluateApiContractPolicy({
           : []),
         "",
         `The commits on this branch do not declare a \`${determinant.requiredLevel ?? "?"}\` ` +
-          `release. ${remediationForLevel(determinant.requiredLevel)}, so release-please bumps ` +
+          `release. ${remediationForLevel(determinant.requiredLevel)}, so Changesets bumps ` +
           `the version correctly.`,
         ...(determinant.lowerTierLine ? ["", determinant.lowerTierLine] : []),
       ].join("\n"),

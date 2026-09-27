@@ -194,3 +194,25 @@ install step) is a poor fit.
   and `lint` are writer checks by design (`prettier --write`, `eslint --fix`); running them in a
   different check-only mode would duplicate their invocation contracts. Re-staging their fixes
   to already-staged files is the smaller cost.
+
+## Amendment (2026-09): release-please replaced by Changesets
+
+This decision's "release-please derives the version and changelog" section described this
+repository's release tool from its own launch through `0.7.x`. As part of the "Standardize npm
+release + GitHub Pages deploy" plan, repo-contract migrated to
+[Changesets](https://github.com/changesets/changesets) + a shared, centrally-maintained reusable
+release workflow hosted in `internal-package-contract` -- the same setup data-cap/env-cap already
+used, rather than maintaining a third, bespoke release mechanism. `release-please-config.json` /
+`.release-please-manifest.json` are gone; `.changeset/config.json` plus this repo's own
+`.github/workflows/release.yml` (now a thin `uses:` caller) replace them. See RELEASING.md's
+current "How releases work" section for the operational detail.
+
+Everything else this ADR decided is unaffected: Conventional Commits remain the sole versioning
+input (`api-contract` still fails a PR whose declared bump is lower than what the API diff
+requires), commitlint/the PR-title check are unchanged, and pre-1.0 minor/patch deflation still
+applies -- Changesets' own default pre-1.0 behavior, not a configuration option this repo sets
+explicitly (contrast release-please's explicit `bump-minor-pre-major`/`bump-patch-for-minor-pre-major`
+flags). A changeset (hand-written or auto-generated from the commit's own Conventional Commit
+subject) is now the actual version-bump input Changesets consumes; the commit message remains
+the source Conventional-Commits signal either way, so `api-contract`'s own bump-agreement check
+needed no logic change, only its comments' tool name updated.
