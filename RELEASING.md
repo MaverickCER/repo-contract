@@ -11,7 +11,7 @@ shared, centrally-maintained workflow hosted in
 that this repo's own [`.github/workflows/release.yml`](.github/workflows/release.yml)
 calls into (`uses:`). **No `NPM_TOKEN` secret exists in this repository** and none is
 needed — npm verifies the workflow's OIDC identity against a one-time
-trusted-publisher registration on npmjs.com (see [First-time setup](#first-time-setup)
+trusted-publisher registration on npmjs.com (see [One-time setup](#one-time-setup)
 below).
 
 Migrated off [release-please](https://github.com/googleapis/release-please) onto this

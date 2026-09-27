@@ -321,6 +321,14 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+      # Generates docs/api/ into the working tree (gitignored, never committed --
+      # see .gitignore) purely so the `docs` check below has real content to
+      # validate docs/index.html's link to it against. Without this, a fresh
+      # checkout has no docs/api/ at all (it's only ever committed nowhere now --
+      # the GitHub Pages deploy job regenerates it separately, on push to main),
+      # and linkinator fails every PR with a spurious 404 on a link that is, in
+      # fact, live on the real site.
+      - run: npm run api-docs:html
       - run: npm run contract
         # Under a squash merge the PR title becomes the sole commit on main, so
         # api-contract must count it toward the declared release bump too.
