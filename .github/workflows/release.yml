@@ -27,10 +27,7 @@ jobs:
       # permissions at the intersection of what this caller grants and what it
       # itself declares.
       id-token: write
-    # TODO(part H): pin to internal-package-contract's merge-commit SHA once parts
-    # B/C/E/F have landed there and this branch is pushed -- see RELEASING.md's
-    # "Standardize npm release + Pages deploy" note.
-    uses: MaverickCER/internal-package-contract/.github/workflows/release-npm-changesets.yml@main
+    uses: MaverickCER/internal-package-contract/.github/workflows/release-npm-changesets.yml@558368d7da1b90fbfa5681b6962335cf33231b45 # main, parts B/C/E
 
   # Propagates this release to internal-package-contract (part E of the
   # "Standardize npm release + Pages deploy" plan): internal-package-contract
