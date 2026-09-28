@@ -131,9 +131,11 @@ async function runMarkdownlint() {
 // and host itself -- otherwise `https://evil.example/?x=github.com/maverickcer/
 // repo-contract/compare/` or `https://notgithub.com/maverickcer/...` would also
 // be skipped. The owner is spelled with per-letter `[Xx]` classes rather than
-// an inline `(?i:...)` group: release-please writes GitHub's canonical
+// an inline `(?i:...)` group: release-please wrote GitHub's canonical
 // `MaverickCER` casing while package.json's own URLs use `maverickcer`, and the
-// case-expanded form needs no modern-regex-engine support.
+// case-expanded form needs no modern-regex-engine support. (Both compare/tag links and this
+// exemption predate the Changesets migration -- Changesets writes the same shape of link in
+// CHANGELOG.md, so the exemption's reasoning still applies verbatim.)
 export const LINKINATOR_SKIP_PATTERNS = [
   "security/advisories/new",
   "^https?://github\\.com/[Mm][Aa][Vv][Ee][Rr][Ii][Cc][Kk][Cc][Ee][Rr]/repo-contract/(compare|releases/tag)/",

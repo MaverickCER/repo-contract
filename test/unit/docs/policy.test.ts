@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { docsLinkFieldValue, evaluateDocsPolicy, isExternalUrl } from "../../../checks/docs.js"
+import { docsLinkFieldValue, evaluateDocsPolicy } from "../../../checks/docs.js"
 import type {
   CombinedDocsEvidence,
   DocsLinkExceptionEvidence,
@@ -120,11 +120,29 @@ describe("evaluateDocsPolicy", () => {
     expect(result.rationale.split("\n")).toEqual([
       "linkinator found 1 broken link(s):",
       "- https://example.com -- HTTP 404 -- no exception record -- add one to " +
-        ".repo-contract/exceptions/docs-links.json if this link is known-good but flaky",
+        ".repo-contract/exceptions/docs-links.json if this link is known-good",
     ])
   })
 
-  it("fails on a BROKEN local link, unconditionally -- a local link can never be waived", () => {
+  it("fails on an unwaived BROKEN local link, exactly like an unwaived external one", () => {
+    const result = evaluateDocsPolicy({
+      evidence: evidence({
+        linkinator: {
+          ok: true,
+          value: { links: [link({ url: "/missing.md", state: "BROKEN", status: 404 })] },
+        },
+      }),
+      linkExceptions: noExceptions(),
+    })
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale.split("\n")).toEqual([
+      "linkinator found 1 broken link(s):",
+      "- /missing.md -- HTTP 404 -- no exception record -- add one to " +
+        ".repo-contract/exceptions/docs-links.json if this link is known-good",
+    ])
+  })
+
+  it("passes a BROKEN local link with a matching, justified exception record -- local links are waivable exactly like external ones, e.g. a link to another check's own generated doc that this check's own execution-phase crawl runs before that check's policy-phase write happens", () => {
     const result = evaluateDocsPolicy({
       evidence: evidence({
         linkinator: {
@@ -136,9 +154,23 @@ describe("evaluateDocsPolicy", () => {
         exceptionRecord({ id: "docs-links:/missing.md", url: "/missing.md" }),
       ),
     })
+    expect(result.outcome).toBe("pass")
+  })
+
+  it("fails a BROKEN local link whose matching record has an empty justification", () => {
+    const result = evaluateDocsPolicy({
+      evidence: evidence({
+        linkinator: {
+          ok: true,
+          value: { links: [link({ url: "/missing.md", state: "BROKEN", status: 404 })] },
+        },
+      }),
+      linkExceptions: withActive(
+        exceptionRecord({ id: "docs-links:/missing.md", url: "/missing.md", justification: "" }),
+      ),
+    })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("/missing.md")
-    expect(result.rationale).not.toContain("no exception record")
+    expect(result.rationale).toContain("exception incomplete (missing: justification)")
   })
 
   it("treats a plain http:// URL as external too, not only https://", () => {
@@ -156,38 +188,6 @@ describe("evaluateDocsPolicy", () => {
     expect(result.outcome).toBe("pass")
   })
 
-  it("treats a url with 'https://' only as a substring, not a leading scheme, as local -- never waivable", () => {
-    const brokenUrl = "/redirects/see-https://example.com"
-    const result = evaluateDocsPolicy({
-      evidence: evidence({
-        linkinator: {
-          ok: true,
-          value: { links: [link({ url: brokenUrl, state: "BROKEN", status: 404 })] },
-        },
-      }),
-      linkExceptions: withActive(
-        exceptionRecord({ id: `docs-links:${brokenUrl}`, url: brokenUrl }),
-      ),
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).not.toContain("no exception record")
-  })
-
-  it("counts a waived-with-an-active-record local link exactly once, not duplicated as an external offender", () => {
-    const result = evaluateDocsPolicy({
-      evidence: evidence({
-        linkinator: {
-          ok: true,
-          value: { links: [link({ url: "/missing.md", state: "BROKEN", status: 404 })] },
-        },
-      }),
-      linkExceptions: noExceptions(),
-    })
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("linkinator found 1 broken link(s):")
-    expect(result.rationale).not.toContain("no exception record")
-  })
-
   it("passes a BROKEN external link with a matching, justified exception record", () => {
     const result = evaluateDocsPolicy({
       evidence: evidence({
@@ -197,7 +197,7 @@ describe("evaluateDocsPolicy", () => {
     })
     expect(result.rationale).toBe(
       "markdownlint-cli2 reported 0 issues; linkinator found 0 broken link(s) " +
-        "(1 known-flaky external link(s) waived, see .repo-contract/exceptions/docs-links.json) " +
+        "(1 known-good link(s) waived, see .repo-contract/exceptions/docs-links.json) " +
         "across 1 checked.",
     )
   })
@@ -327,31 +327,5 @@ describe("docsLinkFieldValue", () => {
 
   it("falls back to '' for a requirement naming a key the record doesn't have at all", () => {
     expect(docsLinkFieldValue(exceptionRecord(), "doesNotExist")).toBe("")
-  })
-})
-
-describe("isExternalUrl", () => {
-  it("accepts https://", () => {
-    expect(isExternalUrl("https://example.com")).toBe(true)
-  })
-
-  it("accepts http://, not only https://", () => {
-    expect(isExternalUrl("http://example.com")).toBe(true)
-  })
-
-  it("rejects a non-http(s) scheme with an otherwise well-formed authority", () => {
-    expect(isExternalUrl("ftp://example.com")).toBe(false)
-  })
-
-  it("rejects a relative local path", () => {
-    expect(isExternalUrl("/missing.md")).toBe(false)
-  })
-
-  it("rejects a bare anchor", () => {
-    expect(isExternalUrl("#section")).toBe(false)
-  })
-
-  it("rejects a value that merely contains 'https://' without being an absolute URL", () => {
-    expect(isExternalUrl("/redirects/see-https://example.com")).toBe(false)
   })
 })

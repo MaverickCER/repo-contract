@@ -2,10 +2,10 @@
 // `.repo-contract/api-contract/baseline.*` is updated once a baseline already exists (the check
 // itself only ever bootstraps the very first one; see check.ts). Regenerates the current contract
 // and overwrites the baseline in the working tree for review and commit -- by a human, or by
-// .github/workflows/api-baseline.yml on release-please's Release PR branch.
+// .github/workflows/api-baseline.yml on the Version Packages PR branch (changeset-release/main).
 //
 // Intended lifecycle: change public API in a commit that declares the right bump (`api-contract`
-// gates this) -> PR merges -> release-please's Release PR bumps package.json/CHANGELOG.md and
+// gates this) -> PR merges -> the Version Packages PR bumps package.json/CHANGELOG.md and
 // the release publishes -> `npm run contract:baseline` -> commit the new baseline.
 //
 // Outcomes -- only `updated` and `current` exit 0:
@@ -15,7 +15,7 @@
 //             -> regenerates and writes.
 //   current   the baseline already carries package.json's version AND its contents match ->
 //             writes nothing. This is what every Release-PR `synchronize` after the first sync
-//             sees (the job's own baseline commit, release-please refreshing the PR), so it must
+//             sees (the job's own baseline commit, changesets/action refreshing the PR), so it must
 //             not fail.
 //   refused   package.json's version is unparseable; or it is older than the committed
 //             baseline's (regenerating would roll the baseline backwards); or the committed
@@ -84,7 +84,7 @@ export async function runUpdateBaseline(root: string): Promise<UpdateBaselineOut
         message:
           `Refusing to update the baseline: package.json declares version ${packageJson.version}, older than the ` +
           `committed baseline's ${existingBaseline.meta.packageVersion} -- regenerating now would roll the baseline ` +
-          "backwards. Bump package.json (normally via release-please's Release PR) first.",
+          "backwards. Bump package.json (normally via the Version Packages PR) first.",
       }
     }
     sameVersion = versionDelta === 0

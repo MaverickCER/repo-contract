@@ -250,7 +250,7 @@ All six exception-policy-backed checks (`security-socket`, `coderabbitai`, `secu
 ### Commit-message format — `commitlint`
 
 - **Establishes**: is every commit on `origin/main..HEAD` a valid Conventional Commit? Since
-  Conventional Commits are the sole versioning input (release-please derives the bump + changelog
+  Conventional Commits are the sole versioning input (Changesets derives the bump + changelog
   from them, and `api-contract` gates on the bump they declare — see
   specs/decisions/0009-conventional-commits-versioning-and-local-gates.md), a malformed message is a real defect,
   not a style nit.

@@ -1,10 +1,9 @@
-// Human/CI-invoked command (`npm run api-docs:html`, and the release workflow -- see
-// .github/workflows/api-baseline.yml) that regenerates docs/api/: one HTML page per exported API
-// item, across all three targets (repo-contract, repo-contract/presets, repo-contract/helpers),
-// plus a hand-authored landing page. Release-cadence only, by design -- unlike
-// scripts/api-docs/generate.ts's markdown reports, docs/api/ carries no every-commit freshness
-// check (an explicit, accepted limitation, not an oversight -- see specs/decisions/0008 and
-// docs/api/index.html's own freshness note).
+// Human/CI-invoked command (`npm run api-docs:html`, and the GitHub Pages deploy job in
+// ci.yml -- see the shared deploy-pages-typedoc.yml workflow in internal-package-contract) that
+// regenerates docs/api/: one HTML page per exported API item, across all three targets
+// (repo-contract, repo-contract/presets, repo-contract/helpers), plus a hand-authored landing
+// page. Regenerated fresh on every push to main and never committed -- see specs/decisions/0008's
+// 2026-09 amendment for why this moved off its original release-cadence-only design.
 //
 // Pipeline: generateApiReports (report-targets.ts) preserves each target's Doc Model JSON instead
 // of discarding it -> generateMarkdownPages (documenter-adapter.ts) renders that Doc Model into
@@ -115,9 +114,7 @@ const IMPORT_PATH: Readonly<Record<string, string>> = {
 /**
  * The hand-authored `docs/api/index.html` landing page -- one card per generated target, each
  * linking to `./<target>/` (which serves the package-home page: every export with its summary),
- * not the intermediate "Packages" list `runGenerate` no longer emits. States its own
- * release-cadence freshness plainly, confidence first, with the always-fresh markdown reports
- * linked as the fallback for anyone checking against an unreleased commit.
+ * not the intermediate "Packages" list `runGenerate` no longer emits.
  * @param summaries - Every target's generation summary, for the page-count line on each card.
  * @returns The complete landing page HTML.
  */
@@ -138,12 +135,12 @@ function renderLandingPage(summaries: readonly TargetSummary[]): string {
     .join("\n")
 
   const bodyHtml = `<h1>API reference</h1>
-        <p>Generated from this package's own TSDoc comments on every release &mdash; every page here is real documentation, byte-compared against the source, not a hand-maintained copy. Pick a target to see its full export list; each export links to its own page with the signature, parameters, and description.</p>
+        <p>Generated from this package's own TSDoc comments on every push to <code>main</code> &mdash; every page here is real documentation, byte-compared against the source, not a hand-maintained copy. Pick a target to see its full export list; each export links to its own page with the signature, parameters, and description.</p>
         <ul class="adoption-grid">
 ${cards}
         </ul>
         <p>New to repo-contract? Start with the <a href="https://github.com/MaverickCER/repo-contract#readme">README</a> and the <a href="https://github.com/MaverickCER/repo-contract/blob/main/GUIDE.md">Guide</a>; this reference is for looking up an exact shape once you know what you need.</p>
-        <p>Checking against an unreleased commit? The <a href="https://github.com/MaverickCER/repo-contract/tree/main/docs/api-report">markdown API reports</a> are regenerated and verified on every commit by this repository's own <code>api-docs</code> check.</p>`
+        <p>Checking against an unmerged pull request? The <a href="https://github.com/MaverickCER/repo-contract/tree/main/docs/api-report">markdown API reports</a> are regenerated and verified on every commit by this repository's own <code>api-docs</code> check, including on PRs before they reach <code>main</code>.</p>`
 
   return renderPage({
     title: "API reference",

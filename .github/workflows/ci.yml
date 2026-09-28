@@ -321,6 +321,14 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+      # Generates docs/api/ into the working tree (gitignored, never committed --
+      # see .gitignore) purely so the `docs` check below has real content to
+      # validate docs/index.html's link to it against. Without this, a fresh
+      # checkout has no docs/api/ at all (it's only ever committed nowhere now --
+      # the GitHub Pages deploy job regenerates it separately, on push to main),
+      # and linkinator fails every PR with a spurious 404 on a link that is, in
+      # fact, live on the real site.
+      - run: npm run api-docs:html
       - run: npm run contract
         # Under a squash merge the PR title becomes the sole commit on main, so
         # api-contract must count it toward the declared release bump too.
@@ -392,36 +400,27 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # Regenerates docs/coverage-badge.json and docs/mutation-badge.json from the
-  # same coverage/mutation reports `contract` just produced (reused via
-  # upload/download-artifact above rather than re-run). This repo's GitHub
-  # Pages deployment is the legacy branch-deploy mechanism -- serves docs/
-  # directly from committed content on main (confirmed via `gh api
-  # repos/.../pages`), unlike env-cap/data-cap's actions/deploy-pages artifact
-  # upload -- so the badge JSON has to actually land as a commit on main, not
-  # just a build artifact. Push-to-main only: a PR's badge numbers are exactly
-  # `contract`'s report-only concern, and this job also needs write access
-  # `contract` deliberately doesn't have.
+  # Regenerates docs/coverage-badge.json, docs/mutation-badge.json, and the two
+  # evidence docs from the same coverage/mutation reports and generated-doc
+  # copies `contract` just produced (reused via upload/download-artifact above
+  # rather than re-run -- re-running through `npm run contract` a second time
+  # here would double-pay the mutation suite, the single most expensive thing
+  # that job does). GitHub Pages here is now the same artifact-based
+  # actions/deploy-pages flow env-cap/data-cap already use, not the legacy
+  # branch-deploy this repo used before this migration -- so this content is
+  # handed to `deploy` below as a build artifact, never committed to main.
+  # Push-to-main only: a PR's badge numbers are exactly `contract`'s
+  # report-only concern.
   #
-  # Lands via a branch + PR, not a direct push to main: main's own ruleset
-  # requires every merge go through a PR (see BranchProtection in
-  # internal-package-contract), which blocks a bare `git push origin
-  # HEAD:main` outright. Branch protection also requires the `contract`/`lint`
-  # checks and one approving review before a merge -- the checks are carried
-  # forward from this same run rather than re-run (see
-  # scripts/carry-forward-required-checks.sh: `contract` already validated
-  # the actual source that produced these artifacts, so re-running it against
-  # a derived-content-only diff would just re-prove the same answer), but the
-  # review still needs a human's `gh pr merge --admin` today -- see that step's
-  # own comment.
-  badges:
+  # No longer opens a bot PR (superseding this job's prior use of
+  # scripts/carry-forward-required-checks.sh -- that mechanism has nothing
+  # left to carry forward here, since nothing merges to main from this job
+  # anymore). Folds the former `docs-evidence` job into this one: both are the
+  # same "already-generated content, needs to reach Pages" concern.
+  pages-content:
     needs: contract
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      statuses: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -431,108 +430,43 @@ jobs:
 
       - run: node scripts/generate-badges.mjs
 
-      - name: Open a PR with the regenerated badges
-        id: pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # `git add` first, then diff the INDEX -- see api-baseline.yml's
-          # identical guard for why (plain `git diff --quiet` misses
-          # untracked files, which these are on the very first run).
-          git add -A -- docs/coverage-badge.json docs/mutation-badge.json
-          if git diff --cached --quiet -- docs/coverage-badge.json docs/mutation-badge.json; then
-            echo "Badges already current; nothing to commit."
-            exit 0
-          fi
-          BRANCH="chore/sync-badges-${GITHUB_RUN_ID}"
-          git checkout -b "$BRANCH"
-          git commit -m "chore: sync generated coverage/mutation badges"
-          git push origin "$BRANCH"
-          gh pr create --base main --head "$BRANCH" \
-            --title "chore: sync generated coverage/mutation badges" \
-            --body "Automated badge sync from the \`contract\` job on ${GITHUB_SHA}."
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
-
-      # See scripts/carry-forward-required-checks.sh's own comment for why this
-      # carries forward contract/lint's already-known result rather than
-      # re-running them. Doesn't attempt the merge itself: a fully bot-authored
-      # PR has no human to satisfy this branch's required-review rule, and
-      # granting github-actions[bot] a review bypass is a deliberate,
-      # security-relevant repo-setting change, not something this script does
-      # on its own -- left open for a one-line `gh pr merge --squash --admin`.
-      - name: Carry forward contract/lint's result onto the badge-sync branch
-        if: steps.pr.outputs.branch
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: scripts/carry-forward-required-checks.sh "${{ github.repository }}" "${{ steps.pr.outputs.branch }}" "${{ github.sha }}" contract lint
-
-  # Commits the docs/OpenSSF-Scorecard.md and docs/ISO-IEC-IEEE-12207-2017.md
-  # that `contract` already generated and uploaded above -- the idempotent
-  # diff-and-commit pattern api-baseline.yml and `badges` above both already
-  # use, for the same underlying reason `badges` is push-to-main-only and
-  # decoupled from `contract`'s own blocking gate: both docs stamp a fresh
-  # `_Generated <timestamp>_` line on every run by design (see each
-  # generator's own render-markdown.ts), so they can never reproduce
-  # byte-identical against committed content -- `contract`'s "Working tree is
-  # clean" step excludes them from its dirty-check for exactly this reason,
-  # and this job is their real freshness mechanism instead. Deliberately just
-  # downloads-and-commits the already-generated files rather than
-  # regenerating them (see the "Upload generated evidence docs" step's own
-  # comment for why re-running through `npm run contract` a second time here
-  # would double-pay the mutation suite).
-  #
-  # Same branch + PR + carried-forward-checks pattern as `badges` above, for
-  # the same reason: main's ruleset requires every merge go through a PR.
-  docs-evidence:
-    needs: contract
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      statuses: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: generated-evidence-docs
+          path: docs
 
-      - name: Open a PR with the regenerated docs
-        id: pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A -- docs/OpenSSF-Scorecard.md docs/ISO-IEC-IEEE-12207-2017.md
-          if git diff --cached --quiet -- docs/OpenSSF-Scorecard.md docs/ISO-IEC-IEEE-12207-2017.md; then
-            echo "Docs already current; nothing to commit."
-            exit 0
-          fi
-          BRANCH="chore/sync-evidence-docs-${GITHUB_RUN_ID}"
-          git checkout -b "$BRANCH"
-          git commit -m "chore: sync generated OpenSSF Scorecard and ISO 12207 evidence docs"
-          git push origin "$BRANCH"
-          gh pr create --base main --head "$BRANCH" \
-            --title "chore: sync generated OpenSSF Scorecard and ISO 12207 evidence docs" \
-            --body "Automated evidence-docs sync from the \`contract\` job on ${GITHUB_SHA}."
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pages-content
+          path: |
+            docs/coverage-badge.json
+            docs/mutation-badge.json
+            docs/OpenSSF-Scorecard.md
+            docs/ISO-IEC-IEEE-12207-2017.md
+          retention-days: 1
+          if-no-files-found: error
 
-      # See scripts/carry-forward-required-checks.sh's own comment for why this
-      # carries forward contract/lint's already-known result rather than
-      # re-running them. Doesn't attempt the merge itself: a fully bot-authored
-      # PR has no human to satisfy this branch's required-review rule, and
-      # granting github-actions[bot] a review bypass is a deliberate,
-      # security-relevant repo-setting change, not something this script does
-      # on its own -- left open for a one-line `gh pr merge --squash --admin`.
-      - name: Carry forward contract/lint's result onto the evidence-docs branch
-        if: steps.pr.outputs.branch
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: scripts/carry-forward-required-checks.sh "${{ github.repository }}" "${{ steps.pr.outputs.branch }}" "${{ github.sha }}" contract lint
+  # Deploys docs/ (the GitHub Pages site) via the shared, centrally-maintained
+  # reusable workflow hosted in internal-package-contract -- the same
+  # actions/deploy-pages mechanism env-cap/data-cap already use. `badges-script`
+  # is left empty deliberately: this repo's badge JSON depends on the mutation
+  # report `contract` already paid for, so `pages-content` above generates it,
+  # not this job -- `content-artifact-name` hands that pre-built content over
+  # instead. `docs/api/` is generated fresh on every run by `api-docs:html`
+  # (inside the shared workflow); no longer release-cadence-only -- see
+  # RELEASING.md's "GitHub Pages" section and
+  # specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's amendment.
+  deploy:
+    needs: pages-content
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@7e3908f9595c3cf3f4b7e31c371f1daff49d46b2 # main, parts B/C/D/E/F/G/I
+    with:
+      docs-script: api-docs:html
+      content-artifact-name: pages-content
 
   # Belt-and-suspenders for the squash-merge case (see
   # specs/decisions/0009-conventional-commits-versioning-and-local-gates.md): the merge-commit /

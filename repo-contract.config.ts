@@ -357,7 +357,7 @@ export default defineRepoContract({
     "security-secrets": securitySecrets,
     "dead-code": deadCode,
     "adr-governance": adrGovernance,
-    // Conventional Commits are the sole versioning input (release-please derives the bump +
+    // Conventional Commits are the sole versioning input (Changesets derives the bump +
     // changelog from them); commitlint enforces the format across `origin/main..HEAD`. See
     // specs/decisions/0009-conventional-commits-versioning-and-local-gates.md. A pure reader -- it runs the
     // `commitlint` binary against git history and touches nothing.
