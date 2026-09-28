@@ -123,8 +123,9 @@ outlive the package version that produced it:
 `repo-contract` has not yet reached a `1.0` release. Per common pre-1.0 SemVer convention,
 **minor versions may include breaking changes to the Stable tier before 1.0** — this document
 defines _scope_ (what would eventually be covered), not a promise that it is already fully
-locked in at `0.x`. Concretely, release-please is configured (`bump-minor-pre-major`) so that a
-`feat!:` / `BREAKING CHANGE:` commit bumps the minor version, and a `feat:` commit bumps the
-patch version, while the package is `0.x`. The Experimental and Private tiers behave the same
+locked in at `0.x`. Concretely, [Changesets](https://github.com/changesets/changesets) deflates
+bumps while the package is `0.x` (its own default pre-1.0 behavior) so that a `feat!:` /
+`BREAKING CHANGE:` commit bumps the minor version, and a `feat:` commit bumps the
+patch version. The Experimental and Private tiers behave the same
 before and after 1.0: Experimental surfaces may change at any version; Private internals always
 may.
