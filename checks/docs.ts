@@ -57,60 +57,24 @@ export interface CombinedDocsEvidence {
   readonly linkinator: ToolResult<LinkinatorReport>
 }
 
-/** Where a known-good-but-flaky external link's waiver registry lives. */
+/** Where a known-good link's waiver registry lives -- see `DOCS_LINK_EXCEPTION_SCHEMA`'s own comment for what "known-good" covers. */
 const DOCS_LINK_REGISTRY_RELATIVE_PATH = ".repo-contract/exceptions/docs-links.json"
-
-/**
- * Whether `url` is external (`http(s)://`), the only kind of broken link this check's exception
- * registry may ever waive -- a broken *local* link (a relative path, an anchor) always indicates a
- * genuine authoring mistake within this repository's own control, never transient network flake,
- * so it can never be waived through this mechanism. Parses with the real `URL` constructor (not a
- * regex) so a malformed or merely regex-matching value -- e.g. a scheme with no real authority --
- * can never qualify for a `DOCS_LINK_EXCEPTION_SCHEMA` waiver.
- *
- * Exported for direct unit coverage -- its own edge cases (a non-http(s) scheme, a malformed
- * value) are otherwise only reachable indirectly through a full evaluateDocsPolicy fixture.
- * @param url - The linkinator-reported URL to classify.
- * @returns `true` if `url` parses as an absolute `http:`/`https:` URL with a non-empty hostname.
- * @internal
- */
-export function isExternalUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url)
-    const isHttpOrHttps = parsed.protocol === "http:" || parsed.protocol === "https:"
-    // The WHATWG URL spec treats http/https as "special schemes," which the standard parser
-    // itself refuses to produce with an empty host: `new URL("https://")` (or any other
-    // authority-less form) throws rather than yielding `hostname: ""`, confirmed directly against
-    // every construction this comment's own author could find. This is kept as an explicit
-    // belt-and-suspenders check against that spec guarantee, not one this engine's own parser can
-    // be observed violating.
-    // Stryker disable next-line ConditionalExpression, StringLiteral -- unreachable given the WHATWG URL spec's own guarantee that a successfully-parsed http(s) URL never has an empty hostname.
-    const hasHostname = parsed.hostname !== ""
-    return isHttpOrHttps && hasHostname
-  } catch {
-    // Every local link linkinator reports (a relative path, an absolute root-relative path, a
-    // bare anchor) throws here -- `URL` requires either an absolute URL or a base to resolve
-    // against, neither of which a local link provides. Genuinely malformed input parses the same
-    // way: never external.
-    return false
-  }
-}
 
 /** One `.repo-contract/exceptions/docs-links.json` record: the shared core plus this registry's own identity field. */
 export interface DocsLinkExceptionRecord {
   readonly id: string
   readonly version: 1
   readonly justification: string
-  /** The exact external URL this record waives -- must match `LinkinatorLink.url` verbatim. */
+  /** The exact URL this record waives (local or external) -- must match `LinkinatorLink.url` verbatim. */
   readonly url: string
 }
 
 /**
- * `docs-links:<url>` -- stable while the same external URL is linked from this repo's docs; a
- * changed URL is a different finding with a different id, so a stale waiver is never silently
- * reused for an unrelated link.
+ * `docs-links:<url>` -- stable while the same url is linked from this repo's docs; a changed url
+ * is a different finding with a different id, so a stale waiver is never silently reused for an
+ * unrelated link.
  * @param finding - The finding's (or record's) identity field.
- * @param finding.url - The external URL.
+ * @param finding.url - The linked url (local or external).
  * @returns The semantic id.
  */
 export function deriveDocsLinkExceptionId(finding: { readonly url: string }): string {
@@ -118,9 +82,9 @@ export function deriveDocsLinkExceptionId(finding: { readonly url: string }): st
 }
 
 /**
- * A fresh, blank exception record for an external link with no matching record yet.
+ * A fresh, blank exception record for a link with no matching record yet.
  * @param finding - The unmatched finding.
- * @param finding.url - The external URL.
+ * @param finding.url - The linked url (local or external).
  * @param id - The canonical id `reconcileExceptions` computed (equals `deriveDocsLinkExceptionId(finding)`).
  * @returns The blank stub record.
  */
@@ -147,6 +111,19 @@ export function docsLinkFieldValue(record: DocsLinkExceptionRecord, requirement:
   return typeof value === "string" ? value : ""
 }
 
+/**
+ * A broken link -- local (a relative path, an anchor) or external (`http(s)://`) -- is blocking
+ * by default, exactly like any other check finding, unless a matching, justified record exists
+ * here. There is no separate "local links can never be waived" carve-out: the same governance
+ * this registry already applies to a known-good-but-flaky external link (a real, reviewed
+ * justification, checked into version control) applies identically to a local link that is
+ * structurally correct but unverifiable by this check's own crawl -- e.g. a link to a file another
+ * check in this same `npm run contract` run generates as a side effect of its own POLICY
+ * evaluation, which happens only after every check's EXECUTION (including this one's crawl) has
+ * already completed, so no scheduling order can make this check observe it. A record's own
+ * justification is what a reviewer actually reads; a bogus one is exactly as visible on a diff as
+ * a bogus external-link justification always was.
+ */
 export const DOCS_LINK_EXCEPTION_SCHEMA: ExceptionRegistrySchema<DocsLinkExceptionRecord> = {
   namespace: "docs-links:",
   metadataKeys: ["url"],
@@ -154,11 +131,9 @@ export const DOCS_LINK_EXCEPTION_SCHEMA: ExceptionRegistrySchema<DocsLinkExcepti
     const at = `exceptions[${String(index)}]`
     const { url } = raw
 
-    const urlValid = typeof url === "string" && isExternalUrl(url)
+    const urlValid = typeof url === "string" && url.length > 0
     if (!urlValid) {
-      errors.push(
-        `${at}.url must be a non-empty http(s):// URL (got ${JSON.stringify(url)}) -- only an external link may be waived here; a local link is always blocking.`,
-      )
+      errors.push(`${at}.url must be a non-empty string (got ${JSON.stringify(url)}).`)
       return undefined
     }
 
@@ -183,12 +158,12 @@ const DOCS_LINKS_GLOBAL_DEFAULT: ExceptionPolicy = {
   requirements: ["justification"],
 }
 const DOCS_LINKS_CLASSIFICATION: readonly [ExceptionClassification, ...ExceptionClassification[]] =
-  [{ group: "docs-links", category: "external" }]
+  [{ group: "docs-links", category: "link" }]
 
 /**
  * Every currently reconciled `.repo-contract/exceptions/docs-links.json` record, plus the ones
- * that no longer match any currently-linked external URL. Assembled by `docs()`'s own `policy`,
- * the one place this check touches the filesystem.
+ * that no longer match any currently-linked URL. Assembled by `docs()`'s own `policy`, the one
+ * place this check touches the filesystem.
  */
 export interface DocsLinkExceptionEvidence {
   readonly activeExceptions: Readonly<Record<string, DocsLinkExceptionRecord>>
@@ -197,11 +172,11 @@ export interface DocsLinkExceptionEvidence {
 }
 
 /**
- * Whether one BROKEN external link is waived by its matched, reconciled record.
+ * Whether one BROKEN link (local or external) is waived by its matched, reconciled record.
  * @param record - The reconciled record matching this link's url, or `undefined` if none exists.
  * @returns The verdict and any still-missing required fields.
  */
-function evaluateExternalLink(record: DocsLinkExceptionRecord | undefined): {
+function evaluateLinkWaiver(record: DocsLinkExceptionRecord | undefined): {
   readonly verdict: "permitted" | "insufficient" | "unmatched"
   readonly missing: readonly string[]
 } {
@@ -262,11 +237,10 @@ function formatBrokenLink(link: LinkinatorLink): string {
  * without spawning scripts/check-docs.mjs -- matching every other check's own
  * `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
  *
- * A broken *local* link is always blocking -- see `isExternalUrl`'s own doc comment. A broken
- * external* link only blocks when it has no matching, justified waiver in
- * `.repo-contract/exceptions/docs-links.json`; external-link rot the repo genuinely doesn't
- * control (a documented, verified-live site that flakes transiently in CI) belongs there, never
- * silently downgraded to a blanket warning the way a less careful check might.
+ * A broken link -- local or external -- only blocks when it has no matching, justified waiver in
+ * `.repo-contract/exceptions/docs-links.json` -- see `DOCS_LINK_EXCEPTION_SCHEMA`'s own doc
+ * comment for what belongs there; never silently downgraded to a blanket warning the way a less
+ * careful check might.
  * @param root0 - the policy input.
  * @param root0.evidence - scripts/check-docs.mjs's own combined markdownlint/linkinator evidence.
  * @param root0.linkExceptions - The reconciled `docs-links.json` waiver registry for this run.
@@ -298,25 +272,23 @@ export function evaluateDocsPolicy({
   // markdownlint findings carry their own severity, exactly as ESLint's and
   // pa11y's do -- a `"warning"`-severity finding is surfaced but must not
   // block, matching how `lint` and `accessibility` treat their tools'
-  // warnings. A broken local link is always blocking; a broken external link
-  // is blocking only when unwaived -- see this function's own doc comment.
+  // warnings. A broken link (local or external) is blocking only when
+  // unwaived -- see DOCS_LINK_EXCEPTION_SCHEMA's own doc comment.
   const lintErrors = markdownlint.value.filter((finding) => finding.severity !== "warning")
   const lintWarnings = markdownlint.value.filter((finding) => finding.severity === "warning")
   const brokenLinks = linkinator.value.links.filter((link) => link.state === "BROKEN")
-  const localBroken = brokenLinks.filter((link) => !isExternalUrl(link.url))
-  const externalBroken = brokenLinks.filter((link) => isExternalUrl(link.url))
 
-  const externalDeterminants = externalBroken.map((link) => ({
+  const determinants = brokenLinks.map((link) => ({
     link,
-    ...evaluateExternalLink(linkExceptions.activeExceptions[deriveDocsLinkExceptionId(link)]),
+    ...evaluateLinkWaiver(linkExceptions.activeExceptions[deriveDocsLinkExceptionId(link)]),
   }))
-  const externalOffenders = externalDeterminants.filter((d) => d.verdict !== "permitted")
-  // Only ever read below inside the `externalOffenders.length === 0` branch of the guard just
-  // below -- at that point `externalOffenders.length` is always 0, so `- externalOffenders.length`
-  // and `+ externalOffenders.length` are byte-identical to `externalBroken.length` either way.
-  // Hand-verified: swapping the operator leaves every test in policy.test.ts passing unchanged.
-  // Stryker disable next-line ArithmeticOperator -- only read when externalOffenders.length is already 0, making +/- byte-identical.
-  const waivedCount = externalBroken.length - externalOffenders.length
+  const offenders = determinants.filter((d) => d.verdict !== "permitted")
+  // Only ever read below inside the `offenders.length === 0` branch of the guard just below -- at
+  // that point `offenders.length` is always 0, so `- offenders.length` and `+ offenders.length`
+  // are byte-identical to `brokenLinks.length` either way. Hand-verified: swapping the operator
+  // leaves every test in policy.test.ts passing unchanged.
+  // Stryker disable next-line ArithmeticOperator -- only read when offenders.length is already 0, making +/- byte-identical.
+  const waivedCount = brokenLinks.length - offenders.length
 
   const staleLines = linkExceptions.staleExceptions.map(
     (record) =>
@@ -326,13 +298,12 @@ export function evaluateDocsPolicy({
   if (
     lintErrors.length === 0 &&
     lintWarnings.length === 0 &&
-    localBroken.length === 0 &&
-    externalOffenders.length === 0 &&
+    offenders.length === 0 &&
     staleLines.length === 0
   ) {
     const suffix =
       waivedCount > 0
-        ? ` (${String(waivedCount)} known-flaky external link(s) waived, see ${DOCS_LINK_REGISTRY_RELATIVE_PATH})`
+        ? ` (${String(waivedCount)} known-good link(s) waived, see ${DOCS_LINK_REGISTRY_RELATIVE_PATH})`
         : ""
     return {
       outcome: "pass",
@@ -349,21 +320,18 @@ export function evaluateDocsPolicy({
     )
   }
 
-  const linkDetails = [
-    ...localBroken.map((link) => formatBrokenLink(link)),
-    ...externalOffenders.map((d) => {
-      const detail =
-        d.verdict === "unmatched"
-          ? `no exception record -- add one to ${DOCS_LINK_REGISTRY_RELATIVE_PATH} if this link is known-good but flaky`
-          : // `DOCS_LINKS_POLICY`'s only requirement is `"justification"` -- `d.missing` can
-            // therefore never hold more than one entry, making the `", "` separator unobservable
-            // (`.join` never has a second element to separate). Hand-verified: forcing this to
-            // `.join("")` leaves every test in policy.test.ts passing unchanged.
-            // Stryker disable next-line StringLiteral -- d.missing can never hold more than one entry given DOCS_LINKS_POLICY's single requirement, so the join separator is unobservable.
-            `exception incomplete (missing: ${d.missing.join(", ")})`
-      return `${formatBrokenLink(d.link)} -- ${detail}`
-    }),
-  ]
+  const linkDetails = offenders.map((d) => {
+    const detail =
+      d.verdict === "unmatched"
+        ? `no exception record -- add one to ${DOCS_LINK_REGISTRY_RELATIVE_PATH} if this link is known-good`
+        : // `DOCS_LINKS_POLICY`'s only requirement is `"justification"` -- `d.missing` can
+          // therefore never hold more than one entry, making the `", "` separator unobservable
+          // (`.join` never has a second element to separate). Hand-verified: forcing this to
+          // `.join("")` leaves every test in policy.test.ts passing unchanged.
+          // Stryker disable next-line StringLiteral -- d.missing can never hold more than one entry given DOCS_LINKS_POLICY's single requirement, so the join separator is unobservable.
+          `exception incomplete (missing: ${d.missing.join(", ")})`
+    return `${formatBrokenLink(d.link)} -- ${detail}`
+  })
 
   if (linkDetails.length > 0) {
     blockingSections.push(
@@ -417,17 +385,15 @@ export const docs: CheckDefinitionConfig = {
     )
     if (!parsed.ok) return parsed.result
 
-    const rawExternalLinks = parsed.value.linkinator.ok
-      ? parsed.value.linkinator.value.links.filter((link) => isExternalUrl(link.url))
-      : []
+    const rawLinks = parsed.value.linkinator.ok ? parsed.value.linkinator.value.links : []
 
-    // Every external link linkinator crawled this run (any state, not just BROKEN) -- feeding the
-    // full set (not just offenders) into reconcileExceptions is what makes a waiver's own liveness
-    // track "is this URL still linked at all," never "was it broken on this exact run," so a
-    // genuinely flaky-but-known-good link's waiver never flaps stale/active from one run to the
-    // next. Deduplicated by url: the same external URL can appear once per referencing page, and
+    // Every link (local or external) linkinator crawled this run (any state, not just BROKEN) --
+    // feeding the full set (not just offenders) into reconcileExceptions is what makes a waiver's
+    // own liveness track "is this URL still linked at all," never "was it broken on this exact
+    // run," so a genuinely known-good link's waiver never flaps stale/active from one run to the
+    // next. Deduplicated by url: the same url can appear once per referencing page, and
     // reconcileExceptions requires an injective id per finding.
-    const externalLinks = [...new Map(rawExternalLinks.map((link) => [link.url, link])).values()]
+    const allLinks = [...new Map(rawLinks.map((link) => [link.url, link])).values()]
 
     const registryPath = path.join(process.cwd(), DOCS_LINK_REGISTRY_RELATIVE_PATH)
     const loaded = await loadExceptionRegistry({
@@ -446,7 +412,7 @@ export const docs: CheckDefinitionConfig = {
 
     const reconciled = reconcileExceptions<LinkinatorLink, DocsLinkExceptionRecord>({
       existing: loaded.records,
-      findings: externalLinks,
+      findings: allLinks,
       deriveId: deriveDocsLinkExceptionId,
       createStub: createDocsLinkStub,
     })
@@ -458,26 +424,27 @@ export const docs: CheckDefinitionConfig = {
     }
     const { activeRecords, staleRecords, newStubIds } = reconciled.reconciliation
 
-    // reconcileExceptions itself has no notion of "broken" -- feeding it every external link (not
-    // just broken ones) above is what makes a waiver's own liveness track "is this URL still
-    // linked at all" rather than "was it broken on this exact run" (see externalLinks' own
-    // comment). That means it would otherwise scaffold, and persist, a brand-new blank stub for
-    // every currently-*fine* external link too -- a link that never needed a waiver in the first
-    // place. Only a newly-scaffolded stub for a link that is genuinely BROKEN right now is worth
-    // writing; drop the rest before persisting. A pre-existing matched record is always kept,
-    // regardless of its link's current state, for the same staleness reasoning above.
+    // reconcileExceptions itself has no notion of "broken" -- feeding it every link (not just
+    // broken ones) above is what makes a waiver's own liveness track "is this URL still linked at
+    // all" rather than "was it broken on this exact run" (see allLinks' own comment). That means
+    // it would otherwise scaffold, and persist, a brand-new blank stub for every currently-*fine*
+    // link too (in practice, every local link this repo's docs contain) -- a link that never
+    // needed a waiver in the first place. Only a newly-scaffolded stub for a link that is
+    // genuinely BROKEN right now is worth writing; drop the rest before persisting. A pre-existing
+    // matched record is always kept, regardless of its link's current state, for the same
+    // staleness reasoning above.
     //
-    // Built from `rawExternalLinks`, not the deduplicated `externalLinks` -- the same URL can be
-    // BROKEN from one referencing page and OK from another, and `externalLinks`' own dedup keeps
-    // only whichever occurrence happened to come first. Checking the raw list means a URL that is
-    // broken via *any* reference is never missed here, even when its deduplicated representative
-    // happens to be the OK one.
-    const brokenExternalUrls = new Set(
-      rawExternalLinks.filter((link) => link.state === "BROKEN").map((link) => link.url),
+    // Built from `rawLinks`, not the deduplicated `allLinks` -- the same URL can be BROKEN from
+    // one referencing page and OK from another, and `allLinks`' own dedup keeps only whichever
+    // occurrence happened to come first. Checking the raw list means a URL that is broken via
+    // *any* reference is never missed here, even when its deduplicated representative happens to
+    // be the OK one.
+    const brokenUrls = new Set(
+      rawLinks.filter((link) => link.state === "BROKEN").map((link) => link.url),
     )
     const newStubIdSet = new Set(newStubIds)
     const recordsToPersist = activeRecords.filter(
-      (record) => !newStubIdSet.has(record.id) || brokenExternalUrls.has(record.url),
+      (record) => !newStubIdSet.has(record.id) || brokenUrls.has(record.url),
     )
 
     try {
