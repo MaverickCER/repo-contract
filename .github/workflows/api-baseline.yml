@@ -1,91 +1,37 @@
 name: API baseline
 
-# Keeps .repo-contract/api-contract/baseline.* in sync with each release,
-# automatically, so it is never a manual post-release step (it was: "after a
-# release ships, run `npm run contract:baseline` and commit").
+# A thin caller of internal-package-contract's own reusable `api-baseline-sync.yml` workflow --
+# the shared, centrally-maintained counterpart to what this file used to hand-roll itself (this
+# repo's own scripts/api-contract/update-baseline.ts, before that engine moved to
+# internal-package-contract alongside the rest of `api-contract` -- see
+# repo-contract.config.ts's own module doc comment). Keeps
+# `.repo-contract/api-contract/<target>/baseline.*` in sync with each release, automatically, so
+# it is never a manual post-release step (it was: "after a release ships, run
+# `npm run contract:baseline` and commit").
 #
-# docs/api/ (the browsable HTML API reference) is no longer this job's
-# concern -- it moved to the GitHub Pages deploy job in ci.yml, regenerated
-# fresh on every push to main instead of release-cadence-only. See
-# RELEASING.md's "GitHub Pages" section and
-# specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's amendment
-# for why. The job/workflow names stay "API baseline"/"update-baseline" even
-# though the docs/api/ role that once justified "more than the baseline
-# alone" is gone -- both are check-list identifiers branch protection may
-# reference, so renaming them is a real (if quiet) breaking change, not a
-# cosmetic one.
+# The `on:`/trigger shape stays here -- that is the caller's responsibility, not the reusable
+# workflow's (which declares only `on: workflow_call`, no inputs). Runs only on the Changesets
+# "Version Packages" PR branch (changeset-release/main, which bumps package.json) -- the reusable
+# workflow itself re-checks `github.head_ref == 'changeset-release/main'` before doing anything, so
+# a run on any other branch is a fast no-op, not a wasted baseline regeneration. The baseline is
+# committed straight onto that PR branch, so it lands atomically with the version bump and
+# CHANGELOG entry -- no direct push to protected `main`, no follow-up PR.
 #
-# Runs only on the Changesets "Version Packages" PR branch (changeset-release/main,
-# which bumps package.json) -- migrated off release-please's own differently-named
-# branch. The baseline is committed straight onto that PR branch, so it lands
-# atomically with the version bump and CHANGELOG entry -- no direct push to
-# protected `main`, no follow-up PR.
-#
-# The job re-fires on every `synchronize` of that PR: its own commit, and
-# every time changesets/action refreshes the PR because another change merged
-# to `main` while it sat open. That is fine -- the update-baseline step is
-# idempotent (see its own note below), so a re-run with nothing new to
-# regenerate commits nothing and stays green.
+# docs/api/ (the browsable HTML API reference) is not this job's concern -- it's generated fresh
+# on every push to main by the GitHub Pages deploy job in ci.yml instead. See RELEASING.md's
+# "GitHub Pages" section and specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's
+# amendment for why.
 #
 # RELEASING.md documents the manual backstop if this job is ever disabled:
-# `npm run contract:baseline`.
+# `npm run contract:baseline` (`internal-package-contract update-baseline`).
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main]
 
-# Serialize runs for the same Release PR branch: this job pushes a commit back
-# onto that branch, and two overlapping runs (a fast `synchronize` after the
-# push, say) would race to regenerate and push the baseline. `cancel-in-progress`
-# is deliberately false -- a run must not be interrupted mid-`git push`.
-concurrency:
-  group: api-baseline-${{ github.head_ref || github.ref }}
-  cancel-in-progress: false
-
-permissions:
-  contents: read
-
 jobs:
   update-baseline:
-    # Changesets' own fixed branch name for a single-package repo's Version
-    # Packages PR (see `.changeset/config.json`'s `baseBranch: main` and
-    # RELEASING.md) -- unlike release-please, there is no per-component suffix
-    # to account for.
-    if: github.head_ref == 'changeset-release/main'
-    runs-on: ubuntu-latest
     permissions:
       contents: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24.x
-          cache: npm
-
-      - run: npm ci
-      - run: npm run build
-      # Idempotent: a no-op (exit 0, no file writes) once the baseline already
-      # carries package.json's version. See update-baseline.ts.
-      - run: npm run contract:baseline
-
-      - name: Commit the regenerated baseline
-        env:
-          # Passed through the environment rather than interpolated straight into
-          # `run` -- a branch ref is attacker-influenced input and must never be
-          # spliced into the shell command text.
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A -- .repo-contract/api-contract
-          if git diff --cached --quiet -- .repo-contract/api-contract; then
-            echo "Baseline already current; nothing to commit."
-            exit 0
-          fi
-          git commit -m "chore: sync generated API baseline for release"
-          git push origin HEAD:"$HEAD_REF"
+    uses: MaverickCER/internal-package-contract/.github/workflows/api-baseline-sync.yml@0104bf7001841dd0d7c9d0e55aa456350944c26b # main
