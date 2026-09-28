@@ -117,7 +117,8 @@ async function runMarkdownlint() {
 // compare/tag link under any other owner (a fork, a typo) is still crawled.
 //
 // README.md links the generated HTML API reference at its live, deployed
-// GitHub Pages URL (docs/api/, built by scripts/api-docs-html/ -- see
+// GitHub Pages URL (docs/api/, built by `npm run docs:api` -- TypeDoc, via
+// internal-package-contract's shared config -- see
 // specs/decisions/0008's "a real, browsable HTML API reference" amendment).
 // Pages serves docs/ only from `main`, so that URL is, by construction, never
 // verifiable from a PR branch's own perspective -- not flaky, structurally
@@ -174,7 +175,7 @@ async function runMarkdownLinkinator() {
 }
 
 // A second, HTML-mode crawl over docs/ -- the site's own index.html and (once
-// scripts/api-docs-html/ has run) the generated docs/api/**/*.html pages. Neither was covered by
+// `npm run docs:api` has run) the generated docs/api/**/*.html pages. Neither was covered by
 // the markdown-only crawl above (DOCS_GLOBS never included docs/), a real, confirmed gap this
 // closes rather than a new requirement invented for its own sake. Internal (docs/-relative) links
 // get no special tolerance -- a broken one fails this check same as any markdown link would;

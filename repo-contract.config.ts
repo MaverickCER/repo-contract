@@ -6,7 +6,10 @@
  *
  * Each check's own `run`/`policy` lives in its own file under checks/, or --
  * for the checks a published preset now covers, see the note further down
- * -- in src/presets/. This file owns only the dependency graph between them, and their
+ * -- in src/presets/, or -- for `api-contract`/`api-docs-report`, see the note further down still --
+ * imported directly from `internal-package-contract` (IPC), the shared devDependency this
+ * repository, env-cap, and data-cap all now consume for exactly this kind of fleet-wide check. This
+ * file owns only the dependency graph between them, and their
  * declaration order (see specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md):
  * declaration order is the required topological order, and drives real scheduling, not just
  * documentation -- a `dependsOn` id must be declared earlier than the check declaring it, and an
@@ -15,11 +18,14 @@
  * The `checks` object below is organized in three declaration-order phases, relying on that
  * barrier semantics rather than per-check `dependsOn` wiring wherever possible:
  *
- * 1. **Writers** -- `suppression-governance`, `api-contract`, `api-docs`, `lint`,
+ * 1. **Writers** -- `suppression-governance`, `api-docs-report`, `lint`,
  *    `format`, `schema` -- every check that writes to a file other checks (or a human) later reads.
- *    Declared first so nothing reads their output before it's written. `api-contract` only ever
- *    writes on the one-time baseline bootstrap (see scripts/api-contract/check.ts); it is
- *    otherwise a pure reader, and its position here is conservative.
+ *    Declared first so nothing reads their output before it's written. `api-docs-report`
+ *    (IPC's generic `npmScriptCheck` factory wired to this repo's own `docs:api:report` script --
+ *    TypeDoc + typedoc-plugin-markdown, reading `src/**` directly, no build required) genuinely
+ *    regenerates `docs/api-report/*.md` on every run, failing only if that regeneration produces a
+ *    diff from what's already committed -- a real write, unlike `api-contract` below, which is why
+ *    it stays here rather than among the readers.
  *    `lint` (`eslint --fix`/`oxlint --fix`) and `format` (`prettier --write .`) both rewrite the
  *    whole source tree in place, and `schema` regenerates `schemas/*.schema.json` plus
  *    `scripts/suppression-governance/disable-comments.schema.json` from their source types -- all
@@ -29,7 +35,7 @@
  *    `architecture`/`crap`/`duplication`/`security-secrets`/`dead-code`/`security-network` all
  *    reading `src/**`) must never race an in-place rewrite of that same content -- confirmed safe
  *    to co-locate with the original four writers: `lint`/`format` never touch any of
- *    suppression-governance's/api-contract's/api-docs's/schema's own generated output
+ *    suppression-governance's/api-docs-report's/schema's own generated output
  *    (`.prettierignore`/each ESLint `files` glob excludes every one of them by path or extension),
  *    and `schema` only ever reads its own TypeScript source types, never another writer's output.
  *    `lint` and `format` do rewrite the same files as each other, though, so `format` carries an
@@ -41,8 +47,17 @@
  *    check declared after it automatically waits for it -- zero per-check `dependsOn` wiring needed
  *    on either side.
  * 3. **Readers** -- everything else: every check that only reads and reports, run concurrently
- *    against the now-built, now-written state. `coverage`, `crap`, and `mutation` still attach
- *    their own genuine evidence dependencies via `dependsOn` (see each one's own note below) --
+ *    against the now-built, now-written state. `api-contract` (also IPC-sourced -- see the note
+ *    further down) is declared first among them, immediately after the build barrier, because
+ *    unlike `api-docs-report` above it needs a fresh `dist/.dts/` (diffed against each entry
+ *    point's committed baseline under `.repo-contract/api-contract/<target>/`), not source read
+ *    directly -- the same reasoning IPC's own `contract.ts` documents for its identical placement.
+ *    It can still write, rarely: bootstrapping a target's baseline the first time it's ever checked
+ *    (see internal-package-contract's `scripts/api-contract/update-baseline.ts`), the one case this
+ *    repository's own former copy of this engine also called out; its position here remains
+ *    conservative for that reason even though nothing else reads its output afterward. `coverage`,
+ *    `crap`, and `mutation` still attach their own genuine evidence dependencies via `dependsOn`
+ *    (see each one's own note below) --
  *    `isolated`/declaration order alone only ever expresses "wait for the build," never a specific
  *    sibling's evidence. `test-unit` and `test-integration` are also `isolated: true`, for the same
  *    pure-scheduling, resource-contention reason as `mutation` below -- see their own note at their
@@ -70,7 +85,7 @@
  *   specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md. `mutation` is declared near the
  *   end of the readers so its barrier blocks as little as possible.
  *   `test-unit`/`test-integration` earn the identical `isolated: true` treatment for the identical
- *   reason -- both spawn real, heavy child processes per test (`tsc`, `api-extractor`) on top of
+ *   reason -- both spawn real, heavy child processes per test (`tsc`, real `git`) on top of
  *   Vitest's own internal worker pool, and running either concurrently with the rest of this
  *   phase's reader fleet reproduced the same class of flake `mutation` was isolated for, this time
  *   surfacing as a generic Vitest `STACK_TRACE_ERROR` on a different, unrelated handful of cases
@@ -92,6 +107,25 @@
  * check's own inline comment below -- because this repository's multiple
  * entrypoints trigger a real upstream attw bug no `run`-spread override
  * alone could work around.
+ *
+ * `api-contract` and `api-docs-report` are likewise NOT defined under checks/ -- they're imported
+ * directly from `internal-package-contract` (`internal-package-contract/checks/api-contract`,
+ * `internal-package-contract/checks/npm-script`'s generic factory). This repository used to host
+ * both engines itself (`checks/api-contract.ts` + `scripts/api-contract/*`, `checks/api-docs.ts` +
+ * `scripts/api-docs/*` + `scripts/api-docs-html/*`); they moved out to IPC once this repository's
+ * own migration off release-please onto Changesets meant every repo in the fleet -- repo-contract,
+ * env-cap, data-cap -- needed the identical "does this branch's declared semver bump cover its real
+ * API diff" rule, not a Conventional-Commits-flavored original here and a Changesets-flavored port
+ * there. IPC's own `contract.ts` documents the mirror image of this note: repo-contract is the one
+ * fleet member whose *published* runtime code IPC itself imports and wraps (every `checks/*.ts` in
+ * IPC calls real `defineRepoContract`/`runRepoContract`), which is why that direction's own sync
+ * workflow (`sync-repo-contract-version.yml`) adds a changeset on every bump and this repository's
+ * own listener (`sync-internal-package-contract.yml`, added alongside this migration) does not --
+ * see that workflow's own comment. `api-docs-report` replaces the committed API-Extractor-format
+ * `docs/api-report/*.api.md` reports with TypeDoc + `typedoc-plugin-markdown` output instead (see
+ * `typedoc.json`/`typedoc.markdown.json`); `api-contract` replaces API Extractor's own contract
+ * diffing with the identical engine, still API-Extractor-backed under the hood, just no longer a
+ * private copy of it.
  *
  * `dead-code` and `security-deps` are the two deliberate exceptions: neither
  * uses its own published preset (both still published, unchanged, for
@@ -115,11 +149,11 @@
  * instead of a second one-off.
  */
 import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
+import { apiContract } from "internal-package-contract/checks/api-contract"
+import { npmScriptCheck } from "internal-package-contract/checks/npm-script"
 import { accessibility } from "./checks/accessibility.js"
 import { adrGovernance } from "./checks/adr-governance.js"
 import { coderabbitai } from "./checks/coderabbitai.js"
-import { apiContract } from "./checks/api-contract.js"
-import { apiDocs } from "./checks/api-docs.js"
 import { architecture } from "./checks/architecture.js"
 import { build } from "./checks/build.js"
 import { coverage } from "./checks/coverage.js"
@@ -175,8 +209,15 @@ export default defineRepoContract({
   checks: {
     // -- Writers --
     "suppression-governance": suppressionGovernance,
-    "api-contract": apiContract,
-    "api-docs": apiDocs,
+    // IPC's generic npm-script factory, wired to this repo's own `docs:api:report` script
+    // (TypeDoc + typedoc-plugin-markdown, reading src/** directly -- no dist/ dependency).
+    // `mustNotChange: ["docs/api-report"]` reruns that generation through a hash-diff wrapper and
+    // fails if it regenerates anything, i.e. the committed report is stale. See module doc comment.
+    "api-docs-report": npmScriptCheck({
+      script: "docs:api:report",
+      label: "API docs report",
+      mustNotChange: ["docs/api-report"],
+    }),
     // Rewrites the whole source tree in place (`eslint --fix`/`oxlint --fix`) -- a writer, not a
     // reader, for the same reason format/schema below are: a reader that concurrently lints or
     // reads the same files it's rewriting must never race that rewrite. See module doc comment.
@@ -203,12 +244,19 @@ export default defineRepoContract({
     build: { ...build, isolated: true },
 
     // -- Readers --
+    // IPC-sourced (internal-package-contract/checks/api-contract); needs a fresh dist/.dts/, unlike
+    // api-docs-report above -- see module doc comment for why it's declared here, first among the
+    // readers, rather than back among the writers. Diffs every entry point's real, current public
+    // surface (index/presets/helpers) against its own committed baseline under
+    // `.repo-contract/api-contract/<target>/` and fails when this branch's changesets under-declare
+    // the resulting bump.
+    "api-contract": apiContract,
     typecheck,
     // `isolated: true` on both `test-unit` and `test-integration` below is the same pure-scheduling
     // fix already applied to `mutation` (see that check's own comment and
     // specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md), extended here
     // once this repository's own local runs started reproducing the identical symptom: both spawn
-    // real, heavy child processes per test (`tsc`, `api-extractor`) on top of Vitest's own internal
+    // real, heavy child processes per test (`tsc`, real `git`) on top of Vitest's own internal
     // worker pool, and running either concurrently with the rest of this phase's reader fleet
     // (`accessibility`'s real headless Chrome, `dead-code`'s whole-project `knip` walk,
     // `coderabbitai`'s and `arethetypeswrong`'s own real subprocess spawns, etc.) oversubscribes the
@@ -240,10 +288,12 @@ export default defineRepoContract({
     },
     // `isolated: true` here too, for a distinct but related reason discovered
     // running this repository's own contract end to end: `test-property` and
-    // `test-integration` both real-git-fixture-test src/adr-governance,
-    // src/api-contract, and diff-files.ts (mkdtemp'd, disposable repos, real
-    // `execFileSync("git", ...)` calls -- see each test file's own doc
-    // comment) -- concurrently-scheduled real git subprocess spawning was
+    // `test-integration` both real-git-fixture-test adr-governance and
+    // diff-files.ts (mkdtemp'd, disposable repos, real `execFileSync("git",
+    // ...)` calls -- see each test file's own doc comment; this list also
+    // covered api-contract's own real-git integration test before it moved to
+    // internal-package-contract's own suite alongside the rest of that engine
+    // -- see module doc comment) -- concurrently-scheduled real git subprocess spawning was
     // observed, once, to write a fixture's own commits onto this checkout's
     // actual local branch instead of its intended scratch directory (a
     // handful of "establish baseline"/"add baseline"-style commits authored

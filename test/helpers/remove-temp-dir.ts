@@ -3,10 +3,11 @@ import { rm } from "node:fs/promises"
 /**
  * Recursively removes a scratch directory (typically an `os.tmpdir()` entry from `mkdtemp`),
  * tolerating the transient locks Windows holds on a file a just-returned process wrote -- a
- * Defender scan mid-flight, or the OS releasing the handle lazily. Several api-contract test
- * suites run real `@microsoft/api-extractor` / `tsc` passes against files under such a directory
- * and then remove it in `afterEach`; a bare `rm(dir, { recursive: true, force: true })` there
- * intermittently throws `EBUSY`/`EPERM` on windows-latest CI (never on Linux/macOS).
+ * Defender scan mid-flight, or the OS releasing the handle lazily. Several integration test
+ * suites (pack-consumer.ts's real `npm pack`, github-actions's real `tsc` pass,
+ * suppression-governance's discover-suppressions) run real subprocesses against files under such
+ * a directory and then remove it in `afterEach`; a bare `rm(dir, { recursive: true, force: true })`
+ * there intermittently throws `EBUSY`/`EPERM` on windows-latest CI (never on Linux/macOS).
  *
  * `maxRetries`/`retryDelay` is Node's own backoff for exactly that errno set (`EBUSY`, `EMFILE`,
  * `ENFILE`, `ENOTEMPTY`, `EPERM`). A removal that still fails after the retries is swallowed: the

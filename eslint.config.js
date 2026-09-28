@@ -77,12 +77,19 @@ export default tseslint.config(
       // presence/absence between runs shouldn't affect lint results.
       ".stryker-tmp",
       "reports",
-      // Tooling-owned data, not source: api-contract/ holds api-extractor
-      // snapshots of src/'s public surface (baseline.* committed as the
-      // compatibility diffing target, current.* regenerated every run -- `eslint
-      // --fix` rewriting baseline.* would corrupt that diff), and exceptions/
-      // holds the reviewed-exception registries, including this repository's own
-      // disable-comments.json suppression registry (deterministically serialized
+      // TypeDoc's own generated HTML API reference (`npm run docs:api`) -- gitignored, never
+      // committed (see .gitignore/RELEASING.md's "GitHub Pages" section), and, unlike
+      // docs/script.js below, entirely machine-generated: TypeDoc's default theme ships its own
+      // client-side JS assets (docs/api/assets/{hierarchy,icons,main,navigation,search}.js), none
+      // of which fit this repo's own module-boundary model or were ever hand-authored here.
+      "docs/api",
+      // Tooling-owned data, not source: api-contract/ holds one subdirectory per ApiContract
+      // target (index/, presets/, helpers/) of API-Extractor-backed snapshots of src/'s public
+      // surface (baseline.* committed as the compatibility diffing target, current.* regenerated
+      // every run -- `eslint --fix` rewriting baseline.* would corrupt that diff; see
+      // internal-package-contract's own scripts/api-contract/baseline-store.ts, which now owns
+      // this engine), and exceptions/ holds the reviewed-exception registries, including this
+      // repository's own disable-comments.json suppression registry (deterministically serialized
       // by scripts/suppression-governance/check.ts, not hand-formatted).
       ".repo-contract",
       // A static, zero-logic legacy-module-resolution compatibility shim
@@ -169,7 +176,7 @@ export default tseslint.config(
         // internal layer only reachable through src/index.ts.
         { type: "helpers", pattern: "src/helpers" },
         // checks/ (including checks/shared/), scripts/ (including its
-        // api-contract/architecture/adr-governance subdirectories), and
+        // suppression-governance/architecture/adr-governance subdirectories), and
         // eslint-rules/ are each one architectural unit -- none needs a
         // finer internal boundary than "the whole tree participates in the
         // policies below".
@@ -842,11 +849,6 @@ export default tseslint.config(
       // a top-level `IfStatement`, which is exactly the shape this rule
       // exists to catch, but is the correct idiom here rather than a smell.
       "scripts/adr-governance/check.ts",
-      "scripts/api-contract/check.ts",
-      "scripts/api-contract/update-baseline.ts",
-      "scripts/api-docs/check.ts",
-      "scripts/api-docs/generate.ts",
-      "scripts/api-docs-html/generate.ts",
       "scripts/coderabbitai/review.ts",
       "scripts/dead-code/check.ts",
       "scripts/iso-12207-alignment/run.ts",
@@ -933,8 +935,8 @@ export default tseslint.config(
     },
   },
   {
-    // scripts/api-contract/*.ts is real, substantial logic (unlike the thin
-    // scripts/*.mjs wrapper scripts below) and gets the same type-aware
+    // scripts/**/*.ts (e.g. scripts/suppression-governance/) is real, substantial logic (unlike
+    // the thin scripts/*.mjs wrapper scripts below) and gets the same type-aware
     // strict linting src/ does.
     files: ["scripts/**/*.ts"],
     extends: [
