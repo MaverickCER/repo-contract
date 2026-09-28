@@ -216,3 +216,33 @@ flags). A changeset (hand-written or auto-generated from the commit's own Conven
 subject) is now the actual version-bump input Changesets consumes; the commit message remains
 the source Conventional-Commits signal either way, so `api-contract`'s own bump-agreement check
 needed no logic change, only its comments' tool name updated.
+
+## Amendment (2026-09): `api-contract` moves to internal-package-contract and reads changesets directly
+
+The previous amendment's "no logic change" held only as long as `api-contract` stayed
+repo-contract-private: the commit message remained _a_ valid proxy for the declared bump because,
+at the time, this repository was the only fleet member whose `api-contract` existed at all. That
+stopped being true once `api-contract` moved out to
+[`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract) (ported from
+this repository's own `checks/api-contract.ts` + `scripts/api-contract/*`, deleted here -- see
+`repo-contract.config.ts`'s own module doc comment and
+`specs/decisions/0008`'s matching amendment for the sibling `api-docs` move) to serve every fleet
+member — env-cap and data-cap version via Changesets alone and never adopted Conventional-Commits-
+driven versioning the way this repository's own release-please era did, so a commit-message-parsing
+`api-contract` could never have worked for them. The engine now reads `.changeset/*.md` files
+directly off disk (`internal-package-contract`'s own `scripts/api-contract/changesets.ts`, which
+replaces `conventional-commits.ts`) — the same files `changeset version` itself consumes — rather
+than inferring the declared bump from commit messages.
+
+This is a genuine behavioral narrowing worth naming: a changeset auto-generated from the PR title
+(this ADR's own "release-please replaced by Changesets" amendment, previous section) still means
+`api-contract`'s comparison target exists by the time it runs in CI (the shared release workflow
+writes it before the checkout `api-contract` sees), but a contributor who inspects only their own
+commit messages, never the resulting `.changeset/*.md` file, no longer gets a fully accurate mental
+model of what `api-contract` is actually comparing against. Conventional Commits remain this
+repository's own commit-message convention (commitlint, the PR-title check, and the "one commit
+type -> one changelog section" mapping in the "Decision" section above are all unaffected), and
+remain _one_ input to what a changeset ends up declaring when no hand-written one exists — they are
+just no longer `api-contract`'s own direct input. See `specs/verification-taxonomy.md`'s "API
+compatibility" row and CONTRIBUTING.md's "Commits and versioning" section for the current,
+accurate description.
