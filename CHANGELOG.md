@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.7.2...repo-contract-v0.7.3) (2026-09-27)
+
+
+### Bug Fixes
+
+* exclude typescript@7 and vitest@5 from this dependency-group bump ([12b9ad0](https://github.com/MaverickCER/repo-contract/commit/12b9ad03bb808006612fc79f598252633ed4fd53))
+
 ## [0.7.2](https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.7.1...repo-contract-v0.7.2) (2026-09-27)
 
 

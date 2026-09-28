@@ -40,7 +40,7 @@
 <blockquote>
 <p>This API is provided as a beta preview for developers and may change based on feedback that we receive. Do not use this API in a production environment.</p>
 </blockquote>
-<p>A full exception-policy configuration, keyed by classification <code>group</code> (e.g. a tool name, or a suppression domain). The core never invents the names &quot;domain&quot;/&quot;rule&quot;/&quot;severity&quot;/ &quot;exceptionType&quot; -- those are every consumer&#39;s own vocabulary, expressed here purely as <code>{ group, category }</code> (see <code>ExceptionClassification</code><!-- -->).</p>
+<p>A full exception-policy configuration, keyed by classification <code>group</code> (e.g. a tool name, or a suppression domain). The core never invents the names &quot;domain&quot;/&quot;rule&quot;/&quot;severity&quot;/ &quot;exceptionType&quot; -- those are every consumer&#39;s own vocabulary, expressed here purely as<code>{ group, category }</code> (see <code>ExceptionClassification</code><!-- -->).</p>
 <p><strong>Signature:</strong></p>
 <pre><code class="language-typescript">export type ExceptionPolicyConfig = Readonly&lt;Record&lt;string, ExceptionCategoryGroup&gt;&gt;;
 </code></pre>
