@@ -256,7 +256,7 @@ module.exports = {
       name: "src-must-not-import-scripts",
       severity: "error",
       comment:
-        "scripts/ (self-hosting tooling, e.g. scripts/api-contract/) exists to validate this repository using the public src/ API -- the dependency must stay one-directional.",
+        "scripts/ (self-hosting tooling, e.g. scripts/suppression-governance/) exists to validate this repository using the public src/ API -- the dependency must stay one-directional.",
       from: { path: "^src" },
       to: { path: "^scripts" },
     },

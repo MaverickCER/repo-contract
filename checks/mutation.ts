@@ -154,9 +154,9 @@ interface StrykerReport {
 // non-isolated check has settled, removes that contention; it says nothing
 // about needing any other check's evidence (see
 // specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md
-// -- a second isolated check, e.g. `api-docs`, is free to run concurrently
+// -- a second isolated check, e.g. `build`, is free to run concurrently
 // with this one; only non-isolated checks are guaranteed to have already
-// finished -- against another isolated check, e.g. `api-docs`, the guarantee is actually stronger:
+// finished -- against another isolated check, e.g. `build`, the guarantee is actually stronger:
 // an isolated check is a full barrier at its own declared position, waiting on every earlier check
 // including other isolated ones, so two isolated checks in the same run are always sequential
 // relative to each other, never concurrent). Separately,

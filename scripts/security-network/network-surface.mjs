@@ -12,8 +12,8 @@
 // built from nothing else). checks/, scripts/, test/, and this file's own
 // directory are repository-internal tooling, never shipped, and
 // legitimately may need things this list forbids (e.g. this very script
-// spawns tsx via child_process, and scripts/api-contract's tooling reads
-// files by dynamic path) -- see specs/decisions/0007-no-network-surface.md
+// spawns tsx via child_process, and scripts/suppression-governance's tooling
+// reads files by dynamic path) -- see specs/decisions/0007-no-network-surface.md
 // for the full threat model and why it stops at this boundary.
 
 /**
