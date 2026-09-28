@@ -62,11 +62,7 @@ describe("DOCS_LINK_EXCEPTION_SCHEMA", () => {
     if (!result.ok) expect(result.errors.join("\n")).toContain("exceptions[1]")
   })
 
-  it("rejects a non-string url that would otherwise coerce to a valid URL (e.g. an array)", () => {
-    // If the `typeof url === "string"` guard were ever dropped, `new URL(["https://x"])` would
-    // coerce the array to its single-element string via Array#toString and parse successfully --
-    // this is the one input shape that actually distinguishes the guard from isExternalUrl's own
-    // rejection of non-strings.
+  it("rejects a non-string url (e.g. an array), even one that would stringify to something non-empty", () => {
     expect(validate([validRecord({ url: ["https://example.com"] })]).ok).toBe(false)
   })
 
@@ -78,10 +74,14 @@ describe("DOCS_LINK_EXCEPTION_SCHEMA", () => {
     expect(validate([validRecord({ id: "socket:x" })]).ok).toBe(false)
   })
 
-  it("rejects a local (non-http(s)) url", () => {
+  it("accepts a local (non-http(s)) url -- a local link is waivable exactly like an external one", () => {
     const result = validate([validRecord({ id: "docs-links:/missing.md", url: "/missing.md" })])
-    expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.errors.join("\n")).toContain("only an external link")
+    expect(result.ok, result.ok ? "" : result.errors.join("\n")).toBe(true)
+    if (result.ok) {
+      expect(result.records).toEqual([
+        { ...validRecord({ id: "docs-links:/missing.md", url: "/missing.md" }) },
+      ])
+    }
   })
 
   it("rejects an empty url", () => {
