@@ -127,6 +127,18 @@ async function runMarkdownlint() {
 // repo-contract/ site), so an unrelated broken link to the already-live
 // landing page is still caught.
 //
+// TypeDoc's default theme (docs/api/, since the internal-package-contract migration -- see
+// specs/decisions/0008's matching amendment) stamps a "Defined in" link on every documented symbol
+// at github.com/maverickcer/repo-contract/blob/<the exact current git HEAD SHA>/<path>. This
+// repository's own `.githooks/pre-push` runs the full `npm run contract` -- including this crawl
+// -- BEFORE `git push` actually happens, so that exact SHA structurally cannot exist on GitHub yet
+// at crawl time: a chicken-and-egg case linkinator can never resolve locally, not a real broken
+// link (confirmed: the identical URL, crawled again once the same commit has actually been pushed,
+// resolves cleanly -- GitHub serves a blob URL for any commit reachable from any pushed ref,
+// merged or not). CI itself never hits this: `ci.yml`'s own `contract` job always runs against an
+// already-pushed SHA (that's what triggered the workflow), so this exemption only ever matters
+// pre-push, never masks a genuinely broken source link reaching CI.
+//
 // linkinator applies each `--skip` value as a bare `new RegExp(x)` (no flags,
 // unanchored, tested against the full href), so the pattern anchors the scheme
 // and host itself -- otherwise `https://evil.example/?x=github.com/maverickcer/
@@ -141,6 +153,7 @@ export const LINKINATOR_SKIP_PATTERNS = [
   "security/advisories/new",
   "^https?://github\\.com/[Mm][Aa][Vv][Ee][Rr][Ii][Cc][Kk][Cc][Ee][Rr]/repo-contract/(compare|releases/tag)/",
   "^https?://maverickcer\\.github\\.io/repo-contract/api/",
+  "^https?://github\\.com/[Mm][Aa][Vv][Ee][Rr][Ii][Cc][Kk][Cc][Ee][Rr]/repo-contract/blob/",
 ]
 
 async function runLinkinatorOn(targets, extraArgs) {

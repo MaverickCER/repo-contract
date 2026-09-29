@@ -13,7 +13,7 @@ entirely check-owned (see `checks/shared/`, unpublished) -- see
 specs/decisions/0013-reusable-exception-policy-helper.md for the full
 rationale and the boundary this barrel deliberately does not cross.
 
-Published **Experimental** (see VERSIONING.md): its TypeScript signature
+Published **Experimental** (see `VERSIONING.md`): its TypeScript signature
 and runtime behavior may both change in a minor or patch release, the same
 classification `repo-contract/presets` already carries (see
 specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)
