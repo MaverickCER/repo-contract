@@ -20,6 +20,45 @@ export interface ScorecardCheckResult {
   readonly details: readonly string[]
 }
 
+/**
+ * Provenance metadata for one evaluation run, recorded alongside its
+ * results so a reader of `docs/OpenSSF-Scorecard.md` (or this check's own
+ * rationale) can tell exactly when, against what, and by which version of
+ * this evaluator, a given score was produced -- without that requiring a
+ * fresh run to reconstruct.
+ */
+export interface ScorecardProvenance {
+  /** ISO 8601 timestamp of when this evaluation ran. */
+  readonly date: string
+  readonly repo: {
+    /** The `owner/repo` slug this evaluation ran against (`gh-api.ts`'s `repoSlug()`). */
+    readonly name: string
+    /** The full commit SHA checked out when this evaluation ran (`scripts/diff-files.ts`'s `runGit(["rev-parse", "HEAD"], root)`). */
+    readonly commit: string
+  }
+  readonly scorecard: {
+    /**
+     * repo-contract's own `package.json` version -- **this evaluator's own
+     * version, never the upstream `scorecard` binary's** (this evaluation
+     * never runs that binary at all; see this file's own module doc comment
+     * for that same disclaimer). Any rendering of this field must keep that
+     * distinction explicit, not just print a bare version number.
+     */
+    readonly version: string
+    /**
+     * The commit repo-contract itself was built from when this evaluation
+     * ran. Sourced from the exact same `runGit(["rev-parse", "HEAD"])` call
+     * as `repo.commit` above -- repo-contract evaluates its own repository,
+     * so today the two values are always identical -- but kept as its own
+     * field because it answers a different question: "what version of the
+     * evaluator* produced this document" versus "what commit was
+     * evaluated*". A consumer that vendored this evaluator to assess a
+     * different target repository would see these two diverge.
+     */
+    readonly commit: string
+  }
+}
+
 export type GhApiResult<T> =
   | { readonly ok: true; readonly value: T }
   | {
