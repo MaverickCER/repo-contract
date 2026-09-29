@@ -50,11 +50,18 @@
       "name": "publint"
     },
     {
-      "id": "dead-code:unused-dev-dependency:yaml",
+      "id": "dead-code:unused-export:ghApiJson",
       "version": 1,
-      "justification": "Genuinely `import`ed (`import { parse as parseYaml } from \"yaml\"`) by scripts/openssf-scorecard/local-checks.ts, to parse .github/workflows/*.yml for the Pinned-Dependencies/Token-Permissions/Dangerous-Workflow sub-checks -- but that file is reachable only by being imported by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use (the same class of gap as local-checks.ts's own `unused-file` entry below). repo-contract's public output-format API dropped first-class YAML support (see src/types.ts's OutputFormat) -- this is `yaml`'s sole remaining, internal-tooling-only use, no longer a `peerDependencies` entry.",
-      "kind": "unused-dev-dependency",
-      "name": "yaml"
+      "justification": "Genuinely used by every gh-API-backed evaluator in scripts/openssf-scorecard/github-checks.ts (Branch-Protection, Code-Review, Signed-Releases, Contributors, Maintained) and by run.ts's own repo-metadata lookup -- but those callers are reachable only by being imported by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. gh-api.ts's own `packageVersion`/`ghApiRaw` are now imported directly and statically by checks/openssf-scorecard.ts (for provenance metadata and the live weight-table fetch), which is what makes gh-api.ts itself, `GhApiResult`, and `yaml` (transitively, via weights.ts) newly visible to knip -- `ghApiJson`/`repoSlug` specifically are not among those statically-reachable exports, the same reachability gap as every other spawned-only file in this directory.",
+      "kind": "unused-export",
+      "name": "ghApiJson"
+    },
+    {
+      "id": "dead-code:unused-export:repoSlug",
+      "version": 1,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts (to build the `owner/repo` slug every sub-check queries) -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `ghApiJson` entry above for why this export specifically (as opposed to gh-api.ts's other exports) is still flagged even though the file itself is no longer `unused-file`.",
+      "kind": "unused-export",
+      "name": "repoSlug"
     },
     {
       "id": "dead-code:unused-file:scripts/iso-12207-alignment/gather-evidence.ts",
@@ -71,23 +78,16 @@
       "name": "scripts/iso-12207-alignment/run.ts"
     },
     {
-      "id": "dead-code:unused-file:scripts/openssf-scorecard/gh-api.ts",
-      "version": 1,
-      "justification": "Imported only by scripts/openssf-scorecard/run.ts and github-checks.ts, both themselves reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- knip's static import graph never resolves a spawned-not-imported entry point, so this whole file's own reachability is invisible to it, the same class of gap as every `unused-dev-dependency` entry above.",
-      "kind": "unused-file",
-      "name": "scripts/openssf-scorecard/gh-api.ts"
-    },
-    {
       "id": "dead-code:unused-file:scripts/openssf-scorecard/github-checks.ts",
       "version": 1,
-      "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see gh-api.ts's identical entry above.",
+      "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see the `repoSlug`/`ghApiJson` entries above for the identical reachability gap this whole directory shares.",
       "kind": "unused-file",
       "name": "scripts/openssf-scorecard/github-checks.ts"
     },
     {
       "id": "dead-code:unused-file:scripts/openssf-scorecard/local-checks.ts",
       "version": 1,
-      "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see gh-api.ts's identical entry above.",
+      "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see the `repoSlug`/`ghApiJson` entries above for the identical reachability gap this whole directory shares.",
       "kind": "unused-file",
       "name": "scripts/openssf-scorecard/local-checks.ts"
     },
@@ -97,13 +97,6 @@
       "justification": "The openssf-scorecard check's own entrypoint, spawned by literal path via checks/openssf-scorecard.ts's `run: [\"tsx\", \"scripts/openssf-scorecard/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
       "kind": "unused-file",
       "name": "scripts/openssf-scorecard/run.ts"
-    },
-    {
-      "id": "dead-code:unused-type:GhApiResult",
-      "version": 1,
-      "justification": "The return type of ghApiJson() (gh-api.ts), consumed structurally by every caller in github-checks.ts without ever naming the type directly (each caller narrows `.ok` and reads `.value`/`.message` rather than annotating a variable with `GhApiResult<T>`) -- genuinely used as a type, just never referenced by name outside the file that declares it.",
-      "kind": "unused-type",
-      "name": "GhApiResult"
     }
   ]
 }

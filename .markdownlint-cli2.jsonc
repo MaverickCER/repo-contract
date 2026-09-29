@@ -14,7 +14,18 @@
   // layout (a double blank line between each "## [x.y.z]" heading and the
   // first "### " section, MD012) is release-please's fixed output, not a
   // style choice this repo can correct without a forbidden hand-edit.
-  "ignores": ["docs/api-report/**", ".github/pull_request_template.md", "CHANGELOG.md"],
+  // .changeset/*.md is Changesets' own fixed format: YAML frontmatter
+  // (`---`) followed directly by a one-line consumer-facing description,
+  // consumed by `@changesets/cli` -- no top-level heading by design, the
+  // same reasoning as the PR template entry above. Also covers
+  // .changeset/README.md, `@changesets/cli`'s own scaffolded boilerplate
+  // (never hand-edited).
+  "ignores": [
+    "docs/api-report/**",
+    ".github/pull_request_template.md",
+    "CHANGELOG.md",
+    ".changeset/*.md",
+  ],
   // MD013 (line-length) is disabled: this repository's prose is not wrapped
   // at a fixed column width, and Prettier already owns code formatting --
   // matching common practice for prose-heavy documentation (e.g. GitHub
