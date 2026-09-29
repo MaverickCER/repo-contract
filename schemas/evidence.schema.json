@@ -14,7 +14,7 @@
         "version": {
           "type": "number",
           "const": 1,
-          "description": "Schema version of this shape; see VERSIONING.md."
+          "description": "Schema version of this shape; see `VERSIONING.md`."
         },
         "startedAt": {
           "type": "string",
@@ -43,7 +43,7 @@
         "durationMs",
         "checks"
       ],
-      "description": "Versioned, immutable record of one complete `runRepoContract` execution -- every configured check's evidence, plus timing for the run as a whole. Says nothing about whether any of it was acceptable; see `Verdict`. Additive fields are a compatible change; changing or removing an existing field requires bumping this version number (see VERSIONING.md)."
+      "description": "Versioned, immutable record of one complete `runRepoContract` execution -- every configured check's evidence, plus timing for the run as a whole. Says nothing about whether any of it was acceptable; see `Verdict`. Additive fields are a compatible change; changing or removing an existing field requires bumping this version number (see `VERSIONING.md`)."
     },
     "CheckEvidence": {
       "type": "object",
