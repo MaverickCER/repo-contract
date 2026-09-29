@@ -21,9 +21,13 @@ import { defineConfig } from "vitest/config"
 // double-spends the same CPU budget -- this repository's own dogfooding
 // runs (`npm run contract` against this very package) hit a real, repeatable
 // failure from it: several test/unit/api-contract/ and test/unit/api-docs/
-// files each run a real `@microsoft/api-extractor` analysis against this
-// package's own dist/.dts/ output, and enough of those landed in concurrent
-// forks at once, alongside this same repository's other CPU-heavy checks
+// files (that engine, and its tests, have since moved to
+// internal-package-contract -- see repo-contract.config.ts's own module doc
+// comment -- but the CPU-contention lesson below still holds for this
+// repository's own remaining heavy suites) each ran a real
+// `@microsoft/api-extractor` analysis against this package's own
+// dist/.dts/ output, and enough of those landed in concurrent forks at
+// once, alongside this same repository's other CPU-heavy checks
 // (`accessibility` launching a real headless Chromium, `arethetypeswrong`,
 // `dead-code`, `duplication`, ...) also running concurrently at the
 // check level, to intermittently make API Extractor's own SourceMapper

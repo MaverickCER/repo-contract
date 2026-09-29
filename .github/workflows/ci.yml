@@ -300,13 +300,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # fetch-depth: 0 (full history, all branches -- see release.yml's own
-      # identical setting) is required here, not optional: adr-governance,
-      # api-contract, and commitlint all read `origin/main..HEAD`
-      # (scripts/git-commits.ts / scripts/diff-files.ts), which the default
-      # single-commit shallow checkout leaves unresolvable on a pull_request
-      # build and identical-to-HEAD on a push-to-main build -- either way
-      # landing the checks on a vacuous "nothing changed" pass path instead of
-      # actually evaluating this run's commits.
+      # identical setting) is required here, not optional: adr-governance and
+      # commitlint both read `origin/main..HEAD` (scripts/git-commits.ts /
+      # scripts/diff-files.ts), which the default single-commit shallow
+      # checkout leaves unresolvable on a pull_request build and
+      # identical-to-HEAD on a push-to-main build -- either way landing the
+      # checks on a vacuous "nothing changed" pass path instead of actually
+      # evaluating this run's commits. `api-contract` (internal-package-contract-sourced)
+      # no longer needs this itself -- it now derives the declared release level from
+      # `.changeset/*.md` files on disk, not commit history, since repo-contract's own
+      # migration off release-please onto Changesets (see repo-contract.config.ts's own
+      # module doc comment) -- but the checkout depth stays for the two checks that still do.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -328,12 +332,8 @@ jobs:
       # the GitHub Pages deploy job regenerates it separately, on push to main),
       # and linkinator fails every PR with a spurious 404 on a link that is, in
       # fact, live on the real site.
-      - run: npm run api-docs:html
+      - run: npm run docs:api
       - run: npm run contract
-        # Under a squash merge the PR title becomes the sole commit on main, so
-        # api-contract must count it toward the declared release bump too.
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
 
       # A contract run is not a pure read: `format`/`lint` auto-fix, and
       # `suppression-governance` reconciles `.repo-contract/exceptions/*.json`
@@ -452,8 +452,11 @@ jobs:
   # is left empty deliberately: this repo's badge JSON depends on the mutation
   # report `contract` already paid for, so `pages-content` above generates it,
   # not this job -- `content-artifact-name` hands that pre-built content over
-  # instead. `docs/api/` is generated fresh on every run by `api-docs:html`
-  # (inside the shared workflow); no longer release-cadence-only -- see
+  # instead. `docs/api/` is generated fresh on every run by `docs:api`
+  # (TypeDoc, via internal-package-contract's shared config -- the same
+  # mechanism env-cap/data-cap already use `docs-script` for; this repo used
+  # to pass its own bespoke `api-docs:html` here before this migration) inside
+  # the shared workflow; no longer release-cadence-only -- see
   # RELEASING.md's "GitHub Pages" section and
   # specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's amendment.
   deploy:
@@ -465,7 +468,7 @@ jobs:
       id-token: write
     uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@7e3908f9595c3cf3f4b7e31c371f1daff49d46b2 # main, parts B/C/D/E/F/G/I
     with:
-      docs-script: api-docs:html
+      docs-script: docs:api
       content-artifact-name: pages-content
 
   # Belt-and-suspenders for the squash-merge case (see

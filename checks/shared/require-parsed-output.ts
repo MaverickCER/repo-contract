@@ -9,9 +9,11 @@ type RequiredParsedOutput<T> =
  * its own parsed JSON output: fail early with a fixed rationale when the output never parsed (see
  * `ParsedOutput.success`), otherwise hand back `value` narrowed to `T`. Lives under `checks/`, not
  * `src/presets/shared/` (where it originally lived): every one of its real consumers is a
- * `checks/*.ts` file (`accessibility`, `adr-governance`, `api-contract`, `api-docs`,
+ * `checks/*.ts` file (`accessibility`, `adr-governance`,
  * `architecture`, `coverage`, `crap`, `docs`, `lint`, `security-network`,
- * `suppression-governance`), and none is a published preset -- unlike its former siblings
+ * `suppression-governance`, among others -- `api-contract`/`api-docs-report` moved out to
+ * internal-package-contract and use that package's own equivalent helpers instead), and none is a
+ * published preset -- unlike its former siblings
  * (`exit-code-fail-rationale.ts`, `missing-dependency.ts`, `read-json-report.ts`,
  * `error-warning-pass-policy.ts`, `vitest-json-policy.ts`), which all have real preset consumers
  * and correctly stay in `src/presets/shared/`. Deliberately generic over the value's own shape and

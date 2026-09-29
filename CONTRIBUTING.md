@@ -63,7 +63,7 @@ minor, a breaking-change marker → major, everything else → patch). Add your 
 `.changeset/*.md` file (`npx changeset`) only when you want a richer, consumer-facing
 description than the commit subject alone, or need to force a higher bump than the
 prefix implies — a hand-written changeset always takes precedence over the generated one.
-If a change touches the public TypeScript API by more than your commits declare, the
+If a change touches the public TypeScript API by more than your changesets declare, the
 `api-contract` check fails the PR and tells you exactly what to add. When you're unsure
 whether a change is breaking, ask in the pull request rather than guess.
 

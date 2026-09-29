@@ -14,19 +14,24 @@
 //
 // PAGES covers the shared page shell/template mechanically, not every
 // generated page individually: docs/index.html (the main site), plus, once
-// scripts/api-docs-html/ has run, docs/api/index.html (the hand-authored
-// landing page) and one representative generated per-symbol page --
-// specifically one containing a real <table> (api-documenter's own raw
-// table markup carries no <caption>/scope, the actual risk case), not all
-// ~70+ generated pages, which all share one template and one stylesheet.
-// The ~70+-page docs/api/**/*.html generation is release-cadence only (see
-// specs/decisions/0008's amendment); if docs/api/ hasn't been generated at
-// all in this working tree, those two entries are silently skipped below,
-// same as before this comment. But once docs/api/ HAS been generated, the
-// specific representative page (REPRESENTATIVE_TABLE_PAGE below) is
-// required to exist -- if the symbol it names is ever renamed or removed,
-// this check fails loudly naming it, rather than silently losing its own
-// table-markup coverage the next time someone updates PAGES.
+// `npm run docs:api` (TypeDoc) has run, docs/api/index.html -- TypeDoc's own
+// generated landing page, not hand-authored. docs/api/ is regenerated fresh
+// on every CI run (never committed -- see .gitignore/RELEASING.md's "GitHub
+// Pages" section), so it's normal for it to be absent in a bare local
+// checkout until that script has run once; if it's missing here, that one
+// entry is silently skipped below.
+//
+// This used to also scan one representative generated per-symbol page
+// containing a real <table> -- this repository's prior API-doc tool
+// (API Documenter) emitted raw, uncaptioned <table> markup, a real
+// accessibility risk. That case doesn't apply anymore: TypeDoc's default
+// theme renders symbol members as <dl>/<div class="tsd-*"> structures, not
+// <table> elements at all (confirmed: zero <table> matches anywhere under a
+// real generated docs/api/ tree) -- see internal-package-contract's own copy
+// of this script for the identical conclusion reached for env-cap/data-cap.
+// Scanning the landing page is enough to cover the shared template/theme
+// every generated page reuses; add a representative-page entry back here if
+// a future API-doc tool (or TypeDoc theme) starts emitting raw tables.
 //
 // pa11y is driven through its Node API rather than its CLI: the CLI cannot
 // pass `chromeLaunchConfig` (needed for `--no-sandbox` below), and it also
@@ -48,9 +53,13 @@
 // supplies the browser puppeteer-core no longer downloads: a system
 // Chrome/Chromium, auto-detected the same way a developer's own machine or a
 // CI runner already has one (GitHub Actions' own `ubuntu-latest` images ship
-// Google Chrome preinstalled). Ported from `internal-package-contract`'s own
-// generalized copy of this script -- see that repo's
-// `scripts/check-accessibility.mjs` doc comment.
+// Google Chrome preinstalled). This script is the original this pattern was
+// ported FROM -- `internal-package-contract`'s own
+// `scripts/check-accessibility.mjs` is a near-direct port of it, generalized
+// to run against whichever package installs that shared devDependency; see
+// that file's own doc comment for the divergences (e.g. its own conclusion,
+// same as this file reaches independently below, that a TypeDoc-based
+// docs/api/ has no <table>-markup accessibility case left to scan for).
 
 import pa11y from "pa11y"
 import { sync as spawnSync } from "cross-spawn"
@@ -64,15 +73,6 @@ const docsApiDir = join(repoRoot, "docs", "api")
 
 const MAIN_SITE_PAGE = join(repoRoot, "docs", "index.html")
 const API_LANDING_PAGE = join(docsApiDir, "index.html")
-// A page containing a real <table> -- api-documenter's own raw table markup carries no
-// <caption>/scope, the actual accessibility risk case this entry exists to cover. If this exact
-// symbol is ever renamed or removed, update this path -- see the module comment above for why a
-// missing docs/api/ directory is fine, but a missing page once docs/api/ exists is not.
-const REPRESENTATIVE_TABLE_PAGE = join(
-  docsApiDir,
-  "repo-contract-helpers",
-  "repo-contract.hashrequirementfields.html",
-)
 
 // Every well-known system Chrome/Chromium install location this check knows to look for, in
 // priority order, per platform -- checked only if `PUPPETEER_EXECUTABLE_PATH`/`CHROME_PATH`
@@ -135,24 +135,19 @@ async function findChromeExecutable() {
 }
 
 /**
- * Resolves which pages to scan: always the main site; the two docs/api/ pages only once
- * docs/api/ has actually been generated in this working tree (release-cadence only, so it's
- * normal for it to be absent between releases) -- but once that directory exists, both must too,
- * or this throws naming exactly which one is missing, rather than silently scanning fewer pages.
+ * Resolves which pages to scan: always the main site; the docs/api/ landing page too, but only
+ * once docs/api/ has actually been generated in this working tree (`npm run docs:api`) -- normal
+ * for it to be absent in a bare local checkout that hasn't run that script yet.
  * @returns Absolute paths of every page to scan.
  */
 async function resolvePages() {
   const pages = [MAIN_SITE_PAGE]
   if (!(await pathExists(docsApiDir))) return pages
 
-  for (const page of [API_LANDING_PAGE, REPRESENTATIVE_TABLE_PAGE]) {
-    if (!(await pathExists(page))) {
-      throw new Error(
-        `docs/api/ exists but the expected page ${page} does not. If the symbol it names was renamed or removed, update REPRESENTATIVE_TABLE_PAGE in scripts/check-accessibility.mjs.`,
-      )
-    }
-    pages.push(page)
+  if (!(await pathExists(API_LANDING_PAGE))) {
+    throw new Error(`docs/api/ exists but its expected landing page ${API_LANDING_PAGE} does not.`)
   }
+  pages.push(API_LANDING_PAGE)
   return pages
 }
 

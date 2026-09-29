@@ -1,0 +1,739 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.59.2",
+    "schemaVersion": 1011,
+    "oldestForwardsCompatibleVersion": 1001,
+    "tsdocConfig": {
+      "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+      "noStandardTags": true,
+      "tagDefinitions": [
+        {
+          "tagName": "@alpha",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@beta",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@defaultValue",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@decorator",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@deprecated",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@eventProperty",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@example",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@experimental",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@inheritDoc",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@internal",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@label",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@link",
+          "syntaxKind": "inline",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@override",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@packageDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@param",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@privateRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@public",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@readonly",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@remarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@returns",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@sealed",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@see",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@throws",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@typeParam",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@virtual",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@jsx",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxRuntime",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxFrag",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxImportSource",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@betaDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@internalRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@preapproved",
+          "syntaxKind": "modifier"
+        }
+      ],
+      "supportForTags": {
+        "@alpha": true,
+        "@beta": true,
+        "@defaultValue": true,
+        "@decorator": true,
+        "@deprecated": true,
+        "@eventProperty": true,
+        "@example": true,
+        "@experimental": true,
+        "@inheritDoc": true,
+        "@internal": true,
+        "@label": true,
+        "@link": true,
+        "@override": true,
+        "@packageDocumentation": true,
+        "@param": true,
+        "@privateRemarks": true,
+        "@public": true,
+        "@readonly": true,
+        "@remarks": true,
+        "@returns": true,
+        "@sealed": true,
+        "@see": true,
+        "@throws": true,
+        "@typeParam": true,
+        "@virtual": true,
+        "@betaDocumentation": true,
+        "@internalRemarks": true,
+        "@preapproved": true
+      },
+      "reportUnsupportedHtmlElements": false
+    }
+  },
+  "kind": "Package",
+  "canonicalReference": "repo-contract!",
+  "docComment": "/**\n * Curated, growing catalog of preset checks for tools common across\n * TypeScript/JavaScript repositories -- each preset encodes how to execute\n * and interpret a common tool, never a repository's definition of quality\n * (see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). Import a preset,\n * spread it into your own `checks` record, and override whatever you need\n * -- most often `policy`; a factory preset's options are the preferred way\n * to change what it executes, a direct `run` override is an escape hatch.\n * Never re-exported from the package root (`src/index.ts`) -- presets are\n * an opt-in extra, not part of the core execution/evidence/policy surface\n * those exports describe, and this barrel never re-exports anything from\n * there either; the two stay independent.\n *\n * @packageDocumentation\n */\n",
+  "name": "repo-contract",
+  "preserveMemberOrder": false,
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "repo-contract!",
+      "name": "",
+      "preserveMemberOrder": false,
+      "members": [
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!arethetypeswrong:var",
+          "docComment": "/**\n * Published-package type-resolution correctness via `@arethetypeswrong/cli`.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "arethetypeswrong: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/arethetypeswrong.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "arethetypeswrong",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!brokenLinks:function(1)",
+          "docComment": "/**\n * Broken-link detection via linkinator, recursing through local files and\n * following both local and remote links. `--skip node_modules` avoids\n * wasting the crawl on vendored files that were never authored content.\n *\n * @param options - configuration for this check; see {@link BrokenLinksOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function brokenLinks(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "BrokenLinksOptions",
+              "canonicalReference": "repo-contract!~BrokenLinksOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/broken-links.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "brokenLinks"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!commitlint:function(1)",
+          "docComment": "/**\n * Commit-message governance via commitlint, using whatever commitlint\n * config the consumer's own repository already has (commitlint ships no\n * rules of its own -- e.g. `@commitlint/config-conventional`). Exit-code\n * based rather than `--format json`: commitlint has no broadly-documented,\n * stable JSON CLI output, so this preset reads its plain-text report the\n * same way the `format`/`typecheck` presets already do for their tools,\n * rather than relying on an unconfirmed flag.\n *\n * @param options - configuration for this check; see {@link CommitlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function commitlint(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CommitlintOptions",
+              "canonicalReference": "repo-contract!~CommitlintOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/commitlint.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "commitlint"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!deadCode:function(1)",
+          "docComment": "/**\n * Dead/unused-code detection via knip.\n *\n * @param options - configuration for this check; see {@link DeadCodeOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function deadCode(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "DeadCodeOptions",
+              "canonicalReference": "repo-contract!~DeadCodeOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/dead-code.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "deadCode"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!duplication:function(1)",
+          "docComment": "/**\n * Duplicated-code detection via jscpd.\n *\n * @param options - configuration for this check; see {@link DuplicationOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function duplication(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "DuplicationOptions",
+              "canonicalReference": "repo-contract!~DuplicationOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/duplication.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "duplication"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!e2e:var",
+          "docComment": "/**\n * End-to-end test execution via Playwright, reading its JSON reporter output.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "e2e: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/e2e.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "e2e",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!format:var",
+          "docComment": "/**\n * Code formatting via Prettier, applied in place.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "format: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/format.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "format",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!license:var",
+          "docComment": "/**\n * Dependency license compliance via licensee.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "license: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/license.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "license",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!lint:function(1)",
+          "docComment": "/**\n * Static analysis via ESLint, using whatever `eslint.config.js` the\n * consumer's own repository already has -- this preset makes no assumption\n * about rule configuration, only about how to run the tool and interpret\n * its JSON output. Severity `2` (error) blocks; severity `1` (warning) is\n * reported but never blocks -- ESLint's own severities already encode that\n * distinction, so this preset just respects it rather than treating every\n * finding as equally blocking.\n *\n * @param options - configuration for this check; see {@link LintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function lint(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "LintOptions",
+              "canonicalReference": "repo-contract!~LintOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/lint.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "lint"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!markdownlint:function(1)",
+          "docComment": "/**\n * Markdown structure/style lint via markdownlint-cli2. Unlike this\n * package's other file-based-report presets, the report path is\n * config-driven rather than a CLI flag -- markdownlint-cli2 only writes\n * JSON when its own config file requests it. This preset assumes the\n * consumer's `.markdownlint-cli2.jsonc` includes:\n * ```jsonc\n * \"outputFormatters\": [[\"markdownlint-cli2-formatter-json\", { \"name\": \"reports/markdownlint.json\" }]]\n * ```\n *\n * which also requires the `markdownlint-cli2-formatter-json` package\n * alongside `markdownlint-cli2` itself.\n *\n * @param options - configuration for this check; see {@link MarkdownlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function markdownlint(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "MarkdownlintOptions",
+              "canonicalReference": "repo-contract!~MarkdownlintOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/markdownlint.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "markdownlint"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!publint:var",
+          "docComment": "/**\n * publint has no machine-readable output mode -- only a plain-text CLI\n * reporter (see its own `src/cli.js` `formatMessages`). Its process exit\n * code reflects only 'error'-level findings; 'warning'/'suggestion'-level\n * findings never affect it. This preset reads the same three section\n * headers publint's own CLI writes (\"Errors:\", \"Warnings:\", \"Suggestions:\")\n * to distinguish blocking findings from non-blocking ones, without\n * depending on any per-message structure publint doesn't expose. Relevant\n * only to repositories that publish an npm package.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "publint: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/publint.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "publint",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!securityDeps:var",
+          "docComment": "/**\n * Dependency vulnerability scanning via `npm audit`.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "securityDeps: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/security-deps.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "securityDeps",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!securitySecrets:var",
+          "docComment": "/**\n * Secret-leak scanning via secretlint.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "securitySecrets: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/security-secrets.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "securitySecrets",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!stylelint:function(1)",
+          "docComment": "/**\n * CSS/SCSS lint via stylelint, using whatever stylelint config the\n * consumer's own repository already has. `severity: \"error\"` blocks;`severity: \"warning\"` is reported but never blocks, matching how the`lint` preset treats ESLint's own severities.\n *\n * @param options - configuration for this check; see {@link StylelintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function stylelint(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "StylelintOptions",
+              "canonicalReference": "repo-contract!~StylelintOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/stylelint.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "stylelint"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!test:var",
+          "docComment": "/**\n * Unit/integration test execution via Vitest, reading its JSON reporter output.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "test: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/test.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "test",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!typecheck:var",
+          "docComment": "/**\n * Type checking via `tsc --noEmit`.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "typecheck: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/typecheck.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "typecheck",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        }
+      ]
+    }
+  ]
+}

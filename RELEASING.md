@@ -53,17 +53,22 @@ release-please era) stays as-is; only future entries render through Changesets.
 
 ## API baseline and browsable docs
 
-[`.github/workflows/api-baseline.yml`](.github/workflows/api-baseline.yml) regenerates
-`.repo-contract/api-contract/baseline.*` on the Version Packages PR branch
-(`changeset-release/main`), so it lands in the same merge as the version bump. If that
-job is ever disabled, run `npm run contract:baseline` after the release and commit the
-result — that is the only other way the baseline is updated.
+[`.github/workflows/api-baseline.yml`](.github/workflows/api-baseline.yml) is a thin caller of
+[`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract)'s own
+reusable `api-baseline-sync.yml` workflow, which regenerates every entry point's own
+`.repo-contract/api-contract/<target>/baseline.*` (`index`, `presets`, `helpers`) on the Version
+Packages PR branch (`changeset-release/main`), so it lands in the same merge as the version bump.
+If that job is ever disabled, run `npm run contract:baseline`
+(`internal-package-contract update-baseline`) after the release and commit the result — that is
+the only other way the baseline is updated.
 
 The browsable HTML API reference (`docs/api/`) is **no longer tied to the release
 cadence** — see the GitHub Pages section below. It is not committed at all anymore; it
 regenerates fresh on every push to `main` as part of the Pages deploy.
 
-`runUpdateBaseline` has four outcomes — only the first two exit 0:
+`runUpdateBaseline` (internal-package-contract's own
+`scripts/api-contract/update-baseline.ts`) has four outcomes per target — only the first two
+exit 0:
 
 | outcome   | when                                                                                                                                                            | writes? |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
@@ -74,10 +79,12 @@ regenerates fresh on every push to `main` as part of the Pages deploy.
 
 `current` is what every re-run of the same Version Packages PR sees (the job's own
 baseline commit, `changesets/action` refreshing the PR after a later merge), so the
-job stays green. Every branch is covered by
-`test/unit/api-contract/update-baseline.test.ts`; that suite is the standing
-verification for this job's guardrail, so no manual dry run is needed before a
-release.
+job stays green. This guardrail's own standing verification now lives in
+internal-package-contract's suite (this engine, `api-contract`, moved there — see
+`repo-contract.config.ts`'s own module doc comment); the `api-contract` check itself,
+run as part of `npm run contract` on every PR here, is what confirms it still behaves
+correctly against this repository's own real multi-target baseline, so no manual dry
+run is needed before a release.
 
 ## GitHub Pages
 
@@ -96,7 +103,7 @@ behavior change from before this migration —
 documented the old release-cadence-only rationale and has a follow-up amendment
 recording this change.
 
-If the `deploy` job is ever disabled, run `npm run api-docs:html` locally and it will
+If the `deploy` job is ever disabled, run `npm run docs:api` locally and it will
 regenerate `docs/api/` (uncommitted — Pages just won't reflect it until the job runs
 again).
 

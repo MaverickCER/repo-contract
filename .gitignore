@@ -53,11 +53,12 @@ examples/**/dist
 examples/**/*.tsbuildinfo
 examples/package-lock.json
 
-# Ephemeral, fully re-derivable from dist/ on every `npm run contract` run --
-# .repo-contract/api-contract/baseline.* is the only committed state.
-.repo-contract/api-contract/current.api.md
-.repo-contract/api-contract/current.api.json
-.repo-contract/api-contract/current.d.ts
+# Ephemeral, fully re-derivable from dist/.dts/ on every `npm run contract` run -- one
+# subdirectory per ApiContract target (index/, presets/, helpers/ -- see internal-package-contract's
+# own scripts/api-contract/targets.ts), each target's own baseline.* is the only committed state.
+.repo-contract/api-contract/*/current.api.md
+.repo-contract/api-contract/*/current.api.json
+.repo-contract/api-contract/*/current.d.ts
 # writeExceptionRegistry (src/helpers/) writes <registry>.<uuid>.tmp then renames it over the
 # target; a rename failure leaves the temp file behind (the run has already failed).
 .repo-contract/exceptions/*.tmp
@@ -71,9 +72,10 @@ history.json
 # GitHub Pages is now the actions/deploy-pages artifact-based flow (see
 # RELEASING.md's "GitHub Pages" section) -- these regenerate fresh on every
 # push to main and are handed to the deploy job as build artifacts, never
-# committed. docs/api-report/*.api.md stays committed (the always-fresh
-# Markdown report an `api-docs` check gates on every PR); only the browsable
-# HTML tree and the release-only badge/evidence-doc JSON+Markdown are ignored.
+# committed. docs/api-report/*.md stays committed (the always-fresh
+# TypeDoc-Markdown report the `api-docs-report` check gates on every PR);
+# only the browsable HTML tree and the release-only badge/evidence-doc
+# JSON+Markdown are ignored.
 /docs/api/
 /docs/coverage-badge.json
 /docs/mutation-badge.json

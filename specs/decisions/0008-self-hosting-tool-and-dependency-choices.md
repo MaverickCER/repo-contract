@@ -222,3 +222,47 @@ matching `.gitignore` entry). The tool choice above (API Extractor's Doc Model +
 committed" half of that decision changes to "generated and deployed, never committed."
 `.github/workflows/api-baseline.yml` keeps its Release-PR-branch job for
 `.repo-contract/api-contract/baseline.*` alone -- `docs/api/` is no longer its concern.
+
+## Amendment (2026-09): the tool choice above reverses -- TypeDoc via internal-package-contract
+
+The "not TypeDoc" reasoning two amendments up was a genuine, correct tradeoff **for this
+repository considered alone**: avoiding a second, independently-computed answer to "what's public
+and how it's documented" alongside API Extractor's Doc Model, which `api-contract` already treated
+as canonical. That framing stops being the deciding factor once the same engine has to serve every
+repository in the fleet, not just this one. `env-cap` and `data-cap` both generate their own
+browsable HTML API reference with TypeDoc already (a plain, no-drama choice neither of them had this
+repository's own `api-contract`-drives-a-second-tool history to react against) -- API Extractor's
+Doc Model, `@microsoft/api-documenter`, and this repository's own hand-rolled `marked`-based HTML
+renderer (`scripts/api-docs-html/`) were, in that light, a bespoke third rendering pipeline this one
+repository alone maintained, not a fleet-wide standard. When `api-contract` itself moved out to
+[`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract) (ported,
+adapted for Changesets instead of Conventional Commits -- see `specs/decisions/0009`'s own
+amendment and `repo-contract.config.ts`'s module doc comment), it took its own API Extractor usage
+with it, staying "still API-Extractor-backed under the hood" exactly as before -- what disappears is
+only _this repository's own separate copy_ of that engine, plus `scripts/api-docs/` and
+`scripts/api-docs-html/`, replaced by `internal-package-contract/checks/npm-script`'s generic
+factory wired to `docs:api`/`docs:api:report` (TypeDoc + `typedoc-plugin-markdown`, via
+`internal-package-contract/config/typedoc` and `.../config/typedoc-markdown`, the same bundled
+configs `typedoc.json`/`typedoc.markdown.json` here `extends`). The "two independently-computed
+answers" cost this amendment originally avoided is still real, but it is now a cost every fleet
+member (including `internal-package-contract` itself, in its own role as an ApiContract target) pays
+identically, in exchange for one shared, centrally-maintained implementation instead of `N` bespoke
+ones -- the same tradeoff this repository already made, in the other direction, when it stopped
+hosting its own copies of `arethetypeswrong`/`publint`/`typecheck` and started consuming
+`repo-contract/presets` like any other consumer.
+
+`docs/api-report/*.api.md` (API Documenter's report format) is replaced by TypeDoc-Markdown's own
+output under the same `docs/api-report/` directory, with different filenames
+(`typedoc-plugin-markdown`'s `outputFileStrategy: "modules"` names files by module, not by package
+
+- entry-point the way API Documenter's `.api.md` naming did) -- the historical filenames are not
+  preserved. `.repo-contract/api-contract/baseline.*` moves from one flat baseline to one
+  `.repo-contract/api-contract/<target>/baseline.*` per entry point (`index`, `presets`, `helpers`),
+  matching `internal-package-contract`'s own per-target model (see its own
+  `scripts/api-contract/targets.ts`, which derives targets from `typedoc.json`'s own `entryPoints` --
+  the same field TypeDoc itself reads, not a second hand-maintained list). `docs/api/`'s own tool
+  choice moves too: TypeDoc's default HTML theme, not API Documenter's Markdown rendered through this
+  repository's own `marked`-based `scripts/api-docs-html/render.ts` -- `scripts/check-accessibility.mjs`
+  already noted the one accessibility-relevant consequence (TypeDoc's theme renders symbol members as
+  `<dl>`/`<div class="tsd-*">`, not the raw, uncaptioned `<table>` markup API Documenter emitted, so
+  the representative-table-page accessibility scan this repository used to need no longer applies).

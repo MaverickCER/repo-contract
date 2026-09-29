@@ -1,7 +1,9 @@
 // Entry point for the "suppression-governance" self-hosting check, invoked via
 // `run: ["tsx", "scripts/suppression-governance/check.ts"]` in repo-contract.config.ts. Prints
 // ONLY the JSON evidence to stdout (for `output: { format: "json" }` to parse) -- mirrors
-// scripts/api-contract/check.ts's own stdout contract. A human-facing scaffolding notice, when
+// internal-package-contract's own scripts/api-contract/check.ts stdout contract (the pattern this
+// repository's own now-deleted checks/api-contract.ts followed too, before that engine moved
+// there). A human-facing scaffolding notice, when
 // stubs were created this run, goes to stderr.
 //
 // Report-only for policy purposes, like architecture.ts/dead-code.ts: a forbidden or
