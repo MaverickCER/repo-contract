@@ -279,13 +279,13 @@ peer dependency on everyone's behalf for a format most checks never need.
 `result.output` is `undefined` when a check does not request a format. If a policy reads
 `result.output.value` (or `.success`/`.error`/`.format`) without narrowing first, and that
 check never configured `output`, `runRepoContract()` rejects with
-[`PolicyReadUnrequestedOutputError`](docs/api-report/repo-contract.api.md), which names the
+[`PolicyReadUnrequestedOutputError`](docs/api-report/index/README.md), which names the
 check and tells you to add `output: { format: "json" }` — rather than the generic
 `PolicyThrewError` you'd otherwise have to debug from a bare "Cannot read properties of
 undefined" stack trace. The sibling mistake — reading `result.output.value` when the format
 _was_ requested but the parse failed (`result.output.success === false`) — similarly
 rejects with
-[`PolicyReadFailedParseValueError`](docs/api-report/repo-contract.api.md). Check
+[`PolicyReadFailedParseValueError`](docs/api-report/index/README.md). Check
 `result.output.success` before reading `.value`.
 
 ### Validating parsed output with a schema
@@ -643,7 +643,7 @@ policy: ({ result }) => {
 ## Errors
 
 repo-contract distinguishes several failure categories and does not conflate them. See the
-generated [API report](docs/api-report/repo-contract.api.md) for each error class's exact
+generated [API report](docs/api-report/index/README.md) for each error class's exact
 shape and `code` string.
 
 - **Configuration errors** (`InvalidRepoContractConfigError`, `InvalidCheckConfigError`) —
@@ -668,9 +668,9 @@ shape and `code` string.
 
 Browse the generated [HTML API reference](https://maverickcer.github.io/repo-contract/api/)
 for the full field-by-field shape of `Evidence`, `CheckEvidence`, `Verdict`, and every error
-class. The underlying [markdown reports](docs/api-report/repo-contract.api.md) are
+class. The underlying [markdown reports](docs/api-report/index/README.md) are
 regenerated and byte-compared against the source on every commit by this repository's own
-`api-docs` check, so the reference can never drift from what the package actually exports.
+`api-docs-report` check, so the reference can never drift from what the package actually exports.
 
 ```ts
 interface Evidence {

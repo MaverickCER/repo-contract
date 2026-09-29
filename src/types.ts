@@ -140,11 +140,11 @@ export interface CheckEvidence {
  * every configured check's evidence, plus timing for the run as a whole.
  * Says nothing about whether any of it was acceptable; see `Verdict`.
  * Additive fields are a compatible change; changing or removing an existing
- * field requires bumping this version number (see VERSIONING.md).
+ * field requires bumping this version number (see `VERSIONING.md`).
  * @public
  */
 export interface Evidence<TChecks extends CheckSchema = CheckSchema> {
-  /** Schema version of this shape; see VERSIONING.md. */
+  /** Schema version of this shape; see `VERSIONING.md`. */
   readonly version: 1
   /** ISO 8601 timestamp of when the run began. */
   readonly startedAt: string
@@ -489,14 +489,14 @@ export interface RunRepoContractOptions {
  * `outcome` is `"pass"` or `"warn"` -- `"fail"` is the only outcome that
  * fails the run; one failing check never collapses into a single generic
  * message, every check remains individually inspectable under `checks`.
- * Versioned independently of `Evidence` (see VERSIONING.md's
+ * Versioned independently of `Evidence` (see `VERSIONING.md`'s
  * schema-versioning policy) -- `version: 2` reflects `checks[id]` changing
  * shape from `{ passed, reason? }` to a full `PolicyResult`
  * (`{ outcome, rationale }`); see ADR 0001.
  * @public
  */
 export interface Verdict<TChecks extends CheckSchema = CheckSchema> {
-  /** Schema version of this shape; see VERSIONING.md. */
+  /** Schema version of this shape; see `VERSIONING.md`. */
   readonly version: 2
   /** `true` only if every check's `outcome` is `"pass"` or `"warn"`. */
   readonly passed: boolean

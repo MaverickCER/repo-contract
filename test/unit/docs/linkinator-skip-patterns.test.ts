@@ -64,3 +64,30 @@ describe("LINKINATOR_SKIP_PATTERNS -- the generated HTML API reference", () => {
     expect(isSkipped(href)).toBe(false)
   })
 })
+
+describe('LINKINATOR_SKIP_PATTERNS -- TypeDoc\'s generated source ("Defined in") links', () => {
+  it.each([
+    "https://github.com/MaverickCER/repo-contract/blob/8e4ed4641dd0ec0415599fec12cdfffd094d98a3/src/errors.ts",
+    "https://github.com/maverickcer/repo-contract/blob/main/src/index.ts",
+    "http://github.com/MaverickCER/repo-contract/blob/abc1234/src/types.ts#L10",
+  ])("skips this repo's own blob links, unresolvable pre-push by construction: %s", (href) => {
+    expect(isSkipped(href)).toBe(true)
+  })
+
+  it.each([
+    // another owner's fork, or a typo'd owner -- must still be crawled
+    "https://github.com/someone-else/repo-contract/blob/main/src/index.ts",
+    "https://github.com/maverikcer/repo-contract/blob/main/src/index.ts",
+    // this owner, but a different repo
+    "https://github.com/maverickcer/other-repo/blob/main/src/index.ts",
+    // spoofed host / path smuggled into a query string
+    "https://notgithub.com/maverickcer/repo-contract/blob/main/src/index.ts",
+    "https://github.com.evil.example/maverickcer/repo-contract/blob/main/src/index.ts",
+    "https://evil.example/?x=github.com/maverickcer/repo-contract/blob/main",
+    // real, verifiable links on this repo -- never skipped
+    "https://github.com/maverickcer/repo-contract/issues/1",
+    "https://github.com/maverickcer/repo-contract/commit/abc1234",
+  ])("does not skip: %s", (href) => {
+    expect(isSkipped(href)).toBe(false)
+  })
+})
