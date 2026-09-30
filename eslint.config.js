@@ -851,7 +851,6 @@ export default tseslint.config(
       "scripts/adr-governance/check.ts",
       "scripts/coderabbitai/review.ts",
       "scripts/dead-code/check.ts",
-      "scripts/iso-12207-alignment/run.ts",
       "scripts/openssf-scorecard/run.ts",
       "scripts/preset-commands/scan.ts",
       "scripts/security-network/scan.ts",
