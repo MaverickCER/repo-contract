@@ -1,0 +1,162 @@
+{
+  "metadata": {
+    "environment": {
+      "cpuModel": "Apple M3",
+      "cpuArchitecture": "arm64",
+      "processArch": "arm64",
+      "logicalCores": 8,
+      "physicalCores": 8,
+      "cpuFrequencyMHz": 2400,
+      "platform": "darwin",
+      "osRelease": "25.6.0",
+      "totalMemoryMb": 24576,
+      "nodeVersion": "v24.20.0",
+      "timezoneOffsetMinutes": 240,
+      "isCI": false,
+      "runner": "local"
+    },
+    "package": {
+      "indexBundleBytes": 43716,
+      "indexBundleGzipBytes": 11438,
+      "presetsBundleBytes": 33536,
+      "presetsBundleGzipBytes": 7193,
+      "helpersBundleBytes": 12051,
+      "helpersBundleGzipBytes": 3657
+    },
+    "configuration": {
+      "targetDurationMs": 2000,
+      "minIterations": 5,
+      "maxIterations": 20,
+      "warmupIterations": 1,
+      "gcEnabled": false
+    },
+    "timing": {
+      "startedAtUtc": "2026-09-30T17:04:46.850Z",
+      "finishedAtUtc": "2026-09-30T17:05:59.408Z",
+      "totalSuiteDurationMs": 72558
+    },
+    "generation": {
+      "fixtureSeed": "deterministic",
+      "generatorVersion": 1
+    },
+    "versions": {
+      "benchmarkSchemaVersion": 1,
+      "benchmarkSuiteVersion": 1,
+      "benchmarkToolVersion": "1.0.0",
+      "repoContractVersion": "0.7.3"
+    },
+    "git": {
+      "gitCommit": "00211b5d2398dc5fc178f28d53bff23eacadaada",
+      "gitBranch": "main",
+      "gitDirty": true
+    },
+    "generatedBy": "npm run benchmark"
+  },
+  "benchmarkManifest": [
+    {
+      "id": "api-contract-diff-api-contract-small-s1-v1",
+      "category": "api-contract",
+      "name": "diff-api-contract",
+      "tier": "small",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "api-contract-diff-api-contract-medium-s1-v1",
+      "category": "api-contract",
+      "name": "diff-api-contract",
+      "tier": "medium",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "api-contract-diff-api-contract-large-s1-v1",
+      "category": "api-contract",
+      "name": "diff-api-contract",
+      "tier": "large",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    }
+  ],
+  "results": {
+    "diff-api-contract": {
+      "tiers": {
+        "small": {
+          "id": "api-contract-diff-api-contract-small-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "exportedSymbols": 20
+          },
+          "fixtureGenerationMs": 2276,
+          "durationMs": {
+            "minMs": 300.036333,
+            "medianMs": 316.58500000000004,
+            "p95Ms": 335.21616700000004,
+            "maxMs": 335.21616700000004,
+            "stdDevMs": 12.394300679710021,
+            "iterations": 7,
+            "warmupIterations": 1
+          },
+          "changeCount": 6,
+          "configuration": {
+            "targetDurationMs": 2000,
+            "minIterations": 5,
+            "maxIterations": 20,
+            "warmupIterations": 1,
+            "gcEnabled": false
+          }
+        },
+        "medium": {
+          "id": "api-contract-diff-api-contract-medium-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "exportedSymbols": 100
+          },
+          "fixtureGenerationMs": 2039,
+          "durationMs": {
+            "minMs": 1468.1250419999997,
+            "medianMs": 1489.8622919999998,
+            "p95Ms": 1547.7322920000006,
+            "maxMs": 1547.7322920000006,
+            "stdDevMs": 30.108722218033385,
+            "iterations": 5,
+            "warmupIterations": 1
+          },
+          "changeCount": 18,
+          "configuration": {
+            "targetDurationMs": 2000,
+            "minIterations": 5,
+            "maxIterations": 20,
+            "warmupIterations": 1,
+            "gcEnabled": false
+          }
+        },
+        "large": {
+          "id": "api-contract-diff-api-contract-large-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "exportedSymbols": 400
+          },
+          "fixtureGenerationMs": 2169,
+          "durationMs": {
+            "minMs": 7386.596166000003,
+            "medianMs": 8958.791665999997,
+            "p95Ms": 9310.870459000005,
+            "maxMs": 9310.870459000005,
+            "stdDevMs": 716.2184448245789,
+            "iterations": 5,
+            "warmupIterations": 1
+          },
+          "changeCount": 64,
+          "configuration": {
+            "targetDurationMs": 2000,
+            "minIterations": 5,
+            "maxIterations": 20,
+            "warmupIterations": 1,
+            "gcEnabled": false
+          }
+        }
+      }
+    }
+  }
+}

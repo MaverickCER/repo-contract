@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "environment": {
+      "cpuModel": "Apple M3",
+      "cpuArchitecture": "arm64",
+      "processArch": "arm64",
+      "logicalCores": 8,
+      "physicalCores": 8,
+      "cpuFrequencyMHz": 2400,
+      "platform": "darwin",
+      "osRelease": "25.6.0",
+      "totalMemoryMb": 24576,
+      "nodeVersion": "v24.20.0",
+      "timezoneOffsetMinutes": 240,
+      "isCI": false,
+      "runner": "local"
+    },
+    "package": {
+      "indexBundleBytes": 43716,
+      "indexBundleGzipBytes": 11438,
+      "presetsBundleBytes": 33536,
+      "presetsBundleGzipBytes": 7193,
+      "helpersBundleBytes": 12051,
+      "helpersBundleGzipBytes": 3657
+    },
+    "configuration": {
+      "targetDurationMs": 2000,
+      "minIterations": 8,
+      "maxIterations": 60,
+      "warmupIterations": 2,
+      "gcEnabled": false
+    },
+    "timing": {
+      "startedAtUtc": "2026-09-30T17:04:38.638Z",
+      "finishedAtUtc": "2026-09-30T17:04:40.958Z",
+      "totalSuiteDurationMs": 2320
+    },
+    "generation": {
+      "fixtureSeed": "deterministic",
+      "generatorVersion": 1
+    },
+    "versions": {
+      "benchmarkSchemaVersion": 1,
+      "benchmarkSuiteVersion": 1,
+      "benchmarkToolVersion": "1.0.0",
+      "repoContractVersion": "0.7.3"
+    },
+    "git": {
+      "gitCommit": "00211b5d2398dc5fc178f28d53bff23eacadaada",
+      "gitBranch": "main",
+      "gitDirty": true
+    },
+    "generatedBy": "npm run benchmark"
+  },
+  "benchmarkManifest": [
+    {
+      "id": "policy-evidence-evaluate-evidence-and-policy-small-s1-v1",
+      "category": "policy-evidence",
+      "name": "evaluate-evidence-and-policy",
+      "tier": "small",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "policy-evidence-evaluate-evidence-and-policy-medium-s1-v1",
+      "category": "policy-evidence",
+      "name": "evaluate-evidence-and-policy",
+      "tier": "medium",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "policy-evidence-evaluate-evidence-and-policy-large-s1-v1",
+      "category": "policy-evidence",
+      "name": "evaluate-evidence-and-policy",
+      "tier": "large",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    }
+  ],
+  "results": {
+    "evaluate-evidence-and-policy": {
+      "tiers": {
+        "small": {
+          "id": "policy-evidence-evaluate-evidence-and-policy-small-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "checks": 20,
+            "evidenceBytes": 10990
+          },
+          "fixtureGenerationMs": 1,
+          "durationMs": {
+            "minMs": 0.05241700000000549,
+            "medianMs": 0.06745800000000202,
+            "p95Ms": 0.16654199999999264,
+            "maxMs": 0.4783749999999998,
+            "stdDevMs": 0.06072704829922389,
+            "iterations": 60,
+            "warmupIterations": 2
+          },
+          "checksEvaluated": 20,
+          "configuration": {
+            "targetDurationMs": 2000,
+            "minIterations": 8,
+            "maxIterations": 60,
+            "warmupIterations": 2,
+            "gcEnabled": false
+          }
+        },
+        "medium": {
+          "id": "policy-evidence-evaluate-evidence-and-policy-medium-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "checks": 100,
+            "evidenceBytes": 511310
+          },
+          "fixtureGenerationMs": 3,
+          "durationMs": {
+            "minMs": 1.2787500000000023,
+            "medianMs": 1.3271249999999952,
+            "p95Ms": 1.6661670000000157,
+            "maxMs": 1.9002499999999998,
+            "stdDevMs": 0.12682596398286383,
+            "iterations": 60,
+            "warmupIterations": 2
+          },
+          "checksEvaluated": 100,
+          "configuration": {
+            "targetDurationMs": 2000,
+            "minIterations": 8,
+            "maxIterations": 60,
+            "warmupIterations": 2,
+            "gcEnabled": false
+          }
+        },
+        "large": {
+          "id": "policy-evidence-evaluate-evidence-and-policy-large-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "checks": 400,
+            "evidenceBytes": 20048070
+          },
+          "fixtureGenerationMs": 99,
+          "durationMs": {
+            "minMs": 46.92679099999998,
+            "medianMs": 49.8772919999999,
+            "p95Ms": 60.099917000000005,
+            "maxMs": 86.5167919999999,
+            "stdDevMs": 6.389434472340274,
+            "iterations": 39,
+            "warmupIterations": 2
+          },
+          "checksEvaluated": 400,
+          "configuration": {
+            "targetDurationMs": 2000,
+            "minIterations": 8,
+            "maxIterations": 60,
+            "warmupIterations": 2,
+            "gcEnabled": false
+          }
+        }
+      }
+    }
+  }
+}

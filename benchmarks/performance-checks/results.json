@@ -1,0 +1,162 @@
+{
+  "metadata": {
+    "environment": {
+      "cpuModel": "Apple M3",
+      "cpuArchitecture": "arm64",
+      "processArch": "arm64",
+      "logicalCores": 8,
+      "physicalCores": 8,
+      "cpuFrequencyMHz": 2400,
+      "platform": "darwin",
+      "osRelease": "25.6.0",
+      "totalMemoryMb": 24576,
+      "nodeVersion": "v24.20.0",
+      "timezoneOffsetMinutes": 240,
+      "isCI": false,
+      "runner": "local"
+    },
+    "package": {
+      "indexBundleBytes": 43716,
+      "indexBundleGzipBytes": 11438,
+      "presetsBundleBytes": 33536,
+      "presetsBundleGzipBytes": 7193,
+      "helpersBundleBytes": 12051,
+      "helpersBundleGzipBytes": 3657
+    },
+    "configuration": {
+      "targetDurationMs": 3000,
+      "minIterations": 5,
+      "maxIterations": 20,
+      "warmupIterations": 1,
+      "gcEnabled": false
+    },
+    "timing": {
+      "startedAtUtc": "2026-09-30T17:03:57.217Z",
+      "finishedAtUtc": "2026-09-30T17:04:32.925Z",
+      "totalSuiteDurationMs": 35708
+    },
+    "generation": {
+      "fixtureSeed": "deterministic",
+      "generatorVersion": 1
+    },
+    "versions": {
+      "benchmarkSchemaVersion": 1,
+      "benchmarkSuiteVersion": 1,
+      "benchmarkToolVersion": "1.0.0",
+      "repoContractVersion": "0.7.3"
+    },
+    "git": {
+      "gitCommit": "00211b5d2398dc5fc178f28d53bff23eacadaada",
+      "gitBranch": "main",
+      "gitDirty": true
+    },
+    "generatedBy": "npm run benchmark"
+  },
+  "benchmarkManifest": [
+    {
+      "id": "checks-run-checks-small-s1-v1",
+      "category": "checks",
+      "name": "run-checks",
+      "tier": "small",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "checks-run-checks-medium-s1-v1",
+      "category": "checks",
+      "name": "run-checks",
+      "tier": "medium",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "checks-run-checks-large-s1-v1",
+      "category": "checks",
+      "name": "run-checks",
+      "tier": "large",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    }
+  ],
+  "results": {
+    "run-checks": {
+      "tiers": {
+        "small": {
+          "id": "checks-run-checks-small-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "checks": 20,
+            "dependencyEdges": 3
+          },
+          "durationMs": {
+            "minMs": 262.1477090000001,
+            "medianMs": 283.1382910000002,
+            "p95Ms": 347.2506659999999,
+            "maxMs": 347.2506659999999,
+            "stdDevMs": 21.57957254365591,
+            "iterations": 11,
+            "warmupIterations": 1
+          },
+          "resolvedChecks": 20,
+          "configuration": {
+            "targetDurationMs": 3000,
+            "minIterations": 5,
+            "maxIterations": 20,
+            "warmupIterations": 1,
+            "gcEnabled": false
+          }
+        },
+        "medium": {
+          "id": "checks-run-checks-medium-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "checks": 100,
+            "dependencyEdges": 19
+          },
+          "durationMs": {
+            "minMs": 1103.7573329999996,
+            "medianMs": 1124.3718749999998,
+            "p95Ms": 1245.4599999999991,
+            "maxMs": 1245.4599999999991,
+            "stdDevMs": 60.168250119903625,
+            "iterations": 5,
+            "warmupIterations": 1
+          },
+          "resolvedChecks": 100,
+          "configuration": {
+            "targetDurationMs": 3000,
+            "minIterations": 5,
+            "maxIterations": 20,
+            "warmupIterations": 1,
+            "gcEnabled": false
+          }
+        },
+        "large": {
+          "id": "checks-run-checks-large-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "checks": 400,
+            "dependencyEdges": 79
+          },
+          "durationMs": {
+            "minMs": 3965.8278329999994,
+            "medianMs": 4099.783041999999,
+            "p95Ms": 4533.206624999999,
+            "maxMs": 4533.206624999999,
+            "stdDevMs": 208.44369576456418,
+            "iterations": 5,
+            "warmupIterations": 1
+          },
+          "resolvedChecks": 400,
+          "configuration": {
+            "targetDurationMs": 3000,
+            "minIterations": 5,
+            "maxIterations": 20,
+            "warmupIterations": 1,
+            "gcEnabled": false
+          }
+        }
+      }
+    }
+  }
+}
