@@ -18,14 +18,21 @@
  * The `checks` object below is organized in three declaration-order phases, relying on that
  * barrier semantics rather than per-check `dependsOn` wiring wherever possible:
  *
- * 1. **Writers** -- `suppression-governance`, `api-docs-report`, `lint`,
+ * 1. **Writers** -- `suppression-governance`, `api-docs-report`, `sbom`, `lint`,
  *    `format`, `schema` -- every check that writes to a file other checks (or a human) later reads.
  *    Declared first so nothing reads their output before it's written. `api-docs-report`
  *    (IPC's generic `npmScriptCheck` factory wired to this repo's own `docs:api:report` script --
  *    TypeDoc + typedoc-plugin-markdown, reading `src/**` directly, no build required) genuinely
  *    regenerates `docs/api-report/*.md` on every run, failing only if that regeneration produces a
  *    diff from what's already committed -- a real write, unlike `api-contract` below, which is why
- *    it stays here rather than among the readers.
+ *    it stays here rather than among the readers. `sbom` (`checks/sbom.ts` /
+ *    `scripts/sbom/*.ts`) genuinely regenerates `docs/sbom.cdx.json` (a real CycloneDX SBOM, via
+ *    `@cyclonedx/cyclonedx-npm`) the same way, and -- unlike `openssf-scorecard` below, which also
+ *    writes a doc but stays among the readers -- needs no other check's evidence via `dependsOn`,
+ *    so nothing stops it from sitting here with the rest of the genuine writers; see that check's
+ *    own module doc comment for the full reasoning, including why its own output can be byte-
+ *    identical run to run (unlike `openssf-scorecard`'s timestamped doc) and therefore needs no
+ *    special CI-gate exclusion.
  *    `lint` (`eslint --fix`/`oxlint --fix`) and `format` (`prettier --write .`) both rewrite the
  *    whole source tree in place, and `schema` regenerates `schemas/*.schema.json` plus
  *    `scripts/suppression-governance/disable-comments.schema.json` from their source types -- all
@@ -35,7 +42,7 @@
  *    `architecture`/`crap`/`duplication`/`security-secrets`/`dead-code`/`security-network` all
  *    reading `src/**`) must never race an in-place rewrite of that same content -- confirmed safe
  *    to co-locate with the original four writers: `lint`/`format` never touch any of
- *    suppression-governance's/api-docs-report's/schema's own generated output
+ *    suppression-governance's/api-docs-report's/sbom's/schema's own generated output
  *    (`.prettierignore`/each ESLint `files` glob excludes every one of them by path or extension),
  *    and `schema` only ever reads its own TypeScript source types, never another writer's output.
  *    `lint` and `format` do rewrite the same files as each other, though, so `format` carries an
@@ -165,6 +172,7 @@ import { lint } from "./checks/lint.js"
 import { mutation } from "./checks/mutation.js"
 import { openssfScorecard } from "./checks/openssf-scorecard.js"
 import { presetCommands } from "./checks/preset-commands.js"
+import { sbom } from "./checks/sbom.js"
 import { schema } from "./checks/schema.js"
 import { securityDeps } from "./checks/security-deps.js"
 import { securityNetwork } from "./checks/security-network.js"
@@ -217,6 +225,14 @@ export default defineRepoContract({
       label: "API docs report",
       mustNotChange: ["docs/api-report"],
     }),
+    // Regenerates docs/sbom.cdx.json (a real CycloneDX SBOM for this repository's own npm
+    // dependency graph) on every run via @cyclonedx/cyclonedx-npm -- a real write, and, thanks to
+    // `--output-reproducible` (scripts/sbom/spawn.ts), a byte-identical one given an unchanged
+    // package-lock.json, so it needs no special exclusion from the "working tree is clean" CI gate
+    // the way docs/OpenSSF-Scorecard.md does. Declared here rather than among the readers below
+    // (where `openssf-scorecard`, which also writes a doc, lives) because it reads no other
+    // check's evidence via `dependsOn` -- see checks/sbom.ts's own module doc comment.
+    sbom,
     // Rewrites the whole source tree in place (`eslint --fix`/`oxlint --fix`) -- a writer, not a
     // reader, for the same reason format/schema below are: a reader that concurrently lints or
     // reads the same files it's rewriting must never race that rewrite. See module doc comment.

@@ -15,6 +15,13 @@
       "name": "@commitlint/cli"
     },
     {
+      "id": "dead-code:unused-dev-dependency:@cyclonedx/cyclonedx-npm",
+      "version": 1,
+      "justification": "Spawned by literal command name (\"cyclonedx-npm\") via `cross-spawn` in scripts/sbom/spawn.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
+      "kind": "unused-dev-dependency",
+      "name": "@cyclonedx/cyclonedx-npm"
+    },
+    {
       "id": "dead-code:unused-dev-dependency:@socketsecurity/cli",
       "version": 1,
       "justification": "Spawned by literal command name (\"socket\") via `cross-spawn` in scripts/security-socket/scan.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
@@ -83,6 +90,13 @@
       "justification": "The openssf-scorecard check's own entrypoint, spawned by literal path via checks/openssf-scorecard.ts's `run: [\"tsx\", \"scripts/openssf-scorecard/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
       "kind": "unused-file",
       "name": "scripts/openssf-scorecard/run.ts"
+    },
+    {
+      "id": "dead-code:unused-file:scripts/sbom/run.ts",
+      "version": 1,
+      "justification": "The sbom check's own entrypoint, spawned by literal path via checks/sbom.ts's `run: [\"tsx\", \"scripts/sbom/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/openssf-scorecard/run.ts, scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
+      "kind": "unused-file",
+      "name": "scripts/sbom/run.ts"
     }
   ]
 }

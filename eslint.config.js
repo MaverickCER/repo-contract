@@ -853,6 +853,7 @@ export default tseslint.config(
       "scripts/dead-code/check.ts",
       "scripts/openssf-scorecard/run.ts",
       "scripts/preset-commands/scan.ts",
+      "scripts/sbom/run.ts",
       "scripts/security-network/scan.ts",
       "scripts/security-socket/scan.ts",
       "scripts/suppression-governance/check.ts",
