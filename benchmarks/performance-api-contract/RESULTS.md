@@ -15,12 +15,12 @@
 
 - **id**: `api-contract-diff-api-contract-large-s1-v1`
 - **status**: completed
-- **inputs**: 
+- **inputs**:
   - **exportedSymbols**: 400
 - **fixtureGenerationMs**: 2795
 - **durationMs**: median **9443.39ms** (min 9432.01, p95 9524.33, max 9524.33, stdDev 35.29, n=5)
 - **changeCount**: 64
-- **configuration**: 
+- **configuration**:
   - **targetDurationMs**: 2000
   - **minIterations**: 5
   - **maxIterations**: 20
@@ -31,12 +31,12 @@
 
 - **id**: `api-contract-diff-api-contract-medium-s1-v1`
 - **status**: completed
-- **inputs**: 
+- **inputs**:
   - **exportedSymbols**: 100
 - **fixtureGenerationMs**: 2504
 - **durationMs**: median **2114.62ms** (min 2045.48, p95 2148.11, max 2148.11, stdDev 36.53, n=5)
 - **changeCount**: 18
-- **configuration**: 
+- **configuration**:
   - **targetDurationMs**: 2000
   - **minIterations**: 5
   - **maxIterations**: 20
@@ -47,12 +47,12 @@
 
 - **id**: `api-contract-diff-api-contract-small-s1-v1`
 - **status**: completed
-- **inputs**: 
+- **inputs**:
   - **exportedSymbols**: 20
 - **fixtureGenerationMs**: 3077
 - **durationMs**: median **444.67ms** (min 433.17, p95 504.34, max 504.34, stdDev 25.15, n=5)
 - **changeCount**: 6
-- **configuration**: 
+- **configuration**:
   - **targetDurationMs**: 2000
   - **minIterations**: 5
   - **maxIterations**: 20

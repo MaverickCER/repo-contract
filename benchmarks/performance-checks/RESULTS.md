@@ -15,12 +15,12 @@
 
 - **id**: `checks-run-checks-large-s1-v1`
 - **status**: completed
-- **inputs**: 
+- **inputs**:
   - **checks**: 400
   - **dependencyEdges**: 79
 - **durationMs**: median **3711.32ms** (min 3613.23, p95 3747.60, max 3747.60, stdDev 47.70, n=5)
 - **resolvedChecks**: 400
-- **configuration**: 
+- **configuration**:
   - **targetDurationMs**: 3000
   - **minIterations**: 5
   - **maxIterations**: 20
@@ -31,12 +31,12 @@
 
 - **id**: `checks-run-checks-medium-s1-v1`
 - **status**: completed
-- **inputs**: 
+- **inputs**:
   - **checks**: 100
   - **dependencyEdges**: 19
 - **durationMs**: median **923.82ms** (min 910.79, p95 1099.93, max 1099.93, stdDev 71.90, n=5)
 - **resolvedChecks**: 100
-- **configuration**: 
+- **configuration**:
   - **targetDurationMs**: 3000
   - **minIterations**: 5
   - **maxIterations**: 20
@@ -47,12 +47,12 @@
 
 - **id**: `checks-run-checks-small-s1-v1`
 - **status**: completed
-- **inputs**: 
+- **inputs**:
   - **checks**: 20
   - **dependencyEdges**: 3
 - **durationMs**: median **225.90ms** (min 213.58, p95 234.50, max 234.50, stdDev 6.78, n=14)
 - **resolvedChecks**: 20
-- **configuration**: 
+- **configuration**:
   - **targetDurationMs**: 3000
   - **minIterations**: 5
   - **maxIterations**: 20
