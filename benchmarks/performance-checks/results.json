@@ -1,27 +1,27 @@
 {
   "metadata": {
     "environment": {
-      "cpuModel": "Apple M3",
-      "cpuArchitecture": "arm64",
-      "processArch": "arm64",
-      "logicalCores": 8,
-      "physicalCores": 8,
-      "cpuFrequencyMHz": 2400,
-      "platform": "darwin",
-      "osRelease": "25.6.0",
-      "totalMemoryMb": 24576,
-      "nodeVersion": "v24.20.0",
-      "timezoneOffsetMinutes": 240,
-      "isCI": false,
-      "runner": "local"
+      "cpuModel": "AMD EPYC 7763 64-Core Processor",
+      "cpuArchitecture": "x64",
+      "processArch": "x64",
+      "logicalCores": 4,
+      "physicalCores": 2,
+      "cpuFrequencyMHz": 0,
+      "platform": "linux",
+      "osRelease": "6.17.0-1022-azure",
+      "totalMemoryMb": 15990,
+      "nodeVersion": "v24.21.0",
+      "timezoneOffsetMinutes": 0,
+      "isCI": true,
+      "runner": "GitHub Actions"
     },
     "package": {
-      "indexBundleBytes": 43716,
-      "indexBundleGzipBytes": 11438,
-      "presetsBundleBytes": 33536,
-      "presetsBundleGzipBytes": 7193,
-      "helpersBundleBytes": 12051,
-      "helpersBundleGzipBytes": 3657
+      "indexBundleBytes": null,
+      "indexBundleGzipBytes": null,
+      "presetsBundleBytes": null,
+      "presetsBundleGzipBytes": null,
+      "helpersBundleBytes": null,
+      "helpersBundleGzipBytes": null
     },
     "configuration": {
       "targetDurationMs": 3000,
@@ -31,9 +31,9 @@
       "gcEnabled": false
     },
     "timing": {
-      "startedAtUtc": "2026-09-30T17:03:57.217Z",
-      "finishedAtUtc": "2026-09-30T17:04:32.925Z",
-      "totalSuiteDurationMs": 35708
+      "startedAtUtc": "2026-09-30T20:18:09.697Z",
+      "finishedAtUtc": "2026-09-30T20:18:40.827Z",
+      "totalSuiteDurationMs": 31130
     },
     "generation": {
       "fixtureSeed": "deterministic",
@@ -46,11 +46,11 @@
       "repoContractVersion": "0.7.3"
     },
     "git": {
-      "gitCommit": "00211b5d2398dc5fc178f28d53bff23eacadaada",
-      "gitBranch": "main",
-      "gitDirty": true
+      "gitCommit": "cdc9a60a863987dadfb28e66c7484c460373d8c3",
+      "gitBranch": "feat/benchmark-suite",
+      "gitDirty": false
     },
-    "generatedBy": "npm run benchmark"
+    "generatedBy": "ci"
   },
   "benchmarkManifest": [
     {
@@ -89,12 +89,12 @@
             "dependencyEdges": 3
           },
           "durationMs": {
-            "minMs": 262.1477090000001,
-            "medianMs": 283.1382910000002,
-            "p95Ms": 347.2506659999999,
-            "maxMs": 347.2506659999999,
-            "stdDevMs": 21.57957254365591,
-            "iterations": 11,
+            "minMs": 213.57544700000017,
+            "medianMs": 225.89712400000008,
+            "p95Ms": 234.495185,
+            "maxMs": 234.495185,
+            "stdDevMs": 6.784223503259982,
+            "iterations": 14,
             "warmupIterations": 1
           },
           "resolvedChecks": 20,
@@ -114,11 +114,11 @@
             "dependencyEdges": 19
           },
           "durationMs": {
-            "minMs": 1103.7573329999996,
-            "medianMs": 1124.3718749999998,
-            "p95Ms": 1245.4599999999991,
-            "maxMs": 1245.4599999999991,
-            "stdDevMs": 60.168250119903625,
+            "minMs": 910.7901600000005,
+            "medianMs": 923.8153090000014,
+            "p95Ms": 1099.9329369999996,
+            "maxMs": 1099.9329369999996,
+            "stdDevMs": 71.90076065714918,
             "iterations": 5,
             "warmupIterations": 1
           },
@@ -139,11 +139,11 @@
             "dependencyEdges": 79
           },
           "durationMs": {
-            "minMs": 3965.8278329999994,
-            "medianMs": 4099.783041999999,
-            "p95Ms": 4533.206624999999,
-            "maxMs": 4533.206624999999,
-            "stdDevMs": 208.44369576456418,
+            "minMs": 3613.233456,
+            "medianMs": 3711.3204069999992,
+            "p95Ms": 3747.6027609999983,
+            "maxMs": 3747.6027609999983,
+            "stdDevMs": 47.704294438824164,
             "iterations": 5,
             "warmupIterations": 1
           },
