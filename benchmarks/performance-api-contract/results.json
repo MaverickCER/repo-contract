@@ -1,27 +1,27 @@
 {
   "metadata": {
     "environment": {
-      "cpuModel": "Apple M3",
-      "cpuArchitecture": "arm64",
-      "processArch": "arm64",
-      "logicalCores": 8,
-      "physicalCores": 8,
-      "cpuFrequencyMHz": 2400,
-      "platform": "darwin",
-      "osRelease": "25.6.0",
-      "totalMemoryMb": 24576,
-      "nodeVersion": "v24.20.0",
-      "timezoneOffsetMinutes": 240,
-      "isCI": false,
-      "runner": "local"
+      "cpuModel": "AMD EPYC 7763 64-Core Processor",
+      "cpuArchitecture": "x64",
+      "processArch": "x64",
+      "logicalCores": 4,
+      "physicalCores": 2,
+      "cpuFrequencyMHz": 0,
+      "platform": "linux",
+      "osRelease": "6.17.0-1022-azure",
+      "totalMemoryMb": 15990,
+      "nodeVersion": "v24.21.0",
+      "timezoneOffsetMinutes": 0,
+      "isCI": true,
+      "runner": "GitHub Actions"
     },
     "package": {
-      "indexBundleBytes": 43716,
-      "indexBundleGzipBytes": 11438,
-      "presetsBundleBytes": 33536,
-      "presetsBundleGzipBytes": 7193,
-      "helpersBundleBytes": 12051,
-      "helpersBundleGzipBytes": 3657
+      "indexBundleBytes": null,
+      "indexBundleGzipBytes": null,
+      "presetsBundleBytes": null,
+      "presetsBundleGzipBytes": null,
+      "helpersBundleBytes": null,
+      "helpersBundleGzipBytes": null
     },
     "configuration": {
       "targetDurationMs": 2000,
@@ -31,9 +31,9 @@
       "gcEnabled": false
     },
     "timing": {
-      "startedAtUtc": "2026-09-30T17:04:46.850Z",
-      "finishedAtUtc": "2026-09-30T17:05:59.408Z",
-      "totalSuiteDurationMs": 72558
+      "startedAtUtc": "2026-09-30T20:18:43.846Z",
+      "finishedAtUtc": "2026-09-30T20:20:05.375Z",
+      "totalSuiteDurationMs": 81529
     },
     "generation": {
       "fixtureSeed": "deterministic",
@@ -46,11 +46,11 @@
       "repoContractVersion": "0.7.3"
     },
     "git": {
-      "gitCommit": "00211b5d2398dc5fc178f28d53bff23eacadaada",
-      "gitBranch": "main",
+      "gitCommit": "cdc9a60a863987dadfb28e66c7484c460373d8c3",
+      "gitBranch": "feat/benchmark-suite",
       "gitDirty": true
     },
-    "generatedBy": "npm run benchmark"
+    "generatedBy": "ci"
   },
   "benchmarkManifest": [
     {
@@ -87,14 +87,14 @@
           "inputs": {
             "exportedSymbols": 20
           },
-          "fixtureGenerationMs": 2276,
+          "fixtureGenerationMs": 3077,
           "durationMs": {
-            "minMs": 300.036333,
-            "medianMs": 316.58500000000004,
-            "p95Ms": 335.21616700000004,
-            "maxMs": 335.21616700000004,
-            "stdDevMs": 12.394300679710021,
-            "iterations": 7,
+            "minMs": 433.17395599999963,
+            "medianMs": 444.66926799999965,
+            "p95Ms": 504.3416729999999,
+            "maxMs": 504.3416729999999,
+            "stdDevMs": 25.15347421741607,
+            "iterations": 5,
             "warmupIterations": 1
           },
           "changeCount": 6,
@@ -112,13 +112,13 @@
           "inputs": {
             "exportedSymbols": 100
           },
-          "fixtureGenerationMs": 2039,
+          "fixtureGenerationMs": 2504,
           "durationMs": {
-            "minMs": 1468.1250419999997,
-            "medianMs": 1489.8622919999998,
-            "p95Ms": 1547.7322920000006,
-            "maxMs": 1547.7322920000006,
-            "stdDevMs": 30.108722218033385,
+            "minMs": 2045.484274999999,
+            "medianMs": 2114.6160789999994,
+            "p95Ms": 2148.1119909999998,
+            "maxMs": 2148.1119909999998,
+            "stdDevMs": 36.53430008512649,
             "iterations": 5,
             "warmupIterations": 1
           },
@@ -137,13 +137,13 @@
           "inputs": {
             "exportedSymbols": 400
           },
-          "fixtureGenerationMs": 2169,
+          "fixtureGenerationMs": 2795,
           "durationMs": {
-            "minMs": 7386.596166000003,
-            "medianMs": 8958.791665999997,
-            "p95Ms": 9310.870459000005,
-            "maxMs": 9310.870459000005,
-            "stdDevMs": 716.2184448245789,
+            "minMs": 9432.011296999997,
+            "medianMs": 9443.393314,
+            "p95Ms": 9524.331490000004,
+            "maxMs": 9524.331490000004,
+            "stdDevMs": 35.29330772061161,
             "iterations": 5,
             "warmupIterations": 1
           },
