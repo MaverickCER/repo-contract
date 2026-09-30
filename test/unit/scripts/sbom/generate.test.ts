@@ -1,3 +1,4 @@
+import path from "node:path"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type * as SpawnModule from "../../../../scripts/sbom/spawn.js"
 
@@ -39,7 +40,7 @@ describe("generateSbom", () => {
 
     await generateSbom("/repo")
 
-    expect(mkdir).toHaveBeenCalledWith("/repo/docs", { recursive: true })
+    expect(mkdir).toHaveBeenCalledWith(path.join("/repo", "docs"), { recursive: true })
     const mkdirOrder = mkdir.mock.invocationCallOrder[0]
     const spawnOrder = runCycloneDxNpm.mock.invocationCallOrder[0]
     expect(mkdirOrder).toBeDefined()
@@ -98,7 +99,7 @@ describe("generateSbom", () => {
 
     const evidence = await generateSbom("/repo")
 
-    expect(readFile).toHaveBeenCalledWith("/repo/docs/sbom.cdx.json", "utf8")
+    expect(readFile).toHaveBeenCalledWith(path.join("/repo", "docs/sbom.cdx.json"), "utf8")
     expect(evidence).toEqual({
       ok: true,
       outputPath: "docs/sbom.cdx.json",
