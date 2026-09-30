@@ -17,14 +17,19 @@ function renderDurationStats(stats) {
   return `median **${stats.medianMs.toFixed(2)}ms** (min ${stats.minMs.toFixed(2)}, p95 ${stats.p95Ms.toFixed(2)}, max ${stats.maxMs.toFixed(2)}, stdDev ${stats.stdDevMs.toFixed(2)}, n=${stats.iterations})`
 }
 
+function renderKeyValue(key, value, depth) {
+  const rendered = renderValue(value, depth)
+  // No trailing space before a nested block's own leading "\n" -- Prettier strips trailing
+  // whitespace, so "- **key**: \n  - ..." (space before the newline) would never match
+  // `prettier --check`'s own output for this committed file.
+  return `${"  ".repeat(depth - 1)}- **${key}**:${rendered.startsWith("\n") ? "" : " "}${rendered}`
+}
+
 function renderValue(value, depth) {
   if (isDurationStats(value)) return renderDurationStats(value)
   if (value && typeof value === "object" && !Array.isArray(value)) {
-    const lines = []
-    for (const [k, v] of Object.entries(value)) {
-      lines.push(`${"  ".repeat(depth)}- **${k}**: ${renderValue(v, depth + 1)}`)
-    }
-    return (depth === 0 ? "\n" : "\n") + lines.join("\n")
+    const lines = Object.entries(value).map(([k, v]) => renderKeyValue(k, v, depth + 1))
+    return "\n" + lines.join("\n")
   }
   if (Array.isArray(value))
     return value.length === 0 ? "(none)" : `${value.length} entr${value.length === 1 ? "y" : "ies"}`
@@ -43,7 +48,7 @@ function renderTierEntry(entry) {
   }
   for (const [key, value] of Object.entries(entry)) {
     if (key === "id" || key === "status") continue
-    lines.push(`- **${key}**: ${renderValue(value, 1)}`)
+    lines.push(renderKeyValue(key, value, 1))
   }
   return lines.join("\n")
 }

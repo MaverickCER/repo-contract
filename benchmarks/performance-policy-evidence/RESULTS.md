@@ -15,13 +15,13 @@
 
 - **id**: `policy-evidence-evaluate-evidence-and-policy-large-s1-v1`
 - **status**: completed
-- **inputs**: 
+- **inputs**:
   - **checks**: 400
   - **evidenceBytes**: 20048070
 - **fixtureGenerationMs**: 164
 - **durationMs**: median **67.91ms** (min 65.46, p95 74.22, max 80.37, stdDev 3.07, n=30)
 - **checksEvaluated**: 400
-- **configuration**: 
+- **configuration**:
   - **targetDurationMs**: 2000
   - **minIterations**: 8
   - **maxIterations**: 60
@@ -32,13 +32,13 @@
 
 - **id**: `policy-evidence-evaluate-evidence-and-policy-medium-s1-v1`
 - **status**: completed
-- **inputs**: 
+- **inputs**:
   - **checks**: 100
   - **evidenceBytes**: 511310
 - **fixtureGenerationMs**: 5
 - **durationMs**: median **1.89ms** (min 1.85, p95 2.54, max 2.76, stdDev 0.23, n=60)
 - **checksEvaluated**: 100
-- **configuration**: 
+- **configuration**:
   - **targetDurationMs**: 2000
   - **minIterations**: 8
   - **maxIterations**: 60
@@ -49,13 +49,13 @@
 
 - **id**: `policy-evidence-evaluate-evidence-and-policy-small-s1-v1`
 - **status**: completed
-- **inputs**: 
+- **inputs**:
   - **checks**: 20
   - **evidenceBytes**: 10990
 - **fixtureGenerationMs**: 1
 - **durationMs**: median **0.12ms** (min 0.07, p95 0.30, max 0.97, stdDev 0.14, n=60)
 - **checksEvaluated**: 20
-- **configuration**: 
+- **configuration**:
   - **targetDurationMs**: 2000
   - **minIterations**: 8
   - **maxIterations**: 60
