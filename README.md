@@ -203,6 +203,10 @@ new requirements land as `warn`, become `fail` on a date
 
 AI coding agents, CI bots, and release automation consume the same contract as human contributors. An actionable rationale gives automation a concrete thing to fix rather than a bare "a check failed" — making regenerate-until-green workflows much easier to converge.
 
+## Supply-chain transparency
+
+This repository publishes its own dependency inventory: [`docs/sbom.cdx.json`](docs/sbom.cdx.json), a real [CycloneDX](https://cyclonedx.org/) 1.6 Software Bill of Materials, regenerated on every `npm run contract` run via [`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`). It covers every direct and transitive **npm** dependency resolved in `package-lock.json` — no other ecosystem — and is deterministic given an unchanged lockfile, so it stays a normal, diff-gated committed file rather than a special-cased exclusion.
+
 ## Status
 
 Pre-1.0. Per [VERSIONING.md](VERSIONING.md), a `0.x` minor may carry a breaking change to the Stable tier before 1.0 — pin accordingly and read the [CHANGELOG](CHANGELOG.md) on every minor upgrade.
