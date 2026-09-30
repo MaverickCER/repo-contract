@@ -92,7 +92,7 @@ Deployed via [`actions/deploy-pages`](https://github.com/actions/deploy-pages) (
 modern, artifact-based flow), through a shared reusable workflow hosted in
 `internal-package-contract` (`deploy-pages-typedoc.yml`) — the same mechanism
 data-cap/env-cap already use. `docs/api/`, the coverage/mutation badge JSON, and the
-OpenSSF Scorecard/ISO 12207 evidence docs are all built fresh on every push to `main`
+OpenSSF Scorecard evidence doc are all built fresh on every push to `main`
 and handed to the deploy step as build artifacts; **nothing is committed back to the
 repo for Pages anymore.** Repo setting: GitHub → Settings → Pages → source is "GitHub
 Actions" (not "Deploy from a branch").
