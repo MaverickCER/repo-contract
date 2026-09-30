@@ -21,6 +21,163 @@ permissions:
   contents: read
 
 jobs:
+  # Runs first, on every PR, and -- when the PR's own diff touches benchmarked code -- commits
+  # refreshed results straight onto the PR branch. Every job below that (transitively) needs
+  # `verify`/`lint` checks out the PR branch's own live head rather than the originally-triggered
+  # SHA, so whatever this job just committed is exactly what `contract`/etc. actually validate --
+  # one real commit, one real CI pass, not two. Mirrors env-cap's/data-cap's own identically-named
+  # `benchmark-pr` job (see either repo's ci.yml for the full incident history this design avoids:
+  # a GITHUB_TOKEN-authored push re-triggering its own `pull_request: synchronize` and looping
+  # indefinitely on real benchmark-timing noise), with one real difference: env-cap/data-cap
+  # forward to internal-package-contract's reusable `.github/workflows/benchmark-pr.yml` via
+  # `uses:`; that reusable workflow is currently hardcoded to exactly two categories
+  # (`performance-runtime`/`performance-buildtime` -- both directory name and PR-comment label are
+  # literal, not parameterized), a shape that fits env-cap's/data-cap's two categories but not
+  # repo-contract's three (`performance-checks`/`performance-policy-evidence`/
+  # `performance-api-contract` -- see benchmarks/README.md for why repo-contract's own
+  # performance-sensitive surface splits into three categories instead of two). Rather than modify
+  # that shared, other-repositories-depend-on-it-too reusable workflow, this job calls
+  # internal-package-contract's own generic script layer directly
+  # (`scripts/benchmark/render-summary.mjs`/`append-history.mjs`) -- the exact same scripts the
+  # reusable workflow itself calls, looped over repo-contract's three categories inline. No `npm
+  # run build` step: unlike env-cap's/data-cap's categories (which benchmark generated *consumer*
+  # code against the published package's own `dist/`), all three of repo-contract's categories
+  # import repo-contract's (or internal-package-contract's) own source directly via `tsx` -- see
+  # benchmarks/README.md.
+  #
+  # The anti-recursion-loop guard (`github.actor != 'github-actions[bot]'`) and same-repo-PR-only
+  # guard below are identical to internal-package-contract's own reusable workflow's guard (see
+  # that file's own header comment in internal-package-contract for the incident this specific
+  # shape avoids), and the per-PR concurrency group matches it too.
+  benchmark-pr:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: benchmarks-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: write
+      pull-requests: write
+      statuses: write
+    # Exposes the exact commit this job ended up validating (after its own possible push) as a
+    # job output, so every downstream job checks out that same precise SHA instead of
+    # independently re-resolving `refs/pull/{N}/head` at whatever moment it happens to run --
+    # closing a real (if narrow) skew window a long-running workflow could otherwise hit if that
+    # ref moved again between this job finishing and a downstream job's own checkout.
+    outputs:
+      sha: ${{ steps.resolve-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Snapshot main's committed results as "previous"
+        run: |
+          mkdir -p /tmp/benchmark-previous
+          for dir in performance-checks performance-policy-evidence performance-api-contract; do
+            git show "origin/main:benchmarks/${dir}/results.json" > "/tmp/benchmark-previous/${dir}.json" || echo '{}' > "/tmp/benchmark-previous/${dir}.json"
+          done
+
+      - run: npm run benchmark
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: benchmark-results
+          path: |
+            benchmarks/performance-checks/results.json
+            benchmarks/performance-checks/RESULTS.md
+            benchmarks/performance-policy-evidence/results.json
+            benchmarks/performance-policy-evidence/RESULTS.md
+            benchmarks/performance-api-contract/results.json
+            benchmarks/performance-api-contract/RESULTS.md
+          retention-days: 14
+
+      - name: Post or update the marker-tagged summary comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node node_modules/internal-package-contract/scripts/benchmark/render-summary.mjs \
+            --budgets benchmarks/benchmark-fixtures/budgets.mjs \
+            --marker "<!-- repo-contract-benchmark-summary -->" \
+            --example "Checks (\`benchmarks/performance-checks\`)|/tmp/benchmark-previous/performance-checks.json|benchmarks/performance-checks/results.json|benchmarks/history/checks.json" \
+            --example "Policy & evidence (\`benchmarks/performance-policy-evidence\`)|/tmp/benchmark-previous/performance-policy-evidence.json|benchmarks/performance-policy-evidence/results.json|benchmarks/history/policy-evidence.json" \
+            --example "API contract (\`benchmarks/performance-api-contract\`)|/tmp/benchmark-previous/performance-api-contract.json|benchmarks/performance-api-contract/results.json|benchmarks/history/api-contract.json" \
+            > /tmp/summary.md
+          PR="${{ github.event.pull_request.number }}"
+          MARKER="<!-- repo-contract-benchmark-summary -->"
+          # --paginate: a long-lived PR can carry more comments than the API's single-page
+          # default, which would otherwise hide an existing marker comment on page 2+ and post a
+          # duplicate instead of updating it.
+          EXISTING=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR}/comments" --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -n1)
+          # -F (--field), not -f (--raw-field): only -F's "@<path>" reads the value from a file --
+          # -f treats "@/tmp/summary.md" as the literal string body, posting that text verbatim
+          # instead of the file's real contents.
+          if [ -n "$EXISTING" ]; then
+            gh api "repos/${{ github.repository }}/issues/comments/${EXISTING}" -X PATCH -F body=@/tmp/summary.md
+          else
+            gh api "repos/${{ github.repository }}/issues/${PR}/comments" -X POST -F body=@/tmp/summary.md
+          fi
+
+      - name: Commit refreshed results + history into this PR, only when it touches benchmarked code
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Passed through the environment rather than interpolated straight into `run` -- a
+          # branch ref is attacker-influenced input and must never be spliced into the shell
+          # command text.
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          CHANGED=$(git diff --name-only origin/main...HEAD)
+          # package.json/package-lock.json count as relevant too -- a dependency bump can shift
+          # benchmark timing just as much as a src/ change can, and skipping the refresh here
+          # would silently leave stale results committed against a since-changed dependency tree.
+          RELEVANT=$(echo "$CHANGED" | grep -E "^(src/|benchmarks/|package\.json$|package-lock\.json$)" | grep -vE "^benchmarks/(performance-[^/]+/(results\.json|RESULTS\.md)$|history/)" || true)
+          if [ -z "$RELEVANT" ]; then
+            echo "This PR doesn't touch benchmarked code paths -- comment posted above, nothing to commit."
+            exit 0
+          fi
+
+          node node_modules/internal-package-contract/scripts/benchmark/append-history.mjs \
+            benchmarks/performance-checks/results.json benchmarks/history/checks.json
+          node node_modules/internal-package-contract/scripts/benchmark/append-history.mjs \
+            benchmarks/performance-policy-evidence/results.json benchmarks/history/policy-evidence.json
+          node node_modules/internal-package-contract/scripts/benchmark/append-history.mjs \
+            benchmarks/performance-api-contract/results.json benchmarks/history/api-contract.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            benchmarks/performance-checks/results.json benchmarks/performance-checks/RESULTS.md \
+            benchmarks/performance-policy-evidence/results.json benchmarks/performance-policy-evidence/RESULTS.md \
+            benchmarks/performance-api-contract/results.json benchmarks/performance-api-contract/RESULTS.md \
+            benchmarks/history/checks.json benchmarks/history/policy-evidence.json benchmarks/history/api-contract.json
+          if git diff --cached --quiet; then
+            echo "Freshly measured results match what's already committed -- nothing to push."
+            exit 0
+          fi
+          git commit -m "chore(benchmarks): refresh results.json"
+          git push origin HEAD:"$HEAD_REF"
+
+      # Default `if:` (implicit success()), not `always()` -- this step must only run once the
+      # step above has genuinely succeeded, whether that means it actually committed+pushed or
+      # took its no-op `exit 0` early-return path. If that step instead fails outright (e.g. the
+      # push is rejected because the PR branch moved during this run), this step must NOT run: an
+      # `always()` here would still capture and export the local, committed-but-never-pushed
+      # commit's SHA, which no downstream checkout could ever actually resolve.
+      - name: Resolve this job's own final commit SHA
+        id: resolve-sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   # The OS axis, trimmed to only what genuinely differs by platform: build,
   # the unit tests that actually assert OS-specific behaviour (Windows
   # taskkill, process-tree, spawn-check's cmd.exe routing -- see
@@ -36,6 +193,13 @@ jobs:
   # real, authoritative gate for all of it either way is `npm run contract`
   # in the `contract` job.
   verify:
+    needs: [benchmark-pr]
+    # A skipped dependency isn't a passing one by GitHub's own default job condition -- without
+    # this, `verify` (and `lint` below) would themselves always skip whenever `benchmark-pr` does
+    # (every push-to-main run, every fork PR), taking every job that needs them, including
+    # `contract`, down with them. `always()` opts back into running on a skip; the explicit result
+    # check still blocks on a genuine `benchmark-pr` failure.
+    if: always() && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -44,6 +208,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # `benchmark-pr`'s own resolved SHA output when it ran (the exact commit it validated,
+          # after its own possible push -- see that job's own `resolve-sha` step), so this job
+          # checks out precisely that commit rather than independently re-resolving
+          # `refs/pull/{N}/head` itself at a possibly-later moment. Falls back to the same
+          # ref-resolution formula used everywhere else in this file (refs/pull/<N>/head resolves
+          # for a fork PR too, whose branch lives in the fork, not this repo) when `benchmark-pr`
+          # didn't run at all (push-to-main, a fork PR, or the bot's own retriggered run).
+          ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
           # No job here pushes; nothing needs the checkout's stored token, so
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
@@ -75,10 +247,16 @@ jobs:
   # broken build/lint/test fails fast, once, before that much slower job
   # (dominated by mutation testing) spends its budget.
   lint:
+    needs: [benchmark-pr]
+    # Same reasoning as `verify`'s own identical condition above.
+    if: always() && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Same "prefer benchmark-pr's own resolved SHA output, fall back to re-resolving the
+          # ref formula" reasoning as `verify`'s own identical checkout above.
+          ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
           # No job here pushes; nothing needs the checkout's stored token, so
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
@@ -197,11 +375,26 @@ jobs:
   # rebuilds it -- the whole point is that the artifact tested on the old Node
   # floor is bit-for-bit the one a modern toolchain produced.
   package-build:
-    needs: verify
+    # benchmark-pr listed directly (not just transitively via verify) so this job can address its
+    # `outputs.sha` below -- a job's `needs` context only exposes outputs from its own direct
+    # dependencies, not transitive ones.
+    needs: [verify, benchmark-pr]
+    # Same transitive-skip reasoning as `contract`'s own identical-shaped condition below --
+    # GitHub's default `success()` considers the *entire* transitive dependency graph, not just
+    # this job's direct `needs`, so a skipped `benchmark-pr` deep in `verify`'s own ancestry still
+    # propagates through as "not success" here even when `verify` genuinely ran and passed.
+    if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped') && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # `benchmark-pr`'s own resolved SHA output when it ran -- the exact commit it validated,
+          # after its own possible push -- so this job checks out precisely that commit rather
+          # than independently re-resolving `refs/pull/{N}/head` at a possibly-later moment. The
+          # published tarball this job packs must be built from the exact tree `contract`
+          # validated, not a stale pre-refresh snapshot. Falls back to the same ref-resolution
+          # formula used everywhere else in this file when `benchmark-pr` didn't run at all.
+          ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
           # No job here pushes; nothing needs the checkout's stored token, so
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
@@ -232,7 +425,11 @@ jobs:
   # at all, so a Node-22-only devDependency cannot affect it. See
   # scripts/smoke-consumer.mjs.
   published-floor:
-    needs: package-build
+    # benchmark-pr listed directly so this job can address its `outputs.sha` below -- see
+    # `package-build`'s own identical note.
+    needs: [package-build, benchmark-pr]
+    # Same transitive-skip reasoning as `package-build`'s own identical-shaped condition above.
+    if: always() && (needs.package-build.result == 'success' || needs.package-build.result == 'skipped') && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -241,6 +438,13 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # `benchmark-pr`'s own resolved SHA output when it ran, not an independently re-resolved
+          # `refs/pull/{N}/head` -- this job's own `scripts/smoke-consumer.mjs` must be the same
+          # version `contract` validated, not a stale pre-benchmark-pr-refresh snapshot. Falls back
+          # to the same ref-resolution formula used everywhere else in this file when
+          # `benchmark-pr` didn't run at all. Same reasoning as `package-build`'s identical
+          # checkout override.
+          ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
           # No job here pushes; nothing needs the checkout's stored token, so
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
@@ -264,11 +468,18 @@ jobs:
   # neither exercises nodenext resolution or a future major). See
   # scripts/typescript-compat.mjs.
   typescript-compat:
-    needs: package-build
+    # benchmark-pr listed directly so this job can address its `outputs.sha` below -- see
+    # `package-build`'s own identical note.
+    needs: [package-build, benchmark-pr]
+    # Same transitive-skip reasoning as `package-build`'s own identical-shaped condition above.
+    if: always() && (needs.package-build.result == 'success' || needs.package-build.result == 'skipped') && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Same checkout-override reasoning as `published-floor`'s identical `ref:` -- this job's
+          # own `scripts/typescript-compat.mjs` must be the same version `contract` validated.
+          ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
           persist-credentials: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -296,7 +507,16 @@ jobs:
   # `lint` so a broken build/lint/OS-specific test fails fast, once, before
   # this much slower job spends its mutation-testing budget.
   contract:
-    needs: [verify, lint]
+    # benchmark-pr listed directly (not just transitively via verify/lint) so this job can address
+    # its `outputs.sha` below -- a job's `needs` context only exposes outputs from its own direct
+    # dependencies, not transitive ones.
+    needs: [verify, lint, benchmark-pr]
+    # Without this, `contract` would inherit GitHub's default `success()` condition, which
+    # considers the *entire* transitive dependency graph, not just this job's direct `needs` --
+    # so a skipped `benchmark-pr` (every push-to-main run, every fork PR) would silently skip
+    # `contract` too even when `verify`/`lint` themselves genuinely ran and passed. Same
+    # transitive-skip reasoning as every other job below `benchmark-pr` in this file.
+    if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped') && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       # fetch-depth: 0 (full history, all branches -- see release.yml's own
@@ -313,6 +533,11 @@ jobs:
       # module doc comment) -- but the checkout depth stays for the two checks that still do.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # `benchmark-pr`'s own resolved SHA output when it ran, not an independently
+          # re-resolved `refs/pull/{N}/head` -- the exact commit it validated, after its own
+          # possible push. Falls back to the same ref-resolution formula used everywhere else in
+          # this file when `benchmark-pr` didn't run at all.
+          ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
           fetch-depth: 0
           # This job only reads `origin/main..HEAD`; it never pushes, so the
           # checkout's token does not need to persist into `.git/config`.
@@ -333,6 +558,20 @@ jobs:
       # and linkinator fails every PR with a spurious 404 on a link that is, in
       # fact, live on the real site.
       - run: npm run docs:api
+      # Same "gitignored, regenerated fresh here so the `docs` check has real content to validate
+      # docs/index.html's own link against, never committed" treatment as docs:api immediately
+      # above -- internal-package-contract's shared benchmark engine builds this history chart
+      # page from the already-committed benchmarks/history/*.json files (see `benchmark-pr`'s own
+      # header comment above for where those come from); this step never runs the benchmarks
+      # themselves, it only renders whatever history is already on disk. Regenerated again, with
+      # whatever history `benchmark-pr` may have just appended, in `pages-content` below for the
+      # real deploy -- this copy only needs to exist, not be perfectly current.
+      - run: >-
+          node node_modules/internal-package-contract/scripts/benchmark/render-page.mjs
+          --out docs/benchmarks/index.html
+          --history 'Checks|benchmarks/history/checks.json'
+          --history 'Policy & evidence|benchmarks/history/policy-evidence.json'
+          --history 'API contract|benchmarks/history/api-contract.json'
       - run: npm run contract
 
       # A contract run is not a pure read: `format`/`lint` auto-fix, and
@@ -415,7 +654,16 @@ jobs:
   # same "already-generated content, needs to reach Pages" concern.
   pages-content:
     needs: contract
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # `always()` + an explicit check of `contract`'s own result, not the bare push-to-main
+    # condition alone -- without it, this job inherits GitHub's default `success()`, which walks
+    # `contract`'s entire transitive ancestry (verify, lint, benchmark-pr), and benchmark-pr is
+    # always skipped on a push-to-main event (it only ever runs for pull_request), silently
+    # skipping this job (and `deploy` below) even when `contract` itself genuinely ran and
+    # passed. `contract` never itself concludes "skipped" on a push-to-main event (its own `if:`
+    # already tolerates every job in that ancestry), so no skip-tolerance is needed here, only the
+    # `always()` escape from the default walk -- same pattern as env-cap's/data-cap's own
+    # `badges`/`deploy` jobs.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && always() && needs.contract.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -425,6 +673,26 @@ jobs:
           name: badge-source-reports
 
       - run: node scripts/generate-badges.mjs
+
+      # setup-node + npm ci -- needed only for the render-page.mjs step below
+      # (internal-package-contract's shared benchmark engine); generate-badges.mjs above is
+      # dependency-free and doesn't need node_modules at all.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          cache: npm
+      - run: npm ci
+
+      # Same treatment as docs/api/ (generated fresh on every deploy, never committed) --
+      # internal-package-contract's shared benchmark engine builds this history chart page from
+      # the committed benchmarks/history/*.json files (see `benchmark-pr`'s own header comment
+      # above for where those come from). Lands at maverickcer.github.io/repo-contract/benchmarks/.
+      - run: >-
+          node node_modules/internal-package-contract/scripts/benchmark/render-page.mjs
+          --out docs/benchmarks/index.html
+          --history 'Checks|benchmarks/history/checks.json'
+          --history 'Policy & evidence|benchmarks/history/policy-evidence.json'
+          --history 'API contract|benchmarks/history/api-contract.json'
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -438,6 +706,7 @@ jobs:
             docs/coverage-badge.json
             docs/mutation-badge.json
             docs/OpenSSF-Scorecard.md
+            docs/benchmarks/index.html
           retention-days: 1
           if-no-files-found: error
 
@@ -456,7 +725,8 @@ jobs:
   # specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's amendment.
   deploy:
     needs: pages-content
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Same transitive-skip reasoning as `pages-content`'s own identical-shaped condition above.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && always() && needs.pages-content.result == 'success'
     permissions:
       contents: read
       pages: write
