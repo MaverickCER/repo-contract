@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.3
+
+### Patch Changes
+
+- chore(benchmarks): refresh results.json
+- 8bcc7d4: Send the publish-time contract run's report to stderr so a failing check is visible in the release job's log instead of being swallowed by the Changesets action.
+
 ## 0.8.2
 
 ### Patch Changes
