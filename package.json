@@ -109,7 +109,7 @@
     "lint": "npm run contract -- lint",
     "mutation": "npm run contract -- mutation",
     "precommit": "npm run contract -- format lint typecheck schema dead-code architecture adr-governance suppression-governance security-network duplication && npm run verify-no-ambient-capabilities",
-    "prepublishOnly": "npm run docs:api && npm run docs:benchmarks && npm run contract && npm run verify-no-ambient-capabilities",
+    "prepublishOnly": "npm run docs:api && npm run docs:benchmarks && npm run contract 1>&2 && npm run verify-no-ambient-capabilities",
     "prepush": "npm run contract",
     "publint": "npm run contract -- publint",
     "release": "changeset publish",
