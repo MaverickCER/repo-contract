@@ -74,6 +74,18 @@ function parseNpmPackJson(stdout) {
 }
 
 /**
+ * The result entries of a parsed `npm pack --json` payload. npm <= 11 emits an array of results;
+ * npm 12 emits an object keyed by package name instead, so both are accepted.
+ * @param parsed - The parsed JSON payload.
+ * @returns The result entries (`[]` for any other shape).
+ */
+function packEntries(parsed) {
+  if (Array.isArray(parsed)) return parsed
+  if (typeof parsed === "object" && parsed !== null) return Object.values(parsed)
+  return []
+}
+
+/**
  * Extracts the packed tarball's filename from `npm pack --json` output.
  * @param stdout - Raw stdout from `npm pack --json`.
  * @param stderr - Raw stderr, included verbatim in the thrown error when parsing fails.
@@ -88,14 +100,15 @@ export function parseNpmPackFilename(stdout, stderr = "") {
     )
   }
 
-  if (!Array.isArray(parsed) || parsed.length === 0 || typeof parsed[0]?.filename !== "string") {
+  const entries = packEntries(parsed)
+  if (entries.length === 0 || typeof entries[0]?.filename !== "string") {
     throw new Error(
-      `npm pack --json produced an unexpected shape (expected a non-empty array of { filename }).\n` +
+      `npm pack --json produced an unexpected shape (expected a non-empty array, or object, of { filename }).\n` +
         `stdout:\n${stdout}\nstderr:\n${stderr}`,
     )
   }
 
-  return parsed[0].filename
+  return entries[0].filename
 }
 
 /**

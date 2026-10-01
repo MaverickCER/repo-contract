@@ -17,6 +17,11 @@ describe("parseNpmPackFilename", () => {
     expect(parseNpmPackFilename('[{"filename":"pkg-2.0.0.tgz"}]')).toBe("pkg-2.0.0.tgz")
   })
 
+  it("reads the filename from npm 12's object keyed by package name", () => {
+    const stdout = JSON.stringify({ pkg: { id: "pkg@4.0.0", filename: "pkg-4.0.0.tgz" } }, null, 2)
+    expect(parseNpmPackFilename(stdout)).toBe("pkg-4.0.0.tgz")
+  })
+
   it("skips ANSI-coloured npm log lines prepended to stdout (npm 10)", () => {
     const noise = `${ESC}[2m[${ESC}[22m npm timing reify:audit ${ESC}[2m]${ESC}[22m`
     const json = JSON.stringify([{ filename: "pkg-3.0.0.tgz" }], null, 2)
@@ -32,5 +37,9 @@ describe("parseNpmPackFilename", () => {
   it("throws when the parsed value is not a non-empty array of { filename }", () => {
     expect(() => parseNpmPackFilename("[]")).toThrow(/unexpected shape/)
     expect(() => parseNpmPackFilename('[{"noFilename":true}]')).toThrow(/unexpected shape/)
+    expect(() => parseNpmPackFilename("{}")).toThrow(/unexpected shape/)
+    expect(() => parseNpmPackFilename('{"pkg":{"noFilename":true}}')).toThrow(/unexpected shape/)
+    expect(() => parseNpmPackFilename("null")).toThrow(/unexpected shape/)
+    expect(() => parseNpmPackFilename("5")).toThrow(/unexpected shape/)
   })
 })
