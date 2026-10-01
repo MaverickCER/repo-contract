@@ -57,6 +57,48 @@
       "name": "publint"
     },
     {
+      "id": "dead-code:unused-export:evaluateCiTests",
+      "version": 1,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. This finding is newly surfaced (not new dead code): adding a direct unit test for the neighboring `evaluateDangerousWorkflow` export made local-checks.ts itself reachable to knip for the first time, which retired its own `unused-file` entry below but exposed that every other export local-checks.ts has is, like `ghApiJson`/`repoSlug` above, used only by the still-unreachable run.ts. See those entries for the identical reachability gap.",
+      "kind": "unused-export",
+      "name": "evaluateCiTests"
+    },
+    {
+      "id": "dead-code:unused-export:evaluateLicense",
+      "version": 1,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "kind": "unused-export",
+      "name": "evaluateLicense"
+    },
+    {
+      "id": "dead-code:unused-export:evaluatePackaging",
+      "version": 1,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "kind": "unused-export",
+      "name": "evaluatePackaging"
+    },
+    {
+      "id": "dead-code:unused-export:evaluatePinnedDependencies",
+      "version": 1,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "kind": "unused-export",
+      "name": "evaluatePinnedDependencies"
+    },
+    {
+      "id": "dead-code:unused-export:evaluateSecurityPolicy",
+      "version": 1,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "kind": "unused-export",
+      "name": "evaluateSecurityPolicy"
+    },
+    {
+      "id": "dead-code:unused-export:evaluateTokenPermissions",
+      "version": 1,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "kind": "unused-export",
+      "name": "evaluateTokenPermissions"
+    },
+    {
       "id": "dead-code:unused-export:ghApiJson",
       "version": 1,
       "justification": "Genuinely used by every gh-API-backed evaluator in scripts/openssf-scorecard/github-checks.ts (Branch-Protection, Code-Review, Signed-Releases, Contributors, Maintained) and by run.ts's own repo-metadata lookup -- but those callers are reachable only by being imported by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. gh-api.ts's own `packageVersion`/`ghApiRaw` are now imported directly and statically by checks/openssf-scorecard.ts (for provenance metadata and the live weight-table fetch), which is what makes gh-api.ts itself, `GhApiResult`, and `yaml` (transitively, via weights.ts) newly visible to knip -- `ghApiJson`/`repoSlug` specifically are not among those statically-reachable exports, the same reachability gap as every other spawned-only file in this directory.",
@@ -76,13 +118,6 @@
       "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see the `repoSlug`/`ghApiJson` entries above for the identical reachability gap this whole directory shares.",
       "kind": "unused-file",
       "name": "scripts/openssf-scorecard/github-checks.ts"
-    },
-    {
-      "id": "dead-code:unused-file:scripts/openssf-scorecard/local-checks.ts",
-      "version": 1,
-      "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see the `repoSlug`/`ghApiJson` entries above for the identical reachability gap this whole directory shares.",
-      "kind": "unused-file",
-      "name": "scripts/openssf-scorecard/local-checks.ts"
     },
     {
       "id": "dead-code:unused-file:scripts/openssf-scorecard/run.ts",

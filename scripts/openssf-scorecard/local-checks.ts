@@ -247,20 +247,51 @@ export function evaluateDangerousWorkflow(root: string): ScorecardCheckResult {
   for (const [file, content] of workflows) {
     const lines = content.split("\n")
     let inRunBlock = false
+    // The indentation of the `run:` key itself (its column, via `indexOf` --
+    // robust to an optional leading "- " sequence-item marker the same way
+    // `evaluatePinnedDependencies`'s identical `uses:` handling above is).
+    // A YAML block scalar's content is always indented deeper than its own
+    // key; the block ends at the first later non-blank line indented at or
+    // shallower than that column -- never merely "has fewer than 2 leading
+    // spaces", which every sibling key in a real workflow already satisfies
+    // and so never fires, previously leaving `inRunBlock` stuck `true` for
+    // the rest of the file (verified: this let a later, correctly
+    // `env:`-guarded context expression falsely flag as spliced into a
+    // `run:` block it had already closed).
+    let runIndent = 0
     for (const [index, line] of lines.entries()) {
+      if (inRunBlock && line.trim() !== "") {
+        const contentIndent = line.length - line.trimStart().length
+        if (contentIndent > runIndent) {
+          // Still inside the block scalar's own content -- scan it for a real splice, but
+          // never reinterpret this line as a new YAML key: a heredoc or `echo` in this very
+          // script that happens to contain the literal text "run: |" (e.g. this script
+          // printing example workflow YAML) must not reset `runIndent` or be mistaken for
+          // the block actually closing.
+          const matches = line.match(injectionPattern)
+          if (matches) {
+            findings.push(
+              `${file}:${String(index + 1)}: attacker-influenced expression spliced directly into a run: block -- ${matches.join(", ")}`,
+            )
+          }
+          continue
+        }
+        inRunBlock = false
+      }
       // Optional leading "- " -- same YAML sequence-item form as
       // `evaluatePinnedDependencies`'s identical `uses:` handling above; a
       // `- run: |` step (the multiline block form as the step's first key)
       // is exactly as common in this repository's own workflows as the
       // no-dash form (`run: |` as a later sibling key under an already-
       // opened `- name: ...` step).
-      if (/^[\s-]*run:\s*\|/.test(line)) {
+      const runKeyMatch = /^[\s-]*run:\s*\|/.exec(line)
+      if (runKeyMatch) {
         inRunBlock = true
+        runIndent = line.indexOf("run:")
         continue
       }
-      if (inRunBlock && !/^\s{2,}\S/.test(line) && line.trim() !== "") inRunBlock = false
       const isSingleLineRun = /^[\s-]*run:\s*(?!\|)\S/.test(line)
-      if (!inRunBlock && !isSingleLineRun) continue
+      if (!isSingleLineRun) continue
       const matches = line.match(injectionPattern)
       if (matches) {
         findings.push(
