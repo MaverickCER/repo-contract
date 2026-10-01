@@ -1,15 +1,15 @@
 {
   "metadata": {
     "environment": {
-      "cpuModel": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "cpuModel": "AMD EPYC 7763 64-Core Processor",
       "cpuArchitecture": "x64",
       "processArch": "x64",
       "logicalCores": 4,
       "physicalCores": 2,
-      "cpuFrequencyMHz": 2300,
+      "cpuFrequencyMHz": 0,
       "platform": "linux",
       "osRelease": "6.17.0-1022-azure",
-      "totalMemoryMb": 15989,
+      "totalMemoryMb": 15990,
       "nodeVersion": "v24.21.0",
       "timezoneOffsetMinutes": 0,
       "isCI": true,
@@ -31,9 +31,9 @@
       "gcEnabled": false
     },
     "timing": {
-      "startedAtUtc": "2026-10-01T19:16:39.874Z",
-      "finishedAtUtc": "2026-10-01T19:16:42.279Z",
-      "totalSuiteDurationMs": 2405
+      "startedAtUtc": "2026-10-01T19:58:26.207Z",
+      "finishedAtUtc": "2026-10-01T19:58:28.727Z",
+      "totalSuiteDurationMs": 2520
     },
     "generation": {
       "fixtureSeed": "deterministic",
@@ -46,8 +46,8 @@
       "repoContractVersion": "0.8.1"
     },
     "git": {
-      "gitCommit": "d266db7a108fcfef2887e9675f315c3425cb9767",
-      "gitBranch": "changeset-release/main",
+      "gitCommit": "e0f4cd420a40bf51d436beee003fa5e82e47b161",
+      "gitBranch": "fix/prepublish-generate-docs",
       "gitDirty": true
     },
     "generatedBy": "ci"
@@ -90,11 +90,11 @@
           },
           "fixtureGenerationMs": 1,
           "durationMs": {
-            "minMs": 0.05328000000000088,
-            "medianMs": 0.08424600000000737,
-            "p95Ms": 0.19729999999998427,
-            "maxMs": 0.8234649999999988,
-            "stdDevMs": 0.108315897617583,
+            "minMs": 0.0691500000000076,
+            "medianMs": 0.11322200000000748,
+            "p95Ms": 0.18222100000002683,
+            "maxMs": 0.831185000000005,
+            "stdDevMs": 0.1077828842294384,
             "iterations": 60,
             "warmupIterations": 2
           },
@@ -114,13 +114,13 @@
             "checks": 100,
             "evidenceBytes": 511310
           },
-          "fixtureGenerationMs": 4,
+          "fixtureGenerationMs": 5,
           "durationMs": {
-            "minMs": 1.2764500000000112,
-            "medianMs": 1.3745270000000005,
-            "p95Ms": 1.9648819999999887,
-            "maxMs": 2.2127670000000137,
-            "stdDevMs": 0.20753812635749902,
+            "minMs": 1.8639739999999847,
+            "medianMs": 1.9060040000000527,
+            "p95Ms": 2.5220759999999984,
+            "maxMs": 2.7785949999999957,
+            "stdDevMs": 0.23238124071393826,
             "iterations": 60,
             "warmupIterations": 2
           },
@@ -140,14 +140,14 @@
             "checks": 400,
             "evidenceBytes": 20048070
           },
-          "fixtureGenerationMs": 136,
+          "fixtureGenerationMs": 166,
           "durationMs": {
-            "minMs": 47.54172100000005,
-            "medianMs": 49.45620299999996,
-            "p95Ms": 53.59716400000002,
-            "maxMs": 59.36972499999996,
-            "stdDevMs": 2.3771698036533784,
-            "iterations": 41,
+            "minMs": 65.92101400000001,
+            "medianMs": 67.84249699999987,
+            "p95Ms": 73.07093099999997,
+            "maxMs": 78.44597999999996,
+            "stdDevMs": 2.623996609537926,
+            "iterations": 30,
             "warmupIterations": 2
           },
           "checksEvaluated": 400,
