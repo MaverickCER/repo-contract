@@ -100,7 +100,7 @@ declare interface CheckDefinitionConfig {
         readonly format: OutputFormat;
         /**
          * An optional Standard Schema-compliant validator (Zod, Valibot, ArkType, or any other
-         * implementation of https://standardschema.dev), run once the requested `format` parse
+         * implementation of standardschema.dev), run once the requested `format` parse
          * itself succeeds. repo-contract never imports a schema library itself --
          * `StandardSchemaV1` is hand-vendored (see `src/standard-schema/types.ts`) purely as a
          * type-level contract, so accepting any consumer's own schema object costs zero new
@@ -269,6 +269,33 @@ declare interface DeadCodeOptions {
 }
 
 /**
+ * Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the build output directory, so
+ * supply-chain scanners that flag shipped URLs (Socket.dev's "URL strings" alert, for one) have
+ * nothing to flag. Scans every file, sourcemaps and declaration files included. Individual URLs can
+ * be allowed with a mandatory, reviewable `reason`; there is no blanket opt-out.
+ * @param options - configuration for this check; see {@link DistNoUrlsOptions}.
+ * @returns the configured check.
+ * @beta
+ */
+export declare function distNoUrls(options?: DistNoUrlsOptions): CheckDefinitionConfig;
+
+/** One allowlisted URL (glob) and the reviewable reason it may ship. */
+export declare interface DistNoUrlsAllowEntry {
+    /** A URL, or a glob (`*`, `**`, `?`, `[...]`, `{a,b}`; escape literals with `\`) matched against each whole URL found. */
+    readonly url: string;
+    /** Why this URL must ship in the build output. Required and non-empty -- an allowlist entry without one fails the check. */
+    readonly reason: string;
+}
+
+/** Options accepted by {@link distNoUrls}. */
+export declare interface DistNoUrlsOptions {
+    /** Build-output directory to scan, relative to the working directory. Defaults to `"dist"`. */
+    readonly dir?: string;
+    /** URLs permitted in the output, each with a reason. Empty by default: the strictest policy is the default. */
+    readonly allow?: readonly DistNoUrlsAllowEntry[];
+}
+
+/**
  * Duplicated-code detection via jscpd.
  * @param options - configuration for this check; see {@link DuplicationOptions}.
  * @returns the configured check.
@@ -293,11 +320,11 @@ export declare const e2e: CheckDefinitionConfig;
  * every configured check's evidence, plus timing for the run as a whole.
  * Says nothing about whether any of it was acceptable; see `Verdict`.
  * Additive fields are a compatible change; changing or removing an existing
- * field requires bumping this version number (see VERSIONING.md).
+ * field requires bumping this version number (see `VERSIONING.md`).
  * @public
  */
 declare interface Evidence<TChecks extends CheckSchema = CheckSchema> {
-    /** Schema version of this shape; see VERSIONING.md. */
+    /** Schema version of this shape; see `VERSIONING.md`. */
     readonly version: 1;
     /** ISO 8601 timestamp of when the run began. */
     readonly startedAt: string;
@@ -523,13 +550,13 @@ export declare const securityDeps: CheckDefinitionConfig;
 export declare const securitySecrets: CheckDefinitionConfig;
 
 /**
- * Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned
+ * Hand-vendored from `@standard-schema/spec@1.1.0` (standardschema.dev), pinned
  * 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
  * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type
  * declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this
  * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the
  * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension
- * (https://standardschema.dev/json-schema) is out of scope; see the ADR.
+ * (standardschema.dev/json-schema) is out of scope; see the ADR.
  *
  * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base
  * (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat
