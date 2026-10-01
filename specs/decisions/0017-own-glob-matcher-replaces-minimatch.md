@@ -22,7 +22,7 @@ no filesystem and imports nothing. It supports precisely the syntax category key
 (extglobs, POSIX classes, dotfile rules, case folding) is treated literally. A reversed range
 in a character class matches nothing. The matcher builds no `RegExp` from its input: patterns are
 tokenized and matched by a position-set simulation, polynomial in pattern and value size, so no
-pattern can cause catastrophic backtracking, and brace expansion is capped at 1024 alternatives.
+pattern can cause catastrophic backtracking, and brace expansion is capped at 1024 alternatives and a pattern over 1000 characters is rejected.
 
 ## Alternatives considered
 

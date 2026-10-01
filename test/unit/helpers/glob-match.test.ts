@@ -177,6 +177,13 @@ describe("globMatch", () => {
     expect(globMatch("a".repeat(9), "{a,b}".repeat(9))).toBe(true)
   })
 
+  it("rejects a pattern over 1000 characters, accepts exactly 1000 (it just does not match)", () => {
+    expect(globMatch("a", "a".repeat(1000))).toBe(false)
+    expect(() => globMatch("a", "a".repeat(1001))).toThrow(
+      "Glob pattern is longer than 1000 characters.",
+    )
+  })
+
   it("does not backtrack catastrophically", () => {
     const value = "a".repeat(150)
     expect(globMatch(`${value}b`, "*".repeat(30) + "c")).toBe(false)
