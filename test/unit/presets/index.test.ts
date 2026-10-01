@@ -32,6 +32,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     stylelint: () => presets.stylelint(),
     markdownlint: () => presets.markdownlint(),
     brokenLinks: () => presets.brokenLinks(),
+    distNoUrls: () => presets.distNoUrls(),
     commitlint: () => presets.commitlint(),
   }
 

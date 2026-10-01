@@ -3,6 +3,7 @@ import * as presets from "../../../src/presets/index.js"
 import {
   detectPresets,
   FACTORY_PRESETS,
+  DIST_OUTPUT,
   PRESET_DEPENDENCIES,
 } from "../../../bin/preset-catalog.mjs"
 
@@ -54,11 +55,39 @@ describe("detectPresets", () => {
     expect(lint?.dependency).toBe("eslint")
   })
 
-  it("produces a valid config for a repository with none of the 15 tool-specific dependencies -- only securityDeps", () => {
+  it("detects distNoUrls only when package.json publishes a built dist/", () => {
+    const detects = (packageJson: Parameters<typeof detectPresets>[0]): boolean =>
+      detectPresets(packageJson).detected.includes("distNoUrls")
+    expect(PRESET_DEPENDENCIES.distNoUrls).toBe(DIST_OUTPUT)
+    expect(detects({})).toBe(false)
+    expect(detects({ main: "./dist/index.cjs" })).toBe(true)
+    expect(detects({ module: "dist/index.js" })).toBe(true)
+    expect(detects({ types: "./dist/index.d.ts" })).toBe(true)
+    expect(detects({ files: ["README.md", "dist"] })).toBe(true)
+    expect(detects({ files: ["dist/"] })).toBe(true)
+    expect(detects({ exports: { ".": { import: { default: "./dist/index.js" } } } })).toBe(true)
+    expect(detects({ exports: { ".": ["./dist/index.js"] } })).toBe(true)
+  })
+
+  it("does not detect distNoUrls from look-alike paths, devDependencies, or non-string values", () => {
+    const detects = (packageJson: Parameters<typeof detectPresets>[0]): boolean =>
+      detectPresets(packageJson).detected.includes("distNoUrls")
+    expect(detects({ main: "./src/index.js" })).toBe(false)
+    expect(detects({ main: "./distribution/index.js" })).toBe(false)
+    expect(detects({ main: "./lib/dist/index.js" })).toBe(false)
+    expect(detects({ devDependencies: { tsup: "^8.0.0" } })).toBe(false)
+    expect(detects({ exports: { ".": null } })).toBe(false)
+    expect(detects({ exports: 7 })).toBe(false)
+    expect(detectPresets({}).skipped.find((s) => s.preset === "distNoUrls")?.dependency).toBe(
+      DIST_OUTPUT,
+    )
+  })
+
+  it("produces a valid config for a repository with none of the 16 tool-specific dependencies -- only securityDeps", () => {
     const { detected, skipped } = detectPresets({
       devDependencies: { "some-unrelated-tool": "1.0.0" },
     })
     expect(detected).toEqual(["securityDeps"])
-    expect(skipped).toHaveLength(15)
+    expect(skipped).toHaveLength(16)
   })
 })

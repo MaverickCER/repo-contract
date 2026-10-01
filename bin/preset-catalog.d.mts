@@ -9,12 +9,15 @@ export type PresetName =
   | "stylelint"
   | "markdownlint"
   | "brokenLinks"
+  | "distNoUrls"
   | "securityDeps"
   | "securitySecrets"
   | "license"
   | "commitlint"
   | "publint"
   | "arethetypeswrong"
+
+export declare const DIST_OUTPUT: "dist/"
 
 export declare const PRESET_DEPENDENCIES: Readonly<Record<PresetName, string | null>>
 
@@ -36,4 +39,10 @@ export declare function detectPresets(packageJson: {
   // `devDependencies` (see preset-catalog.mjs's own doc comment for why).
   readonly dependencies?: Readonly<Record<string, string>>
   readonly devDependencies?: Readonly<Record<string, string>>
+  // Read only to detect a published `dist/` (the `distNoUrls` preset).
+  readonly main?: string
+  readonly module?: string
+  readonly types?: string
+  readonly files?: readonly string[]
+  readonly exports?: unknown
 }): DetectPresetsResult
