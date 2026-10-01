@@ -142,9 +142,10 @@ export function evaluateCrapPolicy({ evidence }: { readonly evidence: CrapReport
 // The report goes to a file (`--output`), never stdout: crap4ts exits right after writing, and a
 // piped stdout is cut at the OS pipe buffer (64 KiB) when the process exits before the reader has
 // drained it -- the JSON report of this repository outgrew that, producing a truncated, unparseable
-// document ("... at position 65536"). A file has no such limit. Same remedy as `arethetypeswrong`
-// in internal-package-contract.
-const CRAP_REPORT_PATH = "reports/crap4ts.json"
+// document ("... at position 65536"). A file has no such limit. It lives under coverage/aggregate/,
+// which the `coverage` check this one depends on has already created -- crap4ts does not create
+// missing parent directories, and a fresh CI checkout has no reports/.
+const CRAP_REPORT_PATH = "coverage/aggregate/crap4ts-report.json"
 
 export const crap: CheckDefinitionConfig = {
   run: [
@@ -168,7 +169,7 @@ export const crap: CheckDefinitionConfig = {
     }
 
     const parsed = await readJsonReport<CrapReport>(
-      () => readFile("reports/crap4ts.json", "utf8"),
+      () => readFile("coverage/aggregate/crap4ts-report.json", "utf8"),
       "CRAP4TS did not produce its expected JSON report.",
       "CRAP4TS output could not be parsed as JSON.",
     )
