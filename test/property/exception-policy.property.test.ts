@@ -1,4 +1,3 @@
-import { minimatch } from "minimatch"
 import fc from "fast-check"
 import { describe, expect, it } from "vitest"
 import { evaluateFinding } from "../../scripts/suppression-governance/resolve-policy.js"
@@ -57,6 +56,20 @@ function frozenStricterOf(a: SuppressionPolicy, b: SuppressionPolicy): Suppressi
   }
 }
 
+/**
+ * Independent oracle for the only glob shapes `RULE_PATTERNS` generates -- a literal, `prefix/*`
+ * (one more segment) and `prefix/**` (any depth) -- deliberately NOT sharing code with
+ * `src/helpers/glob-match.ts`, so a bug there cannot hide behind itself.
+ */
+function frozenGlobMatch(rule: string, pattern: string): boolean {
+  if (pattern.endsWith("/**")) return rule.startsWith(pattern.slice(0, -2))
+  if (pattern.endsWith("/*")) {
+    const prefix = pattern.slice(0, -1)
+    return rule.startsWith(prefix) && !rule.slice(prefix.length).includes("/")
+  }
+  return rule === pattern
+}
+
 function frozenResolveRequirement(
   domain: string,
   rule: string,
@@ -79,7 +92,7 @@ function frozenResolveRequirement(
   if (exactMatch) return exactMatch[1]
 
   const matchingPolicies = rules
-    .filter(([pattern]) => minimatch(rule, pattern))
+    .filter(([pattern]) => frozenGlobMatch(rule, pattern))
     .map(([, policy]) => policy)
   if (matchingPolicies.length > 0) {
     return matchingPolicies.reduce(frozenStricterOf)

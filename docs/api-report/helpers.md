@@ -34,7 +34,7 @@ One classification group's own policy -- `default` is this group's fallback for 
 with no exact or glob match in `rules` (see `resolveExceptionPolicy` for the full exact > glob >
 group-default > global-default precedence). Omit `default` to fall through to the caller-supplied
 `globalDefault` instead. Each key of `rules` is either an exact `category` string or a
-`minimatch` glob pattern -- `resolveExceptionPolicy` tries an exact match first and only
+glob pattern -- `resolveExceptionPolicy` tries an exact match first and only
 consults glob matching once no exact key exists, so a glob can never shadow a more specific
 exact entry.
 
@@ -58,7 +58,7 @@ readonly optional rules?: Readonly<Record<string, ExceptionPolicy>>;
 
 **`Beta`**
 
-Keyed by exact `category` string or `minimatch` glob pattern. A literal `"*"` key is rejected by `validateExceptionPolicyConfig` -- see that function's own doc comment for why.
+Keyed by exact `category` string or glob pattern. A literal `"*"` key is rejected by `validateExceptionPolicyConfig` -- see that function's own doc comment for why.
 
 ***
 
@@ -668,7 +668,7 @@ which this function's future retrofit replaces):
 1. **Blanket category** -- `category === "*"` means every category this group could ever apply
    to was matched at once, not one specific category literally named `"*"`. It resolves as the
    strictest (`stricterOf`) policy across every entry in `group.rules` plus the group's own
-   default (or `globalDefault`) -- never via `minimatch`: `minimatch("*", pattern)` tests the
+   default (or `globalDefault`) -- never via the glob matcher: `globMatch("*", pattern)` tests the
    literal one-character string `"*"` as a path against `pattern`, which does not glob-match a
    pattern like `"security/*"` (that would require the *pattern*, not the *target*, to be `"*"`),
    so treating this case as an ordinary pattern match would silently let a blanket match fall
@@ -676,7 +676,7 @@ which this function's future retrofit replaces):
 2. **Exact match** -- `group.rules[category]`, if present. A glob is never even consulted once an
    exact entry exists for `category`.
 3. **Glob match** -- the strictest (`stricterOf`) policy among every key in `group.rules` that is
-   not itself an exact match for `category` but does match it as a `minimatch` glob (e.g.
+   not itself an exact match for `category` but does match it as a glob (e.g.
    `"security/*"` matching `"security/detect-object-injection"`).
 4. **Group default** -- `group.default`, if `group` itself has an entry in `config` (whether or
    not that entry defines its own `default`).
@@ -744,9 +744,9 @@ in its `rules` must be a well-formed `ExceptionPolicy` (see `validateExceptionPo
 no group's `rules` may use the literal `"*"` as a key. A literal `"*"` key is always a mistake,
 never an intentional blanket policy: `resolveExceptionPolicy`'s own blanket-category handling is
 triggered by the *input* `category` being `"*"`, not by a `"*"` entry in `rules` -- a `"*"` rules
-key would instead be consulted only as an ordinary `minimatch` glob, which matches the literal
+key would instead be consulted only as an ordinary glob, which matches the literal
 one-character string `"*"` as a *target*, not as a wildcard pattern matching every real category
-name (`minimatch("*", pattern)` truthiness depends on `pattern`, not the other way around) --
+name (`globMatch("*", pattern)` truthiness depends on `pattern`, not the other way around) --
 see `resolveExceptionPolicy`'s own doc comment, case 1, for the failure mode this prevents.
 
 #### Parameters

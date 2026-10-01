@@ -49,6 +49,12 @@
       "command": "markdownlint-cli2"
     },
     {
+      "id": "preset-command:node",
+      "version": 1,
+      "justification": "The `distNoUrls` preset spawns the consumer's own `node` binary (always present wherever repo-contract itself runs) as `node -e <scanner> <dir>`. The scanner is a fixed string constant in src/presets/dist-no-urls.ts, never built from external input; it uses only `node:fs`/`node:path` to read files under the one directory argument and prints a JSON report of URL strings found (file, line, URL -- never file contents) to stdout. It makes no network request, spawns nothing, reads no environment variable and writes no file.",
+      "command": "node"
+    },
+    {
       "id": "preset-command:npm",
       "version": 1,
       "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `npm audit --omit=dev --json` is the one command here that inherently makes a network request: it sends the production dependency tree (package names and versions only -- no source code, no auth) to the configured npm registry as a bulk advisory query and receives back known advisories. The subcommand is `audit` (read-only), verified against npm's documentation to not be `publish`/`install`/etc. This is exactly, and only, what a dependency-advisory check must do.",
