@@ -77,7 +77,7 @@ export declare interface CheckDefinitionConfig {
         readonly format: OutputFormat;
         /**
          * An optional Standard Schema-compliant validator (Zod, Valibot, ArkType, or any other
-         * implementation of https://standardschema.dev), run once the requested `format` parse
+         * implementation of standardschema.dev), run once the requested `format` parse
          * itself succeeds. repo-contract never imports a schema library itself --
          * `StandardSchemaV1` is hand-vendored (see `src/standard-schema/types.ts`) purely as a
          * type-level contract, so accepting any consumer's own schema object costs zero new
@@ -259,11 +259,11 @@ export declare class DependencyDeclaredLaterError extends RepoContractError {
  * every configured check's evidence, plus timing for the run as a whole.
  * Says nothing about whether any of it was acceptable; see `Verdict`.
  * Additive fields are a compatible change; changing or removing an existing
- * field requires bumping this version number (see VERSIONING.md).
+ * field requires bumping this version number (see `VERSIONING.md`).
  * @public
  */
 export declare interface Evidence<TChecks extends CheckSchema = CheckSchema> {
-    /** Schema version of this shape; see VERSIONING.md. */
+    /** Schema version of this shape; see `VERSIONING.md`. */
     readonly version: 1;
     /** ISO 8601 timestamp of when the run began. */
     readonly startedAt: string;
@@ -660,13 +660,13 @@ export declare interface RunRepoContractOptions {
 export declare type Spawner = (command: string, args: readonly string[], options: SpawnOptions) => ChildProcess;
 
 /**
- * Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned
+ * Hand-vendored from `@standard-schema/spec@1.1.0` (standardschema.dev), pinned
  * 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
  * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type
  * declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this
  * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the
  * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension
- * (https://standardschema.dev/json-schema) is out of scope; see the ADR.
+ * (standardschema.dev/json-schema) is out of scope; see the ADR.
  *
  * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base
  * (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat
@@ -825,14 +825,14 @@ export declare type ValidatedCheckSchema<T> = {
  * `outcome` is `"pass"` or `"warn"` -- `"fail"` is the only outcome that
  * fails the run; one failing check never collapses into a single generic
  * message, every check remains individually inspectable under `checks`.
- * Versioned independently of `Evidence` (see VERSIONING.md's
+ * Versioned independently of `Evidence` (see `VERSIONING.md`'s
  * schema-versioning policy) -- `version: 2` reflects `checks[id]` changing
  * shape from `{ passed, reason? }` to a full `PolicyResult`
  * (`{ outcome, rationale }`); see ADR 0001.
  * @public
  */
 export declare interface Verdict<TChecks extends CheckSchema = CheckSchema> {
-    /** Schema version of this shape; see VERSIONING.md. */
+    /** Schema version of this shape; see `VERSIONING.md`. */
     readonly version: 2;
     /** `true` only if every check's `outcome` is `"pass"` or `"warn"`. */
     readonly passed: boolean;

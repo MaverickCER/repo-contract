@@ -12,7 +12,7 @@
  * specs/decisions/0013-reusable-exception-policy-helper.md for the full
  * rationale and the boundary this barrel deliberately does not cross.
  *
- * Published **Experimental** (see VERSIONING.md): its TypeScript signature
+ * Published **Experimental** (see `VERSIONING.md`): its TypeScript signature
  * and runtime behavior may both change in a minor or patch release, the same
  * classification `repo-contract/presets` already carries (see
  * specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)
@@ -60,7 +60,7 @@ export declare function evaluateExceptionRecords<TRecord>(inputs: readonly Excep
  * with no exact or glob match in `rules` (see `resolveExceptionPolicy` for the full exact > glob >
  * group-default > global-default precedence). Omit `default` to fall through to the caller-supplied
  * `globalDefault` instead. Each key of `rules` is either an exact `category` string or a
- * `minimatch` glob pattern -- `resolveExceptionPolicy` tries an exact match first and only
+ * glob pattern -- `resolveExceptionPolicy` tries an exact match first and only
  * consults glob matching once no exact key exists, so a glob can never shadow a more specific
  * exact entry.
  * @beta
@@ -68,7 +68,7 @@ export declare function evaluateExceptionRecords<TRecord>(inputs: readonly Excep
 export declare interface ExceptionCategoryGroup {
     /** This group's fallback policy when `category` matches neither an exact nor a glob key in `rules`. Falls through to the caller's `globalDefault` when omitted. */
     readonly default?: ExceptionPolicy;
-    /** Keyed by exact `category` string or `minimatch` glob pattern. A literal `"*"` key is rejected by `validateExceptionPolicyConfig` -- see that function's own doc comment for why. */
+    /** Keyed by exact `category` string or glob pattern. A literal `"*"` key is rejected by `validateExceptionPolicyConfig` -- see that function's own doc comment for why. */
     readonly rules?: Readonly<Record<string, ExceptionPolicy>>;
 }
 
@@ -322,7 +322,7 @@ export declare function reconcileExceptions<TFinding, TRecord extends {
  * 1. **Blanket category** -- `category === "*"` means every category this group could ever apply
  *    to was matched at once, not one specific category literally named `"*"`. It resolves as the
  *    strictest (`stricterOf`) policy across every entry in `group.rules` plus the group's own
- *    default (or `globalDefault`) -- never via `minimatch`: `minimatch("*", pattern)` tests the
+ *    default (or `globalDefault`) -- never via the glob matcher: `globMatch("*", pattern)` tests the
  *    literal one-character string `"*"` as a path against `pattern`, which does not glob-match a
  *    pattern like `"security/*"` (that would require the *pattern*, not the *target*, to be `"*"`),
  *    so treating this case as an ordinary pattern match would silently let a blanket match fall
@@ -330,7 +330,7 @@ export declare function reconcileExceptions<TFinding, TRecord extends {
  * 2. **Exact match** -- `group.rules[category]`, if present. A glob is never even consulted once an
  *    exact entry exists for `category`.
  * 3. **Glob match** -- the strictest (`stricterOf`) policy among every key in `group.rules` that is
- *    not itself an exact match for `category` but does match it as a `minimatch` glob (e.g.
+ *    not itself an exact match for `category` but does match it as a glob (e.g.
  *    `"security/*"` matching `"security/detect-object-injection"`).
  * 4. **Group default** -- `group.default`, if `group` itself has an entry in `config` (whether or
  *    not that entry defines its own `default`).
@@ -363,13 +363,13 @@ export declare function serializeExceptionRegistry(records: readonly (Record<str
 })[]): string;
 
 /**
- * Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned
+ * Hand-vendored from `@standard-schema/spec@1.1.0` (standardschema.dev), pinned
  * 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
  * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type
  * declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this
  * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the
  * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension
- * (https://standardschema.dev/json-schema) is out of scope; see the ADR.
+ * (standardschema.dev/json-schema) is out of scope; see the ADR.
  *
  * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base
  * (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat
@@ -456,9 +456,9 @@ export declare namespace StandardSchemaV1 {
  * no group's `rules` may use the literal `"*"` as a key. A literal `"*"` key is always a mistake,
  * never an intentional blanket policy: `resolveExceptionPolicy`'s own blanket-category handling is
  * triggered by the *input* `category` being `"*"`, not by a `"*"` entry in `rules` -- a `"*"` rules
- * key would instead be consulted only as an ordinary `minimatch` glob, which matches the literal
+ * key would instead be consulted only as an ordinary glob, which matches the literal
  * one-character string `"*"` as a *target*, not as a wildcard pattern matching every real category
- * name (`minimatch("*", pattern)` truthiness depends on `pattern`, not the other way around) --
+ * name (`globMatch("*", pattern)` truthiness depends on `pattern`, not the other way around) --
  * see `resolveExceptionPolicy`'s own doc comment, case 1, for the failure mode this prevents.
  * @param config - The exception policy configuration to validate.
  * @param validRequirements - The complete set of field names this consumer's policy may require, if the consumer wants that checked. Omit to skip that check entirely.
