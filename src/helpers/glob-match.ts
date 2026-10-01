@@ -25,6 +25,9 @@ type Token =
   | { readonly kind: "globstar-slash" }
   | { readonly kind: "class"; readonly negated: boolean; readonly members: string }
 
+/** Longest pattern accepted. Category keys are short identifiers; a limit also bounds every expansion step. */
+const MAX_PATTERN_LENGTH = 1000
+
 /** Upper bound on the alternatives one pattern's brace groups may expand to. */
 const MAX_EXPANSIONS = 1024
 
@@ -61,7 +64,7 @@ function findCommaGroup(
  * Expands every `{a,b}` alternation into the brace-free patterns it stands for.
  * @param pattern - the glob, possibly containing brace groups.
  * @returns every brace-free alternative.
- * @throws {Error} when the expansion would exceed {@link MAX_EXPANSIONS} patterns.
+ * @throws {Error} when a pattern exceeds {@link MAX_PATTERN_LENGTH} characters, or the expansion would exceed {@link MAX_EXPANSIONS} patterns.
  */
 function expandBraces(pattern: string): readonly string[] {
   const pending = [pattern]
@@ -69,6 +72,9 @@ function expandBraces(pattern: string): readonly string[] {
   const finished = Array.from({ length: MAX_EXPANSIONS }).some(() => {
     const next = pending.pop()
     if (next === undefined) return true
+    if (next.length > MAX_PATTERN_LENGTH) {
+      throw new Error(`Glob pattern is longer than ${String(MAX_PATTERN_LENGTH)} characters.`)
+    }
     const group = findCommaGroup(next)
     if (group === undefined) {
       done.push(next)
@@ -184,7 +190,7 @@ function step(
  * @param value - the string to test (an exception category such as `"security/xss"`).
  * @param pattern - the glob to test it against.
  * @returns `true` when the whole of `value` matches `pattern`.
- * @throws {Error} when `pattern`'s brace groups expand to too many alternatives.
+ * @throws {Error} when `pattern` is over 1000 characters, or its brace groups expand to too many alternatives.
  */
 export function globMatch(value: string, pattern: string): boolean {
   const alternatives = expandBraces(pattern).map(tokenize)
