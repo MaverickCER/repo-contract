@@ -8,7 +8,7 @@ import { parseText } from "./parse-text.js"
 /**
  * Dispatches to the parser for `format`, then -- only on a successful parse, and only if `schema`
  * is supplied -- runs `schema["~standard"].validate()` against the parsed value
- * (https://standardschema.dev). `parse-json.ts`/`parse-text.ts` stay entirely unaware of `schema`;
+ * (standardschema.dev). `parse-json.ts`/`parse-text.ts` stay entirely unaware of `schema`;
  * this is the sole orchestration point. `validate()` may return its `Result` synchronously or as a
  * `Promise` -- `await`ing either uniformly is a no-op for the synchronous case, but this function
  * still needs to be `async` for that awaited call. A successful `Result` (`issues === undefined`)

@@ -339,7 +339,7 @@ function validateOutput(checkId: string, output: unknown): void {
 
 /**
  * Validates that `schema`, when provided, is at least *plausibly* a `StandardSchemaV1`-compliant
- * object (https://standardschema.dev) -- checks only the three fields every
+ * object (standardschema.dev) -- checks only the three fields every
  * `StandardSchemaV1.Props` object must have (`version`, `vendor`, `validate`), since `schema` is
  * an opaque, consumer-supplied object and anything else in its shape (e.g. the optional `types`
  * field) is not part of the contract this function can or should enforce. Never calls `validate`
@@ -360,7 +360,7 @@ function validateOutputSchema(checkId: string, schema: unknown): void {
   if (schema === null || (typeof schema !== "object" && typeof schema !== "function")) {
     throw new InvalidCheckConfigError(
       checkId,
-      "output.schema must be a Standard Schema-compliant object or function when provided (see https://standardschema.dev).",
+      "output.schema must be a Standard Schema-compliant object or function when provided (see standardschema.dev).",
     )
   }
 
@@ -368,7 +368,7 @@ function validateOutputSchema(checkId: string, schema: unknown): void {
   if (standard === null || typeof standard !== "object") {
     throw new InvalidCheckConfigError(
       checkId,
-      'output.schema must have a "~standard" property (see https://standardschema.dev).',
+      'output.schema must have a "~standard" property (see standardschema.dev).',
     )
   }
 

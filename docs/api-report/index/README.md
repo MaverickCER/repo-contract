@@ -2119,7 +2119,7 @@ readonly optional schema?: StandardSchemaV1<unknown, unknown>;
 ```
 
 An optional Standard Schema-compliant validator (Zod, Valibot, ArkType, or any other
-implementation of https://standardschema.dev), run once the requested `format` parse
+implementation of standardschema.dev), run once the requested `format` parse
 itself succeeds. repo-contract never imports a schema library itself --
 `StandardSchemaV1` is hand-vendored (see `src/standard-schema/types.ts`) purely as a
 type-level contract, so accepting any consumer's own schema object costs zero new
@@ -2285,7 +2285,7 @@ readonly optional schema?: StandardSchemaV1<unknown, unknown>;
 ```
 
 An optional Standard Schema-compliant validator (Zod, Valibot, ArkType, or any other
-implementation of https://standardschema.dev), run once the requested `format` parse
+implementation of standardschema.dev), run once the requested `format` parse
 itself succeeds. repo-contract never imports a schema library itself --
 `StandardSchemaV1` is hand-vendored (see `src/standard-schema/types.ts`) purely as a
 type-level contract, so accepting any consumer's own schema object costs zero new
@@ -2828,13 +2828,13 @@ Abort the entire run. Checks already in flight are terminated; checks not yet st
 
 ### StandardSchemaV1
 
-Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned
+Hand-vendored from `@standard-schema/spec@1.1.0` (standardschema.dev), pinned
 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
 vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type
 declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this
 type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the
 separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension
-(https://standardschema.dev/json-schema) is out of scope; see the ADR.
+(standardschema.dev/json-schema) is out of scope; see the ADR.
 
 Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base
 (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat

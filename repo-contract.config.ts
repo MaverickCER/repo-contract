@@ -190,6 +190,7 @@ import { evaluateAttwReport } from "./src/presets/arethetypeswrong.js"
 import { readJsonReport } from "./src/presets/shared/read-json-report.js"
 import {
   commitlint,
+  distNoUrls,
   duplication,
   format,
   license,
@@ -420,6 +421,9 @@ export default defineRepoContract({
     accessibility,
     "security-deps": securityDeps(),
     "security-secrets": securitySecrets,
+    // Reads the build output the Build barrier above just produced: no URL (not even in
+    // JSDoc, declarations or sourcemaps) may ship, so supply-chain scanners have nothing to flag.
+    "dist-no-urls": distNoUrls(),
     "dead-code": deadCode,
     "adr-governance": adrGovernance,
     // Conventional Commits are the sole versioning input (Changesets derives the bump +

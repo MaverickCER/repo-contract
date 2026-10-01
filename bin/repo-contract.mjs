@@ -12,7 +12,7 @@
 
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { detectPresets } from "./preset-catalog.mjs"
+import { DIST_OUTPUT, detectPresets } from "./preset-catalog.mjs"
 import { buildConfigTemplate, CONTRACT_RUNNER_TEMPLATE } from "./templates.mjs"
 import { patchContractScript } from "./package-json-patch.mjs"
 
@@ -172,7 +172,11 @@ function report({ configResult, runnerResult, scriptStatus, detected, skipped })
   if (skipped.length > 0) {
     lines.push("Not detected (install the tool to add its check):")
     for (const { preset, dependency } of skipped)
-      lines.push(`  - ${preset} (${dependency} not installed)`)
+      lines.push(
+        dependency === DIST_OUTPUT
+          ? `  - ${preset} (package.json names no dist/ build output)`
+          : `  - ${preset} (${dependency} not installed)`,
+      )
     lines.push("")
   }
 

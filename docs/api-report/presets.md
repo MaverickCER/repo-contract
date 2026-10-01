@@ -12,6 +12,54 @@ an opt-in extra, not part of the core execution/evidence/policy surface
 those exports describe, and this barrel never re-exports anything from
 there either; the two stay independent.
 
+## Interfaces
+
+### DistNoUrlsAllowEntry
+
+One allowlisted URL (glob) and the reviewable reason it may ship.
+
+#### Properties
+
+##### reason
+
+```ts
+readonly reason: string;
+```
+
+Why this URL must ship in the build output. Required and non-empty -- an allowlist entry without one fails the check.
+
+##### url
+
+```ts
+readonly url: string;
+```
+
+A URL, or a glob (`*`, `**`, `?`, `[...]`, `{a,b}`; escape literals with ``) matched against each whole URL found.
+
+***
+
+### DistNoUrlsOptions
+
+Options accepted by [distNoUrls](#distnourls).
+
+#### Properties
+
+##### allow?
+
+```ts
+readonly optional allow?: readonly DistNoUrlsAllowEntry[];
+```
+
+URLs permitted in the output, each with a reason. Empty by default: the strictest policy is the default.
+
+##### dir?
+
+```ts
+readonly optional dir?: string;
+```
+
+Build-output directory to scan, relative to the working directory. Defaults to `"dist"`.
+
 ## Variables
 
 ### arethetypeswrong
@@ -200,6 +248,33 @@ Dead/unused-code detection via knip.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `options` | [`DeadCodeOptions`](#) | configuration for this check; see [DeadCodeOptions](#). |
+
+#### Returns
+
+[`CheckDefinitionConfig`](index/README.md#checkdefinitionconfig)
+
+the configured check.
+
+***
+
+### distNoUrls()
+
+```ts
+function distNoUrls(options?): CheckDefinitionConfig;
+```
+
+**`Beta`**
+
+Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the build output directory, so
+supply-chain scanners that flag shipped URLs (Socket.dev's "URL strings" alert, for one) have
+nothing to flag. Scans every file, sourcemaps and declaration files included. Individual URLs can
+be allowed with a mandatory, reviewable `reason`; there is no blanket opt-out.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `options` | [`DistNoUrlsOptions`](#distnourlsoptions) | configuration for this check; see [DistNoUrlsOptions](#distnourlsoptions). |
 
 #### Returns
 

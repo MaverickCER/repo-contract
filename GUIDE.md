@@ -585,24 +585,25 @@ installed (the one exception is `securityDeps`, which shells out to `npm` itself
 repo-contract never installs, bundles, or implicitly depends on these tools — each assumes
 its CLI is already a devDependency of your repository.
 
-| Category            | Preset                   | Wraps                                                                          |
-| ------------------- | ------------------------ | ------------------------------------------------------------------------------ |
-| Testing             | `test`                   | `vitest run --reporter=json --outputFile=reports/vitest/vitest-report.json`    |
-| Testing             | `e2e`                    | `playwright test --reporter=json`                                              |
-| Code quality        | `lint(options?)`         | `eslint <path> --format json`                                                  |
-| Code quality        | `format`                 | `prettier --write .`                                                           |
-| Code quality        | `typecheck`              | `tsc --noEmit -p tsconfig.json`                                                |
-| Code quality        | `deadCode(options?)`     | `knip --reporter json`                                                         |
-| Code quality        | `duplication(options?)`  | `jscpd <path> --reporters json --output reports/jscpd --silent`                |
-| Code quality        | `stylelint(options?)`    | `stylelint <glob> --formatter json`                                            |
-| Docs                | `markdownlint(options?)` | `markdownlint-cli2 <glob>` — requires repository configuration for JSON output |
-| Docs                | `brokenLinks(options?)`  | `linkinator <start> --recurse --format json --skip node_modules`               |
-| Security/governance | `securityDeps`           | `npm audit --omit=dev --json`                                                  |
-| Security/governance | `securitySecrets`        | `secretlint --format json --output reports/secretlint.json **/*`               |
-| Security/governance | `license`                | `licensee --production --osi --errors-only --ndjson`                           |
-| Security/governance | `commitlint(options?)`   | `commitlint --from <from> --to <to>`                                           |
-| Publishing          | `publint`                | `publint run`                                                                  |
-| Publishing          | `arethetypeswrong`       | `attw --pack . --format json`                                                  |
+| Category            | Preset                   | Wraps                                                                              |
+| ------------------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| Testing             | `test`                   | `vitest run --reporter=json --outputFile=reports/vitest/vitest-report.json`        |
+| Testing             | `e2e`                    | `playwright test --reporter=json`                                                  |
+| Code quality        | `lint(options?)`         | `eslint <path> --format json`                                                      |
+| Code quality        | `format`                 | `prettier --write .`                                                               |
+| Code quality        | `typecheck`              | `tsc --noEmit -p tsconfig.json`                                                    |
+| Code quality        | `deadCode(options?)`     | `knip --reporter json`                                                             |
+| Code quality        | `duplication(options?)`  | `jscpd <path> --reporters json --output reports/jscpd --silent`                    |
+| Code quality        | `stylelint(options?)`    | `stylelint <glob> --formatter json`                                                |
+| Docs                | `markdownlint(options?)` | `markdownlint-cli2 <glob>` — requires repository configuration for JSON output     |
+| Docs                | `brokenLinks(options?)`  | `linkinator <start> --recurse --format json --skip node_modules`                   |
+| Security/governance | `securityDeps`           | `npm audit --omit=dev --json`                                                      |
+| Security/governance | `securitySecrets`        | `secretlint --format json --output reports/secretlint.json **/*`                   |
+| Publishing          | `distNoUrls(options?)`   | `node -e <scanner> <dir>` — fails on any URL in the build output; no external tool |
+| Security/governance | `license`                | `licensee --production --osi --errors-only --ndjson`                               |
+| Security/governance | `commitlint(options?)`   | `commitlint --from <from> --to <to>`                                               |
+| Publishing          | `publint`                | `publint run`                                                                      |
+| Publishing          | `arethetypeswrong`       | `attw --pack . --format json`                                                      |
 
 Not every test runner has a preset. Jest, Cypress, and Mocha have different reporter formats
 and may need bespoke presets — the pattern is the same: execute the tool, capture evidence,

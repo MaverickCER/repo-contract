@@ -1,11 +1,11 @@
 /**
- * Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned
+ * Hand-vendored from `@standard-schema/spec@1.1.0` (standardschema.dev), pinned
  * 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
  * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type
  * declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this
  * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the
  * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension
- * (https://standardschema.dev/json-schema) is out of scope; see the ADR.
+ * (standardschema.dev/json-schema) is out of scope; see the ADR.
  *
  * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base
  * (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat
