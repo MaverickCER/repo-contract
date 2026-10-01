@@ -272,3 +272,7 @@ amendment.
   way. `loadExceptionRegistry`'s `path` is a trusted, consumer-supplied value (a check's own
   registry-file location), not externally-tainted input, and is documented as exactly that
   trust boundary at its one narrowly-scoped ESLint carve-out (`eslint.config.js`).
+
+> **Amended by [ADR 0017](0017-own-glob-matcher-replaces-minimatch.md):** the `minimatch` runtime
+> dependency described above was removed; glob matching is now the dependency-free
+> `src/helpers/glob-match.ts`.
