@@ -351,6 +351,45 @@
           }
         }
       }
+    },
+    {
+      "timestamp": "2026-10-01T20:47:50.329Z",
+      "gitCommit": "8bcc7d4c56aa7a9fc236e4607bcd142a77d6a839",
+      "runner": "GitHub Actions",
+      "versions": {
+        "benchmarkSchemaVersion": 1,
+        "benchmarkSuiteVersion": 1,
+        "benchmarkToolVersion": "1.0.0",
+        "repoContractVersion": "0.8.2"
+      },
+      "measurements": {
+        "evaluate-evidence-and-policy": {
+          "small": {
+            "medianMs": 0.11739000000000033,
+            "inputs": {
+              "checks": 20,
+              "evidenceBytes": 10990
+            },
+            "unitsPerSecond": 93789931
+          },
+          "medium": {
+            "medianMs": 1.910886000000005,
+            "inputs": {
+              "checks": 100,
+              "evidenceBytes": 511310
+            },
+            "unitsPerSecond": 267629780.11
+          },
+          "large": {
+            "medianMs": 68.33103899999992,
+            "inputs": {
+              "checks": 400,
+              "evidenceBytes": 20048070
+            },
+            "unitsPerSecond": 293402095.06
+          }
+        }
+      }
     }
   ]
 }
