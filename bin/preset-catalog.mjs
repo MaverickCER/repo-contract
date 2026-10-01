@@ -9,10 +9,17 @@
 // -- it cannot prove each dependency mapping below is itself correct. That's a known, accepted
 // limit of a hand-maintained table, stated here rather than assumed away.
 //
+// `distNoUrls` maps to `DIST_OUTPUT`, a pseudo-dependency: it needs no CLI at all, only a package that
+// actually publishes a built `dist/`, so `detectPresets` detects it from package.json's own
+// `main`/`module`/`types`/`files`/`exports` instead of from `devDependencies`.
+//
 // `securityDeps` maps to `null`, not a real npm package name: it shells out to `npm` itself (see
 // GUIDE.md's preset table), which is always present because this script is already running via
 // `npx`/`npm exec`. It goes through the exact same detection loop as every other preset below,
 // with an always-true answer -- not a separate branch elsewhere.
+/** The pseudo-dependency `distNoUrls` maps to -- see the comment above. */
+export const DIST_OUTPUT = "dist/"
+
 export const PRESET_DEPENDENCIES = {
   test: "vitest",
   e2e: "@playwright/test",
@@ -24,6 +31,7 @@ export const PRESET_DEPENDENCIES = {
   stylelint: "stylelint",
   markdownlint: "markdownlint-cli2",
   brokenLinks: "linkinator",
+  distNoUrls: DIST_OUTPUT,
   securityDeps: null,
   securitySecrets: "secretlint",
   license: "licensee",
@@ -42,7 +50,37 @@ export const FACTORY_PRESETS = new Set([
   "markdownlint",
   "brokenLinks",
   "commitlint",
+  "distNoUrls",
 ])
+
+/**
+ * Every string anywhere inside `value` (an `exports` map nests arbitrarily).
+ * @param value - Any parsed JSON value.
+ * @returns the strings it contains.
+ */
+function allStrings(value) {
+  if (typeof value === "string") return [value]
+  if (Array.isArray(value)) return value.flatMap(allStrings)
+  if (value !== null && typeof value === "object") return Object.values(value).flatMap(allStrings)
+  return []
+}
+
+/**
+ * Whether package.json publishes a built `dist/` directory (its entry points or `files` allowlist
+ * name it).
+ * @param packageJson - Parsed package.json content.
+ * @returns `true` when any entry point or `files` entry is `dist` or lives under it.
+ */
+function publishesDist(packageJson) {
+  const references = allStrings([
+    packageJson.main,
+    packageJson.module,
+    packageJson.types,
+    packageJson.files,
+    packageJson.exports,
+  ])
+  return references.some((reference) => /^(\.\/)?dist(\/|$)/.test(reference))
+}
 
 /**
  * Detects which presets' underlying CLIs are already declared in a consumer's package.json.
@@ -60,7 +98,10 @@ export function detectPresets(packageJson) {
   const skipped = []
 
   for (const [preset, dependency] of Object.entries(PRESET_DEPENDENCIES)) {
-    if (dependency === null || declared.has(dependency)) {
+    const present =
+      dependency === null ||
+      (dependency === DIST_OUTPUT ? publishesDist(packageJson) : declared.has(dependency))
+    if (present) {
       detected.push(preset)
     } else {
       skipped.push({ preset, dependency })

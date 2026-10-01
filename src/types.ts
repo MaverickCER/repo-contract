@@ -284,7 +284,7 @@ export interface CheckDefinitionConfig {
     readonly format: OutputFormat
     /**
      * An optional Standard Schema-compliant validator (Zod, Valibot, ArkType, or any other
-     * implementation of https://standardschema.dev), run once the requested `format` parse
+     * implementation of standardschema.dev), run once the requested `format` parse
      * itself succeeds. repo-contract never imports a schema library itself --
      * `StandardSchemaV1` is hand-vendored (see `src/standard-schema/types.ts`) purely as a
      * type-level contract, so accepting any consumer's own schema object costs zero new
