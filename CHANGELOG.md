@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.1
+
+### Patch Changes
+
+- chore(sbom): regenerate for 0.8.0
+- chore(benchmarks): refresh results.json
+- chore: sync generated API baseline for release
+
 ## 0.8.0
 
 ### Minor Changes
