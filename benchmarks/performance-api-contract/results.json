@@ -1,0 +1,162 @@
+{
+  "metadata": {
+    "environment": {
+      "cpuModel": "AMD EPYC 7763 64-Core Processor",
+      "cpuArchitecture": "x64",
+      "processArch": "x64",
+      "logicalCores": 4,
+      "physicalCores": 2,
+      "cpuFrequencyMHz": 0,
+      "platform": "linux",
+      "osRelease": "6.17.0-1022-azure",
+      "totalMemoryMb": 15990,
+      "nodeVersion": "v24.21.0",
+      "timezoneOffsetMinutes": 0,
+      "isCI": true,
+      "runner": "GitHub Actions"
+    },
+    "package": {
+      "indexBundleBytes": null,
+      "indexBundleGzipBytes": null,
+      "presetsBundleBytes": null,
+      "presetsBundleGzipBytes": null,
+      "helpersBundleBytes": null,
+      "helpersBundleGzipBytes": null
+    },
+    "configuration": {
+      "targetDurationMs": 2000,
+      "minIterations": 5,
+      "maxIterations": 20,
+      "warmupIterations": 1,
+      "gcEnabled": false
+    },
+    "timing": {
+      "startedAtUtc": "2026-09-30T23:43:00.609Z",
+      "finishedAtUtc": "2026-09-30T23:44:20.831Z",
+      "totalSuiteDurationMs": 80222
+    },
+    "generation": {
+      "fixtureSeed": "deterministic",
+      "generatorVersion": 1
+    },
+    "versions": {
+      "benchmarkSchemaVersion": 1,
+      "benchmarkSuiteVersion": 1,
+      "benchmarkToolVersion": "1.0.0",
+      "repoContractVersion": "0.7.3"
+    },
+    "git": {
+      "gitCommit": "ae5deed1dcd0f0804713e9df8d215bc5f2d91e1b",
+      "gitBranch": "feat/benchmark-suite",
+      "gitDirty": true
+    },
+    "generatedBy": "ci"
+  },
+  "benchmarkManifest": [
+    {
+      "id": "api-contract-diff-api-contract-small-s1-v1",
+      "category": "api-contract",
+      "name": "diff-api-contract",
+      "tier": "small",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "api-contract-diff-api-contract-medium-s1-v1",
+      "category": "api-contract",
+      "name": "diff-api-contract",
+      "tier": "medium",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    },
+    {
+      "id": "api-contract-diff-api-contract-large-s1-v1",
+      "category": "api-contract",
+      "name": "diff-api-contract",
+      "tier": "large",
+      "suiteVersion": 1,
+      "definitionVersion": 1
+    }
+  ],
+  "results": {
+    "diff-api-contract": {
+      "tiers": {
+        "small": {
+          "id": "api-contract-diff-api-contract-small-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "exportedSymbols": 20
+          },
+          "fixtureGenerationMs": 2989,
+          "durationMs": {
+            "minMs": 418.0742250000003,
+            "medianMs": 437.23302200000035,
+            "p95Ms": 492.12161300000025,
+            "maxMs": 492.12161300000025,
+            "stdDevMs": 25.615022838750747,
+            "iterations": 5,
+            "warmupIterations": 1
+          },
+          "changeCount": 6,
+          "configuration": {
+            "targetDurationMs": 2000,
+            "minIterations": 5,
+            "maxIterations": 20,
+            "warmupIterations": 1,
+            "gcEnabled": false
+          }
+        },
+        "medium": {
+          "id": "api-contract-diff-api-contract-medium-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "exportedSymbols": 100
+          },
+          "fixtureGenerationMs": 2468,
+          "durationMs": {
+            "minMs": 2002.3431500000006,
+            "medianMs": 2084.3051479999995,
+            "p95Ms": 2122.123886000001,
+            "maxMs": 2122.123886000001,
+            "stdDevMs": 41.91315676787599,
+            "iterations": 5,
+            "warmupIterations": 1
+          },
+          "changeCount": 18,
+          "configuration": {
+            "targetDurationMs": 2000,
+            "minIterations": 5,
+            "maxIterations": 20,
+            "warmupIterations": 1,
+            "gcEnabled": false
+          }
+        },
+        "large": {
+          "id": "api-contract-diff-api-contract-large-s1-v1",
+          "status": "completed",
+          "inputs": {
+            "exportedSymbols": 400
+          },
+          "fixtureGenerationMs": 2746,
+          "durationMs": {
+            "minMs": 9183.056452999997,
+            "medianMs": 9317.195975999995,
+            "p95Ms": 9327.930375999997,
+            "maxMs": 9327.930375999997,
+            "stdDevMs": 55.118691144103316,
+            "iterations": 5,
+            "warmupIterations": 1
+          },
+          "changeCount": 64,
+          "configuration": {
+            "targetDurationMs": 2000,
+            "minIterations": 5,
+            "maxIterations": 20,
+            "warmupIterations": 1,
+            "gcEnabled": false
+          }
+        }
+      }
+    }
+  }
+}

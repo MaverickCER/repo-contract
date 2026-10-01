@@ -72,6 +72,15 @@ export default tseslint.config(
       // repo's CI or `npm run contract`. Linting it here would fail
       // `boundaries/no-unknown-files` (it fits no element model) for no benefit.
       "examples",
+      // benchmarks/ is a standalone tooling tree that measures this package's own internals
+      // directly (imported from src/ via relative path, run via tsx -- see benchmarks/README.md)
+      // rather than a curated consumer of the published public API -- it fits no element this
+      // repo's own `boundaries` module-boundary model covers (the same reasoning as `examples`
+      // above, and the same exclusion env-cap/data-cap apply to their own analogous benchmark/
+      // benchmarks/ trees). Formatted by Prettier like ordinary source (see .prettierignore,
+      // which does NOT exclude it) -- only this repo's stricter TypeScript/boundaries lint rules
+      // are skipped.
+      "benchmarks",
       // Stryker's own scratch workspace -- a full copy of the project tree
       // it mutates and runs tests against; never source, and its transient
       // presence/absence between runs shouldn't affect lint results.

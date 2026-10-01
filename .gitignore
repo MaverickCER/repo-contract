@@ -69,6 +69,11 @@ examples/package-lock.json
 # own machine, not committed source.
 history.json
 
+# performance-api-contract's own fixtures.mjs regenerates these on every benchmark run (a real,
+# freshly compiled + API-Extractor'd scratch TypeScript package per tier, per variant) -- never
+# committed, same treatment env-cap's/data-cap's own generated benchmark fixtures get.
+/benchmarks/performance-api-contract/fixtures/generated
+
 # GitHub Pages is now the actions/deploy-pages artifact-based flow (see
 # RELEASING.md's "GitHub Pages" section) -- these regenerate fresh on every
 # push to main and are handed to the deploy job as build artifacts, never
@@ -80,3 +85,7 @@ history.json
 /docs/coverage-badge.json
 /docs/mutation-badge.json
 /docs/OpenSSF-Scorecard.md
+# Same "generated fresh on every deploy, never committed" treatment as docs/api/ above --
+# internal-package-contract's shared benchmark engine builds this history chart page from the
+# committed benchmarks/history/*.json files (see .github/workflows/ci.yml's `pages-content` job).
+/docs/benchmarks/
