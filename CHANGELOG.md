@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.2
+
+### Patch Changes
+
+- chore(benchmarks): refresh results.json
+- e0f4cd4: Generate the gitignored `docs/api/` and `docs/benchmarks/` pages before the publish-time contract run, so the `docs` check no longer 404s on them in the release job's fresh checkout.
+
 ## 0.8.1
 
 ### Patch Changes
