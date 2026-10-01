@@ -1250,7 +1250,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!Evidence:interface",
-          "docComment": "/**\n * Versioned, immutable record of one complete `runRepoContract` execution --\n * every configured check's evidence, plus timing for the run as a whole.\n * Says nothing about whether any of it was acceptable; see `Verdict`.\n * Additive fields are a compatible change; changing or removing an existing\n * field requires bumping this version number (see VERSIONING.md).\n *\n * @public\n */\n",
+          "docComment": "/**\n * Versioned, immutable record of one complete `runRepoContract` execution --\n * every configured check's evidence, plus timing for the run as a whole.\n * Says nothing about whether any of it was acceptable; see `Verdict`.\n * Additive fields are a compatible change; changing or removing an existing\n * field requires bumping this version number (see `VERSIONING.md`).\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1413,7 +1413,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!Evidence#version:member",
-              "docComment": "/**\n * Schema version of this shape; see VERSIONING.md.\n */\n",
+              "docComment": "/**\n * Schema version of this shape; see `VERSIONING.md`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -3289,7 +3289,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!StandardSchemaV1:interface",
-          "docComment": "/**\n * Hand-vendored from `@standard-schema/spec@1.1.0` (https://standardschema.dev), pinned\n * 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is\n * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type\n * declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this\n * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the\n * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension\n * (https://standardschema.dev/json-schema) is out of scope; see the ADR.\n *\n * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base\n * (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat\n * interface, since repo-contract has no use for the shared base on its own -- structurally\n * identical for any real schema object assigned to it. Re-diff against`@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.\n *\n * Tagged `@public`, not tied to either re-exporting barrel's own stability tier (this type is\n * re-exported from both the Stable root barrel, for `output.schema`, and the Experimental`repo-contract/helpers` barrel): this vendored copy's own shape only ever changes via a\n * deliberate re-diff against the pinned upstream spec version above, never as a side effect of\n * either barrel's own stability classification.\n *\n * @public\n */\n",
+          "docComment": "/**\n * Hand-vendored from `@standard-schema/spec@1.1.0` (standardschema.dev), pinned\n * 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is\n * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type\n * declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this\n * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the\n * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension\n * (standardschema.dev/json-schema) is out of scope; see the ADR.\n *\n * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base\n * (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat\n * interface, since repo-contract has no use for the shared base on its own -- structurally\n * identical for any real schema object assigned to it. Re-diff against`@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.\n *\n * Tagged `@public`, not tied to either re-exporting barrel's own stability tier (this type is\n * re-exported from both the Stable root barrel, for `output.schema`, and the Experimental`repo-contract/helpers` barrel): this vendored copy's own shape only ever changes via a\n * deliberate re-diff against the pinned upstream spec version above, never as a side effect of\n * either barrel's own stability classification.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4576,7 +4576,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!Verdict:interface",
-          "docComment": "/**\n * Versioned, immutable aggregate result of evaluating every configured\n * check's policy against its evidence -- each check's own `PolicyResult`,\n * verbatim, keyed by check id. `passed` is `true` only if every check's`outcome` is `\"pass\"` or `\"warn\"` -- `\"fail\"` is the only outcome that\n * fails the run; one failing check never collapses into a single generic\n * message, every check remains individually inspectable under `checks`.\n * Versioned independently of `Evidence` (see VERSIONING.md's\n * schema-versioning policy) -- `version: 2` reflects `checks[id]` changing\n * shape from `{ passed, reason? }` to a full `PolicyResult`\n * (`{ outcome, rationale }`); see ADR 0001.\n *\n * @public\n */\n",
+          "docComment": "/**\n * Versioned, immutable aggregate result of evaluating every configured\n * check's policy against its evidence -- each check's own `PolicyResult`,\n * verbatim, keyed by check id. `passed` is `true` only if every check's`outcome` is `\"pass\"` or `\"warn\"` -- `\"fail\"` is the only outcome that\n * fails the run; one failing check never collapses into a single generic\n * message, every check remains individually inspectable under `checks`.\n * Versioned independently of `Evidence` (see `VERSIONING.md`'s\n * schema-versioning policy) -- `version: 2` reflects `checks[id]` changing\n * shape from `{ passed, reason? }` to a full `PolicyResult`\n * (`{ outcome, rationale }`); see ADR 0001.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4685,7 +4685,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!Verdict#version:member",
-              "docComment": "/**\n * Schema version of this shape; see VERSIONING.md.\n */\n",
+              "docComment": "/**\n * Schema version of this shape; see `VERSIONING.md`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
