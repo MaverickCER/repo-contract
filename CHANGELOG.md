@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.7
+
+### Patch Changes
+
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- chore(docs): record the throttled release-workflow link as known-good
+- 30e7147: Re-pin internal-package-contract (lockfile and reusable-workflow references) to its 0.7.0 release, whose shared workflows no longer use npm caches.
+
 ## 0.8.6
 
 ### Patch Changes
