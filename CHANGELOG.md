@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.5
+
+### Patch Changes
+
+- chore(benchmarks): refresh results.json
+- chore(benchmarks): refresh results.json
+- b07c91a: Re-pin internal-package-contract (lockfile and reusable-workflow references) to its 0.5.0 release.
+- 2000ec3: Move the repository's own benchmarks onto internal-package-contract's shared benchmark kit (documented suites, cost-first `BENCHMARKS.md`, `benchmarks/README.md`, WRITING/READING docs) and re-pin internal-package-contract to its 0.4 release.
+
 ## 0.8.4
 
 ### Patch Changes
