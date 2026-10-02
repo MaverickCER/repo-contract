@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.6
+
+### Patch Changes
+
+- chore(benchmarks): refresh results.json
+- e1e556d: Make the documentation link check retry transient HTTP 5xx responses (with jitter) and crawl with modest concurrency, so a throttled github.com no longer fails the contract and the release pull request.
+- abfc060: Re-pin internal-package-contract (lockfile and reusable-workflow references) to its 0.6.0 release.
+
 ## 0.8.5
 
 ### Patch Changes
