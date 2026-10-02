@@ -7426,6 +7426,7 @@
       "group": "@isaacs",
       "version": "8.0.2",
       "bom-ref": "repo-contract@0.8.5|@isaacs/cliui@8.0.2",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -7464,6 +7465,7 @@
           "name": "ansi-styles",
           "version": "6.2.3",
           "bom-ref": "repo-contract@0.8.5|@isaacs/cliui@8.0.2|ansi-styles@6.2.3",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -7502,6 +7504,7 @@
           "name": "emoji-regex",
           "version": "9.2.2",
           "bom-ref": "repo-contract@0.8.5|@isaacs/cliui@8.0.2|emoji-regex@9.2.2",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -7540,6 +7543,7 @@
           "name": "string-width",
           "version": "5.1.2",
           "bom-ref": "repo-contract@0.8.5|@isaacs/cliui@8.0.2|string-width@5.1.2",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -7578,6 +7582,7 @@
           "name": "wrap-ansi",
           "version": "8.1.0",
           "bom-ref": "repo-contract@0.8.5|@isaacs/cliui@8.0.2|wrap-ansi@8.1.0",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -25314,6 +25319,7 @@
       "name": "eastasianwidth",
       "version": "0.2.0",
       "bom-ref": "repo-contract@0.8.5|eastasianwidth@0.2.0",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -25967,6 +25973,7 @@
       "name": "err-code",
       "version": "2.0.3",
       "bom-ref": "repo-contract@0.8.5|err-code@2.0.3",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -29210,6 +29217,7 @@
       "name": "foreground-child",
       "version": "3.3.1",
       "bom-ref": "repo-contract@0.8.5|foreground-child@3.3.1",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -31722,8 +31730,8 @@
     {
       "type": "library",
       "name": "internal-package-contract",
-      "version": "0.5.0",
-      "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0",
+      "version": "0.6.0",
+      "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0",
       "licenses": [
         {
           "license": {
@@ -31732,10 +31740,10 @@
           }
         }
       ],
-      "purl": "pkg:npm/internal-package-contract@0.5.0?vcs_url=git%2Bssh%3A%2F%2Fgit%40github.com%2FMaverickCER%2Finternal-package-contract.git%238e8f6809fd77b44b6946d93c1df11e011f363680",
+      "purl": "pkg:npm/internal-package-contract@0.6.0?vcs_url=git%2Bssh%3A%2F%2Fgit%40github.com%2FMaverickCER%2Finternal-package-contract.git%236e4fd08e6a5fe3f175a8f3db420c48b509662435",
       "externalReferences": [
         {
-          "url": "git+ssh://git@github.com/MaverickCER/internal-package-contract.git#8e8f6809fd77b44b6946d93c1df11e011f363680",
+          "url": "git+ssh://git@github.com/MaverickCER/internal-package-contract.git#6e4fd08e6a5fe3f175a8f3db420c48b509662435",
           "type": "distribution",
           "comment": "as detected from npm-ls property \"resolved\""
         }
@@ -31756,7 +31764,7 @@
           "name": "code-frame",
           "group": "@babel",
           "version": "7.29.7",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@babel/code-frame@7.29.7",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@babel/code-frame@7.29.7",
           "licenses": [
             {
               "license": {
@@ -31795,7 +31803,7 @@
           "name": "helper-validator-identifier",
           "group": "@babel",
           "version": "7.29.7",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@babel/helper-validator-identifier@7.29.7",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@babel/helper-validator-identifier@7.29.7",
           "licenses": [
             {
               "license": {
@@ -31831,556 +31839,10 @@
         },
         {
           "type": "library",
-          "name": "agent",
-          "group": "@npmcli",
-          "version": "2.2.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/agent@2.2.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/agent@2.2.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/agent/-/agent-2.2.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "3ab70d3d77694a5f545fba8f55159b996302497adc0dad8cf43beb6ce4e3edaa354b83e5a95158bfdff22ca324ac9299fd5e40fe40c10baf74a2bdf4ee2dba3a"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/agent"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "arborist",
-          "group": "@npmcli",
-          "version": "7.5.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/arborist@7.5.4",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/arborist@7.5.4",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/arborist/-/arborist-7.5.4.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "9d6b4873a430c2850e44244dccac78ca91ea0a4dddac8fb969e61d31341089109c9f894e3a07d087b5b26686c6613c573d2ab5570579de592937f051951934f2"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/arborist"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "fs",
-          "group": "@npmcli",
-          "version": "3.1.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/fs@3.1.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/fs@3.1.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/fs/-/fs-3.1.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "abd0915a3a4708c221e6c57279fa03d5c03b3e4bc82ea099b2748e114522bce44b8f108efc8ae6b9ed83a6b11388d804aa4b4305968cd418be8eb6abc755dd0a"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/fs"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "git",
-          "group": "@npmcli",
-          "version": "5.0.8",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/git@5.0.8",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/git@5.0.8",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/git/-/git-5.0.8.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "9620127f0e5caa18cd5bd50577eaeec307447ff95b3804232cbd976367455bf6e42617970d86603b2ba5ff8815bc45780569135e3606983a8cc3db9e81d6c935"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/git"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "installed-package-contents",
-          "group": "@npmcli",
-          "version": "2.1.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/installed-package-contents@2.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/installed-package-contents@2.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/installed-package-contents/-/installed-package-contents-2.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "73c52e18b799a66ebd06bc91ca42ee291c8a159609b194824f869563976ce289b266a275ef6029ce07ca279795febdc780b7546201557b9e0a4855632a87b6ef"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/installed-package-contents"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "map-workspaces",
-          "group": "@npmcli",
-          "version": "3.0.6",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/map-workspaces@3.0.6",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/map-workspaces@3.0.6",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/map-workspaces/-/map-workspaces-3.0.6.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b6462cd0e627cd09ba88845d7f2f8b70b06370ab9009e13960b6fc2a7ac896eb497e178d68fbcfa60a0513210581b8f39793cb677200fc1580c11534787b900c"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/map-workspaces"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "metavuln-calculator",
-          "group": "@npmcli",
-          "version": "7.1.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/metavuln-calculator@7.1.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/metavuln-calculator@7.1.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/metavuln-calculator/-/metavuln-calculator-7.1.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "364c5ff7a574940c771c2a5575aed5c383f6dd120b81d8bfe4ad5f9a3dad66458860ba5700df24d945553ac5b5e93b12e45f16b3623b0a6f8f535febb15178ee"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/metavuln-calculator"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "name-from-folder",
-          "group": "@npmcli",
-          "version": "2.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/name-from-folder@2.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/name-from-folder@2.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/name-from-folder/-/name-from-folder-2.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "a702be05f1016496ca74d6291c7453341c01a2aacdfe220c3b40221af62ca771e86aad166e019259047a48295d668be80e9637ca37b99641547ba82c0e0276be"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/name-from-folder"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "node-gyp",
-          "group": "@npmcli",
-          "version": "3.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/node-gyp@3.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/node-gyp@3.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/node-gyp/-/node-gyp-3.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "829f294570b6a0ec6ed03504d7f3376d8b5bd5bdff0db27968cd75dfe5c90607d776eb2c440b17d183ab3a175df16be7011e9ab8306f2689860242ca039c9dc4"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/node-gyp"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "package-json",
-          "group": "@npmcli",
-          "version": "5.2.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/package-json@5.2.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/package-json@5.2.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/package-json/-/package-json-5.2.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "7fbcd80ba9106aeb571ef35b2c45a00ffb86bb5fb10a7f62ce0a817e022d592c76d94d190de931374f00d6f33c713c63fdc4557b443de0e75efad76862620e39"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/package-json"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "promise-spawn",
-          "group": "@npmcli",
-          "version": "7.0.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/promise-spawn@7.0.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/promise-spawn@7.0.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/promise-spawn/-/promise-spawn-7.0.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "c617d83d7a15e43cb85246340febf62a4c2f9c37e203ff0cb77b1608623f84cd3736c6081fc65a1ba4334bdc7ba637b9bc7641649dafe954455535800a7a9c99"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/promise-spawn"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "query",
-          "group": "@npmcli",
-          "version": "3.1.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/query@3.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/query@3.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/query/-/query-3.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "0bf891d2d93b29228695d89b60807dc7c1ad3bfd017742369a139a0dbf2e7102ff6d0553986a1e4446858fae19e7e8820517f77507de7740a324bec8f224e489"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/query"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "redact",
-          "group": "@npmcli",
-          "version": "2.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/redact@2.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/redact@2.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/redact/-/redact-2.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "620b11e630906615664c9be376e4ce207a61d0bef7a4af31c0c55a0d8d0f6adc92a9533d0198fdde3a685d8489a9f1c5c4590df5d9aa4f0e8e8aa131b12dcb3f"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/redact"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "run-script",
-          "group": "@npmcli",
-          "version": "8.1.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/run-script@8.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40npmcli/run-script@8.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@npmcli/run-script/-/run-script-8.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "cbb79f1c7c208507e4dbc1b6cf7b6567aee92c6d1775f61b7151b6eabed821700b46cad541c4eae3fb5d7a74a674eac4b0d6a121803f7a1f1a11544e5861540e"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@npmcli/run-script"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "config-creator",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/config-creator@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/config-creator@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32419,7 +31881,7 @@
           "name": "config-loader",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/config-loader@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/config-loader@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32458,7 +31920,7 @@
           "name": "core",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/core@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/core@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32497,7 +31959,7 @@
           "name": "formatter",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/formatter@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/formatter@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32536,7 +31998,7 @@
           "name": "node",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/node@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/node@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32575,7 +32037,7 @@
           "name": "profiler",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/profiler@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/profiler@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32614,7 +32076,7 @@
           "name": "resolver",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/resolver@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/resolver@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32653,7 +32115,7 @@
           "name": "secretlint-rule-preset-recommend",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/secretlint-rule-preset-recommend@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/secretlint-rule-preset-recommend@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32692,7 +32154,7 @@
           "name": "source-creator",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/source-creator@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/source-creator@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32731,7 +32193,7 @@
           "name": "types",
           "group": "@secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/types@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/types@9.3.4",
           "licenses": [
             {
               "license": {
@@ -32767,244 +32229,10 @@
         },
         {
           "type": "library",
-          "name": "bundle",
-          "group": "@sigstore",
-          "version": "2.3.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/bundle@2.3.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40sigstore/bundle@2.3.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@sigstore/bundle/-/bundle-2.3.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "c2e78a58393bd108b134b077eb7c877360f622d4e062231374fc0af03f5d290311dd9434737e48c4fe719f043c70d2e80a00917077f5e2413e08b22f357d7398"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@sigstore/bundle"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "core",
-          "group": "@sigstore",
-          "version": "1.1.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/core@1.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40sigstore/core@1.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@sigstore/core/-/core-1.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "27306a755232aa6d854500ae958ea76d0ccca492694a227c5d758c86d397f5e2a06975e97cd385e779734048c8c9d952b6777f785b6e0b5756e1561d0fdde846"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@sigstore/core"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "protobuf-specs",
-          "group": "@sigstore",
-          "version": "0.3.3",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/protobuf-specs@0.3.3",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40sigstore/protobuf-specs@0.3.3",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@sigstore/protobuf-specs/-/protobuf-specs-0.3.3.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "46969c421065c2905677b28426c44a70141a95b576f1fbe4c704ce248aa122e0f2b0c31a256e3b5783aa5b7d22241f6e469a8e4b1c4401015dafcb536adb5179"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@sigstore/protobuf-specs"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "sign",
-          "group": "@sigstore",
-          "version": "2.3.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/sign@2.3.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40sigstore/sign@2.3.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@sigstore/sign/-/sign-2.3.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "e55cf974f56eba7208bc2e6f05bd003f0a3ba8a0381bdc8ce3c90f5894fe384111b38d267791a8511d7279dc297a4599e26d07870e389bacd4f8e6ec38dfa20c"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@sigstore/sign"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "tuf",
-          "group": "@sigstore",
-          "version": "2.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/tuf@2.3.4",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40sigstore/tuf@2.3.4",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@sigstore/tuf/-/tuf-2.3.4.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "e38bedb2f7933d4a6a866f4d0ab6d4f0258b7b755c9361ced4f34bc3b4486a36c1ef186d9f94413e6d5535208cc2a1981e10ec0491bc803174ab8960c9db09bf"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@sigstore/tuf"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "verify",
-          "group": "@sigstore",
-          "version": "1.2.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/verify@1.2.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40sigstore/verify@1.2.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@sigstore/verify/-/verify-1.2.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "f222b1efdfc5ef70ca6c67d17fbfade1daab7346d1af4b6174faf102d08a5919bf174b46ef58ba3b5aef96749c9dc24b2c16479f787c3377350525006fdcaef2"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@sigstore/verify"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "merge-streams",
           "group": "@sindresorhus",
           "version": "2.3.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sindresorhus/merge-streams@2.3.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@sindresorhus/merge-streams@2.3.0",
           "licenses": [
             {
               "license": {
@@ -33043,7 +32271,7 @@
           "name": "ast-node-types",
           "group": "@textlint",
           "version": "14.8.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/ast-node-types@14.8.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/ast-node-types@14.8.4",
           "licenses": [
             {
               "license": {
@@ -33082,7 +32310,7 @@
           "name": "linter-formatter",
           "group": "@textlint",
           "version": "14.8.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/linter-formatter@14.8.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/linter-formatter@14.8.4",
           "licenses": [
             {
               "license": {
@@ -33120,7 +32348,7 @@
               "type": "library",
               "name": "pluralize",
               "version": "2.0.0",
-              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/linter-formatter@14.8.4|pluralize@2.0.0",
+              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/linter-formatter@14.8.4|pluralize@2.0.0",
               "licenses": [
                 {
                   "license": {
@@ -33161,7 +32389,7 @@
           "name": "module-interop",
           "group": "@textlint",
           "version": "14.8.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/module-interop@14.8.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/module-interop@14.8.4",
           "licenses": [
             {
               "license": {
@@ -33200,7 +32428,7 @@
           "name": "resolver",
           "group": "@textlint",
           "version": "14.8.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/resolver@14.8.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/resolver@14.8.4",
           "licenses": [
             {
               "license": {
@@ -33239,7 +32467,7 @@
           "name": "types",
           "group": "@textlint",
           "version": "14.8.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/types@14.8.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/types@14.8.4",
           "licenses": [
             {
               "license": {
@@ -33275,49 +32503,10 @@
         },
         {
           "type": "library",
-          "name": "models",
-          "group": "@tufjs",
-          "version": "2.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@tufjs/models@2.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40tufjs/models@2.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@tufjs/models/-/models-2.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "f7617bfd2172b9f9f80d7b216bdf907ca9cdd37246aad3053178121db64ea3c246e7d5a44e78bb533028b8d4037fb02e3fd38033154e3d072a1b7b01ef0fa492"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/@tufjs/models"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "node",
           "group": "@types",
           "version": "20.19.43",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@types/node@20.19.43",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@types/node@20.19.43",
           "licenses": [
             {
               "license": {
@@ -33353,47 +32542,9 @@
         },
         {
           "type": "library",
-          "name": "abbrev",
-          "version": "2.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|abbrev@2.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/abbrev@2.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/abbrev/-/abbrev-2.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "ebf9a1d44daed98804b021dd634631e685beeb581953ed6f5daa221c7ae929eb9134d805bd2fbf8ebc07890841e5aa407f9a01ed407b135f689764762ca1fc85"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/abbrev"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "ansi-escapes",
           "version": "4.3.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ansi-escapes@4.3.2",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|ansi-escapes@4.3.2",
           "licenses": [
             {
               "license": {
@@ -33431,7 +32582,7 @@
               "type": "library",
               "name": "type-fest",
               "version": "0.21.3",
-              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ansi-escapes@4.3.2|type-fest@0.21.3",
+              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|ansi-escapes@4.3.2|type-fest@0.21.3",
               "licenses": [
                 {
                   "expression": "(MIT OR CC0-1.0)",
@@ -33469,7 +32620,7 @@
           "type": "library",
           "name": "ansi-regex",
           "version": "5.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ansi-regex@5.0.1",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|ansi-regex@5.0.1",
           "licenses": [
             {
               "license": {
@@ -33505,313 +32656,9 @@
         },
         {
           "type": "library",
-          "name": "balanced-match",
-          "version": "1.0.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|balanced-match@1.0.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/balanced-match@1.0.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "de849e50ed13315ebb84dd4099b5ec2b8c9aa94eed8e21e56f144364ea47d0a5bdf82797e1b440697d009f1b74b71d8cae94695b041a3f02252121098585393f"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/balanced-match"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "bin-links",
-          "version": "4.0.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|bin-links@4.0.4",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/bin-links@4.0.4",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/bin-links/-/bin-links-4.0.4.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "70cb6ae16e59b04c1cbad26b54877e6bfb63b7c1926d2fa1d28364765ebeeab06e12ff0eb77dc17af8f928f9b8d2ddf4f73ba156273c363a6e2f8d900a225658"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/bin-links"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "brace-expansion",
-          "version": "2.1.7",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|brace-expansion@2.1.7",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/brace-expansion@2.1.7",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.1.7.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b996dec3536a7663c34cc27c6a1d72f9bfbd40426b7e45c593745c4d0c375f48d6ff1454bc52ac83509f41d49819d4db5d9584c6d53727771cc6d9dfc35162d2"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/brace-expansion"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "cacache",
-          "version": "18.0.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|cacache@18.0.4",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/cacache@18.0.4",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/cacache/-/cacache-18.0.4.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "07e2f98886bd9a07232db9628abdad877eb21303dfb6bced78762e8f3b31ddd14fff7d46087708792f1fe4c19df34a1d2ce8da3af4a9537104026450a6d9312d"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/cacache"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "chownr",
-          "version": "2.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|chownr@2.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/chownr@2.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/chownr/-/chownr-2.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "6c8a26b43179286a5da2090b77d56ca6f17393d29fa72c86952f18155665ed318f0472f9b2720e9f17ac8705603ed790f5be04c9d97ea556c8c84d4372f09681"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/chownr"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "cmd-shim",
-          "version": "6.0.3",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|cmd-shim@6.0.3",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/cmd-shim@6.0.3",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/cmd-shim/-/cmd-shim-6.0.3.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "14c69b4d195ce6de738dd7a717a992d0c05e1599b45ea1ea78e91cb242856ff2d809c450e5f5602ce1d57382eaf42a8005df73863c0f8cc04226f302ce2495b4"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/cmd-shim"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "common-ancestor-path",
-          "version": "1.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|common-ancestor-path@1.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/common-ancestor-path@1.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/common-ancestor-path/-/common-ancestor-path-1.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "2f7b07468d695d712a5fc554dbc91f81463e606b24d3d84fa9989998b69c3626fa5cd4c233cb9b61e4fbaf25d0c3c6ac075b0a81c53996407b38dba0d3c681f3"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/common-ancestor-path"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "glob",
-          "version": "10.5.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|glob@10.5.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/glob@10.5.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/glob/-/glob-10.5.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "0df5cdf037e127b347dce7bb7059aedcd0aed7029b911789f13a2bcd20056d22ab94d69048a7c8cea62a558f3395bb3634b05b5a9462539d865f63db68154d92"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/glob"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "globby",
           "version": "14.1.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|globby@14.1.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|globby@14.1.0",
           "licenses": [
             {
               "license": {
@@ -33849,7 +32696,7 @@
           "type": "library",
           "name": "hosted-git-info",
           "version": "7.0.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|hosted-git-info@7.0.2",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|hosted-git-info@7.0.2",
           "licenses": [
             {
               "license": {
@@ -33885,123 +32732,9 @@
         },
         {
           "type": "library",
-          "name": "ignore-walk",
-          "version": "6.0.5",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ignore-walk@6.0.5",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/ignore-walk@6.0.5",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/ignore-walk/-/ignore-walk-6.0.5.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "56eb86d300a78e19f2946d400574f7740b88a53343b3f1bc8e5a66c17634ddf5e85f2ffc64af3f4fe84ccedf0be169eb2c22607726ea80f6a09c5fdff7b720dc"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/ignore-walk"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "ini",
-          "version": "4.1.3",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ini@4.1.3",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/ini@4.1.3",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/ini/-/ini-4.1.3.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "5fbaea6b0401bdf7634b5d18535cb5615ade0374ac2eb5bd757d827b03f611b049338ca954d2c390ee72d3881e8cfc0a218f6547eeebf609f7ac53edfe499616"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/ini"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "isexe",
-          "version": "3.1.5",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|isexe@3.1.5",
-          "licenses": [
-            {
-              "license": {
-                "id": "BlueOak-1.0.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/isexe@3.1.5",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/isexe/-/isexe-3.1.5.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "e81ded2ed16ab504b87a46abbcb54c67e5fe565bd07a46dee2d69491ffeb8553b777f874336adf0119bfa572dc3c4b238ccb0582b1604ab85023171256b073f3"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/isexe"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "jiti",
           "version": "2.7.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|jiti@2.7.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|jiti@2.7.0",
           "licenses": [
             {
               "license": {
@@ -34039,7 +32772,7 @@
           "type": "library",
           "name": "js-tokens",
           "version": "4.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|js-tokens@4.0.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|js-tokens@4.0.0",
           "licenses": [
             {
               "license": {
@@ -34077,7 +32810,7 @@
           "type": "library",
           "name": "js-yaml",
           "version": "3.15.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|js-yaml@3.15.2",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|js-yaml@3.15.2",
           "licenses": [
             {
               "license": {
@@ -34115,7 +32848,7 @@
           "type": "library",
           "name": "json-parse-even-better-errors",
           "version": "3.0.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|json-parse-even-better-errors@3.0.2",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|json-parse-even-better-errors@3.0.2",
           "licenses": [
             {
               "license": {
@@ -34151,47 +32884,9 @@
         },
         {
           "type": "library",
-          "name": "licensee",
-          "version": "11.1.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|licensee@11.1.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/licensee@11.1.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/licensee/-/licensee-11.1.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "16981d28a8ef2542e506a6222adacaec9e0ea3bb103b594741350e731c44e083d071cc7a734b4958c83055d1b8ebeacf9cb3d257b1160fa79652d02318ee762e"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/licensee"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "lines-and-columns",
           "version": "2.0.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|lines-and-columns@2.0.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|lines-and-columns@2.0.4",
           "licenses": [
             {
               "license": {
@@ -34229,7 +32924,7 @@
           "type": "library",
           "name": "lru-cache",
           "version": "10.4.3",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|lru-cache@10.4.3",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|lru-cache@10.4.3",
           "licenses": [
             {
               "license": {
@@ -34265,393 +32960,9 @@
         },
         {
           "type": "library",
-          "name": "make-fetch-happen",
-          "version": "13.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|make-fetch-happen@13.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/make-fetch-happen@13.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/make-fetch-happen/-/make-fetch-happen-13.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "70a4d415cfeb6ca51dffd99e3af82ba49d96acdcf29adea37d10ddc20e540a7573bfd753a448fd252e66df0b738975428e5b885f22fca5c6ae918a9ecc8cd940"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/make-fetch-happen"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "minimatch",
-          "version": "9.0.9",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minimatch@9.0.9",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/minimatch@9.0.9",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/minimatch/-/minimatch-9.0.9.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "381c0137d00be1daa61139694b6cdab31faf4de59c956ce46e57d993b2930398f78de38e373fed4429d9a26532bcd83cdf02f966ff52b3a1cc2570202fc47662"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/minimatch"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "minipass-fetch",
-          "version": "3.0.5",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-fetch@3.0.5",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/minipass-fetch@3.0.5",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/minipass-fetch/-/minipass-fetch-3.0.5.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "d8df1e943400b529c55740e4ee0b75e4a1ec4b4172cfa09b619dfad21d164d85754f2e3a962deb01754e423d531cc34b766ac3f55b79a413ed5ad564a70181aa"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/minipass-fetch"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "minipass-sized",
-          "version": "1.0.3",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-sized@1.0.3",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/minipass-sized@1.0.3",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/minipass-sized/-/minipass-sized-1.0.3.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "31b9104360938813250360e6ff9718fbd49614437ca73cce5e2eab94ce57c6ad18a9b75ae59432f6c53be5aebbdc513d64ad19b1bafa63988feaef6792d7e0da"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/minipass-sized"
-            }
-          ],
-          "components": [
-            {
-              "type": "library",
-              "name": "minipass",
-              "version": "3.3.6",
-              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-sized@1.0.3|minipass@3.3.6",
-              "licenses": [
-                {
-                  "license": {
-                    "id": "ISC",
-                    "acknowledgement": "declared"
-                  }
-                }
-              ],
-              "purl": "pkg:npm/minipass@3.3.6",
-              "externalReferences": [
-                {
-                  "url": "https://registry.npmjs.org/minipass/-/minipass-3.3.6.tgz",
-                  "type": "distribution",
-                  "hashes": [
-                    {
-                      "alg": "SHA-512",
-                      "content": "0f188d89dc5210afad1c6eb3388925bcd3b09b786f0ab6d4addb7363be14e87293271bc80df3942f95b93f61a17770d392184a3d81aa78d508879a9c3386017f"
-                    }
-                  ],
-                  "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-                }
-              ],
-              "properties": [
-                {
-                  "name": "cdx:npm:package:development",
-                  "value": "true"
-                },
-                {
-                  "name": "cdx:npm:package:path",
-                  "value": "node_modules/internal-package-contract/node_modules/minipass-sized/node_modules/minipass"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "minizlib",
-          "version": "2.1.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minizlib@2.1.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/minizlib@2.1.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/minizlib/-/minizlib-2.1.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "6c0c6c47c0557e3eb40d65c7137bb7d281f37e5e06ee48644ae3d6faabe977b8c54479bb74bc4e8d493510700227f8712d8f29846274621607668ee38a5ed076"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/minizlib"
-            }
-          ],
-          "components": [
-            {
-              "type": "library",
-              "name": "minipass",
-              "version": "3.3.6",
-              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minizlib@2.1.2|minipass@3.3.6",
-              "licenses": [
-                {
-                  "license": {
-                    "id": "ISC",
-                    "acknowledgement": "declared"
-                  }
-                }
-              ],
-              "purl": "pkg:npm/minipass@3.3.6",
-              "externalReferences": [
-                {
-                  "url": "https://registry.npmjs.org/minipass/-/minipass-3.3.6.tgz",
-                  "type": "distribution",
-                  "hashes": [
-                    {
-                      "alg": "SHA-512",
-                      "content": "0f188d89dc5210afad1c6eb3388925bcd3b09b786f0ab6d4addb7363be14e87293271bc80df3942f95b93f61a17770d392184a3d81aa78d508879a9c3386017f"
-                    }
-                  ],
-                  "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-                }
-              ],
-              "properties": [
-                {
-                  "name": "cdx:npm:package:development",
-                  "value": "true"
-                },
-                {
-                  "name": "cdx:npm:package:path",
-                  "value": "node_modules/internal-package-contract/node_modules/minizlib/node_modules/minipass"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "negotiator",
-          "version": "0.6.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|negotiator@0.6.4",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/negotiator@0.6.4",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/negotiator/-/negotiator-0.6.4.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "9b2453dc38963c7aa1a393eb25a211c9a32fda48187f499456004d39832e087e4a8b5c8489069ffd926e43ada7be9738e302f95836d35fbc86262d4d79ebf0f3"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/negotiator"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "node-gyp",
-          "version": "10.3.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|node-gyp@10.3.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/node-gyp@10.3.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/node-gyp/-/node-gyp-10.3.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "3e9de7147053847cd5b4d63b53a25f3e3bd3fc34c4f3ea3fe312ac2d0b41a14fa3d872ec1a585c7f37e502852b79a25b3666275fe2e52e2d2a8d5f24a723bac5"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/node-gyp"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "nopt",
-          "version": "7.2.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|nopt@7.2.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/nopt@7.2.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/nopt/-/nopt-7.2.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b5a336e158a28a64ff5e7b716cfc89433086fa9e0428ea600f79b11705b7f261a3554adf11140e798e040c78dd9e9b6db5f1ee1d05c5c7e9533f4f10fa62daff"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/nopt"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "normalize-package-data",
           "version": "6.0.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|normalize-package-data@6.0.2",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|normalize-package-data@6.0.2",
           "licenses": [
             {
               "license": {
@@ -34687,275 +32998,9 @@
         },
         {
           "type": "library",
-          "name": "npm-bundled",
-          "version": "3.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-bundled@3.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/npm-bundled@3.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/npm-bundled/-/npm-bundled-3.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "f80bda85e13fc30d491304473ab9f85873733b11ad569f9a76b83601e652ffb2aec4651816e06d6bdf306297c705b269e9383a8f534a48454735c7d9cc91d0c1"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/npm-bundled"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "npm-install-checks",
-          "version": "6.3.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-install-checks@6.3.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "BSD-2-Clause",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/npm-install-checks@6.3.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/npm-install-checks/-/npm-install-checks-6.3.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "5b6f5188aff1b69086aa7e9fde2c5f4581a4fb3472afe130f45d84db405f5f14f9fdeb8b740fcd9bb7ceece7931ae0264ecdf47298089f22747187bbd3c61367"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/npm-install-checks"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "npm-normalize-package-bin",
-          "version": "3.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-normalize-package-bin@3.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/npm-normalize-package-bin@3.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/npm-normalize-package-bin/-/npm-normalize-package-bin-3.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "74cc427fecd9fb7cde4195cac66cae08a9480cf1aebfc105f78d316e40b89105434edaa887aac914ef894ca480ebf4708b481eb569adbb2e08b6ea7400c71a0d"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/npm-normalize-package-bin"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "npm-package-arg",
-          "version": "11.0.3",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-package-arg@11.0.3",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/npm-package-arg@11.0.3",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/npm-package-arg/-/npm-package-arg-11.0.3.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b07189cbcb0e0b562b681cb0a7342520a044e2905b19b885f7953a02eb29cf27a6f79e84d3e16d0edb31d59c65389910099d40157018ff2bafb4562b3b117e07"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/npm-package-arg"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "npm-packlist",
-          "version": "8.0.2",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-packlist@8.0.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/npm-packlist@8.0.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/npm-packlist/-/npm-packlist-8.0.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b2162b3c5212fc92cfe284260300f29391dccb2b0a5bcfc92d3100df64b46794f3be969e797db23057e82b57e31019c206f572201fc98ff18115d9b4c2c8336c"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/npm-packlist"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "npm-pick-manifest",
-          "version": "9.1.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-pick-manifest@9.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/npm-pick-manifest@9.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/npm-pick-manifest/-/npm-pick-manifest-9.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "9e473ede920886a1d542bd3ce57f5dd89ccfccbca3cd04bdeb36ebba9a6a0bd699466ff1f31c7ac6123df201edb1f10b3f66c4fa5a07abc65a1c51e17be35ab8"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/npm-pick-manifest"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "npm-registry-fetch",
-          "version": "17.1.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-registry-fetch@17.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/npm-registry-fetch@17.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/npm-registry-fetch/-/npm-registry-fetch-17.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "e7e6ca4111f4275c46d6e675ccc36fc56d15132a0d5a026963d503ba5b8f14b2837c9f6ed899a68e64c9575b2b04640e44e7dd04c895be71f666fa5b9bec6454"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/npm-registry-fetch"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "p-map",
           "version": "4.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|p-map@4.0.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|p-map@4.0.0",
           "licenses": [
             {
               "license": {
@@ -34991,85 +33036,9 @@
         },
         {
           "type": "library",
-          "name": "pacote",
-          "version": "18.0.6",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|pacote@18.0.6",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/pacote@18.0.6",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/pacote/-/pacote-18.0.6.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "f9e2b71b6ed2330b01f242c8ba3e21d455211edc22114a36d53c3cc0d8e6bdd969384afad7779dbfef0552c4e3ff817f54de72c06135f57d7c37b082d84264e8"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/pacote"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "parse-conflict-json",
-          "version": "3.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|parse-conflict-json@3.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/parse-conflict-json@3.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/parse-conflict-json/-/parse-conflict-json-3.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "d354ef124b5cebcbf06c93ad59996ec967951968cff9b6705ed3c331055b04acdb27fbd90627f42faf4a1f5f9c1efd5267a7b414a2ef8f21def26aac22a60e9b"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/parse-conflict-json"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "parse-json",
           "version": "7.1.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|parse-json@7.1.1",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|parse-json@7.1.1",
           "licenses": [
             {
               "license": {
@@ -35107,7 +33076,7 @@
               "type": "library",
               "name": "type-fest",
               "version": "3.13.1",
-              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|parse-json@7.1.1|type-fest@3.13.1",
+              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|parse-json@7.1.1|type-fest@3.13.1",
               "licenses": [
                 {
                   "expression": "(MIT OR CC0-1.0)",
@@ -35143,47 +33112,9 @@
         },
         {
           "type": "library",
-          "name": "path-scurry",
-          "version": "1.11.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|path-scurry@1.11.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "BlueOak-1.0.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/path-scurry@1.11.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/path-scurry/-/path-scurry-1.11.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "5dae0dc35ec54bd02940527dba62e2252e28ac68e6ed9cf052bc1a99c190b874b30f2b61f5ba0a0dac9c61d0dc643baa6004d7c381c55e06aa59372d5bfbf51c"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/path-scurry"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "path-type",
           "version": "6.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|path-type@6.0.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|path-type@6.0.0",
           "licenses": [
             {
               "license": {
@@ -35219,47 +33150,9 @@
         },
         {
           "type": "library",
-          "name": "postcss-selector-parser",
-          "version": "6.1.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|postcss-selector-parser@6.1.4",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/postcss-selector-parser@6.1.4",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-6.1.4.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "6c8a092ce9a308ed52f57758fc3727479849c6fac38abd4f6c60a1af35c6defc34fc53a58b2fdf037766761438e3591a87880abfe4f07241b37b1eb0352e5c9d"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/postcss-selector-parser"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "prettier",
           "version": "3.9.6",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|prettier@3.9.6",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|prettier@3.9.6",
           "licenses": [
             {
               "license": {
@@ -35295,123 +33188,9 @@
         },
         {
           "type": "library",
-          "name": "proc-log",
-          "version": "4.2.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/proc-log@4.2.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/proc-log/-/proc-log-4.2.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "83cf8e9d4fcbdaffb0ca254af83e5f037e09ec41fc8d9f030e5bf085108cc66323ed4081bf188ed6619e37edfa25720a178cdebd4e2444177c955806f6f2de94"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/proc-log"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "proggy",
-          "version": "2.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|proggy@2.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/proggy@2.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/proggy/-/proggy-2.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "ebd6a0c4bb6723cc41b3d8141aa1272b6e947e27b1a47cbe294a4141669b8b2b508e79f9c0563cae49408bb1917c0048b8f36743f8a4e3cf8b18b918609732e0"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/proggy"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "read-cmd-shim",
-          "version": "4.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|read-cmd-shim@4.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/read-cmd-shim@4.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/read-cmd-shim/-/read-cmd-shim-4.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "c882d689f85a484132b5f5c8efa901f71104886d408a8cda08967cdc0f3bcad8d188dfa35626d78de763091363a19be28a7846fb85246a53b79964ddf2ee4ed1"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/read-cmd-shim"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "read-pkg",
           "version": "8.1.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|read-pkg@8.1.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|read-pkg@8.1.0",
           "licenses": [
             {
               "license": {
@@ -35449,7 +33228,7 @@
           "type": "library",
           "name": "secretlint",
           "version": "9.3.4",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|secretlint@9.3.4",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|secretlint@9.3.4",
           "licenses": [
             {
               "license": {
@@ -35485,123 +33264,9 @@
         },
         {
           "type": "library",
-          "name": "sigstore",
-          "version": "2.3.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|sigstore@2.3.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/sigstore@2.3.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/sigstore/-/sigstore-2.3.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "f06fbf5c353cc0db093904b9cac0d53b412d83dff6b80e6047d9786708a38e5c3105cad4e913dfc22dbe8c999b3fe029d47969fe75406843b8163db6fd22f681"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/sigstore"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "spdx-expression-parse",
-          "version": "4.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|spdx-expression-parse@4.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/spdx-expression-parse@4.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/spdx-expression-parse/-/spdx-expression-parse-4.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "0a5c9ae492228ffec2e9b451db6fad9c65db73854a9626ca4958f6887bd5797e62316eecd5221096abbaf7d26438324922187fa54bbc2f4fd52e1f317e50fe2d"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/spdx-expression-parse"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "ssri",
-          "version": "10.0.6",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ssri@10.0.6",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/ssri@10.0.6",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/ssri/-/ssri-10.0.6.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "306ac51fd67834ff48ca1aa7d7ab03b41a5144d27463684d6ba0fae61ef7e9f55268f087af80cce2c59436f55a4ae0bed0e046870b2bc9d4309a07e0e4b9dca9"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/ssri"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "strip-ansi",
           "version": "6.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|strip-ansi@6.0.1",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|strip-ansi@6.0.1",
           "licenses": [
             {
               "license": {
@@ -35639,7 +33304,7 @@
           "type": "library",
           "name": "supports-color",
           "version": "7.2.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|supports-color@7.2.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|supports-color@7.2.0",
           "licenses": [
             {
               "license": {
@@ -35677,7 +33342,7 @@
           "type": "library",
           "name": "supports-hyperlinks",
           "version": "2.3.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|supports-hyperlinks@2.3.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|supports-hyperlinks@2.3.0",
           "licenses": [
             {
               "license": {
@@ -35713,165 +33378,9 @@
         },
         {
           "type": "library",
-          "name": "tar",
-          "version": "6.2.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/tar@6.2.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/tar/-/tar-6.2.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "0d9e323914f0adb4e3ffb31962adb0fbf645748e8e67f7fd4851d1fbbd6021551984e40f1f35422e9bd19cf83268ca5f5b1c64ff838dbdadc6412c8d20a46fe8"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/tar"
-            }
-          ],
-          "components": [
-            {
-              "type": "library",
-              "name": "fs-minipass",
-              "version": "2.1.0",
-              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1|fs-minipass@2.1.0",
-              "licenses": [
-                {
-                  "license": {
-                    "id": "ISC",
-                    "acknowledgement": "declared"
-                  }
-                }
-              ],
-              "purl": "pkg:npm/fs-minipass@2.1.0",
-              "externalReferences": [
-                {
-                  "url": "https://registry.npmjs.org/fs-minipass/-/fs-minipass-2.1.0.tgz",
-                  "type": "distribution",
-                  "hashes": [
-                    {
-                      "alg": "SHA-512",
-                      "content": "57f26038b1424be47a55cab4b250ae69e58474d0b7a2e0e524c348b1a707d95b402e2bbd995e0b3eb1dce5c0e5f24e5ac3a27c8f08165a9893a39458866233be"
-                    }
-                  ],
-                  "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-                }
-              ],
-              "properties": [
-                {
-                  "name": "cdx:npm:package:development",
-                  "value": "true"
-                },
-                {
-                  "name": "cdx:npm:package:path",
-                  "value": "node_modules/internal-package-contract/node_modules/tar/node_modules/fs-minipass"
-                }
-              ],
-              "components": [
-                {
-                  "type": "library",
-                  "name": "minipass",
-                  "version": "3.3.6",
-                  "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1|fs-minipass@2.1.0|minipass@3.3.6",
-                  "licenses": [
-                    {
-                      "license": {
-                        "id": "ISC",
-                        "acknowledgement": "declared"
-                      }
-                    }
-                  ],
-                  "purl": "pkg:npm/minipass@3.3.6",
-                  "externalReferences": [
-                    {
-                      "url": "https://registry.npmjs.org/minipass/-/minipass-3.3.6.tgz",
-                      "type": "distribution",
-                      "hashes": [
-                        {
-                          "alg": "SHA-512",
-                          "content": "0f188d89dc5210afad1c6eb3388925bcd3b09b786f0ab6d4addb7363be14e87293271bc80df3942f95b93f61a17770d392184a3d81aa78d508879a9c3386017f"
-                        }
-                      ],
-                      "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-                    }
-                  ],
-                  "properties": [
-                    {
-                      "name": "cdx:npm:package:development",
-                      "value": "true"
-                    },
-                    {
-                      "name": "cdx:npm:package:path",
-                      "value": "node_modules/internal-package-contract/node_modules/tar/node_modules/fs-minipass/node_modules/minipass"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "library",
-              "name": "minipass",
-              "version": "5.0.0",
-              "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1|minipass@5.0.0",
-              "licenses": [
-                {
-                  "license": {
-                    "id": "ISC",
-                    "acknowledgement": "declared"
-                  }
-                }
-              ],
-              "purl": "pkg:npm/minipass@5.0.0",
-              "externalReferences": [
-                {
-                  "url": "https://registry.npmjs.org/minipass/-/minipass-5.0.0.tgz",
-                  "type": "distribution",
-                  "hashes": [
-                    {
-                      "alg": "SHA-512",
-                      "content": "dc59e362e7a1bfd93aa2f3846f23acc1a7420cf5f5a6209f855f2772662d1ce8ee3f0ca5556b208532e8eeb69b8c2dd1c79c43e070f1f169b5c67305ed2e6a15"
-                    }
-                  ],
-                  "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-                }
-              ],
-              "properties": [
-                {
-                  "name": "cdx:npm:package:development",
-                  "value": "true"
-                },
-                {
-                  "name": "cdx:npm:package:path",
-                  "value": "node_modules/internal-package-contract/node_modules/tar/node_modules/minipass"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "terminal-link",
           "version": "2.1.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|terminal-link@2.1.1",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|terminal-link@2.1.1",
           "licenses": [
             {
               "license": {
@@ -35907,47 +33416,9 @@
         },
         {
           "type": "library",
-          "name": "tuf-js",
-          "version": "2.2.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tuf-js@2.2.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/tuf-js@2.2.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/tuf-js/-/tuf-js-2.2.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "1b02096aef57680f272d56d45ec377225162ed6990e3c80152b9771539242ff5cbbbf3ce841cdf997f61777dc534c5f5a80b1f97aa333b588c996f4d0bc62788"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/tuf-js"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "type-fest",
           "version": "4.41.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|type-fest@4.41.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|type-fest@4.41.0",
           "licenses": [
             {
               "expression": "(MIT OR CC0-1.0)",
@@ -35983,7 +33454,7 @@
           "type": "library",
           "name": "undici-types",
           "version": "6.21.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|undici-types@6.21.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|undici-types@6.21.0",
           "licenses": [
             {
               "license": {
@@ -36021,7 +33492,7 @@
           "type": "library",
           "name": "unicorn-magic",
           "version": "0.3.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|unicorn-magic@0.3.0",
+          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|unicorn-magic@0.3.0",
           "licenses": [
             {
               "license": {
@@ -36052,158 +33523,6 @@
             {
               "name": "cdx:npm:package:path",
               "value": "node_modules/internal-package-contract/node_modules/unicorn-magic"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "walk-up-path",
-          "version": "3.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|walk-up-path@3.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/walk-up-path@3.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/walk-up-path/-/walk-up-path-3.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "f589422ffca72b709396b491ac3c59bd46ae2f302cc0f0abb1a0a08a5a857af518a5e116d3fdd27048da6b791b5bf4f482186412bee6bfe7e98ea9f563562e4c"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/walk-up-path"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "which",
-          "version": "4.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|which@4.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/which@4.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/which/-/which-4.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "1a5698c846f4ec33f16022a12b3a65096049b6fc5971932b2fee1492b4d22471cfc99538998613bf7a9a39eefb1fb10e0cb492a2901414073a5bc538caabec72"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/which"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "write-file-atomic",
-          "version": "5.0.1",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|write-file-atomic@5.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/write-file-atomic@5.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/write-file-atomic/-/write-file-atomic-5.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "f90536cdde8e4c3f175882426df7da890787f54ef7a88a9a7e8d71e95d6c9c25981897fa7151347034780fcc51cdc1277c8db5205ad43f33c6b5c3dff000be47"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/write-file-atomic"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "yallist",
-          "version": "4.0.0",
-          "bom-ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|yallist@4.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/yallist@4.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "df074689d672ab93c1d3ce172c44b94e9392440df08d7025216321ba6da445cbffe354a7d9e990d1dc9c416e2e6572de8f02af83a12cbdb76554bf8560472dec"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/yallist"
             }
           ]
         }
@@ -37196,44 +34515,6 @@
               "value": "node_modules/is-installed-globally/node_modules/ini"
             }
           ]
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "is-lambda",
-      "version": "1.0.1",
-      "bom-ref": "repo-contract@0.8.5|is-lambda@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-lambda@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-lambda/-/is-lambda-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "cfb08c14636b10dab988507d06aa3ae1793a63db20f9ea6ad66c8871d1da1a76cc4d83b1bf3b04b5d62a414ca507b2f17e4be0aeb8cfdf64fa6307228a8f5421"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-lambda"
         }
       ]
     },
@@ -38308,6 +35589,7 @@
       "name": "jackspeak",
       "version": "3.4.3",
       "bom-ref": "repo-contract@0.8.5|jackspeak@3.4.3",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -44732,44 +42014,6 @@
     },
     {
       "type": "library",
-      "name": "mkdirp",
-      "version": "1.0.4",
-      "bom-ref": "repo-contract@0.8.5|mkdirp@1.0.4",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/mkdirp@1.0.4",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "bd5a95650c9fdd62f1d9285dd2a27dc6ebea800c8a3cb022a884c4b6a5b4a08523ce8dcf78f0dde9f5bd885cf7d1e7fb62ca7fa225aa6e1b33786596d93e86cf"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/mkdirp"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "mlly",
       "version": "1.8.2",
       "bom-ref": "repo-contract@0.8.5|mlly@1.8.2",
@@ -47492,6 +44736,7 @@
       "name": "package-json-from-dist",
       "version": "1.0.1",
       "bom-ref": "repo-contract@0.8.5|package-json-from-dist@1.0.1",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -49284,47 +46529,10 @@
     },
     {
       "type": "library",
-      "name": "promise-inflight",
-      "version": "1.0.1",
-      "bom-ref": "repo-contract@0.8.5|promise-inflight@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/promise-inflight@1.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/promise-inflight/-/promise-inflight-1.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "eb358fc8438569004961c18c1c1293289deee9306c9cc14e21949ae9c7b57bf66baec3a59c74476da6cc8cb88160aa7e9f8e17f5e508e9550f6ae9025c7b86e2"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/promise-inflight"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "promise-retry",
       "version": "2.0.1",
       "bom-ref": "repo-contract@0.8.5|promise-retry@2.0.1",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -50234,122 +47442,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/read-cmd-shim"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "read-package-json-fast",
-      "version": "3.0.2",
-      "bom-ref": "repo-contract@0.8.5|read-package-json-fast@3.0.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/read-package-json-fast@3.0.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/read-package-json-fast/-/read-package-json-fast-3.0.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "d09f8cb20ca6defacb394077873402b991c8234c643460adcff1c91fdc59b21c2ff436c3c24c3529a137831fded89e6ba44639aed3b2e9cca128e3eb90fec567"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/read-package-json-fast"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "json-parse-even-better-errors",
-          "version": "3.0.2",
-          "bom-ref": "repo-contract@0.8.5|read-package-json-fast@3.0.2|json-parse-even-better-errors@3.0.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/json-parse-even-better-errors@3.0.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/json-parse-even-better-errors/-/json-parse-even-better-errors-3.0.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "7e2d0d1b86cf8c21ee9d425f7e62ddd20c6cb0882436602b32f8ace2235a87a3b08353022635a111c0cb9ac2ba886909ab7b47c1b0e44e571eef4fed99737871"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/read-package-json-fast/node_modules/json-parse-even-better-errors"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "npm-normalize-package-bin",
-          "version": "3.0.1",
-          "bom-ref": "repo-contract@0.8.5|read-package-json-fast@3.0.2|npm-normalize-package-bin@3.0.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "ISC",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/npm-normalize-package-bin@3.0.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/npm-normalize-package-bin/-/npm-normalize-package-bin-3.0.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "74cc427fecd9fb7cde4195cac66cae08a9480cf1aebfc105f78d316e40b89105434edaa887aac914ef894ca480ebf4708b481eb569adbb2e08b6ea7400c71a0d"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/read-package-json-fast/node_modules/npm-normalize-package-bin"
-            }
-          ]
         }
       ]
     },
@@ -51354,6 +48446,7 @@
       "name": "retry",
       "version": "0.12.0",
       "bom-ref": "repo-contract@0.8.5|retry@0.12.0",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -54179,6 +51272,7 @@
       "name": "string-width",
       "version": "4.2.3",
       "bom-ref": "repo-contract@0.8.5|string-width@4.2.3#2",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -54217,6 +51311,7 @@
           "name": "ansi-regex",
           "version": "5.0.1",
           "bom-ref": "repo-contract@0.8.5|string-width@4.2.3#2|ansi-regex@5.0.1",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -54255,6 +51350,7 @@
           "name": "emoji-regex",
           "version": "8.0.0",
           "bom-ref": "repo-contract@0.8.5|string-width@4.2.3#2|emoji-regex@8.0.0",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -54293,6 +51389,7 @@
           "name": "strip-ansi",
           "version": "6.0.1",
           "bom-ref": "repo-contract@0.8.5|string-width@4.2.3#2|strip-ansi@6.0.1",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -54523,6 +51620,7 @@
       "name": "strip-ansi",
       "version": "6.0.1",
       "bom-ref": "repo-contract@0.8.5|strip-ansi@6.0.1",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -54561,6 +51659,7 @@
           "name": "ansi-regex",
           "version": "5.0.1",
           "bom-ref": "repo-contract@0.8.5|strip-ansi@6.0.1|ansi-regex@5.0.1",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -57694,82 +54793,6 @@
     },
     {
       "type": "library",
-      "name": "unique-filename",
-      "version": "3.0.0",
-      "bom-ref": "repo-contract@0.8.5|unique-filename@3.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/unique-filename@3.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/unique-filename/-/unique-filename-3.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "69f5e1b82e79c240266743f5f10b1513a929f096b1ac4a243761c6228215bf68a31d0778d7d1f4fba12280015c2335de30891c224341a41dcbfc35c1ddc4d2fe"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/unique-filename"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "unique-slug",
-      "version": "4.0.0",
-      "bom-ref": "repo-contract@0.8.5|unique-slug@4.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "ISC",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/unique-slug@4.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/unique-slug/-/unique-slug-4.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "5ab700e80c847ea0d7e5b5a281eff83507cf64cb4048d571766591efa584498415000092816711e9ef62d26a1faaa071605b4be280313c8a6d63bdffd181350d"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/unique-slug"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "universalify",
       "version": "2.0.1",
       "bom-ref": "repo-contract@0.8.5|universalify@2.0.1",
@@ -58687,6 +55710,7 @@
       "name": "wrap-ansi",
       "version": "7.0.0",
       "bom-ref": "repo-contract@0.8.5|wrap-ansi@7.0.0",
+      "scope": "optional",
       "licenses": [
         {
           "license": {
@@ -58725,6 +55749,7 @@
           "name": "ansi-regex",
           "version": "5.0.1",
           "bom-ref": "repo-contract@0.8.5|wrap-ansi@7.0.0|ansi-regex@5.0.1",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -58763,6 +55788,7 @@
           "name": "strip-ansi",
           "version": "6.0.1",
           "bom-ref": "repo-contract@0.8.5|wrap-ansi@7.0.0|strip-ansi@6.0.1",
+          "scope": "optional",
           "licenses": [
             {
               "license": {
@@ -59491,7 +56517,7 @@
         "repo-contract@0.8.5|fast-check@4.10.2",
         "repo-contract@0.8.5|github-actionlint@1.7.12",
         "repo-contract@0.8.5|globals@17.12.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0",
         "repo-contract@0.8.5|istanbul-lib-coverage@3.2.2",
         "repo-contract@0.8.5|istanbul-lib-report@3.0.1",
         "repo-contract@0.8.5|istanbul-reports@3.2.0",
@@ -64268,7 +61294,7 @@
       "ref": "repo-contract@0.8.5|ini@6.0.0"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0",
       "dependsOn": [
         "repo-contract@0.8.5|@arethetypeswrong/cli@0.18.5",
         "repo-contract@0.8.5|@commitlint/cli@21.2.3",
@@ -64291,14 +61317,14 @@
         "repo-contract@0.8.5|github-actionlint@1.7.12",
         "repo-contract@0.8.5|github-slugger@2.0.0",
         "repo-contract@0.8.5|globals@17.12.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/secretlint-rule-preset-recommend@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@types/node@20.19.43",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|jiti@2.7.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|licensee@11.1.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|prettier@3.9.6",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|secretlint@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/secretlint-rule-preset-recommend@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@types/node@20.19.43",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|jiti@2.7.0",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|prettier@3.9.6",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|secretlint@9.3.4",
         "repo-contract@0.8.5|jscpd@5.3.2",
         "repo-contract@0.8.5|knip@6.38.0",
+        "repo-contract@0.8.5|licensee@12.0.2",
         "repo-contract@0.8.5|linkinator@8.1.0",
         "repo-contract@0.8.5|markdownlint-cli2@0.23.3",
         "repo-contract@0.8.5|pa11y@10.0.0",
@@ -64312,287 +61338,109 @@
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@babel/code-frame@7.29.7",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@babel/code-frame@7.29.7",
       "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@babel/helper-validator-identifier@7.29.7",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|js-tokens@4.0.0",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@babel/helper-validator-identifier@7.29.7",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|js-tokens@4.0.0",
         "repo-contract@0.8.5|picocolors@1.1.1"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@babel/helper-validator-identifier@7.29.7"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@babel/helper-validator-identifier@7.29.7"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/agent@2.2.2",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/config-creator@9.3.4",
       "dependsOn": [
-        "repo-contract@0.8.5|agent-base@7.1.4",
-        "repo-contract@0.8.5|http-proxy-agent@7.0.2",
-        "repo-contract@0.8.5|https-proxy-agent@7.0.6",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|lru-cache@10.4.3",
-        "repo-contract@0.8.5|socks-proxy-agent@8.0.5"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/types@9.3.4"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/arborist@7.5.4",
-      "dependsOn": [
-        "repo-contract@0.8.5|@isaacs/string-locale-compare@1.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/fs@3.1.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/installed-package-contents@2.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/map-workspaces@3.0.6",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/metavuln-calculator@7.1.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/name-from-folder@2.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/node-gyp@3.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/package-json@5.2.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/query@3.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/redact@2.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/run-script@8.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|bin-links@4.0.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|cacache@18.0.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|common-ancestor-path@1.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|hosted-git-info@7.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|json-parse-even-better-errors@3.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|lru-cache@10.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minimatch@9.0.9",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|nopt@7.2.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-install-checks@6.3.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-package-arg@11.0.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-pick-manifest@9.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-registry-fetch@17.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|pacote@18.0.6",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|parse-conflict-json@3.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proggy@2.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|ssri@10.0.6",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|walk-up-path@3.0.1",
-        "repo-contract@0.8.5|json-stringify-nice@1.1.4",
-        "repo-contract@0.8.5|promise-all-reject-late@1.0.1",
-        "repo-contract@0.8.5|promise-call-limit@3.0.2",
-        "repo-contract@0.8.5|read-package-json-fast@3.0.2",
-        "repo-contract@0.8.5|semver@7.8.5",
-        "repo-contract@0.8.5|treeverse@3.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/fs@3.1.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|semver@7.8.5"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/git@5.0.8",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/promise-spawn@7.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|ini@4.1.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|lru-cache@10.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-pick-manifest@9.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|which@4.0.0",
-        "repo-contract@0.8.5|promise-inflight@1.0.1",
-        "repo-contract@0.8.5|promise-retry@2.0.1",
-        "repo-contract@0.8.5|semver@7.8.5"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/installed-package-contents@2.1.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-bundled@3.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-normalize-package-bin@3.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/map-workspaces@3.0.6",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/name-from-folder@2.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|glob@10.5.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minimatch@9.0.9",
-        "repo-contract@0.8.5|read-package-json-fast@3.0.2"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/metavuln-calculator@7.1.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|cacache@18.0.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|json-parse-even-better-errors@3.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|pacote@18.0.6",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|semver@7.8.5"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/name-from-folder@2.0.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/node-gyp@3.0.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/package-json@5.2.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/git@5.0.8",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|glob@10.5.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|hosted-git-info@7.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|json-parse-even-better-errors@3.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|normalize-package-data@6.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|semver@7.8.5"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/promise-spawn@7.0.2",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|which@4.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/query@3.1.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|postcss-selector-parser@6.1.4"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/redact@2.0.1"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/run-script@8.1.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/node-gyp@3.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/package-json@5.2.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/promise-spawn@7.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|node-gyp@10.3.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|which@4.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/config-creator@9.3.4",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/types@9.3.4"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/config-loader@9.3.4",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/config-loader@9.3.4",
       "dependsOn": [
         "repo-contract@0.8.5|ajv@8.20.0",
         "repo-contract@0.8.5|debug@4.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/profiler@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/resolver@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/types@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/profiler@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/resolver@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/types@9.3.4",
         "repo-contract@0.8.5|rc-config-loader@4.1.4"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/core@9.3.4",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/core@9.3.4",
       "dependsOn": [
         "repo-contract@0.8.5|debug@4.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/profiler@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/types@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/profiler@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/types@9.3.4",
         "repo-contract@0.8.5|structured-source@4.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/formatter@9.3.4",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/formatter@9.3.4",
       "dependsOn": [
         "repo-contract@0.8.5|chalk@4.1.2",
         "repo-contract@0.8.5|debug@4.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/resolver@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/types@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/linter-formatter@14.8.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/module-interop@14.8.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/types@14.8.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|strip-ansi@6.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|terminal-link@2.1.1",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/resolver@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/types@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/linter-formatter@14.8.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/module-interop@14.8.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/types@14.8.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|strip-ansi@6.0.1",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|terminal-link@2.1.1",
         "repo-contract@0.8.5|pluralize@8.0.0",
         "repo-contract@0.8.5|table@6.9.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/node@9.3.4",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/node@9.3.4",
       "dependsOn": [
         "repo-contract@0.8.5|debug@4.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/config-loader@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/core@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/formatter@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/profiler@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/source-creator@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/types@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|p-map@4.0.0"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/config-loader@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/core@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/formatter@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/profiler@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/source-creator@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/types@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|p-map@4.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/profiler@9.3.4"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/profiler@9.3.4"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/resolver@9.3.4"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/resolver@9.3.4"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/secretlint-rule-preset-recommend@9.3.4"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/secretlint-rule-preset-recommend@9.3.4"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/source-creator@9.3.4",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/source-creator@9.3.4",
       "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/types@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/types@9.3.4",
         "repo-contract@0.8.5|istextorbinary@9.5.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/types@9.3.4"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/types@9.3.4"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/bundle@2.3.2",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/protobuf-specs@0.3.3"
-      ]
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@sindresorhus/merge-streams@2.3.0"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/core@1.1.0"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/ast-node-types@14.8.4"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/protobuf-specs@0.3.3"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/sign@2.3.2",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/bundle@2.3.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/core@1.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/protobuf-specs@0.3.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|make-fetch-happen@13.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|promise-retry@2.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/tuf@2.3.4",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/protobuf-specs@0.3.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|tuf-js@2.2.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/verify@1.2.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/bundle@2.3.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/core@1.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/protobuf-specs@0.3.3"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@sindresorhus/merge-streams@2.3.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/ast-node-types@14.8.4"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/linter-formatter@14.8.4",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/linter-formatter@14.8.4",
       "dependsOn": [
         "repo-contract@0.8.5|@azu/format-text@1.0.2",
         "repo-contract@0.8.5|@azu/style-format@1.0.1",
         "repo-contract@0.8.5|chalk@4.1.2",
         "repo-contract@0.8.5|debug@4.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/linter-formatter@14.8.4|pluralize@2.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/module-interop@14.8.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/resolver@14.8.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/types@14.8.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|js-yaml@3.15.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|strip-ansi@6.0.1",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/linter-formatter@14.8.4|pluralize@2.0.0",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/module-interop@14.8.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/resolver@14.8.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/types@14.8.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|js-yaml@3.15.2",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|strip-ansi@6.0.1",
         "repo-contract@0.8.5|lodash@4.18.1",
         "repo-contract@0.8.5|string-width@4.2.3",
         "repo-contract@0.8.5|table@6.9.0",
@@ -64600,521 +61448,165 @@
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/linter-formatter@14.8.4|pluralize@2.0.0"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/linter-formatter@14.8.4|pluralize@2.0.0"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/module-interop@14.8.4"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/module-interop@14.8.4"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/resolver@14.8.4"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/resolver@14.8.4"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/types@14.8.4",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/types@14.8.4",
       "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@textlint/ast-node-types@14.8.4"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@textlint/ast-node-types@14.8.4"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@tufjs/models@2.0.1",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|@types/node@20.19.43",
       "dependsOn": [
-        "repo-contract@0.8.5|@tufjs/canonical-json@2.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minimatch@9.0.9"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|undici-types@6.21.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|@types/node@20.19.43",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|ansi-escapes@4.3.2",
       "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|undici-types@6.21.0"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|ansi-escapes@4.3.2|type-fest@0.21.3"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|abbrev@2.0.0"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|ansi-escapes@4.3.2|type-fest@0.21.3"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ansi-escapes@4.3.2",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|ansi-escapes@4.3.2|type-fest@0.21.3"
-      ]
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|ansi-regex@5.0.1"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ansi-escapes@4.3.2|type-fest@0.21.3"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ansi-regex@5.0.1"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|balanced-match@1.0.2"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|bin-links@4.0.4",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|cmd-shim@6.0.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-normalize-package-bin@3.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|read-cmd-shim@4.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|write-file-atomic@5.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|brace-expansion@2.1.7",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|balanced-match@1.0.2"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|cacache@18.0.4",
-      "dependsOn": [
-        "repo-contract@0.8.5|fs-minipass@3.0.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/fs@3.1.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|glob@10.5.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|lru-cache@10.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|p-map@4.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|ssri@10.0.6",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1",
-        "repo-contract@0.8.5|minipass-collect@2.0.1",
-        "repo-contract@0.8.5|minipass-flush@1.0.7",
-        "repo-contract@0.8.5|minipass-pipeline@1.2.4",
-        "repo-contract@0.8.5|minipass@7.1.3",
-        "repo-contract@0.8.5|unique-filename@3.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|chownr@2.0.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|cmd-shim@6.0.3"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|common-ancestor-path@1.0.1"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|glob@10.5.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|foreground-child@3.3.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minimatch@9.0.9",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|path-scurry@1.11.1",
-        "repo-contract@0.8.5|jackspeak@3.4.3",
-        "repo-contract@0.8.5|minipass@7.1.3",
-        "repo-contract@0.8.5|package-json-from-dist@1.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|globby@14.1.0",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|globby@14.1.0",
       "dependsOn": [
         "repo-contract@0.8.5|fast-glob@3.3.3",
         "repo-contract@0.8.5|ignore@7.0.10",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sindresorhus/merge-streams@2.3.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|path-type@6.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|unicorn-magic@0.3.0",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@sindresorhus/merge-streams@2.3.0",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|path-type@6.0.0",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|unicorn-magic@0.3.0",
         "repo-contract@0.8.5|slash@5.1.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|hosted-git-info@7.0.2",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|hosted-git-info@7.0.2",
       "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|lru-cache@10.4.3"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|lru-cache@10.4.3"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ignore-walk@6.0.5",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minimatch@9.0.9"
-      ]
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|jiti@2.7.0"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ini@4.1.3"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|js-tokens@4.0.0"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|isexe@3.1.5"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|jiti@2.7.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|js-tokens@4.0.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|js-yaml@3.15.2",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|js-yaml@3.15.2",
       "dependsOn": [
         "repo-contract@0.8.5|argparse@1.0.10",
         "repo-contract@0.8.5|esprima@4.0.1"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|json-parse-even-better-errors@3.0.2"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|json-parse-even-better-errors@3.0.2"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|licensee@11.1.1",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|lines-and-columns@2.0.4"
+    },
+    {
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|lru-cache@10.4.3"
+    },
+    {
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|normalize-package-data@6.0.2",
       "dependsOn": [
-        "repo-contract@0.8.5|@blueoak/list@15.0.0",
-        "repo-contract@0.8.5|correct-license-metadata@1.5.0",
-        "repo-contract@0.8.5|docopt@0.6.2",
-        "repo-contract@0.8.5|hasown@2.0.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/arborist@7.5.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|spdx-expression-parse@4.0.0",
-        "repo-contract@0.8.5|npm-license-corrections@1.9.0",
-        "repo-contract@0.8.5|semver@7.8.5",
-        "repo-contract@0.8.5|spdx-expression-validate@2.0.0",
-        "repo-contract@0.8.5|spdx-osi@3.0.0",
-        "repo-contract@0.8.5|spdx-whitelisted@1.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|lines-and-columns@2.0.4"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|lru-cache@10.4.3"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|make-fetch-happen@13.0.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|http-cache-semantics@4.2.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/agent@2.2.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|cacache@18.0.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-fetch@3.0.5",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|negotiator@0.6.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|ssri@10.0.6",
-        "repo-contract@0.8.5|is-lambda@1.0.1",
-        "repo-contract@0.8.5|minipass-flush@1.0.7",
-        "repo-contract@0.8.5|minipass-pipeline@1.2.4",
-        "repo-contract@0.8.5|minipass@7.1.3",
-        "repo-contract@0.8.5|promise-retry@2.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minimatch@9.0.9",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|brace-expansion@2.1.7"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-fetch@3.0.5",
-      "dependsOn": [
-        "repo-contract@0.8.5|encoding@0.1.13",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-sized@1.0.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minizlib@2.1.2",
-        "repo-contract@0.8.5|minipass@7.1.3"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-sized@1.0.3",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-sized@1.0.3|minipass@3.3.6"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-sized@1.0.3|minipass@3.3.6",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|yallist@4.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minizlib@2.1.2",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minizlib@2.1.2|minipass@3.3.6",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|yallist@4.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|minizlib@2.1.2|minipass@3.3.6",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|yallist@4.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|negotiator@0.6.4"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|node-gyp@10.3.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|env-paths@2.2.1",
-        "repo-contract@0.8.5|exponential-backoff@3.1.3",
-        "repo-contract@0.8.5|graceful-fs@4.2.11",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|glob@10.5.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|make-fetch-happen@13.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|nopt@7.2.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|which@4.0.0",
-        "repo-contract@0.8.5|semver@7.8.5"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|nopt@7.2.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|abbrev@2.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|normalize-package-data@6.0.2",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|hosted-git-info@7.0.2",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|hosted-git-info@7.0.2",
         "repo-contract@0.8.5|semver@7.8.5",
         "repo-contract@0.8.5|validate-npm-package-license@3.0.4"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-bundled@3.0.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-normalize-package-bin@3.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-install-checks@6.3.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|semver@7.8.5"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-normalize-package-bin@3.0.1"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-package-arg@11.0.3",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|hosted-git-info@7.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|semver@7.8.5",
-        "repo-contract@0.8.5|validate-npm-package-name@5.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-packlist@8.0.2",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|ignore-walk@6.0.5"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-pick-manifest@9.1.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-install-checks@6.3.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-normalize-package-bin@3.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-package-arg@11.0.3",
-        "repo-contract@0.8.5|semver@7.8.5"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-registry-fetch@17.1.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/redact@2.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|make-fetch-happen@13.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minipass-fetch@3.0.5",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minizlib@2.1.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-package-arg@11.0.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|jsonparse@1.3.1",
-        "repo-contract@0.8.5|minipass@7.1.3"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|p-map@4.0.0",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|p-map@4.0.0",
       "dependsOn": [
         "repo-contract@0.8.5|aggregate-error@3.1.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|pacote@18.0.6",
-      "dependsOn": [
-        "repo-contract@0.8.5|fs-minipass@3.0.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/git@5.0.8",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/installed-package-contents@2.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/package-json@5.2.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/promise-spawn@7.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@npmcli/run-script@8.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|cacache@18.0.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-package-arg@11.0.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-packlist@8.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-pick-manifest@9.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|npm-registry-fetch@17.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|sigstore@2.3.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|ssri@10.0.6",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1",
-        "repo-contract@0.8.5|minipass@7.1.3",
-        "repo-contract@0.8.5|promise-retry@2.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|parse-conflict-json@3.0.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|json-parse-even-better-errors@3.0.2",
-        "repo-contract@0.8.5|just-diff-apply@5.5.0",
-        "repo-contract@0.8.5|just-diff@6.0.2"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|parse-json@7.1.1",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|parse-json@7.1.1",
       "dependsOn": [
         "repo-contract@0.8.5|error-ex@1.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@babel/code-frame@7.29.7",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|json-parse-even-better-errors@3.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|lines-and-columns@2.0.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|parse-json@7.1.1|type-fest@3.13.1"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@babel/code-frame@7.29.7",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|json-parse-even-better-errors@3.0.2",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|lines-and-columns@2.0.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|parse-json@7.1.1|type-fest@3.13.1"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|parse-json@7.1.1|type-fest@3.13.1"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|parse-json@7.1.1|type-fest@3.13.1"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|path-scurry@1.11.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|lru-cache@10.4.3",
-        "repo-contract@0.8.5|minipass@7.1.3"
-      ]
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|path-type@6.0.0"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|path-type@6.0.0"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|prettier@3.9.6"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|postcss-selector-parser@6.1.4",
-      "dependsOn": [
-        "repo-contract@0.8.5|cssesc@3.0.0",
-        "repo-contract@0.8.5|util-deprecate@1.0.2"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|prettier@3.9.6"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|proc-log@4.2.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|proggy@2.0.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|read-cmd-shim@4.0.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|read-pkg@8.1.0",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|read-pkg@8.1.0",
       "dependsOn": [
         "repo-contract@0.8.5|@types/normalize-package-data@2.4.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|normalize-package-data@6.0.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|parse-json@7.1.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|type-fest@4.41.0"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|normalize-package-data@6.0.2",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|parse-json@7.1.1",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|type-fest@4.41.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|secretlint@9.3.4",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|secretlint@9.3.4",
       "dependsOn": [
         "repo-contract@0.8.5|debug@4.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/config-creator@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/formatter@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/node@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@secretlint/profiler@9.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|globby@14.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|read-pkg@8.1.0"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/config-creator@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/formatter@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/node@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|@secretlint/profiler@9.3.4",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|globby@14.1.0",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|read-pkg@8.1.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|sigstore@2.3.1",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|strip-ansi@6.0.1",
       "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/bundle@2.3.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/core@1.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/protobuf-specs@0.3.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/sign@2.3.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/tuf@2.3.4",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@sigstore/verify@1.2.1"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|ansi-regex@5.0.1"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|spdx-expression-parse@4.0.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|spdx-exceptions@2.5.0",
-        "repo-contract@0.8.5|spdx-license-ids@3.0.24"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|ssri@10.0.6",
-      "dependsOn": [
-        "repo-contract@0.8.5|minipass@7.1.3"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|strip-ansi@6.0.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|ansi-regex@5.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|supports-color@7.2.0",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|supports-color@7.2.0",
       "dependsOn": [
         "repo-contract@0.8.5|has-flag@4.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|supports-hyperlinks@2.3.0",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|supports-hyperlinks@2.3.0",
       "dependsOn": [
         "repo-contract@0.8.5|has-flag@4.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|supports-color@7.2.0"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|supports-color@7.2.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1",
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|terminal-link@2.1.1",
       "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|chownr@2.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|minizlib@2.1.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1|fs-minipass@2.1.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1|minipass@5.0.0",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|yallist@4.0.0",
-        "repo-contract@0.8.5|mkdirp@1.0.4"
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|ansi-escapes@4.3.2",
+        "repo-contract@0.8.5|internal-package-contract@0.6.0|supports-hyperlinks@2.3.0"
       ]
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1|fs-minipass@2.1.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1|fs-minipass@2.1.0|minipass@3.3.6"
-      ]
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|type-fest@4.41.0"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1|fs-minipass@2.1.0|minipass@3.3.6",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|yallist@4.0.0"
-      ]
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|undici-types@6.21.0"
     },
     {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tar@6.2.1|minipass@5.0.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|terminal-link@2.1.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|ansi-escapes@4.3.2",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|supports-hyperlinks@2.3.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|tuf-js@2.2.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|debug@4.4.3",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|@tufjs/models@2.0.1",
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|make-fetch-happen@13.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|type-fest@4.41.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|undici-types@6.21.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|unicorn-magic@0.3.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|walk-up-path@3.0.1"
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|which@4.0.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|internal-package-contract@0.5.0|isexe@3.1.5"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|write-file-atomic@5.0.1",
-      "dependsOn": [
-        "repo-contract@0.8.5|imurmurhash@0.1.4",
-        "repo-contract@0.8.5|signal-exit@4.1.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|internal-package-contract@0.5.0|yallist@4.0.0"
+      "ref": "repo-contract@0.8.5|internal-package-contract@0.6.0|unicorn-magic@0.3.0"
     },
     {
       "ref": "repo-contract@0.8.5|internal-slot@1.1.0",
@@ -65259,9 +61751,6 @@
     },
     {
       "ref": "repo-contract@0.8.5|is-installed-globally@1.0.0|ini@4.1.1"
-    },
-    {
-      "ref": "repo-contract@0.8.5|is-lambda@1.0.1"
     },
     {
       "ref": "repo-contract@0.8.5|is-map@2.0.3"
@@ -66379,9 +62868,6 @@
       "ref": "repo-contract@0.8.5|mkdirp-classic@0.5.3"
     },
     {
-      "ref": "repo-contract@0.8.5|mkdirp@1.0.4"
-    },
-    {
       "ref": "repo-contract@0.8.5|mlly@1.8.2",
       "dependsOn": [
         "repo-contract@0.8.5|acorn@8.18.0",
@@ -67074,9 +63560,6 @@
       "ref": "repo-contract@0.8.5|promise-call-limit@3.0.2"
     },
     {
-      "ref": "repo-contract@0.8.5|promise-inflight@1.0.1"
-    },
-    {
       "ref": "repo-contract@0.8.5|promise-retry@2.0.1",
       "dependsOn": [
         "repo-contract@0.8.5|err-code@2.0.3",
@@ -67209,19 +63692,6 @@
     },
     {
       "ref": "repo-contract@0.8.5|read-cmd-shim@6.0.0"
-    },
-    {
-      "ref": "repo-contract@0.8.5|read-package-json-fast@3.0.2",
-      "dependsOn": [
-        "repo-contract@0.8.5|read-package-json-fast@3.0.2|json-parse-even-better-errors@3.0.2",
-        "repo-contract@0.8.5|read-package-json-fast@3.0.2|npm-normalize-package-bin@3.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|read-package-json-fast@3.0.2|json-parse-even-better-errors@3.0.2"
-    },
-    {
-      "ref": "repo-contract@0.8.5|read-package-json-fast@3.0.2|npm-normalize-package-bin@3.0.1"
     },
     {
       "ref": "repo-contract@0.8.5|read-pkg@10.1.0",
@@ -68383,18 +64853,6 @@
     },
     {
       "ref": "repo-contract@0.8.5|unicorn-magic@0.4.1"
-    },
-    {
-      "ref": "repo-contract@0.8.5|unique-filename@3.0.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|unique-slug@4.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.8.5|unique-slug@4.0.0",
-      "dependsOn": [
-        "repo-contract@0.8.5|imurmurhash@0.1.4"
-      ]
     },
     {
       "ref": "repo-contract@0.8.5|universalify@2.0.1"
