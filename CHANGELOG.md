@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.8
+
+### Patch Changes
+
+- chore(benchmarks): refresh results.json
+- a5383d3: Resolve the repository's open Dependabot alerts (`js-yaml` updated; `adm-zip`, reached only through `github-actionlint`, overridden to 0.6.1), drop the cross-repository release notification and its expired token in favor of internal-package-contract pulling the latest release on its own schedule, and re-pin internal-package-contract to its 0.8 release.
+
 ## 0.8.7
 
 ### Patch Changes
