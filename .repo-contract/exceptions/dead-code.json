@@ -22,6 +22,13 @@
       "name": "@cyclonedx/cyclonedx-npm"
     },
     {
+      "id": "dead-code:unused-dev-dependency:@microsoft/api-extractor-model",
+      "version": 1,
+      "justification": "Loaded with a dynamic `import(\"@microsoft/api-extractor-model\")` inside the API-contract benchmark suite (benchmarks/performance-api-contract/suite.mjs), which knip does not scan as an entry point, so it cannot see the import as a use of the package.",
+      "kind": "unused-dev-dependency",
+      "name": "@microsoft/api-extractor-model"
+    },
+    {
       "id": "dead-code:unused-dev-dependency:@socketsecurity/cli",
       "version": 1,
       "justification": "Spawned by literal command name (\"socket\") via `cross-spawn` in scripts/security-socket/scan.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
