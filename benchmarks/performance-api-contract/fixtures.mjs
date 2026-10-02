@@ -157,9 +157,8 @@ async function buildVariant(tierDir, variant, source, repoRoot) {
  * @param repoRoot - absolute path to the repo root (to resolve internal-package-contract's extractor-adapter.ts and the local tsc binary).
  * @returns absolute paths to both variants' `.api.json` and `.d.ts` rollup files.
  */
-export async function generateApiContractFixture(tierName, outputRoot, repoRoot) {
-  const exportCount = TIERS[tierName].exports
-  const tierDir = path.join(outputRoot, tierName)
+export async function generateApiContractFixture(exportCount, outputRoot, repoRoot) {
+  const tierDir = path.join(outputRoot, `n${String(exportCount)}`)
   await fs.rm(tierDir, { recursive: true, force: true })
   await mkdir(tierDir, { recursive: true })
 

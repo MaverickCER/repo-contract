@@ -40,21 +40,28 @@ export const RUN_CHECKS_BENCHMARKS = {
  * @param checkCount - how many checks to generate.
  * @returns the synthetic `checks` record, plus how many of its checks declared a real `dependsOn` edge.
  */
-export function generateCheckGraph(checkCount) {
+export function generateCheckGraph(checkCount, { dependencies = true, isolatedEvery } = {}) {
   const checks = {}
   let dependencyEdges = 0
   const isolatedIndex = Math.floor(checkCount / 2)
 
   for (let i = 0; i < checkCount; i++) {
     const id = `check-${String(i).padStart(4, "0")}`
-    const dependsOn = i > 0 && i % 5 === 0 ? [`check-${String(i - 1).padStart(4, "0")}`] : undefined
+    const dependsOn =
+      dependencies && i > 0 && i % 5 === 0 ? [`check-${String(i - 1).padStart(4, "0")}`] : undefined
     if (dependsOn) dependencyEdges++
 
     checks[id] = {
       run: [process.execPath, "-e", ""],
       policy: () => ({ outcome: "pass", rationale: `${id} completed.` }),
       ...(dependsOn ? { dependsOn } : {}),
-      ...(i === isolatedIndex ? { isolated: true } : {}),
+      ...((
+        isolatedEvery === undefined
+          ? i === isolatedIndex
+          : isolatedEvery > 0 && i % isolatedEvery === 0
+      )
+        ? { isolated: true }
+        : {}),
     }
   }
 

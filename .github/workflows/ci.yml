@@ -96,11 +96,11 @@ jobs:
           name: benchmark-results
           path: |
             benchmarks/performance-checks/results.json
-            benchmarks/performance-checks/RESULTS.md
+            benchmarks/performance-checks/BENCHMARKS.md
             benchmarks/performance-policy-evidence/results.json
-            benchmarks/performance-policy-evidence/RESULTS.md
+            benchmarks/performance-policy-evidence/BENCHMARKS.md
             benchmarks/performance-api-contract/results.json
-            benchmarks/performance-api-contract/RESULTS.md
+            benchmarks/performance-api-contract/BENCHMARKS.md
           retention-days: 14
 
       - name: Post or update the marker-tagged summary comment
@@ -108,7 +108,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           node node_modules/internal-package-contract/scripts/benchmark/render-summary.mjs \
-            --budgets benchmarks/benchmark-fixtures/budgets.mjs \
+            --budgets benchmarks/budgets.mjs \
             --marker "<!-- repo-contract-benchmark-summary -->" \
             --example "Checks (\`benchmarks/performance-checks\`)|/tmp/benchmark-previous/performance-checks.json|benchmarks/performance-checks/results.json|benchmarks/history/checks.json" \
             --example "Policy & evidence (\`benchmarks/performance-policy-evidence\`)|/tmp/benchmark-previous/performance-policy-evidence.json|benchmarks/performance-policy-evidence/results.json|benchmarks/history/policy-evidence.json" \
@@ -141,7 +141,7 @@ jobs:
           # package.json/package-lock.json count as relevant too -- a dependency bump can shift
           # benchmark timing just as much as a src/ change can, and skipping the refresh here
           # would silently leave stale results committed against a since-changed dependency tree.
-          RELEVANT=$(echo "$CHANGED" | grep -E "^(src/|benchmarks/|package\.json$|package-lock\.json$)" | grep -vE "^benchmarks/(performance-[^/]+/(results\.json|RESULTS\.md)$|history/)" || true)
+          RELEVANT=$(echo "$CHANGED" | grep -E "^(src/|benchmarks/|package\.json$|package-lock\.json$)" | grep -vE "^benchmarks/(performance-[^/]+/(results\.json|BENCHMARKS\.md)$|history/)" || true)
           if [ -z "$RELEVANT" ]; then
             echo "This PR doesn't touch benchmarked code paths -- comment posted above, nothing to commit."
             exit 0
@@ -157,9 +157,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
-            benchmarks/performance-checks/results.json benchmarks/performance-checks/RESULTS.md \
-            benchmarks/performance-policy-evidence/results.json benchmarks/performance-policy-evidence/RESULTS.md \
-            benchmarks/performance-api-contract/results.json benchmarks/performance-api-contract/RESULTS.md \
+            benchmarks/performance-checks/results.json benchmarks/performance-checks/BENCHMARKS.md \
+            benchmarks/performance-policy-evidence/results.json benchmarks/performance-policy-evidence/BENCHMARKS.md \
+            benchmarks/performance-api-contract/results.json benchmarks/performance-api-contract/BENCHMARKS.md \
             benchmarks/history/checks.json benchmarks/history/policy-evidence.json benchmarks/history/api-contract.json
           if git diff --cached --quiet; then
             echo "Freshly measured results match what's already committed -- nothing to push."
@@ -569,10 +569,17 @@ jobs:
       - run: >-
           node node_modules/internal-package-contract/scripts/benchmark/render-page.mjs
           --out docs/benchmarks/index.html
+          --readme https://github.com/maverickcer/repo-contract/blob/main/benchmarks/README.md
           --history 'Checks|benchmarks/history/checks.json'
           --history 'Policy & evidence|benchmarks/history/policy-evidence.json'
           --history 'API contract|benchmarks/history/api-contract.json'
+      - run: npm run benchmark:check
       - run: npm run contract
+        env:
+          # SecuritySocket scores the package on Socket.dev and FAILS without a token. Create a
+          # token at socket.dev (Settings > API Tokens, `packages:list`) and add it as the
+          # repository or organization secret SOCKET_SECURITY_API_KEY.
+          SOCKET_SECURITY_API_KEY: ${{ secrets.SOCKET_SECURITY_API_KEY }}
 
       # A contract run is not a pure read: `format`/`lint` auto-fix, and
       # `suppression-governance` reconciles `.repo-contract/exceptions/*.json`
@@ -690,6 +697,7 @@ jobs:
       - run: >-
           node node_modules/internal-package-contract/scripts/benchmark/render-page.mjs
           --out docs/benchmarks/index.html
+          --readme https://github.com/maverickcer/repo-contract/blob/main/benchmarks/README.md
           --history 'Checks|benchmarks/history/checks.json'
           --history 'Policy & evidence|benchmarks/history/policy-evidence.json'
           --history 'API contract|benchmarks/history/api-contract.json'
@@ -731,7 +739,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@7e3908f9595c3cf3f4b7e31c371f1daff49d46b2 # main, parts B/C/D/E/F/G/I
+    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@fa96f8f9f71c2d7f22db5b4eec03e2d99df5fc0c # main, parts B/C/D/E/F/G/I
     with:
       docs-script: docs:api
       content-artifact-name: pages-content
