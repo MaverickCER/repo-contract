@@ -31,29 +31,4 @@ jobs:
       # needs `actions: write`. A caller that grants less than the called workflow declares makes
       # GitHub refuse to start the run at all (a `startup_failure`), so releases silently never ran.
       actions: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/release-npm-changesets.yml@c92e7a0424b10626c4e88b613a5ce71c1e8d3d61 # main, parts B/C/E
-
-  # Propagates this release to internal-package-contract (part E of the
-  # "Standardize npm release + Pages deploy" plan): internal-package-contract
-  # depends on repo-contract as a real functional/engine coupling (not just a
-  # devDependency version tick), so its own version needs to move by a matching
-  # severity whenever repo-contract publishes. Requires a fine-grained PAT
-  # (CROSS_REPO_PAT) -- the default GITHUB_TOKEN cannot dispatch to another
-  # repository at all. See RELEASING.md's one-time bootstrap step.
-  notify-internal-package-contract:
-    needs: release
-    if: needs.release.outputs.version != ''
-    runs-on: ubuntu-latest
-    # This job authenticates entirely via CROSS_REPO_PAT (below), never GITHUB_TOKEN
-    # -- an explicit empty block, not an omission, so it never inherits a broader
-    # default than it needs.
-    permissions: {}
-    steps:
-      - name: Dispatch repo-contract-released
-        env:
-          GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
-        run: |
-          gh api repos/MaverickCER/internal-package-contract/dispatches \
-            -f event_type=repo-contract-released \
-            -f "client_payload[version]=${{ needs.release.outputs.version }}" \
-            -f "client_payload[bump-type]=${{ needs.release.outputs.bump-type }}"
+    uses: MaverickCER/internal-package-contract/.github/workflows/release-npm-changesets.yml@8a0b0cfcc4eec8ca8ad8a58dd12da018ea3957c6 # main, parts B/C/E
