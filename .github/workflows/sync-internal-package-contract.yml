@@ -1,25 +1,12 @@
+# Keeps this repo's internal-package-contract pin current. PULLS: a daily check (or a manual run)
+# re-resolves the pin with this repo's own GITHUB_TOKEN, so no cross-repository token exists to expire.
+# See internal-package-contract's dependency-pin-sync.yml for the bump/PR/merge mechanics.
 name: Sync internal-package-contract version
 
-# Listens for internal-package-contract's own release and keeps this repo's
-# internal-package-contract devDependency pin in sync automatically -- the same pattern
-# env-cap/data-cap's own identically-named workflow already uses. Deliberately does NOT
-# add a changeset: internal-package-contract is a devDependency of this repository's own
-# self-hosting tooling only (repo-contract.config.ts, typedoc.json/typedoc.markdown.json)
-# -- nothing under src/ (this package's own *published* runtime code) imports it, so a
-# version bump here doesn't by itself mean repo-contract's own published behavior
-# changed. This is NOT the same direction as internal-package-contract's own
-# sync-repo-contract-version.yml (hosted there), which DOES add a changeset on every
-# bump: every one of IPC's own checks/*.ts genuinely imports and wraps the real
-# repo-contract npm package as a runtime engine dependency, so a repo-contract bump can
-# change IPC's own published behavior. See dependency-pin-sync.yml (hosted in
-# internal-package-contract) for the actual bump/PR/merge mechanics this calls into --
-# merges automatically only if the resulting PR's own CI comes back green; otherwise
-# it's left open for a human, since a real dependency bump (unlike a purely-generated
-# version bump) can genuinely surface a failure worth looking at.
-
 on:
-  repository_dispatch:
-    types: [internal-package-contract-released]
+  schedule:
+    - cron: "43 6 * * *"
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -27,8 +14,6 @@ jobs:
       contents: write
       pull-requests: write
       actions: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/dependency-pin-sync.yml@c92e7a0424b10626c4e88b613a5ce71c1e8d3d61 # main
+    uses: MaverickCER/internal-package-contract/.github/workflows/dependency-pin-sync.yml@8a0b0cfcc4eec8ca8ad8a58dd12da018ea3957c6 # main
     with:
       dependency-name: internal-package-contract
-      new-version: ${{ github.event.client_payload.version }}
-      add-changeset: false
