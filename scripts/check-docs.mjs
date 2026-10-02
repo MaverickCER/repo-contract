@@ -165,6 +165,15 @@ async function runLinkinatorOn(targets, extraArgs) {
     ...targets,
     ...extraArgs,
     "--retry",
+    // github.com answers a burst of link checks with transient 503/504s; `--retry` only covers HTTP
+    // 429, so retry 5xx and unknown responses with jitter and keep the crawl modest in parallelism.
+    "--retry-errors",
+    "--retry-errors-count",
+    "5",
+    "--retry-errors-jitter",
+    "3000",
+    "--concurrency",
+    "8",
     ...LINKINATOR_SKIP_PATTERNS.flatMap((pattern) => ["--skip", pattern]),
     "--format",
     "json",
