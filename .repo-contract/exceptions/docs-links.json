@@ -13,6 +13,12 @@
       "url": "https://github.com/MaverickCER/env-cap/blob/main/specs/decisions/0015-security-backport-window.md"
     },
     {
+      "id": "docs-links:https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml",
+      "version": 1,
+      "justification": "Manually verified: this file exists on internal-package-contract's main branch (the shared Changesets release workflow that RELEASING.md describes) and opens normally in a browser. github.com answers CI's link crawler with a persistent HTTP 503 for this blob page even with retries, which reflects GitHub throttling the crawler, not a defect in the link.",
+      "url": "https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml"
+    },
+    {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/22b2a3b03fe4e44ad7a01b82342d86583926416a",
       "version": 1,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
