@@ -117,6 +117,22 @@ for (const [id, result] of Object.entries(verdict.checks)) {
 process.exitCode = verdict.passed ? 0 : 1
 ```
 
+That prints the verdict and forgets it. To keep a record that a dashboard, a reviewer or the next run can read, store the run: `serializeRun` turns the result into the two JSON documents that match the published `repo-contract/schema` files, and `renderMarkdownSummary` renders a summary for `$GITHUB_STEP_SUMMARY` or a pull-request comment (failures with their whole rationale, warnings and passes with a line each, the slowest checks). Neither touches the filesystem; you decide where they go:
+
+```ts
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs"
+import { renderMarkdownSummary, runRepoContract, serializeRun } from "repo-contract"
+
+const run = await runRepoContract(config)
+const { evidence, verdict } = serializeRun(run)
+mkdirSync("reports/contract", { recursive: true })
+writeFileSync("reports/contract/evidence.json", evidence)
+writeFileSync("reports/contract/verdict.json", verdict)
+if (process.env.GITHUB_STEP_SUMMARY) {
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, renderMarkdownSummary(run.verdict, run.evidence))
+}
+```
+
 ```json
 { "scripts": { "contract": "tsx scripts/contract.mjs" } }
 ```

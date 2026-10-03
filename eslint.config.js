@@ -170,6 +170,9 @@ export default tseslint.config(
         // consumed by src/types.ts, src/index.ts, and src/parsing.
         { type: "standard-schema", pattern: "src/standard-schema" },
         { type: "policy", pattern: "src/policy" },
+        // src/report/ -- pure renderers over a finished run (Markdown summary, stored JSON). Reached only
+        // through src/index.ts; imports types only, so it cannot influence a run it reports on.
+        { type: "report", pattern: "src/report" },
         // src/presets/ (including src/presets/shared/) is production code
         // like every other layer above, but architecturally different: it's
         // a second, independent public barrel (src/presets/index.ts), not an

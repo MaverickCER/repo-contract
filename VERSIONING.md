@@ -12,6 +12,7 @@ the package reaches 1.0 — see [Pre-1.0 status](#pre-10-status) below):
 
 - **`defineRepoContract`** and **`runRepoContract`** — their signatures, and the guarantee that
   neither calls `process.exit()`.
+- **`renderMarkdownSummary`** and **`serializeRun`** — pure functions over a run's result; the Markdown they render is for people and may be reworded in a minor release, the JSON `serializeRun` returns is exactly the `Evidence`/`Verdict` documents described below.
 - **The `Evidence`/`CheckEvidence`/`Verdict` type shapes** and the invariants documented for
   them: for a full run — `options.checks` omitted — every configured check appears exactly once
   in `evidence.checks`/`verdict.checks`, and a policy is invoked for every check regardless of
