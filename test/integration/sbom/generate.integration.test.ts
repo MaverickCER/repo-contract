@@ -41,6 +41,13 @@ describe("generateSbom -- real @cyclonedx/cyclonedx-npm", () => {
       // scoped down to almost nothing (e.g. a flag regression that re-narrowed to --omit=dev).
       expect(evidence.componentCount).toBeGreaterThan(100)
 
+      // The runtime inventory is separate and tiny: this package installs no dependencies.
+      expect(evidence.productionComponentCount).toBe(0)
+      const production = JSON.parse(
+        await readFile(path.join(REPO_ROOT, evidence.productionOutputPath), "utf8"),
+      ) as { components?: unknown[] }
+      expect(production.components ?? []).toHaveLength(0)
+
       const written = await readFile(path.join(REPO_ROOT, evidence.outputPath), "utf8")
       const parsed: unknown = JSON.parse(written)
       expect(parsed).toMatchObject({ bomFormat: "CycloneDX", specVersion: "1.6" })

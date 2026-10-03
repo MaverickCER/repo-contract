@@ -2,7 +2,7 @@
 
 `repo-contract` follows [Semantic Versioning](https://semver.org/). This document defines what
 that promise actually covers, since "semver" alone doesn't say which surface it applies to.
-Three tiers exist, following the same policy `@maverickcer/env-cap` and `@maverickcer/data-cap`
+Three tiers exist, following the same policy `@maverickcer/env-cap` and `data-cap`
 established.
 
 ## Stable
@@ -54,9 +54,8 @@ behavior:
 > interpretation (e.g. a finding that used to fail now warns) → potentially major; a bug fix that
 > restores documented behavior → patch or minor depending on impact.
 
-Also unstable at v0.1.0, per the same "not yet been through a real feedback cycle" framing the
-original design notes used for a future CLI before one existed — that CLI is
-`bin/repo-contract.mjs`, classified Experimental in its own right below.
+The CLI that scaffolds a contract, `bin/repo-contract.mjs`, is classified Experimental in its own
+right below.
 
 **`repo-contract/helpers`** (the whole subpath) — a second Experimental surface, added after
 `repo-contract/presets`, classified the same way and for the same reason: a new pre-1.0 surface
@@ -123,9 +122,30 @@ outlive the package version that produced it:
 `repo-contract` has not yet reached a `1.0` release. Per common pre-1.0 SemVer convention,
 **minor versions may include breaking changes to the Stable tier before 1.0** — this document
 defines _scope_ (what would eventually be covered), not a promise that it is already fully
-locked in at `0.x`. Concretely, [Changesets](https://github.com/changesets/changesets) deflates
-bumps while the package is `0.x` (its own default pre-1.0 behavior) so that a `feat!:` /
-`BREAKING CHANGE:` commit bumps the minor version, and a `feat:` commit bumps the
-patch version. The Experimental and Private tiers behave the same
-before and after 1.0: Experimental surfaces may change at any version; Private internals always
-may.
+locked in at `0.x`.
+
+How a `0.x` bump is chosen is **this repository's release tooling, not [Changesets](https://github.com/changesets/changesets)**
+(Changesets applies exactly the bump a changeset declares: a `major` changeset on `0.8.8` produces
+`1.0.0`). The shared release workflow from `internal-package-contract` deflates one level while the
+package is `0.x`: a `feat!:` / `BREAKING CHANGE:` commit generates a `minor` changeset, a `feat:` a
+`patch`, and the API-contract gate requires only a `minor` for a breaking API diff. So **no commit and
+no API diff can publish `1.0.0` by itself**: crossing to `1.0.0` takes a human-authored `major`
+changeset, and the release workflow then refuses to auto-merge that version pull request — a person
+reads and merges it.
+
+### What `1.0.0` will promise
+
+At the `1.0.0` cut the Stable tier above is locked in, and the two surfaces other packages are built
+on are promoted from Experimental, so that `1.x` does not promise less than the ecosystem needs:
+
+- **`repo-contract/helpers`** — the exception-registry primitives (`loadExceptionRegistry`,
+  `reconcileExceptions`, `writeExceptionRegistry`, `evaluateExceptionRecord`, `hashRequirementFields`,
+  `validateExceptionPolicyConfig`, `resolveExceptionPolicy`) and the types they take and return.
+- **`repo-contract/presets`** — the presets `internal-package-contract` composes, with their `run`
+  commands and policy interpretation.
+
+Until then, `internal-package-contract` depends on `repo-contract` with a **tilde range** (`~0.x.y`),
+so it receives patch releases only and takes each `0.x` minor deliberately — see
+[ADR 0018](specs/decisions/0018-ecosystem-bootstrap-cycle-and-package-names.md). The Experimental and
+Private tiers behave the same before and after 1.0: Experimental surfaces may change at any version;
+Private internals always may.

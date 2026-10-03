@@ -78,6 +78,8 @@ describe("sbom.policy", () => {
             value: {
               ok: true,
               outputPath: "docs/sbom.cdx.json",
+              productionOutputPath: "docs/sbom.production.cdx.json",
+              productionComponentCount: 0,
               bomFormat: "CycloneDX",
               specVersion: "1.6",
               componentCount: 1203,
@@ -90,6 +92,7 @@ describe("sbom.policy", () => {
     expect(result.outcome).toBe("pass")
     expect(result.rationale).toContain("Wrote docs/sbom.cdx.json")
     expect(result.rationale).toContain("1203 component(s)")
+    expect(result.rationale).toContain("docs/sbom.production.cdx.json: 0 component(s)")
     expect(result.rationale).toContain("CycloneDX 1.6")
     expect(result.rationale).toContain("@cyclonedx/cyclonedx-npm@6.0.1")
     expect(result.rationale).toContain("abc123abc123abc123abc123abc123abc123abc1")
@@ -107,6 +110,8 @@ describe("sbom.policy", () => {
             value: {
               ok: true,
               outputPath: "docs/sbom.cdx.json",
+              productionOutputPath: "docs/sbom.production.cdx.json",
+              productionComponentCount: 0,
               bomFormat: "CycloneDX",
               specVersion: "1.6",
               componentCount: 0,

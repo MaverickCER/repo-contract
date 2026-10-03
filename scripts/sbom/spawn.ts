@@ -68,15 +68,25 @@ export type CycloneDxNpmResult =
  * `test/unit/scripts/openssf-scorecard/weights.test.ts` mocks `gh-api.ts`'s `ghApiRaw` rather than
  * `cross-spawn` itself.
  * @param root - Repository root `cyclonedx-npm` should scan and write its output relative to.
+ * @param options - Which document to write and whether to include development dependencies.
+ * @param options.outputFile - Repo-relative path to write; defaults to `docs/sbom.cdx.json`.
+ * @param options.production - When true, development dependencies are left out (`--omit dev`).
  * @returns Whether the write succeeded, or a classified failure.
  */
-export function runCycloneDxNpm(root: string): CycloneDxNpmResult {
-  const outputPath = path.join(root, "docs/sbom.cdx.json")
+export function runCycloneDxNpm(
+  root: string,
+  options: { readonly outputFile?: string; readonly production?: boolean } = {},
+): CycloneDxNpmResult {
+  const outputPath = path.join(root, options.outputFile ?? "docs/sbom.cdx.json")
 
   const result = spawnSync(
     "cyclonedx-npm",
     [
       "--package-lock-only",
+      // `production` inventories only what a user installs (`--omit dev`): for a package with no
+      // runtime dependencies that is the package itself and nothing else, which is the true answer
+      // to "what does installing this bring in".
+      ...(options.production === true ? ["--omit", "dev"] : []),
       "--ignore-npm-errors",
       "--output-reproducible",
       "--spec-version",

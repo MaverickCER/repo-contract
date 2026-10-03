@@ -1,7 +1,7 @@
 import { mkdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import { runCycloneDxNpm } from "./spawn.js"
-import type { SbomEvidence } from "./types.js"
+import type { SbomEvidence, SbomSummary } from "./types.js"
 import { validateSbomDocument } from "./validate.js"
 
 /**
@@ -20,19 +20,54 @@ import { validateSbomDocument } from "./validate.js"
 export async function generateSbom(root: string): Promise<SbomEvidence> {
   await mkdir(path.join(root, "docs"), { recursive: true })
 
-  const spawned = runCycloneDxNpm(root)
+  // Two documents, because they answer different questions. The full tree is the BUILD inventory (what
+  // this repository's own tooling depends on); the production tree is the RUNTIME inventory (what a user
+  // installs). Importing only the first into a security tool overstates a zero-dependency package's
+  // footprint a thousandfold.
+  const full = await generateOne(root, BUILD_SBOM_PATH, false)
+  if (!full.ok) return full
+  const production = await generateOne(root, PRODUCTION_SBOM_PATH, true)
+  if (!production.ok) return production
+
+  return {
+    ok: true,
+    outputPath: BUILD_SBOM_PATH,
+    productionOutputPath: PRODUCTION_SBOM_PATH,
+    productionComponentCount: production.value.componentCount,
+    ...full.value,
+  }
+}
+
+const BUILD_SBOM_PATH = "docs/sbom.cdx.json"
+const PRODUCTION_SBOM_PATH = "docs/sbom.production.cdx.json"
+
+/**
+ * Generates, reads back and validates one SBOM document.
+ * @param root - Repository root.
+ * @param outputFile - Repo-relative path to write.
+ * @param production - Whether to leave development dependencies out.
+ * @returns the validated summary, or a rejection reason.
+ */
+async function generateOne(
+  root: string,
+  outputFile: string,
+  production: boolean,
+): Promise<
+  | { readonly ok: true; readonly value: SbomSummary }
+  | { readonly ok: false; readonly reason: string }
+> {
+  const spawned = runCycloneDxNpm(root, { outputFile, production })
   if (!spawned.ok) {
     return { ok: false, reason: spawned.message }
   }
 
-  const outputPath = path.join(root, "docs/sbom.cdx.json")
   let raw: string
   try {
-    raw = await readFile(outputPath, "utf8")
+    raw = await readFile(path.join(root, outputFile), "utf8")
   } catch (error) {
     return {
       ok: false,
-      reason: `cyclonedx-npm exited successfully but docs/sbom.cdx.json could not be read back: ${(error as Error).message}`,
+      reason: `cyclonedx-npm exited successfully but ${outputFile} could not be read back: ${(error as Error).message}`,
     }
   }
 
@@ -40,13 +75,12 @@ export async function generateSbom(root: string): Promise<SbomEvidence> {
   try {
     parsed = JSON.parse(raw)
   } catch {
-    return { ok: false, reason: "docs/sbom.cdx.json is not valid JSON." }
+    return { ok: false, reason: `${outputFile} is not valid JSON.` }
   }
 
   const validated = validateSbomDocument(parsed)
   if (!validated.ok) {
-    return { ok: false, reason: validated.reason }
+    return { ok: false, reason: validated.reason.replaceAll("docs/sbom.cdx.json", outputFile) }
   }
-
-  return { ok: true, outputPath: "docs/sbom.cdx.json", ...validated.value }
+  return { ok: true, value: validated.value }
 }

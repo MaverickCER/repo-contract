@@ -25,5 +25,11 @@ export interface SbomSummary {
  * output back, or validating its shape). `checks/sbom.ts`'s `policy` parses this directly.
  */
 export type SbomEvidence =
-  | ({ readonly ok: true; readonly outputPath: string } & SbomSummary)
+  | ({
+      readonly ok: true
+      readonly outputPath: string
+      /** The runtime inventory: only what installing the package brings in. */
+      readonly productionOutputPath: string
+      readonly productionComponentCount: number
+    } & SbomSummary)
   | { readonly ok: false; readonly reason: string }

@@ -205,7 +205,26 @@ AI coding agents, CI bots, and release automation consume the same contract as h
 
 ## Supply-chain transparency
 
-This repository publishes its own dependency inventory: [`docs/sbom.cdx.json`](docs/sbom.cdx.json), a real [CycloneDX](https://cyclonedx.org/) 1.6 Software Bill of Materials, regenerated on every `npm run contract` run via [`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`). It covers every direct and transitive **npm** dependency resolved in `package-lock.json` — no other ecosystem — and is deterministic given an unchanged lockfile, so it stays a normal, diff-gated committed file rather than a special-cased exclusion.
+This repository publishes two real [CycloneDX](https://cyclonedx.org/) 1.6 Software Bills of Materials, regenerated on every `npm run contract` run via [`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`), because they answer different questions:
+
+- [`docs/sbom.production.cdx.json`](docs/sbom.production.cdx.json) is the **runtime inventory** — what installing `repo-contract` brings in. It has **no runtime dependencies**, so this document lists the package alone. This is the one to import into a vulnerability scanner to describe what you would deploy.
+- [`docs/sbom.cdx.json`](docs/sbom.cdx.json) is the **build-environment inventory** — every direct and transitive dependency of this repository's own tooling, as resolved in `package-lock.json`. It is for auditing how the package is built, and is **not** what installing the package adds.
+
+Both cover npm only, and both are deterministic given an unchanged lockfile, so they stay normal, diff-gated committed files rather than a special-cased exclusion.
+
+## Part of the MaverickCER toolkit
+
+`repo-contract` is the **mechanism**: it runs checks and turns their evidence into a verdict. The other
+packages build on it or are governed by it:
+
+- [`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract) — the **standard** every
+  publishable package continuously satisfies, expressed once as a `repo-contract` contract (not published; a git dependency),
+  together with the shared release and benchmark workflows.
+- [`@maverickcer/env-cap`](https://github.com/MaverickCER/env-cap) and [`data-cap`](https://github.com/MaverickCER/data-cap) — sibling packages that
+  apply one capability-ownership model to configuration and to data. They are verified by the contract above.
+
+How the four relate, why the dependency between the first two is a deliberate cycle, and the package names:
+[ADR 0018](specs/decisions/0018-ecosystem-bootstrap-cycle-and-package-names.md). Shared vocabulary: the [glossary](specs/glossary.md).
 
 ## Status
 
