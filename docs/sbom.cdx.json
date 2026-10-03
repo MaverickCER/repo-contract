@@ -129,7 +129,7 @@
       "properties": [
         {
           "name": "cdx:npm:package:constraint:engine:node",
-          "value": ">=20.0.0"
+          "value": ">=22.0.0"
         },
         {
           "name": "cdx:npm:package:path",
@@ -17977,8 +17977,8 @@
       "type": "library",
       "name": "node",
       "group": "@types",
-      "version": "26.6.3",
-      "bom-ref": "repo-contract@0.8.8|@types/node@26.6.3",
+      "version": "22.20.5",
+      "bom-ref": "repo-contract@0.8.8|@types/node@22.20.5",
       "licenses": [
         {
           "license": {
@@ -17987,15 +17987,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40types/node@26.6.3",
+      "purl": "pkg:npm/%40types/node@22.20.5",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@types/node/-/node-26.6.3.tgz",
+          "url": "https://registry.npmjs.org/@types/node/-/node-22.20.5.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "76ca8c410a1e4cbaaef70ca70c3d34ab9ef798dceca3721d40e01f1d126a2c27260853e81a8f40d5b0e951cbfff6d9caa44ad05aff6e29e19f977ec4212d3662"
+              "content": "536f8336bfb04a3a6c4d2ff0646607abb19cc1fb9298a88abe83ef2b6db3c13951854f75c8e9e2378a914792a1223be27fbcacc3f773fe12a67c31f4462b3868"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -33376,44 +33376,6 @@
         },
         {
           "type": "library",
-          "name": "undici-types",
-          "version": "6.21.0",
-          "bom-ref": "repo-contract@0.8.8|internal-package-contract@0.8.0|undici-types@6.21.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/undici-types@6.21.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "8b00d9aa0d10006ae0f516afe47e27d0ceb87379a4479f5c27ac10a7eec2e2723482c984c5a79d6982cd3b8e1e4f802d041c236d38863cc96dd8c7744fd1fd25"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/undici-types"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "unicorn-magic",
           "version": "0.3.0",
           "bom-ref": "repo-contract@0.8.8|internal-package-contract@0.8.0|unicorn-magic@0.3.0",
@@ -36200,6 +36162,85 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/jsdoc-type-pratt-parser"
+        }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "node",
+          "group": "@types",
+          "version": "26.6.4",
+          "bom-ref": "repo-contract@0.8.8|jsdoc-type-pratt-parser@9.2.2|@types/node@26.6.4",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT",
+                "acknowledgement": "declared"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40types/node@26.6.4",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@types/node/-/node-26.6.4.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "95d54f0c2ce3edfb1a199acb07436e1ee4ef25cb0d6accac040a8ca25aff720c6b2ddd716eac48af75c988f9c71c9502c63e6c345d6f9d18fd6969eb561e4972"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/jsdoc-type-pratt-parser/node_modules/@types/node"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "undici-types",
+          "version": "8.9.0",
+          "bom-ref": "repo-contract@0.8.8|jsdoc-type-pratt-parser@9.2.2|undici-types@8.9.0",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT",
+                "acknowledgement": "declared"
+              }
+            }
+          ],
+          "purl": "pkg:npm/undici-types@8.9.0",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/undici-types/-/undici-types-8.9.0.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "2930f2453617f2c5a629702290f1c74b273adc244f11331cb728ca16ea5c0ba3812d74f7c6c3747bd685ee6fa6217bad156a545ee79db68c06ee22cece9d2442"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/jsdoc-type-pratt-parser/node_modules/undici-types"
+            }
+          ]
         }
       ]
     },
@@ -54566,8 +54607,8 @@
     {
       "type": "library",
       "name": "undici-types",
-      "version": "8.9.0",
-      "bom-ref": "repo-contract@0.8.8|undici-types@8.9.0",
+      "version": "6.21.0",
+      "bom-ref": "repo-contract@0.8.8|undici-types@6.21.0",
       "licenses": [
         {
           "license": {
@@ -54576,15 +54617,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/undici-types@8.9.0",
+      "purl": "pkg:npm/undici-types@6.21.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/undici-types/-/undici-types-8.9.0.tgz",
+          "url": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "2930f2453617f2c5a629702290f1c74b273adc244f11331cb728ca16ea5c0ba3812d74f7c6c3747bd685ee6fa6217bad156a545ee79db68c06ee22cece9d2442"
+              "content": "8b00d9aa0d10006ae0f516afe47e27d0ceb87379a4479f5c27ac10a7eec2e2723482c984c5a79d6982cd3b8e1e4f802d041c236d38863cc96dd8c7744fd1fd25"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -56420,7 +56461,7 @@
         "repo-contract@0.8.8|@stryker-mutator/core@10.0.0",
         "repo-contract@0.8.8|@stryker-mutator/vitest-runner@10.0.0",
         "repo-contract@0.8.8|@types/cross-spawn@6.0.6",
-        "repo-contract@0.8.8|@types/node@26.6.3",
+        "repo-contract@0.8.8|@types/node@22.20.5",
         "repo-contract@0.8.8|@types/shell-quote@1.7.5",
         "repo-contract@0.8.8|@vitest/coverage-v8@4.1.11",
         "repo-contract@0.8.8|ajv@8.20.0",
@@ -56966,7 +57007,7 @@
     {
       "ref": "repo-contract@0.8.8|@changesets/cli@2.31.1|@inquirer/external-editor@1.0.3",
       "dependsOn": [
-        "repo-contract@0.8.8|@types/node@26.6.3",
+        "repo-contract@0.8.8|@types/node@22.20.5",
         "repo-contract@0.8.8|chardet@2.2.0",
         "repo-contract@0.8.8|iconv-lite@0.7.3"
       ]
@@ -57570,7 +57611,7 @@
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/figures@2.0.9",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -57578,7 +57619,7 @@
       "dependsOn": [
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -57587,7 +57628,7 @@
         "repo-contract@0.8.8|@inquirer/ansi@2.0.8",
         "repo-contract@0.8.8|@inquirer/figures@2.0.9",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3",
+        "repo-contract@0.8.8|@types/node@22.20.5",
         "repo-contract@0.8.8|cli-width@4.1.0",
         "repo-contract@0.8.8|fast-wrap-ansi@0.2.2",
         "repo-contract@0.8.8|mute-stream@3.0.0",
@@ -57600,7 +57641,7 @@
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/external-editor@3.0.5",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -57608,13 +57649,13 @@
       "dependsOn": [
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
       "ref": "repo-contract@0.8.8|@inquirer/external-editor@3.0.5",
       "dependsOn": [
-        "repo-contract@0.8.8|@types/node@26.6.3",
+        "repo-contract@0.8.8|@types/node@22.20.5",
         "repo-contract@0.8.8|chardet@2.2.0",
         "repo-contract@0.8.8|iconv-lite@0.7.3"
       ]
@@ -57627,7 +57668,7 @@
       "dependsOn": [
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -57635,7 +57676,7 @@
       "dependsOn": [
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -57644,7 +57685,7 @@
         "repo-contract@0.8.8|@inquirer/ansi@2.0.8",
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -57660,7 +57701,7 @@
         "repo-contract@0.8.8|@inquirer/rawlist@5.3.5",
         "repo-contract@0.8.8|@inquirer/search@4.3.3",
         "repo-contract@0.8.8|@inquirer/select@5.2.5",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -57668,7 +57709,7 @@
       "dependsOn": [
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -57677,7 +57718,7 @@
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/figures@2.0.9",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -57687,13 +57728,13 @@
         "repo-contract@0.8.8|@inquirer/core@12.0.3",
         "repo-contract@0.8.8|@inquirer/figures@2.0.9",
         "repo-contract@0.8.8|@inquirer/type@4.1.1",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
       "ref": "repo-contract@0.8.8|@inquirer/type@4.1.1",
       "dependsOn": [
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -58584,7 +58625,7 @@
       "ref": "repo-contract@0.8.8|@rushstack/node-core-library@5.24.2",
       "dependsOn": [
         "repo-contract@0.8.8|@rushstack/node-core-library@5.24.2|semver@7.7.4",
-        "repo-contract@0.8.8|@types/node@26.6.3",
+        "repo-contract@0.8.8|@types/node@22.20.5",
         "repo-contract@0.8.8|ajv-draft-04@1.0.0",
         "repo-contract@0.8.8|ajv-formats@3.0.1",
         "repo-contract@0.8.8|ajv@8.20.0",
@@ -58600,7 +58641,7 @@
     {
       "ref": "repo-contract@0.8.8|@rushstack/problem-matcher@0.2.1",
       "dependsOn": [
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -58615,7 +58656,7 @@
       "dependsOn": [
         "repo-contract@0.8.8|@rushstack/node-core-library@5.24.2",
         "repo-contract@0.8.8|@rushstack/problem-matcher@0.2.1",
-        "repo-contract@0.8.8|@types/node@26.6.3",
+        "repo-contract@0.8.8|@types/node@22.20.5",
         "repo-contract@0.8.8|supports-color@8.1.1"
       ]
     },
@@ -59035,7 +59076,7 @@
     {
       "ref": "repo-contract@0.8.8|@types/cross-spawn@6.0.6",
       "dependsOn": [
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|@types/node@22.20.5"
       ]
     },
     {
@@ -59075,9 +59116,9 @@
       "ref": "repo-contract@0.8.8|@types/ms@2.1.0"
     },
     {
-      "ref": "repo-contract@0.8.8|@types/node@26.6.3",
+      "ref": "repo-contract@0.8.8|@types/node@22.20.5",
       "dependsOn": [
-        "repo-contract@0.8.8|undici-types@8.9.0"
+        "repo-contract@0.8.8|undici-types@6.21.0"
       ]
     },
     {
@@ -59928,7 +59969,7 @@
     {
       "ref": "repo-contract@0.8.8|cosmiconfig-typescript-loader@6.3.0",
       "dependsOn": [
-        "repo-contract@0.8.8|@types/node@26.6.3",
+        "repo-contract@0.8.8|@types/node@22.20.5",
         "repo-contract@0.8.8|cosmiconfig@9.0.2",
         "repo-contract@0.8.8|jiti@2.6.1",
         "repo-contract@0.8.8|typescript@5.9.3"
@@ -61380,7 +61421,7 @@
     {
       "ref": "repo-contract@0.8.8|internal-package-contract@0.8.0|@types/node@20.19.43",
       "dependsOn": [
-        "repo-contract@0.8.8|internal-package-contract@0.8.0|undici-types@6.21.0"
+        "repo-contract@0.8.8|undici-types@6.21.0"
       ]
     },
     {
@@ -61516,9 +61557,6 @@
     },
     {
       "ref": "repo-contract@0.8.8|internal-package-contract@0.8.0|type-fest@4.41.0"
-    },
-    {
-      "ref": "repo-contract@0.8.8|internal-package-contract@0.8.0|undici-types@6.21.0"
     },
     {
       "ref": "repo-contract@0.8.8|internal-package-contract@0.8.0|unicorn-magic@0.3.0"
@@ -61883,8 +61921,17 @@
       "ref": "repo-contract@0.8.8|jsdoc-type-pratt-parser@9.2.2",
       "dependsOn": [
         "repo-contract@0.8.8|@types/estree@1.0.9",
-        "repo-contract@0.8.8|@types/node@26.6.3"
+        "repo-contract@0.8.8|jsdoc-type-pratt-parser@9.2.2|@types/node@26.6.4"
       ]
+    },
+    {
+      "ref": "repo-contract@0.8.8|jsdoc-type-pratt-parser@9.2.2|@types/node@26.6.4",
+      "dependsOn": [
+        "repo-contract@0.8.8|jsdoc-type-pratt-parser@9.2.2|undici-types@8.9.0"
+      ]
+    },
+    {
+      "ref": "repo-contract@0.8.8|jsdoc-type-pratt-parser@9.2.2|undici-types@8.9.0"
     },
     {
       "ref": "repo-contract@0.8.8|jsesc@3.1.0"
@@ -64758,7 +64805,7 @@
       "ref": "repo-contract@0.8.8|underscore@1.13.8"
     },
     {
-      "ref": "repo-contract@0.8.8|undici-types@8.9.0"
+      "ref": "repo-contract@0.8.8|undici-types@6.21.0"
     },
     {
       "ref": "repo-contract@0.8.8|undici@7.30.0"
@@ -64843,7 +64890,7 @@
     {
       "ref": "repo-contract@0.8.8|vite@8.3.1",
       "dependsOn": [
-        "repo-contract@0.8.8|@types/node@26.6.3",
+        "repo-contract@0.8.8|@types/node@22.20.5",
         "repo-contract@0.8.8|esbuild@0.28.2",
         "repo-contract@0.8.8|fsevents@2.3.3",
         "repo-contract@0.8.8|jiti@2.6.1",
@@ -64859,7 +64906,7 @@
     {
       "ref": "repo-contract@0.8.8|vitest@4.1.11",
       "dependsOn": [
-        "repo-contract@0.8.8|@types/node@26.6.3",
+        "repo-contract@0.8.8|@types/node@22.20.5",
         "repo-contract@0.8.8|@vitest/coverage-v8@4.1.11",
         "repo-contract@0.8.8|@vitest/expect@4.1.11",
         "repo-contract@0.8.8|@vitest/mocker@4.1.11",

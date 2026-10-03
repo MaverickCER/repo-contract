@@ -5,7 +5,7 @@
 Accepted. Implemented in `SECURITY.md`'s "Supported versions" section.
 Mirrors `@maverickcer/env-cap`'s identical
 [ADR 0015](https://github.com/MaverickCER/env-cap/blob/main/specs/decisions/0015-security-backport-window.md)
-and `@maverickcer/data-cap`'s ADR 0061 — all three packages are heading
+and `data-cap`'s ADR 0061 — all three packages are heading
 toward `1.0` together and should give an evaluator the same forward
 commitment, not a gap in one and an answer in the other two.
 
@@ -15,7 +15,7 @@ commitment, not a gap in one and an answer in the other two.
 pre-`1.0`, security fixes target the latest published `0.x` release, and
 "once `1.0` ships, this document will be updated with a longer-term support
 policy" — a placeholder deferring the actual answer rather than stating it.
-`@maverickcer/env-cap` and `@maverickcer/data-cap` both closed this exact
+`@maverickcer/env-cap` and `data-cap` both closed this exact
 gap with a concrete, dated forward commitment (env-cap's ADR 0015,
 data-cap's ADR 0061); repo-contract — the foundation both of those
 packages' own governance tooling is built on — had not, surfaced during a

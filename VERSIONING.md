@@ -34,13 +34,23 @@ the package reaches 1.0 — see [Pre-1.0 status](#pre-10-status) below):
 - **The `run` string tokenization contract**: which characters are rejected as shell operators,
   which are deliberately allowed through (glob characters, a bare `$`), and that no shell is
   ever invoked without `shell: true`.
+- **`repo-contract/helpers`** (the whole subpath) -- the exception-registry and exception-policy
+  primitives (`loadExceptionRegistry`, `reconcileExceptions`, `writeExceptionRegistry`,
+  `evaluateExceptionRecord`, `hashRequirementFields`, `validateExceptionPolicyConfig`, the exception
+  record types and the v2 record fields): promoted from Experimental by
+  [ADR 0019](specs/decisions/0019-helpers-promoted-presets-stay-experimental.md) after a real
+  feedback cycle -- `internal-package-contract` builds its whole exceptions system on them and
+  needed additive changes only. A new export is a minor; a changed signature or behavior is a
+  breaking change.
 - **`./schema`**: the published JSON Schema files' own `$id`s and top-level `$ref` targets — see
   [Evidence and Verdict schema versioning](#evidence-and-verdict-schema-versioning) below for how
   the schemas _themselves_ version independently of this package's own semver.
 
 ## Experimental
 
-**`repo-contract/presets`** (the whole subpath, including every preset it exports) —
+**`repo-contract/presets`** (the whole subpath, including every preset it exports) --
+the only library surface that stays Experimental (consumers that cannot tolerate a changed preset
+pin a tilde range: `internal-package-contract` uses `~0.8.8`) --
 a new pre-1.0 surface shipped before a real feedback cycle, per this section's own stated
 convention (see [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)). An Experimental
 surface may change shape, including in a breaking way, in a minor or patch release without that
@@ -57,12 +67,6 @@ behavior:
 
 The CLI that scaffolds a contract, `bin/repo-contract.mjs`, is classified Experimental in its own
 right below.
-
-**`repo-contract/helpers`** (the whole subpath) — a second Experimental surface, added after
-`repo-contract/presets`, classified the same way and for the same reason: a new pre-1.0 surface
-shipped before a real feedback cycle (see
-[ADR 0013](specs/decisions/0013-reusable-exception-policy-helper.md)). The same "new export →
-minor; changed behavior → potentially major" framing above applies to it identically.
 
 **`bin/repo-contract.mjs`** (the `repo-contract init` command) — a third Experimental surface,
 added per [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)'s

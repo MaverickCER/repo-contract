@@ -141,7 +141,7 @@ if (process.env.GITHUB_STEP_SUMMARY) {
 npm run contract
 ```
 
-Point your pre-commit hook and your CI job at that same `npm run contract`. The [Guide](GUIDE.md#the-runner-and-ci-integration) covers the runner, the `spawn`/`env` capability model, and Windows. Node.js `>=20` (Bun and Deno are tested too).
+Point your pre-commit hook and your CI job at that same `npm run contract`. The [Guide](GUIDE.md#the-runner-and-ci-integration) covers the runner, the `spawn`/`env` capability model, and Windows. Node.js `>=22` (Bun and Deno are tested too).
 
 Two patterns worth knowing about early, not just once you're rolling this out across an org: the
 [**ratchet**](examples/day-one-walkthrough/README.md) (a new requirement lands as a dated `warn` →
@@ -241,6 +241,8 @@ packages build on it or are governed by it:
 
 How the four relate, why the dependency between the first two is a deliberate cycle, and the package names:
 [ADR 0018](specs/decisions/0018-ecosystem-bootstrap-cycle-and-package-names.md). Shared vocabulary: the [glossary](specs/glossary.md).
+
+`@maverickcer/env-cap` governs configuration and `data-cap` governs application data: siblings that apply the same capability-ownership model. `repo-contract` and `internal-package-contract` are how they are verified. See [the toolkit overview and glossary](https://github.com/MaverickCER/internal-package-contract/blob/main/TOOLKIT.md).
 
 ## Status
 

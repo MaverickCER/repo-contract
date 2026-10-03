@@ -2714,6 +2714,30 @@ Why the policy reached `outcome`, in enough detail to act on without rerunning a
 
 ***
 
+### RenderMarkdownSummaryOptions
+
+Options for [renderMarkdownSummary](#rendermarkdownsummary).
+
+#### Properties
+
+##### slowest?
+
+```ts
+readonly optional slowest?: number;
+```
+
+How many of the slowest checks to list when `evidence` is given; defaults to 5.
+
+##### title?
+
+```ts
+readonly optional title?: string;
+```
+
+Heading text; defaults to `"Contract"`.
+
+***
+
 ### RepoContractConfig
 
 Top-level configuration passed to `defineRepoContract`/`runRepoContract`.
@@ -3179,6 +3203,44 @@ the same `config` object, untouched and uncloned.
 
 ***
 
+### renderMarkdownSummary()
+
+```ts
+function renderMarkdownSummary<TChecks>(
+   verdict, 
+   evidence?, 
+   options?
+): string;
+```
+
+Renders a run's verdict (and, if given, its evidence) as GitHub-flavored Markdown suitable for
+`$GITHUB_STEP_SUMMARY`, a pull-request comment or a README badge page: totals first, then every
+failing check with its complete rationale (so nothing needs re-running to see why), every warning
+and passing check with the first line of its rationale, and -- when the evidence is supplied -- the
+slowest checks, which is the contract's own cost. Pure: it reads nothing and writes nothing.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TChecks` *extends* [`CheckSchema`](#checkschema) |
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `verdict` | [`Verdict`](#verdict)\<`TChecks`\> | The aggregated verdict of the run. |
+| `evidence?` | [`Evidence`](#evidence)\<`TChecks`\> | The run's evidence; optional, adds per-check timing. |
+| `options?` | [`RenderMarkdownSummaryOptions`](#rendermarkdownsummaryoptions) | Heading and list-length options. |
+
+#### Returns
+
+`string`
+
+The Markdown document, ending in a newline.
+
+***
+
 ### runRepoContract()
 
 ```ts
@@ -3237,3 +3299,55 @@ below, keeps the documented synchronous-throw guarantee actually true rather tha
 \}\>
 
 the assembled `evidence` for every check together with the aggregated `verdict`
+
+***
+
+### serializeRun()
+
+```ts
+function serializeRun<TChecks>(run): {
+  evidence: string;
+  verdict: string;
+};
+```
+
+Serializes a run for storage -- stable, indented JSON with a trailing newline, one document per
+file, matching the published `Evidence` and `Verdict` JSON Schemas (`repo-contract/schema`). The
+caller decides where to write them; this package never touches the filesystem.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TChecks` *extends* [`CheckSchema`](#checkschema) |
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `run` | \{ `evidence`: [`Evidence`](#evidence)\<`TChecks`\>; `verdict`: [`Verdict`](#verdict)\<`TChecks`\>; \} | The result of `runRepoContract`. |
+| `run.evidence` | [`Evidence`](#evidence)\<`TChecks`\> | The run's evidence. |
+| `run.verdict` | [`Verdict`](#verdict)\<`TChecks`\> | The run's verdict. |
+
+#### Returns
+
+```ts
+{
+  evidence: string;
+  verdict: string;
+}
+```
+
+The two documents as strings.
+
+##### evidence
+
+```ts
+readonly evidence: string;
+```
+
+##### verdict
+
+```ts
+readonly verdict: string;
+```

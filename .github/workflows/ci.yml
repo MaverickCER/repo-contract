@@ -428,7 +428,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20.x, 22.x]
+        node-version: [22.x]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -497,7 +497,7 @@ jobs:
   # verification-toolchain line (the .nvmrc line, >= the >=22.0.0 that
   # @stryker-mutator/core itself requires), a local-development-and-CI
   # requirement distinct from the published package's own engines.node
-  # >=20.0.0 floor (proven by `published-floor`). Waits on both `verify` and
+  # >=22.0.0 floor (proven by `published-floor`). Waits on both `verify` and
   # `lint` so a broken build/lint/OS-specific test fails fast, once, before
   # this much slower job spends its mutation-testing budget.
   contract:

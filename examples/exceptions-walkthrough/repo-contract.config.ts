@@ -2,8 +2,7 @@
  * Advanced / Experimental example: a governed, justified exception to an otherwise-blocking
  * finding, built on `repo-contract/helpers`.
  *
- * `repo-contract/helpers` is Experimental -- its signature and behavior may change in a minor or
- * patch release (see ../../VERSIONING.md). Start with [`../day-one-walkthrough`](../day-one-walkthrough)
+ * `repo-contract/helpers` is Stable (ADR 0019; see ../../VERSIONING.md). Start with [`../day-one-walkthrough`](../day-one-walkthrough)
  * for the mainline adoption story; this one is for when a repository needs to say "this specific
  * advisory is reviewed and accepted, here is why" without weakening the check for everything else.
  *
