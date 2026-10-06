@@ -2,7 +2,7 @@
 
 `repo-contract` follows [Semantic Versioning](https://semver.org/). This document defines what
 that promise actually covers, since "semver" alone doesn't say which surface it applies to.
-Three tiers exist, following the same policy `@maverickcer/env-cap` and `@maverickcer/data-cap`
+Three tiers exist, following the same policy `@maverickcer/env-cap` and `data-cap`
 established.
 
 ## Stable
@@ -12,6 +12,7 @@ the package reaches 1.0 — see [Pre-1.0 status](#pre-10-status) below):
 
 - **`defineRepoContract`** and **`runRepoContract`** — their signatures, and the guarantee that
   neither calls `process.exit()`.
+- **`renderMarkdownSummary`** and **`serializeRun`** — pure functions over a run's result; the Markdown they render is for people and may be reworded in a minor release, the JSON `serializeRun` returns is exactly the `Evidence`/`Verdict` documents described below.
 - **The `Evidence`/`CheckEvidence`/`Verdict` type shapes** and the invariants documented for
   them: for a full run — `options.checks` omitted — every configured check appears exactly once
   in `evidence.checks`/`verdict.checks`, and a policy is invoked for every check regardless of
@@ -33,13 +34,24 @@ the package reaches 1.0 — see [Pre-1.0 status](#pre-10-status) below):
 - **The `run` string tokenization contract**: which characters are rejected as shell operators,
   which are deliberately allowed through (glob characters, a bare `$`), and that no shell is
   ever invoked without `shell: true`.
+- **`repo-contract/helpers`** (the whole subpath) -- the exception-registry and exception-policy
+  primitives (`loadExceptionRegistry`, `reconcileExceptions`, `writeExceptionRegistry`,
+  `evaluateExceptionRecord`, `hashRequirementFields`, `validateExceptionPolicyConfig`, the exception
+  record types and the v2 record fields): promoted from Experimental by
+  [ADR 0019](specs/decisions/0019-helpers-promoted-presets-stay-experimental.md) after a real
+  feedback cycle -- `internal-package-contract` builds its whole exceptions system on them and
+  needed additive changes only. A new export is a minor from `1.0` on (while the package is `0.x`
+  the release tooling deflates it to a patch -- see [Pre-1.0 status](#pre-10-status)); a changed
+  signature or behavior is a breaking change.
 - **`./schema`**: the published JSON Schema files' own `$id`s and top-level `$ref` targets — see
   [Evidence and Verdict schema versioning](#evidence-and-verdict-schema-versioning) below for how
   the schemas _themselves_ version independently of this package's own semver.
 
 ## Experimental
 
-**`repo-contract/presets`** (the whole subpath, including every preset it exports) —
+**`repo-contract/presets`** (the whole subpath, including every preset it exports) --
+the only library surface that stays Experimental (consumers that cannot tolerate a changed preset
+pin a tilde range: `internal-package-contract` uses `~0.8.8`) --
 a new pre-1.0 surface shipped before a real feedback cycle, per this section's own stated
 convention (see [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)). An Experimental
 surface may change shape, including in a breaking way, in a minor or patch release without that
@@ -54,15 +66,8 @@ behavior:
 > interpretation (e.g. a finding that used to fail now warns) → potentially major; a bug fix that
 > restores documented behavior → patch or minor depending on impact.
 
-Also unstable at v0.1.0, per the same "not yet been through a real feedback cycle" framing the
-original design notes used for a future CLI before one existed — that CLI is
-`bin/repo-contract.mjs`, classified Experimental in its own right below.
-
-**`repo-contract/helpers`** (the whole subpath) — a second Experimental surface, added after
-`repo-contract/presets`, classified the same way and for the same reason: a new pre-1.0 surface
-shipped before a real feedback cycle (see
-[ADR 0013](specs/decisions/0013-reusable-exception-policy-helper.md)). The same "new export →
-minor; changed behavior → potentially major" framing above applies to it identically.
+The CLI that scaffolds a contract, `bin/repo-contract.mjs`, is classified Experimental in its own
+right below.
 
 **`bin/repo-contract.mjs`** (the `repo-contract init` command) — a third Experimental surface,
 added per [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)'s
@@ -123,9 +128,32 @@ outlive the package version that produced it:
 `repo-contract` has not yet reached a `1.0` release. Per common pre-1.0 SemVer convention,
 **minor versions may include breaking changes to the Stable tier before 1.0** — this document
 defines _scope_ (what would eventually be covered), not a promise that it is already fully
-locked in at `0.x`. Concretely, [Changesets](https://github.com/changesets/changesets) deflates
-bumps while the package is `0.x` (its own default pre-1.0 behavior) so that a `feat!:` /
-`BREAKING CHANGE:` commit bumps the minor version, and a `feat:` commit bumps the
-patch version. The Experimental and Private tiers behave the same
-before and after 1.0: Experimental surfaces may change at any version; Private internals always
-may.
+locked in at `0.x`.
+
+How a `0.x` bump is chosen is **this repository's release tooling, not [Changesets](https://github.com/changesets/changesets)**
+(Changesets applies exactly the bump a changeset declares: a `major` changeset on `0.8.8` produces
+`1.0.0`). The shared release workflow from `internal-package-contract` deflates one level while the
+package is `0.x`: a `feat!:` / `BREAKING CHANGE:` commit generates a `minor` changeset, a `feat:` a
+`patch`, and the API-contract gate requires only a `minor` for a breaking API diff. So **no commit and
+no API diff can publish `1.0.0` by itself**: crossing to `1.0.0` takes a human-authored `major`
+changeset, and the release workflow then refuses to auto-merge that version pull request — a person
+reads and merges it.
+
+### What `1.0.0` will promise
+
+At the `1.0.0` cut the Stable tier above is locked in. That includes `repo-contract/helpers`, which is
+already Stable today, so `1.0.0` keeps its existing promise rather than promoting it. The other
+surface that `internal-package-contract` is built on, `repo-contract/presets`, is promoted from
+Experimental at that cut, so that `1.x` does not promise less than the ecosystem needs:
+
+- **`repo-contract/helpers`** (already Stable) — the exception-registry primitives (`loadExceptionRegistry`,
+  `reconcileExceptions`, `writeExceptionRegistry`, `evaluateExceptionRecord`, `hashRequirementFields`,
+  `validateExceptionPolicyConfig`, `resolveExceptionPolicy`) and the types they take and return.
+- **`repo-contract/presets`** — the presets `internal-package-contract` composes, with their `run`
+  commands and policy interpretation.
+
+Until then, `internal-package-contract` depends on `repo-contract` with a **tilde range** (`~0.x.y`),
+so it receives patch releases only and takes each `0.x` minor deliberately — see
+[ADR 0018](specs/decisions/0018-ecosystem-bootstrap-cycle-and-package-names.md). The Experimental and
+Private tiers behave the same before and after 1.0: Experimental surfaces may change at any version;
+Private internals always may.

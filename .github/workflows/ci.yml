@@ -78,7 +78,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
-          cache: npm
 
       - run: npm ci
 
@@ -223,7 +222,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
-          cache: npm
 
       - run: npm ci
       - run: npm run build
@@ -264,7 +262,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
-          cache: npm
 
       - run: npm ci
       - run: npm run typecheck
@@ -325,7 +322,6 @@ jobs:
           # own test harness (vitest), so it belongs on the verification-toolchain
           # Node version, not the published floor.
           node-version: 24.x
-          cache: npm
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
@@ -362,7 +358,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 26.x
-          cache: npm
 
       - run: npm ci
       - run: npm run typecheck
@@ -402,7 +397,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
-          cache: npm
 
       - run: npm ci
       - run: npm run build
@@ -434,7 +428,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20.x, 22.x]
+        node-version: [22.x]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -451,7 +445,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          # No `cache: npm` -- this job never runs `npm ci`.
+          # No npm cache in any job (a cache written by a run of pull-request code can be poisoned) -- and this one never runs `npm ci` anyway.
           node-version: ${{ matrix.node-version }}
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -503,7 +497,7 @@ jobs:
   # verification-toolchain line (the .nvmrc line, >= the >=22.0.0 that
   # @stryker-mutator/core itself requires), a local-development-and-CI
   # requirement distinct from the published package's own engines.node
-  # >=20.0.0 floor (proven by `published-floor`). Waits on both `verify` and
+  # >=22.0.0 floor (proven by `published-floor`). Waits on both `verify` and
   # `lint` so a broken build/lint/OS-specific test fails fast, once, before
   # this much slower job spends its mutation-testing budget.
   contract:
@@ -546,7 +540,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
-          cache: npm
 
       - run: npm ci
       - run: npm run build
@@ -687,7 +680,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
-          cache: npm
       - run: npm ci
 
       # Same treatment as docs/api/ (generated fresh on every deploy, never committed) --
@@ -739,7 +731,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@8a0b0cfcc4eec8ca8ad8a58dd12da018ea3957c6 # main, parts B/C/D/E/F/G/I
+    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@c8b6147aef3592dd1941f8d22325abc9f279e7b7 # v0.9.0
     with:
       docs-script: docs:api
       content-artifact-name: pages-content

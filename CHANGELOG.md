@@ -41,12 +41,16 @@
 
 ## 0.8.3
 
+> **Never published to npm.** The release pipeline failed for this version (it is not on the registry and has no tag); its changes first shipped in 0.8.4.
+
 ### Patch Changes
 
 - chore(benchmarks): refresh results.json
 - 8bcc7d4: Send the publish-time contract run's report to stderr so a failing check is visible in the release job's log instead of being swallowed by the Changesets action.
 
 ## 0.8.2
+
+> **Never published to npm.** The release pipeline failed for this version (it is not on the registry and has no tag); its changes first shipped in 0.8.4.
 
 ### Patch Changes
 
@@ -55,6 +59,8 @@
 
 ## 0.8.1
 
+> **Never published to npm.** The release pipeline failed for this version (it is not on the registry and has no tag); its changes first shipped in 0.8.4.
+
 ### Patch Changes
 
 - chore(sbom): regenerate for 0.8.0
@@ -62,6 +68,8 @@
 - chore: sync generated API baseline for release
 
 ## 0.8.0
+
+> **Never published to npm.** The release pipeline failed for this version (it is not on the registry and has no tag); its changes first shipped in 0.8.4.
 
 ### Minor Changes
 

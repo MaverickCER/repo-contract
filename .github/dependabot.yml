@@ -9,8 +9,8 @@
 # use.
 #
 # Dev-dependency PRs are grouped into one weekly PR to keep the noise down --
-# none of them reach consumers (the published tree is `cross-spawn` plus a
-# handful of transitive packages), so they do not need per-package review.
+# none of them reach consumers (the published package has no runtime
+# dependencies at all), so they do not need per-package review.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -26,8 +26,8 @@ updates:
       # One PR per week for the whole dev/verification toolchain -- minor, patch,
       # AND major. None of it reaches consumers, so a batched bump is fine; a
       # major that actually breaks the build shows up as a red PR, not a silent
-      # merge. Production deps are deliberately left out of every group (there is
-      # one, `cross-spawn`) so each gets its own reviewable PR.
+      # merge. Production deps are deliberately left out of every group (there are
+      # none today; if one is ever added it gets its own reviewable PR).
       dev-dependencies:
         dependency-type: development
         update-types:

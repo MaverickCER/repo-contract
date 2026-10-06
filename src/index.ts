@@ -9,6 +9,8 @@
 
 export { defineRepoContract } from "./config/define-repo-contract.js"
 export { runRepoContract } from "./run-repo-contract.js"
+export { renderMarkdownSummary, serializeRun } from "./report/render-summary.js"
+export type { RenderMarkdownSummaryOptions } from "./report/render-summary.js"
 
 export {
   DependencyDeclaredLaterError,

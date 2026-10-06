@@ -13,7 +13,7 @@ npm run setup
 It is a plain script, not an npm lifecycle hook — the published package ships with no
 install scripts at all (see [ADR 0009](specs/decisions/0009-conventional-commits-versioning-and-local-gates.md)),
 so this one command after `npm install` is the whole setup. Use Node 24 locally
-(`.nvmrc`); the published package supports Node `>=20` and CI proves that independently.
+(`.nvmrc`); the published package supports Node `>=22` and CI proves that independently.
 
 ## Making a change
 

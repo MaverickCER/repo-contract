@@ -20,7 +20,7 @@ export default defineConfig({
   // erased at build time -- see below). There is no isomorphic entry point to
   // keep "neutral", unlike env-cap/data-cap.
   platform: "node",
-  target: "node20",
+  target: "node22",
   dts: false,
   sourcemap: true,
   treeshake: true,

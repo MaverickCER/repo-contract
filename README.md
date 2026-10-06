@@ -117,6 +117,24 @@ for (const [id, result] of Object.entries(verdict.checks)) {
 process.exitCode = verdict.passed ? 0 : 1
 ```
 
+That prints the verdict and forgets it. To keep a record that a dashboard, a reviewer or the next run can read, store the run: `serializeRun` turns the result into the two JSON documents that match the published `repo-contract/schema` files, and `renderMarkdownSummary` renders a summary for `$GITHUB_STEP_SUMMARY` or a pull-request comment (failures with their whole rationale, warnings and passes with a line each, the slowest checks). Neither touches the filesystem; you decide where they go:
+
+```ts
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs"
+import { renderMarkdownSummary, runRepoContract, serializeRun } from "repo-contract"
+import config from "../repo-contract.config.mjs"
+
+const run = await runRepoContract(config)
+const { evidence, verdict } = serializeRun(run)
+mkdirSync("reports/contract", { recursive: true })
+writeFileSync("reports/contract/evidence.json", evidence)
+writeFileSync("reports/contract/verdict.json", verdict)
+if (process.env.GITHUB_STEP_SUMMARY) {
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, renderMarkdownSummary(run.verdict, run.evidence))
+}
+process.exitCode = run.verdict.passed ? 0 : 1
+```
+
 ```json
 { "scripts": { "contract": "tsx scripts/contract.mjs" } }
 ```
@@ -125,7 +143,7 @@ process.exitCode = verdict.passed ? 0 : 1
 npm run contract
 ```
 
-Point your pre-commit hook and your CI job at that same `npm run contract`. The [Guide](GUIDE.md#the-runner-and-ci-integration) covers the runner, the `spawn`/`env` capability model, and Windows. Node.js `>=20` (Bun and Deno are tested too).
+Point your pre-commit hook and your CI job at that same `npm run contract`. The [Guide](GUIDE.md#the-runner-and-ci-integration) covers the runner, the `spawn`/`env` capability model, and Windows. Node.js `>=22` (Bun and Deno are tested too).
 
 Two patterns worth knowing about early, not just once you're rolling this out across an org: the
 [**ratchet**](examples/day-one-walkthrough/README.md) (a new requirement lands as a dated `warn` →
@@ -205,7 +223,28 @@ AI coding agents, CI bots, and release automation consume the same contract as h
 
 ## Supply-chain transparency
 
-This repository publishes its own dependency inventory: [`docs/sbom.cdx.json`](docs/sbom.cdx.json), a real [CycloneDX](https://cyclonedx.org/) 1.6 Software Bill of Materials, regenerated on every `npm run contract` run via [`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`). It covers every direct and transitive **npm** dependency resolved in `package-lock.json` — no other ecosystem — and is deterministic given an unchanged lockfile, so it stays a normal, diff-gated committed file rather than a special-cased exclusion.
+This repository publishes two real [CycloneDX](https://cyclonedx.org/) 1.6 Software Bills of Materials, regenerated on every `npm run contract` run via [`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`), because they answer different questions:
+
+- [`docs/sbom.production.cdx.json`](docs/sbom.production.cdx.json) is the **runtime inventory** — what installing `repo-contract` brings in. It has **no runtime dependencies**, so this document lists the package alone. This is the one to import into a vulnerability scanner to describe what you would deploy.
+- [`docs/sbom.cdx.json`](docs/sbom.cdx.json) is the **build-environment inventory** — every direct and transitive dependency of this repository's own tooling, as resolved in `package-lock.json`. It is for auditing how the package is built, and is **not** what installing the package adds.
+
+Both cover npm only, and both are deterministic given an unchanged lockfile, so they stay normal, diff-gated committed files rather than a special-cased exclusion.
+
+## Part of the MaverickCER toolkit
+
+`repo-contract` is the **mechanism**: it runs checks and turns their evidence into a verdict. The other
+packages build on it or are governed by it:
+
+- [`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract) — the **standard** every
+  publishable package continuously satisfies, expressed once as a `repo-contract` contract (not published; a git dependency),
+  together with the shared release and benchmark workflows.
+- [`@maverickcer/env-cap`](https://github.com/MaverickCER/env-cap) and [`data-cap`](https://github.com/MaverickCER/data-cap) — sibling packages that
+  apply one capability-ownership model to configuration and to data. They are verified by the contract above.
+
+How the four relate, why the dependency between the first two is a deliberate cycle, and the package names:
+[ADR 0018](specs/decisions/0018-ecosystem-bootstrap-cycle-and-package-names.md). Shared vocabulary: the [glossary](specs/glossary.md).
+
+`@maverickcer/env-cap` governs configuration and `data-cap` governs application data: siblings that apply the same capability-ownership model. `repo-contract` and `internal-package-contract` are how they are verified. See [the toolkit overview and glossary](https://github.com/MaverickCER/internal-package-contract/blob/main/TOOLKIT.md).
 
 ## Status
 
