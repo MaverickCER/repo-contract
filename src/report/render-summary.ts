@@ -1,6 +1,9 @@
 import type { CheckSchema, Evidence, Verdict } from "../types.js"
 
-/** Options for {@link renderMarkdownSummary}. */
+/**
+ * Options for {@link renderMarkdownSummary}.
+ * @public
+ */
 export interface RenderMarkdownSummaryOptions {
   /** Heading text; defaults to `"Contract"`. */
   readonly title?: string
@@ -17,7 +20,8 @@ const HEADINGS = { fail: "Failed", warn: "Warnings", pass: "Passed" } as const
  * @returns Everything before its first newline.
  */
 function firstLine(text: string): string {
-  return text.split("\n", 1)[0] ?? ""
+  // Everything up to the first newline; the appended one makes a single line end the same way.
+  return text.slice(0, `${text}\n`.indexOf("\n"))
 }
 
 /**
