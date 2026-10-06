@@ -3819,6 +3819,321 @@
           }
         }
       }
+    },
+    {
+      "timestamp": "2026-10-06T22:50:05.189Z",
+      "gitCommit": "51e51786cdad9de9988b1c9ee0fcaaa0c5eba85a",
+      "nodeVersion": "v24.21.0",
+      "runner": "GitHub Actions",
+      "versions": {},
+      "measurements": {
+        "end-to-end:baseline": {
+          "n20": {
+            "medianMs": 0.2207860000000134,
+            "inputs": {
+              "export": 20
+            },
+            "unitsPerSecond": 90585.45
+          },
+          "n40": {
+            "medianMs": 0.3893510000002607,
+            "inputs": {
+              "export": 40
+            },
+            "unitsPerSecond": 102735.06
+          },
+          "n80": {
+            "medianMs": 0.7002075000000332,
+            "inputs": {
+              "export": 80
+            },
+            "unitsPerSecond": 114251.85
+          },
+          "n160": {
+            "medianMs": 1.5891870000014023,
+            "inputs": {
+              "export": 160
+            },
+            "unitsPerSecond": 100680.41
+          },
+          "n320": {
+            "medianMs": 2.606084999999439,
+            "inputs": {
+              "export": 320
+            },
+            "unitsPerSecond": 122789.55
+          },
+          "n640": {
+            "medianMs": 5.00159800000074,
+            "inputs": {
+              "export": 640
+            },
+            "unitsPerSecond": 127959.1
+          },
+          "n1280": {
+            "medianMs": 8.374423000001116,
+            "inputs": {
+              "export": 1280
+            },
+            "unitsPerSecond": 152846.35
+          }
+        },
+        "end-to-end:with-package": {
+          "n20": {
+            "medianMs": 324.18448200000057,
+            "inputs": {
+              "export": 20
+            },
+            "unitsPerSecond": 61.69
+          },
+          "n40": {
+            "medianMs": 602.7160769999973,
+            "inputs": {
+              "export": 40
+            },
+            "unitsPerSecond": 66.37
+          },
+          "n80": {
+            "medianMs": 1153.244028000001,
+            "inputs": {
+              "export": 80
+            },
+            "unitsPerSecond": 69.37
+          },
+          "n160": {
+            "medianMs": 2662.936415999997,
+            "inputs": {
+              "export": 160
+            },
+            "unitsPerSecond": 60.08
+          },
+          "n320": {
+            "medianMs": 5286.376786000001,
+            "inputs": {
+              "export": 320
+            },
+            "unitsPerSecond": 60.53
+          },
+          "n640": {
+            "medianMs": 11015.111648999999,
+            "inputs": {
+              "export": 640
+            },
+            "unitsPerSecond": 58.1
+          },
+          "n1280": {
+            "medianMs": 22228.864004000003,
+            "inputs": {
+              "export": 1280
+            },
+            "unitsPerSecond": 57.58
+          }
+        },
+        "fn:load-api-model": {
+          "n20": {
+            "medianMs": 6.7861789999878965,
+            "inputs": {
+              "export": 20
+            },
+            "unitsPerSecond": 2947.17
+          },
+          "n40": {
+            "medianMs": 11.439179999986663,
+            "inputs": {
+              "export": 40
+            },
+            "unitsPerSecond": 3496.75
+          },
+          "n80": {
+            "medianMs": 23.06392899999628,
+            "inputs": {
+              "export": 80
+            },
+            "unitsPerSecond": 3468.62
+          },
+          "n160": {
+            "medianMs": 33.32427000001189,
+            "inputs": {
+              "export": 160
+            },
+            "unitsPerSecond": 4801.31
+          },
+          "n320": {
+            "medianMs": 46.46124299999792,
+            "inputs": {
+              "export": 320
+            },
+            "unitsPerSecond": 6887.46
+          },
+          "n640": {
+            "medianMs": 81.01882300002035,
+            "inputs": {
+              "export": 640
+            },
+            "unitsPerSecond": 7899.4
+          },
+          "n1280": {
+            "medianMs": 135.09141199997975,
+            "inputs": {
+              "export": 1280
+            },
+            "unitsPerSecond": 9475.07
+          }
+        },
+        "fn:normalize-api-package": {
+          "n20": {
+            "medianMs": 0.29037699999753386,
+            "inputs": {
+              "export": 20
+            },
+            "unitsPerSecond": 68875.98
+          },
+          "n40": {
+            "medianMs": 0.5103590000071563,
+            "inputs": {
+              "export": 40
+            },
+            "unitsPerSecond": 78376.2
+          },
+          "n80": {
+            "medianMs": 0.5464840000204276,
+            "inputs": {
+              "export": 80
+            },
+            "unitsPerSecond": 146390.38
+          },
+          "n160": {
+            "medianMs": 1.2976969999726862,
+            "inputs": {
+              "export": 160
+            },
+            "unitsPerSecond": 123295.35
+          },
+          "n320": {
+            "medianMs": 1.9103849999955855,
+            "inputs": {
+              "export": 320
+            },
+            "unitsPerSecond": 167505.5
+          },
+          "n640": {
+            "medianMs": 3.686243000003742,
+            "inputs": {
+              "export": 640
+            },
+            "unitsPerSecond": 173618.51
+          },
+          "n1280": {
+            "medianMs": 6.636296000011498,
+            "inputs": {
+              "export": 1280
+            },
+            "unitsPerSecond": 192878.68
+          }
+        },
+        "fn:classify-contract-changes": {
+          "n20": {
+            "medianMs": 302.73769999999786,
+            "inputs": {
+              "export": 20
+            },
+            "unitsPerSecond": 66.06
+          },
+          "n40": {
+            "medianMs": 595.6223599999794,
+            "inputs": {
+              "export": 40
+            },
+            "unitsPerSecond": 67.16
+          },
+          "n80": {
+            "medianMs": 1150.803500000009,
+            "inputs": {
+              "export": 80
+            },
+            "unitsPerSecond": 69.52
+          },
+          "n160": {
+            "medianMs": 2637.5335320000013,
+            "inputs": {
+              "export": 160
+            },
+            "unitsPerSecond": 60.66
+          },
+          "n320": {
+            "medianMs": 5259.598762000009,
+            "inputs": {
+              "export": 320
+            },
+            "unitsPerSecond": 60.84
+          },
+          "n640": {
+            "medianMs": 10763.164267999993,
+            "inputs": {
+              "export": 640
+            },
+            "unitsPerSecond": 59.46
+          },
+          "n1280": {
+            "medianMs": 21639.308457999956,
+            "inputs": {
+              "export": 1280
+            },
+            "unitsPerSecond": 59.15
+          }
+        },
+        "end-to-end:overhead": {
+          "n20": {
+            "medianMs": 323.96369600000054,
+            "inputs": {
+              "export": 20
+            },
+            "unitsPerSecond": 61.74
+          },
+          "n40": {
+            "medianMs": 602.326725999997,
+            "inputs": {
+              "export": 40
+            },
+            "unitsPerSecond": 66.41
+          },
+          "n80": {
+            "medianMs": 1152.543820500001,
+            "inputs": {
+              "export": 80
+            },
+            "unitsPerSecond": 69.41
+          },
+          "n160": {
+            "medianMs": 2661.3472289999954,
+            "inputs": {
+              "export": 160
+            },
+            "unitsPerSecond": 60.12
+          },
+          "n320": {
+            "medianMs": 5283.770701000001,
+            "inputs": {
+              "export": 320
+            },
+            "unitsPerSecond": 60.56
+          },
+          "n640": {
+            "medianMs": 11010.110050999998,
+            "inputs": {
+              "export": 640
+            },
+            "unitsPerSecond": 58.13
+          },
+          "n1280": {
+            "medianMs": 22220.489581,
+            "inputs": {
+              "export": 1280
+            },
+            "unitsPerSecond": 57.6
+          }
+        }
+      }
     }
   ]
 }
