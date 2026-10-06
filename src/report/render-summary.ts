@@ -25,6 +25,17 @@ function firstLine(text: string): string {
 }
 
 /**
+ * A code fence that a rationale cannot close early: at least three backticks, and always longer than
+ * any run of backticks inside the text, so a rationale that itself contains a fence stays inside it.
+ * @param text - The rationale that goes inside the fence.
+ * @returns The backtick run to open and close the fence with.
+ */
+function fenceFor(text: string): string {
+  const longestRun = Array.from(text.matchAll(/`+/g), (match) => match[0].length + 1)
+  return "`".repeat(Math.max(3, ...longestRun))
+}
+
+/**
  * Renders a run's verdict (and, if given, its evidence) as GitHub-flavored Markdown suitable for
  * `$GITHUB_STEP_SUMMARY`, a pull-request comment or a README badge page: totals first, then every
  * failing check with its complete rationale (so nothing needs re-running to see why), every warning
@@ -63,7 +74,8 @@ export function renderMarkdownSummary<TChecks extends CheckSchema>(
     lines.push(`### ${HEADINGS[outcome]}`, "")
     for (const [id, result] of group) {
       if (outcome === "fail") {
-        lines.push(`#### ${id}`, "", "```text", result.rationale, "```", "")
+        const fence = fenceFor(result.rationale)
+        lines.push(`#### ${id}`, "", `${fence}text`, result.rationale, fence, "")
       } else {
         lines.push(`- **${id}** -- ${firstLine(result.rationale)}`)
       }
@@ -90,6 +102,8 @@ export function renderMarkdownSummary<TChecks extends CheckSchema>(
  * Serializes a run for storage -- stable, indented JSON with a trailing newline, one document per
  * file, matching the published `Evidence` and `Verdict` JSON Schemas (`repo-contract/schema`). The
  * caller decides where to write them; this package never touches the filesystem.
+ * A `bigint` anywhere in the run (for example in a check's transformed output) cannot be written as
+ * JSON, so it is written as its decimal string rather than making serialization throw.
  * @param run - The result of `runRepoContract`.
  * @param run.evidence - The run's evidence.
  * @param run.verdict - The run's verdict.
@@ -100,8 +114,7 @@ export function serializeRun<TChecks extends CheckSchema>(run: {
   readonly evidence: Evidence<TChecks>
   readonly verdict: Verdict<TChecks>
 }): { readonly evidence: string; readonly verdict: string } {
-  return {
-    evidence: `${JSON.stringify(run.evidence, null, 2)}\n`,
-    verdict: `${JSON.stringify(run.verdict, null, 2)}\n`,
-  }
+  const toJson = (value: unknown): string =>
+    `${JSON.stringify(value, (_key, item: unknown) => (typeof item === "bigint" ? item.toString() : item), 2)}\n`
+  return { evidence: toJson(run.evidence), verdict: toJson(run.verdict) }
 }

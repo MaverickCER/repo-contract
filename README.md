@@ -122,6 +122,7 @@ That prints the verdict and forgets it. To keep a record that a dashboard, a rev
 ```ts
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs"
 import { renderMarkdownSummary, runRepoContract, serializeRun } from "repo-contract"
+import config from "../repo-contract.config.mjs"
 
 const run = await runRepoContract(config)
 const { evidence, verdict } = serializeRun(run)
@@ -131,6 +132,7 @@ writeFileSync("reports/contract/verdict.json", verdict)
 if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, renderMarkdownSummary(run.verdict, run.evidence))
 }
+process.exitCode = run.verdict.passed ? 0 : 1
 ```
 
 ```json

@@ -3314,6 +3314,8 @@ function serializeRun<TChecks>(run): {
 Serializes a run for storage -- stable, indented JSON with a trailing newline, one document per
 file, matching the published `Evidence` and `Verdict` JSON Schemas (`repo-contract/schema`). The
 caller decides where to write them; this package never touches the filesystem.
+A `bigint` anywhere in the run (for example in a check's transformed output) cannot be written as
+JSON, so it is written as its decimal string rather than making serialization throw.
 
 #### Type Parameters
 

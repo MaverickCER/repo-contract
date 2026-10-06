@@ -13,8 +13,9 @@
  * rationale and the boundary this barrel deliberately does not cross.
  *
  * Published **Stable** (see `VERSIONING.md` and
- * specs/decisions/0019-helpers-promoted-presets-stay-experimental.md): a new export is a minor release,
- * a changed signature or behavior is a breaking change.
+ * specs/decisions/0019-helpers-promoted-presets-stay-experimental.md): a new export is a minor release
+ * from `1.0` on (while the package is `0.x` the release tooling deflates it to a patch), a changed
+ * signature or behavior is a breaking change.
  *
  * Never re-exported from the package root (`src/index.ts`) -- this is a
  * second, independent public barrel, published under its own `./helpers`

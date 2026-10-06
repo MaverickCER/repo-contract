@@ -28,6 +28,17 @@ export type CycloneDxNpmResult =
     }
 
 /**
+ * A copy of an environment without `NODE_ENV`, so the tool falls back to its own default.
+ * @param environment - The environment to copy.
+ * @returns The copy, never the original.
+ */
+function withoutNodeEnv(environment: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const copy = { ...environment }
+  delete copy.NODE_ENV
+  return copy
+}
+
+/**
  * Runs `cyclonedx-npm` against `<root>/package-lock.json`, writing its own real, already-spec-
  * compliant CycloneDX JSON document directly to `<root>/docs/sbom.cdx.json` via the tool's own
  * `--output-file` -- this repository never re-serializes that document itself (no
@@ -100,6 +111,10 @@ export function runCycloneDxNpm(
     {
       cwd: root,
       encoding: "utf8",
+      // The build inventory must include development dependencies whatever the caller's
+      // environment says: with `NODE_ENV=production` cyclonedx-npm omits them by default, which
+      // would silently turn the build document into a production one.
+      env: options.production === true ? process.env : withoutNodeEnv(process.env),
       // Confirmed directly against this repository's own ~1200-component tree: well under 2
       // seconds. 5 minutes is a generous ceiling that still bounds a stalled invocation, matching
       // scripts/security-socket/scan.ts's own reasoning for its identical deadline.

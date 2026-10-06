@@ -40,8 +40,9 @@ the package reaches 1.0 — see [Pre-1.0 status](#pre-10-status) below):
   record types and the v2 record fields): promoted from Experimental by
   [ADR 0019](specs/decisions/0019-helpers-promoted-presets-stay-experimental.md) after a real
   feedback cycle -- `internal-package-contract` builds its whole exceptions system on them and
-  needed additive changes only. A new export is a minor; a changed signature or behavior is a
-  breaking change.
+  needed additive changes only. A new export is a minor from `1.0` on (while the package is `0.x`
+  the release tooling deflates it to a patch -- see [Pre-1.0 status](#pre-10-status)); a changed
+  signature or behavior is a breaking change.
 - **`./schema`**: the published JSON Schema files' own `$id`s and top-level `$ref` targets — see
   [Evidence and Verdict schema versioning](#evidence-and-verdict-schema-versioning) below for how
   the schemas _themselves_ version independently of this package's own semver.
@@ -140,10 +141,12 @@ reads and merges it.
 
 ### What `1.0.0` will promise
 
-At the `1.0.0` cut the Stable tier above is locked in, and the two surfaces other packages are built
-on are promoted from Experimental, so that `1.x` does not promise less than the ecosystem needs:
+At the `1.0.0` cut the Stable tier above is locked in. That includes `repo-contract/helpers`, which is
+already Stable today, so `1.0.0` keeps its existing promise rather than promoting it. The other
+surface that `internal-package-contract` is built on, `repo-contract/presets`, is promoted from
+Experimental at that cut, so that `1.x` does not promise less than the ecosystem needs:
 
-- **`repo-contract/helpers`** — the exception-registry primitives (`loadExceptionRegistry`,
+- **`repo-contract/helpers`** (already Stable) — the exception-registry primitives (`loadExceptionRegistry`,
   `reconcileExceptions`, `writeExceptionRegistry`, `evaluateExceptionRecord`, `hashRequirementFields`,
   `validateExceptionPolicyConfig`, `resolveExceptionPolicy`) and the types they take and return.
 - **`repo-contract/presets`** — the presets `internal-package-contract` composes, with their `run`

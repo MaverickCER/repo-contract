@@ -171,3 +171,35 @@ describe("renderMarkdownSummary() whole output", () => {
     expect(markdown).not.toContain("Whole run")
   })
 })
+
+describe("renderMarkdownSummary() failure fences", () => {
+  const failing = (rationale: string): string[] =>
+    renderMarkdownSummary(verdictOf({ tests: { outcome: "fail", rationale } }, false)).split("\n")
+
+  it("uses a three-backtick fence when the rationale has no longer run of backticks", () => {
+    expect(failing("plain")).toContain("```text")
+    expect(failing("one ` and two `` only")).toContain("```text")
+  })
+
+  it("opens and closes with a fence longer than the longest backtick run in the rationale", () => {
+    const three = failing("before\n```\nafter")
+    expect(three).toContain("````text")
+    expect(three.filter((line) => line === "````")).toHaveLength(1)
+    expect(three).toContain("```")
+    const run = "`".repeat(10)
+    const fence = "`".repeat(11)
+    const seven = failing(`a ${run} b\n\`\`\` c`)
+    expect(seven).toContain(`${fence}text`)
+    expect(seven.filter((line) => line === fence)).toHaveLength(1)
+  })
+
+  it("measures every run, not just the first one", () => {
+    expect(failing("``` first, ````` second, `` third")).toContain("``````text")
+  })
+
+  it("leaves the rationale itself untouched inside the fence", () => {
+    const lines = failing("x\n```\ny")
+    const open = lines.indexOf("````text")
+    expect(lines.slice(open + 1, open + 5)).toEqual(["x", "```", "y", "````"])
+  })
+})

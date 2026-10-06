@@ -99,4 +99,33 @@ describe("serializeRun()", () => {
     expect(out.verdict).toBe(`${JSON.stringify(verdict(), null, 2)}\n`)
     expect(JSON.parse(out.verdict)).toEqual(verdict())
   })
+
+  it("writes a bigint as its decimal string instead of throwing, and leaves other values alone", () => {
+    const withBigint = {
+      ...verdict(),
+      checks: { big: { outcome: "pass", rationale: "ok", output: 12345678901234567890n } },
+    } as never
+    const out = serializeRun({ evidence, verdict: withBigint })
+    const parsed = JSON.parse(out.verdict) as {
+      checks: { big: { output: unknown; rationale: string } }
+    }
+    expect(parsed.checks.big.output).toBe("12345678901234567890")
+    expect(parsed.checks.big.rationale).toBe("ok")
+    expect(JSON.parse(out.evidence)).toEqual(JSON.parse(JSON.stringify(evidence)))
+    expect(out.verdict.endsWith("\n")).toBe(true)
+  })
+
+  it("keeps a numeric value a number", () => {
+    const withNumber = {
+      ...verdict(),
+      checks: { n: { outcome: "pass", rationale: "ok", output: 42 } },
+    } as never
+    expect(
+      (
+        JSON.parse(serializeRun({ evidence, verdict: withNumber }).verdict) as never as {
+          checks: { n: { output: unknown } }
+        }
+      ).checks.n.output,
+    ).toBe(42)
+  })
 })
