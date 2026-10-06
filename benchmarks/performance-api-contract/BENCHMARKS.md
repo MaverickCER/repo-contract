@@ -4,16 +4,16 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-For a typical workload of **160 exports** per operation, routing the work through `repo-contract` adds **3.61 s** per operation compared with a bare-minimum baseline (**1,438× baseline** of the baseline). Overall, it grows O(n) with workload size (measured exponent 1.04). At list prices that is on the order of **~$10 – $100 per million operations** of compute.
+For a typical workload of **160 exports** per operation, routing the work through `repo-contract` adds **3.72 s** per operation compared with a bare-minimum baseline (**1,497× baseline** of the baseline). Overall, it grows O(n) with workload size (measured exponent 1.03). At list prices that is on the order of **~$10 – $100 per million operations** of compute.
 
 > The relative figure and the growth class are the dependable ones: both come from the same run, so they survive a change of machine. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
 
 | Cost | Typical (160 exports) | Largest (1280 exports) |
 | --- | --- | --- |
-| Added latency per operation | 3.61 s | 29.3 s |
-| Added latency, relative to baseline | 1,438× baseline | 2,584× baseline |
-| Added CPU time per operation | 5.20 s | 41.9 s |
-| Added memory per operation (heap delta) | 267.6 MiB | 211.2 MiB |
+| Added latency per operation | 3.72 s | 30.3 s |
+| Added latency, relative to baseline | 1,497× baseline | 2,628× baseline |
+| Added CPU time per operation | 5.43 s | 43.5 s |
+| Added memory per operation (heap delta) | 268.8 MiB | 188.4 MiB |
 | Compute cost per 1M operations (order of magnitude) | ~$10 – $100 | ~$100 – $1000 |
 | Single-core throughput ceiling of the overhead alone | 0 ops/s | 0 ops/s |
 
@@ -40,15 +40,15 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 | exports | Baseline | With package | Added | Added vs baseline | Added CPU | Est. $ / 1M ops |
 | --- | --- | --- | --- | --- | --- | --- |
-| 20 | 407 µs | 444 ms | 443 ms | 1,091× baseline | 684 ms | $0.923 – $7.69 |
-| 40 | 652 µs | 826 ms | 825 ms | 1,267× baseline | 1.18 s | $2.48 – $13.24 |
-| 80 | 1.24 ms | 1.60 s | 1.60 s | 1,296× baseline | 2.23 s | $9.19 – $25.11 |
-| 160 | 2.51 ms | 3.61 s | 3.61 s | 1,438× baseline | 5.20 s | $15.72 – $58.46 |
-| 320 | 3.84 ms | 7.14 s | 7.14 s | 1,859× baseline | 10.3 s | $40.56 – $115.70 |
-| 640 | 6.47 ms | 14.8 s | 14.8 s | 2,293× baseline | 21.1 s | $125.57 – $237.33 |
-| 1280 | 11.4 ms | 29.3 s | 29.3 s | 2,584× baseline | 41.9 s | $100.79 – $470.79 |
+| 20 | 430 µs | 440 ms | 440 ms | 1,025× baseline | 686 ms | $0.917 – $7.72 |
+| 40 | 675 µs | 836 ms | 835 ms | 1,239× baseline | 1.21 s | $2.50 – $13.61 |
+| 80 | 1.24 ms | 1.71 s | 1.71 s | 1,376× baseline | 2.42 s | $9.78 – $27.24 |
+| 160 | 2.49 ms | 3.72 s | 3.72 s | 1,497× baseline | 5.43 s | $16.27 – $61.11 |
+| 320 | 3.91 ms | 7.33 s | 7.32 s | 1,874× baseline | 10.7 s | $41.68 – $120.05 |
+| 640 | 6.46 ms | 15.0 s | 15.0 s | 2,327× baseline | 21.8 s | $127.37 – $244.63 |
+| 1280 | 11.5 ms | 30.3 s | 30.3 s | 2,628× baseline | 43.5 s | $92.75 – $489.19 |
 
-**How the total grows:** O(n) (linear), exponent 1.04 over 7 sizes.
+**How the total grows:** O(n) (linear), exponent 1.03 over 7 sizes.
 
 ## 2. Function by function
 
@@ -56,9 +56,9 @@ Every function the package exposes is measured on its own across the full size l
 
 | Function | Documented | Measured | Agreement | At 160 | At 1280 |
 | --- | --- | --- | --- | --- | --- |
-| `loadApiModel (both API descriptions)` | O(n) | O(n) | ✅ matches | 41.6 ms | 198 ms |
-| `normalizeApiPackage` | O(n log n) | O(n) | 🟡 close (neighbouring class) | 1.43 ms | 9.86 ms |
-| `classifyContractChanges (with type-assignability probing)` | O(n) | O(n) | ✅ matches | 3.52 s | 29.5 s |
+| `loadApiModel (both API descriptions)` | O(n) | O(n) | ✅ matches | 41.9 ms | 203 ms |
+| `normalizeApiPackage` | O(n log n) | O(n) | 🟡 close (neighbouring class) | 1.60 ms | 11.5 ms |
+| `classifyContractChanges (with type-assignability probing)` | O(n) | O(n) | ✅ matches | 3.59 s | 29.7 s |
 
 ### `loadApiModel (both API descriptions)`
 
@@ -78,17 +78,17 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** Once per API check, loading both the baseline and the current API description (this function loads both).
 
-**Measured: O(n)** (exponent 0.70, 7 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.71, 7 sizes) -- ✅ matches.
 
 | exports | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 11.6 ms | 15.3 ms | 43.9 ms | 1.6 MiB | 86 |
-| 40 | 21.3 ms | 23.1 ms | 71.9 ms | 2.9 MiB | 47 |
-| 80 | 28.3 ms | 29.3 ms | 81.4 ms | 5.5 MiB | 35 |
-| 160 | 41.6 ms | 46.5 ms | 96.0 ms | 10.5 MiB | 24 |
-| 320 | 61.8 ms | 67.4 ms | 124 ms | 19.8 MiB | 16 |
-| 640 | 109 ms | 119 ms | 196 ms | 38.6 MiB | 9 |
-| 1280 | 198 ms | 207 ms | 312 ms | 18.2 MiB | 5 |
+| 20 | 11.6 ms | 15.0 ms | 46.2 ms | 1.6 MiB | 86 |
+| 40 | 20.3 ms | 22.4 ms | 72.2 ms | 2.9 MiB | 49 |
+| 80 | 28.6 ms | 30.2 ms | 82.8 ms | 5.5 MiB | 35 |
+| 160 | 41.9 ms | 44.5 ms | 97.4 ms | 10.5 MiB | 24 |
+| 320 | 63.7 ms | 67.1 ms | 128 ms | 19.8 MiB | 16 |
+| 640 | 112 ms | 120 ms | 199 ms | 38.6 MiB | 9 |
+| 1280 | 203 ms | 218 ms | 331 ms | 18.2 MiB | 5 |
 
 ### `normalizeApiPackage`
 
@@ -108,17 +108,17 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** Once per API check, normalizing both the baseline and the current model (this function normalizes both).
 
-**Measured: O(n)** (exponent 0.77, 7 sizes) -- 🟡 close (neighbouring class).
+**Measured: O(n)** (exponent 0.80, 7 sizes) -- 🟡 close (neighbouring class).
 
 | exports | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 443 µs | 501 µs | 511 µs | 65.7 KiB | 2,258 |
-| 40 | 745 µs | 848 µs | 1.63 ms | 128.8 KiB | 1,342 |
-| 80 | 1.24 ms | 1.41 ms | 4.05 ms | 252.4 KiB | 808 |
-| 160 | 1.43 ms | 2.14 ms | 5.04 ms | 492.1 KiB | 700 |
-| 320 | 2.55 ms | 2.98 ms | 9.45 ms | 986.2 KiB | 392 |
-| 640 | 4.81 ms | 5.30 ms | 18.5 ms | 1.8 MiB | 208 |
-| 1280 | 9.86 ms | 10.9 ms | 38.1 ms | 3.6 MiB | 101 |
+| 20 | 464 µs | 511 µs | 1.22 ms | 65.7 KiB | 2,155 |
+| 40 | 813 µs | 918 µs | 1.91 ms | 128.8 KiB | 1,230 |
+| 80 | 1.36 ms | 1.50 ms | 3.89 ms | 252.4 KiB | 734 |
+| 160 | 1.60 ms | 2.23 ms | 5.94 ms | 492.1 KiB | 626 |
+| 320 | 2.81 ms | 6.14 ms | 10.8 ms | 986.5 KiB | 356 |
+| 640 | 5.63 ms | 8.77 ms | 20.5 ms | 1.8 MiB | 178 |
+| 1280 | 11.5 ms | 12.3 ms | 45.9 ms | 3.6 MiB | 87 |
 
 ### `classifyContractChanges (with type-assignability probing)`
 
@@ -147,35 +147,35 @@ Every function the package exposes is measured on its own across the full size l
 
 | exports | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 399 ms | 400 ms | 578 ms | 90.6 MiB | 3 |
-| 40 | 789 ms | 799 ms | 1.12 s | 167.2 MiB | 1 |
-| 80 | 1.55 s | 1.56 s | 2.16 s | 340.9 MiB | 1 |
-| 160 | 3.52 s | 3.54 s | 5.06 s | 269.9 MiB | 0 |
-| 320 | 7.00 s | 7.02 s | 9.95 s | 343.0 MiB | 0 |
-| 640 | 14.3 s | 14.3 s | 20.2 s | 609.7 MiB | 0 |
-| 1280 | 29.5 s | 29.6 s | 42.2 s | 185.6 MiB | 0 |
+| 20 | 419 ms | 422 ms | 618 ms | 90.7 MiB | 2 |
+| 40 | 823 ms | 838 ms | 1.19 s | 167.2 MiB | 1 |
+| 80 | 1.59 s | 1.61 s | 2.22 s | 340.7 MiB | 1 |
+| 160 | 3.59 s | 3.65 s | 5.23 s | 269.9 MiB | 0 |
+| 320 | 7.08 s | 7.15 s | 10.2 s | 343.1 MiB | 0 |
+| 640 | 14.7 s | 14.7 s | 21.1 s | 610.2 MiB | 0 |
+| 1280 | 29.7 s | 30.1 s | 42.8 s | 183.3 MiB | 0 |
 
 ## 3. What makes up one end-to-end operation
 
 Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls, so where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time): every moment of the operation belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly -- not against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
 
-**At 160 exports** (whole operation: 3.61 s)
+**At 160 exports** (whole operation: 3.72 s)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `classify-contract-changes` | 1 | 3.52 s | 3.52 s | 97% |
-| `load-api-model` | 1 | 41.6 ms | 41.6 ms | 1.2% |
-| `normalize-api-package` | 1 | 1.43 ms | 1.43 ms | 0.0% |
-| _unattributed_ |  |  | 53.0 ms | 1.5% |
+| `classify-contract-changes` | 1 | 3.59 s | 3.59 s | 97% |
+| `load-api-model` | 1 | 41.9 ms | 41.9 ms | 1.1% |
+| `normalize-api-package` | 1 | 1.60 ms | 1.60 ms | 0.0% |
+| _unattributed_ |  |  | 85.5 ms | 2.3% |
 
-**At 1280 exports** (whole operation: 29.3 s)
+**At 1280 exports** (whole operation: 30.3 s)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `classify-contract-changes` | 1 | 29.5 s | 29.5 s | 101% |
-| `load-api-model` | 1 | 198 ms | 198 ms | 0.7% |
-| `normalize-api-package` | 1 | 9.86 ms | 9.86 ms | 0.0% |
-| _unattributed_ |  |  | 0 | 0.0% |
+| `classify-contract-changes` | 1 | 29.7 s | 29.7 s | 98% |
+| `load-api-model` | 1 | 203 ms | 203 ms | 0.7% |
+| `normalize-api-package` | 1 | 11.5 ms | 11.5 ms | 0.0% |
+| _unattributed_ |  |  | 393 ms | 1.3% |
 
 ## Cost model
 
@@ -183,9 +183,9 @@ Estimates use two bracketing price shapes: **low** = CPU-priced compute ($0.040 
 
 ## Environment and method
 
-- Run: `2026-10-06T05:17:25.552Z` → `2026-10-06T05:25:46.975Z` (501 s), ci: CI (run 37416711506)
+- Run: `2026-10-06T16:21:32.929Z` → `2026-10-06T16:30:06.247Z` (513 s), ci: CI (run 37493164518)
 - Machine: AMD EPYC 7763 64-Core Processor, 4 logical core(s) (2 physical), 15990 MB RAM, linux/x64, Node v24.21.0, GitHub Actions
-- Git: `7be5b51b14d072c3935b3481e2021a1890d8573d` on `fix/v1-audit`
+- Git: `be604bb86592b8a22b30a3696d9616dbfee0db0a` on `fix/v1-audit`
 - Sizes: 20, 40, 80, 160, 320, 640, 1280 exports -- One exported function in the package's public API. 160 is a mid-sized library's surface; the ladder reaches 1,280. It stops there, not at 10,240, because every size compiles a real synthetic TypeScript package and runs API Extractor over it, which takes minutes at the largest sizes.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They exist to show how _this_ package's cost changes between runs on comparable hardware and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).
