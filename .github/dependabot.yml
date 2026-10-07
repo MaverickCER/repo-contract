@@ -22,6 +22,16 @@ updates:
     versioning-strategy: increase-if-necessary
     labels:
       - dependencies
+    ignore:
+      # TypeScript 7 removes the compiler API (createSourceFile, forEachChild, the scanner, ...) that
+      # repo-contract's static analysis is written against; stay on 5.x/6.x until an adapter exists.
+      # Everything below 7 still updates.
+      - dependency-name: "typescript"
+        versions: [">= 7.0.0"]
+      # changesets/action v1 (used by the release workflow) targets Changesets CLI v2; CLI v3 needs the
+      # action's v2. Move both together, then remove this rule.
+      - dependency-name: "@changesets/cli"
+        update-types: ["version-update:semver-major"]
     groups:
       # One PR per week for the whole dev/verification toolchain -- minor, patch,
       # AND major. None of it reaches consumers, so a batched bump is fine; a
