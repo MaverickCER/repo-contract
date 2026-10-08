@@ -20,9 +20,24 @@ import { rmSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
+import { ensureStrykerVitest5Compat } from "../node_modules/internal-package-contract/scripts/stryker-vitest5-compat.mjs"
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
 rmSync(path.join(root, "reports", "mutation", "stryker-incremental.json"), { force: true })
+
+// Vitest 5 changed how test names are matched; until the Stryker runner ships its own fix every mutant
+// would run zero tests and survive (stryker-js#6210). The shared compatibility step aligns the runner.
+const compat = ensureStrykerVitest5Compat(root)
+if (compat.status === "patched") {
+  console.error(
+    `[run-mutation] Vitest ${compat.vitestVersion}: aligned @stryker-mutator/vitest-runner's test-name separator with Vitest 5 (stryker-js#6210).`,
+  )
+} else if (compat.status === "unrecognised") {
+  console.error(
+    `[run-mutation] Vitest ${compat.vitestVersion} with an @stryker-mutator/vitest-runner this package does not recognise: if every mutant survives having run 0 tests, see stryker-js#6210.`,
+  )
+}
 
 const child = spawn("stryker", ["run", "--reporters", "json"], {
   cwd: root,

@@ -202,8 +202,38 @@ describe("evaluateVitestJsonPolicy", () => {
       ),
     )
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("suite.test.ts — no messages test")
-    expect(result.rationale).not.toContain("Stryker was here")
+    // Exact equality, not `toContain`: a failure with no messages must list as `suite — test` with no
+    // trailing separator, which a substring check cannot tell apart from `suite — test — `.
+    expect(result.rationale).toBe(
+      "Vitest reported 1 failing test(s) across 1 failing suite(s):\n- suite.test.ts — no messages test",
+    )
+  })
+
+  it("lists no failure detail for a failing suite that has no assertionResults at all", () => {
+    const result = evaluateVitestJsonPolicy(
+      output(
+        report({
+          numFailedTests: 1,
+          numFailedTestSuites: 1,
+          testResults: [{ name: "suite.test.ts" }],
+        }),
+      ),
+    )
+    expect(result).toEqual({
+      outcome: "fail",
+      rationale: "Vitest reported 1 failing test(s) across 1 failing suite(s):",
+    })
+  })
+
+  it("fails with the invalid-report-data rationale when testResults is present but not an array", () => {
+    expect(evaluateVitestJsonPolicy(output(report({ testResults: "none" })))).toEqual({
+      outcome: "fail",
+      rationale: "Vitest produced invalid JSON report data.",
+    })
+    expect(evaluateVitestJsonPolicy(output(report({ testResults: { 0: {} } })))).toEqual({
+      outcome: "fail",
+      rationale: "Vitest produced invalid JSON report data.",
+    })
   })
 
   it("lists every failing suite/test across multiple suites, each as its own bullet", () => {

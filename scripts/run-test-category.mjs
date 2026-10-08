@@ -12,8 +12,18 @@
 // stdio is fully inherited -- this script never writes anything of its own
 // to stdout, so a caller parsing vitest's --reporter=json output (e.g. a
 // repo-contract check) sees exactly vitest's own stdout, uncorrupted.
+//
+// One exception, for --reporter=json: as of Vitest 5 that reporter no longer prints the report to stdout --
+// it writes a file of its own choosing and prints only a "JSON report written to ..." line -- and
+// Vitest 4 with --outputFile writes the file alone. So this script has Vitest write the report to a fresh
+// private temporary file and prints that file's contents to stdout once Vitest has exited. Vitest's own
+// stdout (its "JSON report written to ..." notice, any coverage text) goes to stderr meanwhile, so stdout
+// carries the report and nothing else. A caller that parses stdout therefore gets the report on either
+// major, and can never read a stale one: the file is created for this run and removed after it.
 
 import spawn from "cross-spawn"
+import { mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -32,16 +42,50 @@ if (!category || !CATEGORIES.has(category)) {
 
 const configFile = `vitest.${category}.config.ts`
 
-const child = spawn("vitest", ["run", "--config", configFile, ...passthroughArgs], {
-  cwd: root,
-  stdio: "inherit",
-})
+const wantsJsonOnStdout =
+  passthroughArgs.includes("--reporter=json") &&
+  !passthroughArgs.some((arg) => arg.startsWith("--outputFile"))
+const reportDir = wantsJsonOnStdout
+  ? mkdtempSync(path.join(tmpdir(), "run-test-category-"))
+  : undefined
+const reportFile = reportDir === undefined ? undefined : path.join(reportDir, "report.json")
 
+const child = spawn(
+  "vitest",
+  [
+    "run",
+    "--config",
+    configFile,
+    ...passthroughArgs,
+    ...(reportFile === undefined ? [] : [`--outputFile=${reportFile}`]),
+  ],
+  { cwd: root, stdio: wantsJsonOnStdout ? ["inherit", 2, "inherit"] : "inherit" },
+)
+
+// Prints the report Vitest wrote (see the header) and removes its private directory. A missing report --
+// Vitest died before writing one -- prints nothing, which the caller reports as unparseable output.
+function emitReport() {
+  if (reportFile === undefined || reportDir === undefined) return
+  try {
+    process.stdout.write(readFileSync(reportFile, "utf8"))
+  } catch {
+    // no report was written
+  } finally {
+    rmSync(reportDir, { recursive: true, force: true })
+  }
+}
+
+// Both handlers set `process.exitCode` and let the process end on its own instead of calling
+// `process.exit()`: when stdout is a pipe (as it is under repo-contract's runner) a large report is written
+// asynchronously, and `process.exit()` discards whatever has not been flushed, which turns a valid JSON
+// report into a truncated, unparseable one.
 child.once("error", (error) => {
+  emitReport()
   console.error(`[run-test-category] failed to spawn vitest: ${error.message}`)
-  process.exit(1)
+  process.exitCode = 1
 })
 
 child.once("exit", (code, signal) => {
-  process.exit(signal ? 1 : (code ?? 1))
+  emitReport()
+  process.exitCode = signal ? 1 : (code ?? 1)
 })
