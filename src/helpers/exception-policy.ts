@@ -172,15 +172,8 @@ export function resolveExceptionPolicy(
   if (exactMatch) return exactMatch[1]
 
   const globMatches = rules
-    .filter(([pattern]) => {
-      // Equivalent mutant: by the time this line runs, `exactMatch` above has already returned
-      // for any entry whose `pattern` literally equals `category`, so no remaining entry in
-      // `rules` can ever have `pattern === category` here -- `pattern !== category` is therefore
-      // always `true` at this point, and no test could ever distinguish it from the literal
-      // `true` a mutant substitutes for it.
-      // Stryker disable next-line ConditionalExpression -- equivalent mutant, see comment above.
-      return pattern !== category && globMatch(category, pattern)
-    })
+    // An entry whose pattern equals `category` literally was already returned as `exactMatch` above.
+    .filter(([pattern]) => globMatch(category, pattern))
     .map(([, policy]) => policy)
   if (globMatches.length > 0) {
     return globMatches.reduce(stricterOf)
@@ -431,11 +424,5 @@ export function hashRequirementFields<TRecord>(
   fieldValue: (record: TRecord, requirement: string) => string,
 ): string {
   const canonical = JSON.stringify(fields.map((field) => [field, fieldValue(record, field)]))
-  // Equivalent mutant: Node's Hash.update(data, inputEncoding) treats a falsy/empty
-  // inputEncoding identically to "utf8" for a string `data` argument -- confirmed directly:
-  // createHash("sha256").update(x, "utf8").digest("hex") === createHash("sha256").update(x,
-  // "").digest("hex") for every input tried. No test could ever distinguish "utf8" from "" at
-  // this exact call site.
-  // Stryker disable next-line StringLiteral -- equivalent mutant, see comment above.
-  return createHash("sha256").update(canonical, "utf8").digest("hex")
+  return createHash("sha256").update(canonical).digest("hex")
 }

@@ -63,7 +63,6 @@ export async function runWithConcurrencyGraph<T, R>(
   // results either way, since a stray non-index entry only ever causes a
   // harmless, unused `remaining[...]` property to be created when
   // processed, never affecting `ready` or the final results.
-  // Stryker disable next-line ArrayDeclaration -- each dependents[] entry's initial contents are unobservable regardless of value, confirmed empirically across diamond, fan-out, and no-dependency shapes that seeding it with garbage produces identical scheduling results.
   const dependents: number[][] = items.map(() => [])
   dependencies.forEach((indexes, index) => {
     for (const depIndex of indexes) {
@@ -98,7 +97,6 @@ export async function runWithConcurrencyGraph<T, R>(
   // indistinguishable in the returned result. Confirmed empirically: an
   // unexempted run showed the `ObjectLiteral` replacement (`{}`, i.e. starting
   // from a zero-length array instead) survives.
-  // Stryker disable next-line ObjectLiteral -- pre-sizing only matters while the run is in flight; by completion every index is guaranteed filled exactly once, so a sparse vs. dense start is indistinguishable in the returned result, confirmed empirically that the unexempted {} mutant survives.
   const results: R[] = Array.from({ length: items.length })
   const effectiveConcurrency = concurrencyIsUsable ? Math.max(1, concurrency) : 1
   let active = 0
@@ -133,7 +131,6 @@ export async function runWithConcurrencyGraph<T, R>(
       // so a later rejectPromise call would have no observable effect on
       // the promise's own outcome regardless -- kept for clarity/intent,
       // not because it changes behavior.
-      // Stryker disable next-line ConditionalExpression -- native Promise resolution is idempotent, so a second rejectPromise call after settling has no observable effect either way; kept only for clarity/intent, not because it changes behavior.
       if (done) return
       done = true
       // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- propagated verbatim, not wrapped: matches runWithConcurrency's own existing behavior (a worker rejection passes straight through Promise.all unmodified), which this function is meant to be a drop-in graph-aware replacement for.
@@ -163,13 +160,11 @@ export async function runWithConcurrencyGraph<T, R>(
       // `noUncheckedIndexedAccess` can't itself express any of these
       // invariants, confirmed equivalent by exhaustive differential
       // testing, not assumed.
-      // Stryker disable ConditionalExpression,EqualityOperator,LogicalOperator,BlockStatement -- loosening the while condition or its guard checks to always-true is behaviorally invisible: the loop just runs one harmless extra iteration where ready.shift() returns undefined and the immediately-following index === undefined check breaks back out, and every index ever pushed onto ready is already guaranteed valid so the equivalent item === undefined guard is confirmed equivalent by exhaustive differential testing, not assumed.
       while (active < effectiveConcurrency && ready.length > 0) {
         const index = ready.shift()
         if (index === undefined) break
         const item = items[index]
         if (item === undefined) continue
-        // Stryker restore all
         active += 1
         worker(item, index)
           .then((result) => {
@@ -185,7 +180,6 @@ export async function runWithConcurrencyGraph<T, R>(
             // branch never executes at all. The surrounding `BlockStatement`/
             // `LogicalOperator` mutants on this same line are not exempted:
             // confirmed Killed under the same run, so they stay live.
-            // Stryker disable next-line ArrayDeclaration -- dependents[index] can never actually be undefined (dependents is built with exactly items.length entries, one per valid index), confirmed empirically -- not just by analogy -- that un-exempting this mutant and running Stryker scoped to this file shows the ?? [] fallback's own ArrayDeclaration content is NoCoverage, i.e. the fallback branch never executes.
             for (const dependentIndex of dependents[index] ?? []) {
               const nextRemaining = (remaining[dependentIndex] ?? 0) - 1
               remaining[dependentIndex] = nextRemaining

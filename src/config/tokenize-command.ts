@@ -96,67 +96,32 @@ export function tokenizeRunString(run: string, checkId: string): readonly string
   let current = ""
   let hasCurrent = false
   let quote: "'" | '"' | null = null
-  let i = 0
+  // Index of the first character the next pass handles: an escape sequence consumes more than one
+  // character, and the passes it covers must not handle them again. The loop walks a finite list of
+  // the string's own UTF-16 units (the unit `consumeEscape` indexes by), so it cannot run unbounded
+  // however the body changes.
+  let resume = 0
 
-  // Loosening the `i < run.length` bound to `i <= run.length` is
-  // behaviorally invisible: the one extra iteration it would permit reads
-  // `run[run.length]`, which is `undefined`, and is caught immediately below
-  // by the (itself unmutatable, for the same `noUncheckedIndexedAccess`
-  // reason) `char === undefined` check -- confirmed equivalent by exhaustive
-  // differential testing against a wide corpus of inputs, not assumed.
-  //
-  // `iterations` is a second, independent forward-progress bound: every loop
-  // pass that doesn't throw/break advances `i` by exactly 1 or 2, so no
-  // correct execution ever needs more than `run.length` passes -- a
-  // regression that makes `i` stand still or move backward (a `+=`
-  // accidentally becoming `-=`), or that wipes the loop body entirely,
-  // would otherwise hang forever instead of failing loudly. It is
-  // deliberately tracked in the `for` statement's own update/condition
-  // clauses rather than inside the loop body: those clauses sit outside the
-  // body's own `{ ... }` block, so they keep running (and keep bounding the
-  // loop) even under a mutation that replaces the entire body with `{}`,
-  // which a bound placed inside the body could not survive.
-  //
-  // Every mutation of this line's own clauses (loosening either half of the
-  // `&&`, swapping it for `||`, or reversing `iterations`' own direction) is
-  // itself equivalent as long as the *body* still advances `i` correctly:
-  // `i < run.length` alone already terminates the loop at the right point
-  // for correct code, with the `iterations` bound only ever mattering in
-  // combination with a genuine body regression -- confirmed empirically:
-  // mutating this line in isolation (leaving the body untouched) produces no
-  // observable difference. It exists precisely to convert the *body*
-  // mutations described above from an unkillable hang into a fast, visible
-  // test failure, not to be independently killable itself.
-  // Stryker disable next-line ConditionalExpression,EqualityOperator,LogicalOperator,AssignmentOperator,BlockStatement -- loosening i < run.length to i <= run.length is behaviorally invisible since the unmutatable char === undefined check right after already catches it, and the iterations bound is a second, independent forward-progress bound tracked in this line's own clauses (outside the body's braces) specifically so a body-emptying mutation can't produce an unkillable hang; every mutation of this line's own clauses is equivalent as long as the body still advances i correctly, confirmed empirically.
-  for (let iterations = 0; i < run.length && iterations <= run.length; iterations += 1) {
-    const char = run[i]
-    // Unreachable given the loop condition (`i < run.length` already
-    // guarantees `run[i]` is defined) -- kept only because
-    // `noUncheckedIndexedAccess` can't itself express that invariant.
-    // Stryker disable next-line ConditionalExpression -- unreachable given the loop's own i < run.length guard already ensures run[i] is defined; kept only because noUncheckedIndexedAccess can't itself express that invariant.
-    if (char === undefined) break
-
+  for (const [i, char] of run.split("").entries()) {
+    if (i < resume) continue
     if (quote !== null) {
       const escape = consumeEscape(run, i, quote)
       if (escape !== undefined) {
         current += escape.value
-        i = escape.next
+        resume = escape.next
         continue
       }
       if (char === quote) {
         quote = null
-        i += 1
         continue
       }
       current += char
-      i += 1
       continue
     }
 
     if (char === "'" || char === '"') {
       quote = char
       hasCurrent = true
-      i += 1
       continue
     }
 
@@ -180,7 +145,7 @@ export function tokenizeRunString(run: string, checkId: string): readonly string
     if (escape !== undefined) {
       current += escape.value
       hasCurrent = true
-      i = escape.next
+      resume = escape.next
       continue
     }
 
@@ -190,7 +155,6 @@ export function tokenizeRunString(run: string, checkId: string): readonly string
         current = ""
         hasCurrent = false
       }
-      i += 1
       continue
     }
 
@@ -198,7 +162,6 @@ export function tokenizeRunString(run: string, checkId: string): readonly string
 
     current += char
     hasCurrent = true
-    i += 1
   }
 
   if (quote !== null) {

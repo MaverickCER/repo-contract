@@ -73,7 +73,6 @@ function installTerminationHandlers(
      * per-process, so that real exercise is invisible here. Same reasoning
      * applies to Stryker's mutation testing, which only observes this
      * process's own test run. */
-    // Stryker disable BlockStatement,CallExpression,ConditionalExpression,EqualityOperator,BooleanLiteral -- this handler body only executes when the host process receives a real SIGINT/SIGTERM; the test exercising it necessarily runs in a separate child process (v8 coverage and Stryker's own instrumentation are both per-process), so mutating this body -- including the hadActiveChecks/!hadActiveChecks branch below -- always reports an uncoverable-looking survivor rather than a real gap.
     const handler = (): void => {
       // Must run before killing anything currently active (see this
       // function's own doc comment): synchronous, so every check the
@@ -113,7 +112,6 @@ function installTerminationHandlers(
         process.kill(process.pid, signal)
       }, SELF_TERMINATE_DELAY_MS)
     }
-    // Stryker restore all
     /* v8 ignore stop */
     handlers.set(signal, handler)
     process.once(signal, handler)
@@ -161,7 +159,6 @@ function resolveCheckDependencies(
     // instrumentation here reflects that mismatch between wall-clock budget and V8's stack limit,
     // not a gap in test coverage -- a known limitation of mutation testing for recursion/loop-guard
     // code generally, not specific to this function.
-    // Stryker disable next-line ConditionalExpression -- disabling this in an uninstrumented process empirically produces unbounded mutual recursion that hits V8's stack limit in single-digit milliseconds, but under Stryker's own per-statement instrumentation overhead reaching that same stack limit takes long enough to exceed stryker.config.mjs's timeoutMS, surfacing as a "Timeout" verdict rather than a real test gap.
     if (required.has(checkId)) return
 
     const check = checks[checkId]
@@ -229,7 +226,6 @@ export async function runChecks(
         // the real exercise -- run-checks.test.ts's "does not spawn a check still queued behind
         // the concurrency limit..." test, run in a separate child process -- is invisible here
         // for the identical reason already documented on that handler).
-        // Stryker disable next-line ArrayDeclaration -- see comment immediately above: only provable via a real signal delivered to a separate child process, invisible to this process's own Stryker instrumentation, the same per-process-invisible situation already documented on installTerminationHandlers' handler.
         [hostAbortController.signal],
   )
 
@@ -257,14 +253,12 @@ export async function runChecks(
     // isolated check alone in `entries`, with nothing else to wait on,
     // resolves to zero effective edges too -- the same proven-equivalent
     // case).
-    // Stryker disable CallExpression,ArrowFunction,OptionalChaining,LogicalOperator,EqualityOperator,UnaryOperator,ConditionalExpression,BlockStatement -- dependency-scheduler.test.ts's own "zero-edges equivalence" suite already proves runWithConcurrencyGraph behaves identically to runWithConcurrency for a graph with no real edges, so this fast path is a pure performance optimization: every existing no-dependsOn/no-isolated test would pass identically either way, making this branch provably unobservable rather than undertested.
     const hasDependencies = entries.some(
       ([, check]) => (check.dependsOn?.length ?? 0) > 0 || check.isolated === true,
     )
     if (!hasDependencies) {
       return await runWithConcurrency(entries, concurrency, worker)
     }
-    // Stryker restore all
 
     const indexById = new Map(entries.map(([checkId], index) => [checkId, index]))
     // Precomputed once per run rather than re-scanned inside
@@ -280,7 +274,6 @@ export async function runChecks(
     // never appearing in any real edge list. Confirmed empirically, not assumed: `["Stryker was
     // here", 2, 5].filter((i) => i < 10)` evaluates to `[2, 5]`, dropping the bogus entry with no
     // trace.
-    // Stryker disable next-line ArrayDeclaration -- this array's own initial contents are unobservable regardless of what they are: every real isolated index is still pushed on below, and dependencyIndexesFor's own earlierIsolated filter compares each entry against a numeric index with `<`, which coerces a non-numeric seed value to NaN and silently filters it out (every comparison against NaN is false) -- confirmed empirically that a bogus seed entry never appears in any real edge list.
     const isolatedIndexes: number[] = []
     for (const [entryIndex, [, entryCheck]] of entries.entries()) {
       if (entryCheck.isolated === true) isolatedIndexes.push(entryIndex)
@@ -312,11 +305,9 @@ export async function runChecks(
         // unreachable given that guarantee, same as this file's other
         // upstream-validated invariants.
         /* v8 ignore start */
-        // Stryker disable EqualityOperator,ConditionalExpression,BlockStatement,StringLiteral,CallExpression -- validate-config.ts has already guaranteed, before runChecks is ever invoked, that every dependsOn id names a check that exists in this same checks record; reaching this would be a bug in that guarantee, not a user-input problem.
         if (depIndex === undefined) {
           throw new Error(`internal: dependsOn references unknown check id "${depId}".`)
         }
-        // Stryker restore all
         /* v8 ignore stop */
         return depIndex
       })
@@ -338,7 +329,6 @@ export async function runChecks(
       // `isolated === true` -- so `index` (this check's own) can never itself be a member of
       // `isolatedIndexes`, making `isolatedIndex === index` unconditionally false for every value
       // this filter is ever called with. `<` and `<=` therefore select the identical subset here.
-      // Stryker disable next-line EqualityOperator -- provably equivalent: this branch only runs when check.isolated !== true, and isolatedIndexes contains only indexes of checks where isolated === true, so this check's own `index` can never be a member of isolatedIndexes -- isolatedIndex === index is unconditionally false, making `<` and `<=` select the identical subset for every value this filter is ever called with.
       const earlierIsolated = isolatedIndexes.filter((isolatedIndex) => isolatedIndex < index)
       return [...new Set([...declared, ...earlierIsolated])]
     }

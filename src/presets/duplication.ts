@@ -79,7 +79,6 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
         // default `toString()` encoding is itself utf8, so parsing succeeds
         // identically either way. No test can observe a difference through
         // this policy's output.
-        // Stryker disable next-line StringLiteral -- JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way
         () => readFile(REPORT_PATH, "utf8"),
         "jscpd did not produce its expected JSON report.",
         "jscpd produced invalid JSON evidence.",

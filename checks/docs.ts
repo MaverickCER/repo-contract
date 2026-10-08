@@ -185,7 +185,6 @@ function evaluateLinkWaiver(record: DocsLinkExceptionRecord | undefined): {
   // so its exact array identity/contents on this early return are unobservable through any real
   // call path. Hand-verified: replacing it with a non-empty placeholder array leaves every test in
   // policy.test.ts passing unchanged.
-  // Stryker disable next-line ArrayDeclaration -- missing is never read when verdict is "unmatched", only by the sibling "insufficient" branch below.
   if (record === undefined) return { verdict: "unmatched", missing: [] }
   const determinant = evaluateExceptionRecord({
     record,
@@ -200,7 +199,6 @@ function evaluateLinkWaiver(record: DocsLinkExceptionRecord | undefined): {
   // above-medium-severity exclusion, which this file's own policy never configures). Defensive
   // dead code for a case this file's own config makes unreachable, not a real coverage gap --
   // same reasoning as internal-package-contract's checks/mutation.ts's identical guard.
-  // Stryker disable next-line ConditionalExpression, StringLiteral -- DOCS_LINKS_POLICY never configures a "forbidden" tier, so this branch is structurally unreachable dead code.
   if (determinant.verdict === "forbidden") return { verdict: "unmatched", missing: [] }
   return { verdict: determinant.verdict, missing: determinant.missing }
 }
@@ -287,7 +285,6 @@ export function evaluateDocsPolicy({
   // that point `offenders.length` is always 0, so `- offenders.length` and `+ offenders.length`
   // are byte-identical to `brokenLinks.length` either way. Hand-verified: swapping the operator
   // leaves every test in policy.test.ts passing unchanged.
-  // Stryker disable next-line ArithmeticOperator -- only read when offenders.length is already 0, making +/- byte-identical.
   const waivedCount = brokenLinks.length - offenders.length
 
   const staleLines = linkExceptions.staleExceptions.map(
@@ -328,7 +325,6 @@ export function evaluateDocsPolicy({
           // therefore never hold more than one entry, making the `", "` separator unobservable
           // (`.join` never has a second element to separate). Hand-verified: forcing this to
           // `.join("")` leaves every test in policy.test.ts passing unchanged.
-          // Stryker disable next-line StringLiteral -- d.missing can never hold more than one entry given DOCS_LINKS_POLICY's single requirement, so the join separator is unobservable.
           `exception incomplete (missing: ${d.missing.join(", ")})`
     return `${formatBrokenLink(d.link)} -- ${detail}`
   })

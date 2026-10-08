@@ -37,7 +37,6 @@ export const securitySecrets: CheckDefinitionConfig = {
     const parsed = await readJsonReport<readonly SecretlintResult[]>(
       // Provably equivalent, not a coverage gap -- see the identical
       // comment in src/presets/duplication.ts for why.
-      // Stryker disable next-line StringLiteral -- JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way
       () => readFile("reports/secretlint.json", "utf8"),
       "Secretlint did not produce its expected JSON report.",
       "Secretlint produced invalid JSON evidence.",

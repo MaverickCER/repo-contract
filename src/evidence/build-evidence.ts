@@ -33,48 +33,34 @@ export async function buildEvidence(
   startedAt: Date,
   completedAt: Date,
 ): Promise<BuiltEvidence> {
-  // Mirrors src/policy/run-policies.ts's own thrown-error aggregation: each
-  // mapped entry catches its own failure and records it rather than letting
-  // it reject `Promise.all` directly, so that two checks whose `output.schema`
-  // both throw during validation (`StandardSchemaValidateThrewError` -- the
-  // only error `parseOutput` can still throw) are both reported, not just
-  // whichever rejected first.
-  const thrown: unknown[] = []
-
-  const entries = await Promise.all(
+  // Every output is parsed to completion before any failure is reported, so that two checks whose
+  // `output.schema` both throw during validation (`StandardSchemaValidateThrewError` -- the only
+  // error `parseOutput` can still throw) are both reported, not just whichever rejected first.
+  const settled = await Promise.allSettled(
     results.map(async ([checkId, check, raw]): Promise<ParsedCheckEntry> => {
       if (check.output === undefined) return [checkId, check, raw]
-      try {
-        const output = await parseOutput(
-          check.output.format,
-          raw.stdout,
-          checkId,
-          check.output.schema,
-        )
-        return [checkId, check, { ...raw, output }]
-      } catch (error) {
-        thrown.push(error)
-        // Never actually consumed -- every branch below that follows a
-        // non-empty `thrown` throws before `entries` is read.
-        // Stryker disable next-line ArrayDeclaration -- this tuple is never read: both branches below that can run when `thrown` is non-empty (thrown.length === 1 or > 1) throw before `entries` -- the array this returns into -- is ever returned to a caller.
-        return [checkId, check, raw]
-      }
+      const output = await parseOutput(
+        check.output.format,
+        raw.stdout,
+        checkId,
+        check.output.schema,
+      )
+      return [checkId, check, { ...raw, output }]
     }),
   )
 
-  if (thrown.length === 1) {
-    const [only] = thrown as [StandardSchemaValidateThrewError]
-    throw only
+  const thrown = settled.flatMap((outcome): unknown[] =>
+    outcome.status === "rejected" ? [outcome.reason as unknown] : [],
+  )
+  if (thrown.length > 0) {
+    throw thrown.length === 1
+      ? (thrown[0] as StandardSchemaValidateThrewError)
+      : new AggregateError(thrown, `${String(thrown.length)} check output(s) failed to parse.`)
   }
-  // "> 1" vs. ">= 1" are equivalent here for the same reason as the
-  // identical comparison in src/policy/run-policies.ts: the `=== 1` early
-  // return just above already consumes the length-1 case, so by the time
-  // this line runs, thrown.length is never exactly 1 -- either 0 (falls
-  // through below either way) or >= 2 (takes this branch either way).
-  // Stryker disable next-line EqualityOperator -- "> 1" vs. ">= 1" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this comparison's real behavior without anyone noticing.
-  if (thrown.length > 1) {
-    throw new AggregateError(thrown, `${String(thrown.length)} check output(s) failed to parse.`)
-  }
+  // Nothing rejected past the check above, so every outcome is fulfilled.
+  const entries = settled.map(
+    (outcome) => (outcome as PromiseFulfilledResult<ParsedCheckEntry>).value,
+  )
 
   // `Evidence["checks"]` is a mapped type over the *specific* CheckSchema a
   // consumer's config declares (see runRepoContract's own generic

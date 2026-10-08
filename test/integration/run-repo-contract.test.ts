@@ -263,6 +263,30 @@ describe("runRepoContract", () => {
     expect(verdict.passed).toBe(true)
   })
 
+  it("concurrency: 1 runs checks one at a time, never overlapping, even when more cores are available", async () => {
+    // Each check prints when it started and finished; with a limit of one, the second must start
+    // after the first has finished. A limit that is dropped (every core used) lets them overlap.
+    const timed = [
+      node,
+      "-e",
+      "const s=Date.now();setTimeout(()=>process.stdout.write(s+','+Date.now()),400)",
+    ]
+    const { evidence } = await runRepoContract({
+      checks: {
+        a: { run: timed, policy: () => ({ outcome: "pass", rationale: "ok" }) },
+        b: { run: timed, policy: () => ({ outcome: "pass", rationale: "ok" }) },
+      },
+      concurrency: 1,
+      spawn: testSpawn,
+      env: testEnv,
+    })
+    const spans = Object.values(evidence.checks)
+      .map((check) => check.stdout.split(",").map(Number) as [number, number])
+      .sort((x, y) => x[0] - y[0])
+    expect(spans).toHaveLength(2)
+    expect(spans[1]?.[0]).toBeGreaterThanOrEqual(spans[0]?.[1] ?? Infinity)
+  })
+
   it("a config-level shell: true actually reaches the spawned process, not just validation -- a check with no shell of its own still gets real shell interpretation", async () => {
     // Regression coverage for run-repo-contract.ts's `execution.shell = config.shell ?? false`:
     // this can only be distinguished from a config.shell that's silently dropped by observing real
