@@ -1,9 +1,28 @@
-import type { JsonAssertionResult, JsonTestResult, JsonTestResults } from "vitest/reporters"
 import type { ParsedOutput, PolicyResult } from "../../types.js"
 
-type VitestJsonReport = JsonTestResults
-type VitestJsonTestSuite = JsonTestResult
-type VitestJsonAssertion = JsonAssertionResult
+// The parts of Vitest's `--reporter=json` output this evaluator reads, declared here rather than imported
+// from Vitest: the output is untrusted parsed JSON, and the types Vitest exports for it moved between
+// major versions (`vitest/reporters` up to 4, `vitest/node` from 5), so importing them would tie this
+// published package to one Vitest major.
+interface VitestJsonAssertion {
+  readonly status: string
+  readonly fullName: string
+  readonly failureMessages?: readonly string[] | null
+  readonly location?: { readonly line: number; readonly column: number } | null
+}
+
+interface VitestJsonTestSuite {
+  readonly name: string
+  readonly assertionResults: readonly VitestJsonAssertion[]
+}
+
+interface VitestJsonReport {
+  readonly numFailedTests: number
+  readonly numFailedTestSuites: number
+  readonly numTotalTests: number
+  readonly numTotalTestSuites: number
+  readonly testResults: readonly VitestJsonTestSuite[]
+}
 
 /**
  * Interprets Vitest's own `--reporter=json` output shape -- and nothing
@@ -34,14 +53,11 @@ export function evaluateVitestJsonPolicy(output: ParsedOutput<unknown> | undefin
   // whole `runRepoContract()` promise with. `numFailedTests`/
   // `numFailedTestSuites` being `undefined` (not `0`) already falls through the
   // pass branch below, so `testResults` must be guarded before it is walked.
-  const value: unknown = output.value
-  if (typeof value !== "object" || value === null) {
-    return { outcome: "fail", rationale: "Vitest produced invalid JSON report data." }
-  }
-
-  const report = value as VitestJsonReport
-
-  if (!Array.isArray(report.testResults)) {
+  //
+  // One guard covers every such value: `null` and `undefined` have no `testResults` (the `?.`), and a
+  // primitive, a string or any object without a `testResults` array fails the `Array.isArray` test.
+  const report = output.value as Partial<VitestJsonReport> | null | undefined
+  if (!Array.isArray(report?.testResults)) {
     return { outcome: "fail", rationale: "Vitest produced invalid JSON report data." }
   }
 
@@ -56,33 +72,22 @@ export function evaluateVitestJsonPolicy(output: ParsedOutput<unknown> | undefin
   // `JsonTestResult` -- a suite missing `assertionResults` entirely (a partial or
   // older reporter shape) must not throw out of the policy, just contribute no
   // failure detail lines.
-  const failures = report.testResults.flatMap((suite: Partial<VitestJsonTestSuite>): string[] =>
-    (suite.assertionResults ?? [])
-      .filter((test: VitestJsonAssertion) => test.status === "failed")
-      .map((test: VitestJsonAssertion) => {
-        const location = test.location
-          ? `:${String(test.location.line)}:${String(test.location.column)}`
-          : ""
+  const failures = report.testResults.flatMap(
+    (suite: Partial<VitestJsonTestSuite>): string[] =>
+      suite.assertionResults
+        ?.filter((test: VitestJsonAssertion) => test.status === "failed")
+        .map((test: VitestJsonAssertion) => {
+          const location = test.location
+            ? `:${String(test.location.line)}:${String(test.location.column)}`
+            : ""
 
-        const messages = (test.failureMessages ?? [])
-          .map((message: string) => message.trim())
-          .filter(Boolean)
-          .join(" | ")
+          const messages = (test.failureMessages ?? [])
+            .map((message: string) => message.trim())
+            .filter(Boolean)
+            .join(" | ")
 
-        // This mutant (dropping .filter(Boolean).join(" — "), returning the bare array instead)
-        // is proven killed under direct, unmocked `vitest run` of
-        // test/unit/presets/shared/vitest-json-policy.test.ts -- applying this exact replacement
-        // by hand and re-running fails 4 of that file's tests, including two that assert the
-        // complete rationale string via `toBe` specifically to make this mutation observable --
-        // but it survives every `npx stryker run` against this file (scoped or full, reproduced
-        // three times, once with concurrency forced to 1): this mutant's own `coveredBy`/
-        // `testsCompleted` show only 6 of the file's 11 tests ever ran against it, never the two
-        // `toBe` tests that would kill it. See stryker.config.mjs's own comment for the identical
-        // "coverage-attribution quirk" already found and worked around for `perTest` mode -- this
-        // is the same class of bug surfacing under `"all"` mode too, for this one line.
-        // Stryker disable next-line MethodExpression -- proven killed under direct vitest execution but Stryker's own coverage attribution never runs the two tests that would kill it; see the comment above.
-        return [`${suite.name}${location}`, test.fullName, messages].filter(Boolean).join(" — ")
-      }),
+          return [`${suite.name}${location}`, test.fullName, messages].filter(Boolean).join(" — ")
+        }) ?? [],
   )
 
   return {
