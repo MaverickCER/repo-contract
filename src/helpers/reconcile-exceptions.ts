@@ -164,14 +164,10 @@ function canonicalRecord(
 export function serializeExceptionRegistry(
   records: readonly (Record<string, unknown> & { readonly id: string })[],
 ): string {
-  // `records` have unique ids by precondition, so the `<`/`<=` and `>`/`>=` mutants of this
-  // comparator, and its `: 0` (tie) branch, are all equivalent -- no two ids ever compare equal.
-  // The reversing mutants (swapped `-1`/`1`, the `true`/`false` conditional replacements) are
-  // killed by the "byte-identical regardless of record order" property test, which serializes a
-  // list and its reverse and requires identical bytes. Comparing the `id` strings directly (not
-  // the records) also keeps this safe for null-prototype record objects.
-  // Stryker disable next-line ConditionalExpression,EqualityOperator -- equivalent mutants, see comment above.
-  const sorted = [...records].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  // `records` have unique ids by precondition, so ordering the ids themselves (by UTF-16 code
+  // units, the default string order) orders the records without a hand-written comparator.
+  const byId = new Map(records.map((record) => [record.id, record]))
+  const sorted = [...byId.keys()].sort().map((id) => byId.get(id)) as (typeof records)[number][]
   const canonical = sorted.map((record) => canonicalRecord(record))
   return `${JSON.stringify({ exceptions: canonical }, null, 2)}\n`
 }

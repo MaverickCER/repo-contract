@@ -42,13 +42,8 @@ export function validateRepoContractConfig(config: RepoContractConfig): void {
   }
 
   if (concurrency !== undefined) {
-    // `typeof concurrency !== "number"` is behaviorally redundant with the
-    // clause after it: `Number.isInteger` returns `false` (never throws or
-    // coerces) for every non-number value, so `!Number.isInteger(...)`
-    // alone already rejects every case the typeof check would -- kept for
-    // readability at the call site, not because it changes behavior.
-    // Stryker disable next-line ConditionalExpression -- the typeof check is redundant with Number.isInteger, which returns false (never throws) for every non-number value, so it's kept only for readability at the call site.
-    if (typeof concurrency !== "number" || !Number.isInteger(concurrency) || concurrency < 1) {
+    // `Number.isInteger` is false for every non-number value, so the cast below only runs for integers.
+    if (!Number.isInteger(concurrency) || (concurrency as number) < 1) {
       throw new InvalidRepoContractConfigError(
         "concurrency must be a positive integer when provided.",
       )
@@ -199,17 +194,9 @@ function validateStringRun(checkId: string, run: string, usesShell: boolean): vo
     // a non-empty array whose executable is `""`, which would otherwise fail
     // only later as an opaque spawn error rather than a synchronous config
     // error like every other structurally-broken `run`.
-    const [executable] = tokenizeRunString(run, checkId)
-    // `noUncheckedIndexedAccess` types the destructured `executable` as
-    // `string | undefined`, but `tokenizeRunString` throws on any input that
-    // would produce an empty token array (it rejects an empty or
-    // whitespace-only string outright), so `executable` is always a real
-    // string by the time control reaches here. The `?.` exists only to
-    // satisfy the compiler; removing it is behaviourally equivalent, so the
-    // OptionalChaining mutant here is an equivalent mutant with no test that
-    // could ever distinguish it.
-    // Stryker disable next-line OptionalChaining -- equivalent mutant: `executable` is provably always a string here (see comment above), so `executable?.trim()` and `executable.trim()` are identical.
-    if (executable?.trim().length === 0) {
+    // `tokenizeRunString` throws on any input that would produce no tokens, so there is always a first one.
+    const [executable] = tokenizeRunString(run, checkId) as readonly [string, ...string[]]
+    if (executable.trim().length === 0) {
       throw new InvalidCheckConfigError(
         checkId,
         "run string's first token (the executable) is empty or contains only whitespace.",
@@ -303,10 +290,8 @@ function validateInheritEnv(checkId: string, inheritEnv: unknown): void {
  */
 function validateTimeoutMs(checkId: string, timeoutMs: unknown): void {
   if (timeoutMs === undefined) return
-  // Same redundancy as concurrency's typeof check above: `Number.isFinite`
-  // returns `false` (never throws or coerces) for every non-number value.
-  // Stryker disable next-line ConditionalExpression -- same redundancy as the concurrency check above: the typeof check is redundant with Number.isFinite, which returns false for every non-number value.
-  if (typeof timeoutMs !== "number" || !Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+  // `Number.isFinite` is false for every non-number value, so the cast below only runs for numbers.
+  if (!Number.isFinite(timeoutMs) || (timeoutMs as number) <= 0) {
     throw new InvalidCheckConfigError(checkId, "timeoutMs must be a positive number when provided.")
   }
 }
@@ -322,13 +307,8 @@ function validateOutput(checkId: string, output: unknown): void {
     throw new InvalidCheckConfigError(checkId, "output must be an object when provided.")
   }
   const { format, schema } = output as Record<string, unknown>
-  // `typeof format !== "string"` is behaviorally redundant with the clause
-  // after it: `Array#includes` uses strict equality, so a non-string
-  // `format` can never match an entry of `OUTPUT_FORMATS` (all strings),
-  // meaning `!OUTPUT_FORMATS.includes(...)` alone already rejects every
-  // case the typeof check would.
-  // Stryker disable next-line ConditionalExpression -- the typeof check is redundant with Array#includes' strict equality against OUTPUT_FORMATS (all strings), so a non-string format can never match regardless of the typeof check.
-  if (typeof format !== "string" || !OUTPUT_FORMATS.includes(format as OutputFormat)) {
+  // `includes` compares strictly, so a non-string `format` never matches an entry of `OUTPUT_FORMATS`.
+  if (!OUTPUT_FORMATS.includes(format as OutputFormat)) {
     throw new InvalidCheckConfigError(
       checkId,
       `output.format must be one of ${OUTPUT_FORMATS.map((f) => `"${f}"`).join(", ")}.`,
@@ -455,16 +435,11 @@ function validateIsolated(checkId: string, isolated: unknown): void {
 export function validateDependencyGraph(
   checks: Record<string, { dependsOn?: readonly string[] }>,
 ): void {
-  const ids = Object.keys(checks)
-  const indexById = new Map(ids.map((id, index) => [id, index]))
+  const entries = Object.entries(checks)
+  const indexById = new Map(entries.map(([id], index) => [id, index]))
 
-  for (const [index, id] of ids.entries()) {
-    const check = checks[id]
-    // `id` always comes from `Object.keys(checks)`, so `checks[id]` can
-    // never actually be undefined -- kept only because
-    // `noUncheckedIndexedAccess` can't itself express that invariant.
-    // Stryker disable next-line OptionalChaining -- id always comes from Object.keys(checks), so check can never be undefined here; the optional chaining exists only to satisfy noUncheckedIndexedAccess.
-    for (const depId of check?.dependsOn ?? []) {
+  for (const [index, [id, check]] of entries.entries()) {
+    for (const depId of check.dependsOn ?? []) {
       const depIndex = indexById.get(depId)
       if (depIndex === undefined) {
         throw new InvalidCheckConfigError(id, `dependsOn references unknown check id "${depId}".`)

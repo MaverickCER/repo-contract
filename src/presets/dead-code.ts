@@ -77,7 +77,6 @@ function readReporterOptions(args: readonly string[]): DeadCodeOptions | undefin
   // observable result this early return produces. Kept for clarity (avoids
   // relying on that throw-and-catch as the mechanism), not for behavior no
   // test can otherwise reach.
-  // Stryker disable next-line ConditionalExpression,EqualityOperator,BlockStatement -- JSON.parse(undefined) always throws, and the catch block below already converts that back to undefined, the same result this early return produces
   if (raw === undefined) {
     return undefined
   }
@@ -87,13 +86,11 @@ function readReporterOptions(args: readonly string[]): DeadCodeOptions | undefin
   // end and implicitly returns `undefined` anyway -- identical to its
   // explicit `return undefined`. Kept for clarity, not for behavior no
   // test can otherwise reach.
-  // Stryker disable BlockStatement -- an empty catch block falls off the end of the function and implicitly returns undefined, identical to its explicit return
   try {
     return JSON.parse(raw) as DeadCodeOptions
   } catch {
     return undefined
   }
-  // Stryker restore all
 }
 
 /**

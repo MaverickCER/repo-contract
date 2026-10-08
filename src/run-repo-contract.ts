@@ -64,11 +64,8 @@ async function runRepoContractAfterValidation<const TChecks extends CheckSchema>
   config: RepoContractConfig<TChecks>,
   options: RunRepoContractOptions | undefined,
 ): Promise<{ evidence: Evidence<TChecks>; verdict: Verdict<TChecks> }> {
-  // validateRepoContractConfig above already rejects any config.concurrency that is not a
-  // positive integer (>= 1, see validate-config.ts), so by the time this line runs
-  // config.concurrency is always either undefined or already truthy -- `??` and `&&` therefore
-  // select the identical branch for every value this parameter can actually hold here.
-  // Stryker disable next-line LogicalOperator -- validateRepoContractConfig above already rejects any config.concurrency that is not a positive integer (>= 1), so by the time this line runs config.concurrency is always either undefined or already truthy; `??` and `&&` therefore select the identical branch for every value this parameter can actually hold here, making them equivalent at this exact call site.
+  // An explicit `config.concurrency` (a positive integer, already validated) wins; otherwise every
+  // available core is used.
   const concurrency = config.concurrency ?? os.availableParallelism()
   const startedAt = new Date()
 

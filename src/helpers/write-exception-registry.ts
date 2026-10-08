@@ -21,7 +21,6 @@ function isEnoent(error: unknown): boolean {
     // a primitive's `.code` is `undefined` (never the string "ENOENT"), and `null` is caught by
     // the `!== null` clause. Same accepted equivalent mutant as load-exception-registry.ts's own
     // ENOENT check.
-    // Stryker disable next-line ConditionalExpression -- equivalent mutant, see comment above.
     typeof error === "object" &&
     error !== null &&
     (error as { readonly code?: unknown }).code === "ENOENT"

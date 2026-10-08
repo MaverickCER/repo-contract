@@ -73,7 +73,6 @@ function createBoundedCollector(): { append(chunk: Buffer): void; value(): strin
   // to an explicit `new StringDecoder("utf8")`, including for a multi-byte character split across
   // writes) -- this is the only encoding this collector is ever used with, so no other string value
   // is reachable here to distinguish "utf8" from any other literal.
-  // Stryker disable next-line StringLiteral -- Node's own encoding normalization treats a falsy/unrecognized encoding argument as "utf8" (confirmed empirically: `new StringDecoder("").encoding === "utf8"`, decoding identically to an explicit "utf8", including for a multi-byte character split across writes); this is the only encoding this collector is ever used with, so no other string value is reachable here to distinguish it.
   const decoder = new StringDecoder("utf8")
   let value = ""
   let byteCount = 0
@@ -93,7 +92,6 @@ function createBoundedCollector(): { append(chunk: Buffer): void; value(): strin
       // timing can, which this project's own mutation policy already
       // refuses to treat as a real kill -- see checks/mutation.ts's
       // "Timed out" handling).
-      // Stryker disable next-line ConditionalExpression -- removing this guard has no effect on the content `value()` ever returns (see comment above); it only removes an unbounded-with-chunk-count amount of wasted repeated work for a process that keeps writing past the cap, which no deterministic test can observe without relying on flaky timing.
       if (truncated) return
       byteCount += chunk.byteLength
       value += decoder.write(chunk)
@@ -101,7 +99,6 @@ function createBoundedCollector(): { append(chunk: Buffer): void; value(): strin
         // Same reasoning as the `if (truncated) return` guard above: leaving
         // this `false` never changes any content `value()` returns, only
         // how much repeated, wasted slice+concat work later chunks cause.
-        // Stryker disable next-line BooleanLiteral -- leaving this false has no effect on returned content (see comment above and the identical reasoning on the `if (truncated) return` guard); it only removes an unbounded-with-chunk-count amount of wasted repeated work, which no deterministic test can observe without relying on flaky timing.
         truncated = true
         value = `${value.slice(0, MAX_CAPTURED_OUTPUT_BYTES)}\n...[output truncated at ${String(MAX_CAPTURED_OUTPUT_BYTES)} bytes]`
       }
@@ -157,11 +154,9 @@ function resolveCommand(
   // directly (tokenizeRunString's own contract guarantees a non-empty
   // result or a throw, with no way to bypass it short of calling this
   // private function directly, which isn't exported).
-  // Stryker disable EqualityOperator,ConditionalExpression,BlockStatement,StringLiteral,CallExpression -- unlike the array-form check above, this one has no way to be exercised directly: tokenizeRunString's own contract guarantees a non-empty result or a throw, with no way to bypass it short of calling this private function directly, which isn't exported.
   if (command === undefined) {
     throw new InvalidCheckConfigError(checkId, "run string is empty or contains only whitespace.")
   }
-  // Stryker restore all
   return { command, args }
 }
 
@@ -305,7 +300,6 @@ export async function spawnCheck(
       // Windows-only cosmetic behavior (suppresses a console window flash)
       // with no effect on stdout/stderr/exitCode/signal on any platform, and
       // no Node API exposes it back for a test to observe either way.
-      // Stryker disable next-line BooleanLiteral -- Windows-only cosmetic behavior (suppresses a console window flash) with no effect on stdout/stderr/exitCode/signal on any platform, and no Node API exposes it back for a test to observe either way.
       windowsHide: true,
     })
 
@@ -389,7 +383,6 @@ export async function spawnCheck(
     // so both are always real streams in practice -- confirmed empirically,
     // including for a spawn that fails outright (ENOENT). Kept only to
     // satisfy the type, not because it changes observed behavior.
-    // Stryker disable next-line OptionalChaining -- child.stdout is typed Readable | null (Node is only ever null when stdio overrides that stream to something other than "pipe"), but this call site never passes a stdio option, so it's always a real stream in practice, confirmed empirically including for a spawn that fails outright (ENOENT).
     child.stdout?.on("data", (chunk: Buffer) => {
       stdoutCollector.append(chunk)
     })
@@ -397,7 +390,6 @@ export async function spawnCheck(
     // "both"), confirmed empirically here too: un-exempting this mutant and
     // running Stryker scoped to this file showed `OptionalChaining`'s
     // `child.stderr.on` replacement survives.
-    // Stryker disable next-line OptionalChaining -- same reasoning as the stdout guard above (which already covers "both"), confirmed empirically here too: un-exempting this mutant and running Stryker scoped to this file showed OptionalChaining's child.stderr.on replacement survives.
     child.stderr?.on("data", (chunk: Buffer) => {
       stderrCollector.append(chunk)
     })
@@ -417,7 +409,6 @@ export async function spawnCheck(
       // confirmed empirically that Node's own process.kill() normalizes a
       // falsy/empty signal argument back to SIGTERM, so the OS-observed
       // signal is identical either way.
-      // Stryker disable next-line EqualityOperator,ConditionalExpression,StringLiteral,CallExpression -- if child.pid were ever genuinely undefined here, calling killWithEscalation(undefined, ...) would throw synchronously inside this AbortSignal listener, which Node reschedules onto process.nextTick as an uncaught exception, crashing the whole test process rather than failing one assertion; the "SIGTERM" string literal is separately unkillable since Node's own process.kill() normalizes a falsy/empty signal argument back to SIGTERM, so the OS-observed signal is identical either way.
       if (child.pid !== undefined) killWithEscalation(child.pid, "SIGTERM")
     }
     // `effectiveSignal` fires "abort" at most once in its lifetime (an
@@ -444,7 +435,6 @@ export async function spawnCheck(
       // regardless) -- it matters for a long-running consumer process
       // avoiding a listener leak, not for anything this suite can directly
       // assert on.
-      // Stryker disable next-line StringLiteral,CallExpression -- removing the wrong event name here has no test-observable effect within a short-lived test: the real listener is attached to an AbortController that's garbage-collected with the test, and effectiveSignal only ever fires "abort" once in its lifetime regardless; it matters for a long-running consumer process avoiding a listener leak, not for anything this suite can directly assert on.
       effectiveSignal.removeEventListener("abort", onEffectiveAbort)
       // Releases the manual fallback's own listeners on `runSignal`/
       // `timeoutController.signal` (a no-op on the native AbortSignal.any
@@ -458,7 +448,6 @@ export async function spawnCheck(
       // because calling delete(undefined) would behave differently at
       // runtime (Set#delete on a non-member value is already a silent
       // no-op), so no test can observe a difference either way.
-      // Stryker disable next-line ConditionalExpression -- handle is ActiveCheckHandle | undefined exactly when spawning itself failed and no pid was ever obtained (see below); this guard exists to satisfy Set#delete's parameter type, not because calling delete(undefined) would behave differently at runtime -- Set#delete on a non-member value is already a silent no-op.
       if (handle !== undefined) activeHandles.delete(handle)
     }
 
@@ -513,7 +502,6 @@ export async function spawnCheck(
                 // check against that contract rather than assumed absolute,
                 // since it is difficult to construct a real counterexample to
                 // test against (both null, or both non-null, simultaneously).
-                // Stryker disable next-line ConditionalExpression,EqualityOperator,LogicalOperator -- Node's own child_process contract guarantees exactly one of code/signal is non-null on a normal "exit" event, making signal !== null here effectively redundant given code === null already; kept as a belt-and-suspenders check against that contract rather than assumed absolute, since it is difficult to construct a real counterexample to test against (both null, or both non-null, simultaneously).
                 code === null && signal !== null
                 ? "signaled"
                 : "completed"

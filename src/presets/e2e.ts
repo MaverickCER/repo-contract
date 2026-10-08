@@ -62,7 +62,6 @@ function collectFailingSpecs(suites: readonly PlaywrightSuite[]): string[] {
       // hand-tracing both fallback sites -- converging on the exact same
       // `message: undefined` this line already produces for a genuinely
       // empty `spec.tests`/`t.results`. No test can observe a difference.
-      // Stryker disable next-line ArrayDeclaration -- any fallback garbage here resolves safely to undefined via optional chaining below, same as a genuinely empty array
       const lastResult = (spec.tests ?? []).flatMap((t) => t.results ?? []).at(-1)
       const message = lastResult?.error?.message?.trim()
 
@@ -127,7 +126,6 @@ export const e2e: CheckDefinitionConfig = {
       // optional chaining (see its own comment), so substituting any
       // non-suite garbage for a genuinely absent `report.suites` still
       // yields zero collected detail lines either way.
-      // Stryker disable next-line ArrayDeclaration -- collectFailingSpecs only reads .specs/.suites via safe optional chaining, so fallback garbage yields zero details either way
       const details = collectFailingSpecs(report.suites ?? [])
 
       return {

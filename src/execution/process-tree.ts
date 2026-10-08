@@ -89,7 +89,6 @@ export function killTree(pid: number, signal: NodeJS.Signals, killProcessTree?: 
    * -- disabled for the same reason, not left to inflate "no coverage"
    * counts against a branch that genuinely is tested, just on a different
    * platform than the one that runs Stryker. */
-  // Stryker disable ConditionalExpression,EqualityOperator,StringLiteral,ArrayDeclaration,ObjectLiteral,BlockStatement,CallExpression -- this whole branch only runs on Windows, and mutation testing only runs in the ubuntu-only CI job (see the v8-ignore comment above), so every mutator that could apply to it would surface as an unreachable "no coverage" survivor rather than a real test gap.
   if (process.platform === "win32") {
     // No consumer-supplied synchronous spawner: taskkill can't run at all, so whole-tree cleanup
     // is skipped here -- spawn-check.ts's own caller falls back to killing just the tracked child
@@ -111,7 +110,6 @@ export function killTree(pid: number, signal: NodeJS.Signals, killProcessTree?: 
     if (result.error !== undefined) throw result.error
     return
   }
-  // Stryker restore all
   /* v8 ignore stop */
 
   try {

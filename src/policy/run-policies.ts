@@ -60,7 +60,12 @@ function matchedVagueRationalePattern(rationale: string): string | undefined {
 }
 
 /** `ParsedOutput`'s own field names -- the only properties reading `result.output` when it's `undefined` can throw on, so only these can trigger `PolicyReadUnrequestedOutputError` below. */
-const OUTPUT_PROPERTIES: ReadonlySet<string> = new Set(["success", "value", "error", "format"])
+const OUTPUT_PROPERTIES: ReadonlySet<string | undefined> = new Set([
+  "success",
+  "value",
+  "error",
+  "format",
+])
 
 /**
  * Recognizes the one `TypeError` message shape Node/V8 produces for reading a
@@ -97,16 +102,7 @@ function readPropertyOfUndefined(error: unknown): string | undefined {
  */
 function unrequestedOutputProperty(error: unknown): string | undefined {
   const property = readPropertyOfUndefined(error)
-  // Provably equivalent, not a coverage gap: OUTPUT_PROPERTIES is a
-  // ReadonlySet<string>, so `.has(undefined)` is always false regardless of
-  // its argument's runtime value -- the `property !== undefined` guard is
-  // therefore redundant with the `.has()` call it short-circuits into, and
-  // no test can observe a difference between keeping and removing it. Kept
-  // anyway for readability (it documents "must be a recognized property
-  // name" without requiring the reader to already know Set.has's behavior
-  // on undefined), not because it changes behavior.
-  // Stryker disable next-line ConditionalExpression -- OUTPUT_PROPERTIES is a ReadonlySet<string>, so .has(undefined) is always false regardless of argument, making the property !== undefined guard redundant with the .has() call it short-circuits into; removing it changes no observable behavior.
-  return property !== undefined && OUTPUT_PROPERTIES.has(property) ? property : undefined
+  return OUTPUT_PROPERTIES.has(property) ? property : undefined
 }
 
 /**
@@ -246,26 +242,11 @@ export async function runPolicies(
       // dependsOn plus the already-fully-assembled evidence.checks) --
       // never persisted, so Evidence's own shape/schema doesn't grow. `{}`
       // for a check with no dependsOn, never undefined.
-      const dependencies: Record<string, CheckEvidence> = {}
-      // `check.dependsOn` is `undefined` exactly for a check with no
-      // declared dependencies, in which case this fallback's own contents
-      // are unobservable regardless of what they are: any id it iterated
-      // would look up `evidence.checks[depId]`, find nothing (no real
-      // check has that id), and be filtered out by the guard below anyway
-      // -- confirmed by "a policy with no dependsOn sees ctx.dependencies
-      // as an empty object" in run-policies.test.ts, which passes
-      // regardless of this fallback's specific value.
-      // Stryker disable next-line ArrayDeclaration -- check.dependsOn is undefined exactly when a check has no declared dependencies, in which case this fallback's contents are unobservable regardless of value: any id iterated would look up evidence.checks[depId], find nothing, and get filtered out by the guard below anyway, confirmed by the "sees ctx.dependencies as an empty object" test in run-policies.test.ts, which passes regardless of the fallback's specific value.
-      for (const depId of check.dependsOn ?? []) {
-        const depEvidence = evidence.checks[depId]
-        // validate-config.ts already guarantees every dependsOn id names a
-        // check that exists in this run, and the phasing invariant
-        // guarantees its evidence is already assembled by the time any
-        // policy runs -- this guard exists only to satisfy
-        // noUncheckedIndexedAccess.
-        // Stryker disable next-line ConditionalExpression -- validate-config.ts already guarantees every dependsOn id names a check that exists in this run, and the phasing invariant guarantees its evidence is already assembled by the time any policy runs; this guard exists only to satisfy noUncheckedIndexedAccess.
-        if (depEvidence !== undefined) dependencies[depId] = depEvidence
-      }
+      // validate-config.ts guarantees every dependsOn id names a check in this run, and the phasing
+      // invariant guarantees its evidence is already assembled by the time any policy runs.
+      const dependencies = Object.fromEntries(
+        (check.dependsOn ?? []).map((depId) => [depId, evidence.checks[depId]]),
+      ) as Record<string, CheckEvidence>
 
       let outcome: PolicyResult
       try {
@@ -289,23 +270,17 @@ export async function runPolicies(
     }),
   )
 
-  if (thrown.length === 1) {
-    const [only] = thrown as [
-      PolicyThrewError | PolicyReadUnrequestedOutputError | PolicyReadFailedParseValueError,
-    ]
-    throw only
-  }
-  // `> 1` vs `>= 1` are equivalent here given the early return just above --
-  // by the time this line can even run, thrown.length is never 1 (either 0,
-  // falling through to the success path below either way, or >= 2, taking
-  // this branch either way). Documented rather than silently accepted so a
-  // future refactor that removes the early return doesn't quietly widen it.
-  // Stryker disable next-line EqualityOperator -- "> 1" vs. ">= 1" are equivalent here given the early return just above: by the time this line runs, thrown.length is never exactly 1 (either 0 or >= 2 either way), documented so a future refactor that removes the early return doesn't quietly widen this silently.
-  if (thrown.length > 1) {
-    throw new AggregateError(
-      thrown,
-      `${String(thrown.length)} check policies threw instead of returning a PolicyResult.`,
-    )
+  if (thrown.length > 0) {
+    throw thrown.length === 1
+      ? (
+          thrown as [
+            PolicyThrewError | PolicyReadUnrequestedOutputError | PolicyReadFailedParseValueError,
+          ]
+        )[0]
+      : new AggregateError(
+          thrown,
+          `${String(thrown.length)} check policies threw instead of returning a PolicyResult.`,
+        )
   }
 
   // Every slot is filled and in declaration order by now: a policy that threw

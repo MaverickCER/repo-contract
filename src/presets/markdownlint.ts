@@ -67,7 +67,6 @@ export function markdownlint(options: MarkdownlintOptions = {}): CheckDefinition
       const parsed = await readJsonReport<readonly MarkdownlintFinding[]>(
         // Provably equivalent, not a coverage gap -- see the identical
         // comment in src/presets/duplication.ts for why.
-        // Stryker disable next-line StringLiteral -- JSON.parse coerces via toString(), which defaults to utf8 for a Buffer, so parsing succeeds identically either way
         () => readFile(REPORT_PATH, "utf8"),
         "markdownlint-cli2 did not produce its expected JSON report -- confirm your " +
           ".markdownlint-cli2.jsonc configures outputFormatters to write " +

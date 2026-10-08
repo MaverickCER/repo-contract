@@ -316,7 +316,7 @@ describe("runPolicies", () => {
 
     await runPolicies([["tests", check, raw]], evidence)
 
-    expect(observed).toEqual({})
+    expect(observed).toStrictEqual({})
   })
 
   it("invokes the policy for a check whose status is spawn_error, not just completed checks", async () => {

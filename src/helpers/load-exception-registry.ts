@@ -71,17 +71,11 @@ export async function loadExceptionRegistry<T>(input: {
   readonly schema: StandardSchemaV1<unknown, readonly T[]>
   readonly readFile?: (path: string) => Promise<string>
 }): Promise<{ ok: true; records: readonly T[] } | { ok: false; errors: readonly string[] }> {
-  // Equivalent mutant, confirmed empirically: `node:fs/promises`'s `readFile(path, "")` returns
-  // a raw `Buffer` rather than a decoded string (unlike `Hash.update`, an empty inputEncoding is
-  // not treated the same as "utf8" here) -- but this function's only use of `raw` is
-  // `JSON.parse(raw)` immediately below, and `JSON.parse`'s own `ToString` coercion on a `Buffer`
-  // calls `Buffer.prototype.toString()` with no arguments, whose own default encoding is "utf8"
-  // -- confirmed directly, including with multi-byte UTF-8 content, that
-  // `JSON.parse(bufferReadWithEmptyEncoding)` produces byte-identical results to
-  // `JSON.parse(stringReadWithUtf8Encoding)` every time. No test could ever observe a difference
-  // through this function's own return value.
-  // Stryker disable next-line StringLiteral -- equivalent mutant, see comment above.
-  const { path, schema, readFile = (target: string) => readFileFromFs(target, "utf8") } = input
+  const {
+    path,
+    schema,
+    readFile = async (target: string) => (await readFileFromFs(target)).toString(),
+  } = input
 
   let raw: string
   try {
@@ -92,17 +86,7 @@ export async function loadExceptionRegistry<T>(input: {
     // than a real `Error` (`null`, a plain string, ...); reading `.code`/`.message` off that
     // directly would throw out of this catch block instead of returning the clean `{ ok: false }`
     // this function promises for every other failure. `isPlainObject` narrows first.
-    // Equivalent mutant: `code` is consumed only by the `code === "ENOENT"` comparison two lines
-    // down, which requires an exact primitive-string match -- there is no value for which
-    // `typeof error.code === "string"` is false yet `error.code === "ENOENT"` is true (a value
-    // that literally equals the primitive string "ENOENT" always has `typeof` "string"). Mutating
-    // this `typeof` check to `true` therefore changes what gets assigned to `code` for a
-    // non-string `.code` (e.g. a number, or `undefined`), but never changes whether the
-    // subsequent `=== "ENOENT"` comparison can succeed -- confirmed directly: every plain-object
-    // test case covering this line (a numeric code, an absent code) produces the identical
-    // not-ENOENT branch and final message either way.
-    // Stryker disable next-line ConditionalExpression -- equivalent mutant, see comment above.
-    const code = isPlainObject(error) && typeof error.code === "string" ? error.code : undefined
+    const code = isPlainObject(error) ? error.code : undefined
     if (code === "ENOENT") return { ok: true, records: [] }
     const message =
       isPlainObject(error) && typeof error.message === "string" ? error.message : String(error)
