@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.9.0
+
+### Minor Changes
+
+- d01088b: Add `renderMarkdownSummary` and `serializeRun`, pure helpers that turn a run's evidence and verdict into a Markdown summary (for a CI step summary or a pull-request comment) and into the two stored JSON documents, so a runner can keep a durable, machine-readable record instead of printing the verdict and discarding it. The SBOM is now published as a runtime inventory (what installing the package brings in: nothing) and a separate build-environment inventory, and the documentation corrects how a 0.x release is chosen and how the package relates to the rest of the toolkit.
+- d01088b: Audit fixes ahead of 1.0.
+
+  - Breaking (pre-1.0 minor): Node.js `>=22` (Node 20 is end-of-life); `@types/node` is `^22`.
+  - `repo-contract/helpers` is Stable (ADR 0019); `presets` and `init` stay Experimental.
+  - Added `renderMarkdownSummary` and `serializeRun` so a runner can write durable, machine-readable reports and a job summary.
+  - Documentation: how a 0.x bump is chosen (nothing automated can publish 1.0.0), the bootstrap cycle with `internal-package-contract`, a shared glossary and the toolkit overview.
+
+### Patch Changes
+
+- fix(mutation): align the Stryker runner with Vitest 5 before every run
+- fix(tests): make the vitest preset and test checks independent of the Vitest major
+- 4e7f685: `npm run version` now regenerates the committed SBOMs, which embed the package's own version, so the release pull request no longer leaves the working tree dirty and fails the contract.
+
 ## 0.8.8
 
 ### Patch Changes

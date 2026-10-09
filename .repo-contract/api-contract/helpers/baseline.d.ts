@@ -12,11 +12,10 @@
  * specs/decisions/0013-reusable-exception-policy-helper.md for the full
  * rationale and the boundary this barrel deliberately does not cross.
  *
- * Published **Experimental** (see `VERSIONING.md`): its TypeScript signature
- * and runtime behavior may both change in a minor or patch release, the same
- * classification `repo-contract/presets` already carries (see
- * specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)
- * -- neither has been through a real feedback cycle yet.
+ * Published **Stable** (see `VERSIONING.md` and
+ * specs/decisions/0019-helpers-promoted-presets-stay-experimental.md): a new export is a minor release
+ * from `1.0` on (while the package is `0.x` the release tooling deflates it to a patch), a changed
+ * signature or behavior is a breaking change.
  *
  * Never re-exported from the package root (`src/index.ts`) -- this is a
  * second, independent public barrel, published under its own `./helpers`
