@@ -133,7 +133,7 @@
     "test:unit": "node scripts/run-test-category.mjs unit",
     "test:watch": "vitest --watch",
     "typecheck": "npm run contract -- typecheck",
-    "verify": "npm run contract",
+    "verify": "npm run docs:api && npm run docs:benchmarks && npm run contract",
     "verify-no-ambient-capabilities": "node scripts/verify-no-ambient-capabilities.mjs",
     "version": "changeset version && npm run build && npm run sbom"
   },
