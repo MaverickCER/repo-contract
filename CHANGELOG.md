@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1
+
+### Patch Changes
+
+- fix(release): build the generated docs before the release verify
+
 ## 0.9.0
 
 ### Minor Changes
