@@ -455,11 +455,29 @@ jobs:
 
       - run: node scripts/smoke-consumer.mjs artifacts
 
+  # The development toolchain stays on TypeScript 5 (typescript-eslint, typedoc and API Extractor
+  # cannot load the TypeScript 7 compiler API), so the native TypeScript 7 compiler gets its own job:
+  # this repository's source must still type-check under it. `npx -p` supplies the 7 binary; the
+  # repository's own `typescript` stays what the code's type imports resolve against.
+  typescript-7:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+
+      - run: npm ci
+      - run: npx --yes -p typescript@7 tsc --noEmit -p tsconfig.json
+
   # Proves the shipped .d.ts files actually compile under a real consumer's
-  # own toolchain, including a TypeScript release newer than this repo's own
-  # build ever runs against (this repo's own tsconfig uses
+  # own toolchain, under the newest release of each TypeScript major a consumer
+  # may have installed -- 5, 6 and 7 (this repo's own tsconfig uses
   # moduleResolution: "Bundler" and a pinned typescript devDependency --
-  # neither exercises nodenext resolution or a future major). See
+  # neither exercises nodenext resolution or a newer major). See
   # scripts/typescript-compat.mjs.
   typescript-compat:
     # benchmark-pr listed directly so this job can address its `outputs.sha` below -- see
