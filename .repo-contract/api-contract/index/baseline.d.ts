@@ -520,6 +520,31 @@ export declare class PolicyThrewError extends RepoContractError {
 }
 
 /**
+ * Renders a run's verdict (and, if given, its evidence) as GitHub-flavored Markdown suitable for
+ * `$GITHUB_STEP_SUMMARY`, a pull-request comment or a README badge page: totals first, then every
+ * failing check with its complete rationale (so nothing needs re-running to see why), every warning
+ * and passing check with the first line of its rationale, and -- when the evidence is supplied -- the
+ * slowest checks, which is the contract's own cost. Pure: it reads nothing and writes nothing.
+ * @param verdict - The aggregated verdict of the run.
+ * @param evidence - The run's evidence; optional, adds per-check timing.
+ * @param options - Heading and list-length options.
+ * @returns The Markdown document, ending in a newline.
+ * @public
+ */
+export declare function renderMarkdownSummary<TChecks extends CheckSchema>(verdict: Verdict<TChecks>, evidence?: Evidence<TChecks>, options?: RenderMarkdownSummaryOptions): string;
+
+/**
+ * Options for {@link renderMarkdownSummary}.
+ * @public
+ */
+export declare interface RenderMarkdownSummaryOptions {
+    /** Heading text; defaults to `"Contract"`. */
+    readonly title?: string;
+    /** How many of the slowest checks to list when `evidence` is given; defaults to 5. */
+    readonly slowest?: number;
+}
+
+/**
  * Top-level configuration passed to `defineRepoContract`/`runRepoContract`.
  * @public
  */
@@ -644,6 +669,26 @@ export declare interface RunRepoContractOptions {
     /** Restrict this run to only these check ids (and whatever they `dependsOn`, transitively). Every configured check runs when omitted. */
     readonly checks?: string[];
 }
+
+/**
+ * Serializes a run for storage -- stable, indented JSON with a trailing newline, one document per
+ * file, matching the published `Evidence` and `Verdict` JSON Schemas (`repo-contract/schema`). The
+ * caller decides where to write them; this package never touches the filesystem.
+ * A `bigint` anywhere in the run (for example in a check's transformed output) cannot be written as
+ * JSON, so it is written as its decimal string rather than making serialization throw.
+ * @param run - The result of `runRepoContract`.
+ * @param run.evidence - The run's evidence.
+ * @param run.verdict - The run's verdict.
+ * @returns The two documents as strings.
+ * @public
+ */
+export declare function serializeRun<TChecks extends CheckSchema>(run: {
+    readonly evidence: Evidence<TChecks>;
+    readonly verdict: Verdict<TChecks>;
+}): {
+    readonly evidence: string;
+    readonly verdict: string;
+};
 
 /**
  * Spawns a child process, given a resolved command, argv, and options --
