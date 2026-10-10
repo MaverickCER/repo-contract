@@ -4,18 +4,18 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **35.4 ms** per operation compared with a bare-minimum baseline (**4.8%** of the baseline). Overall, it grows O(n) with workload size (measured exponent 0.98). At list prices that is on the order of **~$0.1 – $1 per million operations** of compute.
+For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **0** per operation compared with a bare-minimum baseline (**0.0%** of the baseline). Overall, it grows O(n) with workload size (measured exponent 1.04). At list prices that is on the order of **~$0 – $0.1 per million operations** of compute.
 
 > The relative figure and the growth class are the dependable ones: both come from the same run, so they survive a change of machine. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
 
 | Cost | Typical (80 checks) | Largest (2560 checks) |
 | --- | --- | --- |
-| Added latency per operation | 35.4 ms | 961 ms |
-| Added latency, relative to baseline | 4.8% | 4.1% |
-| Added CPU time per operation | 35.6 ms | 2.35 s |
-| Added memory per operation (heap delta) | 10.8 MiB | 3.4 MiB |
-| Compute cost per 1M operations (order of magnitude) | ~$0.1 – $1 | ~$1 – $10 |
-| Single-core throughput ceiling of the overhead alone | 28 ops/s | 1 ops/s |
+| Added latency per operation | 0 | 1.76 s |
+| Added latency, relative to baseline | 0.0% | 11% |
+| Added CPU time per operation | 17.9 ms | 2.25 s |
+| Added memory per operation (heap delta) | 11.0 MiB | 23.3 MiB |
+| Compute cost per 1M operations (order of magnitude) | ~$0 – $0.1 | ~$10 |
+| Single-core throughput ceiling of the overhead alone | ∞ ops/s | 1 ops/s |
 
 ## 1. End-to-end: the package's total impact
 
@@ -40,16 +40,16 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 | checks | Baseline | With package | Added | Added vs baseline | Added CPU | Est. $ / 1M ops |
 | --- | --- | --- | --- | --- | --- | --- |
-| 20 | 193 ms | 234 ms | 41.0 ms | 21% | 13.7 ms | $0.085 – $0.154 |
-| 40 | 368 ms | 400 ms | 31.5 ms | 8.6% | 18.9 ms | $0.066 – $0.213 |
-| 80 | 739 ms | 774 ms | 35.4 ms | 4.8% | 35.6 ms | $0.074 – $0.400 |
-| 160 | 1.47 s | 1.60 s | 125 ms | 8.5% | 147 ms | $0.261 – $1.65 |
-| 320 | 2.93 s | 3.14 s | 212 ms | 7.2% | 273 ms | $0.441 – $3.07 |
-| 640 | 5.82 s | 6.05 s | 235 ms | 4.0% | 504 ms | $0.490 – $5.67 |
-| 1280 | 11.6 s | 12.1 s | 543 ms | 4.7% | 1.30 s | $1.13 – $14.66 |
-| 2560 | 23.4 s | 24.3 s | 961 ms | 4.1% | 2.35 s | $2.00 – $26.44 |
+| 20 | 153 ms | 164 ms | 10.9 ms | 7.1% | 12.1 ms | $0.023 – $0.136 |
+| 40 | 329 ms | 290 ms | 0 | 0.0% | 18.7 ms | $0 – $0.211 |
+| 80 | 605 ms | 519 ms | 0 | 0.0% | 17.9 ms | $0 – $0.201 |
+| 160 | 1.08 s | 1.07 s | 0 | 0.0% | 85.8 ms | $0 – $0.964 |
+| 320 | 2.00 s | 2.05 s | 49.9 ms | 2.5% | 146 ms | $0.104 – $1.64 |
+| 640 | 4.01 s | 4.26 s | 250 ms | 6.2% | 450 ms | $0.520 – $5.06 |
+| 1280 | 8.76 s | 9.10 s | 348 ms | 4.0% | 1.10 s | $0.725 – $12.41 |
+| 2560 | 16.7 s | 18.4 s | 1.76 s | 11% | 2.25 s | $3.68 – $25.30 |
 
-**How the total grows:** O(n) (linear), exponent 0.98 over 8 sizes.
+**How the total grows:** O(n) (linear), exponent 1.04 over 8 sizes.
 
 ## 2. Function by function
 
@@ -57,9 +57,9 @@ Every function the package exposes is measured on its own across the full size l
 
 | Function | Documented | Measured | Agreement | At 80 | At 2560 |
 | --- | --- | --- | --- | --- | --- |
-| `runChecks (scheduler and process orchestration)` (no-dependencies) | O(n) | O(n) | ✅ matches | 746 ms | 23.4 s |
-| `runChecks (scheduler and process orchestration)` (few-dependencies) | O(n) | O(n) | ✅ matches | 752 ms | 23.7 s |
-| `runChecks (scheduler and process orchestration)` (frequent-barriers) | O(n) | O(n) | ✅ matches | 852 ms | 28.1 s |
+| `runChecks (scheduler and process orchestration)` (no-dependencies) | O(n) | O(n) | ✅ matches | 579 ms | 17.3 s |
+| `runChecks (scheduler and process orchestration)` (few-dependencies) | O(n) | O(n) | ✅ matches | 576 ms | 17.1 s |
+| `runChecks (scheduler and process orchestration)` (frequent-barriers) | O(n) | O(n) | ✅ matches | 612 ms | 20.5 s |
 
 ### `runChecks (scheduler and process orchestration)`
 
@@ -91,70 +91,70 @@ Every function the package exposes is measured on its own across the full size l
 
 Every check is independent, so the scheduler can always keep eight running.
 
-**Measured: O(n)** (exponent 0.99, 8 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.97, 8 sizes) -- ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 193 ms | 200 ms | 58.7 ms | 2.8 MiB | 5 |
-| 40 | 382 ms | 385 ms | 115 ms | 6.5 MiB | 3 |
-| 80 | 746 ms | 753 ms | 212 ms | 11.2 MiB | 1 |
-| 160 | 1.50 s | 1.51 s | 416 ms | 22.4 MiB | 1 |
-| 320 | 3.03 s | 3.08 s | 863 ms | 44.8 MiB | 0 |
-| 640 | 6.04 s | 6.10 s | 1.72 s | 44.0 MiB | 0 |
-| 1280 | 12.2 s | 12.4 s | 3.50 s | 36.3 MiB | 0 |
-| 2560 | 23.4 s | 23.7 s | 6.43 s | 48.5 MiB | 0 |
+| 20 | 164 ms | 194 ms | 48.8 ms | 3.3 MiB | 6 |
+| 40 | 291 ms | 295 ms | 96.5 ms | 6.5 MiB | 3 |
+| 80 | 579 ms | 582 ms | 181 ms | 11.2 MiB | 2 |
+| 160 | 1.17 s | 1.17 s | 369 ms | 22.4 MiB | 1 |
+| 320 | 2.42 s | 2.50 s | 775 ms | 44.8 MiB | 0 |
+| 640 | 4.58 s | 4.70 s | 1.43 s | 44.1 MiB | 0 |
+| 1280 | 8.89 s | 9.31 s | 2.72 s | 35.8 MiB | 0 |
+| 2560 | 17.3 s | 18.2 s | 4.88 s | 48.7 MiB | 0 |
 
 #### Variant `few-dependencies`
 
 Every fifth check depends on its predecessor and one check in the middle is an isolated barrier -- the shape of a real contract.
 
-**Measured: O(n)** (exponent 1.00, 8 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.97, 8 sizes) -- ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 219 ms | 227 ms | 59.5 ms | 3.3 MiB | 5 |
-| 40 | 405 ms | 412 ms | 115 ms | 6.6 MiB | 2 |
-| 80 | 752 ms | 755 ms | 208 ms | 11.4 MiB | 1 |
-| 160 | 1.49 s | 1.49 s | 409 ms | 22.7 MiB | 1 |
-| 320 | 2.94 s | 2.96 s | 813 ms | 45.6 MiB | 0 |
-| 640 | 5.88 s | 5.88 s | 1.61 s | 45.5 MiB | 0 |
-| 1280 | 11.8 s | 11.9 s | 3.28 s | 38.8 MiB | 0 |
-| 2560 | 23.7 s | 23.8 s | 6.52 s | 11.4 MiB | 0 |
+| 20 | 176 ms | 178 ms | 48.5 ms | 3.3 MiB | 6 |
+| 40 | 310 ms | 314 ms | 90.8 ms | 6.6 MiB | 3 |
+| 80 | 576 ms | 592 ms | 172 ms | 11.4 MiB | 2 |
+| 160 | 1.16 s | 1.18 s | 351 ms | 22.8 MiB | 1 |
+| 320 | 2.26 s | 2.30 s | 678 ms | 45.6 MiB | 0 |
+| 640 | 4.45 s | 4.51 s | 1.30 s | 45.4 MiB | 0 |
+| 1280 | 8.72 s | 8.82 s | 2.54 s | 38.9 MiB | 0 |
+| 2560 | 17.1 s | 17.3 s | 4.84 s | 29.7 MiB | 0 |
 
 #### Variant `frequent-barriers`
 
 Every twentieth check is isolated, which forces everything before it to finish and everything after it to wait: the most serialized realistic shape.
 
-**Measured: O(n)** (exponent 1.01, 8 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 1.02, 8 sizes) -- ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 212 ms | 219 ms | 62.2 ms | 3.3 MiB | 5 |
-| 40 | 421 ms | 423 ms | 109 ms | 6.6 MiB | 2 |
-| 80 | 852 ms | 867 ms | 208 ms | 11.9 MiB | 1 |
-| 160 | 1.70 s | 1.72 s | 411 ms | 23.0 MiB | 1 |
-| 320 | 3.41 s | 3.45 s | 809 ms | 46.7 MiB | 0 |
-| 640 | 6.82 s | 6.84 s | 1.62 s | 50.8 MiB | 0 |
-| 1280 | 13.7 s | 13.9 s | 3.29 s | 12.8 MiB | 0 |
-| 2560 | 28.1 s | 28.7 s | 6.83 s | 72.3 MiB | 0 |
+| 20 | 158 ms | 162 ms | 46.4 ms | 3.3 MiB | 6 |
+| 40 | 304 ms | 312 ms | 83.7 ms | 6.6 MiB | 3 |
+| 80 | 612 ms | 646 ms | 157 ms | 11.7 MiB | 2 |
+| 160 | 1.21 s | 1.23 s | 303 ms | 23.0 MiB | 1 |
+| 320 | 2.52 s | 2.53 s | 626 ms | 46.8 MiB | 0 |
+| 640 | 5.06 s | 5.08 s | 1.26 s | 50.7 MiB | 0 |
+| 1280 | 10.1 s | 10.2 s | 2.52 s | 12.9 MiB | 0 |
+| 2560 | 20.5 s | 20.6 s | 5.10 s | 8.5 MiB | 0 |
 
 ## 3. What makes up one end-to-end operation
 
 Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls, so where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time): every moment of the operation belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly -- not against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
 
-**At 80 checks** (whole operation: 774 ms)
+**At 80 checks** (whole operation: 519 ms)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `run-checks` | 1 | 752 ms | 752 ms | 97% |
-| _unattributed_ |  |  | 21.7 ms | 2.8% |
+| `run-checks` | 1 | 576 ms | 576 ms | 111% |
+| _unattributed_ |  |  | 0 | 0.0% |
 
-**At 2560 checks** (whole operation: 24.3 s)
+**At 2560 checks** (whole operation: 18.4 s)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `run-checks` | 1 | 23.7 s | 23.7 s | 97% |
-| _unattributed_ |  |  | 617 ms | 2.5% |
+| `run-checks` | 1 | 17.1 s | 17.1 s | 93% |
+| _unattributed_ |  |  | 1.29 s | 7.0% |
 
 ## Cost model
 
@@ -162,9 +162,9 @@ Estimates use two bracketing price shapes: **low** = CPU-priced compute ($0.040 
 
 ## Environment and method
 
-- Run: `2026-10-10T21:43:03.987Z` → `2026-10-10T21:55:20.898Z` (737 s), ci: CI (run 38088655062)
-- Machine: AMD EPYC 7763 64-Core Processor, 4 logical core(s) (2 physical), 15990 MB RAM, linux/x64, Node v24.21.0, GitHub Actions
-- Git: `efd08e1bd5a06407327490a44a87d4b6ea7b1e76` on `docs/accuracy-stage-1a`
+- Run: `2026-10-10T22:36:01.372Z` → `2026-10-10T22:45:04.569Z` (543 s), ci: CI (run 38092012203)
+- Machine: AMD EPYC 9V45 96-Core Processor, 4 logical core(s) (2 physical), 15990 MB RAM, linux/x64, Node v24.21.0, GitHub Actions
+- Git: `da80093aebf458f036d338ee7a9815294d601337` on `docs/accuracy-stage-1a`
 - Sizes: 20, 40, 80, 160, 320, 640, 1280, 2560 checks -- One configured check that spawns a process. 100 is a large real repository's contract (this one runs around forty); the ladder reaches 2,560 to expose how scheduling scales. It stops there, not at 10,240, because every check spawns a real process and larger sizes take minutes per sample.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They exist to show how _this_ package's cost changes between runs on comparable hardware and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).
