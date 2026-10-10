@@ -21,7 +21,8 @@ function publishedFiles(): string[] {
     cwd: root,
     encoding: "utf8",
     shell: process.platform === "win32",
-    stdio: ["ignore", "pipe", "ignore"],
+    // stderr stays visible so a failing `npm pack` explains itself.
+    stdio: ["ignore", "pipe", "inherit"],
     // npm colours its JSON when the runner forces colour on, which is not parseable.
     env: {
       ...process.env,
@@ -35,6 +36,15 @@ function publishedFiles(): string[] {
   const start = output.lastIndexOf("\n[\n")
   const [result] = JSON.parse(start === -1 ? output : output.slice(start + 1)) as PackResult[]
   return (result?.files ?? []).map((file) => file.path)
+}
+
+/** The link target with percent-encoding decoded, or `undefined` when the encoding is malformed. */
+function decodeTarget(target: string): string | undefined {
+  try {
+    return decodeURI(target)
+  } catch {
+    return undefined
+  }
 }
 
 const LINK = /\]\(([^)\s]+)(?:\s+"[^"]*")?\)|^ {0,3}\[[^\]]+\]:\s*(\S+)/g
@@ -68,6 +78,13 @@ function relativeLinks(markdown: string): { line: number; target: string }[] {
   }
   return links
 }
+
+describe("decodeTarget", () => {
+  it("decodes valid percent-encoding and refuses a malformed sequence", () => {
+    expect(decodeTarget("./a%20b.md")).toBe("./a b.md")
+    expect(decodeTarget("./%E0%A4%A.md")).toBeUndefined()
+  })
+})
 
 describe("relativeLinks", () => {
   it("skips links inside backtick and tilde fences, honouring the opening length", () => {
@@ -126,8 +143,13 @@ describe("published documentation links", () => {
     const offenders: string[] = []
     for (const file of documents) {
       for (const { line, target } of relativeLinks(readFileSync(path.join(root, file), "utf8"))) {
+        const decoded = decodeTarget(target)
+        if (decoded === undefined) {
+          offenders.push(`${file}:${String(line)}: ${target} (malformed percent-encoding)`)
+          continue
+        }
         const resolved = path.posix
-          .normalize(path.posix.join(path.posix.dirname(file), decodeURI(target)))
+          .normalize(path.posix.join(path.posix.dirname(file), decoded))
           .replace(/\/$/, "")
         const found =
           published.includes(resolved) ||
