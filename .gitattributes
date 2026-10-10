@@ -1,7 +1,7 @@
 # Normalize every text file to LF in the repository and on checkout, on
 # every platform. Without this, a Windows checkout (core.autocrlf=true by
 # default on the GitHub windows-latest runner) rewrites every file to CRLF,
-# and `prettier --check .` -- whose .prettierrc.json pins `endOfLine: "lf"`
+# and `prettier --check .` -- whose Prettier config pins `endOfLine: "lf"`
 # -- then flags all ~300 files and fails `verify (windows-latest)`. Keeping
 # the normalization here rather than in CI also gives Windows contributors
 # the same LF working tree the check expects.
