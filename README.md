@@ -4,8 +4,8 @@
 [![npm version](https://img.shields.io/npm/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
 [![Socket Badge](https://badge.socket.dev/npm/package/repo-contract/latest)](https://socket.dev/npm/package/repo-contract)
 [![Node](https://img.shields.io/node/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
-[![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/coverage-badge.json)](scripts/run-coverage.mjs)
-[![Mutation](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/mutation-badge.json)](checks/mutation.ts)
+[![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/coverage-badge.json)](https://github.com/MaverickCER/repo-contract/blob/main/scripts/run-coverage.mjs)
+[![Mutation](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/mutation-badge.json)](https://github.com/MaverickCER/repo-contract/blob/main/checks/mutation.ts)
 [![License](https://img.shields.io/npm/l/repo-contract.svg)](LICENSE)
 
 **Define your engineering standards once. Share them across repositories. Get actionable rationale for every outcome.**
@@ -225,8 +225,8 @@ AI coding agents, CI bots, and release automation consume the same contract as h
 
 This repository publishes two real [CycloneDX](https://cyclonedx.org/) 1.6 Software Bills of Materials, regenerated on every `npm run contract` run via [`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`), because they answer different questions:
 
-- [`docs/sbom.production.cdx.json`](docs/sbom.production.cdx.json) is the **runtime inventory** — what installing `repo-contract` brings in. It has **no runtime dependencies**, so this document lists the package alone. This is the one to import into a vulnerability scanner to describe what you would deploy.
-- [`docs/sbom.cdx.json`](docs/sbom.cdx.json) is the **build-environment inventory** — every direct and transitive dependency of this repository's own tooling, as resolved in `package-lock.json`. It is for auditing how the package is built, and is **not** what installing the package adds.
+- [`docs/sbom.production.cdx.json`](https://github.com/MaverickCER/repo-contract/blob/main/docs/sbom.production.cdx.json) is the **runtime inventory** — what installing `repo-contract` brings in. It has **no runtime dependencies**, so this document lists the package alone. This is the one to import into a vulnerability scanner to describe what you would deploy.
+- [`docs/sbom.cdx.json`](https://github.com/MaverickCER/repo-contract/blob/main/docs/sbom.cdx.json) is the **build-environment inventory** — every direct and transitive dependency of this repository's own tooling, as resolved in `package-lock.json`. It is for auditing how the package is built, and is **not** what installing the package adds.
 
 Both cover npm only, and both are deterministic given an unchanged lockfile, so they stay normal, diff-gated committed files rather than a special-cased exclusion.
 
