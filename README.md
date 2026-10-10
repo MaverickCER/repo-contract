@@ -252,7 +252,7 @@ Pre-1.0. Per [VERSIONING.md](VERSIONING.md), a `0.x` minor may carry a breaking 
 
 ## Learn more
 
-- **[Guide](GUIDE.md)** — how to integrate it, define checks, parse output, write cross-check policies, use presets, and handle errors.
+- **[Guide](GUIDE.md)** — how to integrate it, define checks, parse output, write cross-check policies, use presets, handle errors, and [troubleshoot](GUIDE.md#troubleshooting).
 - **[Adoption guide](ADOPTION.md)** — decision-maker summary covering security posture, versioning/stability tiers, and architectural guarantees.
 - **[Security](SECURITY.md)** — how commands run, which capabilities the consumer supplies, and the enforced no-network guarantee.
 - **[API reference](https://maverickcer.github.io/repo-contract/api/)** — every exported type, field, and error code, generated from source so it cannot drift.
