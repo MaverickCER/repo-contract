@@ -153,16 +153,14 @@ yourself.
 do with the result. That file is the whole integration:
 
 ```ts
-// scripts/contract.mjs
+// scripts/contract.mjs — the entry point; this is the whole thing
 import { runRepoContract } from "repo-contract"
 import config from "../repo-contract.config.mjs"
 
 const { verdict } = await runRepoContract(config)
-
 for (const [id, result] of Object.entries(verdict.checks)) {
   console.log(`[${result.outcome.toUpperCase()}] ${id}: ${result.rationale}`)
 }
-
 process.exitCode = verdict.passed ? 0 : 1
 ```
 
