@@ -4,6 +4,7 @@
 [![npm version](https://img.shields.io/npm/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
 [![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/coverage-badge.json)](https://github.com/MaverickCER/repo-contract/blob/main/scripts/run-coverage.mjs)
 [![Mutation](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/mutation-badge.json)](https://github.com/MaverickCER/repo-contract/blob/main/checks/mutation.ts)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/MaverickCER/repo-contract/badge)](https://scorecard.dev/viewer/?uri=github.com/MaverickCER/repo-contract)
 [![Socket Badge](https://badge.socket.dev/npm/package/repo-contract/latest)](https://socket.dev/npm/package/repo-contract)
 [![Node](https://img.shields.io/node/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
 [![License](https://img.shields.io/npm/l/repo-contract.svg)](LICENSE)
