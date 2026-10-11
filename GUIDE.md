@@ -195,6 +195,28 @@ identical is the contract definition and the code path, with no hidden state. Th
 repository uses its own `repo-contract.config.ts` to validate itself — see
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Persisting a run and publishing a summary
+
+The runner above prints the verdict and forgets it. To keep a record that a dashboard, a reviewer, or the next run can read, store the run. `serializeRun` turns the raw result into the two JSON documents that match the published `repo-contract/schema` files; each carries its own `version` field, so a stored document stays interpretable independently of the package version that wrote it (see [VERSIONING.md](VERSIONING.md#evidence-and-verdict-schema-versioning)). `renderMarkdownSummary` takes the raw `verdict` and `evidence` from the run, not the serialized JSON, and renders a summary for `$GITHUB_STEP_SUMMARY` or a pull-request comment: failures with their whole rationale, warnings and passes with a line each, and the slowest checks. Neither function touches the filesystem; you decide where the output goes:
+
+```ts
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs"
+import { renderMarkdownSummary, runRepoContract, serializeRun } from "repo-contract"
+import config from "../repo-contract.config.mjs"
+
+const run = await runRepoContract(config)
+const { evidence, verdict } = serializeRun(run)
+mkdirSync("reports/contract", { recursive: true })
+writeFileSync("reports/contract/evidence.json", evidence)
+writeFileSync("reports/contract/verdict.json", verdict)
+if (process.env.GITHUB_STEP_SUMMARY) {
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, renderMarkdownSummary(run.verdict, run.evidence))
+}
+process.exitCode = run.verdict.passed ? 0 : 1
+```
+
+The [API reference](https://maverickcer.github.io/repo-contract/api/) is authoritative for both signatures.
+
 ## Defining checks
 
 Each check owns its identifier, command, output interpretation, and policy:

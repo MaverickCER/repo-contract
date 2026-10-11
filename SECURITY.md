@@ -135,6 +135,15 @@ verify-no-ambient-capabilities`) in that same credentialed job, unlike this repo
   reachable from that job, which `repo-contract.config.ts` does not yet do here. Track that as a
   follow-up, not a promise already kept by this migration.
 
+## SBOMs
+
+This repository commits two [CycloneDX](https://cyclonedx.org/) 1.6 Software Bills of Materials, regenerated on every `npm run contract` run via [`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`). They answer different questions:
+
+- [`docs/sbom.production.cdx.json`](docs/sbom.production.cdx.json) is the **runtime inventory**: what installing `repo-contract` brings in. The package declares no runtime dependencies, so the document lists the package alone. This is the one to import into a vulnerability scanner to describe what you would deploy.
+- [`docs/sbom.cdx.json`](docs/sbom.cdx.json) is the **build-environment inventory**: every direct and transitive dependency of this repository's own tooling, as resolved in `package-lock.json`. It is for auditing how the package is built and is not what installing the package adds.
+
+Both cover npm only. Both are deterministic given an unchanged lockfile, so they stay normal, diff-gated committed files rather than a special-cased exclusion.
+
 ## Supported versions
 
 This project has not reached a `1.0` release.
