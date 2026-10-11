@@ -409,8 +409,9 @@ npm run contract</code></pre>
           <div class="callout callout--note">
             <p class="callout-title">You probably don&#39;t need it when</p>
             <p>
-              Your project is small, one team owns every rule, and exit codes are all the policy you
-              need. Your existing scripts or CI alone may be enough.
+              <code>npm test</code> and a linter are the whole story, each CI check is already
+              independent and that is fine, and you don&#39;t need any policy logic on top of exit
+              codes.
             </p>
           </div>
         </div>
