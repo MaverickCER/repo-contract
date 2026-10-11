@@ -167,3 +167,5 @@ itself.
 - [`demo/`](demo) — a smaller, unrelated example: the tiny, real contract behind the main README's
   opening demo (three published presets, one deliberately imperfect file, real pass/fail/warn
   output).
+- [`release-gate/`](release-gate) — one policy that reads the evidence of several checks to decide
+  whether a release is permitted, and names the check that blocks it.
