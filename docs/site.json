@@ -1,0 +1,230 @@
+{
+  "siteUrl": "https://maverickcer.github.io/repo-contract/",
+  "repoUrl": "https://github.com/maverickcer/repo-contract",
+  "title": "repo-contract — one contract for your engineering standards",
+  "description": "Define your engineering standards once, share them across repositories, and get an actionable rationale for every outcome. repo-contract runs the tools you already use and evaluates their results against repository-owned policy, locally and in CI.",
+  "ogImage": "assets/og-image.png",
+  "maturity": "repo-contract is pre-1.0. A `0.x` minor may carry a breaking change to the Stable tier before 1.0, so pin the version and read the changelog on every minor upgrade.",
+  "hero": {
+    "eyebrow": "Engineering standards, made executable",
+    "heading": "Define your engineering standards once. Share them across repositories. Get actionable rationale for every outcome.",
+    "lede": "Your linters, test runners and security scanners can tell you what happened. They don't define what your organization considers acceptable.",
+    "support": "repo-contract is that missing layer: one typed, versioned contract that runs the tools you already use, evaluates their results against policy your repository owns, and returns one verdict, locally and in CI.",
+    "outcome": "Give every repository a consistent, versioned engineering standard without forcing every team to adopt the same tools or migrate its CI."
+  },
+  "install": {
+    "label": "Quick start",
+    "commands": [
+      "npm install --save-dev repo-contract tsx",
+      "npx repo-contract init",
+      "npm run contract"
+    ],
+    "note": "For a project that already has its tools, such as `typescript`, `vitest` and `eslint`. repo-contract bundles none of them; `init` wires up only the ones it finds in your `package.json`."
+  },
+  "cta": {
+    "primary": {
+      "label": "Read the README",
+      "url": "https://github.com/maverickcer/repo-contract#readme"
+    },
+    "secondary": {
+      "label": "Run the examples",
+      "url": "https://github.com/maverickcer/repo-contract/tree/main/examples"
+    }
+  },
+  "problem": {
+    "eyebrow": "Why it exists",
+    "heading": "Your engineering standard is probably scattered.",
+    "lede": "A mature repository enforces dozens of requirements: tests, coverage, public-API compatibility, dependency vulnerabilities, mutation score, architecture boundaries, documentation. The tools that check them are excellent. The rules about what their results should mean end up spread across places no single tool owns.",
+    "listLabel": "Where the rules live today",
+    "items": [
+      "CI YAML",
+      "package.json scripts",
+      "ESLint / tool configuration",
+      "test & release scripts",
+      "security workflows",
+      "code-review habits"
+    ],
+    "conclusion": "no single place answers: what does \"acceptable\" mean here?",
+    "closing": "Individual tools answer individual questions. Your engineering standard is the answer to all of them together."
+  },
+  "model": {
+    "eyebrow": "How it works",
+    "heading": "Your tools produce results. Your repository decides what they mean.",
+    "lede": "A **check** runs a command. **Evidence** records what happened: exit code, timing, captured and parsed output. A **policy** you write decides whether that evidence meets your standard, and can read any other check's evidence to do it. The **verdict** aggregates every policy result, with a mandatory rationale on each.",
+    "flow": [
+      "ESLint · Vitest · tsc · Stryker · npm audit · your own checks",
+      "↓ repo-contract",
+      "Evidence → Policy → Verdict",
+      "↓ consumed by a pre-commit hook and CI"
+    ],
+    "flowDescription": "ESLint, Vitest, TypeScript, Stryker, npm audit, and any custom checks feed into repo-contract, which captures their results as evidence, applies repository-owned policy, and produces one verdict that local scripts and CI consume.",
+    "note": "Execution and policy evaluation are strictly separate phases: every check finishes and its evidence is assembled before any policy runs, so a policy that reads a sibling check is never a race. That is what lets one decision rest on several results. `Verdict` is returned alongside `Evidence`, never merged into it. The [API reference](api/) has the exact shape of each."
+  },
+  "demo": {
+    "eyebrow": "See it",
+    "heading": "One decision from several checks, with the reason.",
+    "intro": "The real output of [examples/release-gate](https://github.com/maverickcer/repo-contract/tree/main/examples/release-gate): three published presets run against one deliberately imperfect file, and a `release` check whose policy reads their evidence to decide whether a release is permitted.",
+    "command": "npm run demo",
+    "output": "[PASS] typecheck\n  tsc reported no type errors.\n\n[FAIL] format\n  Prettier reported formatting failures:\n  Checking formatting...\n  [warn] src/greet.ts\n  [warn] Code style issues found in the above file. Run Prettier with --write to fix.\n\n[WARN] lint\n  ESLint reported 0 errors but 1 warning(s):\n  - src/greet.ts:15:3 [no-console]: Unexpected console statement.\n\n[FAIL] release\n  Release blocked by format. Passing: typecheck. lint: 0 error(s), 1 warning(s); warnings do not block a release.",
+    "source": {
+      "label": "examples/release-gate",
+      "url": "https://github.com/maverickcer/repo-contract/tree/main/examples/release-gate"
+    },
+    "explanation": "`release` runs no command of its own. Its policy reads the evidence of the other three checks and says which one blocks the release, what passed, and what was only a warning. `warn` does not block the run; `fail` does. The rationale is a plain string, so a person, a bot or a log can use it equally."
+  },
+  "guarantees": {
+    "eyebrow": "Guarantees",
+    "heading": "What is guaranteed, and where it stops.",
+    "lede": "Each claim states its scope and links to the document that defines it, so you can check the boundary before you rely on it.",
+    "items": [
+      {
+        "claim": "No network calls in repo-contract's own code.",
+        "scope": "Enforced by an ESLint rule and an independent static scan of the shipped surface, including every preset's spawned command against a reviewed allowlist. It does not stop a command you configure, or an external tool a preset runs, from using the network.",
+        "linkLabel": "Read the security model",
+        "url": "https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md"
+      },
+      {
+        "claim": "Every check finishes before any policy runs.",
+        "scope": "A policy that reads a sibling check never sees partial evidence. This governs when policies run; it does not make the checks themselves fast or deterministic.",
+        "linkLabel": "Read the architecture",
+        "url": "https://github.com/maverickcer/repo-contract/blob/main/specs/architecture.md"
+      },
+      {
+        "claim": "No shell by default, and no ambient access.",
+        "scope": "The consumer supplies the process and environment capabilities. repo-contract cannot vouch for what the commands you configure do once they run.",
+        "linkLabel": "Read the security model",
+        "url": "https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md"
+      }
+    ]
+  },
+  "comparison": {
+    "eyebrow": "Why not just CI",
+    "heading": "CI distributes how checks run. repo-contract distributes what your organization considers acceptable.",
+    "lede": "Keep your CI. Shared ESLint configs, reusable workflows and template repositories all distribute individual checks. repo-contract distributes the whole standard (the checks, the policies that relate them, and the rationale for their outcomes) as one versioned package.",
+    "caption": "Where common approaches stop and repo-contract begins",
+    "rows": [
+      ["Rules scattered across workflows and scripts", "One repository-owned contract"],
+      ["Individual checks", "Checks, the relationships between them, and their policies"],
+      ["CI-specific orchestration logic", "The same contract, run locally and in CI"],
+      ["Exit codes and CI job state", "Structured evidence with a stable, versioned shape"],
+      ["\"CI failed\"", "An actionable rationale on every outcome, including pass"],
+      ["Each repository reinvents the glue", "One shared contract package, inherited"]
+    ],
+    "columns": ["Today", "With repo-contract"]
+  },
+  "adoption": {
+    "eyebrow": "Adoption",
+    "heading": "Start with one check. Scale when you are ready.",
+    "lede": "repo-contract is intentionally incremental. Keep your CI provider, linters, test runners and security tools, and introduce the contract around the checks that matter first.",
+    "calloutTitle": "A progressive rollout, not a migration",
+    "steps": [
+      "Wrap one existing check. `npx repo-contract init` detects what is already in your `package.json` and generates a starting point.",
+      "Write its policy, then run the contract locally and in CI.",
+      "Move the next standard into the contract.",
+      "Share it across repositories once more than one needs it: an internal package wraps repo-contract and owns the executors, every project of that type extends it, and changes arrive through normal dependency updates.",
+      "Introduce a new shared requirement as a dated `warn` that becomes a `fail` on a chosen date, so nobody's build breaks overnight. The [day-one walkthrough](https://github.com/maverickcer/repo-contract/tree/main/examples/day-one-walkthrough) is a runnable example."
+    ],
+    "notFor": {
+      "title": "You probably don't need it when",
+      "text": "`npm test` and a linter are the whole story, each CI check is already independent and that is fine, and you don't need any policy logic on top of exit codes."
+    }
+  },
+  "brief": {
+    "heading": "A one-page brief for your manager",
+    "oneLine": "repo-contract lets every repository follow one shared, versioned engineering standard, and explains every decision it makes.",
+    "problem": "Each team keeps its quality rules in different places, so nobody can say what \"acceptable\" means across the organization. New requirements are hard to introduce without breaking people's builds.",
+    "whatItDoes": "It runs the checks a team already has, such as tests, linting and security scans. It then applies one agreed standard to their results and gives a single verdict, with a plain-language reason, on a developer's machine and in CI.",
+    "whyItMatters": [
+      "Every team is held to the same written-down standard.",
+      "A new requirement can start as a warning with a date and later become a blocker, so nobody is surprised.",
+      "Exceptions can be recorded with a reason instead of living in someone's memory."
+    ],
+    "whatItCosts": "Adopting it in one repository is a small change: install the package, run a generator and keep the existing tools. It replaces none of them, and it is free, open source software under the MIT licence.",
+    "whatCouldGoWrong": [
+      "The standard is only as good as the policies a team writes. The package enforces what you define; it does not decide what is good.",
+      "It sees only what a check measures, so it does not replace judgement in code review."
+    ],
+    "whatWeAsk": "Agree that one repository trials it for a few weeks, then judge from the results whether to share a standard across teams."
+  },
+  "resources": {
+    "eyebrow": "Proof, not promises",
+    "heading": "repo-contract uses repo-contract.",
+    "lede": "The project is self-hosted: its own repository defines a contract with the public API and uses that contract to validate itself. The implementation, tests, architecture documentation and decision records are the evidence behind everything on this page.",
+    "items": [
+      {
+        "title": "Architecture",
+        "description": "The pipeline, the core invariants, and why execution and policy evaluation stay strictly phased.",
+        "label": "Read architecture.md",
+        "url": "https://github.com/maverickcer/repo-contract/blob/main/specs/architecture.md"
+      },
+      {
+        "title": "API reference",
+        "description": "Every exported type, field and error code, generated from source and byte-compared against it on every commit.",
+        "label": "Read the API reference",
+        "url": "api/"
+      },
+      {
+        "title": "Runnable examples",
+        "description": "A shared organizational contract and its consumers, a release gate that reads several checks, a dated warn-then-fail rollout, and a governed, justified exception.",
+        "label": "Browse the examples",
+        "url": "https://github.com/maverickcer/repo-contract/tree/main/examples"
+      },
+      {
+        "title": "Its own contract",
+        "description": "One check per verification category, each a real command with a real policy, using the package's public API.",
+        "label": "Read repo-contract.config.ts",
+        "url": "https://github.com/maverickcer/repo-contract/blob/main/repo-contract.config.ts"
+      },
+      {
+        "title": "Benchmarks",
+        "description": "What each operation costs, how that cost grows with size, and what the package adds, recorded at every merge.",
+        "label": "View the benchmark history",
+        "url": "benchmarks/"
+      }
+    ]
+  },
+  "fit": {
+    "eyebrow": "Try it",
+    "heading": "Trial it on one repository.",
+    "lede": "Read the README for a first contract, or run an example to see a verdict. Either way, the same contract runs locally and in CI.",
+    "links": [
+      {
+        "label": "API reference",
+        "url": "api/"
+      },
+      {
+        "label": "Benchmarks",
+        "url": "benchmarks/"
+      },
+      {
+        "label": "View on GitHub",
+        "url": "https://github.com/maverickcer/repo-contract"
+      }
+    ]
+  },
+  "footer": {
+    "links": [
+      {
+        "label": "API reference",
+        "url": "api/"
+      },
+      {
+        "label": "Benchmarks",
+        "url": "benchmarks/"
+      },
+      {
+        "label": "GitHub ↗",
+        "url": "https://github.com/maverickcer/repo-contract"
+      },
+      {
+        "label": "Issues ↗",
+        "url": "https://github.com/maverickcer/repo-contract/issues"
+      }
+    ],
+    "license": {
+      "label": "MIT License",
+      "url": "https://github.com/maverickcer/repo-contract/blob/main/LICENSE"
+    },
+    "copyright": "repo-contract contributors"
+  }
+}
