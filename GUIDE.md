@@ -139,7 +139,7 @@ Alternatives).
 repo-contract is a library, not a repository-wide command. Your repository owns the entry
 point, the process-spawning capability, and the environment it runs with — so the contract
 stays composable and the package never becomes another opaque layer between you and your
-tools. `npx repo-contract init` (see the [README's Quick Start](README.md#quick-start))
+tools. `npx repo-contract init` (see the [README's Quick Start](README.md#install-and-verify))
 automates writing the files below — it detects your `package.json`'s existing devDependencies,
 generates `repo-contract.config.mts` and `scripts/contract.mjs` from them, and adds (or, if it's
 already present, leaves untouched) a `"contract"` entry in `package.json`'s own `scripts` — but
