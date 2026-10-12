@@ -66,7 +66,7 @@
   // Theme toggle -- persists an explicit choice in localStorage as
   // [data-theme] on <html>; absent that, styles.css's
   // `@media (prefers-color-scheme: dark)` block governs.
-  var THEME_STORAGE_KEY = "repo-contract-theme"
+  var THEME_STORAGE_KEY = document.documentElement.getAttribute("data-theme-key") || "theme"
   var root = document.documentElement
   var themeToggle = document.getElementById("theme-toggle")
   var themeToggleIcon = themeToggle ? themeToggle.querySelector(".theme-toggle-icon") : null

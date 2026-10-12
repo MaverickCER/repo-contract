@@ -5,7 +5,7 @@ request a change.
 
 ## Before opening a Discussion or Issue
 
-Check the README and the generated [API report](docs/api-report/index/README.md) first — most
+Check the [troubleshooting table](GUIDE.md#troubleshooting), the README and the generated [API report](docs/api-report/index/README.md) first — most
 "how do I configure X" questions are answered there, precisely. Then search existing GitHub Discussions and Issues; a duplicate report doesn't
 move anything forward faster.
 

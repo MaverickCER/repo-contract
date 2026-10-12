@@ -179,7 +179,7 @@ guardrail exception lives in.
 ## Consequences
 
 - `npm run contract` runs one additional check, `security-network` (see
-  [`repo-contract.config.ts`](../../repo-contract.config.ts) for the current full list).
+  [`repo-contract.config.ts`](https://github.com/MaverickCER/repo-contract/blob/main/repo-contract.config.ts) for the current full list).
 - A contributor introducing any of the above into `src/` gets a fast, precise ESLint error while
   editing, and (independently) a failed `security-network` check if they somehow bypass or disable
   the lint layer.

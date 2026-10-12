@@ -14,7 +14,7 @@ the calendar.
 
 ## The pattern
 
-[`adoption-policy.ts`](adoption-policy.ts) defines `exampleAdoptionPolicy(schedule,
+[`adoption-policy.ts`](https://github.com/MaverickCER/repo-contract/blob/main/examples/day-one-walkthrough/adoption-policy.ts) defines `exampleAdoptionPolicy(schedule,
 evaluate)`. It wraps a requirement's real check in a dated rollout:
 
 | Requirement state | Before `enforcedFrom`         | On/after `enforcedFrom` |
@@ -27,7 +27,7 @@ evaluate)`. It wraps a requirement's real check in a dated rollout:
 `exampleAdoptionPolicy` is a function you could write and keep in your own shared
 contract package; it is **not** exported by `repo-contract`.
 
-## What [`repo-contract.config.ts`](repo-contract.config.ts) contains
+## What [`repo-contract.config.ts`](https://github.com/MaverickCER/repo-contract/blob/main/examples/day-one-walkthrough/repo-contract.config.ts) contains
 
 - **`Types`** — the inherited baseline, the real `typecheck` preset
   (`tsc --noEmit`), unchanged.

@@ -69,13 +69,16 @@
     "repo-contract": "./bin/repo-contract.mjs"
   },
   "files": [
-    "CHANGELOG.md",
     "bin",
     "dist",
     "helpers",
     "presets",
     "schemas",
-    "src"
+    "src",
+    "/*.md",
+    "specs/**/*.md",
+    "examples/**/*.md",
+    "docs/api-report/**/*.md"
   ],
   "scripts": {
     "accessibility": "npm run contract -- accessibility",

@@ -2,21 +2,42 @@
 
 [![CI](https://github.com/MaverickCER/repo-contract/actions/workflows/ci.yml/badge.svg)](https://github.com/MaverickCER/repo-contract/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
+[![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/coverage-badge.json)](https://github.com/MaverickCER/repo-contract/blob/main/scripts/run-coverage.mjs)
+[![Mutation](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/mutation-badge.json)](https://github.com/MaverickCER/repo-contract/blob/main/checks/mutation.ts)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/MaverickCER/repo-contract/badge)](https://scorecard.dev/viewer/?uri=github.com/MaverickCER/repo-contract)
 [![Socket Badge](https://badge.socket.dev/npm/package/repo-contract/latest)](https://socket.dev/npm/package/repo-contract)
 [![Node](https://img.shields.io/node/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
-[![Coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/coverage-badge.json)](scripts/run-coverage.mjs)
-[![Mutation](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/mutation-badge.json)](checks/mutation.ts)
 [![License](https://img.shields.io/npm/l/repo-contract.svg)](LICENSE)
 
 **Define your engineering standards once. Share them across repositories. Get actionable rationale for every outcome.**
 
-repo-contract is a TypeScript library that turns the engineering rules scattered across CI, scripts, configuration, and documentation into a single contract you can version, review, and share. It runs the tools you already use, evaluates their results against your standards, and gives actionable information for every outcome. You replace none of your existing tools; your CI, scripts, and development workflow stay intact.
+repo-contract is a TypeScript library for defining, versioning, and sharing engineering standards across repositories. It runs your existing tools, captures their results as structured evidence, and evaluates that evidence against repository-owned policies. Every policy outcome carries a rationale you can act on. Your linters, test runners, security scanners, CI provider, and workflow stay as they are.
 
-[See it run](#see-it-run) · [Quick Start](#quick-start) · [Across repositories](#from-one-repo-to-a-whole-org)
+[Why](#why-it-exists) · [See it run](#see-it-run) · [Install](#install-and-verify) · [Fit](#fit-and-capabilities) · [Limits](#limits-and-when-not-to-use-it) · [Security](#security-and-supply-chain) · [Maturity](#maturity-versioning-and-support) · [Docs](#documentation)
 
-## See it run
+## Why it exists
 
-**Actionable rationale for every outcome.** Here's the real output of the tiny contract in [`examples/demo/`](examples/demo/README.md) — three published presets against one deliberately imperfect file:
+**Benefit:** one reviewed, versioned definition of what "good" means for a repository, runnable on a laptop and in CI, that tells a contributor what to fix rather than only that something failed.
+
+**Problem:** green CI does not mean your standard held. Coverage stays above the floor while the file you just added has almost none. The mutation score moves because the test suite moved, and nothing reconciles the two. A contributor gets "CI failed" and no idea what the repository expects. The standard itself lives scattered across CI YAML, `package.json` scripts, configuration, and review habits, so nothing executable says what it is.
+
+**Who it is for:** platform and staff engineers who own quality gates for several repositories, and teams whose gates have outgrown independent CI steps. Developers can use it alone in a single repository.
+
+**Why it matters:** a standard that is not written as code drifts. Twenty repositories with copied YAML end up with twenty slightly different standards, and each failure costs someone a local re-run just to learn what broke.
+
+## How it differs
+
+Shared ESLint configs, reusable workflows, and template repositories distribute individual checks. repo-contract distributes the whole standard: the checks, the policies that relate them, and the rationale for each outcome, as typed code in your repository.
+
+Reusable workflows can express sophisticated policy, so this is not a claim that they cannot. The difference is a typed, repository-owned policy model with structured evidence that runs the same way locally and in CI, instead of one assembled from workflow-specific orchestration. Tools run checks and quality gates aggregate exit codes. repo-contract sits a layer under both: it turns each tool's output into evidence, then lets your policies decide what that evidence means, including reading one check's evidence to judge another's.
+
+## What it does
+
+A **check** runs a command and captures its result as **evidence**. A **policy** you own turns that evidence into a **verdict**: `pass`, `warn`, or `fail`, each with a rationale. `warn` is visible and does not block the run; `fail` does. [How it works](GUIDE.md#the-model) covers the model; [presets](GUIDE.md#presets) wrap the common tools (TypeScript, ESLint, Vitest, Prettier, security auditing, dead-code and package validation).
+
+### See it run
+
+The real output of the contract in [`examples/demo/`](examples/demo/README.md): three published presets against one deliberately imperfect file.
 
 ```ts
 checks: {
@@ -43,117 +64,11 @@ $ npm run demo
   - src/greet.ts:15:3 [no-console]: Unexpected console statement.
 ```
 
-Real output, not a mockup — run it yourself with `npm run demo` from [`examples/demo/`](examples/demo/README.md). Not "CI failed": each line says what happened, where, why the repository treats it that way, and — when there's something to fix — how. `warn` doesn't block the run; `fail` does.
+Each result names the check, its outcome, and the rationale behind it. Failures carry the diagnostics needed to fix them; warnings stay visible without blocking. Run it yourself with `npm run demo` from [`examples/demo/`](examples/demo/README.md).
 
-## Why it exists
+### One check judging another
 
-Green CI does not mean your standard held.
-
-- Coverage stays above 85%, but the file you just added has almost none — and whether that's acceptable isn't written down anywhere executable.
-- The mutation score moved because the test suite moved — and nothing reconciles the two.
-- A contributor gets "CI failed" and no idea what the repository expects them to do.
-
-Individual tools answer individual questions. Your engineering standard is the answer to all of them together — and today it lives scattered across CI YAML, `package.json` scripts, configuration, docs, and review habits. repo-contract makes that standard one executable thing.
-
-Tools run checks. Quality gates aggregate their exit codes. repo-contract sits a layer under both: it turns each tool's output into structured evidence, then lets your own policies decide what that evidence means — including reading one check's evidence to judge another's.
-
-## Quick start
-
-**Your standards, defined once as typed code.**
-
-```sh
-npm install --save-dev repo-contract tsx typescript vitest eslint
-npx repo-contract init
-npm run contract
-```
-
-This assumes an existing project: a `tsconfig.json`, an ESLint flat config, and at least one test
-file already in place. `init` only wires up checks for tools it finds as devDependencies — it does
-not scaffold the tools' own configuration, so in a truly empty project (e.g. straight off `npm init`)
-`typecheck`, `lint`, and `test` will each fail with that tool's own "no config found" error until you
-add one, exactly as running `tsc`/`eslint`/`vitest` directly would.
-
-`init` reads your `package.json`'s existing devDependencies (`typescript`, `vitest`, and `eslint`
-above — install whichever of the [presets](GUIDE.md#presets) apply to you, `init` only wires up
-what it finds), writes the same two files shown below
-from them, and adds (or, if one's already there, leaves untouched) that same `"contract"` entry in
-`package.json`'s own `scripts` — nothing it generates is required to run a contract; it's the same
-scaffold you'd otherwise type by hand, once, so it stops being the first thing between you and
-seeing this work. Point your pre-commit hook and your CI job at that same `npm run contract`.
-`init` is Experimental (see [VERSIONING.md](VERSIONING.md)) — everything it writes is yours from
-the moment it lands, so that classification is about the generator, never about what it produces.
-
-### Already know how you want it configured? Create it by hand
-
-A hand-authored contract is the same two files and the same `package.json` entry `init` writes,
-with nothing hidden.
-
-`tsx` runs the TypeScript config and runner. Each check invokes its own tool, so install those too — `typescript`, `vitest`, and `eslint` for the three below. repo-contract bundles none of them.
-
-```ts
-// repo-contract.config.mts — your standard, as typed code
-import { spawn } from "node:child_process"
-import { defineRepoContract } from "repo-contract"
-import { lint, test, typecheck } from "repo-contract/presets"
-
-export default defineRepoContract({
-  spawn,
-  env: process.env,
-  checks: { typecheck, test, lint: lint() },
-})
-```
-
-`.mts`, not `.ts`: an `.mts` file is always ESM to Node, regardless of whether your own `package.json` has `"type": "module"` set (`npm init`'s default output doesn't). A plain `.ts` config would compile to CommonJS in that case while the `.mjs` runner below — ESM by its own extension — imports it, and Node's CJS/ESM default-export interop would silently hand `runRepoContract` the wrong shape.
-
-```ts
-// scripts/contract.mjs — the entry point; this is the whole thing
-import { runRepoContract } from "repo-contract"
-import config from "../repo-contract.config.mjs"
-
-const { verdict } = await runRepoContract(config)
-for (const [id, result] of Object.entries(verdict.checks)) {
-  console.log(`[${result.outcome.toUpperCase()}] ${id}: ${result.rationale}`)
-}
-process.exitCode = verdict.passed ? 0 : 1
-```
-
-That prints the verdict and forgets it. To keep a record that a dashboard, a reviewer or the next run can read, store the run: `serializeRun` turns the result into the two JSON documents that match the published `repo-contract/schema` files, and `renderMarkdownSummary` renders a summary for `$GITHUB_STEP_SUMMARY` or a pull-request comment (failures with their whole rationale, warnings and passes with a line each, the slowest checks). Neither touches the filesystem; you decide where they go:
-
-```ts
-import { appendFileSync, mkdirSync, writeFileSync } from "node:fs"
-import { renderMarkdownSummary, runRepoContract, serializeRun } from "repo-contract"
-import config from "../repo-contract.config.mjs"
-
-const run = await runRepoContract(config)
-const { evidence, verdict } = serializeRun(run)
-mkdirSync("reports/contract", { recursive: true })
-writeFileSync("reports/contract/evidence.json", evidence)
-writeFileSync("reports/contract/verdict.json", verdict)
-if (process.env.GITHUB_STEP_SUMMARY) {
-  appendFileSync(process.env.GITHUB_STEP_SUMMARY, renderMarkdownSummary(run.verdict, run.evidence))
-}
-process.exitCode = run.verdict.passed ? 0 : 1
-```
-
-```json
-{ "scripts": { "contract": "tsx scripts/contract.mjs" } }
-```
-
-```sh
-npm run contract
-```
-
-Point your pre-commit hook and your CI job at that same `npm run contract`. The [Guide](GUIDE.md#the-runner-and-ci-integration) covers the runner, the `spawn`/`env` capability model, and Windows. Node.js `>=22` (Bun and Deno are tested too).
-
-Two patterns worth knowing about early, not just once you're rolling this out across an org: the
-[**ratchet**](examples/day-one-walkthrough/README.md) (a new requirement lands as a dated `warn` →
-`fail`, never an overnight red build) and [**governed exceptions**](examples/exceptions-walkthrough/README.md)
-(_Experimental_ — a justified, reviewed waiver for one specific finding, without weakening the
-check for everything else).
-
-## What a policy can express
-
-**Checks produce evidence. Policies decide whether that evidence meets your standard** — and a policy can read any other check's result to do it:
+A policy can read any other check's evidence. Here mutation testing is only meaningful once the tests pass:
 
 ```ts
 checks: {
@@ -161,112 +76,107 @@ checks: {
 
   mutation: {
     run: ["npm", "run", "mutation"],
-    dependsOn: ["tests"], // run after tests; hand this policy their result
-    policy: ({ dependencies }) =>
-      dependencies.tests?.exitCode !== 0
-        ? { outcome: "fail", rationale: "Tests must pass before a mutation score means anything." }
-        : { outcome: "pass", rationale: "Tests passed; mutation score is meaningful." },
+    dependsOn: ["tests"], // orders execution and hands this policy the tests' evidence
+    policy: ({ result, dependencies }) => {
+      if (dependencies.tests?.exitCode !== 0) {
+        return { outcome: "fail", rationale: "The test suite is failing, so no mutation score was evaluated. Fix the failing tests first." }
+      }
+      return result.exitCode === 0
+        ? { outcome: "pass", rationale: "Mutation testing passed against a green test suite." }
+        : { outcome: "fail", rationale: "Tests pass but mutation testing failed: surviving mutants mean tests run code they never assert on." }
+    },
   },
 }
 ```
 
-That relationship — "don't evaluate X until Y passed" — is easy to state in the contract and awkward to maintain as independent CI steps. The [Guide](GUIDE.md#a-fuller-example-cross-check-policy) has the full version: coverage floors, per-file warnings, surviving-mutant rationales.
+`dependsOn` only orders execution: the mutation command still runs when tests fail, and its policy decides what that evidence means. The policy separates a red dependency (no valid mutation evidence) from a valid but inadequate mutation result. The [Guide](GUIDE.md#a-fuller-example-cross-check-policy) has the full version with coverage floors, per-file warnings, and surviving-mutant rationales.
 
-Presets exist for the common tools — TypeScript, ESLint, Vitest, Prettier, security auditing, dependency and dead-code analysis, package validation, and more. Each assumes its CLI is already a devDependency; repo-contract never installs anything. [Full catalog →](GUIDE.md#presets)
+### Evidence it works
 
-## Why not just add more CI steps?
+- **Self-hosted:** this repository is checked by its own contract on every change, with the coverage and mutation badges above generated from it. Mutation is held at 100% on `src/**`, with every exception a reviewable record ([CODE_REVIEW.md](CODE_REVIEW.md#3-automated-checks-versus-residual-review)).
+- **Tested as shipped:** the published package shape is installed and exercised in CI on Node.js, Bun, and Deno, and on Linux, macOS, and Windows ([runtime support](GUIDE.md#runtime-support)).
+- **Runnable proof:** the [examples](examples/README.md) are real projects, not snippets: the demo above, a [ratchet rollout](examples/day-one-walkthrough/README.md), a [governed exception](examples/exceptions-walkthrough/README.md), and a [cross-check release gate](examples/release-gate/README.md).
+- **Verifiable release:** published with npm OIDC provenance, so a consumer can check that an artifact was built by this repository's CI ([ADOPTION.md](ADOPTION.md#security--threat-model)).
 
-**repo-contract distributes the whole engineering standard, not just individual checks.** One versioned package defines what your repositories consider acceptable — typed code, reviewed like any other code, and runnable on a developer's laptop as well as in CI.
+## Install and verify
 
-You can express any individual check in CI. The problem is that the standard governing those checks ends up scattered across CI YAML, shared configs, and reusable workflows — infrastructure that distributes **how checks run**, rather than **what your organization considers acceptable**.
+**Prerequisites:** Node.js `>=22` (Bun and Deno are tested too) and a project with a `package.json`. repo-contract has no runtime dependencies and bundles none of the tools it runs: install the ones you want checked (`typescript`, `eslint`, `vitest`, and so on), and `init` wires up the checks for what it finds.
 
-Shared ESLint configs, reusable workflows, and template repos distribute individual checks. repo-contract distributes the **whole standard**: the checks, the policies that relate them, and the rationale for their outcomes.
-
-```text
-GitHub Actions                    repo-contract
-  lint      ✓                       one policy reads another check's result
-  test      ✓                       the same contract runs in a pre-commit hook and in CI
-  coverage  ✓                       it's typed code in your repo, reviewed like any code
-  mutation  ✓                       every outcome carries a rationale you can act on
-  ── but does that meet
-     our standard? ──
+```sh
+npm install --save-dev repo-contract tsx
+npx repo-contract init   # writes repo-contract.config.mts and scripts/contract.mjs, adds a "contract" script
+npm run contract
 ```
 
-## From one repo to a whole org
+That is the fastest path to a working result: in a project with only these two packages it produces a passing `securityDeps` check, and a tool you add later gets its check by adding its [preset](GUIDE.md#presets) to the generated config (`init` never overwrites existing files). Each tool still needs its own configuration (`tsconfig.json`, an ESLint flat config); `init` does not scaffold those, and a missing one surfaces as that tool's own "no config found" error.
 
-```text
-typecheck + lint + test
-      |  add policy
-coverage + mutation + security
-      |  share it
-one contract package, inherited by every repository
-      |  roll out safely
-new requirements land as `warn`, become `fail` on a date
+The smallest hand-written contract has the same shape as the file `init` generates:
+
+```ts
+// repo-contract.config.mts
+import { spawn } from "node:child_process"
+import { defineRepoContract } from "repo-contract"
+import { typecheck } from "repo-contract/presets"
+
+export default defineRepoContract({ spawn, env: process.env, checks: { typecheck } })
 ```
 
-**One definition, shared across every repository.** An organization expresses its engineering standard for a project type **once** — an internal package that wraps repo-contract and owns the executors — and every project of that type extends it instead of redefining it. Change the shared standard, and consuming repositories receive it through their normal dependency updates, including ones created from an older boilerplate.
+**Verify it works:** `npm run contract` prints one `[PASS|WARN|FAIL] check: rationale` line per check and exits non-zero on a `fail`. Point your pre-commit hook and CI job at that same command. Writing the runner by hand, saving evidence as JSON, and publishing a CI summary are in the [Guide](GUIDE.md#the-runner-and-ci-integration); [Windows notes](GUIDE.md#troubleshooting) are in the troubleshooting table.
 
-- [`examples/`](examples/README.md) — a minimal, runnable end-to-end wiring of that model.
-- [`examples/day-one-walkthrough/`](examples/day-one-walkthrough/README.md) — the **ratchet** pattern: rolling out a new shared requirement as a dated `warn` → `fail`, not an overnight red build.
-- [`examples/exceptions-walkthrough/`](examples/exceptions-walkthrough/README.md) — _Experimental:_ a governed, justified waiver for one finding, without weakening the check.
-- [ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md) — the reasoning.
+## Fit and capabilities
 
-## You probably don't need it when
+**Use cases:** enforce a quality bar in one repository; share one standard across many through an internal package that owns the executors ([ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md)); roll out a new requirement safely as a dated `warn` that becomes `fail` ([ratchet](examples/day-one-walkthrough/README.md)); give CI bots and coding agents a concrete rationale to act on.
 
-- `npm test` plus a linter is the whole story;
-- each CI check is already independent and that's fine;
-- you don't need any policy logic on top of exit codes.
+**Core capabilities:**
 
-## Works with automation
+- Checks that run any command, with output parsed as JSON or validated against a schema ([Defining checks](GUIDE.md#defining-checks)).
+- Policies that read other checks' evidence, with `dependsOn` ordering and `isolated` barriers.
+- Presets for common tools, spread and overridden as needed ([catalog](GUIDE.md#presets)).
+- Structured, schema-versioned evidence and verdict documents, plus a Markdown summary renderer ([Persisting a run](GUIDE.md#persisting-a-run-and-publishing-a-summary)).
+- Ratchets and [governed exceptions](GUIDE.md#advanced-governed-exceptions) (Experimental) for a justified waiver of one finding without weakening the check.
 
-AI coding agents, CI bots, and release automation consume the same contract as human contributors. An actionable rationale gives automation a concrete thing to fix rather than a bare "a check failed" — making regenerate-until-green workflows much easier to converge.
+**Integration:** it is a library, so your repository owns the entry point. Your tools, CI provider, and scripts keep running as they do; process spawning and environment access are capabilities you supply, never ambient ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)). It adopts one check at a time: `--checks a,b,c` runs a named subset.
 
-## Supply-chain transparency
+**Runtimes:** Node.js `>=22` on macOS, Linux, and Windows; Bun and Deno (Deno needs `--allow-read --allow-run --allow-env`); not browsers ([details](GUIDE.md#runtime-support)).
 
-This repository publishes two real [CycloneDX](https://cyclonedx.org/) 1.6 Software Bills of Materials, regenerated on every `npm run contract` run via [`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`), because they answer different questions:
+**Configuration and extension:** a typed `defineRepoContract` object. Spread a preset to override its command or timeout, or write your own check and policy ([Guide](GUIDE.md#defining-checks)). Organizations wrap it in a shared package that other repositories extend ([examples](examples/README.md)).
 
-- [`docs/sbom.production.cdx.json`](docs/sbom.production.cdx.json) is the **runtime inventory** — what installing `repo-contract` brings in. It has **no runtime dependencies**, so this document lists the package alone. This is the one to import into a vulnerability scanner to describe what you would deploy.
-- [`docs/sbom.cdx.json`](docs/sbom.cdx.json) is the **build-environment inventory** — every direct and transitive dependency of this repository's own tooling, as resolved in `package-lock.json`. It is for auditing how the package is built, and is **not** what installing the package adds.
+## Limits and when not to use it
 
-Both cover npm only, and both are deterministic given an unchanged lockfile, so they stay normal, diff-gated committed files rather than a special-cased exclusion.
+- **Skip it when** `npm test` plus a linter is the whole story, each CI check is independent and that is fine, or you need no policy logic beyond exit codes.
+- **Trade-offs:** it is a layer you maintain (a config and a runner), checks run as local processes so tools must be installed in every environment, and `init`'s detection table and the presets are Experimental and may change shape before 1.0.
+- **Not a replacement** for your CI provider, test runner, or scanners. It does not install tools, host results, or authorize anything; it is not a dashboard.
+- **Automation:** agents and bots can consume the same structured verdicts, but rationale does not guarantee a fix converges. The loop that retries, stops, and validates changes is the automation's job.
 
-## Part of the MaverickCER toolkit
+## Security and supply chain
 
-`repo-contract` is the **mechanism**: it runs checks and turns their evidence into a verdict. The other
-packages build on it or are governed by it:
+- **Guarantees:** no shell by default (a `run` array is argv; a string is tokenized), no ambient spawn or environment access, no network calls or telemetry, and the no-network property is enforced by a check in this repository's own contract ([SECURITY.md](SECURITY.md#runtime-security-model)).
+- **Trust boundaries:** it executes the commands your config names with the environment you pass, so the config and any policy you write are trusted code; what its guarantees do not cover is in [Application responsibilities](SECURITY.md#application-responsibilities).
+- **Dependencies and licence:** zero runtime dependencies, MIT licensed. Two CycloneDX SBOMs are committed, one for what installing the package adds and one for this repository's build tooling ([what each covers](SECURITY.md#sboms)).
+- **Reporting:** [private security advisory](https://github.com/MaverickCER/repo-contract/security/advisories/new); supported versions are in [SECURITY.md](SECURITY.md#supported-versions).
 
-- [`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract) — the **standard** every
-  publishable package continuously satisfies, expressed once as a `repo-contract` contract (not published; a git dependency),
-  together with the shared release and benchmark workflows.
-- [`@maverickcer/env-cap`](https://github.com/MaverickCER/env-cap) and [`data-cap`](https://github.com/MaverickCER/data-cap) — sibling packages that
-  apply one capability-ownership model to configuration and to data. They are verified by the contract above.
+## Maturity, versioning and support
 
-How the four relate, why the dependency between the first two is a deliberate cycle, and the package names:
-[ADR 0018](specs/decisions/0018-ecosystem-bootstrap-cycle-and-package-names.md). Shared vocabulary: the [glossary](specs/glossary.md).
+Pre-1.0 (see the npm badge for the current version). Per [VERSIONING.md](VERSIONING.md), a `0.x` minor may carry a breaking change to the Stable tier before 1.0, so pin accordingly. Evidence and verdict documents version independently of the package. Security fixes target the latest release until 1.0, after which they backport for a stated window ([ADR 0015](specs/decisions/0015-security-backport-window.md), a forward commitment, not yet a track record).
 
-`@maverickcer/env-cap` governs configuration and `data-cap` governs application data: siblings that apply the same capability-ownership model. `repo-contract` and `internal-package-contract` are how they are verified. See [the toolkit overview and glossary](https://github.com/MaverickCER/internal-package-contract/blob/main/TOOLKIT.md).
+- **Upgrade:** read the [CHANGELOG](CHANGELOG.md) on every minor; there is no dedicated migration guide yet, and [ADOPTION.md](ADOPTION.md#migrating-onto-repo-contract) says what to use instead.
+- **Release history:** [CHANGELOG](CHANGELOG.md) and [GitHub releases](https://github.com/MaverickCER/repo-contract/releases); the release process is in [RELEASING.md](RELEASING.md).
+- **Bugs and requests:** [open an issue](https://github.com/MaverickCER/repo-contract/issues); questions go to Discussions ([SUPPORT.md](SUPPORT.md)).
+- **Troubleshooting:** the [table in the Guide](GUIDE.md#troubleshooting) covers the common errors.
 
-## Status
+## Documentation
 
-Pre-1.0. Per [VERSIONING.md](VERSIONING.md), a `0.x` minor may carry a breaking change to the Stable tier before 1.0 — pin accordingly and read the [CHANGELOG](CHANGELOG.md) on every minor upgrade.
+- **[Guide](GUIDE.md)**: integration, defining checks, cross-check policies, presets, errors, troubleshooting.
+- **[Adoption guide](ADOPTION.md)**: the decision-maker summary of security, stability tiers, and architectural guarantees.
+- **[API reference](https://maverickcer.github.io/repo-contract/api/)**: every exported type, field, and error code, generated from source.
+- **[Architecture](specs/architecture.md)** and **[ADRs](https://github.com/MaverickCER/repo-contract/tree/main/specs/decisions)**: why it is built this way. [Glossary](specs/glossary.md).
+- **[Examples](examples/README.md)**: runnable end-to-end wiring and walkthroughs.
+- **Part of the MaverickCER toolkit:** `repo-contract` is the mechanism that runs checks and produces verdicts. [`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract) is the standard the other packages satisfy, and [`@maverickcer/env-cap`](https://github.com/MaverickCER/env-cap) and [`data-cap`](https://github.com/MaverickCER/data-cap) are sibling packages it verifies. See the [toolkit overview](https://github.com/MaverickCER/internal-package-contract/blob/main/TOOLKIT.md) and [ADR 0018](specs/decisions/0018-ecosystem-bootstrap-cycle-and-package-names.md).
 
-## Learn more
+## Next steps
 
-- **[Guide](GUIDE.md)** — how to integrate it, define checks, parse output, write cross-check policies, use presets, and handle errors.
-- **[Adoption guide](ADOPTION.md)** — decision-maker summary covering security posture, versioning/stability tiers, and architectural guarantees.
-- **[Security](SECURITY.md)** — how commands run, which capabilities the consumer supplies, and the enforced no-network guarantee.
-- **[API reference](https://maverickcer.github.io/repo-contract/api/)** — every exported type, field, and error code, generated from source so it cannot drift.
-- **[Architecture](specs/architecture.md)** and the **[ADRs](https://github.com/MaverickCER/repo-contract/tree/main/specs/decisions)** — why it is built this way.
-- **[examples/](examples/README.md)** — runnable end-to-end wiring, plus the two deep-dive walkthroughs.
+- **Evaluate:** read the [Adoption guide](ADOPTION.md), then run `npm run demo` in [`examples/demo/`](examples/demo/README.md).
+- **Integrate:** follow the [Guide](GUIDE.md#the-runner-and-ci-integration) and the [examples](examples/README.md).
+- **Verify:** inspect the [security model](SECURITY.md#runtime-security-model) and the [architecture](specs/architecture.md).
 
-## If this is useful
-
-If this model matches how you think about repository standards, try the demo and examples. If it doesn't fit your repo, [open an issue](https://github.com/MaverickCER/repo-contract/issues) and say why.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and how this repository uses its own `repo-contract.config.ts` to validate itself, and [RELEASING.md](RELEASING.md) for the release process.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+Contributing: [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and how this repository validates itself with its own contract. License: MIT, see [LICENSE](LICENSE).

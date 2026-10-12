@@ -139,7 +139,7 @@ Alternatives).
 repo-contract is a library, not a repository-wide command. Your repository owns the entry
 point, the process-spawning capability, and the environment it runs with — so the contract
 stays composable and the package never becomes another opaque layer between you and your
-tools. `npx repo-contract init` (see the [README's Quick Start](README.md#quick-start))
+tools. `npx repo-contract init` (see the [README's Quick Start](README.md#install-and-verify))
 automates writing the files below — it detects your `package.json`'s existing devDependencies,
 generates `repo-contract.config.mts` and `scripts/contract.mjs` from them, and adds (or, if it's
 already present, leaves untouched) a `"contract"` entry in `package.json`'s own `scripts` — but
@@ -153,16 +153,14 @@ yourself.
 do with the result. That file is the whole integration:
 
 ```ts
-// scripts/contract.mjs
+// scripts/contract.mjs — the entry point; this is the whole thing
 import { runRepoContract } from "repo-contract"
 import config from "../repo-contract.config.mjs"
 
 const { verdict } = await runRepoContract(config)
-
 for (const [id, result] of Object.entries(verdict.checks)) {
   console.log(`[${result.outcome.toUpperCase()}] ${id}: ${result.rationale}`)
 }
-
 process.exitCode = verdict.passed ? 0 : 1
 ```
 
@@ -194,6 +192,28 @@ installed toolchain are consumer-supplied and can differ per environment — wha
 identical is the contract definition and the code path, with no hidden state. This
 repository uses its own `repo-contract.config.ts` to validate itself — see
 [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Persisting a run and publishing a summary
+
+The runner above prints the verdict and forgets it. To keep a record that a dashboard, a reviewer, or the next run can read, store the run. `serializeRun` turns the raw result into the two JSON documents that match the published `repo-contract/schema` files; each carries its own `version` field, so a stored document stays interpretable independently of the package version that wrote it (see [VERSIONING.md](VERSIONING.md#evidence-and-verdict-schema-versioning)). `renderMarkdownSummary` takes the raw `verdict` and `evidence` from the run, not the serialized JSON, and renders a summary for `$GITHUB_STEP_SUMMARY` or a pull-request comment: failures with their whole rationale, warnings and passes with a line each, and the slowest checks. Neither function touches the filesystem; you decide where the output goes:
+
+```ts
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs"
+import { renderMarkdownSummary, runRepoContract, serializeRun } from "repo-contract"
+import config from "../repo-contract.config.mjs"
+
+const run = await runRepoContract(config)
+const { evidence, verdict } = serializeRun(run)
+mkdirSync("reports/contract", { recursive: true })
+writeFileSync("reports/contract/evidence.json", evidence)
+writeFileSync("reports/contract/verdict.json", verdict)
+if (process.env.GITHUB_STEP_SUMMARY) {
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, renderMarkdownSummary(run.verdict, run.evidence))
+}
+process.exitCode = run.verdict.passed ? 0 : 1
+```
+
+The [API reference](https://maverickcer.github.io/repo-contract/api/) is authoritative for both signatures.
 
 ## Defining checks
 
@@ -664,6 +684,24 @@ shape and `code` string.
 - **Schema throwing** — `output.schema["~standard"].validate()` itself throwing rejects with
   `StandardSchemaValidateThrewError`. A schema _returning_ failure `issues`, by contrast, is
   an ordinary parser-error-shaped `result.output`.
+
+## Troubleshooting
+
+Find the symptom, then follow the cause to the fix. The [Errors](#errors) section explains the
+failure categories behind these.
+
+| Symptom                                                                                        | Cause                                                                                                                                                                                                                   | What to do                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A preset check fails with "`<tool>` is required by this preset but was not found"              | The tool could not be started (`status: "spawn_error"`, code `ENOENT`).                                                                                                                                                 | Install it as a development dependency, and run the contract through an npm script such as `npm run contract` so npm puts `node_modules/.bin` on `PATH`. |
+| `init` left out a check you expected                                                           | `init` only wires up tools it finds in your `devDependencies`, and it does not create the tools' own configuration.                                                                                                     | Install the tool, then add its [preset](#presets) to your config.                                                                                        |
+| A tool behaves differently than in your shell, or cannot find `PATH`, `HOME` or a token        | You supply `env`; repo-contract never reads `process.env` itself ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)).            | Pass `env: process.env`, or the variables the tool needs, to `defineRepoContract`. See [Supplying `spawn` and `env`](#supplying-spawn-and-env).          |
+| On Windows, checks for npm-installed tools fail to start                                       | Node refuses to run `.cmd` shims through plain `node:child_process.spawn` without `shell: true` (its CVE-2024-27980 mitigation).                                                                                        | Supply `cross-spawn` as `spawn`, which resolves the shims safely, or set `shell: true`. See [Supplying `spawn` and `env`](#supplying-spawn-and-env).     |
+| Config throws `run string contains an unquoted "&"`                                            | A string `run` is split into arguments without a shell, so `&&`, pipes and redirects are not available.                                                                                                                 | Use the array form, or set `shell: true` (then `run` must be a string). See [`run`](#run).                                                               |
+| `runRepoContract()` rejects with `PolicyThrewError` after a policy returned "see output above" | repo-contract rejects rationales that only point back at raw output, such as "see output above" or "check the report for details" ([ADR 0016](specs/decisions/0016-vague-rationale-is-a-structural-policy-failure.md)). | Say what happened and what to do next in the rationale: the count, the file, the threshold.                                                              |
+| `PolicyReadUnrequestedOutputError` or `PolicyReadFailedParseValueError`                        | A policy read `result.output` on a check with no `output`, or `.value` on a check whose parse failed.                                                                                                                   | Add `output` to the check, or test `result.output.success` before reading `.value`. See [Errors](#errors).                                               |
+| A check ends with `status: "timed_out"`                                                        | It ran longer than its `timeoutMs`.                                                                                                                                                                                     | Raise `timeoutMs` on that check, or fix the slow tool.                                                                                                   |
+
+Still stuck? [SUPPORT.md](SUPPORT.md) says what to include in an issue.
 
 ## `Evidence` and `Verdict` shapes
 

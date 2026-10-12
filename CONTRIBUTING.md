@@ -31,8 +31,8 @@ so this one command after `npm install` is the whole setup. Use Node 24 locally
    suppressed directive to a new line retires its old record (which then fails as _stale_ — delete
    it) and scaffolds a fresh one; carry the justification across by hand.
 4. Commit. Your editor opens with a Conventional Commits cheat sheet; `commitlint` (a
-   `commit-msg` hook) rejects a message that doesn't conform. `--no-verify` skips a hook
-   for a work-in-progress checkpoint.
+   `commit-msg` hook) rejects a message that doesn't conform; fix the message rather than skipping the hook. Keep
+   work in progress unstaged or stashed until its gates pass.
 5. Push — the `pre-push` hook runs the full `npm run contract`, which includes the
    `coderabbitai` check: a local `coderabbit review --agent` pass if the
    [CodeRabbit CLI](https://docs.coderabbit.ai/cli) is installed on a real branch, or a `warn`
@@ -44,11 +44,11 @@ so this one command after `npm install` is the whole setup. Use Node 24 locally
    no Socket org token). Neither `warn` blocks a push or CI. Open a pull request; CI re-runs the
    contract across the OS and Node matrix.
 
-`npm run setup` wires two local git settings — the hooks and the commit-message template.
-Opt out of either:
+`npm run setup` wires two local git settings — the hooks and the commit-message template. The
+hooks are the local half of the gate CI enforces, so leave them on. Only the commit-message
+template is optional:
 
 ```bash
-git config --unset core.hooksPath
 git config --unset commit.template
 ```
 

@@ -3,35 +3,28 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
     <script>
       ;(function () {
+        var KEY = "repo-contract-theme"
         try {
-          var stored = window.localStorage.getItem("repo-contract-theme")
+          var stored = window.localStorage.getItem(KEY)
           var isDark =
             stored === "dark"
               ? true
               : stored === "light"
                 ? false
                 : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
-
           document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light")
-        } catch (error) {
-          // localStorage/matchMedia unavailable -- leave [data-theme] unset;
-          // styles.css's prefers-color-scheme media query still applies.
-        }
+          document.documentElement.setAttribute("data-theme-key", KEY)
+        } catch (error) {}
       })()
     </script>
-
     <title>repo-contract — one contract for your engineering standards</title>
-
     <meta
       name="description"
       content="Define your engineering standards once, share them across repositories, and get an actionable rationale for every outcome. repo-contract runs the tools you already use and evaluates their results against repository-owned policy, locally and in CI."
     />
-
     <link rel="canonical" href="https://maverickcer.github.io/repo-contract/" />
-
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://maverickcer.github.io/repo-contract/" />
     <meta
@@ -40,61 +33,50 @@
     />
     <meta
       property="og:description"
-      content="Your tools tell you what happened. Your repository decides what it means. repo-contract turns that decision into typed, versioned code that runs locally and in CI — and shares across repositories."
+      content="Define your engineering standards once, share them across repositories, and get an actionable rationale for every outcome. repo-contract runs the tools you already use and evaluates their results against repository-owned policy, locally and in CI."
     />
-    <meta
-      property="og:image"
-      content="https://maverickcer.github.io/repo-contract/assets/og-image.png"
-    />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-
-    <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
       content="repo-contract — one contract for your engineering standards"
     />
     <meta
       name="twitter:description"
-      content="Your tools tell you what happened. Your repository decides what it means. repo-contract turns that decision into typed, versioned code that runs locally and in CI — and shares across repositories."
+      content="Define your engineering standards once, share them across repositories, and get an actionable rationale for every outcome. repo-contract runs the tools you already use and evaluates their results against repository-owned policy, locally and in CI."
     />
+    <meta
+      property="og:image"
+      content="https://maverickcer.github.io/repo-contract/assets/og-image.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:image"
       content="https://maverickcer.github.io/repo-contract/assets/og-image.png"
     />
-
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="favicon.png" type="image/png" sizes="48x48" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-
     <header class="site-header">
       <div class="container">
         <a class="site-logo" href="#top">repo-contract</a>
-
         <nav class="primary-nav" id="primary-nav" aria-label="Primary">
           <ul class="primary-nav-list">
             <li><a href="#why">Why it exists</a></li>
             <li><a href="#how">How it works</a></li>
-            <li><a href="#across-repositories">Across repositories</a></li>
+            <li><a href="#see-it">See it</a></li>
+            <li><a href="#guarantees">Guarantees</a></li>
+            <li><a href="#adoption">Adoption</a></li>
             <li><a href="#proof">Proof</a></li>
           </ul>
         </nav>
-
         <div class="header-actions">
-          <a class="github-link" href="https://github.com/maverickcer/repo-contract"> GitHub ↗ </a>
-
-          <a
-            class="button button--primary button--header"
-            href="https://github.com/maverickcer/repo-contract#readme"
-          >
-            Read the README
-          </a>
-
-          <button
+          <button class="icon-button" type="button" id="theme-toggle" aria-pressed="false">
+            <span aria-hidden="true" class="theme-toggle-icon">◐</span
+            ><span class="sr-only">Toggle dark mode</span></button
+          ><a class="github-link" href="https://github.com/maverickcer/repo-contract">GitHub ↗</a
+          ><button
             class="nav-toggle"
             type="button"
             aria-expanded="false"
@@ -105,80 +87,73 @@
         </div>
       </div>
     </header>
-
     <main id="main">
-      <!-- Hero -->
       <section class="hero" id="top" aria-labelledby="hero-heading">
         <div class="container">
           <p class="section-eyebrow">Engineering standards, made executable</p>
-
           <h1 id="hero-heading">
             Define your engineering standards once. Share them across repositories. Get actionable
             rationale for every outcome.
           </h1>
-
           <p class="hero-lede">
-            Your linters, test runners, security scanners, and CI can tell you what happened. They
-            don't define what your organization considers acceptable.
+            Your linters, test runners and security scanners can tell you what happened. They
+            don&#39;t define what your organization considers acceptable.
           </p>
-
           <p class="hero-support">
-            repo-contract turns that missing layer into one typed, versioned contract: it runs the
-            tools you already use, evaluates their results against policy your repository owns, and
-            returns one verdict — the same contract, locally and in CI. You replace none of your
-            existing tools.
+            repo-contract is that missing layer: one typed, versioned contract that runs the tools
+            you already use, evaluates their results against policy your repository owns, and
+            returns one verdict, locally and in CI.
           </p>
-
+          <p class="hero-outcome">
+            Give every repository a consistent, versioned engineering standard without forcing every
+            team to adopt the same tools or migrate its CI.
+          </p>
+          <p class="hero-meta">Pre-1.0 · v0.10.0 · MIT</p>
           <div class="code-block">
             <div class="code-block-header">
-              <span class="code-block-filename">Quick start</span>
-
-              <button class="copy-button" type="button" data-copy-target="hero-init-snippet">
+              <span class="code-block-filename">Quick start</span
+              ><button class="copy-button" type="button" data-copy-target="hero-install">
                 Copy
               </button>
             </div>
-
-            <!-- prettier-ignore -->
-            <pre><code id="hero-init-snippet">npm install --save-dev repo-contract tsx typescript vitest eslint
+            <pre tabindex="0"><code id="hero-install">npm install --save-dev repo-contract tsx
 npx repo-contract init
 npm run contract</code></pre>
           </div>
-
+          <p class="hero-note">
+            For a project that already has its tools, such as <code>typescript</code>,
+            <code>vitest</code> and <code>eslint</code>. repo-contract bundles none of them;
+            <code>init</code> wires up only the ones it finds in your <code>package.json</code>.
+          </p>
           <div class="hero-actions">
-            <a class="button button--primary" href="#see-it">See it in action</a>
-
             <a
-              class="button button--secondary button--on-dark"
+              class="button button--primary"
               href="https://github.com/maverickcer/repo-contract#readme"
-            >
-              Read the README
-            </a>
+              >Read the README</a
+            ><a
+              class="button button--secondary button--on-dark"
+              href="https://github.com/maverickcer/repo-contract/tree/main/examples"
+              >Run the examples</a
+            ><a class="hero-link" href="brief.html">For your manager: the one-page brief</a>
           </div>
         </div>
       </section>
-
-      <!-- Why it exists -->
       <section class="section" id="why" aria-labelledby="why-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">Why it exists</p>
-
           <h2 id="why-heading">Your engineering standard is probably scattered.</h2>
-
           <p class="section-lede">
-            A mature repository enforces dozens of requirements — tests, coverage, public-API
+            A mature repository enforces dozens of requirements: tests, coverage, public-API
             compatibility, dependency vulnerabilities, mutation score, architecture boundaries,
             documentation. The tools that check them are excellent. The rules about what their
-            results should <em>mean</em> end up spread across places no single tool owns.
+            results should mean end up spread across places no single tool owns.
           </p>
-
           <div class="diagram">
             <p class="sr-only">
-              Engineering rules today live scattered across CI YAML, package.json scripts, ESLint
-              and other tool configuration, test and release scripts, security workflows, and code
-              review habits — leaving no single place that answers what "acceptable" means for the
-              repository.
+              Where the rules live today: CI YAML, package.json scripts, ESLint / tool
+              configuration, test &amp; release scripts, security workflows, code-review habits — no
+              single place answers: what does &quot;acceptable&quot; mean here?
             </p>
-
             <ol class="diagram-tree" aria-hidden="true">
               <li>
                 <span class="diagram-branch-label">Where the rules live today</span>
@@ -192,102 +167,182 @@ npm run contract</code></pre>
                 </ol>
               </li>
               <li>
-                <span class="diagram-branch-label">
-                  &rarr; no single place answers: what does "acceptable" mean here?
-                </span>
+                <span class="diagram-branch-label"
+                  >&rarr; no single place answers: what does &quot;acceptable&quot; mean here?</span
+                >
               </li>
             </ol>
           </div>
-
           <p>
             Individual tools answer individual questions. Your engineering standard is the answer to
             all of them together.
           </p>
         </div>
       </section>
-
-      <!-- How it works -->
       <section class="section section--muted" id="how" aria-labelledby="how-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">How it works</p>
-
           <h2 id="how-heading">
             Your tools produce results. Your repository decides what they mean.
           </h2>
-
           <p class="section-lede">
-            A <strong>check</strong> runs a command. <strong>Evidence</strong> records what happened
-            — exit code, timing, captured and parsed output. A <strong>policy</strong> you write
-            decides whether that evidence meets your standard, and can read any other check's
-            evidence to do it. The <strong>verdict</strong> aggregates every policy result, with a
-            mandatory rationale on each.
+            A <strong>check</strong> runs a command. <strong>Evidence</strong> records what
+            happened: exit code, timing, captured and parsed output. A <strong>policy</strong> you
+            write decides whether that evidence meets your standard, and can read any other
+            check&#39;s evidence to do it. The <strong>verdict</strong> aggregates every policy
+            result, with a mandatory rationale on each.
           </p>
-
           <div class="diagram">
             <p class="sr-only">
               ESLint, Vitest, TypeScript, Stryker, npm audit, and any custom checks feed into
               repo-contract, which captures their results as evidence, applies repository-owned
               policy, and produces one verdict that local scripts and CI consume.
             </p>
-
             <ol class="diagram-tree" aria-hidden="true">
               <li>
-                <span class="diagram-branch-label">
-                  ESLint · Vitest · tsc · Stryker · npm audit · your own checks
-                </span>
-              </li>
-              <li><span class="diagram-branch-label">&darr; repo-contract</span></li>
-              <li>
-                <span class="diagram-branch-label">Evidence &rarr; Policy &rarr; Verdict</span>
-              </li>
-              <li>
                 <span class="diagram-branch-label"
-                  >&darr; consumed by a pre-commit hook and CI</span
+                  >ESLint · Vitest · tsc · Stryker · npm audit · your own checks</span
                 >
+              </li>
+              <li><span class="diagram-branch-label">↓ repo-contract</span></li>
+              <li><span class="diagram-branch-label">Evidence → Policy → Verdict</span></li>
+              <li>
+                <span class="diagram-branch-label">↓ consumed by a pre-commit hook and CI</span>
               </li>
             </ol>
           </div>
-
           <p>
             Execution and policy evaluation are strictly separate phases: every check finishes and
-            its evidence is assembled before any policy runs, so a policy reading a sibling check is
-            never a race. <code>Verdict</code> is returned alongside <code>Evidence</code>, never
-            merged into it — the caller weighs both. The <a href="api/">API reference</a> has the
-            exact field-by-field shape of each.
+            its evidence is assembled before any policy runs, so a policy that reads a sibling check
+            is never a race. That is what lets one decision rest on several results.
+            <code>Verdict</code> is returned alongside <code>Evidence</code>, never merged into it.
+            The <a href="api/">API reference</a> has the exact shape of each.
           </p>
         </div>
       </section>
+      <section class="section" id="see-it" aria-labelledby="see-it-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">See it</p>
+          <h2 id="see-it-heading">One decision from several checks, with the reason.</h2>
+          <p class="section-lede">
+            The real output of
+            <a href="https://github.com/maverickcer/repo-contract/tree/main/examples/release-gate"
+              >examples/release-gate</a
+            >: three published presets run against one deliberately imperfect file, and a
+            <code>release</code> check whose policy reads their evidence to decide whether a release
+            is permitted.
+          </p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-block-filename">npm run demo</span
+              ><button class="copy-button" type="button" data-copy-target="demo-output">
+                Copy
+              </button>
+            </div>
+            <pre tabindex="0"><code id="demo-output">[PASS] typecheck
+  tsc reported no type errors.
 
-      <!-- Why CI isn't enough -->
+[FAIL] format
+  Prettier reported formatting failures:
+  Checking formatting...
+  [warn] src/greet.ts
+  [warn] Code style issues found in the above file. Run Prettier with --write to fix.
+
+[WARN] lint
+  ESLint reported 0 errors but 1 warning(s):
+  - src/greet.ts:15:3 [no-console]: Unexpected console statement.
+
+[FAIL] release
+  Release blocked by format. Passing: typecheck. lint: 0 error(s), 1 warning(s); warnings do not block a release.</code></pre>
+          </div>
+          <p class="source-note">
+            Source:
+            <a href="https://github.com/maverickcer/repo-contract/tree/main/examples/release-gate"
+              >examples/release-gate</a
+            >
+          </p>
+          <p>
+            <code>release</code> runs no command of its own. Its policy reads the evidence of the
+            other three checks and says which one blocks the release, what passed, and what was only
+            a warning. <code>warn</code> does not block the run; <code>fail</code> does. The
+            rationale is a plain string, so a person, a bot or a log can use it equally.
+          </p>
+        </div>
+      </section>
+      <section class="section section--muted" id="guarantees" aria-labelledby="guarantees-heading">
+        <div class="container">
+          <p class="section-eyebrow">Guarantees</p>
+          <h2 id="guarantees-heading">What is guaranteed, and where it stops.</h2>
+          <p class="section-lede">
+            Each claim states its scope and links to the document that defines it, so you can check
+            the boundary before you rely on it.
+          </p>
+          <div class="adoption-grid">
+            <div class="adoption-card guarantee">
+              <span class="adoption-card-title"
+                >No network calls in repo-contract&#39;s own code.</span
+              ><span class="adoption-card-desc"
+                ><strong>Scope:</strong> Enforced by an ESLint rule and an independent static scan
+                of the shipped surface, including every preset&#39;s spawned command against a
+                reviewed allowlist. It does not stop a command you configure, or an external tool a
+                preset runs, from using the network.</span
+              ><a
+                class="external-link-note"
+                href="https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md"
+                >Read the security model ↗</a
+              >
+            </div>
+            <div class="adoption-card guarantee">
+              <span class="adoption-card-title">Every check finishes before any policy runs.</span
+              ><span class="adoption-card-desc"
+                ><strong>Scope:</strong> A policy that reads a sibling check never sees partial
+                evidence. This governs when policies run; it does not make the checks themselves
+                fast or deterministic.</span
+              ><a
+                class="external-link-note"
+                href="https://github.com/maverickcer/repo-contract/blob/main/specs/architecture.md"
+                >Read the architecture ↗</a
+              >
+            </div>
+            <div class="adoption-card guarantee">
+              <span class="adoption-card-title">No shell by default, and no ambient access.</span
+              ><span class="adoption-card-desc"
+                ><strong>Scope:</strong> The consumer supplies the process and environment
+                capabilities. repo-contract cannot vouch for what the commands you configure do once
+                they run.</span
+              ><a
+                class="external-link-note"
+                href="https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md"
+                >Read the security model ↗</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
       <section class="section" id="why-not-ci" aria-labelledby="why-not-ci-heading">
         <div class="container">
-          <p class="section-eyebrow">Why CI isn't enough on its own</p>
-
+          <p class="section-eyebrow">Why not just CI</p>
           <h2 id="why-not-ci-heading">
             CI distributes how checks run. repo-contract distributes what your organization
             considers acceptable.
           </h2>
-
           <p class="section-lede">
-            Keep your CI. Shared ESLint configs, reusable workflows, and template repositories all
-            distribute individual checks. repo-contract distributes the whole standard — the checks,
-            the policies that relate them, and the rationale for their outcomes — as one versioned
+            Keep your CI. Shared ESLint configs, reusable workflows and template repositories all
+            distribute individual checks. repo-contract distributes the whole standard (the checks,
+            the policies that relate them, and the rationale for their outcomes) as one versioned
             package.
           </p>
-
           <div class="table-scroll">
             <table class="comparison-table">
               <caption>
                 Where common approaches stop and repo-contract begins
               </caption>
-
               <thead>
                 <tr>
                   <th scope="col">Today</th>
                   <th scope="col">With repo-contract</th>
                 </tr>
               </thead>
-
               <tbody>
                 <tr>
                   <th scope="row">Rules scattered across workflows and scripts</th>
@@ -306,7 +361,7 @@ npm run contract</code></pre>
                   <td>Structured evidence with a stable, versioned shape</td>
                 </tr>
                 <tr>
-                  <th scope="row">"CI failed"</th>
+                  <th scope="row">&quot;CI failed&quot;</th>
                   <td>An actionable rationale on every outcome, including pass</td>
                 </tr>
                 <tr>
@@ -318,292 +373,174 @@ npm run contract</code></pre>
           </div>
         </div>
       </section>
-
-      <!-- Across repositories -->
-      <section
-        class="section section--muted"
-        id="across-repositories"
-        aria-labelledby="across-repositories-heading"
-      >
-        <div class="container container--narrow">
-          <p class="section-eyebrow">The organizational payoff</p>
-
-          <h2 id="across-repositories-heading">
-            Define the standard once. Share it across repositories.
-          </h2>
-
-          <p class="section-lede">
-            An organization expresses its engineering standard for a project type once — as an
-            internal package that wraps repo-contract and owns the executors. Every project of that
-            type extends it rather than redefining it, and picks up changes through normal
-            dependency updates.
-          </p>
-
-          <div class="diagram">
-            <p class="sr-only">
-              An organization defines its engineering standard once as a shared contract package.
-              Every service consumes that same package and runs the identical contract, both locally
-              and in CI.
-            </p>
-
-            <ol class="diagram-tree" aria-hidden="true">
-              <li>
-                <span class="diagram-branch-label"
-                  >Engineering standard &rarr; shared contract package</span
-                >
-                <ol>
-                  <li>Service A — the same contract, locally and in CI</li>
-                  <li>Service B — the same contract, locally and in CI</li>
-                  <li>Service C — the same contract, locally and in CI</li>
-                </ol>
-              </li>
-            </ol>
-          </div>
-
-          <div class="callout callout--note">
-            <p class="callout-title">Not a way to break 200 repositories overnight</p>
-
-            <p>
-              A new shared requirement can land as a dated <code>warn</code> — visible everywhere on
-              day one, blocking nobody — and become a <code>fail</code> on a chosen date. The
-              <a
-                href="https://github.com/maverickcer/repo-contract/tree/main/examples/day-one-walkthrough"
-                >day-one walkthrough</a
-              >
-              is a runnable example of exactly that.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- See it -->
-      <section class="section" id="see-it" aria-labelledby="see-it-heading">
-        <div class="container container--narrow">
-          <p class="section-eyebrow">See it</p>
-
-          <h2 id="see-it-heading">Not just "CI failed."</h2>
-
-          <p class="section-lede">
-            The real output of the tiny contract in
-            <a href="https://github.com/maverickcer/repo-contract/tree/main/examples/demo"
-              >examples/demo</a
-            >
-            — three published presets against one deliberately imperfect file:
-          </p>
-
-          <div class="code-block">
-            <div class="code-block-header">
-              <span class="code-block-filename">npm run demo</span>
-
-              <button class="copy-button" type="button" data-copy-target="demo-output">Copy</button>
-            </div>
-
-            <!-- prettier-ignore -->
-            <pre><code id="demo-output">[PASS] typecheck
-  tsc reported no type errors.
-
-[FAIL] format
-  Prettier reported formatting failures:
-  Checking formatting...
-  [warn] src/greet.ts
-  [warn] Code style issues found in the above file. Run Prettier with --write to fix.
-
-[WARN] lint
-  ESLint reported 0 errors but 1 warning(s):
-  - src/greet.ts:15:3 [no-console]: Unexpected console statement.</code></pre>
-          </div>
-
-          <p>
-            Every line says what happened, where, why the repository treats it that way, and — when
-            there is something to fix — how. <code>warn</code> does not block the run;
-            <code>fail</code> does. That rationale is a plain, JSON-serializable string, so it can
-            be persisted, diffed, or consumed by a bot as readily as by a person.
-          </p>
-        </div>
-      </section>
-
-      <!-- Adoption -->
       <section class="section section--muted" id="adoption" aria-labelledby="adoption-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">Adoption</p>
-
-          <h2 id="adoption-heading">Don't replace your stack. Put a contract around it.</h2>
-
+          <h2 id="adoption-heading">Start with one check. Scale when you are ready.</h2>
           <p class="section-lede">
-            repo-contract is intentionally incremental. Keep your CI provider, linters, test
-            runners, and security tools. Introduce the contract around the checks that matter first.
+            repo-contract is intentionally incremental. Keep your CI provider, linters, test runners
+            and security tools, and introduce the contract around the checks that matter first.
           </p>
-
           <div class="callout callout--note">
             <p class="callout-title">A progressive rollout, not a migration</p>
-
             <ol class="callout-steps">
               <li>
-                Wrap one existing check — <code>npx repo-contract init</code> detects what's already
+                Wrap one existing check. <code>npx repo-contract init</code> detects what is already
                 in your <code>package.json</code> and generates a starting point.
               </li>
-              <li>Write its policy.</li>
-              <li>Run the contract locally.</li>
-              <li>Run the same contract in CI.</li>
+              <li>Write its policy, then run the contract locally and in CI.</li>
               <li>Move the next standard into the contract.</li>
-              <li>Share the contract across repositories, once more than one needs it.</li>
+              <li>
+                Share it across repositories once more than one needs it: an internal package wraps
+                repo-contract and owns the executors, every project of that type extends it, and
+                changes arrive through normal dependency updates.
+              </li>
+              <li>
+                Introduce a new shared requirement as a dated <code>warn</code> that becomes a
+                <code>fail</code> on a chosen date, so nobody&#39;s build breaks overnight. The
+                <a
+                  href="https://github.com/maverickcer/repo-contract/tree/main/examples/day-one-walkthrough"
+                  >day-one walkthrough</a
+                >
+                is a runnable example.
+              </li>
             </ol>
+          </div>
+          <div class="callout callout--note">
+            <p class="callout-title">You probably don&#39;t need it when</p>
+            <p>
+              <code>npm test</code> and a linter are the whole story, each CI check is already
+              independent and that is fine, and you don&#39;t need any policy logic on top of exit
+              codes.
+            </p>
           </div>
         </div>
       </section>
-
-      <!-- Proof -->
-      <section class="section" id="proof" aria-labelledby="proof-heading">
+      <section class="section" id="brief" aria-labelledby="brief-heading">
+        <div class="container container--narrow">
+          <p class="section-eyebrow">For decision-makers</p>
+          <h2 id="brief-heading">A one-page brief for your manager</h2>
+          <p class="section-lede">
+            repo-contract lets every repository follow one shared, versioned engineering standard,
+            and explains every decision it makes.
+          </p>
+          <p>
+            It answers what this is, why it matters, what it costs, what could go wrong and what is
+            being asked, in plain language, on one printable page.
+          </p>
+          <div class="hero-actions">
+            <a class="button button--secondary" href="brief.html">Open the one-page brief</a>
+          </div>
+        </div>
+      </section>
+      <section class="section section--muted" id="proof" aria-labelledby="proof-heading">
         <div class="container">
           <p class="section-eyebrow">Proof, not promises</p>
-
           <h2 id="proof-heading">repo-contract uses repo-contract.</h2>
-
           <p class="section-lede">
             The project is self-hosted: its own repository defines a contract with the public API
             and uses that contract to validate itself. The implementation, tests, architecture
-            documentation, and decision records are the evidence behind everything on this page.
+            documentation and decision records are the evidence behind everything on this page.
           </p>
-
           <div class="adoption-grid">
-            <a class="adoption-card" href="https://github.com/maverickcer/repo-contract#readme">
-              <span class="adoption-card-title">README</span>
-              <span class="adoption-card-desc">
-                The pitch, a minimal first contract, and when repo-contract is and isn't worth
-                adopting.
-              </span>
-              <span class="external-link-note">Read the README ↗</span>
-            </a>
-
             <a
               class="adoption-card"
               href="https://github.com/maverickcer/repo-contract/blob/main/specs/architecture.md"
-            >
-              <span class="adoption-card-title">Architecture</span>
-              <span class="adoption-card-desc">
-                The pipeline, the core invariants, and why execution and policy evaluation stay
-                strictly phased.
-              </span>
-              <span class="external-link-note">Read architecture.md ↗</span>
-            </a>
-
-            <a
-              class="adoption-card"
-              href="https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md"
-            >
-              <span class="adoption-card-title">Security model</span>
-              <span class="adoption-card-desc">
-                No shell by default, consumer-supplied process and environment capabilities, and a
-                mechanically enforced no-network guarantee.
-              </span>
-              <span class="external-link-note">Read the security model ↗</span>
-            </a>
-
-            <a class="adoption-card" href="api/">
-              <span class="adoption-card-title">API reference</span>
-              <span class="adoption-card-desc">
-                Every exported type, field, and error code — generated from source and byte-compared
-                against it on every commit.
-              </span>
-              <span class="external-link-note">Read the API reference ↗</span>
-            </a>
-
-            <a
+              ><span class="adoption-card-title">Architecture</span
+              ><span class="adoption-card-desc"
+                >The pipeline, the core invariants, and why execution and policy evaluation stay
+                strictly phased.</span
+              ><span class="external-link-note">Read architecture.md ↗</span></a
+            ><a class="adoption-card" href="api/"
+              ><span class="adoption-card-title">API reference</span
+              ><span class="adoption-card-desc"
+                >Every exported type, field and error code, generated from source and byte-compared
+                against it on every commit.</span
+              ><span class="external-link-note">Read the API reference ↗</span></a
+            ><a
               class="adoption-card"
               href="https://github.com/maverickcer/repo-contract/tree/main/examples"
-            >
-              <span class="adoption-card-title">Runnable examples</span>
-              <span class="adoption-card-desc">
-                A shared organizational contract and its consumers, plus a dated warn-then-fail
-                rollout and a governed, justified exception.
-              </span>
-              <span class="external-link-note">Browse the examples ↗</span>
-            </a>
-
-            <a
+              ><span class="adoption-card-title">Runnable examples</span
+              ><span class="adoption-card-desc"
+                >A shared organizational contract and its consumers, a release gate that reads
+                several checks, a dated warn-then-fail rollout, and a governed, justified
+                exception.</span
+              ><span class="external-link-note">Browse the examples ↗</span></a
+            ><a
               class="adoption-card"
               href="https://github.com/maverickcer/repo-contract/blob/main/repo-contract.config.ts"
+              ><span class="adoption-card-title">Its own contract</span
+              ><span class="adoption-card-desc"
+                >One check per verification category, each a real command with a real policy, using
+                the package&#39;s public API.</span
+              ><span class="external-link-note">Read repo-contract.config.ts ↗</span></a
+            ><a class="adoption-card" href="benchmarks/"
+              ><span class="adoption-card-title">Benchmarks</span
+              ><span class="adoption-card-desc"
+                >What each operation costs, how that cost grows with size, and what the package
+                adds, recorded at every merge.</span
+              ><span class="external-link-note">View the benchmark history ↗</span></a
             >
-              <span class="adoption-card-title">Its own contract</span>
-              <span class="adoption-card-desc">
-                One check per verification category, each a real command with a real policy, using
-                the package's public API.
-              </span>
-              <span class="external-link-note">Read repo-contract.config.ts ↗</span>
-            </a>
           </div>
         </div>
       </section>
-
-      <!-- Final CTA -->
-      <section class="section section--muted" id="fit" aria-labelledby="fit-heading">
+      <section class="section" id="fit" aria-labelledby="fit-heading">
         <div class="container container--narrow">
-          <p class="section-eyebrow">Next</p>
-
-          <h2 id="fit-heading">See whether this model fits your repository.</h2>
-
+          <p class="section-eyebrow">Try it</p>
+          <h2 id="fit-heading">Trial it on one repository.</h2>
           <p class="section-lede">
-            repo-contract is pre-1.0. A <code>0.x</code> minor may carry a breaking change to the
-            Stable tier before 1.0 — pin accordingly and read the changelog on every minor upgrade.
+            Read the README for a first contract, or run an example to see a verdict. Either way,
+            the same contract runs locally and in CI.
           </p>
-
+          <p class="maturity">
+            repo-contract is pre-1.0. A <code>0.x</code> minor may carry a breaking change to the
+            Stable tier before 1.0, so pin the version and read the changelog on every minor
+            upgrade.
+          </p>
           <div class="hero-actions">
             <a
               class="button button--primary"
               href="https://github.com/maverickcer/repo-contract#readme"
-            >
-              Read the README
-            </a>
-
-            <a
+              >Read the README</a
+            ><a
               class="button button--secondary"
               href="https://github.com/maverickcer/repo-contract/tree/main/examples"
+              >Run the examples</a
             >
-              View the examples
-            </a>
-
-            <a class="button button--secondary" href="api/"> Browse the API </a>
-
-            <a class="button button--secondary" href="benchmarks/"> View benchmarks </a>
-
-            <a class="button button--secondary" href="https://github.com/maverickcer/repo-contract">
-              View on GitHub
-            </a>
           </div>
+          <p class="fit-links">
+            <a href="api/">API reference</a> · <a href="benchmarks/">Benchmarks</a> ·
+            <a href="https://github.com/maverickcer/repo-contract">View on GitHub</a>
+          </p>
         </div>
       </section>
     </main>
-
-    <!-- Footer -->
     <footer class="site-footer">
       <div class="container footer-inner">
         <ul class="footer-nav">
           <li><a href="#why">Why it exists</a></li>
           <li><a href="#how">How it works</a></li>
-          <li><a href="#across-repositories">Across repositories</a></li>
           <li><a href="#see-it">See it</a></li>
+          <li><a href="#guarantees">Guarantees</a></li>
+          <li><a href="#adoption">Adoption</a></li>
           <li><a href="#proof">Proof</a></li>
+          <li><a href="brief.html">One-page brief</a></li>
           <li><a href="api/">API reference</a></li>
           <li><a href="benchmarks/">Benchmarks</a></li>
-          <li><a href="https://github.com/maverickcer/repo-contract#readme">README ↗</a></li>
           <li><a href="https://github.com/maverickcer/repo-contract">GitHub ↗</a></li>
           <li><a href="https://github.com/maverickcer/repo-contract/issues">Issues ↗</a></li>
         </ul>
-
         <p class="footer-meta">
-          <span>© repo-contract contributors</span>
-
-          <span>
-            <a href="https://github.com/maverickcer/repo-contract/blob/main/LICENSE">
-              MIT License
-            </a>
-          </span>
+          <span>© repo-contract contributors</span
+          ><span
+            ><a href="https://github.com/maverickcer/repo-contract/blob/main/LICENSE"
+              >MIT License</a
+            ></span
+          >
         </p>
       </div>
     </footer>
-
     <div class="sr-only" role="status" aria-live="polite" id="copy-status"></div>
-
     <script src="script.js"></script>
   </body>
 </html>

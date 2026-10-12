@@ -8,7 +8,7 @@ Releases are fully automated by [Changesets](https://github.com/changesets/chang
 and npm's [OIDC trusted publishing](https://docs.npmjs.com/trusted-publishers), via a
 shared, centrally-maintained workflow hosted in
 [`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml)
-that this repo's own [`.github/workflows/release.yml`](.github/workflows/release.yml)
+that this repo's own [`.github/workflows/release.yml`](https://github.com/MaverickCER/repo-contract/blob/main/.github/workflows/release.yml)
 calls into (`uses:`). **No `NPM_TOKEN` secret exists in this repository** and none is
 needed — npm verifies the workflow's OIDC identity against a one-time
 trusted-publisher registration on npmjs.com (see [One-time setup](#one-time-setup)
@@ -52,7 +52,7 @@ release-please era) stays as-is; only future entries render through Changesets.
 
 ## API baseline and browsable docs
 
-[`.github/workflows/api-baseline.yml`](.github/workflows/api-baseline.yml) is a thin caller of
+[`.github/workflows/api-baseline.yml`](https://github.com/MaverickCER/repo-contract/blob/main/.github/workflows/api-baseline.yml) is a thin caller of
 [`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract)'s own
 reusable `api-baseline-sync.yml` workflow, which regenerates every entry point's own
 `.repo-contract/api-contract/<target>/baseline.*` (`index`, `presets`, `helpers`) on the Version

@@ -7,25 +7,25 @@ import { buildConfigTemplate, CONTRACT_RUNNER_TEMPLATE } from "../../../bin/temp
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..")
 
 /**
- * Extracts the fenced ```ts code block in README.md that contains `marker` as its first line --
+ * Extracts the fenced ```ts code block in GUIDE.md that contains `marker` as its first line --
  * the single source of truth this test pins CONTRACT_RUNNER_TEMPLATE against, so the generated
- * runner and README's own documented Quick Start example can never silently drift apart.
+ * runner and README's own documented runner example can never silently drift apart.
  */
-function extractFencedBlock(readmeText: string, marker: string): string {
-  const markerIndex = readmeText.indexOf(marker)
+function extractFencedBlock(documentText: string, marker: string): string {
+  const markerIndex = documentText.indexOf(marker)
   if (markerIndex === -1) {
-    throw new Error(`README.md does not contain the expected marker: ${marker}`)
+    throw new Error(`GUIDE.md does not contain the expected marker: ${marker}`)
   }
-  const fenceStart = readmeText.lastIndexOf("```ts", markerIndex)
-  const contentStart = readmeText.indexOf("\n", fenceStart) + 1
-  const fenceEnd = readmeText.indexOf("\n```", contentStart)
-  return readmeText.slice(contentStart, fenceEnd + 1)
+  const fenceStart = documentText.lastIndexOf("```ts", markerIndex)
+  const contentStart = documentText.indexOf("\n", fenceStart) + 1
+  const fenceEnd = documentText.indexOf("\n```", contentStart)
+  return documentText.slice(contentStart, fenceEnd + 1)
 }
 
 describe("CONTRACT_RUNNER_TEMPLATE", () => {
-  it("matches README.md's Quick Start fenced code block for scripts/contract.mjs byte-for-byte", () => {
-    const readme = readFileSync(path.join(repoRoot, "README.md"), "utf8")
-    const block = extractFencedBlock(readme, "// scripts/contract.mjs")
+  it("matches GUIDE.md's runner fenced code block for scripts/contract.mjs byte-for-byte", () => {
+    const guide = readFileSync(path.join(repoRoot, "GUIDE.md"), "utf8")
+    const block = extractFencedBlock(guide, "// scripts/contract.mjs")
     expect(block).toBe(CONTRACT_RUNNER_TEMPLATE)
   })
 })

@@ -23,14 +23,14 @@ finding is or how it maps to a record; that stays in this example's own code.
 
 ## The pieces
 
-| File                                         | What it owns                                                                                                                          |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| [`findings.ts`](findings.ts)                 | A synthetic `npm audit`-shaped advisory list + `deriveAdvisoryId` (the finding↔record identity)                                       |
-| [`exceptions.json`](exceptions.json)         | The waiver registry — `{ "exceptions": [...] }`                                                                                       |
-| [`exception-record.ts`](exception-record.ts) | The waiver shape + a hand-written [Standard Schema](https://standardschema.dev) (no Zod dependency)                                   |
-| [`exception-policy.ts`](exception-policy.ts) | The flow: `loadExceptionRegistry` → `reconcileExceptions` → `evaluateExceptionRecord` / `resolveExceptionPolicy` → one `PolicyResult` |
+| File | What it owns |
+| --- | --- |
+| [`findings.ts`](https://github.com/MaverickCER/repo-contract/blob/main/examples/exceptions-walkthrough/findings.ts) | A synthetic `npm audit`-shaped advisory list + `deriveAdvisoryId` (the finding↔record identity) |
+| [`exceptions.json`](https://github.com/MaverickCER/repo-contract/blob/main/examples/exceptions-walkthrough/exceptions.json) | The waiver registry — `{ "exceptions": [...] }` |
+| [`exception-record.ts`](https://github.com/MaverickCER/repo-contract/blob/main/examples/exceptions-walkthrough/exception-record.ts) | The waiver shape + a hand-written [Standard Schema](https://standardschema.dev) (no Zod dependency) |
+| [`exception-policy.ts`](https://github.com/MaverickCER/repo-contract/blob/main/examples/exceptions-walkthrough/exception-policy.ts) | The flow: `loadExceptionRegistry` → `reconcileExceptions` → `evaluateExceptionRecord` / `resolveExceptionPolicy` → one `PolicyResult` |
 
-The organization's stance, from [`exception-policy.ts`](exception-policy.ts):
+The organization's stance, from [`exception-policy.ts`](https://github.com/MaverickCER/repo-contract/blob/main/examples/exceptions-walkthrough/exception-policy.ts):
 
 ```ts
 critical / high → forbidden      // cannot be waived at all

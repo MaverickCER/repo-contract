@@ -7,8 +7,8 @@ import type { CheckDefinitionConfig } from "../src/types.js"
  * Dogfoods repo-contract's own contract/evidence mechanism a further time (alongside
  * `openssf-scorecard`) to produce `docs/sbom.cdx.json` -- a real, spec-compliant CycloneDX
  * Software Bill of Materials for this repository's own npm dependency graph (direct + transitive,
- * as resolved in package-lock.json; no other ecosystem). See README.md's own SBOM section for the
- * exact spec version targeted and how it was confirmed, and scripts/sbom/spawn.ts's own doc
+ * as resolved in package-lock.json; no other ecosystem). See SECURITY.md's SBOMs section for what each
+ * document covers, and scripts/sbom/spawn.ts's own doc
  * comment for the exact flags used and why.
  *
  * Unlike `openssf-scorecard`, this check needs no `dependsOn`: it reads no other check's evidence,

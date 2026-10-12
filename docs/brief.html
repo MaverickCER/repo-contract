@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>repo-contract: a one-page brief</title>
+    <meta
+      name="description"
+      content="repo-contract lets every repository follow one shared, versioned engineering standard, and explains every decision it makes."
+    />
+    <link rel="canonical" href="https://maverickcer.github.io/repo-contract/brief.html" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="brief-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <main id="main" class="brief">
+      <p class="brief-back"><a href="index.html">&larr; repo-contract</a></p>
+      <h1>repo-contract: a one-page brief</h1>
+      <p class="brief-oneline">
+        repo-contract lets every repository follow one shared, versioned engineering standard, and
+        explains every decision it makes.
+      </p>
+      <section class="brief-block">
+        <h2>The problem</h2>
+        <p>
+          Each team keeps its quality rules in different places, so nobody can say what
+          &quot;acceptable&quot; means across the organization. New requirements are hard to
+          introduce without breaking people&#39;s builds.
+        </p>
+      </section>
+      <section class="brief-block">
+        <h2>What it does</h2>
+        <p>
+          It runs the checks a team already has, such as tests, linting and security scans. It then
+          applies one agreed standard to their results and gives a single verdict, with a
+          plain-language reason, on a developer&#39;s machine and in CI.
+        </p>
+      </section>
+      <section class="brief-block">
+        <h2>Why it matters</h2>
+        <ul>
+          <li>Every team is held to the same written-down standard.</li>
+          <li>
+            A new requirement can start as a warning with a date and later become a blocker, so
+            nobody is surprised.
+          </li>
+          <li>
+            Exceptions can be recorded with a reason instead of living in someone&#39;s memory.
+          </li>
+        </ul>
+      </section>
+      <section class="brief-block">
+        <h2>What it costs</h2>
+        <p>
+          Adopting it in one repository is a small change: install the package, run a generator and
+          keep the existing tools. It replaces none of them, and it is free, open source software
+          under the MIT licence.
+        </p>
+      </section>
+      <section class="brief-block">
+        <h2>What could go wrong</h2>
+        <ul>
+          <li>
+            repo-contract is pre-1.0. A <code>0.x</code> minor may carry a breaking change to the
+            Stable tier before 1.0, so pin the version and read the changelog on every minor
+            upgrade.
+          </li>
+          <li>
+            The standard is only as good as the policies a team writes. The package enforces what
+            you define; it does not decide what is good.
+          </li>
+          <li>
+            It sees only what a check measures, so it does not replace judgement in code review.
+          </li>
+        </ul>
+      </section>
+      <section class="brief-block">
+        <h2>What we are asking for</h2>
+        <p>
+          Agree that one repository trials it for a few weeks, then judge from the results whether
+          to share a standard across teams.
+        </p>
+      </section>
+      <p class="brief-next">
+        To judge it yourself:
+        <a href="https://github.com/maverickcer/repo-contract#readme">Read the README</a> ·
+        <a href="https://github.com/maverickcer/repo-contract/tree/main/examples"
+          >Run the examples</a
+        >
+      </p>
+      <p class="brief-print">Print this page or save it as a PDF to share.</p>
+    </main>
+  </body>
+</html>
