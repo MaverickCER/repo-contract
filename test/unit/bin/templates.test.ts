@@ -46,7 +46,7 @@ describe("buildConfigTemplate", () => {
   it("produces content that never spells the ambient-capability scanner's forbidden substrings verbatim as its own bin/templates.mjs source, only as this function's runtime output", () => {
     // This test only proves the *output* is correct -- the source-level constant-splitting that
     // keeps bin/templates.mjs itself scanner-clean is covered by
-    // scripts/verify-no-ambient-capabilities.mjs directly, not by unit tests of its output.
+    // the `AmbientCapabilities` check directly, not by unit tests of its output.
     const content = buildConfigTemplate(["securityDeps"])
     expect(content).toContain('import { spawn } from "node:child_process"')
     expect(content).toContain("env: process.env,")

@@ -49,6 +49,20 @@ export {
   validateExceptionPolicyConfig,
 } from "./exception-policy.js"
 
+export type {
+  RepoContractLogMode,
+  RepoContractLogs,
+  RepoContractLogsFileSystem,
+  RepoContractLogsOptions,
+} from "./contract-logs.js"
+export {
+  onEvidenceSaveToRepoContractLogs,
+  onVerdictPrependRepoContractLogs,
+  REPO_CONTRACT_LOG_DIRECTORY,
+  REPO_CONTRACT_LOG_EVIDENCE_MARKER,
+  repoContractLogs,
+} from "./contract-logs.js"
+
 export { loadExceptionRegistry } from "./load-exception-registry.js"
 
 export { reconcileExceptions, serializeExceptionRegistry } from "./reconcile-exceptions.js"

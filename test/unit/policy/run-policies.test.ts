@@ -1115,4 +1115,95 @@ describe("runPolicies", () => {
       }
     })
   })
+
+  describe("onVerdict", () => {
+    const entriesOf = (policies: Record<string, CheckDefinition["policy"]>) =>
+      Object.entries(policies).map(([id, policy]): ParsedCheckEntry => [
+        id,
+        { run: "x", policy },
+        rawEvidence(),
+      ])
+    const evidence = () => makeEvidence({ a: rawEvidence(), b: rawEvidence() })
+
+    it("is told each check's own result, once", async () => {
+      const seen: [string, PolicyResult][] = []
+      const entries = entriesOf({
+        a: () => ({ outcome: "pass", rationale: "fine" }),
+        b: () => ({ outcome: "fail", rationale: "broken" }),
+      })
+      await runPolicies(entries, evidence(), (id, result) => {
+        seen.push([id, result])
+      })
+      expect(seen.sort()).toEqual([
+        ["a", { outcome: "pass", rationale: "fine" }],
+        ["b", { outcome: "fail", rationale: "broken" }],
+      ])
+    })
+
+    it("is not changed by a hook that throws", async () => {
+      const entries = entriesOf({ a: () => ({ outcome: "pass", rationale: "fine" }) })
+      const verdict = await runPolicies(entries, evidence(), () => {
+        throw new Error("a broken reporter")
+      })
+      expect(verdict.passed).toBe(true)
+      expect(verdict.checks.a).toEqual({ outcome: "pass", rationale: "fine" })
+    })
+
+    it("gives the hook its own copy: what it assigns does not reach the verdict", async () => {
+      const entries = entriesOf({ a: () => ({ outcome: "fail", rationale: "broken" }) })
+      const verdict = await runPolicies(entries, evidence(), (_id, result) => {
+        ;(result as { outcome: string }).outcome = "pass"
+        ;(result as { rationale: string }).rationale = "changed by the hook"
+      })
+      expect(verdict.passed).toBe(false)
+      expect(verdict.checks.a).toEqual({ outcome: "fail", rationale: "broken" })
+    })
+
+    it("is not changed by an async hook that rejects", async () => {
+      const seen: unknown[] = []
+      const catcher = (reason: unknown): void => {
+        seen.push(reason)
+      }
+      process.on("unhandledRejection", catcher)
+      try {
+        const entries = entriesOf({ a: () => ({ outcome: "pass", rationale: "fine" }) })
+        const verdict = await runPolicies(entries, evidence(), () =>
+          Promise.reject(new Error("a broken async reporter")),
+        )
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        expect(verdict.passed).toBe(true)
+        expect(seen).toEqual([])
+      } finally {
+        process.off("unhandledRejection", catcher)
+      }
+    })
+
+    it("is not told about a policy that throws, or one that returns something invalid", async () => {
+      const seen: string[] = []
+      const entries = entriesOf({
+        a: () => ({ outcome: "pass", rationale: "fine" }),
+        b: () => {
+          throw new Error("boom")
+        },
+      })
+      await expect(
+        runPolicies(entries, evidence(), (id) => {
+          seen.push(id)
+        }),
+      ).rejects.toThrow()
+      expect(seen).toEqual(["a"])
+
+      const invalid = entriesOf({
+        a: () => ({ outcome: "pass", rationale: "fine" }),
+        b: () => ({ outcome: "maybe", rationale: "unsure" }) as unknown as PolicyResult,
+      })
+      const told: string[] = []
+      await expect(
+        runPolicies(invalid, evidence(), (id) => {
+          told.push(id)
+        }),
+      ).rejects.toThrow()
+      expect(told).toEqual(["a"])
+    })
+  })
 })

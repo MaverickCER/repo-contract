@@ -6,7 +6,7 @@
 // environment -- it only reads the consumer's local package.json (via node:fs) and writes local
 // files, extending specs/decisions/0011-process-spawning-and-ambient-environment-access-are-
 // consumer-supplied-capabilities-not-package-owned.md's invariant to this surface. This file is
-// scanned by scripts/verify-no-ambient-capabilities.mjs against the real published tarball, so it
+// scanned by the `AmbientCapabilities` check against the real published tarball, so it
 // deliberately never spells out the literal two-word token that scanner forbids -- not even in a
 // comment explaining why -- and never imports child_process/cross-spawn.
 

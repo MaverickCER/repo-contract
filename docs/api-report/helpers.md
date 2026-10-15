@@ -327,6 +327,320 @@ readonly record: TRecord;
 
 The record to evaluate.
 
+***
+
+### RepoContractLogs
+
+**`Beta`**
+
+Where the log of a check lives, and what is written to it. No function throws.
+
+#### Properties
+
+##### begin
+
+```ts
+readonly begin: () => void;
+```
+
+**`Beta`**
+
+Removes the `.log` files of an earlier run and starts empty.
+
+###### Returns
+
+`void`
+
+##### count
+
+```ts
+readonly count: () => number;
+```
+
+**`Beta`**
+
+How many logs exist this run.
+
+###### Returns
+
+`number`
+
+the count.
+
+##### directory
+
+```ts
+readonly directory: string;
+```
+
+**`Beta`**
+
+The folder the logs are in, relative to the repository root.
+
+##### flush
+
+```ts
+readonly flush: () => Promise<void>;
+```
+
+**`Beta`**
+
+Waits for every write asked for so far.
+
+###### Returns
+
+`Promise`\<`void`\>
+
+a promise that settles once they have finished; it never rejects.
+
+##### has
+
+```ts
+readonly has: (checkId) => boolean;
+```
+
+**`Beta`**
+
+Whether a log for a check has been written this run.
+
+###### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `checkId` | `string` | the check. |
+
+###### Returns
+
+`boolean`
+
+`true` when its log exists.
+
+##### prependVerdict
+
+```ts
+readonly prependVerdict: (checkId, label, rationale, passed) => void;
+```
+
+**`Beta`**
+
+Puts a verdict at the top of a check's log, replacing one already there. With the `"failing"` mode, a passing
+check's log is removed instead.
+
+###### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `checkId` | `string` | the check. |
+| `label` | `string` | what to call the result, for example `FAIL (advisory)`. |
+| `rationale` | `string` | the verdict's whole reason. |
+| `passed` | `boolean` | whether the check passed. |
+
+###### Returns
+
+`void`
+
+##### saveEvidence
+
+```ts
+readonly saveEvidence: (checkId, evidence) => void;
+```
+
+**`Beta`**
+
+Writes (or overwrites) a check's log with its evidence.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `checkId` | `string` |
+| `evidence` | [`CheckEvidence`](index/README.md#checkevidence) |
+
+###### Returns
+
+`void`
+
+***
+
+### RepoContractLogsFileSystem
+
+**`Beta`**
+
+The file operations the logs use; every one defaults to `node:fs/promises`' own. For tests, or a non-`node:fs` environment.
+
+#### Properties
+
+##### mkdir
+
+```ts
+readonly mkdir: (folder) => Promise<void>;
+```
+
+**`Beta`**
+
+Creates the folder, and any missing parents, if it does not exist.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `folder` | `string` |
+
+###### Returns
+
+`Promise`\<`void`\>
+
+##### readdir
+
+```ts
+readonly readdir: (folder) => Promise<readonly string[]>;
+```
+
+**`Beta`**
+
+Lists the names of the entries in a folder.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `folder` | `string` |
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+##### readFile
+
+```ts
+readonly readFile: (file) => Promise<string>;
+```
+
+**`Beta`**
+
+Reads a file as text.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `file` | `string` |
+
+###### Returns
+
+`Promise`\<`string`\>
+
+##### rm
+
+```ts
+readonly rm: (file) => Promise<void>;
+```
+
+**`Beta`**
+
+Removes a file; a file that is already gone is not an error.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `file` | `string` |
+
+###### Returns
+
+`Promise`\<`void`\>
+
+##### writeFile
+
+```ts
+readonly writeFile: (file, text) => Promise<void>;
+```
+
+**`Beta`**
+
+Writes (or overwrites) a file with the text.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `file` | `string` |
+| `text` | `string` |
+
+###### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### RepoContractLogsOptions
+
+**`Beta`**
+
+Where and how logs are written.
+
+#### Properties
+
+##### cwd?
+
+```ts
+readonly optional cwd?: string;
+```
+
+**`Beta`**
+
+The repository root the folder is resolved against. Defaults to the current working directory.
+
+##### directory?
+
+```ts
+readonly optional directory?: string;
+```
+
+**`Beta`**
+
+The folder, relative to `cwd`. Defaults to `reports/contract/logs`.
+
+##### fs?
+
+```ts
+readonly optional fs?: Partial<RepoContractLogsFileSystem>;
+```
+
+**`Beta`**
+
+Overrides how files are read and written. A store with its own file operations is not shared with other hooks: wire its `saveEvidence` and `prependVerdict` yourself.
+
+##### mode?
+
+```ts
+readonly optional mode?: RepoContractLogMode;
+```
+
+**`Beta`**
+
+Which logs to keep. Defaults to `"failing"`: a log for a check that passed is removed once its verdict is known.
+
+##### onProblem?
+
+```ts
+readonly optional onProblem?: (message) => void;
+```
+
+**`Beta`**
+
+Told once, with the reason, the first time a log cannot be written. Defaults to ignoring it.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `message` | `string` |
+
+###### Returns
+
+`void`
+
 ## Type Aliases
 
 ### ExceptionPolicy
@@ -386,6 +700,42 @@ type ExceptionVerdict = "forbidden" | "insufficient" | "permitted";
 
 A resolved judgment about one record, once its `ExceptionPolicy` has been checked against its
 own field values. See `ExceptionDeterminant`.
+
+***
+
+### RepoContractLogMode
+
+```ts
+type RepoContractLogMode = "all" | "failing" | "off";
+```
+
+**`Beta`**
+
+Which logs are kept: every check's, only the checks that did not pass, or none.
+
+## Variables
+
+### REPO\_CONTRACT\_LOG\_DIRECTORY
+
+```ts
+const REPO_CONTRACT_LOG_DIRECTORY: string;
+```
+
+**`Beta`**
+
+The default folder, relative to the repository root.
+
+***
+
+### REPO\_CONTRACT\_LOG\_EVIDENCE\_MARKER
+
+```ts
+const REPO_CONTRACT_LOG_EVIDENCE_MARKER: "=== evidence ===" = "=== evidence ===";
+```
+
+**`Beta`**
+
+Starts the part of a log that is the check's evidence, so the verdict above it can be rewritten alone.
 
 ## Functions
 
@@ -478,7 +828,7 @@ function hashRequirementFields<TRecord>(
 A deterministic digest of a set of fields' current values on `record`, via `node:crypto` --
 pure, synchronous, no ambient state (Socket.dev has no alert on `node:crypto`; it is not
 `child_process`/`process.env`, the two capabilities `src/helpers/**` must never touch -- see
-`scripts/verify-no-ambient-capabilities.mjs`). This is what makes a "verification" *content-bound*
+the `AmbientCapabilities` check). This is what makes a "verification" *content-bound*
 rather than merely attested: a consumer records this hash (see `ExceptionVerification` in
 `checks/shared/exception-record.ts`) at the moment a human or a mechanical re-check approved a
 record's current prose; recomputing it later and comparing is how staleness is detected with no
@@ -579,6 +929,56 @@ Every valid record (`ok: true`), or every problem found reading/parsing/validati
 
 ***
 
+### onEvidenceSaveToRepoContractLogs()
+
+```ts
+function onEvidenceSaveToRepoContractLogs(options?): (checkId, evidence) => void;
+```
+
+**`Beta`**
+
+The `onEvidence` hook that saves each check's raw output to its log. Creating it removes the logs of an
+earlier run.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `options` | [`RepoContractLogsOptions`](#repocontractlogsoptions) | where and how to write. |
+
+#### Returns
+
+the hook to pass as `onEvidence`.
+
+(`checkId`, `evidence`) => `void`
+
+***
+
+### onVerdictPrependRepoContractLogs()
+
+```ts
+function onVerdictPrependRepoContractLogs(options?): (checkId, result) => void;
+```
+
+**`Beta`**
+
+The `onVerdict` hook that puts each check's verdict at the top of its log. With the default `"failing"` mode, the
+log of a check that passed is removed.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `options` | [`RepoContractLogsOptions`](#repocontractlogsoptions) | where and how to write; the same options as [onEvidenceSaveToRepoContractLogs](#onevidencesavetorepocontractlogs). |
+
+#### Returns
+
+the hook to pass as `onVerdict`.
+
+(`checkId`, `result`) => `void`
+
+***
+
 ### reconcileExceptions()
 
 ```ts
@@ -641,6 +1041,31 @@ namespace). This function does not re-validate it.
 \}
 
 The reconciliation, or the first integrity problem found.
+
+***
+
+### repoContractLogs()
+
+```ts
+function repoContractLogs(options?): RepoContractLogs;
+```
+
+**`Beta`**
+
+The logs for one folder. The same options give the same logs, so a hook created here and another created
+elsewhere agree on which files exist.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `options` | [`RepoContractLogsOptions`](#repocontractlogsoptions) | where and how to write. |
+
+#### Returns
+
+[`RepoContractLogs`](#repocontractlogs)
+
+the log store.
 
 ***
 

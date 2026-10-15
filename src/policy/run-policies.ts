@@ -1,4 +1,5 @@
 import type { ParsedCheckEntry } from "../evidence/build-evidence.js"
+import { notify } from "../notify.js"
 import {
   PolicyReadFailedParseValueError,
   PolicyReadUnrequestedOutputError,
@@ -222,11 +223,13 @@ function invalidPolicyResultReason(value: unknown): string | undefined {
  * if exactly one policy fails, it throws that single error directly.
  * @param entries - each check's id, definition, and final (possibly parsed-output) evidence to invoke its policy against
  * @param evidence - the complete, already-assembled evidence for the whole run, passed to every policy call
+ * @param onVerdict - told of each check's `PolicyResult` as soon as it is valid; a hook that throws is ignored
  * @returns the aggregated `Verdict` (throws instead if one or more policies failed to produce a valid `PolicyResult`)
  */
 export async function runPolicies(
   entries: readonly ParsedCheckEntry[],
   evidence: Evidence,
+  onVerdict?: (checkId: string, result: PolicyResult) => void | Promise<void>,
 ): Promise<Verdict> {
   const thrown: (
     PolicyThrewError | PolicyReadUnrequestedOutputError | PolicyReadFailedParseValueError
@@ -267,6 +270,7 @@ export async function runPolicies(
         return
       }
       checkResults[entryIndex] = [checkId, outcome]
+      notify(onVerdict, checkId, { ...outcome })
     }),
   )
 

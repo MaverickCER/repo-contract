@@ -52,6 +52,77 @@ describe("runChecks", () => {
     expect(results[0]?.[2].stdout).toBe("a")
   })
 
+  it("tells onEvidence about each check as it finishes, with that check's own evidence, once", async () => {
+    const checks: CheckSchema = {
+      slow: {
+        run: [process.execPath, "-e", "setTimeout(() => process.stdout.write('slow'), 150)"],
+        policy: okPolicy,
+      },
+      fast: { run: [process.execPath, "-e", "process.stdout.write('fast')"], policy: okPolicy },
+    }
+    const seen: [string, string][] = []
+    const results = await runChecks(checks, 4, execution, {
+      onEvidence: (checkId, evidence) => {
+        seen.push([checkId, evidence.stdout])
+      },
+    })
+    // The fast check is reported before the slow one has finished, not after the whole run.
+    expect(seen).toEqual([
+      ["fast", "fast"],
+      ["slow", "slow"],
+    ])
+    expect(results).toHaveLength(2)
+  })
+
+  it("gives an onEvidence hook its own copy: what it assigns does not reach what the run returns", async () => {
+    const checks: CheckSchema = {
+      a: { run: [process.execPath, "-e", "process.stdout.write('real')"], policy: okPolicy },
+    }
+    const results = await runChecks(checks, 4, execution, {
+      onEvidence: (_id, evidence) => {
+        ;(evidence as { stdout: string }).stdout = "changed by the hook"
+      },
+    })
+    expect(results[0]?.[2].stdout).toBe("real")
+  })
+
+  it("is not changed by an async onEvidence hook that rejects", async () => {
+    const seen: unknown[] = []
+    const catcher = (reason: unknown): void => {
+      seen.push(reason)
+    }
+    process.on("unhandledRejection", catcher)
+    try {
+      const checks: CheckSchema = {
+        a: { run: [process.execPath, "-e", "process.stdout.write('a')"], policy: okPolicy },
+      }
+      const results = await runChecks(checks, 4, execution, {
+        onEvidence: () => Promise.reject(new Error("a broken async reporter")),
+      })
+      await new Promise((resolve) => setTimeout(resolve, 20))
+      expect(results).toHaveLength(1)
+      expect(seen).toEqual([])
+    } finally {
+      process.off("unhandledRejection", catcher)
+    }
+  })
+
+  it("is not changed by an onEvidence hook that throws", async () => {
+    const checks: CheckSchema = {
+      a: { run: [process.execPath, "-e", "process.stdout.write('a')"], policy: okPolicy },
+      b: { run: [process.execPath, "-e", "process.stdout.write('b')"], policy: okPolicy },
+    }
+    const results = await runChecks(checks, 4, execution, {
+      onEvidence: () => {
+        throw new Error("a broken reporter")
+      },
+    })
+    expect(results.map(([checkId, , evidence]) => [checkId, evidence.stdout])).toEqual([
+      ["a", "a"],
+      ["b", "b"],
+    ])
+  })
+
   it("runs many checks and returns every configured check id exactly once", async () => {
     const checks: CheckSchema = Object.fromEntries(
       Array.from({ length: 8 }, (_, i) => [

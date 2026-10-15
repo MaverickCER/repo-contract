@@ -1152,7 +1152,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!hashRequirementFields:function(1)",
-          "docComment": "/**\n * A deterministic digest of a set of fields' current values on `record`, via `node:crypto` --\n * pure, synchronous, no ambient state (Socket.dev has no alert on `node:crypto`; it is not\n * `child_process`/`process.env`, the two capabilities `src/helpers/**` must never touch -- see\n * `scripts/verify-no-ambient-capabilities.mjs`). This is what makes a \"verification\" *content-bound*\n * rather than merely attested: a consumer records this hash (see `ExceptionVerification` in\n * `checks/shared/exception-record.ts`) at the moment a human or a mechanical re-check approved a\n * record's current prose; recomputing it later and comparing is how staleness is detected with no\n * separate tracking logic -- edit any field named in `fields` and the hash silently stops matching.\n * Each field's name is bound into the digest alongside its value, both serialized via\n * `JSON.stringify` as a `[name, value]` pair -- JSON's own escaping makes the digest unambiguous\n * regardless of what characters a field's name or value contains, so two different field sets\n * whose values happen to concatenate identically as plain text can never collide here.\n *\n * @param record - The record to hash fields from.\n *\n * @param fields - Which fields (by name, in this exact order) to include in the digest -- the same names `fieldValue` would be called with by `evaluateExceptionRecord`.\n *\n * @param fieldValue - Resolves one named field's current string value on `record`, exactly like `evaluateExceptionRecord`'s own `fieldValue` parameter.\n *\n * @returns A hex-encoded SHA-256 digest of `fields`' current values.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * A deterministic digest of a set of fields' current values on `record`, via `node:crypto` --\n * pure, synchronous, no ambient state (Socket.dev has no alert on `node:crypto`; it is not\n * `child_process`/`process.env`, the two capabilities `src/helpers/**` must never touch -- see\n * the `AmbientCapabilities` check). This is what makes a \"verification\" *content-bound*\n * rather than merely attested: a consumer records this hash (see `ExceptionVerification` in\n * `checks/shared/exception-record.ts`) at the moment a human or a mechanical re-check approved a\n * record's current prose; recomputing it later and comparing is how staleness is detected with no\n * separate tracking logic -- edit any field named in `fields` and the hash silently stops matching.\n * Each field's name is bound into the digest alongside its value, both serialized via\n * `JSON.stringify` as a `[name, value]` pair -- JSON's own escaping makes the digest unambiguous\n * regardless of what characters a field's name or value contains, so two different field sets\n * whose values happen to concatenate identically as plain text can never collide here.\n *\n * @param record - The record to hash fields from.\n *\n * @param fields - Which fields (by name, in this exact order) to include in the digest -- the same names `fieldValue` would be called with by `evaluateExceptionRecord`.\n *\n * @param fieldValue - Resolves one named field's current string value on `record`, exactly like `evaluateExceptionRecord`'s own `fieldValue` parameter.\n *\n * @returns A hex-encoded SHA-256 digest of `fields`' current values.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1322,6 +1322,116 @@
         },
         {
           "kind": "Function",
+          "canonicalReference": "repo-contract!onEvidenceSaveToRepoContractLogs:function(1)",
+          "docComment": "/**\n * The `onEvidence` hook that saves each check's raw output to its log. Creating it removes the logs of an\n * earlier run.\n *\n * @param options - where and how to write.\n *\n * @returns the hook to pass as `onEvidence`.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function onEvidenceSaveToRepoContractLogs(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "RepoContractLogsOptions",
+              "canonicalReference": "repo-contract!RepoContractLogsOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "(checkId: string, evidence: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckEvidence",
+              "canonicalReference": "repo-contract!~CheckEvidence:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ") => void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/contract-logs.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 6
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "onEvidenceSaveToRepoContractLogs"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!onVerdictPrependRepoContractLogs:function(1)",
+          "docComment": "/**\n * The `onVerdict` hook that puts each check's verdict at the top of its log. With the default `\"failing\"` mode, the\n * log of a check that passed is removed.\n *\n * @param options - where and how to write; the same options as {@link onEvidenceSaveToRepoContractLogs}.\n *\n * @returns the hook to pass as `onVerdict`.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function onVerdictPrependRepoContractLogs(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "RepoContractLogsOptions",
+              "canonicalReference": "repo-contract!RepoContractLogsOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "(checkId: string, result: "
+            },
+            {
+              "kind": "Reference",
+              "text": "PolicyResult",
+              "canonicalReference": "repo-contract!~PolicyResult:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ") => void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/contract-logs.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 6
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "onVerdictPrependRepoContractLogs"
+        },
+        {
+          "kind": "Function",
           "canonicalReference": "repo-contract!reconcileExceptions:function(1)",
           "docComment": "/**\n * Reconciles this run's raw findings against the check's already-loaded, already-validated\n * exception registry. Pure and add-only: it never mutates a matched record and never removes a\n * stale one.\n *\n * `deriveId` must be **injective** over `findings` -- every independently-governable finding needs\n * a distinct id, or the mechanism cannot tell which finding a record's `justification` belongs to.\n * A collision is returned as `{ ok: false }` (a real condition a check must surface: the source\n * genuinely holds two identical directives), naming both finding indices so the check can point a\n * developer at them.\n *\n * `createStub(finding, id)` is handed the canonical id and its result's `id` is asserted equal to\n * it -- a `createStub` that derives its own identity differently is a `{ ok: false }` bug report,\n * never a silently-mismatched record.\n *\n * Precondition: `existing` has already passed the check's registry validator (unique ids, correct\n * namespace). This function does not re-validate it.\n *\n * @param input - The already-loaded registry, this run's findings, and the check-owned identity + stub callbacks.\n *\n * @param  - input.existing - The validated records currently on disk.\n *\n * @param  - input.findings - Every raw finding this run produced -- nothing filtered.\n *\n * @param  - input.deriveId - The finding's check-namespaced semantic id. Must be injective over `findings`.\n *\n * @param  - input.createStub - Builds a fresh record for an unmatched finding; receives the canonical id and must return a record carrying it.\n *\n * @returns The reconciliation, or the first integrity problem found.\n *\n * @beta\n */\n",
           "excerptTokens": [
@@ -1405,6 +1515,720 @@
             }
           ],
           "name": "reconcileExceptions"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!REPO_CONTRACT_LOG_DIRECTORY:var",
+          "docComment": "/**\n * The default folder, relative to the repository root.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "REPO_CONTRACT_LOG_DIRECTORY: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            }
+          ],
+          "fileUrlPath": "src/helpers/contract-logs.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "REPO_CONTRACT_LOG_DIRECTORY",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!REPO_CONTRACT_LOG_EVIDENCE_MARKER:var",
+          "docComment": "/**\n * Starts the part of a log that is the check's evidence, so the verdict above it can be rewritten alone.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "REPO_CONTRACT_LOG_EVIDENCE_MARKER = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"=== evidence ===\""
+            }
+          ],
+          "fileUrlPath": "src/helpers/contract-logs.ts",
+          "initializerTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "REPO_CONTRACT_LOG_EVIDENCE_MARKER",
+          "variableTypeTokenRange": {
+            "startIndex": 0,
+            "endIndex": 0
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!RepoContractLogMode:type",
+          "docComment": "/**\n * Which logs are kept: every check's, only the checks that did not pass, or none.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type RepoContractLogMode = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"all\" | \"failing\" | \"off\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/contract-logs.ts",
+          "releaseTag": "Beta",
+          "name": "RepoContractLogMode",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!repoContractLogs:function(1)",
+          "docComment": "/**\n * The logs for one folder. The same options give the same logs, so a hook created here and another created\n * elsewhere agree on which files exist.\n *\n * @param options - where and how to write.\n *\n * @returns the log store.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function repoContractLogs(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "RepoContractLogsOptions",
+              "canonicalReference": "repo-contract!RepoContractLogsOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "RepoContractLogs",
+              "canonicalReference": "repo-contract!RepoContractLogs:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/contract-logs.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "repoContractLogs"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!RepoContractLogs:interface",
+          "docComment": "/**\n * Where the log of a check lives, and what is written to it. No function throws.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface RepoContractLogs "
+            }
+          ],
+          "fileUrlPath": "src/helpers/contract-logs.ts",
+          "releaseTag": "Beta",
+          "name": "RepoContractLogs",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogs#begin:member",
+              "docComment": "/**\n * Removes the `.log` files of an earlier run and starts empty.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly begin: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "begin",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogs#count:member",
+              "docComment": "/**\n * How many logs exist this run.\n *\n * @returns the count.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly count: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "count",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogs#directory:member",
+              "docComment": "/**\n * The folder the logs are in, relative to the repository root.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly directory: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "directory",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogs#flush:member",
+              "docComment": "/**\n * Waits for every write asked for so far.\n *\n * @returns a promise that settles once they have finished; it never rejects.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly flush: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "flush",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogs#has:member",
+              "docComment": "/**\n * Whether a log for a check has been written this run.\n *\n * @param checkId - the check.\n *\n * @returns `true` when its log exists.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly has: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(checkId: string) => boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "has",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogs#prependVerdict:member",
+              "docComment": "/**\n * Puts a verdict at the top of a check's log, replacing one already there. With the `\"failing\"` mode, a passing\n * check's log is removed instead.\n *\n * @param checkId - the check.\n *\n * @param label - what to call the result, for example `FAIL (advisory)`.\n *\n * @param rationale - the verdict's whole reason.\n *\n * @param passed - whether the check passed.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly prependVerdict: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(checkId: string, label: string, rationale: string, passed: boolean) => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "prependVerdict",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogs#saveEvidence:member",
+              "docComment": "/**\n * Writes (or overwrites) a check's log with its evidence.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly saveEvidence: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(checkId: string, evidence: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CheckEvidence",
+                  "canonicalReference": "repo-contract!~CheckEvidence:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "saveEvidence",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!RepoContractLogsFileSystem:interface",
+          "docComment": "/**\n * The file operations the logs use; every one defaults to `node:fs/promises`' own. For tests, or a non-`node:fs` environment.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface RepoContractLogsFileSystem "
+            }
+          ],
+          "fileUrlPath": "src/helpers/contract-logs.ts",
+          "releaseTag": "Beta",
+          "name": "RepoContractLogsFileSystem",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsFileSystem#mkdir:member",
+              "docComment": "/**\n * Creates the folder, and any missing parents, if it does not exist.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly mkdir: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(folder: string) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "mkdir",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsFileSystem#readdir:member",
+              "docComment": "/**\n * Lists the names of the entries in a folder.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly readdir: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(folder: string) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<readonly string[]>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "readdir",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsFileSystem#readFile:member",
+              "docComment": "/**\n * Reads a file as text.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly readFile: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(file: string) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "readFile",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsFileSystem#rm:member",
+              "docComment": "/**\n * Removes a file; a file that is already gone is not an error.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly rm: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(file: string) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "rm",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsFileSystem#writeFile:member",
+              "docComment": "/**\n * Writes (or overwrites) a file with the text.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly writeFile: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(file: string, text: string) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "writeFile",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!RepoContractLogsOptions:interface",
+          "docComment": "/**\n * Where and how logs are written.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface RepoContractLogsOptions "
+            }
+          ],
+          "fileUrlPath": "src/helpers/contract-logs.ts",
+          "releaseTag": "Beta",
+          "name": "RepoContractLogsOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsOptions#cwd:member",
+              "docComment": "/**\n * The repository root the folder is resolved against. Defaults to the current working directory.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly cwd?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "cwd",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsOptions#directory:member",
+              "docComment": "/**\n * The folder, relative to `cwd`. Defaults to `reports/contract/logs`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly directory?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "directory",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsOptions#fs:member",
+              "docComment": "/**\n * Overrides how files are read and written. A store with its own file operations is not shared with other hooks: wire its `saveEvidence` and `prependVerdict` yourself.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly fs?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RepoContractLogsFileSystem",
+                  "canonicalReference": "repo-contract!RepoContractLogsFileSystem:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "fs",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsOptions#mode:member",
+              "docComment": "/**\n * Which logs to keep. Defaults to `\"failing\"`: a log for a check that passed is removed once its verdict is known.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly mode?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RepoContractLogMode",
+                  "canonicalReference": "repo-contract!RepoContractLogMode:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "mode",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RepoContractLogsOptions#onProblem:member",
+              "docComment": "/**\n * Told once, with the reason, the first time a log cannot be written. Defaults to ignoring it.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly onProblem?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(message: string) => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "onProblem",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Function",

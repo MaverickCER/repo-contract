@@ -25,6 +25,81 @@
  */
 
 /**
+ * What actually happened when one configured check ran. `output` is present
+ * only if that check's config requested a format, and is otherwise
+ * `undefined` -- a policy narrows with `ctx.result.output?.success` (or an
+ * `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.
+ *
+ * `output.value` is the value produced by the configured `format` parser, optionally validated
+ * and (if a schema transforms/coerces it) replaced by `output.schema` (see
+ * `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a
+ * check's config supplies a schema. It is typed `unknown` for every format regardless, including
+ * `"text"` (even though `parseText` always produces a `string` at runtime) and regardless of
+ * whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can
+ * reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own
+ * inferred output type) through to that same check's `policy` parameter once several checks with
+ * heterogeneous formats live together in one `checks` record (a real TypeScript inference
+ * limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/
+ * for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package
+ * is attempting to close: a schema still gives its own author real compile-time input/output
+ * typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this
+ * shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as
+ * they already must for `"json"`/`"text"` with no schema supplied.
+ * @public
+ */
+declare interface CheckEvidence {
+    /** The executable that was actually spawned (after tokenization, if `run` was a string). */
+    readonly command: string;
+    /** The arguments passed to `command`, exactly as spawned. */
+    readonly args: readonly string[];
+    /** ISO 8601 timestamp of when the process was spawned. */
+    readonly startedAt: string;
+    /** ISO 8601 timestamp of when the process reached its terminal state. */
+    readonly completedAt: string;
+    /** Wall-clock time from spawn to termination, in milliseconds. */
+    readonly durationMs: number;
+    /** `null` when the process never exited normally -- see `signal` and `status`. */
+    readonly exitCode: number | null;
+    /** The signal that terminated the process, if any. `null` for a normal exit or a spawn failure. */
+    readonly signal: NodeJS.Signals | null;
+    /** The process's raw standard output, captured verbatim up to an internal size cap (10 MiB); content beyond the cap is replaced with a truncation marker. */
+    readonly stdout: string;
+    /** The process's raw standard error, captured verbatim up to an internal size cap (10 MiB); content beyond the cap is replaced with a truncation marker. */
+    readonly stderr: string;
+    /** Why the process reached its terminal state; see `CheckStatus`. */
+    readonly status: CheckStatus;
+    /** Populated only for `status === "spawn_error"` -- the underlying Node error message (e.g. "spawn foo ENOENT"). Never populated for any other status. */
+    readonly spawnError?: string;
+    /** Populated only for `status === "spawn_error"` -- the underlying Node `ErrnoException`'s structured `.code` (e.g. `"ENOENT"`, `"EACCES"`), when Node provides one. Never populated for any other status. Distinguishes "the executable does not exist" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message. */
+    readonly spawnErrorCode?: string;
+    /**
+     * The parsed interpretation of `stdout`, present only if this check's config requested a
+     * `format`. If that config also supplied `output.schema`, a successful parse is additionally
+     * validated (and possibly transformed) by that schema before landing here -- see this
+     * interface's own doc comment above and `CheckDefinitionConfig.output.schema`.
+     */
+    readonly output?: ParsedOutput<unknown>;
+}
+
+/**
+ * Why a check's process ended up in its terminal state. `"completed"` means
+ * the process ran to exit on its own -- the exit code may still be
+ * non-zero, and that is for the check's policy to interpret, never this
+ * package. The other five values all mean the process did not exit on its
+ * own; repo-contract terminated it, or it was terminated for a reason
+ * repo-contract can observe but did not cause.
+ *
+ * `"signaled"` specifically means a signal repo-contract did *not* itself request -- an
+ * externally-caused termination. A check killed because the *host* process running repo-contract
+ * received its own SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler cleanup) is instead
+ * `"host_terminated"`: repo-contract did request that signal, just not via `options.signal` or
+ * `timeoutMs` (see `"aborted"`/`"timed_out"`), so it must not be conflated with an externally-caused
+ * `"signaled"`.
+ * @public
+ */
+declare type CheckStatus = "completed" | "timed_out" | "signaled" | "host_terminated" | "spawn_error" | "aborted";
+
+/**
  * Evaluates one record against every one of its own classifications, taking the strictest
  * (`stricterOf`) of each classification's resolved policy -- a record matching both a forbidden
  * classification and an otherwise-fine one is forbidden overall. `classifications` is a non-empty
@@ -211,7 +286,7 @@ export declare type ExceptionVerdict = "forbidden" | "insufficient" | "permitted
  * A deterministic digest of a set of fields' current values on `record`, via `node:crypto` --
  * pure, synchronous, no ambient state (Socket.dev has no alert on `node:crypto`; it is not
  * `child_process`/`process.env`, the two capabilities `src/helpers/**` must never touch -- see
- * `scripts/verify-no-ambient-capabilities.mjs`). This is what makes a "verification" *content-bound*
+ * the `AmbientCapabilities` check). This is what makes a "verification" *content-bound*
  * rather than merely attested: a consumer records this hash (see `ExceptionVerification` in
  * `checks/shared/exception-record.ts`) at the moment a human or a mechanical re-check approved a
  * record's current prose; recomputing it later and comparing is how staleness is detected with no
@@ -270,6 +345,113 @@ export declare function loadExceptionRegistry<T>(input: {
 }>;
 
 /**
+ * The `onEvidence` hook that saves each check's raw output to its log. Creating it removes the logs of an
+ * earlier run.
+ * @param options - where and how to write.
+ * @returns the hook to pass as `onEvidence`.
+ * @beta
+ */
+export declare function onEvidenceSaveToRepoContractLogs(options?: RepoContractLogsOptions): (checkId: string, evidence: CheckEvidence) => void;
+
+/**
+ * The `onVerdict` hook that puts each check's verdict at the top of its log. With the default `"failing"` mode, the
+ * log of a check that passed is removed.
+ * @param options - where and how to write; the same options as {@link onEvidenceSaveToRepoContractLogs}.
+ * @returns the hook to pass as `onVerdict`.
+ * @beta
+ */
+export declare function onVerdictPrependRepoContractLogs(options?: RepoContractLogsOptions): (checkId: string, result: PolicyResult) => void;
+
+/**
+ * Output interpretation a check can explicitly request. No format requested means no parsing --
+ * the consumer gets raw stdout/stderr only. Format conversion (e.g. YAML) is deliberately not a
+ * core concern of this package -- JSON and plain text cover every check this package or its
+ * consumers actually run; a check whose tool emits another format converts it in its own `run`
+ * step or reads it directly in its `policy` function, using whatever library it already depends
+ * on, rather than this package carrying an optional peer dependency on everyone's behalf.
+ * @public
+ */
+declare type OutputFormat = "json" | "text";
+
+/**
+ * The result of a check's requested output-format parse: either a successful `ParsedOutputSuccess`, or a `ParsedOutputFailure`.
+ * @public
+ */
+declare type ParsedOutput<T> = ParsedOutputSuccess<T> | ParsedOutputFailure;
+
+/**
+ * A requested parse of a check's stdout failed. The raw stdout on the
+ * parent `CheckEvidence` is preserved unchanged -- a parse failure is never
+ * silently reinterpreted or discarded.
+ * @public
+ */
+declare interface ParsedOutputFailure {
+    /** The format that was requested (and failed to parse). */
+    readonly format: OutputFormat;
+    /** Always `false`. */
+    readonly success: false;
+    /** The parse error's message. */
+    readonly error: string;
+}
+
+/**
+ * A requested parse of a check's stdout succeeded.
+ * @public
+ */
+declare interface ParsedOutputSuccess<T> {
+    /** The format that was requested and successfully parsed. */
+    readonly format: OutputFormat;
+    /** Always `true`. */
+    readonly success: true;
+    /** The parsed value. */
+    readonly value: T;
+}
+
+/**
+ * `"pass"`: the repository-owned policy evaluated the captured evidence as
+ * satisfying its configured requirements. `"fail"`: the evidence did not
+ * satisfy them. `"warn"`: the evidence does not violate the policy's
+ * blocking requirements, but the policy has intentionally decided the
+ * condition is materially relevant and wants it surfaced -- not a synonym
+ * for "minor failure"; a `warn` never fails `Verdict.passed` (see
+ * `runPolicies` in `src/policy/run-policies.ts`).
+ * @public
+ */
+declare type PolicyOutcome = "pass" | "fail" | "warn";
+
+/**
+ * A repository-owned policy's interpretation of one check's captured
+ * evidence -- fully JSON-serializable (a plain object of primitives only,
+ * never an `Error`, class instance, function, or tool-specific object) so it
+ * can be persisted, transmitted, aggregated across parallel checks, and
+ * consumed directly by a human or an AI without rerunning anything.
+ *
+ * `rationale` is mandatory and must contain enough actionable detail --
+ * specific file/line locations, rule ids, test names, counts -- for a
+ * consumer to understand *why* the policy reached its outcome from this
+ * value alone. A rationale like "see output above" or "check the report for
+ * details" defeats the purpose: it forces the consumer back to raw,
+ * unstructured command output, exactly what this type exists to avoid.
+ * That specific anti-pattern is not just documented here -- `runPolicies`
+ * (`src/policy/run-policies.ts`'s `VAGUE_RATIONALE_PATTERNS`, ADR 0016) rejects a
+ * rationale matching it at runtime, the same as any other malformed
+ * `PolicyResult`, so a check (repo-contract's own, or a consumer's) that
+ * regresses to a vague deferral fails loudly instead of silently shipping.
+ * See specs/architecture.md for the evidence/rationale/judgment distinction this
+ * type is built around: evidence answers "what happened?", `rationale`
+ * answers "what does the repository's policy conclude about what
+ * happened?", and a policy's `outcome` is not the final word -- a human or
+ * AI consumer still makes the final judgment call using both.
+ * @public
+ */
+declare interface PolicyResult {
+    /** The policy's pass/fail/warn decision. */
+    readonly outcome: PolicyOutcome;
+    /** Why the policy reached `outcome`, in enough detail to act on without rerunning anything. */
+    readonly rationale: string;
+}
+
+/**
  * Reconciles this run's raw findings against the check's already-loaded, already-validated
  * exception registry. Pure and add-only: it never mutates a matched record and never removes a
  * stale one.
@@ -308,6 +490,105 @@ export declare function reconcileExceptions<TFinding, TRecord extends {
     readonly ok: false;
     readonly error: string;
 };
+
+/**
+ * The default folder, relative to the repository root.
+ * @beta
+ */
+export declare const REPO_CONTRACT_LOG_DIRECTORY: string;
+
+/**
+ * Starts the part of a log that is the check's evidence, so the verdict above it can be rewritten alone.
+ * @beta
+ */
+export declare const REPO_CONTRACT_LOG_EVIDENCE_MARKER = "=== evidence ===";
+
+/**
+ * Which logs are kept: every check's, only the checks that did not pass, or none.
+ * @beta
+ */
+export declare type RepoContractLogMode = "all" | "failing" | "off";
+
+/**
+ * Where the log of a check lives, and what is written to it. No function throws.
+ * @beta
+ */
+export declare interface RepoContractLogs {
+    /** The folder the logs are in, relative to the repository root. */
+    readonly directory: string;
+    /** Removes the `.log` files of an earlier run and starts empty. */
+    readonly begin: () => void;
+    /** Writes (or overwrites) a check's log with its evidence. */
+    readonly saveEvidence: (checkId: string, evidence: CheckEvidence) => void;
+    /**
+     * Puts a verdict at the top of a check's log, replacing one already there. With the `"failing"` mode, a passing
+     * check's log is removed instead.
+     * @param checkId - the check.
+     * @param label - what to call the result, for example `FAIL (advisory)`.
+     * @param rationale - the verdict's whole reason.
+     * @param passed - whether the check passed.
+     */
+    readonly prependVerdict: (checkId: string, label: string, rationale: string, passed: boolean) => void;
+    /**
+     * Whether a log for a check has been written this run.
+     * @param checkId - the check.
+     * @returns `true` when its log exists.
+     */
+    readonly has: (checkId: string) => boolean;
+    /**
+     * How many logs exist this run.
+     * @returns the count.
+     */
+    readonly count: () => number;
+    /**
+     * Waits for every write asked for so far.
+     * @returns a promise that settles once they have finished; it never rejects.
+     */
+    readonly flush: () => Promise<void>;
+}
+
+/**
+ * The logs for one folder. The same options give the same logs, so a hook created here and another created
+ * elsewhere agree on which files exist.
+ * @param options - where and how to write.
+ * @returns the log store.
+ * @beta
+ */
+export declare function repoContractLogs(options?: RepoContractLogsOptions): RepoContractLogs;
+
+/**
+ * The file operations the logs use; every one defaults to `node:fs/promises`' own. For tests, or a non-`node:fs` environment.
+ * @beta
+ */
+export declare interface RepoContractLogsFileSystem {
+    /** Creates the folder, and any missing parents, if it does not exist. */
+    readonly mkdir: (folder: string) => Promise<void>;
+    /** Lists the names of the entries in a folder. */
+    readonly readdir: (folder: string) => Promise<readonly string[]>;
+    /** Reads a file as text. */
+    readonly readFile: (file: string) => Promise<string>;
+    /** Removes a file; a file that is already gone is not an error. */
+    readonly rm: (file: string) => Promise<void>;
+    /** Writes (or overwrites) a file with the text. */
+    readonly writeFile: (file: string, text: string) => Promise<void>;
+}
+
+/**
+ * Where and how logs are written.
+ * @beta
+ */
+export declare interface RepoContractLogsOptions {
+    /** The repository root the folder is resolved against. Defaults to the current working directory. */
+    readonly cwd?: string;
+    /** The folder, relative to `cwd`. Defaults to `reports/contract/logs`. */
+    readonly directory?: string;
+    /** Which logs to keep. Defaults to `"failing"`: a log for a check that passed is removed once its verdict is known. */
+    readonly mode?: RepoContractLogMode;
+    /** Told once, with the reason, the first time a log cannot be written. Defaults to ignoring it. */
+    readonly onProblem?: (message: string) => void;
+    /** Overrides how files are read and written. A store with its own file operations is not shared with other hooks: wire its `saveEvidence` and `prependVerdict` yourself. */
+    readonly fs?: Partial<RepoContractLogsFileSystem>;
+}
 
 /**
  * Resolves the policy one `{ group, category }` classification is subject to, in strict precedence

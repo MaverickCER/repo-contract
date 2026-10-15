@@ -193,6 +193,41 @@ identical is the contract definition and the code path, with no hidden state. Th
 repository uses its own `repo-contract.config.ts` to validate itself — see
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Reporting while a run is going
+
+`runRepoContract(config, options)` takes two optional hooks so a caller can show progress and keep each
+check's raw output without waiting for the whole run:
+
+- `onEvidence(checkId, evidence)` is called once for each check as soon as its process has ended, before the
+  run's other checks have necessarily finished and before any policy runs.
+- `onVerdict(checkId, result)` is called once for each check as soon as its policy has returned a valid
+  result. Policies run after every check's evidence is assembled (a policy can read any other check's
+  evidence), so these calls come once the checks have all finished, in the order the policies settle.
+
+A hook's return value is ignored and a hook that throws is ignored too: reporting never changes what a run does.
+
+`repo-contract/helpers` ships the two hooks most callers want, which keep one log per check:
+
+```ts
+import { runRepoContract } from "repo-contract"
+import {
+  onEvidenceSaveToRepoContractLogs,
+  onVerdictPrependRepoContractLogs,
+  repoContractLogs,
+} from "repo-contract/helpers"
+
+const logs = { cwd: process.cwd() } // directory defaults to reports/contract/logs, mode to "failing"
+const run = await runRepoContract(config, {
+  onEvidence: onEvidenceSaveToRepoContractLogs(logs), // the raw output, the moment a check's evidence exists
+  onVerdict: onVerdictPrependRepoContractLogs(logs), // the verdict, at the top of the same file
+})
+await repoContractLogs(logs).flush() // writes happen in the background, in order
+```
+
+Creating the first hook removes the logs of an earlier run, and a log is overwritten if it exists. With the default
+`"failing"` mode the log of a check that passed is removed once its verdict is known; `"all"` keeps every log and
+`"off"` writes none. A disk problem is told once through `onProblem` and never thrown.
+
 ## Persisting a run and publishing a summary
 
 The runner above prints the verdict and forgets it. To keep a record that a dashboard, a reviewer, or the next run can read, store the run. `serializeRun` turns the raw result into the two JSON documents that match the published `repo-contract/schema` files; each carries its own `version` field, so a stored document stays interpretable independently of the package version that wrote it (see [VERSIONING.md](VERSIONING.md#evidence-and-verdict-schema-versioning)). `renderMarkdownSummary` takes the raw `verdict` and `evidence` from the run, not the serialized JSON, and renders a summary for `$GITHUB_STEP_SUMMARY` or a pull-request comment: failures with their whole rationale, warnings and passes with a line each, and the slowest checks. Neither function touches the filesystem; you decide where the output goes:
@@ -420,8 +455,9 @@ checks: {
 
 A dependency must be declared before the check that names it — naming a check declared later
 in the same `checks` record is a configuration error, not a forward reference. `dependsOn`
-controls execution ordering only; it does not move data between checks (flow artifacts
-through the filesystem) and it does not decide whether the dependent check runs based on the
+orders execution and hands the dependent check's policy each dependency's evidence
+(`ctx.dependencies`). It does not feed one command's output to another (flow artifacts through
+the filesystem), and it does not decide whether the dependent check runs based on the
 dependency's policy result (that belongs to the dependent check's command or policy).
 
 Every named dependency must exist, a check cannot depend on itself, and the entire
