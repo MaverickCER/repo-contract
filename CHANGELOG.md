@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.11.0
+
+### Minor Changes
+
+- af65e10: feat: `RunRepoContractOptions.onEvidence` reports each check as soon as it finishes, so a caller can show progress and keep a check's raw output while the run is still going
+- af65e10: feat: `RunRepoContractOptions.onVerdict` reports each check's `PolicyResult` as soon as its policy returns, beside `onEvidence`. `repo-contract/helpers` gains `onEvidenceSaveToRepoContractLogs` and `onVerdictPrependRepoContractLogs`, ready-made hooks that write one log per check as the run goes (the raw output when its evidence exists, the verdict prepended when its policy returns), plus `repoContractLogs` for the store behind them
+
+### Patch Changes
+
+- feat(ci): publish the mutation badge and the OpenSSF Scorecard result
+- fix(site): readable inline code in the hero
+- fix(sbom): change only the commit in the internal-package-contract purl
+
 ## 0.10.0
 
 ### Minor Changes
