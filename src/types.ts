@@ -480,6 +480,24 @@ export interface RunRepoContractOptions {
   readonly signal?: AbortSignal
   /** Restrict this run to only these check ids (and whatever they `dependsOn`, transitively). Every configured check runs when omitted. */
   readonly checks?: string[]
+  /**
+   * Called once for each check as soon as it has reached a terminal state, before the run's other checks have
+   * necessarily finished and before any policy runs. For progress output and for writing a check's raw output
+   * somewhere durable while the run is still going. Its return value is ignored, and a hook that throws is
+   * ignored too, as is an `async` hook whose promise rejects (an `async` hook is not waited for): reporting can never
+   * change what a run does. The hook gets its own top-level copy of the evidence; the nested values are shared and
+   * read-only.
+   */
+  readonly onEvidence?: (checkId: string, evidence: CheckEvidence) => void | Promise<void>
+  /**
+   * Called once for each check as soon as its policy has returned a valid result, with that check's own
+   * `PolicyResult`. Policies run after every check's evidence is assembled, so this fires once the checks
+   * have all finished (the phasing is unchanged), in the order the policies settle, not declaration order. A
+   * policy that throws is reported through the run's usual error, never through this hook. Its return value is
+   * ignored, and a hook that throws, or an `async` one that rejects, is ignored too: reporting can never change what a
+   * run does. The hook gets its own copy of the result.
+   */
+  readonly onVerdict?: (checkId: string, result: PolicyResult) => void | Promise<void>
 }
 
 /**

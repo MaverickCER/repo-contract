@@ -3399,6 +3399,96 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RunRepoContractOptions#onEvidence:member",
+              "docComment": "/**\n * Called once for each check as soon as it has reached a terminal state, before the run's other checks have\n * necessarily finished and before any policy runs. For progress output and for writing a check's raw output\n * somewhere durable while the run is still going. Its return value is ignored, and a hook that throws is\n * ignored too, as is an `async` hook whose promise rejects (an `async` hook is not waited for): reporting can never\n * change what a run does. The hook gets its own top-level copy of the evidence; the nested values are shared and\n * read-only.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly onEvidence?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(checkId: string, evidence: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CheckEvidence",
+                  "canonicalReference": "repo-contract!CheckEvidence:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "onEvidence",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RunRepoContractOptions#onVerdict:member",
+              "docComment": "/**\n * Called once for each check as soon as its policy has returned a valid result, with that check's own\n * `PolicyResult`. Policies run after every check's evidence is assembled, so this fires once the checks\n * have all finished (the phasing is unchanged), in the order the policies settle, not declaration order. A\n * policy that throws is reported through the run's usual error, never through this hook. Its return value is\n * ignored, and a hook that throws, or an `async` one that rejects, is ignored too: reporting can never change what a\n * run does. The hook gets its own copy of the result.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly onVerdict?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(checkId: string, result: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PolicyResult",
+                  "canonicalReference": "repo-contract!PolicyResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "onVerdict",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "repo-contract!RunRepoContractOptions#signal:member",
               "docComment": "/**\n * Abort the entire run. Checks already in flight are terminated; checks not yet started never spawn. Every configured check still receives a well-formed evidence entry (`status: \"aborted\"`) and still has its policy invoked.\n */\n",
               "excerptTokens": [

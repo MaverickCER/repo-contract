@@ -83,7 +83,7 @@ async function runRepoContractAfterValidation<const TChecks extends CheckSchema>
   const completedAt = new Date()
 
   const { evidence, entries } = await buildEvidence(results, startedAt, completedAt)
-  const verdict = await runPolicies(entries, evidence)
+  const verdict = await runPolicies(entries, evidence, options?.onVerdict)
 
   return { evidence, verdict } as { evidence: Evidence<TChecks>; verdict: Verdict<TChecks> }
 }

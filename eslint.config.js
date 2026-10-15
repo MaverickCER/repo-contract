@@ -672,7 +672,8 @@ export default tseslint.config(
   },
   {
     // Same narrow carve-out as the scripts/ block above, for the same reason, scoped to exactly
-    // two files: src/helpers/load-exception-registry.ts and write-exception-registry.ts
+    // three files: src/helpers/load-exception-registry.ts, write-exception-registry.ts and
+    // contract-logs.ts (whose folder is the caller's own `directory` option, under the caller's own `cwd`)
     // (specs/decisions/0013-reusable-exception-policy-helper.md) both take a caller-supplied
     // `path` -- the calling application's own registry-file location, e.g. its own check config
     // -- via their own `readFile`/`writeFile`/`rename`/`lstat` capabilities, defaulting to
@@ -687,7 +688,11 @@ export default tseslint.config(
     // policy (`suppressionPolicy.eslint.rules["security/*"]`) forbids exactly that; this is
     // instead a deliberate, narrowly-scoped configuration decision, the same mechanism already
     // established for scripts/ above.
-    files: ["src/helpers/load-exception-registry.ts", "src/helpers/write-exception-registry.ts"],
+    files: [
+      "src/helpers/load-exception-registry.ts",
+      "src/helpers/write-exception-registry.ts",
+      "src/helpers/contract-logs.ts",
+    ],
     plugins: { "secure-coding": secureCoding, security },
     rules: {
       ...SECURITY_RULES,

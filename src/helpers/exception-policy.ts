@@ -403,7 +403,7 @@ export function validateExceptionPolicyConfig(
  * A deterministic digest of a set of fields' current values on `record`, via `node:crypto` --
  * pure, synchronous, no ambient state (Socket.dev has no alert on `node:crypto`; it is not
  * `child_process`/`process.env`, the two capabilities `src/helpers/**` must never touch -- see
- * `scripts/verify-no-ambient-capabilities.mjs`). This is what makes a "verification" *content-bound*
+ * the `AmbientCapabilities` check). This is what makes a "verification" *content-bound*
  * rather than merely attested: a consumer records this hash (see `ExceptionVerification` in
  * `checks/shared/exception-record.ts`) at the moment a human or a mechanical re-check approved a
  * record's current prose; recomputing it later and comparing is how staleness is detected with no

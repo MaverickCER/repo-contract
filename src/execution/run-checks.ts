@@ -1,4 +1,5 @@
 import { UnknownCheckIdError } from "../errors.js"
+import { notify } from "../notify.js"
 import type {
   CheckDefinition,
   CheckEvidence,
@@ -234,6 +235,9 @@ export async function runChecks(
     CheckDefinition,
   ]): Promise<CheckExecutionEntry> => {
     const evidence = await spawnCheck(checkId, check, runSignal, activeHandles, execution)
+    // The hook gets its own top-level copy, so nothing it assigns reaches the evidence the run goes on to use; the
+    // nested values are shared and, like the whole record, are read-only.
+    notify(options?.onEvidence, checkId, { ...evidence })
     return [checkId, check, evidence]
   }
 
