@@ -1,6 +1,6 @@
 # repo-contract public API
 
-Every export a consumer can import, by entry point, for version 0.11.0. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
+Every export a consumer can import, by entry point, for version 0.11.1. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
 
 ## `repo-contract`
 
@@ -43,22 +43,22 @@ Every export a consumer can import, by entry point, for version 0.11.0. Generate
 
 ## `repo-contract/helpers`
 
-- `evaluateExceptionRecord` (function, beta): `function evaluateExceptionRecord<TRecord>(input: ExceptionRecordEvaluation<TRecord>): ExceptionDeterminant<TRecord>`
-- `evaluateExceptionRecords` (function, beta): `function evaluateExceptionRecords<TRecord>(inputs: readonly ExceptionRecordEvaluation<TRecord>[]): readonly ExceptionDeterminant<TRecord>[]`
-- `ExceptionCategoryGroup` (interface, beta): `interface ExceptionCategoryGroup`
-- `ExceptionClassification` (interface, beta): `interface ExceptionClassification`
-- `ExceptionDeterminant` (interface, beta): `interface ExceptionDeterminant<TRecord>`
-- `ExceptionPolicy` (typealias, beta): `type ExceptionPolicy = { readonly mode: "forbidden"; } | { readonly mode: "allowed"; } | { readonly mode: "exception"; readonly requirements: readonly string[]; }`
-- `ExceptionPolicyConfig` (typealias, beta): `type ExceptionPolicyConfig = Readonly<Record<string, ExceptionCategoryGroup>>`
-- `ExceptionReconciliation` (interface, beta): `interface ExceptionReconciliation<TFinding, TRecord>`
-- `ExceptionRecordCore` (interface, beta): `interface ExceptionRecordCore`
-- `ExceptionRecordEvaluation` (interface, beta): `interface ExceptionRecordEvaluation<TRecord>`
-- `ExceptionVerdict` (typealias, beta): `type ExceptionVerdict = "forbidden" | "insufficient" | "permitted"`
-- `hashRequirementFields` (function, beta): `function hashRequirementFields<TRecord>(record: TRecord, fields: readonly string[], fieldValue: (record: TRecord, requirement: string) => string): string`
-- `loadExceptionRegistry` (function, beta): `function loadExceptionRegistry<T>(input: { readonly path: string; readonly schema: StandardSchemaV1<unknown, readonly T[]>; readonly readFile?: (path: string) => Promise<string>; }): Promise<{ ok: true; records: readonly T[]; } | { ok: false; errors: readonly string[]; }>`
+- `evaluateExceptionRecord` (function): `function evaluateExceptionRecord<TRecord>(input: ExceptionRecordEvaluation<TRecord>): ExceptionDeterminant<TRecord>`
+- `evaluateExceptionRecords` (function): `function evaluateExceptionRecords<TRecord>(inputs: readonly ExceptionRecordEvaluation<TRecord>[]): readonly ExceptionDeterminant<TRecord>[]`
+- `ExceptionCategoryGroup` (interface): `interface ExceptionCategoryGroup`
+- `ExceptionClassification` (interface): `interface ExceptionClassification`
+- `ExceptionDeterminant` (interface): `interface ExceptionDeterminant<TRecord>`
+- `ExceptionPolicy` (typealias): `type ExceptionPolicy = { readonly mode: "forbidden"; } | { readonly mode: "allowed"; } | { readonly mode: "exception"; readonly requirements: readonly string[]; }`
+- `ExceptionPolicyConfig` (typealias): `type ExceptionPolicyConfig = Readonly<Record<string, ExceptionCategoryGroup>>`
+- `ExceptionReconciliation` (interface): `interface ExceptionReconciliation<TFinding, TRecord>`
+- `ExceptionRecordCore` (interface): `interface ExceptionRecordCore`
+- `ExceptionRecordEvaluation` (interface): `interface ExceptionRecordEvaluation<TRecord>`
+- `ExceptionVerdict` (typealias): `type ExceptionVerdict = "forbidden" | "insufficient" | "permitted"`
+- `hashRequirementFields` (function): `function hashRequirementFields<TRecord>(record: TRecord, fields: readonly string[], fieldValue: (record: TRecord, requirement: string) => string): string`
+- `loadExceptionRegistry` (function): `function loadExceptionRegistry<T>(input: { readonly path: string; readonly schema: StandardSchemaV1<unknown, readonly T[]>; readonly readFile?: (path: string) => Promise<string>; }): Promise<{ ok: true; records: readonly T[]; } | { ok: false; errors: readonly string[]; }>`
 - `onEvidenceSaveToRepoContractLogs` (function, beta): `function onEvidenceSaveToRepoContractLogs(options?: RepoContractLogsOptions): (checkId: string, evidence: CheckEvidence) => void`
 - `onVerdictPrependRepoContractLogs` (function, beta): `function onVerdictPrependRepoContractLogs(options?: RepoContractLogsOptions): (checkId: string, result: PolicyResult) => void`
-- `reconcileExceptions` (function, beta): `function reconcileExceptions<TFinding, TRecord extends { readonly id: string; }>(input: { readonly existing: readonly TRecord[]; readonly findings: readonly TFinding[]; readonly deriveId: (finding: TFinding) => string; readonly createStub: (finding: TFinding, id: string) => TRecord; }): { readonly ok: true; readonly reconciliation: ExceptionReconciliation<TFinding, TRecord>; } | { readonly ok: false; readonly error: string; }`
+- `reconcileExceptions` (function): `function reconcileExceptions<TFinding, TRecord extends { readonly id: string; }>(input: { readonly existing: readonly TRecord[]; readonly findings: readonly TFinding[]; readonly deriveId: (finding: TFinding) => string; readonly createStub: (finding: TFinding, id: string) => TRecord; }): { readonly ok: true; readonly reconciliation: ExceptionReconciliation<TFinding, TRecord>; } | { readonly ok: false; readonly error: string; }`
 - `REPO_CONTRACT_LOG_DIRECTORY` (variable, beta): `REPO_CONTRACT_LOG_DIRECTORY: string`
 - `REPO_CONTRACT_LOG_EVIDENCE_MARKER` (variable, beta): `REPO_CONTRACT_LOG_EVIDENCE_MARKER = "=== evidence ==="`
 - `RepoContractLogMode` (typealias, beta): `type RepoContractLogMode = "all" | "failing" | "off"`
@@ -66,12 +66,12 @@ Every export a consumer can import, by entry point, for version 0.11.0. Generate
 - `RepoContractLogs` (interface, beta): `interface RepoContractLogs`
 - `RepoContractLogsFileSystem` (interface, beta): `interface RepoContractLogsFileSystem`
 - `RepoContractLogsOptions` (interface, beta): `interface RepoContractLogsOptions`
-- `resolveExceptionPolicy` (function, beta): `function resolveExceptionPolicy(classification: ExceptionClassification, config: ExceptionPolicyConfig, globalDefault: ExceptionPolicy): ExceptionPolicy`
-- `serializeExceptionRegistry` (function, beta): `function serializeExceptionRegistry(records: readonly (Record<string, unknown> & { readonly id: string; })[]): string`
+- `resolveExceptionPolicy` (function): `function resolveExceptionPolicy(classification: ExceptionClassification, config: ExceptionPolicyConfig, globalDefault: ExceptionPolicy): ExceptionPolicy`
+- `serializeExceptionRegistry` (function): `function serializeExceptionRegistry(records: readonly (Record<string, unknown> & { readonly id: string; })[]): string`
 - `StandardSchemaV1` (interface): `interface StandardSchemaV1<Input = unknown, Output = Input>`
 - `StandardSchemaV1` (namespace): `namespace StandardSchemaV1`
-- `validateExceptionPolicyConfig` (function, beta): `function validateExceptionPolicyConfig(config: ExceptionPolicyConfig, validRequirements?: readonly string[]): readonly string[]`
-- `writeExceptionRegistry` (function, beta): `function writeExceptionRegistry(input: { readonly path: string; readonly records: readonly (Record<string, unknown> & { readonly id: string; })[]; readonly readFile?: (path: string) => Promise<string>; readonly writeFile?: (path: string, data: string) => Promise<void>; readonly rename?: (from: string, to: string) => Promise<void>; readonly isSymlink?: (path: string) => Promise<boolean>; }): Promise<{ readonly ok: true; readonly written: boolean; } | { readonly ok: false; readonly error: string; }>`
+- `validateExceptionPolicyConfig` (function): `function validateExceptionPolicyConfig(config: ExceptionPolicyConfig, validRequirements?: readonly string[]): readonly string[]`
+- `writeExceptionRegistry` (function): `function writeExceptionRegistry(input: { readonly path: string; readonly records: readonly (Record<string, unknown> & { readonly id: string; })[]; readonly readFile?: (path: string) => Promise<string>; readonly writeFile?: (path: string, data: string) => Promise<void>; readonly rename?: (from: string, to: string) => Promise<void>; readonly isSymlink?: (path: string) => Promise<boolean>; }): Promise<{ readonly ok: true; readonly written: boolean; } | { readonly ok: false; readonly error: string; }>`
 
 ## `repo-contract/presets`
 
