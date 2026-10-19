@@ -75,7 +75,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
 
@@ -90,7 +90,7 @@ jobs:
 
       - run: npm run benchmark
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: benchmark-results
           path: |
@@ -219,7 +219,7 @@ jobs:
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
 
@@ -259,7 +259,7 @@ jobs:
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
 
@@ -316,7 +316,7 @@ jobs:
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           # Same modern line as `verify`/`contract` -- this job runs the repo's
           # own test harness (vitest), so it belongs on the verification-toolchain
@@ -355,7 +355,7 @@ jobs:
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26.x
 
@@ -394,7 +394,7 @@ jobs:
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
 
@@ -404,7 +404,7 @@ jobs:
       - run: mkdir -p ./artifacts
       - run: npm pack --pack-destination ./artifacts
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: package-tarball
           path: artifacts/*.tgz
@@ -443,12 +443,12 @@ jobs:
           # don't leave it in `.git/config` for later steps to reach.
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           # No npm cache in any job (a cache written by a run of pull-request code can be poisoned) -- and this one never runs `npm ci` anyway.
           node-version: ${{ matrix.node-version }}
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: package-tarball
           path: artifacts
@@ -466,7 +466,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
 
@@ -494,11 +494,11 @@ jobs:
           ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: package-tarball
           path: artifacts
@@ -555,7 +555,7 @@ jobs:
           # checkout's token does not need to persist into `.git/config`.
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
 
@@ -628,7 +628,7 @@ jobs:
       # consumes it, since a job condition can't see whether a later job
       # will need it.
       - name: Upload coverage and mutation reports for badge generation
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: badge-source-reports
           path: |
@@ -645,7 +645,7 @@ jobs:
       # invocation (including the mutation suite) just to reproduce a doc
       # this job already has.
       - name: Upload generated evidence docs
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: generated-evidence-docs
           path: |
@@ -686,7 +686,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: badge-source-reports
 
@@ -695,7 +695,7 @@ jobs:
       # setup-node + npm ci -- needed only for the render-page.mjs step below
       # (internal-package-contract's shared benchmark engine); generate-badges.mjs above is
       # dependency-free and doesn't need node_modules at all.
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
       - run: npm ci
@@ -712,12 +712,12 @@ jobs:
           --history 'Policy & evidence|benchmarks/history/policy-evidence.json'
           --history 'API contract|benchmarks/history/api-contract.json'
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: generated-evidence-docs
           path: docs
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pages-content
           path: |
@@ -749,7 +749,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@f8604a0bf289bfaba06df0d752a1dcfdacdf1709 # v0.9.0
+    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@7240119d1919bcff5520836339ef52f7320004ea # v0.11.0
     with:
       docs-script: docs:api
       content-artifact-name: pages-content
