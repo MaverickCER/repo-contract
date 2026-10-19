@@ -17,7 +17,12 @@ const runSuite = path.join(
   "benchmark",
   "run-suite.mjs",
 )
-const SUITES = ["performance-checks", "performance-policy-evidence", "performance-api-contract"]
+const SUITES = [
+  "performance-checks",
+  "performance-policy-evidence",
+  "performance-api-contract",
+  "performance-exceptions",
+]
 const extra = process.argv.slice(2)
 
 for (const name of SUITES) {

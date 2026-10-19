@@ -161,6 +161,62 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * The fields a `version: 2` record carries on top of `id`/`version`/`justification` and the registry's own:
+ * which rule is broken, what was tried first, the constraint that forced the exception, why the outcome is
+ * preferable, what risk remains and when to reopen it. `expires` must be present: a `YYYY-MM-DD` date, or `""` for none.
+ * The same format the standard (`internal-package-contract`) requires of every registry.
+ */
+const EXCEPTION_V2_FIELD_KEYS = [
+  "ruleBroken",
+  "attempted",
+  "constraint",
+  "whyPreferable",
+  "residualRisk",
+  "revisitWhen",
+] as const
+
+const EXCEPTION_V2_ALL_KEYS = [...EXCEPTION_V2_FIELD_KEYS, "expires"] as const
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * @param text - an `expires` value.
+ * @returns whether `text` is a real calendar date written `YYYY-MM-DD` (not `2027-02-30`).
+ */
+function isCalendarDate(text: string): boolean {
+  if (!ISO_DATE.test(text)) return false
+  const date = new Date(`${text}T00:00:00Z`)
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === text
+}
+
+/**
+ * @param entry - the untrusted record.
+ * @param index - its position in the registry, for messages.
+ * @param errors - accumulates every problem found.
+ * @returns the validated version-2 fields, or `undefined` when any is missing or malformed.
+ */
+function validateV2Fields(
+  entry: Readonly<Record<string, unknown>>,
+  index: number,
+  errors: string[],
+): Readonly<Record<string, string>> | undefined {
+  const at = `exceptions[${String(index)}]`
+  let ok = true
+  for (const key of EXCEPTION_V2_FIELD_KEYS) {
+    if (typeof entry[key] !== "string") {
+      errors.push(`${at}.${key} must be a string (a version 2 record carries it).`)
+      ok = false
+    }
+  }
+  const expires = entry.expires
+  if (typeof expires !== "string" || (expires !== "" && !isCalendarDate(expires))) {
+    errors.push(`${at}.expires must be "" or a YYYY-MM-DD date (got ${JSON.stringify(expires)}).`)
+    ok = false
+  }
+  if (!ok) return undefined
+  return Object.fromEntries(EXCEPTION_V2_ALL_KEYS.map((key) => [key, entry[key] as string]))
+}
+
+/**
  * A per-registry validator plugged into `validateExceptionRegistry` -- it owns everything about
  * one registry's own record shape beyond the three-field core (`id`/`version`/`justification`)
  * every `.repo-contract/exceptions/*.json` record shares. `validateExceptionRegistry` handles the
@@ -210,6 +266,7 @@ function validateOneExceptionRecord<TRecord extends { readonly id: string }>(
   }
 
   const allowedKeys = new Set<string>(["id", "version", "justification", ...schema.metadataKeys])
+  if (entry.version === 2) for (const key of EXCEPTION_V2_ALL_KEYS) allowedKeys.add(key)
   const unknownKeys = Object.keys(entry).filter((key) => !allowedKeys.has(key))
   if (unknownKeys.length > 0) {
     errors.push(
@@ -227,10 +284,10 @@ function validateOneExceptionRecord<TRecord extends { readonly id: string }>(
     )
   }
 
-  const versionValid = version === 1
+  const versionValid = version === 1 || version === 2
   if (!versionValid) {
     errors.push(
-      `exceptions[${String(index)}].version must be the number 1 (got ${JSON.stringify(version)}).`,
+      `exceptions[${String(index)}].version must be the number 2 (or the legacy 1) (got ${JSON.stringify(version)}).`,
     )
   }
 
@@ -243,13 +300,20 @@ function validateOneExceptionRecord<TRecord extends { readonly id: string }>(
     return undefined
   }
 
-  return schema.validateRecord({ id, version: 1, justification }, entry, index, errors)
+  // Both validators run, so one pass names every problem with the record, not only its structured fields'.
+  const v2 = version === 2 ? validateV2Fields(entry, index, errors) : undefined
+  const record = schema.validateRecord({ id, version: 1, justification }, entry, index, errors)
+  if (record === undefined || (version === 2 && v2 === undefined)) return undefined
+  if (v2 === undefined) return record
+  // The registry's own validator rebuilds the record at version 1; a v2 record keeps its version and
+  // carries its structured fields beside the registry-specific ones.
+  return { ...record, version: 2, ...v2 }
 }
 
 /**
  * Validates an untrusted parsed value as one exception registry's `exceptions` array against
  * `schema` -- the one generic validator every `.repo-contract/exceptions/*.json` registry shares.
- * Owns the three-field core (`id` non-empty and correctly namespaced, `version` the number `1`,
+ * Owns the three-field core (`id` non-empty and correctly namespaced, `version` the number `2` or the legacy `1`,
  * `justification` a string -- an *empty* justification is valid registry data, only
  * policy-insufficient), unknown-own-key rejection, and id uniqueness across the whole array;
  * `schema.validateRecord` owns everything registry-specific. Every problem found is reported

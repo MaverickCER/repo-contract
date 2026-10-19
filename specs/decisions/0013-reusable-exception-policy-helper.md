@@ -4,7 +4,8 @@
 
 Accepted. Implemented in
 `src/helpers/{index,exception-policy,load-exception-registry,reconcile-exceptions,write-exception-registry}.ts`,
-published as the third, independent `repo-contract/helpers` subpath (Experimental, see
+published as the third, independent `repo-contract/helpers` subpath (Experimental when this was
+decided; promoted to Stable by [ADR 0019](0019-helpers-promoted-presets-stay-experimental.md), see
 VERSIONING.md). `scripts/shared/exception-record.ts` builds the check-owned layer on top of it:
 the generic `validateExceptionRegistry` + per-registry `ExceptionRegistrySchema` (with the shared
 `validateSecurityExceptionFields` for the security family). Each check reconciles its own findings
@@ -69,7 +70,7 @@ independent barrel into the root export. Every function
 is synchronous and pure except `loadExceptionRegistry` and `writeExceptionRegistry`, whose only
 I/O is through injectable `node:fs/promises` capabilities — `src/helpers/**` never imports
 `node:child_process` or reads
-`process.env` (enforced by `scripts/verify-no-ambient-capabilities.mjs` against the real published
+`process.env` (enforced by the `AmbientCapabilities` check against the real published
 tarball, the same mechanism ADR 0011 already established for the root package).
 
 `resolveExceptionPolicy` ports `resolve-policy.ts`'s exact precedence algorithm — exact match, then

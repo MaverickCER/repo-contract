@@ -2379,6 +2379,7 @@
         "class": "linear",
         "exponent": 0.9552146419701689,
         "rSquared": 0.9996827321725431,
+        "variable": "check",
         "notation": "O(n)",
         "points": 10
       },
@@ -2386,6 +2387,7 @@
         "class": "linear",
         "exponent": 0.9719095166080289,
         "rSquared": 0.9537419099891556,
+        "variable": "check",
         "notation": "O(n)",
         "points": 10
       },
@@ -2393,6 +2395,7 @@
         "class": "linear",
         "exponent": 0.9630721421270619,
         "rSquared": 0.9643742653339487,
+        "variable": "check",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -2403,6 +2406,7 @@
         "class": "linear",
         "exponent": 1.0580308965124863,
         "rSquared": 0.9991137685555262,
+        "variable": "check",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -2413,6 +2417,7 @@
         "class": "linear",
         "exponent": 1.011974621881459,
         "rSquared": 0.9449302126933665,
+        "variable": "check",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -2423,6 +2428,7 @@
         "class": "linear",
         "exponent": 1.0178003750687394,
         "rSquared": 0.9539085050862359,
+        "variable": "check",
         "notation": "O(n)",
         "points": 10,
         "expected": "linear",
@@ -2726,6 +2732,36 @@
             "shareOfTotal": 0.40651307743352616
           }
         ]
+      },
+      {
+        "id": "run-policies-with-verdict-hook",
+        "group": "fn:run-policies-with-verdict-hook@quiet-output",
+        "description": "Not part of the end-to-end operation, which passes no hook; measured to show what the hook adds.",
+        "rows": []
+      },
+      {
+        "id": "render-markdown-summary",
+        "group": "fn:render-markdown-summary",
+        "description": "Not part of the end-to-end operation, which ends at the verdict.",
+        "rows": []
+      },
+      {
+        "id": "serialize-run",
+        "group": "fn:serialize-run@quiet-output",
+        "description": "Not part of the end-to-end operation, which ends at the verdict.",
+        "rows": []
+      },
+      {
+        "id": "save-evidence-to-logs",
+        "group": "fn:save-evidence-to-logs@quiet-output",
+        "description": "Not part of the end-to-end operation; logs are an opt-in hook.",
+        "rows": []
+      },
+      {
+        "id": "prepend-verdict-to-logs",
+        "group": "fn:prepend-verdict-to-logs@quiet-output",
+        "description": "Not part of the end-to-end operation; logs are an opt-in hook.",
+        "rows": []
       }
     ],
     "cost": {
@@ -2758,6 +2794,61 @@
           "opsPerSecondPerCore": 24.154362414323966
         }
       }
+    },
+    "coverage": {
+      "benchmarks": [
+        {
+          "id": "render-markdown-summary",
+          "covers": {
+            "renderMarkdownSummary": {
+              "verdict.checks": "swept",
+              "verdict.passed": "fixed: derived from the outcomes, one boolean",
+              "verdict.version": "fixed: the schema version, one number",
+              "evidence.checks": "swept",
+              "evidence.completedAt": "fixed: one timestamp, not read by the summary",
+              "evidence.durationMs": "fixed: one number, not read by the summary",
+              "evidence.startedAt": "fixed: one timestamp, not read by the summary",
+              "evidence.version": "fixed: the schema version, one number",
+              "options.slowest": "sweep:slowest",
+              "options.title": "fixed: one short heading, whose length does not change the work"
+            }
+          }
+        },
+        {
+          "id": "serialize-run",
+          "covers": {
+            "serializeRun": {
+              "run.evidence": "swept",
+              "run.verdict": "swept"
+            }
+          }
+        },
+        {
+          "id": "save-evidence-to-logs",
+          "covers": {
+            "repoContractLogs": {
+              "options.cwd": "fixed: the root of the in-memory filesystem",
+              "options.directory": "fixed: the default log folder",
+              "options.fs": "fixed: an in-memory stand-in, as the standard asks (no real I/O)",
+              "options.mode": "fixed: the default, which keeps the logs of checks that did not pass",
+              "options.onProblem": "not covered: only called when a write fails, which the in-memory stand-in never does"
+            }
+          }
+        },
+        {
+          "id": "prepend-verdict-to-logs",
+          "covers": {
+            "repoContractLogs": {
+              "options.cwd": "fixed: the root of the in-memory filesystem",
+              "options.directory": "fixed: the default log folder",
+              "options.fs": "fixed: an in-memory stand-in, as the standard asks (no real I/O)",
+              "options.mode": "fixed: `all`, so every check has a log to rewrite",
+              "options.onProblem": "not covered: only called when a write fails, which the in-memory stand-in never does"
+            }
+          }
+        }
+      ],
+      "notBenchmarked": {}
     }
   }
 }

@@ -1,0 +1,57 @@
+{
+  "when": "Load when a task creates or edits a repo-contract config (defineRepoContract, checks, policies), adds a preset, reads Evidence or a Verdict, or wires the contract into a script, hook or CI. Skip it for repositories that do not use repo-contract.",
+  "purpose": "repo-contract runs a repository's own checks, captures each result as structured evidence, and lets a policy the repository owns turn that evidence into a verdict with a reason.",
+  "notFor": "replacing your linters, test runners or CI provider. It runs the tools you already have; it does not decide what good code is.",
+  "example": {
+    "file": "examples/demo/repo-contract.config.ts",
+    "lines": [14, 32]
+  },
+  "rules": [
+    "Supply `spawn` and `env` yourself. The package never imports a spawner or reads `process.env`; on Windows pass `cross-spawn`.",
+    "A policy returns `{ outcome, rationale }` and the rationale is required, even for `pass`. Put file, line, rule and counts in it.",
+    "`warn` is visible and never blocks. Only `fail` fails the run.",
+    "Name a check in `dependsOn` only after it is declared. `dependsOn` orders execution; the policy still decides what a failed dependency means.",
+    "Ask for parsed output with `output: { format: \"json\" }`; without it a policy sees only raw `stdout` and `stderr`.",
+    "Prefer a `run` array; a string is for `shell: true`, which uses the platform shell."
+  ],
+  "behavior": [
+    "Checks run in parallel unless one names another in `dependsOn` or is marked `isolated`.",
+    "A command that cannot be started is recorded as evidence with `status: \"spawn_error\"`, not thrown.",
+    "Evidence and Verdict are separate documents: evidence says what happened, the verdict says whether the standard held.",
+    "Presets are Experimental: a new preset or changed default may arrive in a minor release."
+  ],
+  "mistakes": [
+    {
+      "wrong": "Reading `process.env` or importing `child_process` inside a check",
+      "right": "Take both from the config, so it runs the same on a laptop, in CI and in tests."
+    },
+    {
+      "wrong": "Using the `format` preset as a gate",
+      "right": "It runs `prettier --write`, which never fails on unformatted files. Use `{ ...format, run: [\"prettier\", \"--check\", \".\"] }`."
+    },
+    {
+      "wrong": "A policy with no rationale, or one that only says it failed",
+      "right": "Say what to fix, where, and why it matters."
+    }
+  ],
+  "verify": [
+    "Run the project's contract script (`npm run contract`) and read every FAIL and WARN rationale.",
+    "Confirm every import is a package.json export."
+  ],
+  "references": [
+    {
+      "when": "Every option of a check, the presets and the evidence shapes",
+      "path": "GUIDE.md"
+    },
+    {
+      "when": "Why each rule exists",
+      "path": "specs/decisions"
+    }
+  ],
+  "imports": {
+    "repo-contract": "`defineRepoContract`, `runRepoContract`, `serializeRun`, `renderMarkdownSummary`, the types",
+    "repo-contract/helpers": "Governed exceptions: `loadExceptionRegistry`, `reconcileExceptions`, `repoContractLogs`",
+    "repo-contract/presets": "Ready-made checks: `typecheck`, `lint`, `format`, `test`, `securityDeps`, `license`",
+    "repo-contract/schema": "The JSON Schemas for the documents `serializeRun` writes"
+  }
+}

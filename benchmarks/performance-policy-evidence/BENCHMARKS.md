@@ -4,9 +4,9 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **287 µs** per operation compared with a bare-minimum baseline (**133%** of the baseline). Overall, it grows O(n) with workload size (measured exponent 0.97). At list prices that is on the order of **~$0.001 – $0.01 per million operations** of compute.
+For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **287 µs** per operation compared with a bare-minimum baseline (**133% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 0.97). At list prices that is on the order of **~$0.001 – $0.01 per million operations** of compute.
 
-> The relative figure and the growth class are the dependable ones: both come from the same run, so they survive a change of machine. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
+> The relative figure and the growth class are the steadier ones: both come from the same run, so they depend far less on the machine than a time does, though runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
 
 | Cost | Typical (80 checks) | Largest (10240 checks) |
 | --- | --- | --- |
@@ -57,12 +57,22 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 Every function the package exposes is measured on its own across the full size ladder, then its measured growth rate is compared with the big-O we documented for it. A function whose measured class **differs** from its documented one is the most useful thing in this report: either the documentation or the code is wrong.
 
-| Function | Documented | Measured | Agreement | At 80 | At 10240 |
-| --- | --- | --- | --- | --- | --- |
-| `buildEvidence` (quiet-output) | O(n) | O(n) | ✅ matches | 312 µs | 36.8 ms |
-| `buildEvidence` (chatty-output) | O(n) | O(n) | ✅ matches | 2.93 ms | 407 ms |
-| `runPolicies` (quiet-output) | O(n) | O(n) | ✅ matches | 183 µs | 25.6 ms |
-| `runPolicies` (chatty-output) | O(n) | O(n) | ✅ matches | 178 µs | 34.2 ms |
+| Function | Varies | Documented | Measured | Agreement | At 80 | At 10240 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `buildEvidence` (quiet-output) | check | O(n) | O(n) | ✅ matches | 312 µs | 36.8 ms |
+| `buildEvidence` (chatty-output) | check | O(n) | O(n) | ✅ matches | 2.93 ms | 407 ms |
+| `runPolicies` (quiet-output) | check | O(n) | O(n) | ✅ matches | 183 µs | 25.6 ms |
+| `runPolicies` (chatty-output) | check | O(n) | O(n) | ✅ matches | 178 µs | 34.2 ms |
+| `runPolicies with an onVerdict hook` (quiet-output) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `runPolicies with an onVerdict hook` (chatty-output) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `renderMarkdownSummary` | check | O(n log n) | n/a | ❔ not enough data | n/a | n/a |
+| `renderMarkdownSummary` | slowest | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `serializeRun` (quiet-output) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `serializeRun` (chatty-output) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `repoContractLogs saveEvidence` (quiet-output) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `repoContractLogs saveEvidence` (chatty-output) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `repoContractLogs prependVerdict` (quiet-output) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `repoContractLogs prependVerdict` (chatty-output) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
 
 ### `buildEvidence`
 
@@ -178,6 +188,139 @@ Each check printed about 10 KB of JSON (a linter with many findings).
 | 2560 | 9.87 ms | 10.2 ms | 20.1 ms | 8.3 MiB | 101 |
 | 5120 | 17.9 ms | 18.0 ms | 36.4 ms | 15.1 MiB | 56 |
 | 10240 | 34.2 ms | 34.6 ms | 69.5 ms | 28.4 MiB | 29 |
+
+### `runPolicies with an onVerdict hook`
+
+**Why we benchmark it.** Every contract run that reports verdicts as they arrive (the CLI and any editor integration) passes this hook; its cost must stay negligible next to the policies themselves.
+
+**What poor performance would mean.** Progress reporting would slow the verdict it reports on, and a hook that costs more than the policy would make reporting something people switch off.
+
+**Expected growth: O(n).** The hook is called once per check with its own result, so it adds a constant per check to the linear policy pass.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| checks evaluated | swept | The tier axis: how many check results are turned into evidence and judged. |
+| output per check | variant | How many bytes of parsed JSON output each check produced: a quiet tool (500 B) versus a chatty linter (10 KB). |
+| policy work | fixed at "reads its own parsed output and its dependencies' evidence" | A real, non-trivial policy; an application's own policy logic adds its own cost on top. |
+| dependency lookups | fixed at "about 15% of checks depend on an earlier check" | Exercises the per-check dependency-evidence gathering loop. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which passes no hook; measured to show what the hook adds.
+
+#### Variant `quiet-output`
+
+Each check printed about 500 bytes of JSON.
+
+#### Variant `chatty-output`
+
+Each check printed about 10 KB of JSON (a linter with many findings).
+
+### `renderMarkdownSummary`
+
+**Why we benchmark it.** Every contract run that reports to a pull request or a job summary renders its verdict as Markdown once, from all of its checks.
+
+**What poor performance would mean.** A slower report at the end of every run, growing with the number of checks and with the length of each failure's rationale.
+
+**Expected growth: O(n log n).** Each check is counted and listed once, and the checks are sorted by duration to find the slowest, so cost grows a little faster than the number of checks.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| checks evaluated | swept | The tier axis: how many check results are turned into evidence and judged. |
+| slowest | swept | How many of the slowest checks the summary lists. |
+| outcomes | fixed at "every tenth check fails and every fifth warns" | Failures print their whole rationale in a fenced block, so more of them cost more. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which ends at the verdict.
+
+##### Varying `slowest`
+
+How many of the slowest checks the summary lists.
+
+**Expected: O(1).** Sorting every check by duration dominates; listing the first few lines of the sorted result adds almost nothing.
+
+### `serializeRun`
+
+**Why we benchmark it.** A contract run that keeps its result as files serializes its evidence and verdict once.
+
+**What poor performance would mean.** A slower end to every run that persists its result, growing with the number of checks and with how much each printed.
+
+**Expected growth: O(n).** Both documents are walked once by the JSON serializer, so cost is proportional to the number of checks and the text they hold.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| checks evaluated | swept | The tier axis: how many check results are turned into evidence and judged. |
+| output per check | variant | How many bytes of parsed JSON output each check produced: a quiet tool (500 B) versus a chatty linter (10 KB). |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which ends at the verdict.
+
+#### Variant `quiet-output`
+
+Each check printed about 500 bytes of JSON.
+
+#### Variant `chatty-output`
+
+Each check printed about 10 KB of JSON (a linter with many findings).
+
+### `repoContractLogs saveEvidence`
+
+**Why we benchmark it.** Runs once per check in every contract run that keeps logs (the default), so its cost is paid by every developer and every CI job.
+
+**What poor performance would mean.** Keeping logs would slow every run in proportion to how much the tools print, and a pre-push hook that feels slower is a hook people skip.
+
+**Expected growth: O(n).** Each check's evidence is rendered once and handed to one write, in order, so the cost is proportional to the number of checks and the text they printed.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| checks evaluated | swept | The tier axis: how many check results are turned into evidence and judged. |
+| output per check | variant | How many bytes of parsed JSON output each check produced: a quiet tool (500 B) versus a chatty linter (10 KB). |
+| filesystem | fixed at "an in-memory stand-in" | The real disk adds its own latency per file; the benchmark isolates the package's own rendering and queueing, as the standard asks (no real I/O). |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation; logs are an opt-in hook.
+
+#### Variant `quiet-output`
+
+Each check printed about 500 bytes of JSON.
+
+#### Variant `chatty-output`
+
+Each check printed about 10 KB of JSON (a linter with many findings).
+
+### `repoContractLogs prependVerdict`
+
+**Why we benchmark it.** Runs once per check at the end of every contract run that keeps logs, rewriting the file each one already has.
+
+**What poor performance would mean.** The end of every run would wait on rewriting every log, in proportion to how much each tool printed.
+
+**Expected growth: O(n).** Each log is read once and written once with the verdict on top, so the cost is proportional to the number of checks and the text each holds.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| checks evaluated | swept | The tier axis: how many check results are turned into evidence and judged. |
+| output per check | variant | How many bytes of parsed JSON output each check produced: a quiet tool (500 B) versus a chatty linter (10 KB). |
+| filesystem | fixed at "an in-memory stand-in" | The real disk adds its own latency per file; not covered. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation; logs are an opt-in hook.
+
+#### Variant `quiet-output`
+
+Each check printed about 500 bytes of JSON.
+
+#### Variant `chatty-output`
+
+Each check printed about 10 KB of JSON (a linter with many findings).
 
 ## 3. What makes up one end-to-end operation
 

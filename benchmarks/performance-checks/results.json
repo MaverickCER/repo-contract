@@ -1630,6 +1630,7 @@
         "class": "linear",
         "exponent": 0.9995601187364618,
         "rSquared": 0.9999809265937555,
+        "variable": "check",
         "notation": "O(n)",
         "points": 8
       },
@@ -1637,6 +1638,7 @@
         "class": "linear",
         "exponent": 0.9985619169823758,
         "rSquared": 0.999980750381285,
+        "variable": "check",
         "notation": "O(n)",
         "points": 8
       },
@@ -1644,6 +1646,7 @@
         "class": "linear",
         "exponent": 0.998299681093781,
         "rSquared": 0.9999945631532894,
+        "variable": "check",
         "notation": "O(n)",
         "points": 8,
         "expected": "linear",
@@ -1654,6 +1657,7 @@
         "class": "linear",
         "exponent": 0.9905713585475062,
         "rSquared": 0.9999937784753705,
+        "variable": "check",
         "notation": "O(n)",
         "points": 8,
         "expected": "linear",
@@ -1664,6 +1668,7 @@
         "class": "linear",
         "exponent": 1.0000021494550042,
         "rSquared": 0.9999913444464275,
+        "variable": "check",
         "notation": "O(n)",
         "points": 8,
         "expected": "linear",
@@ -1848,6 +1853,12 @@
             "shareOfTotal": 0.993758192712361
           }
         ]
+      },
+      {
+        "id": "run-repo-contract",
+        "group": "fn:run-repo-contract@plain",
+        "description": "Not part of the end-to-end operation, which measures the scheduler on its own (`run-checks`).",
+        "rows": []
       }
     ],
     "cost": {
@@ -1879,6 +1890,33 @@
           "highUsdPerMillion": 1.5803530461164428,
           "opsPerSecondPerCore": 1.3182734738415511
         }
+      }
+    },
+    "coverage": {
+      "benchmarks": [
+        {
+          "id": "run-repo-contract",
+          "covers": {
+            "runRepoContract": {
+              "config.checks": "swept",
+              "config.concurrency": "sweep:concurrency",
+              "config.env": "fixed: `process.env`, passed by reference as the contract's own config does",
+              "config.killProcessTree": "not covered: only used on Windows to end a check's process tree after a timeout or an abort",
+              "config.shell": "fixed: `false`, the argv-only default every check here uses",
+              "config.spawn": "fixed: node's `child_process.spawn`, as the contract's own config passes it",
+              "options.checks": "fixed: every check selected, which is what a full contract run does; selecting fewer is the same work on fewer checks",
+              "options.onEvidence": "variant:with-hooks",
+              "options.onVerdict": "variant:with-hooks",
+              "options.signal": "not covered: an abort is a failure path; the steady-state cost is the successful run"
+            }
+          }
+        }
+      ],
+      "notBenchmarked": {
+        "commitlint": "It only assembles one check definition from two short strings, a constant amount of work done once; the commit-message tool it runs is a process the contract itself spawns and times.",
+        "distNoUrls": "It only assembles one check definition from two short options, a constant amount of work done once; the scan the check performs is a process the contract itself spawns and times.",
+        "onEvidenceSaveToRepoContractLogs": "A thin wrapper that returns the `saveEvidence` hook of `repoContractLogs`, which `save-evidence-to-logs` in the policy-evidence suite benchmarks with every one of its options accounted for.",
+        "onVerdictPrependRepoContractLogs": "A thin wrapper that returns the `prependVerdict` hook of `repoContractLogs`, which `prepend-verdict-to-logs` in the policy-evidence suite benchmarks with every one of its options accounted for."
       }
     }
   }

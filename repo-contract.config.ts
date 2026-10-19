@@ -156,6 +156,8 @@
  * instead of a second one-off.
  */
 import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
+import { agentSkillCheck } from "internal-package-contract/checks/agent-skill"
+import { ambientCapabilitiesCheck } from "internal-package-contract/checks/ambient-capabilities"
 import { apiContract } from "internal-package-contract/checks/api-contract"
 import { npmScriptCheck } from "internal-package-contract/checks/npm-script"
 import { accessibility } from "./checks/accessibility.js"
@@ -455,6 +457,14 @@ export default defineRepoContract({
     // `dependencies["security-deps"]` for the Vulnerabilities sub-check
     // rather than re-running `npm audit` a second, potentially-divergent time.
     "openssf-scorecard": { ...openssfScorecard, dependsOn: ["security-deps"] },
+    // Reads the tarball npm would publish and fails if it spawns a process, reads `process.env` or depends on
+    // `cross-spawn` itself (specs/decisions/0011-...md): both are consumer-supplied capabilities here. The
+    // settings are in package.json under "internal-package-contract"."ambientCapabilities". It packs what
+    // the tests just exercised, so it waits for them.
+    "ambient-capabilities": { ...ambientCapabilitiesCheck(), dependsOn: ["test-unit"] },
+    // The agent skill is written from docs/skill.json and what the package already says about itself; this
+    // fails when what is committed is not what would be written now, or is over its word budget.
+    "agent-skill": agentSkillCheck(),
     // Declared last among the readers so its own scheduling barrier (see checks/mutation.ts and
     // this file's own doc comment) blocks as little else as possible.
     mutation: { ...mutation, dependsOn: ["suppression-governance"] },

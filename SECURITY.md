@@ -22,6 +22,20 @@ If that form is unavailable to you, open a public issue that says only "requesti
 security contact" with no details, and a maintainer will follow up. Please do not disclose the
 substance of a suspected vulnerability in a public issue before it has been triaged.
 
+## Disclosure
+
+Reports are handled in private until they can be disclosed without helping an attacker. A report is
+acknowledged, assessed and prioritised by severity, exploitability and impact; acknowledgement does not
+promise that it is accepted as a vulnerability or that a fix can be provided.
+
+When a fix is available, a security advisory is published on this repository naming the affected versions,
+the patched version, the severity, what a user can do if they cannot upgrade at once, and whether
+exploitation is known to have occurred. It does not publish a working exploit or details that expose other
+systems before their owners have had time to update. If a vulnerability is being exploited, or a fix cannot
+be released promptly, users are warned and given mitigations before the fix is complete. Resolved
+advisories stay public: a record of vulnerabilities handled openly is part of what this package asks you to
+trust.
+
 ## Runtime security model
 
 repo-contract's core job is spawning processes you configured. That makes command construction
@@ -126,8 +140,9 @@ particular:
   into the shared, centrally-maintained `release-npm-changesets.yml` reusable workflow hosted in
   `internal-package-contract` (matching data-cap/env-cap) — a single job that grants
   `id-token: write` for npm OIDC trusted publishing and runs `npm run release`
-  (`changeset publish`), which **does** run `prepublishOnly` (`npm run contract && npm run
-verify-no-ambient-capabilities`) in that same credentialed job, unlike this repository's own
+  (`changeset publish`), which **does** run `prepublishOnly` (`npm run docs:api`,
+  `npm run docs:benchmarks` and `npm run contract`, which includes the AmbientCapabilities check)
+  in that same credentialed job, unlike this repository's own
   former release-please-based pipeline's separate credential-free `verify` job. This is a known,
   accepted trade-off of standardizing on the shared workflow every consumer uses, not an
   oversight — but per this section's own guidance immediately below, a repository in this

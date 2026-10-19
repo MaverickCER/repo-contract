@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted. Implemented in `checks/coderabbitai.ts`, `scripts/coderabbitai/{review,evidence-types,
+Accepted, amended 2026-10-18 (findings are advisory, see below). Implemented in `checks/coderabbitai.ts`, `scripts/coderabbitai/{review,evidence-types,
 policy-config,registry}.ts`. Supersedes the reasoning (not the tool) behind
 `.githooks/pre-push`'s former standalone `coderabbit review --agent` step, which this check now
 replaces inside `npm run contract` itself.
@@ -117,3 +117,17 @@ summary>` (see `scripts/coderabbitai/registry.ts`), so a re-review whose wording
   findings; admitting this method here would silently reintroduce an unverifiable "trust me"
   dismissal specifically for the one finding source this repository has the least independent way
   to check.
+
+## Amendment (2026-10-18): findings are advisory
+
+The check still runs on every contract run and still records its own non-execution, but a finding no longer fails
+it. CodeRabbit words its findings differently on every review of the same diff: two reviews of this repository's
+unchanged diff shared none of their four findings. A record is keyed by that wording, so on a large change no record
+could be relied on to match the next review, and the check could not pass however each finding was handled. The
+maintainer decided that CodeRabbit's findings are suggestions, adopted where they improve the code.
+
+- A finding without a complete record, a record that matches no finding, and a review that cannot be read are a
+  `warn` that lists every suggestion. A record still documents why a suggestion was not taken.
+- A malformed or unreconcilable registry still fails, because that is a defect in this repository's own files.
+- On a pull request, CodeRabbit's GitHub App review and the rule that review threads are resolved before a merge are
+  unchanged.

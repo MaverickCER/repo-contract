@@ -4,8 +4,8 @@
 
 Accepted. Implemented in `src/types.ts`, `src/config/validate-config.ts`,
 `src/execution/spawn-check.ts`, `src/execution/run-checks.ts`,
-`src/execution/process-tree.ts`, `src/run-repo-contract.ts`,
-`scripts/verify-no-ambient-capabilities.mjs`.
+`src/execution/process-tree.ts`, `src/run-repo-contract.ts`, and the
+`AmbientCapabilities` check.
 
 ## Context
 
@@ -116,7 +116,7 @@ cross-spawn provides Windows command-shim resolution and safe `cmd.exe` quoting 
 
 An internal `ExecutionCapability` type (`{ spawn, env, shell }`, `shell` already resolved to its effective boolean) is threaded once through `runChecks`/`spawnCheck` instead of three independent parameters - not part of the public API.
 
-The invariant is mechanically checked against the published artifact, not merely documented. `scripts/verify-no-ambient-capabilities.mjs` inspects a real `npm pack` tarball for forbidden runtime imports (`cross-spawn`, `child_process`) and `process.env` references in the packed JS, and for `cross-spawn` in the packed `package.json`'s `dependencies` - wired into `precommit` and `prepublishOnly`.
+The invariant is mechanically checked against the published artifact, not merely documented. The `AmbientCapabilities` check inspects a real `npm pack` tarball for forbidden runtime imports (`cross-spawn`, `child_process`) and `process.env` references in the packed JS, and for `cross-spawn` in the packed `package.json`'s `dependencies`. It runs as part of `npm run contract`, so `prepublishOnly` and `prepush` run it too, and `precommit` names it explicitly.
 
 ## Consequences
 

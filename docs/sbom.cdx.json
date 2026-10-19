@@ -98,8 +98,6 @@
       "name": "repo-contract",
       "version": "0.11.0",
       "bom-ref": "repo-contract@0.11.0",
-      "author": "MaverickCER",
-      "description": "Enforce your repository's own quality bar before CI even spins up. Configure arbitrary checks, capture what happened as evidence, and let repository-owned policies determine what passes. repo-contract provides the execution and evidence layer without becoming another CI system or imposing its own definition of code quality.",
       "licenses": [
         {
           "license": {
@@ -108,29 +106,8 @@
           }
         }
       ],
-      "purl": "pkg:npm/repo-contract@0.11.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FMaverickCER%2Frepo-contract.git",
-      "externalReferences": [
-        {
-          "url": "https://github.com/MaverickCER/repo-contract/issues",
-          "type": "issue-tracker",
-          "comment": "as detected from PackageJson property \"bugs.url\""
-        },
-        {
-          "url": "git+https://github.com/MaverickCER/repo-contract.git",
-          "type": "vcs",
-          "comment": "as detected from PackageJson property \"repository.url\""
-        },
-        {
-          "url": "https://maverickcer.github.io/repo-contract/",
-          "type": "website",
-          "comment": "as detected from PackageJson property \"homepage\""
-        }
-      ],
+      "purl": "pkg:npm/repo-contract@0.11.0",
       "properties": [
-        {
-          "name": "cdx:npm:package:constraint:engine:node",
-          "value": ">=22.0.0"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": ""
@@ -1867,45 +1844,6 @@
     },
     {
       "type": "library",
-      "name": "runtime",
-      "group": "@babel",
-      "version": "7.29.7",
-      "bom-ref": "repo-contract@0.11.0|@babel/runtime@7.29.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/%40babel/runtime@7.29.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.29.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "36af0e8465a264864657a84b1e8c8028b2dc26284fff115e04c189a14af14d7da9b08f1d0a27f32e16484856fe5564b7c053110e6086c3947e74ec920aa3cb87"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@babel/runtime"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "template",
       "group": "@babel",
       "version": "8.0.0",
@@ -2259,8 +2197,8 @@
       "type": "library",
       "name": "apply-release-plan",
       "group": "@changesets",
-      "version": "7.1.1",
-      "bom-ref": "repo-contract@0.11.0|@changesets/apply-release-plan@7.1.1",
+      "version": "8.1.1",
+      "bom-ref": "repo-contract@0.11.0|@changesets/apply-release-plan@8.1.1",
       "licenses": [
         {
           "license": {
@@ -2269,15 +2207,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/apply-release-plan@7.1.1",
+      "purl": "pkg:npm/%40changesets/apply-release-plan@8.1.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/apply-release-plan/-/apply-release-plan-7.1.1.tgz",
+          "url": "https://registry.npmjs.org/@changesets/apply-release-plan/-/apply-release-plan-8.1.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "f6a3c29bfacbc7fc683855c81c6076dbdfb818e2fbe92e0c0beeedc8eb93b11ebed636257c50d039176fc11e610c0eb2e052f604fb77aa96dc4084be756f392c"
+              "content": "9e4d876eadccf4d78731d6884410ef6b02ab409cd707db06c81504e725a720ab6f75c3423e3ef9cc17a4258af48134f679c247dde15e4eb73c7a2b0f22672fd1"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2292,54 +2230,14 @@
           "name": "cdx:npm:package:path",
           "value": "node_modules/@changesets/apply-release-plan"
         }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "prettier",
-          "version": "2.8.8",
-          "bom-ref": "repo-contract@0.11.0|@changesets/apply-release-plan@7.1.1|prettier@2.8.8",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/prettier@2.8.8",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/prettier/-/prettier-2.8.8.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b5d37ca901af363c380876d8f975e4d098025e7f50885db56b9e6b05ee4b24053e903c82e16427e3e6b09b65df936950324e5f2aea7d5e0cd366d1a48c174ff5"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@changesets/apply-release-plan/node_modules/prettier"
-            }
-          ]
-        }
       ]
     },
     {
       "type": "library",
       "name": "assemble-release-plan",
       "group": "@changesets",
-      "version": "6.0.10",
-      "bom-ref": "repo-contract@0.11.0|@changesets/assemble-release-plan@6.0.10",
+      "version": "7.0.0",
+      "bom-ref": "repo-contract@0.11.0|@changesets/assemble-release-plan@7.0.0",
       "licenses": [
         {
           "license": {
@@ -2348,15 +2246,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/assemble-release-plan@6.0.10",
+      "purl": "pkg:npm/%40changesets/assemble-release-plan@7.0.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/assemble-release-plan/-/assemble-release-plan-6.0.10.tgz",
+          "url": "https://registry.npmjs.org/@changesets/assemble-release-plan/-/assemble-release-plan-7.0.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "ad20dca9d27d29b5728e9048b8289d86f64d22256dd57688629ef7c9c5504480399ff8fac106849340a144b314435be4c597b9d4f4d0f4e2216e0e8740c5b8e4"
+              "content": "a045bc071740eb4e24186b43482887af9c3d4efe1459ef48da4eb5201359cc2384d646d86898f8bfe94540d81c11916451cda957ffa101212b183be924e6424e"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2377,8 +2275,8 @@
       "type": "library",
       "name": "changelog-git",
       "group": "@changesets",
-      "version": "0.2.1",
-      "bom-ref": "repo-contract@0.11.0|@changesets/changelog-git@0.2.1",
+      "version": "1.0.0",
+      "bom-ref": "repo-contract@0.11.0|@changesets/changelog-git@1.0.0",
       "licenses": [
         {
           "license": {
@@ -2387,15 +2285,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/changelog-git@0.2.1",
+      "purl": "pkg:npm/%40changesets/changelog-git@1.0.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/changelog-git/-/changelog-git-0.2.1.tgz",
+          "url": "https://registry.npmjs.org/@changesets/changelog-git/-/changelog-git-1.0.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "c7fc4495e0852c7dbc7376d07902327997fc9455f20c5567d5281c0624764f0febe08016964d5fcf108467a3714008c5d8dc2d733a1e9f7380daa47e51ac10f1"
+              "content": "dc3b2dd8899ed8ea799dde1799624b3c8829d75645a89a92915ba0f62ccae930dc215e189613d2e0409b11547e7862346e4d2bd48b68803e23d8e962f3b6c9ac"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2416,8 +2314,8 @@
       "type": "library",
       "name": "cli",
       "group": "@changesets",
-      "version": "2.31.1",
-      "bom-ref": "repo-contract@0.11.0|@changesets/cli@2.31.1",
+      "version": "3.0.3",
+      "bom-ref": "repo-contract@0.11.0|@changesets/cli@3.0.3",
       "licenses": [
         {
           "license": {
@@ -2426,15 +2324,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/cli@2.31.1",
+      "purl": "pkg:npm/%40changesets/cli@3.0.3",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/cli/-/cli-2.31.1.tgz",
+          "url": "https://registry.npmjs.org/@changesets/cli/-/cli-3.0.3.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "b8ed39593711070b953895525bc0a6a6ac3aab45832f9dda8c608ccacceeb6f39ee6da0e9ee9dba4ce236737feab104ecfb8b4033a2967c76206e7b08e6178d3"
+              "content": "2f58baedb31f90aea20bf9037a3b8d3b8a4581345c58839bb03e90a1fdb0a0fd48e0cf2d8f5ec31a572945a4f34efd436123f910cc16744b51f17d0f8f9260dd"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2449,14 +2347,54 @@
           "name": "cdx:npm:package:path",
           "value": "node_modules/@changesets/cli"
         }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "cac",
+          "version": "7.1.0",
+          "bom-ref": "repo-contract@0.11.0|@changesets/cli@3.0.3|cac@7.1.0",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT",
+                "acknowledgement": "declared"
+              }
+            }
+          ],
+          "purl": "pkg:npm/cac@7.1.0",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/cac/-/cac-7.1.0.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "2cc0d4fd4db203820f218f0a4f436c34f584619bc03246e0caca7127a6ed25a615f963033870190a607496c4ce6e21da452d55ff3b4a025efe4d2913a97c9ea0"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/@changesets/cli/node_modules/cac"
+            }
+          ]
+        }
       ]
     },
     {
       "type": "library",
       "name": "config",
       "group": "@changesets",
-      "version": "3.1.4",
-      "bom-ref": "repo-contract@0.11.0|@changesets/config@3.1.4",
+      "version": "4.0.1",
+      "bom-ref": "repo-contract@0.11.0|@changesets/config@4.0.1",
       "licenses": [
         {
           "license": {
@@ -2465,15 +2403,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/config@3.1.4",
+      "purl": "pkg:npm/%40changesets/config@4.0.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/config/-/config-3.1.4.tgz",
+          "url": "https://registry.npmjs.org/@changesets/config/-/config-4.0.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "a5fd1bbc3fefe96236711959ea1ce98ed65d4a55c35cc009f88cfbc5f17357867127c38618038dfb5a9873df593eb8a39ede31a775461bb78dbc03864b6e15d5"
+              "content": "3f1a714902d048b0e371e02046afb8156954f877e50c8c34de698f562a71a10c7dc6b5c55239aa4f2dd213e9ffdadf83a8f7693e22d656be4d4622d9be3c8bc2"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2494,8 +2432,8 @@
       "type": "library",
       "name": "errors",
       "group": "@changesets",
-      "version": "0.2.0",
-      "bom-ref": "repo-contract@0.11.0|@changesets/errors@0.2.0",
+      "version": "1.0.0",
+      "bom-ref": "repo-contract@0.11.0|@changesets/errors@1.0.0",
       "licenses": [
         {
           "license": {
@@ -2504,15 +2442,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/errors@0.2.0",
+      "purl": "pkg:npm/%40changesets/errors@1.0.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/errors/-/errors-0.2.0.tgz",
+          "url": "https://registry.npmjs.org/@changesets/errors/-/errors-1.0.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "e812ce414b1c4e965e1a58efc905e558e22d43253bd6409d1b3ecf8bc1fccddc3a048d20de6e3788be3129454f5ad1beaabacbf434e3a5d9fc798b82412469a3"
+              "content": "12537f984ce7eb39844e08f07f931c94231af5e7f9f6c011d257cef1549822c891bdb0b615b2c1ffdd84a18c35d129749068b1c47162259512bfb740f98a51f2"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2531,10 +2469,10 @@
     },
     {
       "type": "library",
-      "name": "get-dependents-graph",
+      "name": "format",
       "group": "@changesets",
-      "version": "2.1.4",
-      "bom-ref": "repo-contract@0.11.0|@changesets/get-dependents-graph@2.1.4",
+      "version": "0.1.2",
+      "bom-ref": "repo-contract@0.11.0|@changesets/format@0.1.2",
       "licenses": [
         {
           "license": {
@@ -2543,15 +2481,54 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/get-dependents-graph@2.1.4",
+      "purl": "pkg:npm/%40changesets/format@0.1.2",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/get-dependents-graph/-/get-dependents-graph-2.1.4.tgz",
+          "url": "https://registry.npmjs.org/@changesets/format/-/format-0.1.2.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "66c4b4d31e96be61eadec42ff2808cc0bd1fff3df06d7095b925532700a79e66c2fe205d349185c7511c6cc1b83c2eac5d1c87ebd96233803658a5f39ff9113e"
+              "content": "09a7b3e57b4d5c2152fc6e5bc326afdf0b972f4b4cc557766466daba659bccdd3cb72ccedb56ac0b0ec966136d56c0190c2bc3454cd937e222b7d4b24484d260"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@changesets/format"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "get-dependents-graph",
+      "group": "@changesets",
+      "version": "3.0.0",
+      "bom-ref": "repo-contract@0.11.0|@changesets/get-dependents-graph@3.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40changesets/get-dependents-graph@3.0.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@changesets/get-dependents-graph/-/get-dependents-graph-3.0.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "8e2fede70140d7344429745478f13a422f90bb6520c4279248642ba617b3c2f419ae9e3d07bb09fbcfb0bccd2d03bccf792c58282a230f2dd65a0ae5facf9ac2"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2570,88 +2547,10 @@
     },
     {
       "type": "library",
-      "name": "get-release-plan",
-      "group": "@changesets",
-      "version": "4.0.16",
-      "bom-ref": "repo-contract@0.11.0|@changesets/get-release-plan@4.0.16",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/%40changesets/get-release-plan@4.0.16",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/@changesets/get-release-plan/-/get-release-plan-4.0.16.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "d8ae4e9ba0ab30f9b8e6bb6f7247f35a8edef6339508a2c29d789ae5e50f694447eff2d6ceb8bba4ad53c9c77302e02d7a12e45bb54f6d62c2484c531e6888ea"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@changesets/get-release-plan"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "get-version-range-type",
-      "group": "@changesets",
-      "version": "0.4.0",
-      "bom-ref": "repo-contract@0.11.0|@changesets/get-version-range-type@0.4.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/%40changesets/get-version-range-type@0.4.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/@changesets/get-version-range-type/-/get-version-range-type-0.4.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "8706b0b686fd0ebca8193a62c72d43dd95db1a026ed5186bfb2487d8fbd32c7be466e43bb114f8a10c0c87485ba991f5c1e028a1e7448d1b1bad67062c27b255"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@changesets/get-version-range-type"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "git",
       "group": "@changesets",
-      "version": "3.0.4",
-      "bom-ref": "repo-contract@0.11.0|@changesets/git@3.0.4",
+      "version": "4.0.1",
+      "bom-ref": "repo-contract@0.11.0|@changesets/git@4.0.1",
       "licenses": [
         {
           "license": {
@@ -2660,15 +2559,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/git@3.0.4",
+      "purl": "pkg:npm/%40changesets/git@4.0.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/git/-/git-3.0.4.tgz",
+          "url": "https://registry.npmjs.org/@changesets/git/-/git-4.0.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "05700dcd11645fe5dc0b5abf776ecd2af949d727fb3d20208bc246e9db7c11f6c71478b89de6aeee6b9f71271ae73461c0e2fc8fdb3a12ab31993facfbf13a4b"
+              "content": "eaf5a92000b82e4a6696a688bb7ed5893e5e9f277dfae0700221aa0868404af9121c1831e0faed4c65d64cc158a439996e3832a27c9580c7223eb5b832ab49b0"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2687,49 +2586,10 @@
     },
     {
       "type": "library",
-      "name": "logger",
-      "group": "@changesets",
-      "version": "0.1.1",
-      "bom-ref": "repo-contract@0.11.0|@changesets/logger@0.1.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/%40changesets/logger@0.1.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/@changesets/logger/-/logger-0.1.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "390b51dfa6659ee4f12aaa16e12bfac7960884e982951779a56b2366c75d631a56b39d7b4741e4ca279f40f232b42561e19702e71f57686f0a4dd7798914147e"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@changesets/logger"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "parse",
       "group": "@changesets",
-      "version": "0.4.3",
-      "bom-ref": "repo-contract@0.11.0|@changesets/parse@0.4.3",
+      "version": "1.0.0",
+      "bom-ref": "repo-contract@0.11.0|@changesets/parse@1.0.0",
       "licenses": [
         {
           "license": {
@@ -2738,15 +2598,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/parse@0.4.3",
+      "purl": "pkg:npm/%40changesets/parse@1.0.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/parse/-/parse-0.4.3.tgz",
+          "url": "https://registry.npmjs.org/@changesets/parse/-/parse-1.0.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "64398d739dfe75775612fedfa8851281140e2d8a14a26e59e348262e09804e6611f4d6cbe852491f06a4702a7369e0b2fb50f49b49fb993e238f607f3103e5ec"
+              "content": "3f489a31bf69f424586624e0025944205f4050c407232d46ef6b4a95c22a269eb589c652b0a40d88e3ddc403191bc9bf0ef670b7fa33e7111b4e98a47bffdd5a"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2767,8 +2627,8 @@
       "type": "library",
       "name": "pre",
       "group": "@changesets",
-      "version": "2.0.2",
-      "bom-ref": "repo-contract@0.11.0|@changesets/pre@2.0.2",
+      "version": "3.0.0",
+      "bom-ref": "repo-contract@0.11.0|@changesets/pre@3.0.0",
       "licenses": [
         {
           "license": {
@@ -2777,15 +2637,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/pre@2.0.2",
+      "purl": "pkg:npm/%40changesets/pre@3.0.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/pre/-/pre-2.0.2.tgz",
+          "url": "https://registry.npmjs.org/@changesets/pre/-/pre-3.0.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "1da2ff804c8556f91ff4a160eb8f38c11f6cd2a8c05e567ca963c3913c8a17afb3aa305efc8da6ca083731ba59fbe85d8b44e8a8d505f1c8e3edf072d1d83c52"
+              "content": "666ffa625895fdada87964ea1c97fa2b12eb43081c2b58bf0510e5da6d04299bdb9f15797c6f50461c09246b218ec6535134ba7647d4450d8ae9a02f80dc3fdd"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2806,8 +2666,8 @@
       "type": "library",
       "name": "read",
       "group": "@changesets",
-      "version": "0.6.7",
-      "bom-ref": "repo-contract@0.11.0|@changesets/read@0.6.7",
+      "version": "1.0.1",
+      "bom-ref": "repo-contract@0.11.0|@changesets/read@1.0.1",
       "licenses": [
         {
           "license": {
@@ -2816,15 +2676,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/read@0.6.7",
+      "purl": "pkg:npm/%40changesets/read@1.0.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/read/-/read-0.6.7.tgz",
+          "url": "https://registry.npmjs.org/@changesets/read/-/read-1.0.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "0f51b8014606ac1124f2f8fc306c1fef993d1a937a5cbdf083c8b8d8fda3659c052d79e5af63e7eebf72b9035b68c09aacfed94163496d5e972decac0083214c"
+              "content": "9f3bd20ba45c4e259ffddb2ec19157a4bcc61ac4476022faf14dee1d5eecaecba553ddda55663bbb61842620d9fb818820495f696e44aad282d141eba18f8b4d"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2845,8 +2705,8 @@
       "type": "library",
       "name": "should-skip-package",
       "group": "@changesets",
-      "version": "0.1.2",
-      "bom-ref": "repo-contract@0.11.0|@changesets/should-skip-package@0.1.2",
+      "version": "1.0.0",
+      "bom-ref": "repo-contract@0.11.0|@changesets/should-skip-package@1.0.0",
       "licenses": [
         {
           "license": {
@@ -2855,15 +2715,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/should-skip-package@0.1.2",
+      "purl": "pkg:npm/%40changesets/should-skip-package@1.0.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/should-skip-package/-/should-skip-package-0.1.2.tgz",
+          "url": "https://registry.npmjs.org/@changesets/should-skip-package/-/should-skip-package-1.0.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "a802bf5aba962cd08fdb65037414cc3c7e5fe357a554396c3726add7cd00df7756c6e503c8da60e9f3e2fc5c9367046b8958e0d0bf209e3267d85f57028174ab"
+              "content": "a70aa82666ce367d578179995cf104c6001a4fe1dd64b8c02c54c38089be3e74b929e3b69cbb73036fd0fb868c158d7890532e5ca1b7d0c39b86f0f35a0cc382"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2884,8 +2744,8 @@
       "type": "library",
       "name": "types",
       "group": "@changesets",
-      "version": "6.1.0",
-      "bom-ref": "repo-contract@0.11.0|@changesets/types@6.1.0",
+      "version": "7.0.0",
+      "bom-ref": "repo-contract@0.11.0|@changesets/types@7.0.0",
       "licenses": [
         {
           "license": {
@@ -2894,15 +2754,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/types@6.1.0",
+      "purl": "pkg:npm/%40changesets/types@7.0.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/types/-/types-6.1.0.tgz",
+          "url": "https://registry.npmjs.org/@changesets/types/-/types-7.0.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "aca41c27ea359ca3607a86111ca392d3bb4030d777612374b876893996230408317d5ed3504ec913ecf807365d4306f984a6986dac8a3792ab615ece0dbdab00"
+              "content": "7391a8890cadde9c625e3ad648da0ff3f1917f8906f959cace8bf1d4e40cf1d61800b952c2079d9a43e627e66a1b1ab083d0f70648fce54a3828b77904ddc0d3"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2923,8 +2783,8 @@
       "type": "library",
       "name": "write",
       "group": "@changesets",
-      "version": "0.4.0",
-      "bom-ref": "repo-contract@0.11.0|@changesets/write@0.4.0",
+      "version": "1.0.1",
+      "bom-ref": "repo-contract@0.11.0|@changesets/write@1.0.1",
       "licenses": [
         {
           "license": {
@@ -2933,15 +2793,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40changesets/write@0.4.0",
+      "purl": "pkg:npm/%40changesets/write@1.0.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@changesets/write/-/write-0.4.0.tgz",
+          "url": "https://registry.npmjs.org/@changesets/write/-/write-1.0.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "09d4cbbc838f88236e1fbd69c83bb7ac0f90d27eb972601b5e7c161fce2b286885ba61739261cd4fc2874cc11c85cc4df8a97c239e31194849ee5dc4ed7dfde9"
+              "content": "abf4e1b4ff6072710feb196fecbad8dba0b6987a9d181b62fcc98e56782dfccfe8206624b2c9901b13caf56cc136dda3b95707fef9a5d9643eadaf0b5d839368"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -2956,45 +2816,83 @@
           "name": "cdx:npm:package:path",
           "value": "node_modules/@changesets/write"
         }
-      ],
-      "components": [
+      ]
+    },
+    {
+      "type": "library",
+      "name": "core",
+      "group": "@clack",
+      "version": "1.5.1",
+      "bom-ref": "repo-contract@0.11.0|@clack/core@1.5.1",
+      "licenses": [
         {
-          "type": "library",
-          "name": "prettier",
-          "version": "2.8.8",
-          "bom-ref": "repo-contract@0.11.0|@changesets/write@0.4.0|prettier@2.8.8",
-          "licenses": [
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40clack/core@1.5.1",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@clack/core/-/core-1.5.1.tgz",
+          "type": "distribution",
+          "hashes": [
             {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
+              "alg": "SHA-512",
+              "content": "8874eb1c0f0cb55b8b9764df6724a670abf5a8ed8fa320bd67ba5f483a3312e579bed637ff070e3ca25796a2793aad82c790c3190180315c7a1d97d14685446d"
             }
           ],
-          "purl": "pkg:npm/prettier@2.8.8",
-          "externalReferences": [
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@clack/core"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "prompts",
+      "group": "@clack",
+      "version": "1.8.1",
+      "bom-ref": "repo-contract@0.11.0|@clack/prompts@1.8.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40clack/prompts@1.8.1",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@clack/prompts/-/prompts-1.8.1.tgz",
+          "type": "distribution",
+          "hashes": [
             {
-              "url": "https://registry.npmjs.org/prettier/-/prettier-2.8.8.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b5d37ca901af363c380876d8f975e4d098025e7f50885db56b9e6b05ee4b24053e903c82e16427e3e6b09b65df936950324e5f2aea7d5e0cd366d1a48c174ff5"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+              "alg": "SHA-512",
+              "content": "7654f59b97bfd3250bd2444d7109fbc862d54e19206c1d066bfd4099f0c30bff2293a0088927f640b40edb33d8bde7ec1cfd1a160c4ef777152c209f0e9ee4cd"
             }
           ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@changesets/write/node_modules/prettier"
-            }
-          ]
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@clack/prompts"
         }
       ]
     },
@@ -6115,45 +6013,6 @@
     },
     {
       "type": "library",
-      "name": "external-editor",
-      "group": "@inquirer",
-      "version": "1.0.3",
-      "bom-ref": "repo-contract@0.11.0|@inquirer/external-editor@1.0.3",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/%40inquirer/external-editor@1.0.3",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/@inquirer/external-editor/-/external-editor-1.0.3.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "4566d2ac389898ee0b6de8d663bb6da71733bb043264b054cb282c03d36cbfde61a73516c27353550980ab7c6e87bbcdc02a74ed44e61398b5d57004131c7844"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/@inquirer/external-editor"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "figures",
       "group": "@inquirer",
       "version": "2.0.9",
@@ -7134,8 +6993,8 @@
       "type": "library",
       "name": "find-root",
       "group": "@manypkg",
-      "version": "1.1.0",
-      "bom-ref": "repo-contract@0.11.0|@manypkg/find-root@1.1.0",
+      "version": "3.1.0",
+      "bom-ref": "repo-contract@0.11.0|@manypkg/find-root@3.1.0",
       "licenses": [
         {
           "license": {
@@ -7144,15 +7003,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40manypkg/find-root@1.1.0",
+      "purl": "pkg:npm/%40manypkg/find-root@3.1.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@manypkg/find-root/-/find-root-1.1.0.tgz",
+          "url": "https://registry.npmjs.org/@manypkg/find-root/-/find-root-3.1.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "9a48b9b81be11f33bc918622c7f591cb6597f12dc1e7075549cf43e8a714e6540d8253f6cade7cfd57cbb802b8f609515c2868b18f1aa76a09d6a8266b719454"
+              "content": "05c4aa0b22a10556796244b33a285e302578d64a80169b56eb11aa6124e39154e5f57429afea6a1e1c2018238742d8c30afec8b3a105c80d784a6e4655b54004"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -7167,93 +7026,14 @@
           "name": "cdx:npm:package:path",
           "value": "node_modules/@manypkg/find-root"
         }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "node",
-          "group": "@types",
-          "version": "12.20.55",
-          "bom-ref": "repo-contract@0.11.0|@manypkg/find-root@1.1.0|@types/node@12.20.55",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40types/node@12.20.55",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@types/node/-/node-12.20.55.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "27cc4bcfbab6385ba56767321932c4d536db65c8e99e8ec568deb374936b80076b27e0d9ce1fee151e98ad36f80be9d76a4bee77c438fab6e1a085a56106d415"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@manypkg/find-root/node_modules/@types/node"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "fs-extra",
-          "version": "8.1.0",
-          "bom-ref": "repo-contract@0.11.0|@manypkg/find-root@1.1.0|fs-extra@8.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/fs-extra@8.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/fs-extra/-/fs-extra-8.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "ca1950800ea69ce25428eb11505b2025d402be42a1733f2d9591b91c141f45e619cb8e8ec0b718f9989ad26b5d1ec3a8f72fe13fe0b130dd1353d431a0eb46e2"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@manypkg/find-root/node_modules/fs-extra"
-            }
-          ]
-        }
       ]
     },
     {
       "type": "library",
       "name": "get-packages",
       "group": "@manypkg",
-      "version": "1.1.3",
-      "bom-ref": "repo-contract@0.11.0|@manypkg/get-packages@1.1.3",
+      "version": "3.1.0",
+      "bom-ref": "repo-contract@0.11.0|@manypkg/get-packages@3.1.0",
       "licenses": [
         {
           "license": {
@@ -7262,15 +7042,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40manypkg/get-packages@1.1.3",
+      "purl": "pkg:npm/%40manypkg/get-packages@3.1.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@manypkg/get-packages/-/get-packages-1.1.3.tgz",
+          "url": "https://registry.npmjs.org/@manypkg/get-packages/-/get-packages-3.1.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "7e8f9086e537a84ff64d031099b54ca9a43a1166cc862e000563fe3b800cd4da8f06ecb43ab0295792cee81aeb82786d0074b6347e91ad593d38bd7cd6d4e2f0"
+              "content": "d136c1572bcfacfef1198048fdc3fc50ffb297fcfe1ed6d3b6d003ec53002609ff917393c21e7feb44eca8ff59618ef5d1fa2b35fc95d0df0ffc813fba319926"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -7285,82 +7065,142 @@
           "name": "cdx:npm:package:path",
           "value": "node_modules/@manypkg/get-packages"
         }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tools",
+      "group": "@manypkg",
+      "version": "2.1.2",
+      "bom-ref": "repo-contract@0.11.0|@manypkg/tools@2.1.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40manypkg/tools@2.1.2",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@manypkg/tools/-/tools-2.1.2.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e9011feb2a856c44ddc062132aae7b698a0f7d7ff72bc5c5370b00971d02d4cee8f1c6fbf6cbf5337c3eb56b96bc87126cdaab2c5ece0fb62964c555cf7df985"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@manypkg/tools"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "env-cap",
+      "group": "@maverickcer",
+      "version": "0.6.0",
+      "bom-ref": "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40maverickcer/env-cap@0.6.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@maverickcer/env-cap/-/env-cap-0.6.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "b16822926950f929a575023f7ab9d71b0db0c3266242d521f626e993867f3b331370e7fab8ee897288c1d97ee152344e477bb34dda08ebd9bc3b4dfb19414feb"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@maverickcer/env-cap"
+        }
       ],
       "components": [
         {
           "type": "library",
-          "name": "types",
-          "group": "@changesets",
-          "version": "4.1.0",
-          "bom-ref": "repo-contract@0.11.0|@manypkg/get-packages@1.1.3|@changesets/types@4.1.0",
+          "name": "typescript6",
+          "group": "@typescript",
+          "version": "6.0.2",
+          "bom-ref": "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0|@typescript/typescript6@6.0.2",
           "licenses": [
             {
               "license": {
-                "id": "MIT",
+                "id": "Apache-2.0",
                 "acknowledgement": "declared"
               }
             }
           ],
-          "purl": "pkg:npm/%40changesets/types@4.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@changesets/types/-/types-4.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "2c342f543bf929be749f2dacdb91619b777d4126629aca14181b148a88fa302dea6cc502b82f063c8be4fcce88bd7c77958840b3497059440b6fe5481140840b"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
+          "purl": "pkg:npm/%40typescript/typescript6@6.0.2",
           "properties": [
+            {
+              "name": "cdx:npm:package:bundled",
+              "value": "true"
+            },
             {
               "name": "cdx:npm:package:development",
               "value": "true"
             },
             {
               "name": "cdx:npm:package:path",
-              "value": "node_modules/@manypkg/get-packages/node_modules/@changesets/types"
+              "value": "node_modules/@maverickcer/env-cap/node_modules/@typescript/typescript6"
             }
           ]
         },
         {
           "type": "library",
-          "name": "fs-extra",
-          "version": "8.1.0",
-          "bom-ref": "repo-contract@0.11.0|@manypkg/get-packages@1.1.3|fs-extra@8.1.0",
+          "name": "typescript",
+          "version": "6.0.3",
+          "bom-ref": "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0|typescript@6.0.3",
           "licenses": [
             {
               "license": {
-                "id": "MIT",
+                "id": "Apache-2.0",
                 "acknowledgement": "declared"
               }
             }
           ],
-          "purl": "pkg:npm/fs-extra@8.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/fs-extra/-/fs-extra-8.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "ca1950800ea69ce25428eb11505b2025d402be42a1733f2d9591b91c141f45e619cb8e8ec0b718f9989ad26b5d1ec3a8f72fe13fe0b130dd1353d431a0eb46e2"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
+          "purl": "pkg:npm/typescript@6.0.3",
           "properties": [
+            {
+              "name": "cdx:npm:package:bundled",
+              "value": "true"
+            },
             {
               "name": "cdx:npm:package:development",
               "value": "true"
             },
             {
               "name": "cdx:npm:package:path",
-              "value": "node_modules/@manypkg/get-packages/node_modules/fs-extra"
+              "value": "node_modules/@maverickcer/env-cap/node_modules/@typescript/old"
             }
           ]
         }
@@ -11402,6 +11242,45 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@pnpm/config.env-replace"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "deps.graph-sequencer",
+      "group": "@pnpm",
+      "version": "1100.0.1",
+      "bom-ref": "repo-contract@0.11.0|@pnpm/deps.graph-sequencer@1100.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40pnpm/deps.graph-sequencer@1100.0.1",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@pnpm/deps.graph-sequencer/-/deps.graph-sequencer-1100.0.1.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "a4eaf9faad5f2d82b014ddcb009b866449df5c3710ef7cea8031ccb46cbe2beb88a14ab263ee8c7830961707eefb8105baaefa23910f1687e834023e0669aae0"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@pnpm/deps.graph-sequencer"
         }
       ]
     },
@@ -19384,44 +19263,6 @@
     },
     {
       "type": "library",
-      "name": "ansi-colors",
-      "version": "4.1.3",
-      "bom-ref": "repo-contract@0.11.0|ansi-colors@4.1.3",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/ansi-colors@4.1.3",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/ansi-colors/-/ansi-colors-4.1.3.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ffac3f0b6d4f9b503b6998ad948e4d8bfd89e8515037c8b50afcf79070010006f0f77bff365bca7553aacfb0825b3ff78affc9a6545210467cdd720e375e68bf"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/ansi-colors"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "ansi-escapes",
       "version": "7.3.0",
       "bom-ref": "repo-contract@0.11.0|ansi-escapes@7.3.0",
@@ -19797,44 +19638,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/array-includes"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "array-union",
-      "version": "2.1.0",
-      "bom-ref": "repo-contract@0.11.0|array-union@2.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/array-union@2.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/array-union/-/array-union-2.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "1c6cb1a0e4d853208ceacb547ba1098277781287b0008ef331d7ea3be9068e79599810f3fdc479a5ff2bfdc4785aaeb4b0bfe9d0891c8d41043f04b7185ac8cb"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/array-union"
         }
       ]
     },
@@ -20406,44 +20209,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/baseline-browser-mapping"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "better-path-resolve",
-      "version": "1.0.0",
-      "bom-ref": "repo-contract@0.11.0|better-path-resolve@1.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/better-path-resolve@1.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/better-path-resolve/-/better-path-resolve-1.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "a5b9e5e57cc605dac553fc13e23aa62553e7d81e941cf04e873310918fd23d43c1e90b545ed9811c123009b5c9a25f7798ea463274323fff81075f6ad38c63ee"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/better-path-resolve"
         }
       ]
     },
@@ -22928,6 +22693,105 @@
     },
     {
       "type": "library",
+      "name": "data-cap",
+      "version": "0.7.0",
+      "bom-ref": "repo-contract@0.11.0|data-cap@0.7.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/data-cap@0.7.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/data-cap/-/data-cap-0.7.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "079129e01e06753a38f0e2f8a9ba05c837d16ede78aeb81e48f767d1c294ab0c4e70b6558c12c5991acd3db7092e43b175b33c2b1d2f8eb8cbe98808bb891c9d"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/data-cap"
+        }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "typescript6",
+          "group": "@typescript",
+          "version": "6.0.2",
+          "bom-ref": "repo-contract@0.11.0|data-cap@0.7.0|@typescript/typescript6@6.0.2",
+          "licenses": [
+            {
+              "license": {
+                "id": "Apache-2.0",
+                "acknowledgement": "declared"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40typescript/typescript6@6.0.2",
+          "properties": [
+            {
+              "name": "cdx:npm:package:bundled",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/data-cap/node_modules/@typescript/typescript6"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "typescript",
+          "version": "6.0.3",
+          "bom-ref": "repo-contract@0.11.0|data-cap@0.7.0|typescript@6.0.3",
+          "licenses": [
+            {
+              "license": {
+                "id": "Apache-2.0",
+                "acknowledgement": "declared"
+              }
+            }
+          ],
+          "purl": "pkg:npm/typescript@6.0.3",
+          "properties": [
+            {
+              "name": "cdx:npm:package:bundled",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/data-cap/node_modules/@typescript/old"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "data-view-buffer",
       "version": "1.0.2",
       "bom-ref": "repo-contract@0.11.0|data-view-buffer@1.0.2",
@@ -23539,44 +23403,6 @@
     },
     {
       "type": "library",
-      "name": "detect-indent",
-      "version": "6.1.0",
-      "bom-ref": "repo-contract@0.11.0|detect-indent@6.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/detect-indent@6.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/detect-indent/-/detect-indent-6.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ade6244d424065bf6052e67646f542361547760eb64479c9ed6265f1fb4c8b876267a35695c88ecd037cf295214842c4c1f94986de28403bf417404c970698b4"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/detect-indent"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "detect-libc",
       "version": "2.1.2",
       "bom-ref": "repo-contract@0.11.0|detect-libc@2.1.2",
@@ -23800,44 +23626,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/diff"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "dir-glob",
-      "version": "3.0.1",
-      "bom-ref": "repo-contract@0.11.0|dir-glob@3.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/dir-glob@3.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/dir-glob/-/dir-glob-3.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "5a4ad6a7d191e0a5df28663338b993b86562d545857f0b37efb9fd71ce79fed6fa0eeab217aa5c43901b88712c85a0e963dbfaa1a4abd9708389d1a633077320"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/dir-glob"
         }
       ]
     },
@@ -24521,44 +24309,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/enhanced-resolve"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "enquirer",
-      "version": "2.4.1",
-      "bom-ref": "repo-contract@0.11.0|enquirer@2.4.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/enquirer@2.4.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/enquirer/-/enquirer-2.4.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ad1a8983fea0779dfc547bd1dcf4ab75105bff5572d987f31eacef6e11884290d12886b816057fe786f9435c584b138ec0abe35f0792dba13443e9c0330a76a5"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/enquirer"
         }
       ]
     },
@@ -26819,44 +26569,6 @@
     },
     {
       "type": "library",
-      "name": "esprima",
-      "version": "4.0.1",
-      "bom-ref": "repo-contract@0.11.0|esprima@4.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "BSD-2-Clause",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/esprima@4.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/esprima/-/esprima-4.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "786b85170ed4a5d6be838a7e407be75b44724d7fd255e2410ccfe00ad30044ed1c2ee4f61dc10a9d33ef86357a6867aaac207fb1b368a742acce6d23b1a594e0"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/esprima"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "esquery",
       "version": "1.7.0",
       "bom-ref": "repo-contract@0.11.0|esquery@1.7.0",
@@ -27232,44 +26944,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/extend"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "extendable-error",
-      "version": "0.1.7",
-      "bom-ref": "repo-contract@0.11.0|extendable-error@0.1.7",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/extendable-error@0.1.7",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/extendable-error/-/extendable-error-0.1.7.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "50e892da29fafd0d052b4474aba518f6f629436d66aff427d4a3a7b5eeefb000ae3497f9d785af08250749108f7208cf4f66c084d20976513a6d56a9d462a67a"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/extendable-error"
         }
       ]
     },
@@ -27962,44 +27636,6 @@
     },
     {
       "type": "library",
-      "name": "find-up",
-      "version": "4.1.0",
-      "bom-ref": "repo-contract@0.11.0|find-up@4.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/find-up@4.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/find-up/-/find-up-4.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "3e93b001d43f6255d0daf8fc6b787c222a43b98462df071e550406616c4d20d71cab8d009f0ec196c11708c6edd59b7e38b03a16af6cb88a48583d0eb2721297"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/find-up"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "fix-dts-default-cjs-exports",
       "version": "1.0.1",
       "bom-ref": "repo-contract@0.11.0|fix-dts-default-cjs-exports@1.0.1",
@@ -28301,46 +27937,6 @@
           "name": "cdx:npm:package:path",
           "value": "node_modules/formatly"
         }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "package-manager-detector",
-          "version": "1.9.0",
-          "bom-ref": "repo-contract@0.11.0|formatly@0.7.1|package-manager-detector@1.9.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/package-manager-detector@1.9.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/package-manager-detector/-/package-manager-detector-1.9.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "cc031f6ed6bd9cf03c00a900e167663404fc47cb3a0e4d3fc703eca8d9d189d30570ba356242ee3c34e0b367fae177734bcbdb2cd9e827eb9422481bcfba111c"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/formatly/node_modules/package-manager-detector"
-            }
-          ]
-        }
       ]
     },
     {
@@ -28379,44 +27975,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/fs-constants"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "fs-extra",
-      "version": "7.0.1",
-      "bom-ref": "repo-contract@0.11.0|fs-extra@7.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/fs-extra@7.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/fs-extra/-/fs-extra-7.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "6090da0896449c199c6f0d777ef74033d03034e2703b3ac4e29a8ca81ab99c5884a9752a1f094ae01fb7a54c3a24dbdf48fb57d39c451ed632ff59e2d357860b"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/fs-extra"
         }
       ]
     },
@@ -29298,84 +28856,6 @@
     },
     {
       "type": "library",
-      "name": "globby",
-      "version": "11.1.0",
-      "bom-ref": "repo-contract@0.11.0|globby@11.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/globby@11.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/globby/-/globby-11.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "8e121768ecf2d6c6fc232a1c6abb964a7d538e69c156cf00ca1732f37ae6c4d27cab6b96282023dc29c963e2a91925c2b9e00f7348b4e6456f54ab4fd6df52de"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/globby"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "ignore",
-          "version": "5.3.2",
-          "bom-ref": "repo-contract@0.11.0|globby@11.1.0|ignore@5.3.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/ignore@5.3.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/ignore/-/ignore-5.3.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "86c053354a904c3c245ad71d608da2d3a63f9d4044b0d10324a8d676280bbde832f240ee2404bcb91969924710a721172f467fa630f2e4706632344227682afa"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/globby/node_modules/ignore"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "globrex",
       "version": "0.1.2",
       "bom-ref": "repo-contract@0.11.0|globrex@0.1.2",
@@ -29491,8 +28971,8 @@
     {
       "type": "library",
       "name": "handlebars",
-      "version": "4.7.9",
-      "bom-ref": "repo-contract@0.11.0|handlebars@4.7.9",
+      "version": "4.7.10",
+      "bom-ref": "repo-contract@0.11.0|handlebars@4.7.10",
       "licenses": [
         {
           "license": {
@@ -29501,15 +28981,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/handlebars@4.7.9",
+      "purl": "pkg:npm/handlebars@4.7.10",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/handlebars/-/handlebars-4.7.9.tgz",
+          "url": "https://registry.npmjs.org/handlebars/-/handlebars-4.7.10.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "e04ef5134ae939a42e251d80df10d9f863351f2598bf5725479f2d0bc7a640d7907b7447ecc03349b6adf95d301bbf0b401a3a9ba6f3486fcbe2906e0ac82751"
+              "content": "3f954931533baa0067eaf8d7330f161bdb9523e9dc7f6a62ef68f875ee32cf96542cb8f6446a8b61a28e606b20cab562434b5e3ce565375b430825d7b45a972a"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -29530,7 +29010,7 @@
           "type": "library",
           "name": "source-map",
           "version": "0.6.1",
-          "bom-ref": "repo-contract@0.11.0|handlebars@4.7.9|source-map@0.6.1",
+          "bom-ref": "repo-contract@0.11.0|handlebars@4.7.10|source-map@0.6.1",
           "licenses": [
             {
               "license": {
@@ -30788,8 +30268,8 @@
     {
       "type": "library",
       "name": "internal-package-contract",
-      "version": "0.9.0",
-      "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.9.0",
+      "version": "0.13.0",
+      "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.13.0",
       "licenses": [
         {
           "license": {
@@ -30798,10 +30278,10 @@
           }
         }
       ],
-      "purl": "pkg:npm/internal-package-contract@0.9.0?vcs_url=git%2Bssh%3A%2F%2Fgit%40github.com%2FMaverickCER%2Finternal-package-contract.git%23f8604a0bf289bfaba06df0d752a1dcfdacdf1709",
+      "purl": "pkg:npm/internal-package-contract@0.13.0?vcs_url=git%2Bssh%3A%2F%2Fgit%40github.com%2FMaverickCER%2Finternal-package-contract.git%234f8f0d84317047d9a335a8dc1615e685af978cda",
       "externalReferences": [
         {
-          "url": "git+ssh://git@github.com/MaverickCER/internal-package-contract.git#f8604a0bf289bfaba06df0d752a1dcfdacdf1709",
+          "url": "git+ssh://git@github.com/MaverickCER/internal-package-contract.git#4f8f0d84317047d9a335a8dc1615e685af978cda",
           "type": "distribution",
           "comment": "as detected from npm-ls property \"resolved\""
         }
@@ -30822,7 +30302,7 @@
           "name": "node",
           "group": "@types",
           "version": "24.19.1",
-          "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.9.0|@types/node@24.19.1",
+          "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.13.0|@types/node@24.19.1",
           "licenses": [
             {
               "license": {
@@ -30860,7 +30340,7 @@
           "type": "library",
           "name": "jiti",
           "version": "2.7.0",
-          "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.9.0|jiti@2.7.0",
+          "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.13.0|jiti@2.7.0",
           "licenses": [
             {
               "license": {
@@ -30896,26 +30376,26 @@
         },
         {
           "type": "library",
-          "name": "prettier",
-          "version": "3.9.6",
-          "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.9.0|prettier@3.9.6",
+          "name": "typescript",
+          "version": "6.0.3",
+          "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.13.0|typescript@6.0.3",
           "licenses": [
             {
               "license": {
-                "id": "MIT",
+                "id": "Apache-2.0",
                 "acknowledgement": "declared"
               }
             }
           ],
-          "purl": "pkg:npm/prettier@3.9.6",
+          "purl": "pkg:npm/typescript@6.0.3",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/prettier/-/prettier-3.9.6.tgz",
+              "url": "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "3a9374cf355d89a880871a6eba3e5e7e9212e2c63d8fb6d8eae4799a78f9c8fcc691d92334a4897944e13dbeb4270dbd42e019800e28fbf881e3d90589a057ea"
+                  "content": "cb64efbb14993c3c906a490544f6472859be28a56a222b1d83dfc26709bd7edbca5cb3fc3515a3dfcfce0e335baf8dd2b285ea36e022b047f519d0b1a9671d07"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -30928,7 +30408,7 @@
             },
             {
               "name": "cdx:npm:package:path",
-              "value": "node_modules/internal-package-contract/node_modules/prettier"
+              "value": "node_modules/internal-package-contract/node_modules/typescript"
             }
           ]
         },
@@ -30936,7 +30416,7 @@
           "type": "library",
           "name": "undici-types",
           "version": "7.24.6",
-          "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.9.0|undici-types@7.24.6",
+          "bom-ref": "repo-contract@0.11.0|internal-package-contract@0.13.0|undici-types@7.24.6",
           "licenses": [
             {
               "license": {
@@ -32382,44 +31862,6 @@
     },
     {
       "type": "library",
-      "name": "is-subdir",
-      "version": "1.2.0",
-      "bom-ref": "repo-contract@0.11.0|is-subdir@1.2.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-subdir@1.2.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-subdir/-/is-subdir-1.2.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "d804fa8fe8177bfd6e7aa6d6e9f2d9262230dc5f225c626db74c83ad96818406441b5ada893c4a594f883ea302cd001739408a740e140cc81a70a1f6e571b60b"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-subdir"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "is-symbol",
       "version": "1.1.1",
       "bom-ref": "repo-contract@0.11.0|is-symbol@1.1.1",
@@ -32643,44 +32085,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/is-weakset"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "is-windows",
-      "version": "1.0.2",
-      "bom-ref": "repo-contract@0.11.0|is-windows@1.0.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/is-windows@1.0.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/is-windows/-/is-windows-1.0.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "7972b55089ead9b3e68f25fa7b754723330ba1b73827de22e005a7f87a6adce5392a4ad10bde8e01c4773d127fa46bba9bc4d19c11cff5d917415b13fc239520"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/is-windows"
         }
       ]
     },
@@ -34146,44 +33550,6 @@
     },
     {
       "type": "library",
-      "name": "jsonfile",
-      "version": "4.0.0",
-      "bom-ref": "repo-contract@0.11.0|jsonfile@4.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/jsonfile@4.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "9ba175477cfc8e395fda29901d2d907b3e6c8ca590cdbbae86e27f14a605459bcf1373ee1dc48c559cdfb0b84654e91f776d286cbe5258405ec394a196ab8dc6"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/jsonfile"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "jsonparse",
       "version": "1.3.1",
       "bom-ref": "repo-contract@0.11.0|jsonparse@1.3.1",
@@ -34677,6 +34043,44 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/ky"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "launch-editor",
+      "version": "2.14.2",
+      "bom-ref": "repo-contract@0.11.0|launch-editor@2.14.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/launch-editor@2.14.2",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/launch-editor/-/launch-editor-2.14.2.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "3472446f7d0c1810a49995cb670cf6e6ddfb411e1a634dd9ccf61425738968e6bddae5b013123d481414b88ce7058735c640fb7093465fba1cdcd977b2ada441"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/launch-editor"
         }
       ]
     },
@@ -35608,44 +35012,6 @@
     },
     {
       "type": "library",
-      "name": "locate-path",
-      "version": "5.0.0",
-      "bom-ref": "repo-contract@0.11.0|locate-path@5.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/locate-path@5.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/locate-path/-/locate-path-5.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "b7b870f6923e5afbb03495f0939cd51e9ca122ace0daa4e592524e7f4995c4649b7b7169d9589e65c76e3588da2c3a32ea9f6e1a94041961bced6a4c2a536af2"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/locate-path"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "lodash.groupby",
       "version": "4.6.0",
       "bom-ref": "repo-contract@0.11.0|lodash.groupby@4.6.0",
@@ -35679,44 +35045,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/lodash.groupby"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "lodash.startcase",
-      "version": "4.4.0",
-      "bom-ref": "repo-contract@0.11.0|lodash.startcase@4.4.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/lodash.startcase@4.4.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/lodash.startcase/-/lodash.startcase-4.4.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "f962aab0adbde073127368c46cd8291e977425f201869eeb115e1aa975aa16be80957a2ff9295c801d45bf4d72da419edc673c9cc5bb540d12ac6b929117c812"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/lodash.startcase"
         }
       ]
     },
@@ -41758,44 +41086,6 @@
     },
     {
       "type": "library",
-      "name": "outdent",
-      "version": "0.5.0",
-      "bom-ref": "repo-contract@0.11.0|outdent@0.5.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/outdent@0.5.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/outdent/-/outdent-0.5.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "fe31f1148ce831776a3f34da0a91730005a1a644a364f17856c9fa8c07cda666c7ff29ac99ded073a544f411a7d0be98323eaec2940bc42102a6eb38ba4292f5"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/outdent"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "own-keys",
       "version": "1.0.2",
       "bom-ref": "repo-contract@0.11.0|own-keys@1.0.2",
@@ -41948,160 +41238,6 @@
     },
     {
       "type": "library",
-      "name": "p-filter",
-      "version": "2.1.0",
-      "bom-ref": "repo-contract@0.11.0|p-filter@2.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/p-filter@2.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/p-filter/-/p-filter-2.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "641c71679b0bd878217a9861a46010768b24c69953c2bec809a7a16702c895f2fa69cb958193e6f3204db9100504612ab43fe19947aaf5ea8b836cacf57affcb"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/p-filter"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "p-map",
-          "version": "2.1.0",
-          "bom-ref": "repo-contract@0.11.0|p-filter@2.1.0|p-map@2.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/p-map@2.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/p-map/-/p-map-2.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "cb76fc2a977c380378e388717c16c57e3d4563f463b5377cb73630854a8d617c747d7c76897e2668fe10afaaa120a6d05c8d36c132c075ae1f6146c36a04d417"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/p-filter/node_modules/p-map"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "p-limit",
-      "version": "2.3.0",
-      "bom-ref": "repo-contract@0.11.0|p-limit@2.3.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/p-limit@2.3.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/p-limit/-/p-limit-2.3.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ffff3c985592271f25c42cf07400014c92f6332581d76f9e218ecc0cbd92a8b98091e294f6ac51bd6b92c938e6dc5526a4110cb857dc90022a11a546503c5beb"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/p-limit"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "p-locate",
-      "version": "4.1.0",
-      "bom-ref": "repo-contract@0.11.0|p-locate@4.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/p-locate@4.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/p-locate/-/p-locate-4.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "47bf5967fd30031286bb7a18325cfc8f2fe46e1b0dad2ed2299ecfc441c1809e7e1769ad156d9f2b670eb4187570762442c6f3155ec8f84a1129ee98b74a0aec"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/p-locate"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "p-map",
       "version": "7.0.8",
       "bom-ref": "repo-contract@0.11.0|p-map@7.0.8",
@@ -42135,44 +41271,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/p-map"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "p-try",
-      "version": "2.2.0",
-      "bom-ref": "repo-contract@0.11.0|p-try@2.2.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/p-try@2.2.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/p-try/-/p-try-2.2.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "4789cf0154c053407d0f7e7f1a4dee25fffb5d86d0732a2148a76f03121148d821165e1eef5855a069c1350cfd716697c4ed88d742930bede331dbefa0ac3a75"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/p-try"
         }
       ]
     },
@@ -42412,8 +41510,8 @@
     {
       "type": "library",
       "name": "package-manager-detector",
-      "version": "0.2.11",
-      "bom-ref": "repo-contract@0.11.0|package-manager-detector@0.2.11",
+      "version": "1.9.0",
+      "bom-ref": "repo-contract@0.11.0|package-manager-detector@1.9.0",
       "licenses": [
         {
           "license": {
@@ -42422,15 +41520,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/package-manager-detector@0.2.11",
+      "purl": "pkg:npm/package-manager-detector@1.9.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/package-manager-detector/-/package-manager-detector-0.2.11.tgz",
+          "url": "https://registry.npmjs.org/package-manager-detector/-/package-manager-detector-1.9.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "0449cba25bbecaecf6d92e7a094d5250aab75c2dcf9300f9c2fe22911e0c7c6be7455726cd747d0f04a55b67c46a6c933f25c7a2604947381aa5eb81bd137325"
+              "content": "cc031f6ed6bd9cf03c00a900e167663404fc47cb3a0e4d3fc703eca8d9d189d30570ba356242ee3c34e0b367fae177734bcbdb2cd9e827eb9422481bcfba111c"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -43253,44 +42351,6 @@
     },
     {
       "type": "library",
-      "name": "path-type",
-      "version": "4.0.0",
-      "bom-ref": "repo-contract@0.11.0|path-type@4.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/path-type@4.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/path-type/-/path-type-4.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "80329bf1a64c0de0ffb595acf4febeab427d33091d97ac4c57c4e39c63f7a89549d3a6dd32091b0652d4f0875f3ac22c173d815b5acd553dd7b8d125f333c0bf"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/path-type"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "pathe",
       "version": "2.0.3",
       "bom-ref": "repo-contract@0.11.0|pathe@2.0.3",
@@ -43400,44 +42460,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/picomatch"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "pify",
-      "version": "4.0.1",
-      "bom-ref": "repo-contract@0.11.0|pify@4.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/pify@4.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/pify/-/pify-4.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "b81f3490115bfed7ddebc6d595e1bd4f9186b063e326b2c05294793d922b8419c86914d0463a9d252b082a438fe8e00815b8fb18eadcb9d739a4d8d9fa0795da"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/pify"
         }
       ]
     },
@@ -44239,46 +43261,6 @@
           "name": "cdx:npm:package:path",
           "value": "node_modules/publint"
         }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "package-manager-detector",
-          "version": "1.9.0",
-          "bom-ref": "repo-contract@0.11.0|publint@0.3.25|package-manager-detector@1.9.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/package-manager-detector@1.9.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/package-manager-detector/-/package-manager-detector-1.9.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "cc031f6ed6bd9cf03c00a900e167663404fc47cb3a0e4d3fc703eca8d9d189d30570ba356242ee3c34e0b367fae177734bcbdb2cd9e827eb9422481bcfba111c"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/publint/node_modules/package-manager-detector"
-            }
-          ]
-        }
       ]
     },
     {
@@ -44623,44 +43605,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/qs"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "quansync",
-      "version": "0.2.11",
-      "bom-ref": "repo-contract@0.11.0|quansync@0.2.11",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/quansync@0.2.11",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/quansync/-/quansync-0.2.11.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "0227d3ed011b5bd36b8b8b40c11e4cfeece906ea9f65ffb3c1a10cfd09331238fb341b850f6ac1bb2d0addd13ef3096d6decc357b24c03459f9c23d845261b5c"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/quansync"
         }
       ]
     },
@@ -45280,84 +44224,6 @@
     },
     {
       "type": "library",
-      "name": "read-yaml-file",
-      "version": "1.1.0",
-      "bom-ref": "repo-contract@0.11.0|read-yaml-file@1.1.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/read-yaml-file@1.1.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/read-yaml-file/-/read-yaml-file-1.1.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "548327422fd9e074f6171bb08392ab635ef853555d5080124155975f2aad351b714abf486249f5aec23a4dbe87b2b1c2981ee05693705fa2713d31dc1fa2284c"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/read-yaml-file"
-        }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "js-yaml",
-          "version": "3.15.2",
-          "bom-ref": "repo-contract@0.11.0|read-yaml-file@1.1.0|js-yaml@3.15.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/js-yaml@3.15.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/js-yaml/-/js-yaml-3.15.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "e84b8bf3bf5591103ed42cf9efc98a3222af8cf344ba4ebeaf525a173a1259e8d99ad7fbc566c8cb0d5edca931964cd322df536b0e89061129a46eeeb5cd4ffb"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/read-yaml-file/node_modules/js-yaml"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "readable-stream",
       "version": "3.6.2",
       "bom-ref": "repo-contract@0.11.0|readable-stream@3.6.2",
@@ -45740,8 +44606,8 @@
     {
       "type": "library",
       "name": "repo-contract",
-      "version": "0.8.8",
-      "bom-ref": "repo-contract@0.11.0|repo-contract@0.8.8",
+      "version": "0.11.0",
+      "bom-ref": "repo-contract@0.11.0|repo-contract@0.11.0",
       "licenses": [
         {
           "license": {
@@ -45750,15 +44616,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/repo-contract@0.8.8",
+      "purl": "pkg:npm/repo-contract@0.11.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/repo-contract/-/repo-contract-0.8.8.tgz",
+          "url": "https://registry.npmjs.org/repo-contract/-/repo-contract-0.11.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "fc353ca4fb08934bd52fb7d4da95c4fa14db2cb43e644857f20b9d35e208ac7896b1b316d69f0e7435c6d26f91430774e1e7c2bef631214520c8102f3caf9bdc"
+              "content": "0ae956b34e3d4c4228b51e8ad83780460d4a6b0302220f5255368eaaba9f2b0f3457528fd671d7229aaf25d5da937d7ec0fbe0113e779aa773a4435daafa42d9"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -47420,44 +46286,6 @@
     },
     {
       "type": "library",
-      "name": "slash",
-      "version": "3.0.0",
-      "bom-ref": "repo-contract@0.11.0|slash@3.0.0",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/slash@3.0.0",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/slash/-/slash-3.0.0.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "83d43585a79bcb7e8e492b706f89ed08618668ab1a5528d0ebc7c1c6841cbad9797d2d6fb98d7c1f7c12b778c5c85b6b931f8acf45751bce40e0cc80743322d9"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/slash"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "slice-ansi",
       "version": "4.0.0",
       "bom-ref": "repo-contract@0.11.0|slice-ansi@4.0.0",
@@ -47874,44 +46702,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/source-map"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "spawndamnit",
-      "version": "3.0.1",
-      "bom-ref": "repo-contract@0.11.0|spawndamnit@3.0.1",
-      "licenses": [
-        {
-          "license": {
-            "name": "SEE LICENSE IN LICENSE",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/spawndamnit@3.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/spawndamnit/-/spawndamnit-3.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "3269ddb9052e1c2a057246685a75ec4e0ec96a22c126b2858fd508d8c6d13c6689795a6c2dc541bba3ff206668bf388cfd806c7a59429aca6b80d03ec340b356"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/spawndamnit"
         }
       ]
     },
@@ -49873,44 +48663,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/tar"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "term-size",
-      "version": "2.2.1",
-      "bom-ref": "repo-contract@0.11.0|term-size@2.2.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/term-size@2.2.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/term-size/-/term-size-2.2.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "c0ad118b87ce1a3bff5cfcbc4811d90a197c08ceee31ce5530bed2aa2434cc6efe27956bf913100e81dad82353e8a1d49d31885c7df85033243f3014c9aa4166"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/term-size"
         }
       ]
     },
@@ -52399,44 +51151,6 @@
     },
     {
       "type": "library",
-      "name": "universalify",
-      "version": "0.1.2",
-      "bom-ref": "repo-contract@0.11.0|universalify@0.1.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/universalify@0.1.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/universalify/-/universalify-0.1.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ac125e2390970259b2d6957eeb5ed607d27add4e9771acc71c5d9fd9d6c98b1e17ce9505d114b765b8f414620e080bdae4ffddfc604e61a002435c3ed1acd492"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/universalify"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "unrs-resolver",
       "version": "1.12.2",
       "bom-ref": "repo-contract@0.11.0|unrs-resolver@1.12.2",
@@ -54123,7 +52837,7 @@
       "ref": "repo-contract@0.11.0",
       "dependsOn": [
         "repo-contract@0.11.0|@arethetypeswrong/cli@0.18.5",
-        "repo-contract@0.11.0|@changesets/cli@2.31.1",
+        "repo-contract@0.11.0|@changesets/cli@3.0.3",
         "repo-contract@0.11.0|@commitlint/cli@21.2.3",
         "repo-contract@0.11.0|@commitlint/config-conventional@21.2.3",
         "repo-contract@0.11.0|@cyclonedx/cyclonedx-npm@6.0.1",
@@ -54159,7 +52873,7 @@
         "repo-contract@0.11.0|fast-check@4.10.2",
         "repo-contract@0.11.0|github-actionlint@1.7.12",
         "repo-contract@0.11.0|globals@17.13.0",
-        "repo-contract@0.11.0|internal-package-contract@0.9.0",
+        "repo-contract@0.11.0|internal-package-contract@0.13.0",
         "repo-contract@0.11.0|istanbul-lib-coverage@3.2.2",
         "repo-contract@0.11.0|istanbul-lib-report@3.0.1",
         "repo-contract@0.11.0|istanbul-reports@3.2.0",
@@ -54505,9 +53219,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@babel/runtime@7.29.7"
-    },
-    {
       "ref": "repo-contract@0.11.0|@babel/template@8.0.0",
       "dependsOn": [
         "repo-contract@0.11.0|@babel/code-frame@8.0.6",
@@ -54545,7 +53256,7 @@
       "dependsOn": [
         "repo-contract@0.11.0|eslint-import-resolver-node@0.3.9",
         "repo-contract@0.11.0|eslint-module-utils@2.12.1",
-        "repo-contract@0.11.0|handlebars@4.7.9",
+        "repo-contract@0.11.0|handlebars@4.7.10",
         "repo-contract@0.11.0|is-core-module@2.16.1",
         "repo-contract@0.11.0|micromatch@4.0.8"
       ]
@@ -54570,181 +53281,155 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/apply-release-plan@7.1.1",
+      "ref": "repo-contract@0.11.0|@changesets/apply-release-plan@8.1.1",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/apply-release-plan@7.1.1|prettier@2.8.8",
-        "repo-contract@0.11.0|@changesets/config@3.1.4",
-        "repo-contract@0.11.0|@changesets/get-version-range-type@0.4.0",
-        "repo-contract@0.11.0|@changesets/git@3.0.4",
-        "repo-contract@0.11.0|@changesets/should-skip-package@0.1.2",
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3",
-        "repo-contract@0.11.0|detect-indent@6.1.0",
-        "repo-contract@0.11.0|fs-extra@7.0.1",
-        "repo-contract@0.11.0|lodash.startcase@4.4.0",
-        "repo-contract@0.11.0|outdent@0.5.0",
-        "repo-contract@0.11.0|resolve-from@5.0.0",
+        "repo-contract@0.11.0|@changesets/config@4.0.1",
+        "repo-contract@0.11.0|@changesets/format@0.1.2",
+        "repo-contract@0.11.0|@changesets/git@4.0.1",
+        "repo-contract@0.11.0|@changesets/should-skip-package@1.0.0",
+        "repo-contract@0.11.0|@changesets/types@7.0.0",
+        "repo-contract@0.11.0|import-meta-resolve@4.2.0",
+        "repo-contract@0.11.0|jsonc-parser@3.3.1",
         "repo-contract@0.11.0|semver@7.8.5"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/apply-release-plan@7.1.1|prettier@2.8.8"
-    },
-    {
-      "ref": "repo-contract@0.11.0|@changesets/assemble-release-plan@6.0.10",
+      "ref": "repo-contract@0.11.0|@changesets/assemble-release-plan@7.0.0",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/errors@0.2.0",
-        "repo-contract@0.11.0|@changesets/get-dependents-graph@2.1.4",
-        "repo-contract@0.11.0|@changesets/should-skip-package@0.1.2",
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3",
+        "repo-contract@0.11.0|@changesets/errors@1.0.0",
+        "repo-contract@0.11.0|@changesets/get-dependents-graph@3.0.0",
+        "repo-contract@0.11.0|@changesets/should-skip-package@1.0.0",
+        "repo-contract@0.11.0|@changesets/types@7.0.0",
         "repo-contract@0.11.0|semver@7.8.5"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/changelog-git@0.2.1",
+      "ref": "repo-contract@0.11.0|@changesets/changelog-git@1.0.0",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/types@6.1.0"
+        "repo-contract@0.11.0|@changesets/types@7.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/cli@2.31.1",
+      "ref": "repo-contract@0.11.0|@changesets/cli@3.0.3",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/apply-release-plan@7.1.1",
-        "repo-contract@0.11.0|@changesets/assemble-release-plan@6.0.10",
-        "repo-contract@0.11.0|@changesets/changelog-git@0.2.1",
-        "repo-contract@0.11.0|@changesets/config@3.1.4",
-        "repo-contract@0.11.0|@changesets/errors@0.2.0",
-        "repo-contract@0.11.0|@changesets/get-dependents-graph@2.1.4",
-        "repo-contract@0.11.0|@changesets/get-release-plan@4.0.16",
-        "repo-contract@0.11.0|@changesets/git@3.0.4",
-        "repo-contract@0.11.0|@changesets/logger@0.1.1",
-        "repo-contract@0.11.0|@changesets/pre@2.0.2",
-        "repo-contract@0.11.0|@changesets/read@0.6.7",
-        "repo-contract@0.11.0|@changesets/should-skip-package@0.1.2",
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|@changesets/write@0.4.0",
-        "repo-contract@0.11.0|@inquirer/external-editor@1.0.3",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3",
-        "repo-contract@0.11.0|ansi-colors@4.1.3",
-        "repo-contract@0.11.0|enquirer@2.4.1",
-        "repo-contract@0.11.0|fs-extra@7.0.1",
-        "repo-contract@0.11.0|mri@1.2.0",
-        "repo-contract@0.11.0|package-manager-detector@0.2.11",
-        "repo-contract@0.11.0|picocolors@1.1.1",
-        "repo-contract@0.11.0|resolve-from@5.0.0",
+        "repo-contract@0.11.0|@changesets/apply-release-plan@8.1.1",
+        "repo-contract@0.11.0|@changesets/assemble-release-plan@7.0.0",
+        "repo-contract@0.11.0|@changesets/changelog-git@1.0.0",
+        "repo-contract@0.11.0|@changesets/cli@3.0.3|cac@7.1.0",
+        "repo-contract@0.11.0|@changesets/config@4.0.1",
+        "repo-contract@0.11.0|@changesets/errors@1.0.0",
+        "repo-contract@0.11.0|@changesets/get-dependents-graph@3.0.0",
+        "repo-contract@0.11.0|@changesets/git@4.0.1",
+        "repo-contract@0.11.0|@changesets/pre@3.0.0",
+        "repo-contract@0.11.0|@changesets/read@1.0.1",
+        "repo-contract@0.11.0|@changesets/should-skip-package@1.0.0",
+        "repo-contract@0.11.0|@changesets/types@7.0.0",
+        "repo-contract@0.11.0|@changesets/write@1.0.1",
+        "repo-contract@0.11.0|@clack/prompts@1.8.1",
+        "repo-contract@0.11.0|@manypkg/get-packages@3.1.0",
+        "repo-contract@0.11.0|@pnpm/deps.graph-sequencer@1100.0.1",
+        "repo-contract@0.11.0|import-meta-resolve@4.2.0",
+        "repo-contract@0.11.0|launch-editor@2.14.2",
+        "repo-contract@0.11.0|package-manager-detector@1.9.0",
         "repo-contract@0.11.0|semver@7.8.5",
-        "repo-contract@0.11.0|spawndamnit@3.0.1",
-        "repo-contract@0.11.0|term-size@2.2.1"
+        "repo-contract@0.11.0|tinyexec@1.3.1"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/config@3.1.4",
+      "ref": "repo-contract@0.11.0|@changesets/cli@3.0.3|cac@7.1.0"
+    },
+    {
+      "ref": "repo-contract@0.11.0|@changesets/config@4.0.1",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/errors@0.2.0",
-        "repo-contract@0.11.0|@changesets/get-dependents-graph@2.1.4",
-        "repo-contract@0.11.0|@changesets/logger@0.1.1",
-        "repo-contract@0.11.0|@changesets/should-skip-package@0.1.2",
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3",
-        "repo-contract@0.11.0|fs-extra@7.0.1",
-        "repo-contract@0.11.0|micromatch@4.0.8"
+        "repo-contract@0.11.0|@changesets/get-dependents-graph@3.0.0",
+        "repo-contract@0.11.0|@changesets/should-skip-package@1.0.0",
+        "repo-contract@0.11.0|@changesets/types@7.0.0",
+        "repo-contract@0.11.0|@manypkg/get-packages@3.1.0",
+        "repo-contract@0.11.0|picomatch@4.0.7"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/errors@0.2.0",
+      "ref": "repo-contract@0.11.0|@changesets/errors@1.0.0"
+    },
+    {
+      "ref": "repo-contract@0.11.0|@changesets/format@0.1.2",
       "dependsOn": [
-        "repo-contract@0.11.0|extendable-error@0.1.7"
+        "repo-contract@0.11.0|package-manager-detector@1.9.0",
+        "repo-contract@0.11.0|tinyexec@1.3.1"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/get-dependents-graph@2.1.4",
+      "ref": "repo-contract@0.11.0|@changesets/get-dependents-graph@3.0.0",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3",
-        "repo-contract@0.11.0|picocolors@1.1.1",
+        "repo-contract@0.11.0|@changesets/types@7.0.0",
         "repo-contract@0.11.0|semver@7.8.5"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/get-release-plan@4.0.16",
+      "ref": "repo-contract@0.11.0|@changesets/git@4.0.1",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/assemble-release-plan@6.0.10",
-        "repo-contract@0.11.0|@changesets/config@3.1.4",
-        "repo-contract@0.11.0|@changesets/pre@2.0.2",
-        "repo-contract@0.11.0|@changesets/read@0.6.7",
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3"
+        "repo-contract@0.11.0|@changesets/errors@1.0.0",
+        "repo-contract@0.11.0|@changesets/types@7.0.0",
+        "repo-contract@0.11.0|@manypkg/get-packages@3.1.0",
+        "repo-contract@0.11.0|picomatch@4.0.7",
+        "repo-contract@0.11.0|tinyexec@1.3.1"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/get-version-range-type@0.4.0"
-    },
-    {
-      "ref": "repo-contract@0.11.0|@changesets/git@3.0.4",
+      "ref": "repo-contract@0.11.0|@changesets/parse@1.0.0",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/errors@0.2.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3",
-        "repo-contract@0.11.0|is-subdir@1.2.0",
-        "repo-contract@0.11.0|micromatch@4.0.8",
-        "repo-contract@0.11.0|spawndamnit@3.0.1"
+        "repo-contract@0.11.0|@changesets/types@7.0.0",
+        "repo-contract@0.11.0|yaml@2.9.1"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/logger@0.1.1",
+      "ref": "repo-contract@0.11.0|@changesets/pre@3.0.0",
       "dependsOn": [
-        "repo-contract@0.11.0|picocolors@1.1.1"
+        "repo-contract@0.11.0|@changesets/errors@1.0.0",
+        "repo-contract@0.11.0|@changesets/types@7.0.0",
+        "repo-contract@0.11.0|@manypkg/get-packages@3.1.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/parse@0.4.3",
+      "ref": "repo-contract@0.11.0|@changesets/read@1.0.1",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|js-yaml@4.3.2"
+        "repo-contract@0.11.0|@changesets/git@4.0.1",
+        "repo-contract@0.11.0|@changesets/parse@1.0.0",
+        "repo-contract@0.11.0|@changesets/types@7.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/pre@2.0.2",
+      "ref": "repo-contract@0.11.0|@changesets/should-skip-package@1.0.0",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/errors@0.2.0",
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3",
-        "repo-contract@0.11.0|fs-extra@7.0.1"
+        "repo-contract@0.11.0|@changesets/types@7.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/read@0.6.7",
-      "dependsOn": [
-        "repo-contract@0.11.0|@changesets/git@3.0.4",
-        "repo-contract@0.11.0|@changesets/logger@0.1.1",
-        "repo-contract@0.11.0|@changesets/parse@0.4.3",
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|fs-extra@7.0.1",
-        "repo-contract@0.11.0|p-filter@2.1.0",
-        "repo-contract@0.11.0|picocolors@1.1.1"
-      ]
+      "ref": "repo-contract@0.11.0|@changesets/types@7.0.0"
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/should-skip-package@0.1.2",
+      "ref": "repo-contract@0.11.0|@changesets/write@1.0.1",
       "dependsOn": [
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|@changesets/types@6.1.0"
-    },
-    {
-      "ref": "repo-contract@0.11.0|@changesets/write@0.4.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|@changesets/types@6.1.0",
-        "repo-contract@0.11.0|@changesets/write@0.4.0|prettier@2.8.8",
-        "repo-contract@0.11.0|fs-extra@7.0.1",
+        "repo-contract@0.11.0|@changesets/format@0.1.2",
+        "repo-contract@0.11.0|@changesets/types@7.0.0",
         "repo-contract@0.11.0|human-id@4.2.2"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@changesets/write@0.4.0|prettier@2.8.8"
+      "ref": "repo-contract@0.11.0|@clack/core@1.5.1",
+      "dependsOn": [
+        "repo-contract@0.11.0|fast-wrap-ansi@0.2.2",
+        "repo-contract@0.11.0|sisteransi@1.0.5"
+      ]
+    },
+    {
+      "ref": "repo-contract@0.11.0|@clack/prompts@1.8.1",
+      "dependsOn": [
+        "repo-contract@0.11.0|@clack/core@1.5.1",
+        "repo-contract@0.11.0|fast-string-width@3.0.2",
+        "repo-contract@0.11.0|fast-wrap-ansi@0.2.2",
+        "repo-contract@0.11.0|sisteransi@1.0.5"
+      ]
     },
     {
       "ref": "repo-contract@0.11.0|@colors/colors@1.5.0"
@@ -55189,14 +53874,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@inquirer/external-editor@1.0.3",
-      "dependsOn": [
-        "repo-contract@0.11.0|@types/node@22.20.5",
-        "repo-contract@0.11.0|chardet@2.2.0",
-        "repo-contract@0.11.0|iconv-lite@0.7.3"
-      ]
-    },
-    {
       "ref": "repo-contract@0.11.0|@inquirer/figures@2.0.9"
     },
     {
@@ -55368,46 +54045,44 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@manypkg/find-root@1.1.0",
+      "ref": "repo-contract@0.11.0|@manypkg/find-root@3.1.0",
       "dependsOn": [
-        "repo-contract@0.11.0|@babel/runtime@7.29.7",
-        "repo-contract@0.11.0|@manypkg/find-root@1.1.0|@types/node@12.20.55",
-        "repo-contract@0.11.0|@manypkg/find-root@1.1.0|fs-extra@8.1.0",
-        "repo-contract@0.11.0|find-up@4.1.0"
+        "repo-contract@0.11.0|@manypkg/tools@2.1.2"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@manypkg/find-root@1.1.0|@types/node@12.20.55"
-    },
-    {
-      "ref": "repo-contract@0.11.0|@manypkg/find-root@1.1.0|fs-extra@8.1.0",
+      "ref": "repo-contract@0.11.0|@manypkg/get-packages@3.1.0",
       "dependsOn": [
-        "repo-contract@0.11.0|graceful-fs@4.2.11",
-        "repo-contract@0.11.0|jsonfile@4.0.0",
-        "repo-contract@0.11.0|universalify@0.1.2"
+        "repo-contract@0.11.0|@manypkg/find-root@3.1.0",
+        "repo-contract@0.11.0|@manypkg/tools@2.1.2"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@manypkg/get-packages@1.1.3",
+      "ref": "repo-contract@0.11.0|@manypkg/tools@2.1.2",
       "dependsOn": [
-        "repo-contract@0.11.0|@babel/runtime@7.29.7",
-        "repo-contract@0.11.0|@manypkg/find-root@1.1.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3|@changesets/types@4.1.0",
-        "repo-contract@0.11.0|@manypkg/get-packages@1.1.3|fs-extra@8.1.0",
-        "repo-contract@0.11.0|globby@11.1.0",
-        "repo-contract@0.11.0|read-yaml-file@1.1.0"
+        "repo-contract@0.11.0|jju@1.4.0",
+        "repo-contract@0.11.0|tinyglobby@0.2.17",
+        "repo-contract@0.11.0|yaml@2.9.1"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|@manypkg/get-packages@1.1.3|@changesets/types@4.1.0"
+      "ref": "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0",
+      "dependsOn": [
+        "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0|@typescript/typescript6@6.0.2",
+        "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0|typescript@6.0.3",
+        "repo-contract@0.11.0|@typescript-eslint/utils@8.71.1",
+        "repo-contract@0.11.0|eslint@10.12.0",
+        "repo-contract@0.11.0|typescript@5.9.3"
+      ]
     },
     {
-      "ref": "repo-contract@0.11.0|@manypkg/get-packages@1.1.3|fs-extra@8.1.0",
+      "ref": "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0|@typescript/typescript6@6.0.2",
       "dependsOn": [
-        "repo-contract@0.11.0|graceful-fs@4.2.11",
-        "repo-contract@0.11.0|jsonfile@4.0.0",
-        "repo-contract@0.11.0|universalify@0.1.2"
+        "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0|typescript@6.0.3"
       ]
+    },
+    {
+      "ref": "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0|typescript@6.0.3"
     },
     {
       "ref": "repo-contract@0.11.0|@microsoft/api-extractor-model@7.33.15",
@@ -55895,6 +54570,9 @@
     },
     {
       "ref": "repo-contract@0.11.0|@pnpm/config.env-replace@1.1.0"
+    },
+    {
+      "ref": "repo-contract@0.11.0|@pnpm/deps.graph-sequencer@1100.0.1"
     },
     {
       "ref": "repo-contract@0.11.0|@pnpm/network.ca-file@1.0.2",
@@ -56993,9 +55671,6 @@
       "ref": "repo-contract@0.11.0|angular-html-parser@10.11.0"
     },
     {
-      "ref": "repo-contract@0.11.0|ansi-colors@4.1.3"
-    },
-    {
       "ref": "repo-contract@0.11.0|ansi-escapes@7.3.0",
       "dependsOn": [
         "repo-contract@0.11.0|environment@1.1.0"
@@ -57047,9 +55722,6 @@
         "repo-contract@0.11.0|is-string@1.1.1",
         "repo-contract@0.11.0|math-intrinsics@1.1.0"
       ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|array-union@2.1.0"
     },
     {
       "ref": "repo-contract@0.11.0|array.prototype.findlast@1.2.5",
@@ -57139,12 +55811,6 @@
     },
     {
       "ref": "repo-contract@0.11.0|baseline-browser-mapping@2.11.27"
-    },
-    {
-      "ref": "repo-contract@0.11.0|better-path-resolve@1.0.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|is-windows@1.0.2"
-      ]
     },
     {
       "ref": "repo-contract@0.11.0|bfj@9.1.3",
@@ -57516,6 +56182,25 @@
       "ref": "repo-contract@0.11.0|cssesc@3.0.0"
     },
     {
+      "ref": "repo-contract@0.11.0|data-cap@0.7.0",
+      "dependsOn": [
+        "repo-contract@0.11.0|@typescript-eslint/utils@8.71.1",
+        "repo-contract@0.11.0|data-cap@0.7.0|@typescript/typescript6@6.0.2",
+        "repo-contract@0.11.0|data-cap@0.7.0|typescript@6.0.3",
+        "repo-contract@0.11.0|eslint@10.12.0",
+        "repo-contract@0.11.0|typescript@5.9.3"
+      ]
+    },
+    {
+      "ref": "repo-contract@0.11.0|data-cap@0.7.0|@typescript/typescript6@6.0.2",
+      "dependsOn": [
+        "repo-contract@0.11.0|data-cap@0.7.0|typescript@6.0.3"
+      ]
+    },
+    {
+      "ref": "repo-contract@0.11.0|data-cap@0.7.0|typescript@6.0.3"
+    },
+    {
       "ref": "repo-contract@0.11.0|data-view-buffer@1.0.2",
       "dependsOn": [
         "repo-contract@0.11.0|call-bound@1.0.4",
@@ -57622,9 +56307,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|detect-indent@6.1.0"
-    },
-    {
       "ref": "repo-contract@0.11.0|detect-libc@2.1.2"
     },
     {
@@ -57644,12 +56326,6 @@
     },
     {
       "ref": "repo-contract@0.11.0|diff@8.0.4"
-    },
-    {
-      "ref": "repo-contract@0.11.0|dir-glob@3.0.1",
-      "dependsOn": [
-        "repo-contract@0.11.0|path-type@4.0.0"
-      ]
     },
     {
       "ref": "repo-contract@0.11.0|discontinuous-range@1.0.0"
@@ -57740,13 +56416,6 @@
       "dependsOn": [
         "repo-contract@0.11.0|graceful-fs@4.2.11",
         "repo-contract@0.11.0|tapable@2.3.3"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|enquirer@2.4.1",
-      "dependsOn": [
-        "repo-contract@0.11.0|ansi-colors@4.1.3",
-        "repo-contract@0.11.0|strip-ansi@6.0.1"
       ]
     },
     {
@@ -58027,7 +56696,7 @@
         "repo-contract@0.11.0|eslint-import-resolver-node@0.3.9",
         "repo-contract@0.11.0|eslint-module-utils@2.12.1",
         "repo-contract@0.11.0|eslint@10.12.0",
-        "repo-contract@0.11.0|handlebars@4.7.9",
+        "repo-contract@0.11.0|handlebars@4.7.10",
         "repo-contract@0.11.0|micromatch@4.0.8"
       ]
     },
@@ -58273,9 +56942,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|esprima@4.0.1"
-    },
-    {
       "ref": "repo-contract@0.11.0|esquery@1.7.0",
       "dependsOn": [
         "repo-contract@0.11.0|estraverse@5.3.0"
@@ -58327,9 +56993,6 @@
     },
     {
       "ref": "repo-contract@0.11.0|extend@3.0.2"
-    },
-    {
-      "ref": "repo-contract@0.11.0|extendable-error@0.1.7"
     },
     {
       "ref": "repo-contract@0.11.0|fast-check@4.10.2",
@@ -58423,13 +57086,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|find-up@4.1.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|locate-path@5.0.0",
-        "repo-contract@0.11.0|path-exists@4.0.0"
-      ]
-    },
-    {
       "ref": "repo-contract@0.11.0|fix-dts-default-cjs-exports@1.0.1",
       "dependsOn": [
         "repo-contract@0.11.0|magic-string@0.30.21",
@@ -58478,22 +57134,11 @@
       "ref": "repo-contract@0.11.0|formatly@0.7.1",
       "dependsOn": [
         "repo-contract@0.11.0|fd-package-json@2.0.0",
-        "repo-contract@0.11.0|formatly@0.7.1|package-manager-detector@1.9.0"
+        "repo-contract@0.11.0|package-manager-detector@1.9.0"
       ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|formatly@0.7.1|package-manager-detector@1.9.0"
     },
     {
       "ref": "repo-contract@0.11.0|fs-constants@1.0.0"
-    },
-    {
-      "ref": "repo-contract@0.11.0|fs-extra@7.0.1",
-      "dependsOn": [
-        "repo-contract@0.11.0|graceful-fs@4.2.11",
-        "repo-contract@0.11.0|jsonfile@4.0.0",
-        "repo-contract@0.11.0|universalify@0.1.2"
-      ]
     },
     {
       "ref": "repo-contract@0.11.0|fs-minipass@3.0.3",
@@ -58626,20 +57271,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|globby@11.1.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|array-union@2.1.0",
-        "repo-contract@0.11.0|dir-glob@3.0.1",
-        "repo-contract@0.11.0|fast-glob@3.3.3",
-        "repo-contract@0.11.0|globby@11.1.0|ignore@5.3.2",
-        "repo-contract@0.11.0|merge2@1.4.1",
-        "repo-contract@0.11.0|slash@3.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|globby@11.1.0|ignore@5.3.2"
-    },
-    {
       "ref": "repo-contract@0.11.0|globrex@0.1.2"
     },
     {
@@ -58649,9 +57280,9 @@
       "ref": "repo-contract@0.11.0|graceful-fs@4.2.11"
     },
     {
-      "ref": "repo-contract@0.11.0|handlebars@4.7.9",
+      "ref": "repo-contract@0.11.0|handlebars@4.7.10",
       "dependsOn": [
-        "repo-contract@0.11.0|handlebars@4.7.9|source-map@0.6.1",
+        "repo-contract@0.11.0|handlebars@4.7.10|source-map@0.6.1",
         "repo-contract@0.11.0|minimist@1.2.8",
         "repo-contract@0.11.0|neo-async@2.6.2",
         "repo-contract@0.11.0|uglify-js@3.19.3",
@@ -58659,7 +57290,7 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|handlebars@4.7.9|source-map@0.6.1"
+      "ref": "repo-contract@0.11.0|handlebars@4.7.10|source-map@0.6.1"
     },
     {
       "ref": "repo-contract@0.11.0|has-bigints@1.1.0"
@@ -58800,7 +57431,7 @@
       "ref": "repo-contract@0.11.0|ini@6.0.0"
     },
     {
-      "ref": "repo-contract@0.11.0|internal-package-contract@0.9.0",
+      "ref": "repo-contract@0.11.0|internal-package-contract@0.13.0",
       "dependsOn": [
         "repo-contract@0.11.0|@arethetypeswrong/cli@0.18.5",
         "repo-contract@0.11.0|@commitlint/cli@21.2.3",
@@ -58809,6 +57440,7 @@
         "repo-contract@0.11.0|@danibram/crap4ts@0.6.0",
         "repo-contract@0.11.0|@eslint-community/eslint-plugin-eslint-comments@4.8.1",
         "repo-contract@0.11.0|@eslint/js@10.0.1",
+        "repo-contract@0.11.0|@maverickcer/env-cap@0.6.0",
         "repo-contract@0.11.0|@microsoft/api-extractor-model@7.33.15",
         "repo-contract@0.11.0|@microsoft/api-extractor@7.59.4",
         "repo-contract@0.11.0|@secretlint/secretlint-rule-preset-recommend@13.0.7",
@@ -58818,44 +57450,46 @@
         "repo-contract@0.11.0|@stryker-mutator/vitest-runner@10.0.0",
         "repo-contract@0.11.0|@types/cross-spawn@6.0.6",
         "repo-contract@0.11.0|cross-spawn@7.0.6",
+        "repo-contract@0.11.0|data-cap@0.7.0",
         "repo-contract@0.11.0|dependency-cruiser@18.5.0",
         "repo-contract@0.11.0|eslint-config-prettier@10.1.8",
         "repo-contract@0.11.0|eslint@10.12.0",
         "repo-contract@0.11.0|github-actionlint@1.7.12",
         "repo-contract@0.11.0|github-slugger@2.0.0",
         "repo-contract@0.11.0|globals@17.13.0",
-        "repo-contract@0.11.0|internal-package-contract@0.9.0|@types/node@24.19.1",
-        "repo-contract@0.11.0|internal-package-contract@0.9.0|jiti@2.7.0",
-        "repo-contract@0.11.0|internal-package-contract@0.9.0|prettier@3.9.6",
+        "repo-contract@0.11.0|internal-package-contract@0.13.0|@types/node@24.19.1",
+        "repo-contract@0.11.0|internal-package-contract@0.13.0|jiti@2.7.0",
+        "repo-contract@0.11.0|internal-package-contract@0.13.0|typescript@6.0.3",
         "repo-contract@0.11.0|jscpd@5.4.0",
         "repo-contract@0.11.0|knip@6.40.0",
         "repo-contract@0.11.0|licensee@12.0.2",
         "repo-contract@0.11.0|linkinator@8.1.0",
         "repo-contract@0.11.0|markdownlint-cli2@0.23.3",
         "repo-contract@0.11.0|pa11y@10.0.0",
+        "repo-contract@0.11.0|prettier@3.9.9",
         "repo-contract@0.11.0|publint@0.3.25",
         "repo-contract@0.11.0|puppeteer-core@25.12.0#2",
-        "repo-contract@0.11.0|repo-contract@0.8.8",
+        "repo-contract@0.11.0|repo-contract@0.11.0",
         "repo-contract@0.11.0|secretlint@13.0.7",
         "repo-contract@0.11.0|tsx@4.23.15",
         "repo-contract@0.11.0|typescript-eslint@8.71.1",
-        "repo-contract@0.11.0|typescript@5.9.3"
+        "repo-contract@0.11.0|yaml@2.9.1"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|internal-package-contract@0.9.0|@types/node@24.19.1",
+      "ref": "repo-contract@0.11.0|internal-package-contract@0.13.0|@types/node@24.19.1",
       "dependsOn": [
-        "repo-contract@0.11.0|internal-package-contract@0.9.0|undici-types@7.24.6"
+        "repo-contract@0.11.0|internal-package-contract@0.13.0|undici-types@7.24.6"
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|internal-package-contract@0.9.0|jiti@2.7.0"
+      "ref": "repo-contract@0.11.0|internal-package-contract@0.13.0|jiti@2.7.0"
     },
     {
-      "ref": "repo-contract@0.11.0|internal-package-contract@0.9.0|prettier@3.9.6"
+      "ref": "repo-contract@0.11.0|internal-package-contract@0.13.0|typescript@6.0.3"
     },
     {
-      "ref": "repo-contract@0.11.0|internal-package-contract@0.9.0|undici-types@7.24.6"
+      "ref": "repo-contract@0.11.0|internal-package-contract@0.13.0|undici-types@7.24.6"
     },
     {
       "ref": "repo-contract@0.11.0|internal-slot@1.1.0",
@@ -59052,12 +57686,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|is-subdir@1.2.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|better-path-resolve@1.0.0"
-      ]
-    },
-    {
       "ref": "repo-contract@0.11.0|is-symbol@1.1.1",
       "dependsOn": [
         "repo-contract@0.11.0|call-bound@1.0.4",
@@ -59089,9 +57717,6 @@
         "repo-contract@0.11.0|call-bound@1.0.4",
         "repo-contract@0.11.0|get-intrinsic@1.3.0"
       ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|is-windows@1.0.2"
     },
     {
       "ref": "repo-contract@0.11.0|is@3.3.2"
@@ -59259,12 +57884,6 @@
       "ref": "repo-contract@0.11.0|jsonc-parser@3.3.1"
     },
     {
-      "ref": "repo-contract@0.11.0|jsonfile@4.0.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|graceful-fs@4.2.11"
-      ]
-    },
-    {
       "ref": "repo-contract@0.11.0|jsonparse@1.3.1"
     },
     {
@@ -59329,6 +57948,13 @@
     },
     {
       "ref": "repo-contract@0.11.0|ky@1.14.3"
+    },
+    {
+      "ref": "repo-contract@0.11.0|launch-editor@2.14.2",
+      "dependsOn": [
+        "repo-contract@0.11.0|picocolors@1.1.1",
+        "repo-contract@0.11.0|shell-quote@1.12.0"
+      ]
     },
     {
       "ref": "repo-contract@0.11.0|levn@0.4.1",
@@ -59459,16 +58085,7 @@
       "ref": "repo-contract@0.11.0|load-tsconfig@0.2.5"
     },
     {
-      "ref": "repo-contract@0.11.0|locate-path@5.0.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|p-locate@4.1.0"
-      ]
-    },
-    {
       "ref": "repo-contract@0.11.0|lodash.groupby@4.6.0"
-    },
-    {
-      "ref": "repo-contract@0.11.0|lodash.startcase@4.4.0"
     },
     {
       "ref": "repo-contract@0.11.0|lodash.truncate@4.4.2"
@@ -60434,9 +59051,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|outdent@0.5.0"
-    },
-    {
       "ref": "repo-contract@0.11.0|own-keys@1.0.2",
       "dependsOn": [
         "repo-contract@0.11.0|call-bound@1.0.4",
@@ -60519,31 +59133,7 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|p-filter@2.1.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|p-filter@2.1.0|p-map@2.1.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|p-filter@2.1.0|p-map@2.1.0"
-    },
-    {
-      "ref": "repo-contract@0.11.0|p-limit@2.3.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|p-try@2.2.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|p-locate@4.1.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|p-limit@2.3.0"
-      ]
-    },
-    {
       "ref": "repo-contract@0.11.0|p-map@7.0.8"
-    },
-    {
-      "ref": "repo-contract@0.11.0|p-try@2.2.0"
     },
     {
       "ref": "repo-contract@0.11.0|pa11y@10.0.0",
@@ -60587,10 +59177,7 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|package-manager-detector@0.2.11",
-      "dependsOn": [
-        "repo-contract@0.11.0|quansync@0.2.11"
-      ]
+      "ref": "repo-contract@0.11.0|package-manager-detector@1.9.0"
     },
     {
       "ref": "repo-contract@0.11.0|packageurl-js@2.0.1"
@@ -60713,9 +59300,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|path-type@4.0.0"
-    },
-    {
       "ref": "repo-contract@0.11.0|pathe@2.0.3"
     },
     {
@@ -60723,9 +59307,6 @@
     },
     {
       "ref": "repo-contract@0.11.0|picomatch@4.0.7"
-    },
-    {
-      "ref": "repo-contract@0.11.0|pify@4.0.1"
     },
     {
       "ref": "repo-contract@0.11.0|pirates@4.0.7"
@@ -60842,13 +59423,10 @@
       "ref": "repo-contract@0.11.0|publint@0.3.25",
       "dependsOn": [
         "repo-contract@0.11.0|@publint/pack@0.1.7",
+        "repo-contract@0.11.0|package-manager-detector@1.9.0",
         "repo-contract@0.11.0|picocolors@1.1.1",
-        "repo-contract@0.11.0|publint@0.3.25|package-manager-detector@1.9.0",
         "repo-contract@0.11.0|sade@1.8.1"
       ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|publint@0.3.25|package-manager-detector@1.9.0"
     },
     {
       "ref": "repo-contract@0.11.0|pump@3.0.4",
@@ -60903,9 +59481,6 @@
         "repo-contract@0.11.0|es-define-property@1.0.1",
         "repo-contract@0.11.0|side-channel@1.1.1"
       ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|quansync@0.2.11"
     },
     {
       "ref": "repo-contract@0.11.0|queue-microtask@1.2.3"
@@ -60989,22 +59564,6 @@
       "ref": "repo-contract@0.11.0|read-pkg@10.1.0|unicorn-magic@0.4.1"
     },
     {
-      "ref": "repo-contract@0.11.0|read-yaml-file@1.1.0",
-      "dependsOn": [
-        "repo-contract@0.11.0|graceful-fs@4.2.11",
-        "repo-contract@0.11.0|pify@4.0.1",
-        "repo-contract@0.11.0|read-yaml-file@1.1.0|js-yaml@3.15.2",
-        "repo-contract@0.11.0|strip-bom@3.0.0"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|read-yaml-file@1.1.0|js-yaml@3.15.2",
-      "dependsOn": [
-        "repo-contract@0.11.0|argparse@1.0.10",
-        "repo-contract@0.11.0|esprima@4.0.1"
-      ]
-    },
-    {
       "ref": "repo-contract@0.11.0|readable-stream@3.6.2",
       "dependsOn": [
         "repo-contract@0.11.0|inherits@2.0.4",
@@ -61074,7 +59633,7 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|repo-contract@0.8.8"
+      "ref": "repo-contract@0.11.0|repo-contract@0.11.0"
     },
     {
       "ref": "repo-contract@0.11.0|require-directory@2.1.1"
@@ -61372,9 +59931,6 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.0|slash@3.0.0"
-    },
-    {
       "ref": "repo-contract@0.11.0|slice-ansi@4.0.0",
       "dependsOn": [
         "repo-contract@0.11.0|ansi-styles@4.3.0",
@@ -61432,13 +59988,6 @@
     },
     {
       "ref": "repo-contract@0.11.0|source-map@0.7.6"
-    },
-    {
-      "ref": "repo-contract@0.11.0|spawndamnit@3.0.1",
-      "dependsOn": [
-        "repo-contract@0.11.0|cross-spawn@7.0.6",
-        "repo-contract@0.11.0|signal-exit@4.1.0"
-      ]
     },
     {
       "ref": "repo-contract@0.11.0|spdx-compare@1.0.0",
@@ -61743,9 +60292,6 @@
         "repo-contract@0.11.0|minizlib@3.1.0",
         "repo-contract@0.11.0|yallist@5.0.0"
       ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|term-size@2.2.1"
     },
     {
       "ref": "repo-contract@0.11.0|terminal-link@5.0.0",
@@ -62144,9 +60690,6 @@
       "dependsOn": [
         "repo-contract@0.11.0|imurmurhash@0.1.4"
       ]
-    },
-    {
-      "ref": "repo-contract@0.11.0|universalify@0.1.2"
     },
     {
       "ref": "repo-contract@0.11.0|unrs-resolver@1.12.2",

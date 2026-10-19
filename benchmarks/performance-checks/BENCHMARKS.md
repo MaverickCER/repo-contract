@@ -4,9 +4,9 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **31.7 ms** per operation compared with a bare-minimum baseline (**4.4%** of the baseline). Overall, it grows O(n) with workload size (measured exponent 1.00). At list prices that is on the order of **~$0.1 – $1 per million operations** of compute.
+For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **31.7 ms** per operation compared with a bare-minimum baseline (**4.4% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 1.00). At list prices that is on the order of **~$0.1 – $1 per million operations** of compute.
 
-> The relative figure and the growth class are the dependable ones: both come from the same run, so they survive a change of machine. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
+> The relative figure and the growth class are the steadier ones: both come from the same run, so they depend far less on the machine than a time does, though runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
 
 | Cost | Typical (80 checks) | Largest (2560 checks) |
 | --- | --- | --- |
@@ -55,11 +55,16 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 Every function the package exposes is measured on its own across the full size ladder, then its measured growth rate is compared with the big-O we documented for it. A function whose measured class **differs** from its documented one is the most useful thing in this report: either the documentation or the code is wrong.
 
-| Function | Documented | Measured | Agreement | At 80 | At 2560 |
-| --- | --- | --- | --- | --- | --- |
-| `runChecks (scheduler and process orchestration)` (no-dependencies) | O(n) | O(n) | ✅ matches | 728 ms | 23.1 s |
-| `runChecks (scheduler and process orchestration)` (few-dependencies) | O(n) | O(n) | ✅ matches | 749 ms | 23.0 s |
-| `runChecks (scheduler and process orchestration)` (frequent-barriers) | O(n) | O(n) | ✅ matches | 826 ms | 26.2 s |
+| Function | Varies | Documented | Measured | Agreement | At 80 | At 2560 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `runChecks (scheduler and process orchestration)` (no-dependencies) | check | O(n) | O(n) | ✅ matches | 728 ms | 23.1 s |
+| `runChecks (scheduler and process orchestration)` (few-dependencies) | check | O(n) | O(n) | ✅ matches | 749 ms | 23.0 s |
+| `runChecks (scheduler and process orchestration)` (frequent-barriers) | check | O(n) | O(n) | ✅ matches | 826 ms | 26.2 s |
+| `runChecks (scheduler and process orchestration)` (with-reporting-hook) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `runRepoContract` (plain) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `runRepoContract` (plain) | concurrency | O(1) | n/a | ❔ not enough data | n/a | n/a |
+| `runRepoContract` (with-hooks) | check | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `runRepoContract` (with-hooks) | concurrency | O(1) | n/a | ❔ not enough data | n/a | n/a |
 
 ### `runChecks (scheduler and process orchestration)`
 
@@ -137,6 +142,52 @@ Every twentieth check is isolated, which forces everything before it to finish a
 | 640 | 6.56 s | 6.56 s | 1.54 s | 51.0 MiB | 0 |
 | 1280 | 13.2 s | 13.2 s | 3.14 s | 14.8 MiB | 0 |
 | 2560 | 26.2 s | 26.5 s | 6.20 s | 34.0 MiB | 0 |
+
+#### Variant `with-reporting-hook`
+
+The shape of a real contract (few dependencies) with an `onEvidence` hook that reads each check's evidence, as a progress printer or a log writer does.
+
+### `runRepoContract`
+
+**Why we benchmark it.** It is the public entry point of every contract run: it validates the configuration, schedules and spawns the checks, assembles the evidence and judges it, so it is what every pre-push and every CI job calls.
+
+**What poor performance would mean.** Slower pre-push hooks and CI jobs in proportion to how many checks a repository configures, and a concurrency setting that no longer shortens a run would waste every extra core.
+
+**Expected growth: O(n).** Each check is scheduled, spawned and judged once, with a bounded number running at a time, so total time is proportional to the number of checks.
+
+**Measured on a shorter ladder (20, 40, 80, 160).** Every check spawns a real process and the whole run is measured, so sizes beyond a few hundred take minutes per sample; `run-checks` already measures the scheduler to 2,560.
+
+**Variables that could change its cost**
+
+| Variable | How it is handled | What it is |
+| --- | --- | --- |
+| configured checks | swept | The tier axis: how many checks a repository configures and runs in one contract run. |
+| work per check | fixed at "the fastest real process (node -e \"\")" | Every check spawns a real process that does nothing, so the cost measured is repo-contract's scheduling, not the tool a real check would run. |
+| concurrency | swept | How many checks run at a time. |
+| hooks | variant | Whether the run reports progress through `onEvidence` and `onVerdict`. |
+| runtime | fixed at "Node (V8)" | Measured on Node only. |
+
+**In the end-to-end run:** Not part of the end-to-end operation, which measures the scheduler on its own (`run-checks`).
+
+#### Variant `plain`
+
+No hooks: the shape of a run that only wants its verdict.
+
+##### Varying `concurrency`
+
+How many checks run at a time.
+
+**Expected: O(1).** More checks running at once never makes a run take longer; it shortens it until the machine's cores are busy, so the cost does not grow with it.
+
+#### Variant `with-hooks`
+
+Both `onEvidence` and `onVerdict` read their argument, as a progress printer or a log writer does.
+
+##### Varying `concurrency`
+
+How many checks run at a time.
+
+**Expected: O(1).** More checks running at once never makes a run take longer; it shortens it until the machine's cores are busy, so the cost does not grow with it.
 
 ## 3. What makes up one end-to-end operation
 

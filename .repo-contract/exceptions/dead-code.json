@@ -2,143 +2,283 @@
   "exceptions": [
     {
       "id": "dead-code:unused-dev-dependency:@arethetypeswrong/cli",
-      "version": 1,
+      "version": 2,
       "justification": "Spawned by literal command name (\"attw\") via the arethetypeswrong preset's `run: [\"attw\", ...]` (src/presets/arethetypeswrong.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "attempted": "Searched the repository for `@arethetypeswrong/cli`: it appears in bin/preset-catalog.mjs, docs/api-report/presets.md, docs/sbom.cdx.json, package.json and 6 more.",
+      "constraint": "Spawned by literal command name (\"attw\") via the arethetypeswrong preset's `run: [\"attw\", ...]` (src/presets/arethetypeswrong.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "@arethetypeswrong/cli"
+      "name": "@arethetypeswrong/cli",
+      "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `@arethetypeswrong/cli` as an unused dev dependency.",
+      "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
       "id": "dead-code:unused-dev-dependency:@commitlint/cli",
-      "version": 1,
+      "version": 2,
       "justification": "Spawned by literal command name (\"commitlint\") via the commitlint preset's `run: [\"commitlint\", ...]` (src/presets/commitlint.ts) and by .githooks/commit-msg -- nothing `import`s the package, so knip cannot see the use.",
+      "attempted": "Searched the repository for `@commitlint/cli`: it appears in bin/preset-catalog.mjs, docs/sbom.cdx.json, package.json, specs/decisions/0008-self-hosting-tool-and-dependency-choices.md and 3 more.",
+      "constraint": "Spawned by literal command name (\"commitlint\") via the commitlint preset's `run: [\"commitlint\", ...]` (src/presets/commitlint.ts) and by .githooks/commit-msg -- nothing `import`s the package, so knip cannot see the use.",
+      "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "@commitlint/cli"
+      "name": "@commitlint/cli",
+      "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `@commitlint/cli` as an unused dev dependency.",
+      "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
       "id": "dead-code:unused-dev-dependency:@cyclonedx/cyclonedx-npm",
-      "version": 1,
+      "version": 2,
       "justification": "Spawned by literal command name (\"cyclonedx-npm\") via `cross-spawn` in scripts/sbom/spawn.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
+      "attempted": "Searched the repository for `@cyclonedx/cyclonedx-npm`: it appears in SECURITY.md, checks/sbom.ts, docs/sbom.cdx.json, package.json and 8 more.",
+      "constraint": "Spawned by literal command name (\"cyclonedx-npm\") via `cross-spawn` in scripts/sbom/spawn.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
+      "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "@cyclonedx/cyclonedx-npm"
+      "name": "@cyclonedx/cyclonedx-npm",
+      "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `@cyclonedx/cyclonedx-npm` as an unused dev dependency.",
+      "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
       "id": "dead-code:unused-dev-dependency:@microsoft/api-extractor-model",
-      "version": 1,
+      "version": 2,
       "justification": "Loaded with a dynamic `import(\"@microsoft/api-extractor-model\")` inside the API-contract benchmark suite (benchmarks/performance-api-contract/suite.mjs), which knip does not scan as an entry point, so it cannot see the import as a use of the package.",
+      "attempted": "Searched the repository for `@microsoft/api-extractor-model`: it appears in benchmarks/performance-api-contract/suite.mjs, docs/sbom.cdx.json, package.json.",
+      "constraint": "Loaded with a dynamic `import(\"@microsoft/api-extractor-model\")` inside the API-contract benchmark suite (benchmarks/performance-api-contract/suite.mjs), which knip does not scan as an entry point, so it cannot see the import as a use of the package.",
+      "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "@microsoft/api-extractor-model"
+      "name": "@microsoft/api-extractor-model",
+      "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `@microsoft/api-extractor-model` as an unused dev dependency.",
+      "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
       "id": "dead-code:unused-dev-dependency:@socketsecurity/cli",
-      "version": 1,
+      "version": 2,
       "justification": "Spawned by literal command name (\"socket\") via `cross-spawn` in scripts/security-socket/scan.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
+      "attempted": "Searched the repository for `@socketsecurity/cli`: it appears in CONTRIBUTING.md, checks/security-socket.ts, docs/sbom.cdx.json, package.json and 5 more.",
+      "constraint": "Spawned by literal command name (\"socket\") via `cross-spawn` in scripts/security-socket/scan.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
+      "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "@socketsecurity/cli"
+      "name": "@socketsecurity/cli",
+      "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `@socketsecurity/cli` as an unused dev dependency.",
+      "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
       "id": "dead-code:unused-dev-dependency:licensee",
-      "version": 1,
+      "version": 2,
       "justification": "Spawned by literal command name via the license preset's `run: [\"licensee\", ...]` (src/presets/license.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "attempted": "Searched the repository for `licensee`: it appears in GUIDE.md, bin/preset-catalog.mjs, docs/api-report/presets.md, docs/sbom.cdx.json and 7 more.",
+      "constraint": "Spawned by literal command name via the license preset's `run: [\"licensee\", ...]` (src/presets/license.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "licensee"
+      "name": "licensee",
+      "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `licensee` as an unused dev dependency.",
+      "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
       "id": "dead-code:unused-dev-dependency:linkinator",
-      "version": 1,
+      "version": 2,
       "justification": "Spawned by literal command name via the broken-links preset's `run: [\"linkinator\", ...]` (src/presets/broken-links.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "attempted": "Searched the repository for `linkinator`: it appears in GUIDE.md, SECURITY.md, bin/preset-catalog.mjs, checks/docs.ts and 16 more.",
+      "constraint": "Spawned by literal command name via the broken-links preset's `run: [\"linkinator\", ...]` (src/presets/broken-links.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "linkinator"
+      "name": "linkinator",
+      "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `linkinator` as an unused dev dependency.",
+      "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
       "id": "dead-code:unused-dev-dependency:oxlint",
-      "version": 1,
+      "version": 2,
       "justification": "Spawned by literal command name via scripts/check-lint.mjs (checks/lint.ts's own script) -- nothing `import`s the package, so knip cannot see the use.",
+      "attempted": "Searched the repository for `oxlint`: it appears in checks/crap.ts, checks/docs.ts, checks/lint.ts, docs/sbom.cdx.json and 10 more.",
+      "constraint": "Spawned by literal command name via scripts/check-lint.mjs (checks/lint.ts's own script) -- nothing `import`s the package, so knip cannot see the use.",
+      "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "oxlint"
+      "name": "oxlint",
+      "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `oxlint` as an unused dev dependency.",
+      "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
       "id": "dead-code:unused-dev-dependency:publint",
-      "version": 1,
+      "version": 2,
       "justification": "Spawned by literal command name via the publint preset's `run: [\"publint\", \"run\"]` (src/presets/publint.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "attempted": "Searched the repository for `publint`: it appears in GUIDE.md, bin/preset-catalog.d.mts, bin/preset-catalog.mjs, docs/api-report/presets.md and 11 more.",
+      "constraint": "Spawned by literal command name via the publint preset's `run: [\"publint\", \"run\"]` (src/presets/publint.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "publint"
+      "name": "publint",
+      "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `publint` as an unused dev dependency.",
+      "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
       "id": "dead-code:unused-export:evaluateCiTests",
-      "version": 1,
+      "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. This finding is newly surfaced (not new dead code): adding a direct unit test for the neighboring `evaluateDangerousWorkflow` export made local-checks.ts itself reachable to knip for the first time, which retired its own `unused-file` entry below but exposed that every other export local-checks.ts has is, like `ghApiJson`/`repoSlug` above, used only by the still-unreachable run.ts. See those entries for the identical reachability gap.",
+      "attempted": "Searched the repository for `evaluateCiTests`: it appears in scripts/openssf-scorecard/local-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
       "kind": "unused-export",
-      "name": "evaluateCiTests"
+      "name": "evaluateCiTests",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluateCiTests` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
       "id": "dead-code:unused-export:evaluateLicense",
-      "version": 1,
+      "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "attempted": "Searched the repository for `evaluateLicense`: it appears in scripts/openssf-scorecard/local-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
       "kind": "unused-export",
-      "name": "evaluateLicense"
+      "name": "evaluateLicense",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluateLicense` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
       "id": "dead-code:unused-export:evaluatePackaging",
-      "version": 1,
+      "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "attempted": "Searched the repository for `evaluatePackaging`: it appears in scripts/openssf-scorecard/local-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
       "kind": "unused-export",
-      "name": "evaluatePackaging"
+      "name": "evaluatePackaging",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluatePackaging` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
       "id": "dead-code:unused-export:evaluatePinnedDependencies",
-      "version": 1,
+      "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "attempted": "Searched the repository for `evaluatePinnedDependencies`: it appears in scripts/openssf-scorecard/local-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
       "kind": "unused-export",
-      "name": "evaluatePinnedDependencies"
+      "name": "evaluatePinnedDependencies",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluatePinnedDependencies` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
       "id": "dead-code:unused-export:evaluateSecurityPolicy",
-      "version": 1,
+      "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "attempted": "Searched the repository for `evaluateSecurityPolicy`: it appears in scripts/openssf-scorecard/local-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
       "kind": "unused-export",
-      "name": "evaluateSecurityPolicy"
+      "name": "evaluateSecurityPolicy",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluateSecurityPolicy` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
       "id": "dead-code:unused-export:evaluateTokenPermissions",
-      "version": 1,
+      "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
+      "attempted": "Searched the repository for `evaluateTokenPermissions`: it appears in scripts/openssf-scorecard/local-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
       "kind": "unused-export",
-      "name": "evaluateTokenPermissions"
+      "name": "evaluateTokenPermissions",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluateTokenPermissions` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
       "id": "dead-code:unused-export:ghApiJson",
-      "version": 1,
+      "version": 2,
       "justification": "Genuinely used by every gh-API-backed evaluator in scripts/openssf-scorecard/github-checks.ts (Branch-Protection, Code-Review, Signed-Releases, Contributors, Maintained) and by run.ts's own repo-metadata lookup -- but those callers are reachable only by being imported by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. gh-api.ts's own `packageVersion`/`ghApiRaw` are now imported directly and statically by checks/openssf-scorecard.ts (for provenance metadata and the live weight-table fetch), which is what makes gh-api.ts itself, `GhApiResult`, and `yaml` (transitively, via weights.ts) newly visible to knip -- `ghApiJson`/`repoSlug` specifically are not among those statically-reachable exports, the same reachability gap as every other spawned-only file in this directory.",
+      "attempted": "Searched the repository for `ghApiJson`: it appears in scripts/openssf-scorecard/gh-api.ts, scripts/openssf-scorecard/github-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by every gh-API-backed evaluator in scripts/openssf-scorecard/github-checks.ts (Branch-Protection, Code-Review, Signed-Releases, Contributors, Maintained) and by run.ts's own repo-metadata lookup -- but those callers are reachable only by being imported by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
       "kind": "unused-export",
-      "name": "ghApiJson"
+      "name": "ghApiJson",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `ghApiJson` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
       "id": "dead-code:unused-export:repoSlug",
-      "version": 1,
+      "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts (to build the `owner/repo` slug every sub-check queries) -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `ghApiJson` entry above for why this export specifically (as opposed to gh-api.ts's other exports) is still flagged even though the file itself is no longer `unused-file`.",
+      "attempted": "Searched the repository for `repoSlug`: it appears in scripts/openssf-scorecard/gh-api.ts, scripts/openssf-scorecard/run.ts, scripts/openssf-scorecard/types.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts (to build the `owner/repo` slug every sub-check queries) -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
       "kind": "unused-export",
-      "name": "repoSlug"
+      "name": "repoSlug",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `repoSlug` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
       "id": "dead-code:unused-file:scripts/openssf-scorecard/github-checks.ts",
-      "version": 1,
+      "version": 2,
       "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see the `repoSlug`/`ghApiJson` entries above for the identical reachability gap this whole directory shares.",
+      "attempted": "Searched the repository for `scripts/openssf-scorecard/github-checks.ts`: it appears in no file other than this record.",
+      "constraint": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see the `repoSlug`/`ghApiJson` entries above for the identical reachability gap this whole directory shares.",
+      "expires": "",
       "kind": "unused-file",
-      "name": "scripts/openssf-scorecard/github-checks.ts"
+      "name": "scripts/openssf-scorecard/github-checks.ts",
+      "residualRisk": "If the file stops being used, knip can no longer say so, and this record then hides an unused file.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `scripts/openssf-scorecard/github-checks.ts` as an unused file.",
+      "whyPreferable": "Recording why the file is needed is preferable to deleting something the repository relies on, or to ignoring the file for every future knip run."
     },
     {
       "id": "dead-code:unused-file:scripts/openssf-scorecard/run.ts",
-      "version": 1,
+      "version": 2,
       "justification": "The openssf-scorecard check's own entrypoint, spawned by literal path via checks/openssf-scorecard.ts's `run: [\"tsx\", \"scripts/openssf-scorecard/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
+      "attempted": "Searched the repository for `scripts/openssf-scorecard/run.ts`: it appears in checks/openssf-scorecard.ts, eslint.config.js, scripts/sbom/run.ts, test/unit/checks/openssf-scorecard.test.ts.",
+      "constraint": "The openssf-scorecard check's own entrypoint, spawned by literal path via checks/openssf-scorecard.ts's `run: [\"tsx\", \"scripts/openssf-scorecard/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
+      "expires": "",
       "kind": "unused-file",
-      "name": "scripts/openssf-scorecard/run.ts"
+      "name": "scripts/openssf-scorecard/run.ts",
+      "residualRisk": "If the file stops being used, knip can no longer say so, and this record then hides an unused file.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `scripts/openssf-scorecard/run.ts` as an unused file.",
+      "whyPreferable": "Recording why the file is needed is preferable to deleting something the repository relies on, or to ignoring the file for every future knip run."
     },
     {
       "id": "dead-code:unused-file:scripts/sbom/run.ts",
-      "version": 1,
+      "version": 2,
       "justification": "The sbom check's own entrypoint, spawned by literal path via checks/sbom.ts's `run: [\"tsx\", \"scripts/sbom/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/openssf-scorecard/run.ts, scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
+      "attempted": "Searched the repository for `scripts/sbom/run.ts`: it appears in checks/sbom.ts, eslint.config.js, prettierignore, scripts/sbom/run.ts and 1 more.",
+      "constraint": "The sbom check's own entrypoint, spawned by literal path via checks/sbom.ts's `run: [\"tsx\", \"scripts/sbom/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/openssf-scorecard/run.ts, scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
+      "expires": "",
       "kind": "unused-file",
-      "name": "scripts/sbom/run.ts"
+      "name": "scripts/sbom/run.ts",
+      "residualRisk": "If the file stops being used, knip can no longer say so, and this record then hides an unused file.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `scripts/sbom/run.ts` as an unused file.",
+      "whyPreferable": "Recording why the file is needed is preferable to deleting something the repository relies on, or to ignoring the file for every future knip run."
     }
   ]
 }

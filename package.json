@@ -91,6 +91,7 @@
     "benchmark:api-contract": "tsx node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs benchmarks/performance-api-contract/suite.mjs",
     "benchmark:check": "tsx benchmarks/run-benchmarks.mjs --check",
     "benchmark:checks": "tsx node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs benchmarks/performance-checks/suite.mjs",
+    "benchmark:exceptions": "tsx node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs benchmarks/performance-exceptions/suite.mjs",
     "benchmark:policy-evidence": "tsx node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs benchmarks/performance-policy-evidence/suite.mjs",
     "build": "npm run clean && tsup && tsc -p tsconfig.build.json && node scripts/emit-dts-shims.mjs",
     "check": "node scripts/check.mjs",
@@ -105,15 +106,16 @@
     "docs": "npm run contract -- docs",
     "docs:api": "typedoc",
     "docs:api:report": "typedoc --options typedoc.markdown.json",
-    "docs:benchmarks": "node node_modules/internal-package-contract/scripts/benchmark/render-page.mjs --out docs/benchmarks/index.html --history \"Checks|benchmarks/history/checks.json\" --history \"Policy & evidence|benchmarks/history/policy-evidence.json\" --history \"API contract|benchmarks/history/api-contract.json\"",
+    "docs:benchmarks": "node node_modules/internal-package-contract/scripts/benchmark/render-page.mjs --out docs/benchmarks/index.html --readme https://github.com/maverickcer/repo-contract/blob/main/benchmarks/README.md --history \"Checks|benchmarks/history/checks.json\" --history \"Policy & evidence|benchmarks/history/policy-evidence.json\" --history \"API contract|benchmarks/history/api-contract.json\" --history \"Exception helpers|benchmarks/history/exceptions.json\"",
+    "docs:env": "internal-package-contract env",
     "duplication": "npm run contract -- duplication",
     "format": "npm run contract -- format",
     "format:check": "prettier --check .",
     "license": "npm run contract -- license",
     "lint": "npm run contract -- lint",
     "mutation": "npm run contract -- mutation",
-    "precommit": "npm run contract -- format lint typecheck schema dead-code architecture adr-governance suppression-governance security-network duplication && npm run verify-no-ambient-capabilities",
-    "prepublishOnly": "npm run docs:api && npm run docs:benchmarks && npm run contract 1>&2 && npm run verify-no-ambient-capabilities",
+    "precommit": "npm run contract -- format lint typecheck schema dead-code architecture adr-governance suppression-governance security-network duplication ambient-capabilities",
+    "prepublishOnly": "npm run docs:api && npm run docs:benchmarks && npm run contract 1>&2",
     "prepush": "npm run contract",
     "publint": "npm run contract -- publint",
     "release": "changeset publish",
@@ -137,12 +139,12 @@
     "test:watch": "vitest --watch",
     "typecheck": "npm run contract -- typecheck",
     "verify": "npm run docs:api && npm run docs:benchmarks && npm run contract",
-    "verify-no-ambient-capabilities": "node scripts/verify-no-ambient-capabilities.mjs",
     "version": "changeset version && npm run build && npm run sbom"
   },
   "overrides": {
     "adm-zip": "0.6.1",
     "esbuild": "^0.28.1",
+    "handlebars": "^4.7.10",
     "pa11y": {
       "puppeteer": "npm:puppeteer-core@^25.9.0"
     },
@@ -150,7 +152,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
-    "@changesets/cli": "^2.31.1",
+    "@changesets/cli": "^3.0.3",
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
     "@cyclonedx/cyclonedx-npm": "^6.0.1",
@@ -186,7 +188,7 @@
     "fast-check": "^4.9.0",
     "github-actionlint": "^1.7.12",
     "globals": "^17.9.0",
-    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.9.0",
+    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.13.0",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-reports": "^3.2.0",
@@ -219,5 +221,22 @@
     "esbuild@0.28.2": true,
     "fsevents@2.3.3": true,
     "unrs-resolver@1.12.2": true
+  },
+  "internal-package-contract": {
+    "copies": [
+      "benchmark-budgets",
+      "reading-benchmarks",
+      "typedoc-markdown",
+      "writing-benchmarks"
+    ],
+    "checks": [
+      "AgentSkill",
+      "AmbientCapabilities"
+    ],
+    "ambientCapabilities": {
+      "forbiddenDependencies": [
+        "cross-spawn"
+      ]
+    }
   }
 }

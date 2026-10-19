@@ -43,6 +43,24 @@ The order of operations for a breaking `repo-contract` change follows:
 3. Re-pin `repo-contract`'s own IPC devDependency to that tag. (`dependency-pin-sync` does this, and moves
    any workflow pinned to an IPC commit SHA with it.)
 
+### A pin bump never starts another release
+
+Re-pinning a consumer to a new IPC tag is the step that follows an IPC release, and it must not be able to
+start the next one. Four rules keep the loop finite:
+
+1. A pin bump changes no published runtime behaviour, so it is a `chore` with no changeset and no release.
+   A consumer releases only for its own feature or fix.
+2. IPC never releases because a consumer re-pinned. Its dependencies on `repo-contract` (and any consumer)
+   are ranges, not pins.
+3. Releases go in waves, one per package: `repo-contract`, then IPC, then `env-cap` and `data-cap`, then one
+   re-pin pull request per consumer to the final IPC tag. IPC is not released again until those merge,
+   unless a fix cannot wait.
+4. Releases stay human-authorized: the release pull request is merged by a person, never by the pin-sync
+   automation.
+
+The edges that make this a loop are `IPC -> repo-contract` (a range) and `repo-contract -> IPC` (a pin, dev
+only). `env-cap` and `data-cap` only ever follow IPC, so a re-pin there ends the wave.
+
 ### Names are kept as published
 
 `@maverickcer/env-cap`, `data-cap` and `repo-contract` stay as they are. Renaming after adoption means a
