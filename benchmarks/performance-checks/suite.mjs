@@ -7,6 +7,7 @@
 import { spawn } from "node:child_process"
 import { defineSuite } from "internal-package-contract/benchmark"
 import { runChecks } from "../../src/execution/run-checks.ts"
+import { runRepoContract } from "../../src/run-repo-contract.ts"
 import { generateCheckGraph } from "./fixtures.mjs"
 
 const CONCURRENCY = 8
@@ -100,6 +101,17 @@ export default defineSuite({
     ],
   },
 
+  notBenchmarked: {
+    commitlint:
+      "It only assembles one check definition from two short strings, a constant amount of work done once; the commit-message tool it runs is a process the contract itself spawns and times.",
+    distNoUrls:
+      "It only assembles one check definition from two short options, a constant amount of work done once; the scan the check performs is a process the contract itself spawns and times.",
+    onEvidenceSaveToRepoContractLogs:
+      "A thin wrapper that returns the `saveEvidence` hook of `repoContractLogs`, which `save-evidence-to-logs` in the policy-evidence suite benchmarks with every one of its options accounted for.",
+    onVerdictPrependRepoContractLogs:
+      "A thin wrapper that returns the `prependVerdict` hook of `repoContractLogs`, which `prepend-verdict-to-logs` in the policy-evidence suite benchmarks with every one of its options accounted for.",
+  },
+
   functions: [
     {
       id: "run-checks",
@@ -148,6 +160,12 @@ export default defineSuite({
             "Every twentieth check is isolated, which forces everything before it to finish and everything after it to wait: the most serialized realistic shape.",
           options: { dependencies: true, isolatedEvery: 20 },
         },
+        {
+          name: "with-reporting-hook",
+          description:
+            "The shape of a real contract (few dependencies) with an `onEvidence` hook that reads each check's evidence, as a progress printer or a log writer does.",
+          options: { dependencies: true, hook: true },
+        },
       ],
       notCovered: [
         {
@@ -166,8 +184,110 @@ export default defineSuite({
         description: "This is the end-to-end operation itself.",
       },
       sampling: SPAWN_BOUND,
-      setup: (n, options) => generateCheckGraph(n, options ?? {}).checks,
-      run: (checks) => runChecks(checks, CONCURRENCY, execution()),
+      setup: (n, options) => ({
+        checks: generateCheckGraph(n, options ?? {}).checks,
+        hook: options?.hook === true,
+      }),
+      run: ({ checks, hook }) =>
+        runChecks(
+          checks,
+          CONCURRENCY,
+          execution(),
+          hook ? { onEvidence: (_id, evidence) => evidence.durationMs } : undefined,
+        ),
+    },
+    {
+      id: "run-repo-contract",
+      name: "runRepoContract",
+      why: "It is the public entry point of every contract run: it validates the configuration, schedules and spawns the checks, assembles the evidence and judges it, so it is what every pre-push and every CI job calls.",
+      poorPerformanceMeans:
+        "Slower pre-push hooks and CI jobs in proportion to how many checks a repository configures, and a concurrency setting that no longer shortens a run would waste every extra core.",
+      expectedComplexity: "linear",
+      complexityReason:
+        "Each check is scheduled, spawned and judged once, with a bounded number running at a time, so total time is proportional to the number of checks.",
+      variables: [
+        CHECKS,
+        PROCESS,
+        {
+          name: "concurrency",
+          how: "swept",
+          description: "How many checks run at a time.",
+        },
+        {
+          name: "hooks",
+          how: "variant",
+          description: "Whether the run reports progress through `onEvidence` and `onVerdict`.",
+        },
+        RUNTIME,
+      ],
+      variants: [
+        {
+          name: "plain",
+          description: "No hooks: the shape of a run that only wants its verdict.",
+          options: { hooks: false },
+        },
+        {
+          name: "with-hooks",
+          description:
+            "Both `onEvidence` and `onVerdict` read their argument, as a progress printer or a log writer does.",
+          options: { hooks: true },
+        },
+      ],
+      sweeps: [
+        {
+          variable: "concurrency",
+          description: "How many checks run at a time.",
+          baseValue: CONCURRENCY,
+          primaryValue: 80,
+          tiers: [1, 2, 4, 8, 16],
+          expectedComplexity: "constant",
+          complexityReason:
+            "More checks running at once never makes a run take longer; it shortens it until the machine's cores are busy, so the cost does not grow with it.",
+        },
+      ],
+      tiers: [20, 40, 80, 160],
+      tiersReason:
+        "Every check spawns a real process and the whole run is measured, so sizes beyond a few hundred take minutes per sample; `run-checks` already measures the scheduler to 2,560.",
+      covers: {
+        runRepoContract: {
+          "config.checks": "swept",
+          "config.concurrency": "sweep:concurrency",
+          "config.env":
+            "fixed: `process.env`, passed by reference as the contract's own config does",
+          "config.killProcessTree":
+            "not covered: only used on Windows to end a check's process tree after a timeout or an abort",
+          "config.shell": "fixed: `false`, the argv-only default every check here uses",
+          "config.spawn":
+            "fixed: node's `child_process.spawn`, as the contract's own config passes it",
+          "options.checks":
+            "fixed: every check selected, which is what a full contract run does; selecting fewer is the same work on fewer checks",
+          "options.onEvidence": "variant:with-hooks",
+          "options.onVerdict": "variant:with-hooks",
+          "options.signal":
+            "not covered: an abort is a failure path; the steady-state cost is the successful run",
+        },
+      },
+      inEndToEnd: {
+        callsPerOperation: 0,
+        description:
+          "Not part of the end-to-end operation, which measures the scheduler on its own (`run-checks`).",
+      },
+      sampling: SPAWN_BOUND,
+      setup: (_n, options, context) => ({
+        checks: generateCheckGraph(context.values.check, { dependencies: true }).checks,
+        concurrency: context.values.concurrency,
+        hooks: options?.hooks === true,
+      }),
+      run: ({ checks, concurrency, hooks }) =>
+        runRepoContract(
+          { checks, concurrency, spawn, env: process.env },
+          hooks
+            ? {
+                onEvidence: (_id, evidence) => evidence.durationMs,
+                onVerdict: (_id, result) => result.outcome,
+              }
+            : undefined,
+        ),
     },
   ],
 })

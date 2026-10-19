@@ -20,8 +20,11 @@
   // same reasoning as the PR template entry above. Also covers
   // .changeset/README.md, `@changesets/cli`'s own scaffolded boilerplate
   // (never hand-edited).
+  // docs/ENVIRONMENT.md is written by `internal-package-contract env` (env-cap's document format, with its own
+  // anchors and a generated-file banner first), drift-checked by the EnvContract check and never hand-edited.
   "ignores": [
     "docs/api-report/**",
+    "docs/ENVIRONMENT.md",
     ".github/pull_request_template.md",
     "CHANGELOG.md",
     ".changeset/*.md",

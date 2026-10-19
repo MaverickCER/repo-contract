@@ -92,3 +92,12 @@ history.json
 
 # Vitest 5 writes its JSON report here when --outputFile is not given.
 /.vitest/
+
+# A benchmark run outside CI is a gate, not a figure: only CI's results are committed.
+/.benchmark-local
+
+# Published figures, and the files beside them that say what each figure is: generated in CI, never committed.
+/docs/coverage.json
+/docs/mutation.json
+/docs/size.json
+/docs/*-badge.json

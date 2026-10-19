@@ -19,7 +19,7 @@ Nothing in this folder implements timing, statistics or reporting.
 
 The history page on the project website and the pull-request summaries link back here.
 
-## Three suites, three hot paths
+## Four suites, four hot paths
 
 repo-contract is a check-execution engine, so its performance-sensitive surface is internal. Each suite
 benchmarks its own source (`src/`, run through `tsx`) -- reaching into the repository the way a unit test
@@ -30,15 +30,17 @@ does, not the way an external consumer imports it:
 | [performance-checks](performance-checks/BENCHMARKS.md)                   | `runChecks`: scheduling and process orchestration. Every check spawns a real, empty process, so the cost is repo-contract's own. | configured checks |
 | [performance-policy-evidence](performance-policy-evidence/BENCHMARKS.md) | `buildEvidence` and `runPolicies`: pure in-memory evidence assembly and policy evaluation, with quiet and chatty tool output.    | check results     |
 | [performance-api-contract](performance-api-contract/BENCHMARKS.md)       | The API-contract engine (load, normalize, classify with type-assignability) that gates every release.                            | exported symbols  |
+| [performance-exceptions](performance-exceptions/BENCHMARKS.md)           | The exception-registry and exception-policy helpers: load, write, reconcile, resolve, evaluate, validate and hash.               | entries           |
 
-Two ladders stop short of 10,240 and say why in their report: the checks suite stops at 2,560 (each
-check spawns a real process) and the API-contract suite at 1,280 (each size compiles a real TypeScript
-package and runs API Extractor).
+Some ladders stop short of 10,240 and say why in their report: the checks suite stops at 2,560 (each
+check spawns a real process), the API-contract suite at 1,280 (each size compiles a real TypeScript
+package and runs API Extractor), and the exceptions suite's rule-matching benchmarks at 1,280 (each call
+builds a regular expression per rule, and no real policy has thousands of rules).
 
 ## Commands
 
 ```sh
-npm run benchmark                   # all three suites -> results.json + BENCHMARKS.md in each
+npm run benchmark                   # all four suites -> results.json + BENCHMARKS.md in each
 npm run benchmark -- --quick        # smoke test; never commit its output
 npm run benchmark -- --only <id>    # run a subset while developing
 npm run benchmark:check             # validate the suite's documentation; measures nothing

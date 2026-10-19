@@ -56,9 +56,9 @@ function evaluateFinding(
 /**
  * Evaluates the `coderabbitai` check's own emitted evidence -- a pure evidence->verdict function.
  * `not-applicable` (CI, review delegated to the GitHub App) / `unavailable` is a `warn`, always
- * visibly recorded. `error` fails closed. A malformed/unreconcilable registry (`registryError`)
- * fails regardless of status. A `reviewed` run: any `forbidden` / `insufficient` / `unmatched`
- * verdict or stale record fails, listed individually.
+ * visibly recorded. `error` warns (the run has no suggestions to offer). A malformed/unreconcilable registry
+ * (`registryError`) fails regardless of status. A `reviewed` run: any `forbidden` / `insufficient` / `unmatched`
+ * verdict or stale record warns, listed individually -- CodeRabbit's findings are advisory suggestions.
  * @param input - Wraps the evidence to evaluate.
  * @param input.evidence - The `CoderabbitEvidence` emitted by review.ts.
  * @returns The check's `PolicyResult`.
@@ -113,8 +113,10 @@ export function evaluateCoderabbitPolicy(input: {
     }
   }
 
+  // CodeRabbit is advisory: a review that cannot be read leaves the run without suggestions, which is
+  // visible, not a failure of the change under review.
   if (evidence.status === "error") {
-    return { outcome: "fail", rationale: `coderabbitai review failed: ${evidence.message}` }
+    return { outcome: "warn", rationale: `coderabbitai review failed: ${evidence.message}` }
   }
 
   const activeRecords = Object.values(evidence.activeExceptions)
@@ -183,10 +185,13 @@ export function evaluateCoderabbitPolicy(input: {
     return `- ${d.finding.file} [${d.finding.severity}]: ${detail} -- ${d.finding.summary}`
   })
 
+  // Advisory: CodeRabbit's findings are suggestions, adopted where they improve the code. A review of the same
+  // diff words them differently on every run, so no record can be relied on to match the next one; they are
+  // reported, never a reason to stop a commit.
   return {
-    outcome: "fail",
+    outcome: "warn",
     rationale: [
-      `${String(offenders.length + evidence.staleExceptions.length)} CodeRabbit finding(s) or stale record(s) need attention:`,
+      `${String(offenders.length + evidence.staleExceptions.length)} CodeRabbit suggestion(s) to consider (advisory: adopt one where it improves the code; a record only documents why one was not taken):`,
       ...offenderLines,
       ...staleLines,
     ].join("\n"),

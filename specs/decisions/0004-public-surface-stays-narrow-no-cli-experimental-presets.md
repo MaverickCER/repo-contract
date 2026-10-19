@@ -124,7 +124,7 @@ files `init` itself owns.
 directory (`bin/`), for the first time — the first hand-written, unbundled top-level JS this
 package has ever published (everything else in `files` today is build output or a JSON schema).
 `bin/repo-contract.mjs` becomes new published surface independently subject to
-`scripts/verify-no-ambient-capabilities.mjs`, the mechanical enforcement of ADR 0011's invariant.
+the `AmbientCapabilities` check, the mechanical enforcement of ADR 0011's invariant.
 It ships under the same **Experimental** classification already established above for
 `src/presets/**` — a version-stability classification (its detection table and generated output
 may still change in a 0.x release), not a caution against using it.

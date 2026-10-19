@@ -60,20 +60,17 @@ a function whose cost nobody can see.
 Every function is measured at **20, 40, 80, 160, 320, 640, 1280, 2560, 5120 and 10240** units of
 `n`. `n` is whatever one suite declares as its workload unit (a record, a variable, a file, a call).
 
-Ten doubling points are not arbitrary. Big-O is estimated by fitting a line through
+The default ladder of ten doubling points is not arbitrary. Big-O is estimated by fitting a line through
 `log(time)` against `log(size)`; its slope is the growth exponent. Three points cannot tell `O(n)`
 from `O(n log n)` or `O(1)` from `O(log n)`. A ladder spanning more than two orders of magnitude, with
 ten points, can. `typicalN` (default 640) marks the size the cost summary quotes -- choose the size a
 real operation of this package typically handles, and say why in `workload.description`.
 
-Do not shorten the ladder for committed results, with one exception: a function whose cost
-cannot be measured that high may declare its own `tiers` together with a `tiersReason` saying why
-(this repository's suites do this where a size would be impractical, for example the API-contract
-suite, which stops at 1280 because each size compiles a real package). `--quick` exists for a smoke
-test and says so in its output; do not commit what it produces.
-
-Suites in this repository import the package's TypeScript sources directly and run under `tsx`,
-which is intentional: they measure the real functions, not a bundled copy.
+Never shorten the ladder for committed results, with one recorded exception: a function too slow to
+measure at the largest sizes (it compiles a package, or spawns a process, per unit) may list its own
+`tiers` -- at least four ascending sizes -- together with a `tiersReason` saying why, which the report
+prints beside its results. `--quick` exists for a smoke test and says so in its output; do not commit
+what it produces.
 
 ## How to test
 
@@ -92,7 +89,9 @@ which is intentional: they measure the real functions, not a bundled copy.
   function that resolves from a prepared pool; keep the real code path (queues, deduplication, error
   handling) intact, because that is what the package contributes.
 - **Import the package the way a consumer does.** Its built entry point, never a source path. The
-  published `exports` map is part of the cost (and of the risk).
+  published `exports` map is part of the cost (and of the risk). A package whose costly code is internal
+  (an engine no entry point exposes on its own) may import that source instead, and its benchmarks
+  README says so and why.
 - **Let the engine handle fast operations.** Operations faster than about a millisecond are repeated
   back to back inside one sample and the result divided, because timers cannot resolve them. You
   do nothing; the report records the batch size.
@@ -130,14 +129,14 @@ capacity, cloud spend, cold-start time, memory pressure.
 
 Pick the class you **expect from reading the code** before you run anything:
 
-| Class                  | Notation       | Typical cause                                                               |
-| ---------------------- | -------------- | --------------------------------------------------------------------------- |
-| `constant`             | O(1)           | A lookup or a fixed amount of work regardless of size.                      |
-| `logarithmic`          | O(log n)       | Binary search, balanced-tree operations.                                    |
-| `linear`               | O(n)           | One pass over the input.                                                    |
-| `linearithmic`         | O(n log n)     | Sorting, or a pass that does a log-cost operation per item.                 |
-| `quadratic`            | O(n²)          | A pass inside a pass (nested loops, repeated scans, repeated array copies). |
-| `exponential-or-worse` | O(n³) or worse | Anything faster-growing than quadratic.                                     |
+| Class            | Notation       | Typical cause                                                               |
+| ---------------- | -------------- | --------------------------------------------------------------------------- |
+| `constant`       | O(1)           | A lookup or a fixed amount of work regardless of size.                      |
+| `logarithmic`    | O(log n)       | Binary search, balanced-tree operations.                                    |
+| `linear`         | O(n)           | One pass over the input.                                                    |
+| `linearithmic`   | O(n log n)     | Sorting, or a pass that does a log-cost operation per item.                 |
+| `quadratic`      | O(n²)          | A pass inside a pass (nested loops, repeated scans, repeated array copies). |
+| `cubic-or-worse` | O(n³) or worse | Anything faster-growing than quadratic.                                     |
 
 The reason is one or two sentences that **name the mechanism**, so a reader can check it against the
 code: "walks every newly arrived item once to freeze it" is a reason; "it is linear" is not. After the
@@ -155,6 +154,54 @@ One row per variable from the checklist above, each marked:
 - `fixed` -- held constant on purpose; give the `value`, so a reader knows what was and was not
   covered.
 
+### `covers` and `notBenchmarked` -- every input of every public function
+
+A public function with more than one input (several parameters, or an object with several keys) has
+several things that can change its cost, and the `BenchmarkCoverage` check fails until each one is
+accounted for. In the benchmark that exercises the function, list what you did with every parameter, and
+with every key of an object parameter:
+
+```js
+covers: {
+  validateEnv: {
+    "options.schema": "swept",
+    "options.values": "variant:invalid-values",
+    "options.cache": "fixed: reset before every sample, so each run measures a cold validation",
+    "options.strict": "not covered: strict mode only changes the error message, not the work done",
+  },
+},
+```
+
+Each is one of `swept` (the suite's unit varies it), `sweep:<variable>` (one of the function's `sweeps`),
+`variant:<name>` (one of its `variants`), `fixed: <why>` (held at one value, and why) or `not covered: <why>`
+(left out, and why). A function that has no benchmark at all is listed in the suite's `notBenchmarked` with
+the reason, for example because a benchmarked function that calls it already accounts for its cost.
+
+### `sweeps` -- a second variable that scales
+
+Some functions grow with more than one input: the number of records _and_ how many fields each record
+has. One big-O for both would be wrong, because the two do not have to grow at the same rate. List each
+other variable that scales under `sweeps` and the suite measures it on its own, with every other variable
+held at its `baseValue` (the suite's own unit is held at `primaryValue`, by default the typical size):
+
+```js
+sweeps: [
+  {
+    variable: "width",
+    description: "How many fields each record has.",
+    baseValue: 4,
+    expectedComplexity: "quadratic",
+    complexityReason: "Every field is compared with every other field of the record.",
+  },
+],
+```
+
+The variable must also be listed under `variables` as `swept`. `setup` (or `input`) receives a third
+argument, `{ variable, values }`: the variable being swept and the value of every variable at this
+measurement, so one function builds its input for any of them. In a sweep of another variable, `n` is that variable's value, not the size of the unit: always read every variable from `context.values`, which is right for the primary sweep too. Each sweep is its own group
+(`fn:<id>#<variable>`), with its own growth class, its own documented big-O, and its own row in the
+report, the history and the pull-request summary.
+
 ### `variants` -- measured alternatives
 
 When a variable changes the algorithm (cache hit vs miss, flat vs nested, success vs error), measure
@@ -170,7 +217,9 @@ keeps no shared state"). A reader should never wonder whether something was forg
 
 State how often one end-to-end operation calls this function (`callsPerOperation`, a number or a
 function of `n`) and describe the call. This is what lets section 3 of the report attribute the
-overhead to the functions that cause it.
+time of one operation to the functions that cause it. A function measured alone includes everything
+it calls: when one attributed function calls another, list the callee's id in `includes` so its time is
+subtracted from the caller and counted once.
 
 ### The end-to-end block
 
@@ -196,10 +245,8 @@ Before you open a pull request:
 ## Commands
 
 ```sh
-npm run benchmark:checks            # full ladder -> benchmarks/performance-checks/{results.json,BENCHMARKS.md}
-npm run benchmark:policy-evidence   # -> benchmarks/performance-policy-evidence/...
-npm run benchmark:api-contract      # -> benchmarks/performance-api-contract/...
-npm run benchmark:checks -- --quick # smoke test; never commit its output
-npm run benchmark:checks -- --only end-to-end   # run a subset (by suite id) while developing
-npm run benchmark:check             # validate documentation and shape; measures nothing
+npm run benchmark          # full ladder -> results.json and BENCHMARKS.md in each benchmarks/performance-*/ folder
+npm run benchmark -- --quick        # smoke test; never commit its output
+npm run benchmark -- --only package-name,end-to-end   # run a subset while developing
+npm run benchmark:check    # validate documentation and shape; measures nothing
 ```

@@ -103,7 +103,7 @@ describe("evaluateCoderabbitPolicy", () => {
     expect(result.rationale).toContain("were validated but not reconciled")
   })
 
-  it("fails on a real CLI-reported error", () => {
+  it("warns on a real CLI-reported error: CodeRabbit is advisory", () => {
     const result = evaluateCoderabbitPolicy({
       evidence: {
         status: "error",
@@ -112,7 +112,7 @@ describe("evaluateCoderabbitPolicy", () => {
         existingRecordCount: 0,
       },
     })
-    expect(result.outcome).toBe("fail")
+    expect(result.outcome).toBe("warn")
     expect(result.rationale).toContain("unexpected shape")
   })
 
@@ -121,22 +121,22 @@ describe("evaluateCoderabbitPolicy", () => {
     expect(result.outcome).toBe("pass")
   })
 
-  it("fails a 0-findings review with a stale record", () => {
+  it("warns on a 0-findings review with a stale record", () => {
     const gone = finding({ file: "src/gone.ts" })
     const result = evaluateCoderabbitPolicy({
       evidence: reviewed([], { stale: [record(gone, COMPLETE)] }),
     })
-    expect(result.outcome).toBe("fail")
+    expect(result.outcome).toBe("warn")
     expect(result.rationale).toContain("Stale exception")
     expect(result.rationale).toContain(gone.id)
   })
 
-  it("fails a finding backed only by a blank stub", () => {
+  it("warns on a finding backed only by a blank stub", () => {
     const f = finding()
     const result = evaluateCoderabbitPolicy({
       evidence: reviewed([{ finding: f, record: record(f) }]),
     })
-    expect(result.outcome).toBe("fail")
+    expect(result.outcome).toBe("warn")
     expect(result.rationale).toContain("missing:")
   })
 

@@ -1,0 +1,28 @@
+{
+  "entries": {
+    ".": {
+      "source": "src/",
+      "environment": "isomorphic, zero deps",
+      "tier": "Stable",
+      "purpose": "`defineRepoContract`, `runRepoContract`, `serializeRun`, `renderMarkdownSummary`, the `Evidence`, `Verdict` and `Policy` types, and the error classes"
+    },
+    "./helpers": {
+      "source": "src/helpers/",
+      "environment": "Node-only for the log helpers",
+      "tier": "Stable",
+      "purpose": "Governed exceptions: `loadExceptionRegistry`, `reconcileExceptions`, `evaluateExceptionRecord`; `repoContractLogs` and its two hooks are beta"
+    },
+    "./presets": {
+      "source": "src/presets/",
+      "environment": "isomorphic",
+      "tier": "Experimental",
+      "purpose": "Ready-made checks for common tools: `typecheck`, `lint`, `format`, `test`, `securityDeps`, `license` and others, to spread and override"
+    },
+    "./schema": {
+      "source": "schemas/",
+      "environment": "static JSON",
+      "tier": "Stable",
+      "purpose": "The JSON Schemas for the evidence and verdict documents `serializeRun` writes"
+    }
+  }
+}

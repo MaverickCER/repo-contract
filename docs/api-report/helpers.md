@@ -27,8 +27,6 @@ each other and of the root barrel.
 
 ### ExceptionCategoryGroup
 
-**`Beta`**
-
 One classification group's own policy -- `default` is this group's fallback for any `category`
 with no exact or glob match in `rules` (see `resolveExceptionPolicy` for the full exact > glob >
 group-default > global-default precedence). Omit `default` to fall through to the caller-supplied
@@ -45,8 +43,6 @@ exact entry.
 readonly optional default?: ExceptionPolicy;
 ```
 
-**`Beta`**
-
 This group's fallback policy when `category` matches neither an exact nor a glob key in `rules`. Falls through to the caller's `globalDefault` when omitted.
 
 ##### rules?
@@ -55,15 +51,11 @@ This group's fallback policy when `category` matches neither an exact nor a glob
 readonly optional rules?: Readonly<Record<string, ExceptionPolicy>>;
 ```
 
-**`Beta`**
-
 Keyed by exact `category` string or glob pattern. A literal `"*"` key is rejected by `validateExceptionPolicyConfig` -- see that function's own doc comment for why.
 
 ***
 
 ### ExceptionClassification
-
-**`Beta`**
 
 One classification a record is evaluated against -- deliberately just `{ group, category }`,
 never `domain`/`rule`/`severity`/`exceptionType` or any other consumer-specific vocabulary. A
@@ -81,8 +73,6 @@ never interprets `group`/`category` beyond using them as lookup keys into an
 readonly category: string;
 ```
 
-**`Beta`**
-
 The `rules` key (exact or glob-matched) this classification resolves against within `group`.
 
 ##### group
@@ -91,15 +81,11 @@ The `rules` key (exact or glob-matched) this classification resolves against wit
 readonly group: string;
 ```
 
-**`Beta`**
-
 The top-level key this classification resolves against in an `ExceptionPolicyConfig`.
 
 ***
 
 ### ExceptionDeterminant
-
-**`Beta`**
 
 One record's resolved policy verdict, and (for `"insufficient"`) which required fields are
 still empty. Never published as a batch/matched-vs-unmatched shape -- matching a finding to a
@@ -120,8 +106,6 @@ registry via `reconcileExceptions`).
 readonly missing: readonly string[];
 ```
 
-**`Beta`**
-
 Every required field (by name) still empty on `record`, in the resolved policy's own `requirements` order. Always `[]` for `"forbidden"`/`"permitted"`.
 
 ##### record
@@ -129,8 +113,6 @@ Every required field (by name) still empty on `record`, in the resolved policy's
 ```ts
 readonly record: TRecord;
 ```
-
-**`Beta`**
 
 The record this determinant was computed for, returned verbatim.
 
@@ -140,15 +122,11 @@ The record this determinant was computed for, returned verbatim.
 readonly verdict: ExceptionVerdict;
 ```
 
-**`Beta`**
-
 `"forbidden"`: never permitted. `"insufficient"`: exception-eligible, but `missing` is non-empty. `"permitted"`: every required field is filled in (or the resolved policy was `"allowed"`).
 
 ***
 
 ### ExceptionReconciliation
-
-**`Beta`**
 
 The outcome of reconciling one run's findings against one exception registry.
 
@@ -167,8 +145,6 @@ The outcome of reconciling one run's findings against one exception registry.
 readonly activeRecords: readonly TRecord[];
 ```
 
-**`Beta`**
-
 Every record to persist as live: matched records verbatim, plus one fresh `createStub` per unmatched finding. Never contains a stale record.
 
 ##### matchedPairs
@@ -180,8 +156,6 @@ readonly matchedPairs: readonly {
 }[];
 ```
 
-**`Beta`**
-
 Each finding paired with the existing record it matched, in `findings` order.
 
 ##### newStubIds
@@ -189,8 +163,6 @@ Each finding paired with the existing record it matched, in `findings` order.
 ```ts
 readonly newStubIds: readonly string[];
 ```
-
-**`Beta`**
 
 The ids of the stubs created this run -- a subset of `activeRecords`' ids.
 
@@ -200,15 +172,11 @@ The ids of the stubs created this run -- a subset of `activeRecords`' ids.
 readonly staleRecords: readonly TRecord[];
 ```
 
-**`Beta`**
-
 Existing records whose id matched no finding this run -- surfaced for the policy to fail on, **never removed** by this function (retiring one is an explicit human edit).
 
 ***
 
 ### ExceptionRecordCore
-
-**`Beta`**
 
 The three fields every exception record in `.repo-contract/exceptions/*.json` carries, whatever
 the owning check. A registry adds its own typed fields on top; this is the shared core the
@@ -223,8 +191,6 @@ generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,
 readonly id: string;
 ```
 
-**`Beta`**
-
 The check-namespaced semantic identity of the finding this record waives (e.g. `"suppression:eslint:no-console:src/foo.ts:<module>"`). Equals the finding id; a record whose id matches no current finding is stale. Never derived from prose.
 
 ##### justification
@@ -232,8 +198,6 @@ The check-namespaced semantic identity of the finding this record waives (e.g. `
 ```ts
 readonly justification: string;
 ```
-
-**`Beta`**
 
 The one human-authored field: why this guardrail is deliberately bypassed, and what was checked to confirm the finding is real. `""` in a freshly scaffolded stub (the policy, not the validator, rejects a blank/placeholder value).
 
@@ -243,15 +207,11 @@ The one human-authored field: why this guardrail is deliberately bypassed, and w
 readonly version: number;
 ```
 
-**`Beta`**
-
 Record-schema version.
 
 ***
 
 ### ExceptionRecordEvaluation
-
-**`Beta`**
 
 One record to evaluate, paired with everything `evaluateExceptionRecord` needs to judge it --
 shared by `evaluateExceptionRecord` and `evaluateExceptionRecords` (whose own `inputs` is just
@@ -272,8 +232,6 @@ twice.
 readonly classifications: readonly [ExceptionClassification, ExceptionClassification];
 ```
 
-**`Beta`**
-
 Every classification this record is subject to; the strictest resolved policy across all of them wins.
 
 ##### config
@@ -282,8 +240,6 @@ Every classification this record is subject to; the strictest resolved policy ac
 readonly config: ExceptionPolicyConfig;
 ```
 
-**`Beta`**
-
 The exception policy configuration to resolve `classifications` against.
 
 ##### fieldValue
@@ -291,8 +247,6 @@ The exception policy configuration to resolve `classifications` against.
 ```ts
 readonly fieldValue: (record, requirement) => string;
 ```
-
-**`Beta`**
 
 Resolves one named required field's current string value on `record`.
 
@@ -313,8 +267,6 @@ Resolves one named required field's current string value on `record`.
 readonly globalDefault: ExceptionPolicy;
 ```
 
-**`Beta`**
-
 The policy to fall back to for any classification whose `group` has no entry in `config` at all.
 
 ##### record
@@ -322,8 +274,6 @@ The policy to fall back to for any classification whose `group` has no entry in 
 ```ts
 readonly record: TRecord;
 ```
-
-**`Beta`**
 
 The record to evaluate.
 
@@ -659,8 +609,6 @@ type ExceptionPolicy =
 };
 ```
 
-**`Beta`**
-
 A resolved decision for one `{ group, category }` classification. `"forbidden"`: never
 permitted, regardless of any field's content. `"allowed"`: permitted unconditionally -- no
 field is required. `"exception"`: permitted only once every field named in `requirements` is a
@@ -681,8 +629,6 @@ establishes for the disable-comment domain this type generalizes.
 type ExceptionPolicyConfig = Readonly<Record<string, ExceptionCategoryGroup>>;
 ```
 
-**`Beta`**
-
 A full exception-policy configuration, keyed by classification `group` (e.g. a tool name, or a
 suppression domain). The core never invents the names "domain"/"rule"/"severity"/
 "exceptionType" -- those are every consumer's own vocabulary, expressed here purely as
@@ -695,8 +641,6 @@ suppression domain). The core never invents the names "domain"/"rule"/"severity"
 ```ts
 type ExceptionVerdict = "forbidden" | "insufficient" | "permitted";
 ```
-
-**`Beta`**
 
 A resolved judgment about one record, once its `ExceptionPolicy` has been checked against its
 own field values. See `ExceptionDeterminant`.
@@ -745,8 +689,6 @@ Starts the part of a log that is the check's evidence, so the verdict above it c
 function evaluateExceptionRecord<TRecord>(input): ExceptionDeterminant<TRecord>;
 ```
 
-**`Beta`**
-
 Evaluates one record against every one of its own classifications, taking the strictest
 (`stricterOf`) of each classification's resolved policy -- a record matching both a forbidden
 classification and an otherwise-fine one is forbidden overall. `classifications` is a non-empty
@@ -784,8 +726,6 @@ The record's verdict, and which required fields (if any) are still missing.
 function evaluateExceptionRecords<TRecord>(inputs): readonly ExceptionDeterminant<TRecord>[];
 ```
 
-**`Beta`**
-
 A thin batch over already-matched `(record, classifications)` pairs -- exactly
 `inputs.map(evaluateExceptionRecord)`, provided so a caller evaluating many records against the
 same `config`/`globalDefault`/`fieldValue` doesn't have to write that `.map` itself. Matching a
@@ -822,8 +762,6 @@ function hashRequirementFields<TRecord>(
    fieldValue
 ): string;
 ```
-
-**`Beta`**
 
 A deterministic digest of a set of fields' current values on `record`, via `node:crypto` --
 pure, synchronous, no ambient state (Socket.dev has no alert on `node:crypto`; it is not
@@ -873,8 +811,6 @@ function loadExceptionRegistry<T>(input): Promise<
   ok: false;
 }>;
 ```
-
-**`Beta`**
 
 Reads and validates one exception registry file from disk -- `path -> { "$schema"?: string,
 "exceptions": T[] }`, in two independently-validated layers. This function owns only the
@@ -993,8 +929,6 @@ function reconcileExceptions<TFinding, TRecord>(input):
 };
 ```
 
-**`Beta`**
-
 Reconciles this run's raw findings against the check's already-loaded, already-validated
 exception registry. Pure and add-only: it never mutates a matched record and never removes a
 stale one.
@@ -1079,8 +1013,6 @@ function resolveExceptionPolicy(
 ): ExceptionPolicy;
 ```
 
-**`Beta`**
-
 Resolves the policy one `{ group, category }` classification is subject to, in strict precedence
 order -- documented here as this function's one authoritative source of truth for that order
 (generalized from `scripts/suppression-governance/resolve-policy.ts`'s own `resolveRequirement`,
@@ -1131,8 +1063,6 @@ The resolved policy for `classification`.
 function serializeExceptionRegistry(records): string;
 ```
 
-**`Beta`**
-
 The canonical on-disk form of one exception registry: `{ "exceptions": [ ... ] }`, records
 sorted ascending by `id` (code-unit order, locale-independent), each record's keys in
 `canonicalRecord` order, 2-space indent, `\n` line endings, a trailing newline. Fully
@@ -1160,8 +1090,6 @@ The exact file contents to persist.
 ```ts
 function validateExceptionPolicyConfig(config, validRequirements?): readonly string[];
 ```
-
-**`Beta`**
 
 Validates an entire `ExceptionPolicyConfig`'s shape -- every group's `default` and every entry
 in its `rules` must be a well-formed `ExceptionPolicy` (see `validateExceptionPolicyValue`), and
@@ -1201,8 +1129,6 @@ function writeExceptionRegistry(input): Promise<
   ok: false;
 }>;
 ```
-
-**`Beta`**
 
 Writes one exception registry to disk in its canonical form (`serializeExceptionRegistry`),
 atomically and idempotently -- the sole filesystem-writing primitive in `repo-contract/helpers`.

@@ -348,7 +348,7 @@ and does not inspect, wrap, or sanitize it, and reads `env` only as the environm
 through. This makes the process and environment capabilities explicit at the integration
 boundary — the repository controls what the contract can do — and keeps the package itself free
 of ambient authority (verified against the published tarball by
-`scripts/verify-no-ambient-capabilities.mjs`). On macOS and Linux, Node's native
+the `AmbientCapabilities` check). On macOS and Linux, Node's native
 `child_process.spawn` is sufficient; a consumer targeting Windows supplies a compatible
 implementation such as `cross-spawn` (and optionally `killProcessTree` for process-tree cleanup).
 `shell` is a separate, independent opt-in and does not follow from the spawner choice. See

@@ -35,6 +35,15 @@ const { default: config } = await import(
   pathToFileURL(path.join(root, "repo-contract.config.ts")).href
 )
 
+// The docs link to the benchmark page, which is generated and never committed; build it first, the way every
+// package that runs internal-package-contract's own contract does.
+const { prepare } = await import(
+  pathToFileURL(
+    path.join(root, "node_modules", "internal-package-contract", "scripts", "contract-prepare.mjs"),
+  ).href
+)
+prepare({ cwd: root, out: process.stdout })
+
 const checks = process.argv.slice(2)
 
 const { evidence, verdict } = await runRepoContract(config, checks.length > 0 ? { checks } : {})

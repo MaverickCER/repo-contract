@@ -2,237 +2,363 @@
   "exceptions": [
     {
       "id": "suppression:eslint:@typescript-eslint/no-namespace:src/standard-schema/types.ts:33",
-      "version": 1,
+      "version": 2,
       "justification": "Preserves an exact, re-diffable structural match to @standard-schema/spec's own published dist/index.d.ts, which uses this same interface+namespace merge for StandardSchemaV1.Props/.Result/.Issue/etc. -- an ES2015-module-only alternative cannot express a member nested under the interface's own name, so a namespace here isn't a stylistic choice, it's what keeps this file diffable against upstream verbatim.\n\nAlternatives considered: A separately-named type/module (e.g. StandardSchemaV1Props, StandardSchemaV1Result) instead of StandardSchemaV1.Props/StandardSchemaV1.Result would satisfy the rule, but every real Standard-Schema-compliant consumer -- and the spec itself -- references these as StandardSchemaV1.<Member>; diverging from that referencing convention would make this vendored file harder to recognize as a faithful copy and harder to re-diff against a future spec version.\n\nRemediation: None needed: declare namespace here compiles to zero runtime code (an ambient, type-only declaration merged with the interface of the same name) -- the rule's actual concern (the runtime IIFE-style namespace object TypeScript emits for a non-declare namespace) does not apply, since nothing here is emitted at all.",
+      "attempted": "A separately-named type/module (e.g. StandardSchemaV1Props, StandardSchemaV1Result) instead of StandardSchemaV1.Props/StandardSchemaV1.Result would satisfy the rule, but every real Standard-Schema-compliant consumer -- and the spec itself -- references these as StandardSchemaV1.<Member>; diverging from that referencing convention would make this vendored file harder to recognize as a faithful copy and harder to re-diff against a future spec version.  Remediation: None needed: declare namespace here compiles to zero runtime code (an ambient, type-only declaration merged with the interface of the same name) -- the rule's actual concern (the runtime IIFE-style namespace object TypeScript emits for a non-declare namespace) does not apply, since nothing here is emitted at all.",
       "category": "rule-not-applicable",
+      "constraint": "Preserves an exact, re-diffable structural match to @standard-schema/spec's own published dist/index.d.ts, which uses this same interface+namespace merge for StandardSchemaV1.Props/.Result/.Issue/etc. -- an ES2015-module-only alternative cannot express a member nested under the interface's own name, so a namespace here isn't a stylistic choice, it's what keeps this file diffable against upstream verbatim.",
       "domain": "eslint",
+      "expires": "",
       "file": "src/standard-schema/types.ts",
       "line": 33,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/no-namespace"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/no-namespace']` is disabled at src/standard-schema/types.ts:33.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/only-throw-error:test/unit/execution/process-tree.test.ts:214",
-      "version": 1,
+      "version": 2,
       "justification": "This test deliberately throws a plain object (not an Error) to prove `isErrnoException` requires both `instanceof Error` and a `code` property -- throwing a real Error would defeat the point of the test, which is to verify a non-Error, code-carrying value is still correctly rejected.\n\nAlternatives considered: Throw an Error subclass augmented with a `code` property instead of a bare object.\n\nRemediation: That would test a different, already-covered branch of isErrnoException (the `instanceof Error` check passing) rather than the one this test targets: that a non-Error value must be rejected regardless of whether it carries a `code` property.",
+      "attempted": "Throw an Error subclass augmented with a `code` property instead of a bare object.  Remediation: That would test a different, already-covered branch of isErrnoException (the `instanceof Error` check passing) rather than the one this test targets: that a non-Error value must be rejected regardless of whether it carries a `code` property.",
       "category": "intentional-deviation",
+      "constraint": "This test deliberately throws a plain object (not an Error) to prove `isErrnoException` requires both `instanceof Error` and a `code` property -- throwing a real Error would defeat the point of the test, which is to verify a non-Error, code-carrying value is still correctly rejected.",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/execution/process-tree.test.ts",
       "line": 214,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/only-throw-error"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/only-throw-error']` is disabled at test/unit/execution/process-tree.test.ts:214.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/only-throw-error:test/unit/policy/run-policies.test.ts:432",
-      "version": 1,
+      "version": 2,
       "justification": "This test verifies runPolicies preserves a non-Error thrown value verbatim as PolicyThrewError's `cause` -- throwing a string is the deliberate, minimal input needed to exercise that path.\n\nAlternatives considered: Throw an Error instance instead of a raw string.\n\nRemediation: An Error instance is already covered by the adjacent 'preserves the original error as cause' test above this one; this test exists specifically to prove non-Error throws are also preserved verbatim rather than coerced or wrapped, which requires actually throwing a non-Error value.",
+      "attempted": "Throw an Error instance instead of a raw string.  Remediation: An Error instance is already covered by the adjacent 'preserves the original error as cause' test above this one; this test exists specifically to prove non-Error throws are also preserved verbatim rather than coerced or wrapped, which requires actually throwing a non-Error value.",
       "category": "intentional-deviation",
+      "constraint": "This test verifies runPolicies preserves a non-Error thrown value verbatim as PolicyThrewError's `cause` -- throwing a string is the deliberate, minimal input needed to exercise that path.",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/policy/run-policies.test.ts",
       "line": 432,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/only-throw-error"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/only-throw-error']` is disabled at test/unit/policy/run-policies.test.ts:432.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/prefer-promise-reject-errors:src/execution/dependency-scheduler.ts:136",
-      "version": 1,
+      "version": 2,
       "justification": "rejectPromise(error) must propagate the exact rejection reason a worker's promise produced, unmodified, so a caller's catch block sees the same value it would from runWithConcurrency (which this function replaces) or from awaiting the worker's own promise directly; wrapping it in an Error would change what every caller observes.\n\nAlternatives considered: Wrap non-Error values in `new Error(String(error))` before rejecting, satisfying the rule.\n\nRemediation: Rejected wrapping because it would make this function's contract differ from runWithConcurrency's for exactly the input class that matters most -- a worker rejecting with a plain object -- where a caller inspecting a custom property on the rejection would silently lose it. Passing the value through unmodified preserves an existing, already-tested contract instead of introducing a new one only for this code path.",
+      "attempted": "Wrap non-Error values in `new Error(String(error))` before rejecting, satisfying the rule.  Remediation: Rejected wrapping because it would make this function's contract differ from runWithConcurrency's for exactly the input class that matters most -- a worker rejecting with a plain object -- where a caller inspecting a custom property on the rejection would silently lose it. Passing the value through unmodified preserves an existing, already-tested contract instead of introducing a new one only for this code path.",
       "category": "intentional-deviation",
+      "constraint": "rejectPromise(error) must propagate the exact rejection reason a worker's promise produced, unmodified, so a caller's catch block sees the same value it would from runWithConcurrency (which this function replaces) or from awaiting the worker's own promise directly; wrapping it in an Error would change what every caller observes.",
       "domain": "eslint",
+      "expires": "",
       "file": "src/execution/dependency-scheduler.ts",
       "line": 136,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/prefer-promise-reject-errors"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/prefer-promise-reject-errors']` is disabled at src/execution/dependency-scheduler.ts:136.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/prefer-promise-reject-errors:test/unit/helpers/load-exception-registry.test.ts:108",
-      "version": 1,
+      "version": 2,
       "justification": "Same underlying test family as the exceptions for test/unit/helpers/load-exception-registry.test.ts:83 and test/unit/helpers/load-exception-registry.test.ts:96: this specific case rejects with an empty plain object (no `code`, no `message`), proving the final `String(error)` fallback is genuinely reached and produces a meaningful `\"[object Object]\"` value rather than the mutation-tested branch being provably dead code.\n\nAlternatives considered: A real Error with no message set still has a real (empty) `.message` string, which would exercise a different branch (the real-message path with an empty string) rather than this one -- the fallback specifically for a rejection with no message property at all.\n\nRemediation: None needed -- narrowly-scoped test-only suppression, not production code.",
+      "attempted": "A real Error with no message set still has a real (empty) `.message` string, which would exercise a different branch (the real-message path with an empty string) rather than this one -- the fallback specifically for a rejection with no message property at all.  Remediation: None needed -- narrowly-scoped test-only suppression, not production code.",
       "category": "rule-not-applicable",
+      "constraint": "Same underlying test family as the exceptions for test/unit/helpers/load-exception-registry.test.ts:83 and test/unit/helpers/load-exception-registry.test.ts:96: this specific case rejects with an empty plain object (no `code`, no `message`), proving the final `String(error)` fallback is genuinely reached and produces a meaningful `\"[object Object]\"` value rather than the mutation-tested branch being provably dead code.",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/helpers/load-exception-registry.test.ts",
       "line": 108,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/prefer-promise-reject-errors"
       ],
-      "verificationMethod": "mutation-run"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/prefer-promise-reject-errors']` is disabled at test/unit/helpers/load-exception-registry.test.ts:108.",
+      "verificationMethod": "mutation-run",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/prefer-promise-reject-errors:test/unit/helpers/load-exception-registry.test.ts:83",
-      "version": 1,
+      "version": 2,
       "justification": "This test exists specifically to prove loadExceptionRegistry's own catch block never throws when a caller-supplied readFile rejects with a non-Error value (null, a plain string, etc.) -- a real robustness gap CodeRabbit flagged on PR #42 against src/helpers/load-exception-registry.ts. Proving that requires actually constructing a non-Error rejection, which is exactly what this lint rule otherwise (correctly) discourages in production code.\n\nAlternatives considered: Wrapping the rejected value in a real Error before passing it to Promise.reject would satisfy the lint rule, but would no longer exercise the code path under test -- loadExceptionRegistry's own catch block would then always see a real Error, and the isPlainObject-based fallback logic added to handle a non-Error rejection would go completely untested.\n\nRemediation: None needed -- this is a single, narrowly-scoped test file suppression, not production code; the rule's own purpose (discouraging non-Error rejections in code this repository owns and controls) doesn't apply to a test whose entire point is exercising the malformed-input case a caller-supplied capability could realistically produce.",
+      "attempted": "Wrapping the rejected value in a real Error before passing it to Promise.reject would satisfy the lint rule, but would no longer exercise the code path under test -- loadExceptionRegistry's own catch block would then always see a real Error, and the isPlainObject-based fallback logic added to handle a non-Error rejection would go completely untested.  Remediation: None needed -- this is a single, narrowly-scoped test file suppression, not production code; the rule's own purpose (discouraging non-Error rejections in code this repository owns and controls) doesn't apply to a test whose entire point is exercising the malformed-input case a caller-supplied capability could realistically produce.",
       "category": "rule-not-applicable",
+      "constraint": "This test exists specifically to prove loadExceptionRegistry's own catch block never throws when a caller-supplied readFile rejects with a non-Error value (null, a plain string, etc.) -- a real robustness gap CodeRabbit flagged on PR #42 against src/helpers/load-exception-registry.ts.",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/helpers/load-exception-registry.test.ts",
       "line": 83,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/prefer-promise-reject-errors"
       ],
-      "verificationMethod": "existing-test-suite"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/prefer-promise-reject-errors']` is disabled at test/unit/helpers/load-exception-registry.test.ts:83.",
+      "verificationMethod": "existing-test-suite",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/prefer-promise-reject-errors:test/unit/helpers/load-exception-registry.test.ts:96",
-      "version": 1,
+      "version": 2,
       "justification": "Same underlying test as the exception for test/unit/helpers/load-exception-registry.test.ts:83 (loadExceptionRegistry's non-Error-rejection handling): this specific case rejects with a plain object whose code is a number, not a string, so the `typeof error.code === \"string\"` check must genuinely evaluate (not just short-circuit on a non-object) to fall through to the not-ENOENT path while still surfacing the real message field. Needed to kill Stryker survivors on that exact ternary once the null-rejection test alone left it ambiguous.\n\nAlternatives considered: A real Error subclass with a numeric `.code` property would satisfy the lint rule, but TypeScript's own Error type has no `.code` field, and casting one in would no longer exercise the plain-object branch this code path is specifically built to handle for a caller-supplied readFile capability.\n\nRemediation: None needed -- narrowly-scoped test-only suppression, not production code.",
+      "attempted": "A real Error subclass with a numeric `.code` property would satisfy the lint rule, but TypeScript's own Error type has no `.code` field, and casting one in would no longer exercise the plain-object branch this code path is specifically built to handle for a caller-supplied readFile capability.  Remediation: None needed -- narrowly-scoped test-only suppression, not production code.",
       "category": "rule-not-applicable",
+      "constraint": "Same underlying test as the exception for test/unit/helpers/load-exception-registry.test.ts:83 (loadExceptionRegistry's non-Error-rejection handling): this specific case rejects with a plain object whose code is a number, not a string, so the `typeof error.code === \"string\"` check must genuinely evaluate (not just short-circuit on a non-object) to fall through to the not-ENOENT path while still surfacing the real message field.",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/helpers/load-exception-registry.test.ts",
       "line": 96,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/prefer-promise-reject-errors"
       ],
-      "verificationMethod": "mutation-run"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/prefer-promise-reject-errors']` is disabled at test/unit/helpers/load-exception-registry.test.ts:96.",
+      "verificationMethod": "mutation-run",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/prefer-promise-reject-errors:test/unit/helpers/write-exception-registry.test.ts:126",
-      "version": 1,
+      "version": 2,
       "justification": "This test's whole purpose is to reject the readFile capability with values that are deliberately NOT Errors -- a bare string and `null` -- to prove `isEnoent`'s `typeof`/`!== null` guards and the `String(error)` fallback never throw a TypeError out of writeExceptionRegistry's `{ ok: false }` path. Wrapping the reason in an Error would defeat the test.\n\nAlternatives considered: Wrap each reason in `new Error(String(reason))` before rejecting, satisfying the rule.\n\nRemediation: Wrapping would make the test exercise only the happy 'error is an Error' path and stop covering the exact non-Error inputs the defensive guards exist for -- the same trade-off, and the same resolution, as the three prefer-promise-reject-errors exceptions recorded for test/unit/helpers/load-exception-registry.test.ts at lines 83, 96, and 108.",
+      "attempted": "Wrap each reason in `new Error(String(reason))` before rejecting, satisfying the rule.  Remediation: Wrapping would make the test exercise only the happy 'error is an Error' path and stop covering the exact non-Error inputs the defensive guards exist for -- the same trade-off, and the same resolution, as the three prefer-promise-reject-errors exceptions recorded for test/unit/helpers/load-exception-registry.test.ts at lines 83, 96, and 108.",
       "category": "rule-not-applicable",
+      "constraint": "This test's whole purpose is to reject the readFile capability with values that are deliberately NOT Errors -- a bare string and `null` -- to prove `isEnoent`'s `typeof`/`!== null` guards and the `String(error)` fallback never throw a TypeError out of writeExceptionRegistry's `{ ok: false }` path.",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/helpers/write-exception-registry.test.ts",
       "line": 126,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/prefer-promise-reject-errors"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/prefer-promise-reject-errors']` is disabled at test/unit/helpers/write-exception-registry.test.ts:126.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/unbound-method:test/unit/execution/abort-signals.test.ts:6",
-      "version": 1,
+      "version": 2,
       "justification": "`original` stores a reference to `AbortSignal.any`, a static function with no `this` binding to lose -- the rule exists to catch instance methods torn off their receiver, which doesn't apply to a static method reference that's never invoked at all in this test.\n\nAlternatives considered: Wrap the reference in an arrow function (`() => AbortSignal.any(...)`) to sidestep the rule.\n\nRemediation: The reference is never called here -- it's saved and later reassigned back onto `AbortSignal.any` to restore it, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
+      "attempted": "Wrap the reference in an arrow function (`() => AbortSignal.any(...)`) to sidestep the rule.  Remediation: The reference is never called here -- it's saved and later reassigned back onto `AbortSignal.any` to restore it, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
       "category": "rule-not-applicable",
+      "constraint": "`original` stores a reference to `AbortSignal.any`, a static function with no `this` binding to lose -- the rule exists to catch instance methods torn off their receiver, which doesn't apply to a static method reference that's never invoked at all in this test.",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/execution/abort-signals.test.ts",
       "line": 6,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/unbound-method"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/unbound-method']` is disabled at test/unit/execution/abort-signals.test.ts:6.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/unbound-method:test/unit/execution/run-checks.test.ts:28",
-      "version": 1,
+      "version": 2,
       "justification": "`original` stores a reference to `AbortSignal.any`, a static function with no `this` binding to lose -- the rule exists to catch instance methods torn off their receiver, which doesn't apply to a static method reference that's never invoked at all in this test. Identical pattern, and identical justification, to abort-signals.test.ts's own `withoutNativeAbortSignalAny` helper, duplicated locally here per this file's own doc comment since that one is private to its own test file.\n\nAlternatives considered: Wrap the reference in an arrow function (`() => AbortSignal.any(...)`) to sidestep the rule.\n\nRemediation: The reference is never called here -- it's saved and later reassigned back onto `AbortSignal.any` to restore it, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
+      "attempted": "Wrap the reference in an arrow function (`() => AbortSignal.any(...)`) to sidestep the rule.  Remediation: The reference is never called here -- it's saved and later reassigned back onto `AbortSignal.any` to restore it, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
       "category": "rule-not-applicable",
+      "constraint": "`original` stores a reference to `AbortSignal.any`, a static function with no `this` binding to lose -- the rule exists to catch instance methods torn off their receiver, which doesn't apply to a static method reference that's never invoked at all in this test.",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/execution/run-checks.test.ts",
       "line": 28,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/unbound-method"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/unbound-method']` is disabled at test/unit/execution/run-checks.test.ts:28.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:@typescript-eslint/unbound-method:test/unit/execution/spawn-check.test.ts:578",
-      "version": 1,
+      "version": 2,
       "justification": "`originalAny` stores a reference to `AbortSignal.any`, a static function with no `this` binding to lose -- the rule exists to catch instance methods torn off their receiver, which doesn't apply to a static method reference that is never invoked at all in this test (only saved, then reassigned back onto `AbortSignal.any` to restore it). Identical reasoning to the pre-existing suppression at test/unit/execution/abort-signals.test.ts:6, for the same pattern copied into this file.\n\nAlternatives considered: Wrap the reference in an arrow function (`() => AbortSignal.any(...)`) to sidestep the rule.\n\nRemediation: The reference is never called here -- it is saved and later reassigned back onto `AbortSignal.any` to restore it after the test forces composeSignals' manual-fallback path, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
+      "attempted": "Wrap the reference in an arrow function (`() => AbortSignal.any(...)`) to sidestep the rule.  Remediation: The reference is never called here -- it is saved and later reassigned back onto `AbortSignal.any` to restore it after the test forces composeSignals' manual-fallback path, so a wrapping arrow function would add indirection purely to satisfy a rule about call-time `this` binding that this code path never exercises.",
       "category": "rule-not-applicable",
+      "constraint": "`originalAny` stores a reference to `AbortSignal.any`, a static function with no `this` binding to lose -- the rule exists to catch instance methods torn off their receiver, which doesn't apply to a static method reference that is never invoked at all in this test (only saved, then reassigned back onto `AbortSignal.any` to restore it).",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/execution/spawn-check.test.ts",
       "line": 578,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/unbound-method"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['@typescript-eslint/unbound-method']` is disabled at test/unit/execution/spawn-check.test.ts:578.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:import-x/no-named-as-default:test/unit/schema/schema-conformance.test.ts:1",
-      "version": 1,
+      "version": 2,
       "justification": "ajv's own documentation and type definitions specify `import Ajv from \"ajv\"` as the correct usage -- `Ajv` happens to also be a named export of the same class, which is what triggers this rule, but the default import is the actually-correct form here, not a mistake the rule is catching.\n\nAlternatives considered: Import via the named export instead: `import { Ajv } from \"ajv\"`.\n\nRemediation: That form works today only by coincidence of ajv's current export shape and isn't what ajv documents or tests against -- following the default-import usage ajv's own docs prescribe is the more future-proof choice, so the rule is suppressed here rather than the import rewritten.",
+      "attempted": "Import via the named export instead: `import { Ajv } from \"ajv\"`.  Remediation: That form works today only by coincidence of ajv's current export shape and isn't what ajv documents or tests against -- following the default-import usage ajv's own docs prescribe is the more future-proof choice, so the rule is suppressed here rather than the import rewritten.",
       "category": "rule-not-applicable",
+      "constraint": "ajv's own documentation and type definitions specify `import Ajv from \"ajv\"` as the correct usage -- `Ajv` happens to also be a named export of the same class, which is what triggers this rule, but the default import is the actually-correct form here, not a mistake the rule is catching.",
       "domain": "eslint",
+      "expires": "",
       "file": "test/unit/schema/schema-conformance.test.ts",
       "line": 1,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "import-x/no-named-as-default"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['import-x/no-named-as-default']` is disabled at test/unit/schema/schema-conformance.test.ts:1.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
-      "id": "suppression:eslint:n/no-process-env:repo-contract.config.ts:210",
-      "version": 1,
+      "id": "suppression:eslint:n/no-process-env:repo-contract.config.ts:212",
+      "version": 2,
       "justification": "This is repo-contract's own top-level self-hosting config (repo-contract.config.ts), not published library code -- src/ never reads process.env itself (see specs/decisions/0011), and RepoContractConfig.env is a required, consumer-supplied field. Here, repo-contract is the consumer of its own library, and supplying the real ambient environment to its own checks is exactly the responsibility ADR 0011 places on a consumer, not a config smell.\n\nAlternatives considered: Route environment access through a wrapper/config module instead of reading process.env inline.\n\nRemediation: A wrapper would only relocate this same read one file over, not remove it -- n/no-process-env exists to catch config values read ad hoc instead of through an app's config layer, which doesn't apply to a top-level consumer script whose entire job is supplying the ambient environment to the library it configures.",
+      "attempted": "Route environment access through a wrapper/config module instead of reading process.env inline.  Remediation: A wrapper would only relocate this same read one file over, not remove it -- n/no-process-env exists to catch config values read ad hoc instead of through an app's config layer, which doesn't apply to a top-level consumer script whose entire job is supplying the ambient environment to the library it configures.",
       "category": "rule-not-applicable",
+      "constraint": "This is repo-contract's own top-level self-hosting config (repo-contract.config.ts), not published library code -- src/ never reads process.env itself (see specs/decisions/0011), and RepoContractConfig.env is a required, consumer-supplied field.",
       "domain": "eslint",
+      "expires": "",
       "file": "repo-contract.config.ts",
-      "line": 210,
+      "line": 212,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "n/no-process-env"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['n/no-process-env']` is disabled at repo-contract.config.ts:212.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:secure-coding/no-improper-type-validation:src/config/validate-config.ts:339",
-      "version": 1,
+      "version": 2,
       "justification": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code path: null is already excluded by the preceding `schema === null` short-circuit before this typeof check ever runs, and an array that slips past it (typeof [] === \"object\") is still correctly rejected two lines later when it has no \"~standard\" property, so the bug class this rule guards against cannot actually reach a caller undetected.\n\nAlternatives considered: Rewriting to the rule's own suggested null/array-safe form (value != null && typeof value === \"object\" && !Array.isArray(value)) was already tried and rejected for the sibling case in format-schema-issues.ts, where it was itself flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition; here the null check is already redundant with the preceding `schema === null` branch, and adding an explicit !Array.isArray(schema) would only duplicate the \"~standard\" property check that already rejects arrays two lines below for the same reason.\n\nRemediation: None needed: the preceding short-circuit already rules out null, and the very next check in this same function already rejects any object (including an array) that lacks a \"~standard\" property, so no runtime gap exists for this rule to actually be guarding.",
+      "attempted": "Rewriting to the rule's own suggested null/array-safe form (value != null && typeof value === \"object\" && !Array.isArray(value)) was already tried and rejected for the sibling case in format-schema-issues.ts, where it was itself flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition; here the null check is already redundant with the preceding `schema === null` branch, and adding an explicit !Array.isArray(schema) would only duplicate the \"~standard\" property check that already rejects arrays two lines below for the same reason.  Remediation: None needed: the preceding short-circuit already rules out null, and the very next check in this same function already rejects any object (including an array) that lacks a \"~standard\" property, so no runtime gap exists for this rule to actually be guarding.",
       "category": "rule-not-applicable",
+      "constraint": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code path: null is already excluded by the preceding `schema === null` short-circuit before this typeof check ever runs, and an array that slips past it (typeof [] === \"object\") is still correctly rejected two lines later when it has no \"~standard\" property, so the bug class this rule guards against cannot actually reach a caller undetected.",
       "domain": "eslint",
+      "expires": "",
       "file": "src/config/validate-config.ts",
       "line": 339,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "secure-coding/no-improper-type-validation"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['secure-coding/no-improper-type-validation']` is disabled at src/config/validate-config.ts:339.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:secure-coding/no-improper-type-validation:src/helpers/load-exception-registry.ts:18",
-      "version": 1,
+      "version": 2,
       "justification": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code: segment's declared type (PropertyKey | StandardSchemaV1.PathSegment) can never be null or an array, only a string/number/symbol or the PathSegment object shape, so the bug class this rule guards against cannot occur here. This is the exact same construct, with the exact same type-level guarantee, already justified for its sibling in src/parsing/format-schema-issues.ts:47 -- this file's own formatIssue is an intentionally independent, much smaller copy (src/helpers/** must not depend on src/parsing/, an internal layer of the root barrel; see specs/decisions/0013-reusable-exception-policy-helper.md) that reproduces the same path-rendering logic and therefore the same rule interaction.\n\nAlternatives considered: Rewriting to the rule's own suggested null/array-safe form (segment != null && typeof segment === \"object\" && !Array.isArray(segment)) was tried directly and is itself flagged by @typescript-eslint/no-unnecessary-condition as an unreachable condition given segment's declared type -- the two rules' suggested fixes are mutually exclusive here, so one must be suppressed.\n\nRemediation: None needed: the type system already rules out the unsafe cases (null, array) this rule exists to catch, so no runtime guard adds real safety beyond what TypeScript already guarantees at every call site.",
+      "attempted": "Rewriting to the rule's own suggested null/array-safe form (segment != null && typeof segment === \"object\" && !Array.isArray(segment)) was tried directly and is itself flagged by @typescript-eslint/no-unnecessary-condition as an unreachable condition given segment's declared type -- the two rules' suggested fixes are mutually exclusive here, so one must be suppressed.  Remediation: None needed: the type system already rules out the unsafe cases (null, array) this rule exists to catch, so no runtime guard adds real safety beyond what TypeScript already guarantees at every call site.",
       "category": "rule-not-applicable",
+      "constraint": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code: segment's declared type (PropertyKey | StandardSchemaV1.PathSegment) can never be null or an array, only a string/number/symbol or the PathSegment object shape, so the bug class this rule guards against cannot occur here.",
       "domain": "eslint",
+      "expires": "",
       "file": "src/helpers/load-exception-registry.ts",
       "line": 18,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "secure-coding/no-improper-type-validation"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['secure-coding/no-improper-type-validation']` is disabled at src/helpers/load-exception-registry.ts:18.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:eslint:secure-coding/no-improper-type-validation:src/parsing/format-schema-issues.ts:41",
-      "version": 1,
+      "version": 2,
       "justification": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code: segment's declared type (PropertyKey | StandardSchemaV1.PathSegment) can never be null or an array, only a string/number/symbol or the PathSegment object shape, so the bug class this rule guards against cannot occur here.\n\nAlternatives considered: Rewriting to the rule's own suggested null/array-safe form (segment != null && typeof segment === \"object\" && !Array.isArray(segment)) was tried directly and is itself flagged by @typescript-eslint/no-unnecessary-condition as an unreachable condition given segment's declared type -- the two rules' suggested fixes are mutually exclusive here, so one must be suppressed.\n\nRemediation: None needed: the type system already rules out the unsafe cases (null, array) this rule exists to catch, so no runtime guard adds real safety beyond what TypeScript already guarantees at every call site.",
+      "attempted": "Rewriting to the rule's own suggested null/array-safe form (segment != null && typeof segment === \"object\" && !Array.isArray(segment)) was tried directly and is itself flagged by @typescript-eslint/no-unnecessary-condition as an unreachable condition given segment's declared type -- the two rules' suggested fixes are mutually exclusive here, so one must be suppressed.  Remediation: None needed: the type system already rules out the unsafe cases (null, array) this rule exists to catch, so no runtime guard adds real safety beyond what TypeScript already guarantees at every call site.",
       "category": "rule-not-applicable",
+      "constraint": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code: segment's declared type (PropertyKey | StandardSchemaV1.PathSegment) can never be null or an array, only a string/number/symbol or the PathSegment object shape, so the bug class this rule guards against cannot occur here.",
       "domain": "eslint",
+      "expires": "",
       "file": "src/parsing/format-schema-issues.ts",
       "line": 41,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "secure-coding/no-improper-type-validation"
       ],
-      "verificationMethod": "static-reasoning"
+      "ruleBroken": "The eslint rule `['secure-coding/no-improper-type-validation']` is disabled at src/parsing/format-schema-issues.ts:41.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
       "id": "suppression:typescript:@ts-expect-error:test/unit/crap/policy.test.ts:149",
-      "version": 1,
-      "justification": "",
-      "category": "",
+      "version": 2,
+      "justification": "A test that feeds the CRAP policy a row of untrusted crap4ts JSON with no `crap` field, which the row type forbids on purpose; the `@ts-expect-error` comment on the line says the same.",
+      "attempted": "Building the row through the typed `report()` helper, which requires every field; the test needs a row that is missing one.",
+      "category": "tooling-limit",
+      "constraint": "The row type requires `crap`, so a malformed row cannot be written without suppressing the type error.",
       "domain": "typescript",
+      "expires": "",
       "file": "test/unit/crap/policy.test.ts",
       "line": 149,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@ts-expect-error"
       ],
-      "verificationMethod": ""
+      "ruleBroken": "The typescript rule `['@ts-expect-error']` is disabled at test/unit/crap/policy.test.ts:149.",
+      "verificationMethod": "existing-test-suite",
+      "whyPreferable": "One suppressed line in a test is preferable to loosening the production row type so that a malformed row could be written."
     },
     {
       "id": "suppression:typescript:@ts-expect-error:test/unit/crap/policy.test.ts:157",
-      "version": 1,
-      "justification": "",
-      "category": "",
+      "version": 2,
+      "justification": "A test that feeds the CRAP policy a row of untrusted crap4ts JSON with no `complexity` field, which the row type forbids on purpose; the `@ts-expect-error` comment on the line says the same.",
+      "attempted": "Building the row through the typed `report()` helper, which requires every field; the test needs a row that is missing one.",
+      "category": "tooling-limit",
+      "constraint": "The row type requires `complexity`, so a malformed row cannot be written without suppressing the type error.",
       "domain": "typescript",
+      "expires": "",
       "file": "test/unit/crap/policy.test.ts",
       "line": 157,
+      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
+      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@ts-expect-error"
       ],
-      "verificationMethod": ""
+      "ruleBroken": "The typescript rule `['@ts-expect-error']` is disabled at test/unit/crap/policy.test.ts:157.",
+      "verificationMethod": "existing-test-suite",
+      "whyPreferable": "One suppressed line in a test is preferable to loosening the production row type so that a malformed row could be written."
     }
   ]
 }

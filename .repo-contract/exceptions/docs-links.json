@@ -2,123 +2,276 @@
   "exceptions": [
     {
       "id": "docs-links:https://github.com/MaverickCER/env-cap/blob/main/specs/decisions/0015-security-backport-window.md",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this file exists on env-cap's main branch (confirmed via `gh api repos/MaverickCER/env-cap/contents/specs/decisions/0015-security-backport-window.md`, 2026-09-26) -- ADR 0015 is real, committed, cross-repo-referenced documentation (this repo's own identically-numbered ADR 0015 explicitly mirrors it), not a typo'd or speculative link. linkinator's failure reflects a transient network blip reaching a different repository's raw content during that crawl, not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/env-cap/blob/main/specs/decisions/0015-security-backport-window.md"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's failure reflects a transient network blip reaching a different repository's raw content during that crawl, not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/env-cap/blob/main/specs/decisions/0015-security-backport-window.md as unreachable.",
+      "url": "https://github.com/MaverickCER/env-cap/blob/main/specs/decisions/0015-security-backport-window.md",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this file exists on internal-package-contract's main branch (the shared Changesets release workflow that RELEASING.md describes) and opens normally in a browser. github.com answers CI's link crawler with a persistent HTTP 503 for this blob page even with retries, which reflects GitHub throttling the crawler, not a defect in the link.",
-      "url": "https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "github.com answers CI's link crawler with a persistent HTTP 503 for this blob page even with retries, which reflects GitHub throttling the crawler, not a defect in the link.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml as unreachable.",
+      "url": "https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/22b2a3b03fe4e44ad7a01b82342d86583926416a",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/22b2a3b03fe4e44ad7a01b82342d86583926416a"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/22b2a3b03fe4e44ad7a01b82342d86583926416a as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/22b2a3b03fe4e44ad7a01b82342d86583926416a",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/255e49584a2b6622cee174f560221e731932d840",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/255e49584a2b6622cee174f560221e731932d840"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/255e49584a2b6622cee174f560221e731932d840 as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/255e49584a2b6622cee174f560221e731932d840",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/35f168ca9fbde4f46d1a29624f112e0d4d3b296d",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/35f168ca9fbde4f46d1a29624f112e0d4d3b296d"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/35f168ca9fbde4f46d1a29624f112e0d4d3b296d as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/35f168ca9fbde4f46d1a29624f112e0d4d3b296d",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/6df0911c8bbbfe99bd97095e811b9d762aeb6438",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/6df0911c8bbbfe99bd97095e811b9d762aeb6438"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/6df0911c8bbbfe99bd97095e811b9d762aeb6438 as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/6df0911c8bbbfe99bd97095e811b9d762aeb6438",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/71c92306fcf00e3858f0596c2d56f3272199339d",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via direct curl, 2026-09-19) to the exact commit CHANGELOG.md cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a 40+-link bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/71c92306fcf00e3858f0596c2d56f3272199339d"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a 40+-link bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/71c92306fcf00e3858f0596c2d56f3272199339d as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/71c92306fcf00e3858f0596c2d56f3272199339d",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/7ec8fd946bd584098255c5d2ab3f07b98b55ba1f",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/7ec8fd946bd584098255c5d2ab3f07b98b55ba1f"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/7ec8fd946bd584098255c5d2ab3f07b98b55ba1f as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/7ec8fd946bd584098255c5d2ab3f07b98b55ba1f",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/8d6993fb94299a50c7b2589d400e592e43767df5",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/8d6993fb94299a50c7b2589d400e592e43767df5"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/8d6993fb94299a50c7b2589d400e592e43767df5 as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/8d6993fb94299a50c7b2589d400e592e43767df5",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/a0d8ee7a490d05fc99d9cbb7150706f7c1494694",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/a0d8ee7a490d05fc99d9cbb7150706f7c1494694"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/a0d8ee7a490d05fc99d9cbb7150706f7c1494694 as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/a0d8ee7a490d05fc99d9cbb7150706f7c1494694",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/e23c069f422ac8967cf8c3a65605bdfb85c07abc",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/e23c069f422ac8967cf8c3a65605bdfb85c07abc"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/e23c069f422ac8967cf8c3a65605bdfb85c07abc as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/e23c069f422ac8967cf8c3a65605bdfb85c07abc",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/f56ea342606cfc92a09943ea5eb787936e7b7ba9",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via direct curl, 2026-09-19) to the exact commit CHANGELOG.md cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a 40+-link bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/f56ea342606cfc92a09943ea5eb787936e7b7ba9"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a 40+-link bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/f56ea342606cfc92a09943ea5eb787936e7b7ba9 as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/f56ea342606cfc92a09943ea5eb787936e7b7ba9",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/commit/fbb79259f4a6cede1da64a0abd7e1f1541e1d505",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this commit permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/commits/<sha>`, 2026-09-26) to the exact commit CHANGELOG.md/an ADR cites it for. It is a known-good, permanent GitHub commit reference -- the SHA never changes, GitHub does not delete commit history for a public repository, so this URL will keep resolving correctly regardless of any given crawl's outcome. linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/commit/fbb79259f4a6cede1da64a0abd7e1f1541e1d505"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's HTTP 0 report reflects a transient failure to reach GitHub during that specific crawl (rate-limiting or a network blip against a bulk crawl of the same host), not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/commit/fbb79259f4a6cede1da64a0abd7e1f1541e1d505 as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/commit/fbb79259f4a6cede1da64a0abd7e1f1541e1d505",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/MaverickCER/repo-contract/issues/78",
-      "version": 1,
+      "version": 2,
       "justification": "Manually verified: this issue permalink resolves correctly (HTTP 200, confirmed via `gh api repos/MaverickCER/repo-contract/issues/78`, 2026-09-26). A real, permanent GitHub issue reference -- GitHub does not delete issue history, so this URL keeps resolving regardless of any given crawl's outcome. linkinator's failure reflects a transient network blip during that crawl, not a defect in the link itself.",
-      "url": "https://github.com/MaverickCER/repo-contract/issues/78"
-    },
-    {
-      "id": "docs-links:https://github.com/maverickcer/repo-contract/tree/main/examples/release-gate",
-      "version": 1,
-      "justification": "The release-gate example is added by this change and does not exist on main yet, so its GitHub URL returns 404 until the change is merged. Verified locally that the directory exists on this branch with its README. Remove this record once the change is on main.",
-      "url": "https://github.com/maverickcer/repo-contract/tree/main/examples/release-gate"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "linkinator's failure reflects a transient network blip during that crawl, not a defect in the link itself.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/MaverickCER/repo-contract/issues/78 as unreachable.",
+      "url": "https://github.com/MaverickCER/repo-contract/issues/78",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/mozilla/diversity",
-      "version": 1,
+      "version": 2,
       "justification": "Confirmed live via direct curl (redirects to https://github.com/mozilla/inclusion with a final HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0, a connection-level failure distinct from the redirect) during CI's crawl, a transient GitHub network blip, not a genuine broken link.",
-      "url": "https://github.com/mozilla/diversity"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "Confirmed live via direct curl (redirects to https://github.com/mozilla/inclusion with a final HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0, a connection-level failure distinct from the redirect) during CI's crawl, a transient GitHub network blip, not a genuine broken link.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/mozilla/diversity as unreachable.",
+      "url": "https://github.com/mozilla/diversity",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://github.com/rhysd/actionlint",
-      "version": 1,
+      "version": 2,
       "justification": "Confirmed live via direct curl (HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient GitHub network blip, not a genuine broken link.",
-      "url": "https://github.com/rhysd/actionlint"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "Confirmed live via direct curl (HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient GitHub network blip, not a genuine broken link.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://github.com/rhysd/actionlint as unreachable.",
+      "url": "https://github.com/rhysd/actionlint",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
       "id": "docs-links:https://knip.dev/",
-      "version": 1,
+      "version": 2,
       "justification": "Confirmed live via direct curl (HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient network/TLS blip, not a genuine broken link.",
-      "url": "https://knip.dev/"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "Confirmed live via direct curl (HTTP 200, 2026-09-19); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient network/TLS blip, not a genuine broken link.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://knip.dev/ as unreachable.",
+      "url": "https://knip.dev/",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
-      "id": "docs-links:https://maverickcer.github.io/repo-contract/brief.html",
-      "version": 1,
-      "justification": "The manager brief page is generated by this change and is published by the Pages deploy that follows the merge to main, so the URL returns 404 until then. Verified locally that docs/brief.html exists on this branch. Remove this record once the change is deployed.",
-      "url": "https://maverickcer.github.io/repo-contract/brief.html"
+      "id": "docs-links:https://maverickcer.github.io/repo-contract/coverage.json",
+      "version": 2,
+      "justification": "coverage.json, the details file beside the coverage badge, is written by the `pages-content` CI job and published to Pages after the merge to main, so the link returns 404 until then.",
+      "attempted": "Checked that the README links the path the `pages-content` job writes (docs/coverage.json) and that the job uploads it.",
+      "constraint": "Pages and the main branch serve only what a merge to main and its deploy publish, which happens after this change.",
+      "expires": "2026-12-01",
+      "residualRisk": "If the file is never published, the link stays broken; the first crawl after the deploy would report it.",
+      "revisitWhen": "The merge to main and its deploy have run; remove this record then.",
+      "ruleBroken": "DocsLinks reports https://maverickcer.github.io/repo-contract/coverage.json as unreachable.",
+      "url": "https://maverickcer.github.io/repo-contract/coverage.json",
+      "whyPreferable": "The alternative is to drop the link from the README for the one release that precedes it."
+    },
+    {
+      "id": "docs-links:https://maverickcer.github.io/repo-contract/mutation.json",
+      "version": 2,
+      "justification": "mutation.json, the details file beside the mutation badge, is written by the `pages-content` CI job and published to Pages after the merge to main, so the link returns 404 until then.",
+      "attempted": "Checked that the README links the path the `pages-content` job writes (docs/mutation.json) and that the job uploads it.",
+      "constraint": "Pages and the main branch serve only what a merge to main and its deploy publish, which happens after this change.",
+      "expires": "2026-12-01",
+      "residualRisk": "If the file is never published, the link stays broken; the first crawl after the deploy would report it.",
+      "revisitWhen": "The merge to main and its deploy have run; remove this record then.",
+      "ruleBroken": "DocsLinks reports https://maverickcer.github.io/repo-contract/mutation.json as unreachable.",
+      "url": "https://maverickcer.github.io/repo-contract/mutation.json",
+      "whyPreferable": "The alternative is to drop the link from the README for the one release that precedes it."
+    },
+    {
+      "id": "docs-links:https://raw.githubusercontent.com/MaverickCER/repo-contract/main/skills/repo-contract/SKILL.md",
+      "version": 2,
+      "justification": "skills/repo-contract/SKILL.md is added by this change, so its address on main returns 404 until the change is merged.",
+      "attempted": "Checked that skills/repo-contract/SKILL.md exists on this branch at the path the link names.",
+      "constraint": "Pages and the main branch serve only what a merge to main and its deploy publish, which happens after this change.",
+      "expires": "2026-12-01",
+      "residualRisk": "If the file is never published, the link stays broken; the first crawl after the deploy would report it.",
+      "revisitWhen": "The merge to main and its deploy have run; remove this record then.",
+      "ruleBroken": "DocsLinks reports https://raw.githubusercontent.com/MaverickCER/repo-contract/main/skills/repo-contract/SKILL.md as unreachable.",
+      "url": "https://raw.githubusercontent.com/MaverickCER/repo-contract/main/skills/repo-contract/SKILL.md",
+      "whyPreferable": "The alternative is to drop the link from the README for the one release that precedes it."
     },
     {
       "id": "docs-links:https://standardschema.dev/",
-      "version": 1,
+      "version": 2,
       "justification": "Confirmed live via direct curl (HTTP 200, 2026-09-18); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient network/TLS blip, not a genuine broken link.",
-      "url": "https://standardschema.dev/"
+      "attempted": "Checked the target by hand; the justification says what was found and when.",
+      "constraint": "Confirmed live via direct curl (HTTP 200, 2026-09-18); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient network/TLS blip, not a genuine broken link.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://standardschema.dev/ as unreachable.",
+      "url": "https://standardschema.dev/",
+      "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     }
   ]
 }

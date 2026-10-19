@@ -33,9 +33,9 @@ jobs:
   # `uses:`; that reusable workflow is currently hardcoded to exactly two categories
   # (`performance-runtime`/`performance-buildtime` -- both directory name and PR-comment label are
   # literal, not parameterized), a shape that fits env-cap's/data-cap's two categories but not
-  # repo-contract's three (`performance-checks`/`performance-policy-evidence`/
-  # `performance-api-contract` -- see benchmarks/README.md for why repo-contract's own
-  # performance-sensitive surface splits into three categories instead of two). Rather than modify
+  # repo-contract's four (`performance-checks`/`performance-policy-evidence`/
+  # `performance-api-contract`/`performance-exceptions` -- see benchmarks/README.md for why repo-contract's own
+  # performance-sensitive surface splits into four categories instead of two). Rather than modify
   # that shared, other-repositories-depend-on-it-too reusable workflow, this job calls
   # internal-package-contract's own generic script layer directly
   # (`scripts/benchmark/render-summary.mjs`/`append-history.mjs`) -- the exact same scripts the
@@ -84,7 +84,7 @@ jobs:
       - name: Snapshot main's committed results as "previous"
         run: |
           mkdir -p /tmp/benchmark-previous
-          for dir in performance-checks performance-policy-evidence performance-api-contract; do
+          for dir in performance-checks performance-policy-evidence performance-api-contract performance-exceptions; do
             git show "origin/main:benchmarks/${dir}/results.json" > "/tmp/benchmark-previous/${dir}.json" || echo '{}' > "/tmp/benchmark-previous/${dir}.json"
           done
 
@@ -100,6 +100,8 @@ jobs:
             benchmarks/performance-policy-evidence/BENCHMARKS.md
             benchmarks/performance-api-contract/results.json
             benchmarks/performance-api-contract/BENCHMARKS.md
+            benchmarks/performance-exceptions/results.json
+            benchmarks/performance-exceptions/BENCHMARKS.md
           retention-days: 14
 
       - name: Post or update the marker-tagged summary comment
@@ -112,6 +114,7 @@ jobs:
             --example "Checks (\`benchmarks/performance-checks\`)|/tmp/benchmark-previous/performance-checks.json|benchmarks/performance-checks/results.json|benchmarks/history/checks.json" \
             --example "Policy & evidence (\`benchmarks/performance-policy-evidence\`)|/tmp/benchmark-previous/performance-policy-evidence.json|benchmarks/performance-policy-evidence/results.json|benchmarks/history/policy-evidence.json" \
             --example "API contract (\`benchmarks/performance-api-contract\`)|/tmp/benchmark-previous/performance-api-contract.json|benchmarks/performance-api-contract/results.json|benchmarks/history/api-contract.json" \
+            --example "Exception helpers (\`benchmarks/performance-exceptions\`)|/tmp/benchmark-previous/performance-exceptions.json|benchmarks/performance-exceptions/results.json|benchmarks/history/exceptions.json" \
             > /tmp/summary.md
           PR="${{ github.event.pull_request.number }}"
           MARKER="<!-- repo-contract-benchmark-summary -->"
@@ -152,6 +155,8 @@ jobs:
             benchmarks/performance-policy-evidence/results.json benchmarks/history/policy-evidence.json
           node node_modules/internal-package-contract/scripts/benchmark/append-history.mjs \
             benchmarks/performance-api-contract/results.json benchmarks/history/api-contract.json
+          node node_modules/internal-package-contract/scripts/benchmark/append-history.mjs \
+            benchmarks/performance-exceptions/results.json benchmarks/history/exceptions.json
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -159,7 +164,8 @@ jobs:
             benchmarks/performance-checks/results.json benchmarks/performance-checks/BENCHMARKS.md \
             benchmarks/performance-policy-evidence/results.json benchmarks/performance-policy-evidence/BENCHMARKS.md \
             benchmarks/performance-api-contract/results.json benchmarks/performance-api-contract/BENCHMARKS.md \
-            benchmarks/history/checks.json benchmarks/history/policy-evidence.json benchmarks/history/api-contract.json
+            benchmarks/performance-exceptions/results.json benchmarks/performance-exceptions/BENCHMARKS.md \
+            benchmarks/history/checks.json benchmarks/history/policy-evidence.json benchmarks/history/api-contract.json benchmarks/history/exceptions.json
           if git diff --cached --quiet; then
             echo "Freshly measured results match what's already committed -- nothing to push."
             exit 0
@@ -569,21 +575,8 @@ jobs:
       # and linkinator fails every PR with a spurious 404 on a link that is, in
       # fact, live on the real site.
       - run: npm run docs:api
-      # Same "gitignored, regenerated fresh here so the `docs` check has real content to validate
-      # docs/index.html's own link against, never committed" treatment as docs:api immediately
-      # above -- internal-package-contract's shared benchmark engine builds this history chart
-      # page from the already-committed benchmarks/history/*.json files (see `benchmark-pr`'s own
-      # header comment above for where those come from); this step never runs the benchmarks
-      # themselves, it only renders whatever history is already on disk. Regenerated again, with
-      # whatever history `benchmark-pr` may have just appended, in `pages-content` below for the
-      # real deploy -- this copy only needs to exist, not be perfectly current.
-      - run: >-
-          node node_modules/internal-package-contract/scripts/benchmark/render-page.mjs
-          --out docs/benchmarks/index.html
-          --readme https://github.com/maverickcer/repo-contract/blob/main/benchmarks/README.md
-          --history 'Checks|benchmarks/history/checks.json'
-          --history 'Policy & evidence|benchmarks/history/policy-evidence.json'
-          --history 'API contract|benchmarks/history/api-contract.json'
+      # The contract builds docs/benchmarks (`npm run docs:benchmarks`) before its checks, so the docs check
+      # finds the page the docs link to.
       - run: npm run benchmark:check
       - run: npm run contract
         env:
@@ -653,8 +646,8 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # Regenerates docs/coverage-badge.json, docs/mutation-badge.json, and the
-  # evidence doc from the same coverage/mutation reports and generated-doc
+  # Regenerates docs/coverage-badge.json, docs/mutation-badge.json (and the coverage.json and
+  # mutation.json beside them), and the evidence doc from the same coverage/mutation reports and generated-doc
   # copies `contract` just produced (reused via upload/download-artifact above
   # rather than re-run -- re-running through `npm run contract` a second time
   # here would double-pay the mutation suite, the single most expensive thing
@@ -690,27 +683,22 @@ jobs:
         with:
           name: badge-source-reports
 
-      - run: node scripts/generate-badges.mjs
-
-      # setup-node + npm ci -- needed only for the render-page.mjs step below
-      # (internal-package-contract's shared benchmark engine); generate-badges.mjs above is
-      # dependency-free and doesn't need node_modules at all.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
       - run: npm ci
 
+      # The coverage and mutation badges, each with a details file beside it that says which number it is (the lowest of
+      # four coverage measures, the share of mutants detected) and gives every value it summarises. The same tool every
+      # other package uses, reading this repository's own aggregated coverage summary.
+      - run: npx --no-install internal-package-contract tool badges --coverage coverage/aggregate/coverage-summary.json --no-size
+      - run: node node_modules/internal-package-contract/scripts/run-mutation-badge.mjs
+
       # Same treatment as docs/api/ (generated fresh on every deploy, never committed) --
       # internal-package-contract's shared benchmark engine builds this history chart page from
       # the committed benchmarks/history/*.json files (see `benchmark-pr`'s own header comment
       # above for where those come from). Lands at maverickcer.github.io/repo-contract/benchmarks/.
-      - run: >-
-          node node_modules/internal-package-contract/scripts/benchmark/render-page.mjs
-          --out docs/benchmarks/index.html
-          --readme https://github.com/maverickcer/repo-contract/blob/main/benchmarks/README.md
-          --history 'Checks|benchmarks/history/checks.json'
-          --history 'Policy & evidence|benchmarks/history/policy-evidence.json'
-          --history 'API contract|benchmarks/history/api-contract.json'
+      - run: npm run docs:benchmarks
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -722,7 +710,9 @@ jobs:
           name: pages-content
           path: |
             docs/coverage-badge.json
+            docs/coverage.json
             docs/mutation-badge.json
+            docs/mutation.json
             docs/OpenSSF-Scorecard.md
             docs/benchmarks/index.html
           retention-days: 1
@@ -749,7 +739,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@f8604a0bf289bfaba06df0d752a1dcfdacdf1709 # v0.9.0
+    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@4f8f0d84317047d9a335a8dc1615e685af978cda # v0.13.0
     with:
       docs-script: docs:api
       content-artifact-name: pages-content

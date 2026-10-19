@@ -143,7 +143,7 @@ describe("validateExceptionRegistry (generic core)", () => {
   it("rejects a foreign namespace, a bad version, an unknown field, and a duplicate id", () => {
     for (const bad of [
       { id: "other:a", version: 1, justification: "", slug: "a" },
-      { id: "toy:a", version: 2, justification: "", slug: "a" },
+      { id: "toy:a", version: 3, justification: "", slug: "a" },
       { id: "toy:a", version: 1, justification: "", slug: "a", extra: 1 },
     ]) {
       expect(validateExceptionRegistry([bad], schema).ok).toBe(false)
@@ -157,5 +157,56 @@ describe("validateExceptionRegistry (generic core)", () => {
         schema,
       ).ok,
     ).toBe(false)
+  })
+
+  describe("a version 2 record", () => {
+    const v2 = {
+      id: "toy:a",
+      version: 2,
+      justification: "",
+      slug: "a",
+      ruleBroken: "r",
+      attempted: "a",
+      constraint: "c",
+      whyPreferable: "w",
+      residualRisk: "k",
+      revisitWhen: "v",
+      expires: "",
+    }
+
+    it("is accepted and keeps its version and every structured field", () => {
+      const result = validateExceptionRegistry([v2], schema)
+      expect(result).toEqual({ ok: true, records: [{ ...v2, version: 2 }] })
+    })
+
+    it("accepts a hard expiry date and rejects any other expires value", () => {
+      expect(validateExceptionRegistry([{ ...v2, expires: "2027-01-31" }], schema).ok).toBe(true)
+      expect(validateExceptionRegistry([{ ...v2, expires: "2028-02-29" }], schema).ok).toBe(true)
+      for (const expires of ["soon", "2027-1-3", 5, null, "2027-02-30", "2027-13-01"]) {
+        const result = validateExceptionRegistry([{ ...v2, expires }], schema)
+        expect(result.ok).toBe(false)
+      }
+    })
+
+    it("names a structured-field problem and the registry's own problem in the same pass", () => {
+      const broken: Record<string, unknown> = { ...v2, slug: "" }
+      delete broken.ruleBroken
+      const result = validateExceptionRegistry([broken], schema)
+      const errors = result.ok ? [] : result.errors.join("\n")
+      expect(errors).toContain("ruleBroken")
+      expect(errors).toContain("slug must be a non-empty string")
+    })
+
+    it("names every structured field that is missing, not only the first", () => {
+      const rest: Record<string, unknown> = { ...v2 }
+      delete rest.ruleBroken
+      delete rest.attempted
+      const result = validateExceptionRegistry([rest], schema)
+      expect(result.ok ? [] : result.errors.join("\n")).toMatch(/ruleBroken[\s\S]*attempted/)
+    })
+
+    it("is the only version allowed to carry the structured fields", () => {
+      expect(validateExceptionRegistry([{ ...v2, version: 1 }], schema).ok).toBe(false)
+    })
   })
 })
