@@ -112,7 +112,7 @@ declare type CheckStatus = "completed" | "timed_out" | "signaled" | "host_termin
  * `requirement` itself, it only ever calls `fieldValue(record, requirement)` and trims the result.
  * @param input - The record to evaluate, its classifications, the policy configuration and global default to resolve them against, and the field-value accessor -- see `ExceptionRecordEvaluation`'s own per-field doc comments.
  * @returns The record's verdict, and which required fields (if any) are still missing.
- * @beta
+ * @public
  */
 export declare function evaluateExceptionRecord<TRecord>(input: ExceptionRecordEvaluation<TRecord>): ExceptionDeterminant<TRecord>;
 
@@ -125,7 +125,7 @@ export declare function evaluateExceptionRecord<TRecord>(input: ExceptionRecordE
  * any matching of its own.
  * @param inputs - Each already-matched record to evaluate, in the same shape `evaluateExceptionRecord` itself takes.
  * @returns Each input's own determinant, in the same order as `inputs`.
- * @beta
+ * @public
  */
 export declare function evaluateExceptionRecords<TRecord>(inputs: readonly ExceptionRecordEvaluation<TRecord>[]): readonly ExceptionDeterminant<TRecord>[];
 
@@ -137,7 +137,7 @@ export declare function evaluateExceptionRecords<TRecord>(inputs: readonly Excep
  * glob pattern -- `resolveExceptionPolicy` tries an exact match first and only
  * consults glob matching once no exact key exists, so a glob can never shadow a more specific
  * exact entry.
- * @beta
+ * @public
  */
 export declare interface ExceptionCategoryGroup {
     /** This group's fallback policy when `category` matches neither an exact nor a glob key in `rules`. Falls through to the caller's `globalDefault` when omitted. */
@@ -154,7 +154,7 @@ export declare interface ExceptionCategoryGroup {
  * `security-socket`'s `{ group: "socket", category: normalizedSeverity }`) -- the core itself
  * never interprets `group`/`category` beyond using them as lookup keys into an
  * `ExceptionPolicyConfig`.
- * @beta
+ * @public
  */
 export declare interface ExceptionClassification {
     /** The top-level key this classification resolves against in an `ExceptionPolicyConfig`. */
@@ -168,7 +168,7 @@ export declare interface ExceptionClassification {
  * still empty. Never published as a batch/matched-vs-unmatched shape -- matching a finding to a
  * record stays entirely check-owned (each check reconciles its own findings against its own
  * registry via `reconcileExceptions`).
- * @beta
+ * @public
  */
 export declare interface ExceptionDeterminant<TRecord> {
     /** The record this determinant was computed for, returned verbatim. */
@@ -191,7 +191,7 @@ export declare interface ExceptionDeterminant<TRecord> {
  * filled in makes each one individually reviewable against a specific question instead. This is
  * the same design `scripts/suppression-governance/policy-config.ts`'s `SuppressionPolicy`
  * establishes for the disable-comment domain this type generalizes.
- * @beta
+ * @public
  */
 export declare type ExceptionPolicy = {
     readonly mode: "forbidden";
@@ -207,13 +207,13 @@ export declare type ExceptionPolicy = {
  * suppression domain). The core never invents the names "domain"/"rule"/"severity"/
  * "exceptionType" -- those are every consumer's own vocabulary, expressed here purely as
  * `{ group, category }` (see `ExceptionClassification`).
- * @beta
+ * @public
  */
 export declare type ExceptionPolicyConfig = Readonly<Record<string, ExceptionCategoryGroup>>;
 
 /**
  * The outcome of reconciling one run's findings against one exception registry.
- * @beta
+ * @public
  */
 export declare interface ExceptionReconciliation<TFinding, TRecord> {
     /** Each finding paired with the existing record it matched, in `findings` order. */
@@ -244,7 +244,7 @@ export declare interface ExceptionReconciliation<TFinding, TRecord> {
  * the owning check. A registry adds its own typed fields on top; this is the shared core the
  * generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,
  * `validateExceptionRegistry` in the check-owned layer) relies on.
- * @beta
+ * @public
  */
 export declare interface ExceptionRecordCore {
     /** The check-namespaced semantic identity of the finding this record waives (e.g. `"suppression:eslint:no-console:src/foo.ts:<module>"`). Equals the finding id; a record whose id matches no current finding is stale. Never derived from prose. */
@@ -260,7 +260,7 @@ export declare interface ExceptionRecordCore {
  * shared by `evaluateExceptionRecord` and `evaluateExceptionRecords` (whose own `inputs` is just
  * `readonly ExceptionRecordEvaluation<TRecord>[]`) so the same five-field shape isn't declared
  * twice.
- * @beta
+ * @public
  */
 export declare interface ExceptionRecordEvaluation<TRecord> {
     /** The record to evaluate. */
@@ -278,7 +278,7 @@ export declare interface ExceptionRecordEvaluation<TRecord> {
 /**
  * A resolved judgment about one record, once its `ExceptionPolicy` has been checked against its
  * own field values. See `ExceptionDeterminant`.
- * @beta
+ * @public
  */
 export declare type ExceptionVerdict = "forbidden" | "insufficient" | "permitted";
 
@@ -299,7 +299,7 @@ export declare type ExceptionVerdict = "forbidden" | "insufficient" | "permitted
  * @param fields - Which fields (by name, in this exact order) to include in the digest -- the same names `fieldValue` would be called with by `evaluateExceptionRecord`.
  * @param fieldValue - Resolves one named field's current string value on `record`, exactly like `evaluateExceptionRecord`'s own `fieldValue` parameter.
  * @returns A hex-encoded SHA-256 digest of `fields`' current values.
- * @beta
+ * @public
  */
 export declare function hashRequirementFields<TRecord>(record: TRecord, fields: readonly string[], fieldValue: (record: TRecord, requirement: string) => string): string;
 
@@ -330,7 +330,7 @@ export declare function hashRequirementFields<TRecord>(record: TRecord, fields: 
  * @param input.schema - Validates (and may transform) the envelope's `exceptions` array once this function's own envelope checks pass.
  * @param input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' own `readFile(path, "utf8")`.
  * @returns Every valid record (`ok: true`), or every problem found reading/parsing/validating the file (`ok: false`).
- * @beta
+ * @public
  */
 export declare function loadExceptionRegistry<T>(input: {
     readonly path: string;
@@ -474,7 +474,7 @@ declare interface PolicyResult {
  * @param input.deriveId - The finding's check-namespaced semantic id. Must be injective over `findings`.
  * @param input.createStub - Builds a fresh record for an unmatched finding; receives the canonical id and must return a record carrying it.
  * @returns The reconciliation, or the first integrity problem found.
- * @beta
+ * @public
  */
 export declare function reconcileExceptions<TFinding, TRecord extends {
     readonly id: string;
@@ -622,7 +622,7 @@ export declare interface RepoContractLogsOptions {
  * @param config - The exception policy configuration to resolve against.
  * @param globalDefault - The policy to fall back to when `classification.group` has no entry in `config` at all.
  * @returns The resolved policy for `classification`.
- * @beta
+ * @public
  */
 export declare function resolveExceptionPolicy(classification: ExceptionClassification, config: ExceptionPolicyConfig, globalDefault: ExceptionPolicy): ExceptionPolicy;
 
@@ -636,7 +636,7 @@ export declare function resolveExceptionPolicy(classification: ExceptionClassifi
  * Assumes `records` have unique ids (the caller reconciled them and validated its registry).
  * @param records - The reconciled records (`activeRecords` plus any `staleRecords`, in any order).
  * @returns The exact file contents to persist.
- * @beta
+ * @public
  */
 export declare function serializeExceptionRegistry(records: readonly (Record<string, unknown> & {
     readonly id: string;
@@ -743,7 +743,7 @@ export declare namespace StandardSchemaV1 {
  * @param config - The exception policy configuration to validate.
  * @param validRequirements - The complete set of field names this consumer's policy may require, if the consumer wants that checked. Omit to skip that check entirely.
  * @returns Every configuration problem found; empty if `config` is valid.
- * @beta
+ * @public
  */
 export declare function validateExceptionPolicyConfig(config: ExceptionPolicyConfig, validRequirements?: readonly string[]): readonly string[];
 
@@ -774,7 +774,7 @@ export declare function validateExceptionPolicyConfig(config: ExceptionPolicyCon
  * @param input.rename - Replaces the target with the temp file. Default: `node:fs/promises` `rename`.
  * @param input.isSymlink - Whether `path` is a symlink. Default: `lstat(path).isSymbolicLink()`, treating a missing path as not a symlink.
  * @returns `{ ok: true, written }` on success, or `{ ok: false, error }` for a symlink, an unreadable target, or a failed write/rename.
- * @beta
+ * @public
  */
 export declare function writeExceptionRegistry(input: {
     readonly path: string;
