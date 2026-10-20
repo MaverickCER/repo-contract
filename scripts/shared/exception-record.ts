@@ -296,12 +296,12 @@ function validateOneExceptionRecord<TRecord extends { readonly id: string }>(
     errors.push(`exceptions[${String(index)}].justification must be a string.`)
   }
 
+  // Every validator runs before any return, so one pass names every problem with the record.
+  const v2 = version === 2 ? validateV2Fields(entry, index, errors) : undefined
   if (!idValid || !versionValid || !justificationValid || unknownKeys.length > 0) {
     return undefined
   }
 
-  // Both validators run, so one pass names every problem with the record, not only its structured fields'.
-  const v2 = version === 2 ? validateV2Fields(entry, index, errors) : undefined
   const record = schema.validateRecord({ id, version: 1, justification }, entry, index, errors)
   if (record === undefined || (version === 2 && v2 === undefined)) return undefined
   if (v2 === undefined) return record

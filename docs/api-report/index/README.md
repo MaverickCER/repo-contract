@@ -2498,7 +2498,7 @@ field requires bumping this version number (see `VERSIONING.md`).
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
+| <a id="type-parameter-tchecks"></a> `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
 
 #### Properties
 
@@ -2586,7 +2586,7 @@ A requested parse of a check's stdout succeeded.
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t"></a> `T` |
 
 #### Properties
 
@@ -2630,7 +2630,7 @@ observes a partially-populated `evidence` (see specs/architecture.md).
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
+| <a id="type-parameter-tchecks-1"></a> `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
 
 #### Properties
 
@@ -2746,7 +2746,7 @@ Top-level configuration passed to `defineRepoContract`/`runRepoContract`.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
+| <a id="type-parameter-tchecks-2"></a> `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
 
 #### Properties
 
@@ -2924,8 +2924,8 @@ either barrel's own stability classification.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `Input` | `unknown` |
-| `Output` | `Input` |
+| <a id="type-parameter-input"></a> `Input` | `unknown` |
+| <a id="type-parameter-output"></a> `Output` | `Input` |
 
 #### Properties
 
@@ -2956,7 +2956,7 @@ shape from `{ passed, reason? }` to a full `PolicyResult`
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
+| <a id="type-parameter-tchecks-3"></a> `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
 
 #### Properties
 
@@ -3053,7 +3053,7 @@ The result of a check's requested output-format parse: either a successful `Pars
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t-1"></a> `T` |
 
 ***
 
@@ -3077,7 +3077,7 @@ opinion about what makes a check pass, fail, or warrant a `warn`.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
+| <a id="type-parameter-tchecks-4"></a> `TChecks` *extends* [`CheckSchema`](#checkschema) | [`CheckSchema`](#checkschema) |
 
 #### Parameters
 
@@ -3193,7 +3193,7 @@ not a hypothetical).
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t-2"></a> `T` |
 
 ## Functions
 
@@ -3235,7 +3235,7 @@ the `output`-to-`policy` one above.
 
 | Type Parameter |
 | ------ |
-| `TChecks` *extends* [`CheckSchema`](#checkschema) |
+| <a id="type-parameter-tchecks-5"></a> `TChecks` *extends* [`CheckSchema`](#checkschema) |
 
 #### Parameters
 
@@ -3271,7 +3271,7 @@ slowest checks, which is the contract's own cost. Pure: it reads nothing and wri
 
 | Type Parameter |
 | ------ |
-| `TChecks` *extends* [`CheckSchema`](#checkschema) |
+| <a id="type-parameter-tchecks-6"></a> `TChecks` *extends* [`CheckSchema`](#checkschema) |
 
 #### Parameters
 
@@ -3330,7 +3330,7 @@ below, keeps the documented synchronous-throw guarantee actually true rather tha
 
 | Type Parameter |
 | ------ |
-| `TChecks` *extends* [`CheckSchema`](#checkschema) |
+| <a id="type-parameter-tchecks-7"></a> `TChecks` *extends* [`CheckSchema`](#checkschema) |
 
 #### Parameters
 
@@ -3369,7 +3369,7 @@ JSON, so it is written as its decimal string rather than making serialization th
 
 | Type Parameter |
 | ------ |
-| `TChecks` *extends* [`CheckSchema`](#checkschema) |
+| <a id="type-parameter-tchecks-8"></a> `TChecks` *extends* [`CheckSchema`](#checkschema) |
 
 #### Parameters
 

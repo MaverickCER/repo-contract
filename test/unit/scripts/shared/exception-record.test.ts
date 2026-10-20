@@ -188,6 +188,15 @@ describe("validateExceptionRegistry (generic core)", () => {
       }
     })
 
+    it("names a structured-field problem even when a core field is also wrong", () => {
+      const broken: Record<string, unknown> = { ...v2, id: "not-toy" }
+      delete broken.ruleBroken
+      const result = validateExceptionRegistry([broken], schema)
+      const errors = result.ok ? "" : result.errors.join("\n")
+      expect(errors).toContain("ruleBroken")
+      expect(errors).toContain("id")
+    })
+
     it("names a structured-field problem and the registry's own problem in the same pass", () => {
       const broken: Record<string, unknown> = { ...v2, slug: "" }
       delete broken.ruleBroken

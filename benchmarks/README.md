@@ -32,10 +32,9 @@ does, not the way an external consumer imports it:
 | [performance-api-contract](performance-api-contract/BENCHMARKS.md)       | The API-contract engine (load, normalize, classify with type-assignability) that gates every release.                            | exported symbols  |
 | [performance-exceptions](performance-exceptions/BENCHMARKS.md)           | The exception-registry and exception-policy helpers: load, write, reconcile, resolve, evaluate, validate and hash.               | entries           |
 
-Some ladders stop short of 10,240 and say why in their report: the checks suite stops at 2,560 (each
-check spawns a real process), the API-contract suite at 1,280 (each size compiles a real TypeScript
-package and runs API Extractor), and the exceptions suite's rule-matching benchmarks at 1,280 (each call
-builds a regular expression per rule, and no real policy has thousands of rules).
+Two ladders stop short of 10,240 and say why in their report: the checks suite stops at 2,560 (each
+check spawns a real process) and the API-contract suite at 1,280 (each size compiles a real TypeScript
+package and runs API Extractor).
 
 ## Commands
 

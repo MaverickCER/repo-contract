@@ -222,45 +222,6 @@
       "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
-      "id": "docs-links:https://maverickcer.github.io/repo-contract/coverage.json",
-      "version": 2,
-      "justification": "coverage.json, the details file beside the coverage badge, is written by the `pages-content` CI job and published to Pages after the merge to main, so the link returns 404 until then.",
-      "attempted": "Checked that the README links the path the `pages-content` job writes (docs/coverage.json) and that the job uploads it.",
-      "constraint": "Pages and the main branch serve only what a merge to main and its deploy publish, which happens after this change.",
-      "expires": "2026-12-01",
-      "residualRisk": "If the file is never published, the link stays broken; the first crawl after the deploy would report it.",
-      "revisitWhen": "The merge to main and its deploy have run; remove this record then.",
-      "ruleBroken": "DocsLinks reports https://maverickcer.github.io/repo-contract/coverage.json as unreachable.",
-      "url": "https://maverickcer.github.io/repo-contract/coverage.json",
-      "whyPreferable": "The alternative is to drop the link from the README for the one release that precedes it."
-    },
-    {
-      "id": "docs-links:https://maverickcer.github.io/repo-contract/mutation.json",
-      "version": 2,
-      "justification": "mutation.json, the details file beside the mutation badge, is written by the `pages-content` CI job and published to Pages after the merge to main, so the link returns 404 until then.",
-      "attempted": "Checked that the README links the path the `pages-content` job writes (docs/mutation.json) and that the job uploads it.",
-      "constraint": "Pages and the main branch serve only what a merge to main and its deploy publish, which happens after this change.",
-      "expires": "2026-12-01",
-      "residualRisk": "If the file is never published, the link stays broken; the first crawl after the deploy would report it.",
-      "revisitWhen": "The merge to main and its deploy have run; remove this record then.",
-      "ruleBroken": "DocsLinks reports https://maverickcer.github.io/repo-contract/mutation.json as unreachable.",
-      "url": "https://maverickcer.github.io/repo-contract/mutation.json",
-      "whyPreferable": "The alternative is to drop the link from the README for the one release that precedes it."
-    },
-    {
-      "id": "docs-links:https://raw.githubusercontent.com/MaverickCER/repo-contract/main/skills/repo-contract/SKILL.md",
-      "version": 2,
-      "justification": "skills/repo-contract/SKILL.md is added by this change, so its address on main returns 404 until the change is merged.",
-      "attempted": "Checked that skills/repo-contract/SKILL.md exists on this branch at the path the link names.",
-      "constraint": "Pages and the main branch serve only what a merge to main and its deploy publish, which happens after this change.",
-      "expires": "2026-12-01",
-      "residualRisk": "If the file is never published, the link stays broken; the first crawl after the deploy would report it.",
-      "revisitWhen": "The merge to main and its deploy have run; remove this record then.",
-      "ruleBroken": "DocsLinks reports https://raw.githubusercontent.com/MaverickCER/repo-contract/main/skills/repo-contract/SKILL.md as unreachable.",
-      "url": "https://raw.githubusercontent.com/MaverickCER/repo-contract/main/skills/repo-contract/SKILL.md",
-      "whyPreferable": "The alternative is to drop the link from the README for the one release that precedes it."
-    },
-    {
       "id": "docs-links:https://standardschema.dev/",
       "version": 2,
       "justification": "Confirmed live via direct curl (HTTP 200, 2026-09-18); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient network/TLS blip, not a genuine broken link.",

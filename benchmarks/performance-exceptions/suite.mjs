@@ -191,8 +191,9 @@ export default defineSuite({
         },
       },
       inEndToEnd: {
-        callsPerOperation: 1,
-        description: "Once per run, between reading and writing the registry.",
+        callsPerOperation: 0,
+        description:
+          "Called once per run, between reading and writing the registry, but not attributed: the end-to-end run reconciles a registry in which every finding matches, while this benchmark holds the registry at 640 records with only some findings matching, so its time would misstate that share.",
       },
       setup: (n, _options, context) => {
         const findingCount = context.values.entry
@@ -300,9 +301,6 @@ export default defineSuite({
       expectedComplexity: "linear",
       complexityReason:
         "It scans the group's rules for an exact match and then for glob matches, so cost is proportional to the number of rules.",
-      tiers: [20, 40, 80, 160, 320, 640, 1280],
-      tiersReason:
-        "Every call builds a regular expression for each rule it tests, so sizes beyond a few thousand rules take minutes per sample; no real policy has that many.",
       variables: [
         { ...ENTRIES, name: "rules", description: "The tier axis: rules in the group." },
         {
@@ -357,9 +355,6 @@ export default defineSuite({
       expectedComplexity: "linear",
       complexityReason:
         "Each classification is resolved once, so cost is proportional to the number of classifications.",
-      tiers: [20, 40, 80, 160, 320, 640, 1280],
-      tiersReason:
-        "Every call builds a regular expression for each rule it tests, so sizes beyond a few thousand rules take minutes per sample; no real policy has that many.",
       variables: [
         {
           ...ENTRIES,
@@ -382,7 +377,6 @@ export default defineSuite({
           description: "How many rules the policy group has.",
           baseValue: 2,
           primaryValue: 1,
-          tiers: [20, 40, 80, 160, 320, 640, 1280],
           expectedComplexity: "linear",
           complexityReason: "Each classification scans the group's rules once.",
         },
@@ -426,9 +420,6 @@ export default defineSuite({
       expectedComplexity: "linear",
       complexityReason:
         "Each rule is validated once, and each required field is looked up in the list of valid ones.",
-      tiers: [20, 40, 80, 160, 320, 640, 1280],
-      tiersReason:
-        "Every call builds a regular expression for each rule it tests, so sizes beyond a few thousand rules take minutes per sample; no real policy has that many.",
       variables: [
         { ...ENTRIES, name: "rules", description: "The tier axis: rules in the config." },
         {

@@ -20,7 +20,7 @@
       1280
     ],
     "environment": {
-      "cpuModel": "AMD EPYC 9V45 96-Core Processor",
+      "cpuModel": "AMD EPYC 7763 64-Core Processor",
       "processArch": "x64",
       "logicalCores": 4,
       "physicalCores": 2,
@@ -32,8 +32,8 @@
       "runner": "GitHub Actions"
     },
     "git": {
-      "gitCommit": "9a7f16bb0d0e2237799eb2925b1b4d3de7798c99",
-      "gitBranch": "changeset-release/main",
+      "gitCommit": "9caf04b4ab765d7b8c0dfe0a98e734d2083782bd",
+      "gitBranch": "chore/follow-ups",
       "gitDirty": false
     },
     "bundleSizes": {},
@@ -43,11 +43,11 @@
       "minMemoryMb": 128
     },
     "timing": {
-      "startedAtUtc": "2026-10-19T13:00:40.258Z",
-      "finishedAtUtc": "2026-10-19T13:03:40.771Z",
-      "totalSuiteDurationMs": 180513
+      "startedAtUtc": "2026-10-20T02:02:50.218Z",
+      "finishedAtUtc": "2026-10-20T02:02:53.930Z",
+      "totalSuiteDurationMs": 3712
     },
-    "generatedBy": "ci: CI (run 39254970455)",
+    "generatedBy": "ci: CI (run 39355249621)",
     "versions": {}
   },
   "results": {
@@ -56,254 +56,79 @@
       "tiers": {
         "n20": {
           "id": "end-to-end:baseline@n20",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 20
           },
-          "durationMs": {
-            "minMs": 0.1397470000000188,
-            "medianMs": 0.20080099999995582,
-            "p95Ms": 0.2137433333333926,
-            "maxMs": 0.2137433333333926,
-            "stdDevMs": 0.02548791171397072,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 0.142,
-            "medianMs": 0.4073333333333333,
-            "p95Ms": 0.9926666666666667,
-            "maxMs": 0.9926666666666667,
-            "stdDevMs": 0.2970181083144034,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 112528,
-          "opsPerSecond": 4980.054880205876,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 3,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n40": {
           "id": "end-to-end:baseline@n40",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 40
           },
-          "durationMs": {
-            "minMs": 0.2173253333333681,
-            "medianMs": 0.3295250000001033,
-            "p95Ms": 0.33965999999994284,
-            "maxMs": 0.33965999999994284,
-            "stdDevMs": 0.04192617630320707,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 0.23933333333333331,
-            "medianMs": 0.7320000000000001,
-            "p95Ms": 1.332,
-            "maxMs": 1.332,
-            "stdDevMs": 0.3474934835520101,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 220904,
-          "opsPerSecond": 3034.6711175166874,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 3,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n80": {
           "id": "end-to-end:baseline@n80",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 80
           },
-          "durationMs": {
-            "minMs": 0.5990679999999884,
-            "medianMs": 0.623509500000182,
-            "p95Ms": 0.6412955000000693,
-            "maxMs": 0.6412955000000693,
-            "stdDevMs": 0.012247749022674738,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 1.225,
-            "medianMs": 2.099,
-            "p95Ms": 2.472,
-            "maxMs": 2.472,
-            "stdDevMs": 0.42919706720806,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 493652,
-          "opsPerSecond": 1603.824801385878,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 2,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n160": {
           "id": "end-to-end:baseline@n160",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 160
           },
-          "durationMs": {
-            "minMs": 1.363021000000117,
-            "medianMs": 1.3876769999997123,
-            "p95Ms": 1.4367709999996805,
-            "maxMs": 1.4367709999996805,
-            "stdDevMs": 0.02328781187988984,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 2.993,
-            "medianMs": 3.716,
-            "p95Ms": 5.322,
-            "maxMs": 5.322,
-            "stdDevMs": 0.8107807903496481,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 760400,
-          "opsPerSecond": 720.6287918587735,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n320": {
           "id": "end-to-end:baseline@n320",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 320
           },
-          "durationMs": {
-            "minMs": 2.2760939999989205,
-            "medianMs": 2.373258999999962,
-            "p95Ms": 2.3943099999996775,
-            "maxMs": 2.3943099999996775,
-            "stdDevMs": 0.03480458800292359,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 8.53,
-            "medianMs": 9.258,
-            "p95Ms": 9.424,
-            "maxMs": 9.424,
-            "stdDevMs": 0.25598205015195885,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 1489168,
-          "opsPerSecond": 421.3615117439842,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n640": {
           "id": "end-to-end:baseline@n640",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 640
           },
-          "durationMs": {
-            "minMs": 3.175819000000047,
-            "medianMs": 3.8476950000003853,
-            "p95Ms": 3.8820749999995314,
-            "maxMs": 3.8820749999995314,
-            "stdDevMs": 0.20369608397307667,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 3.182,
-            "medianMs": 10.722,
-            "p95Ms": 10.802,
-            "maxMs": 10.802,
-            "stdDevMs": 2.2598763439622087,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 2946512,
-          "opsPerSecond": 259.89585972898055,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n1280": {
           "id": "end-to-end:baseline@n1280",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 1280
           },
-          "durationMs": {
-            "minMs": 6.433428000000276,
-            "medianMs": 6.580385999999635,
-            "p95Ms": 6.650501000000077,
-            "maxMs": 6.650501000000077,
-            "stdDevMs": 0.06997667882409633,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 13.182,
-            "medianMs": 13.825,
-            "p95Ms": 13.979,
-            "maxMs": 13.979,
-            "stdDevMs": 0.2679986007426157,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 5876936,
-          "opsPerSecond": 151.96676912267085,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         }
       }
@@ -313,254 +138,79 @@
       "tiers": {
         "n20": {
           "id": "end-to-end:with-package@n20",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 20
           },
-          "durationMs": {
-            "minMs": 126.51703500000076,
-            "medianMs": 134.916349000001,
-            "p95Ms": 163.38038999999844,
-            "maxMs": 163.38038999999844,
-            "stdDevMs": 9.834919969468618,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 221.652,
-            "medianMs": 237.378,
-            "p95Ms": 383.304,
-            "maxMs": 383.304,
-            "stdDevMs": 45.147568083452725,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 46495216,
-          "opsPerSecond": 7.412000157223293,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n40": {
           "id": "end-to-end:with-package@n40",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 40
           },
-          "durationMs": {
-            "minMs": 248.50902599999972,
-            "medianMs": 254.1305719999982,
-            "p95Ms": 268.0697880000007,
-            "maxMs": 268.0697880000007,
-            "stdDevMs": 5.83560034285795,
-            "iterations": 7,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 402.49,
-            "medianMs": 408.626,
-            "p95Ms": 445.554,
-            "maxMs": 445.554,
-            "stdDevMs": 13.976467474337868,
-            "iterations": 7,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 95572864,
-          "opsPerSecond": 3.9349850438301734,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n80": {
           "id": "end-to-end:with-package@n80",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 80
           },
-          "durationMs": {
-            "minMs": 527.0275059999985,
-            "medianMs": 552.5194379999994,
-            "p95Ms": 572.5815640000001,
-            "maxMs": 572.5815640000001,
-            "stdDevMs": 16.145712741415633,
-            "iterations": 4,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 846.855,
-            "medianMs": 891.513,
-            "p95Ms": 922.96,
-            "maxMs": 922.96,
-            "stdDevMs": 29.35092859157102,
-            "iterations": 4,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 171606728,
-          "opsPerSecond": 1.8098910757235678,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n160": {
           "id": "end-to-end:with-package@n160",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 160
           },
-          "durationMs": {
-            "minMs": 1120.6376539999983,
-            "medianMs": 1125.7479849999982,
-            "p95Ms": 1177.9311369999996,
-            "maxMs": 1177.9311369999996,
-            "stdDevMs": 25.888092564935995,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 1723.603,
-            "medianMs": 1724.801,
-            "p95Ms": 1820.83,
-            "maxMs": 1820.83,
-            "stdDevMs": 45.55350160220638,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 402916864,
-          "opsPerSecond": 0.888298281075761,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n320": {
           "id": "end-to-end:with-package@n320",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 320
           },
-          "durationMs": {
-            "minMs": 2242.2564120000025,
-            "medianMs": 2250.6607479999984,
-            "p95Ms": 2293.2040109999944,
-            "maxMs": 2293.2040109999944,
-            "stdDevMs": 22.301519465303073,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 3530.087,
-            "medianMs": 3540.556,
-            "p95Ms": 3636.809,
-            "maxMs": 3636.809,
-            "stdDevMs": 48.03219435846021,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 374074344,
-          "opsPerSecond": 0.4443139646384417,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n640": {
           "id": "end-to-end:with-package@n640",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 640
           },
-          "durationMs": {
-            "minMs": 4571.908669000004,
-            "medianMs": 4637.477355000003,
-            "p95Ms": 4645.945872000004,
-            "maxMs": 4645.945872000004,
-            "stdDevMs": 33.08654609422742,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 7123.922,
-            "medianMs": 7277.162,
-            "p95Ms": 7288.002,
-            "maxMs": 7288.002,
-            "stdDevMs": 74.92384993370898,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 605338360,
-          "opsPerSecond": 0.21563447612780837,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n1280": {
           "id": "end-to-end:with-package@n1280",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 1280
           },
-          "durationMs": {
-            "minMs": 9307.321507,
-            "medianMs": 9395.197292999997,
-            "p95Ms": 9581.893916,
-            "maxMs": 9581.893916,
-            "stdDevMs": 114.48813164534961,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 14580.827,
-            "medianMs": 14747.763,
-            "p95Ms": 14998.2,
-            "maxMs": 14998.2,
-            "stdDevMs": 171.52471159638313,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 460786840,
-          "opsPerSecond": 0.10643736036762759,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         }
       }
@@ -570,254 +220,79 @@
       "tiers": {
         "n20": {
           "id": "fn:load-api-model@n20",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 20
           },
-          "durationMs": {
-            "minMs": 4.451540000009118,
-            "medianMs": 5.747792000009213,
-            "p95Ms": 7.697441999989678,
-            "maxMs": 7.697441999989678,
-            "stdDevMs": 0.9792892327672682,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 16.002,
-            "medianMs": 21.673,
-            "p95Ms": 28.46,
-            "maxMs": 28.46,
-            "stdDevMs": 4.127496782554773,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 1620232,
-          "opsPerSecond": 173.97985174105068,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n40": {
           "id": "fn:load-api-model@n40",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 40
           },
-          "durationMs": {
-            "minMs": 7.394683999998961,
-            "medianMs": 11.070512999998755,
-            "p95Ms": 12.093811000013375,
-            "maxMs": 12.093811000013375,
-            "stdDevMs": 1.8078581743825255,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 26.265,
-            "medianMs": 43.819,
-            "p95Ms": 45.13,
-            "maxMs": 45.13,
-            "stdDevMs": 7.900888598759004,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 3027280,
-          "opsPerSecond": 90.33005064897286,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n80": {
           "id": "fn:load-api-model@n80",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 80
           },
-          "durationMs": {
-            "minMs": 14.611504000000423,
-            "medianMs": 15.307834999999614,
-            "p95Ms": 24.459344000002602,
-            "maxMs": 24.459344000002602,
-            "stdDevMs": 2.8073167992114048,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 48.311,
-            "medianMs": 50.722,
-            "p95Ms": 87.48,
-            "maxMs": 87.48,
-            "stdDevMs": 11.158324272040135,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 5792096,
-          "opsPerSecond": 65.32602422223817,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n160": {
           "id": "fn:load-api-model@n160",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 160
           },
-          "durationMs": {
-            "minMs": 22.448251999987406,
-            "medianMs": 24.076075000004494,
-            "p95Ms": 38.28211800000281,
-            "maxMs": 38.28211800000281,
-            "stdDevMs": 5.398895487040945,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 49.093,
-            "medianMs": 61.817,
-            "p95Ms": 110.372,
-            "maxMs": 110.372,
-            "stdDevMs": 17.81596627073592,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 10791136,
-          "opsPerSecond": 41.535009340177474,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n320": {
           "id": "fn:load-api-model@n320",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 320
           },
-          "durationMs": {
-            "minMs": 30.564024999999674,
-            "medianMs": 35.644026000009035,
-            "p95Ms": 37.720716000010725,
-            "maxMs": 37.720716000010725,
-            "stdDevMs": 2.331077089528769,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 56.146,
-            "medianMs": 77.889,
-            "p95Ms": 86.424,
-            "maxMs": 86.424,
-            "stdDevMs": 9.849551972044212,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 20741272,
-          "opsPerSecond": 28.05519219405088,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n640": {
           "id": "fn:load-api-model@n640",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 640
           },
-          "durationMs": {
-            "minMs": 58.591629000002285,
-            "medianMs": 66.94133799998963,
-            "p95Ms": 84.957150000002,
-            "maxMs": 84.957150000002,
-            "stdDevMs": 6.511206267707598,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 112.751,
-            "medianMs": 126.668,
-            "p95Ms": 169.491,
-            "maxMs": 169.491,
-            "stdDevMs": 14.41264185671732,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 40500240,
-          "opsPerSecond": 14.93845252988751,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n1280": {
           "id": "fn:load-api-model@n1280",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 1280
           },
-          "durationMs": {
-            "minMs": 112.93892600000254,
-            "medianMs": 119.87561000000278,
-            "p95Ms": 121.25381399999605,
-            "maxMs": 121.25381399999605,
-            "stdDevMs": 2.7551957645154985,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 189.397,
-            "medianMs": 205.614,
-            "p95Ms": 208.867,
-            "maxMs": 208.867,
-            "stdDevMs": 7.231094980015128,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 19026112,
-          "opsPerSecond": 8.34198049127739,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         }
       }
@@ -827,254 +302,79 @@
       "tiers": {
         "n20": {
           "id": "fn:normalize-api-package@n20",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 20
           },
-          "durationMs": {
-            "minMs": 0.23127300000487594,
-            "medianMs": 0.24368600000161678,
-            "p95Ms": 0.2777819999973872,
-            "maxMs": 0.2777819999973872,
-            "stdDevMs": 0.013819085551068287,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 0.2365,
-            "medianMs": 0.2555,
-            "p95Ms": 1.1425,
-            "maxMs": 1.1425,
-            "stdDevMs": 0.32749448850324187,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 66784,
-          "opsPerSecond": 4103.64157150335,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 2,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n40": {
           "id": "fn:normalize-api-package@n40",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 40
           },
-          "durationMs": {
-            "minMs": 0.43315199999778997,
-            "medianMs": 0.5041579999960959,
-            "p95Ms": 0.5417140000063227,
-            "maxMs": 0.5417140000063227,
-            "stdDevMs": 0.03460387464731232,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 0.441,
-            "medianMs": 0.536,
-            "p95Ms": 1.912,
-            "maxMs": 1.912,
-            "stdDevMs": 0.5813594499102943,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 131888,
-          "opsPerSecond": 1983.5051710133407,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n80": {
           "id": "fn:normalize-api-package@n80",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 80
           },
-          "durationMs": {
-            "minMs": 0.4603429999988293,
-            "medianMs": 0.801207999989856,
-            "p95Ms": 0.8869750000012573,
-            "maxMs": 0.8869750000012573,
-            "stdDevMs": 0.14970805927295064,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 0.468,
-            "medianMs": 2.675,
-            "p95Ms": 3.876,
-            "maxMs": 3.876,
-            "stdDevMs": 1.3071038367321857,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 258464,
-          "opsPerSecond": 1248.1153458436022,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n160": {
           "id": "fn:normalize-api-package@n160",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 160
           },
-          "durationMs": {
-            "minMs": 0.8392549999989569,
-            "medianMs": 0.937210000003688,
-            "p95Ms": 1.3846929999999702,
-            "maxMs": 1.3846929999999702,
-            "stdDevMs": 0.1929055320910597,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 0.874,
-            "medianMs": 3.261,
-            "p95Ms": 5.987,
-            "maxMs": 5.987,
-            "stdDevMs": 1.3742087323256245,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 503864,
-          "opsPerSecond": 1066.9967243158576,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n320": {
           "id": "fn:normalize-api-package@n320",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 320
           },
-          "durationMs": {
-            "minMs": 1.447425000005751,
-            "medianMs": 1.5747949999931734,
-            "p95Ms": 3.556111999991117,
-            "maxMs": 3.556111999991117,
-            "stdDevMs": 0.6216769601319664,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 4.475,
-            "medianMs": 5.85,
-            "p95Ms": 14.551,
-            "maxMs": 14.551,
-            "stdDevMs": 2.9630937025345654,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 1010136,
-          "opsPerSecond": 635.0032861447585,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n640": {
           "id": "fn:normalize-api-package@n640",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 640
           },
-          "durationMs": {
-            "minMs": 2.7586299999966286,
-            "medianMs": 3.054558999996516,
-            "p95Ms": 3.726685000001453,
-            "maxMs": 3.726685000001453,
-            "stdDevMs": 0.26862954451893284,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 7.692,
-            "medianMs": 11.953,
-            "p95Ms": 15.332,
-            "maxMs": 15.332,
-            "stdDevMs": 2.253419714567173,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 1893904,
-          "opsPerSecond": 327.3795006091356,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n1280": {
           "id": "fn:normalize-api-package@n1280",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 1280
           },
-          "durationMs": {
-            "minMs": 5.452493999997387,
-            "medianMs": 6.232149999996182,
-            "p95Ms": 7.424608000001172,
-            "maxMs": 7.424608000001172,
-            "stdDevMs": 0.6052101795493183,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 17.702,
-            "medianMs": 24.987,
-            "p95Ms": 28.962,
-            "maxMs": 28.962,
-            "stdDevMs": 3.1447257750080526,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 3827168,
-          "opsPerSecond": 160.45826881583605,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         }
       }
@@ -1084,337 +384,79 @@
       "tiers": {
         "n20": {
           "id": "fn:classify-contract-changes@n20",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 20
           },
-          "durationMs": {
-            "minMs": 123.90984799999569,
-            "medianMs": 133.06228899999405,
-            "p95Ms": 187.1297029999987,
-            "maxMs": 187.1297029999987,
-            "stdDevMs": 17.55956496555133,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 210.063,
-            "medianMs": 219.836,
-            "p95Ms": 289.679,
-            "maxMs": 289.679,
-            "stdDevMs": 22.17763831790932,
-            "iterations": 10,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 47006672,
-          "opsPerSecond": 7.51527729994217,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n40": {
           "id": "fn:classify-contract-changes@n40",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 40
           },
-          "durationMs": {
-            "minMs": 248.39293600000383,
-            "medianMs": 250.37651700001152,
-            "p95Ms": 261.4802519999939,
-            "maxMs": 261.4802519999939,
-            "stdDevMs": 5.060549756091324,
-            "iterations": 7,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 388.083,
-            "medianMs": 399.644,
-            "p95Ms": 418.217,
-            "maxMs": 418.217,
-            "stdDevMs": 9.899619122749622,
-            "iterations": 7,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 102395712,
-          "opsPerSecond": 3.993984787319148,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n80": {
           "id": "fn:classify-contract-changes@n80",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 80
           },
-          "durationMs": {
-            "minMs": 486.2978810000059,
-            "medianMs": 498.4119229999924,
-            "p95Ms": 506.4298329999874,
-            "maxMs": 506.4298329999874,
-            "stdDevMs": 7.171780645078746,
-            "iterations": 4,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 754.755,
-            "medianMs": 772.862,
-            "p95Ms": 774.309,
-            "maxMs": 774.309,
-            "stdDevMs": 7.7938105731407035,
-            "iterations": 4,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 177799664,
-          "opsPerSecond": 2.0063725481944688,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n160": {
           "id": "fn:classify-contract-changes@n160",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 160
           },
-          "durationMs": {
-            "minMs": 1087.5674209999997,
-            "medianMs": 1112.4477909999987,
-            "p95Ms": 1115.6524969999882,
-            "maxMs": 1115.6524969999882,
-            "stdDevMs": 12.552443081410024,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 1647.293,
-            "medianMs": 1676.206,
-            "p95Ms": 1687.829,
-            "maxMs": 1687.829,
-            "stdDevMs": 17.04315761693109,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 388175632,
-          "opsPerSecond": 0.8989185902388126,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n320": {
           "id": "fn:classify-contract-changes@n320",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 320
           },
-          "durationMs": {
-            "minMs": 2308.8864780000004,
-            "medianMs": 2349.7045479999942,
-            "p95Ms": 2381.6167570000107,
-            "maxMs": 2381.6167570000107,
-            "stdDevMs": 29.766120572080077,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 3625.202,
-            "medianMs": 3672.451,
-            "p95Ms": 3705.135,
-            "maxMs": 3705.135,
-            "stdDevMs": 32.812593019550675,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 353437448,
-          "opsPerSecond": 0.4255854213037862,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n640": {
           "id": "fn:classify-contract-changes@n640",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 640
           },
-          "durationMs": {
-            "minMs": 4760.74631799999,
-            "medianMs": 4790.991160999984,
-            "p95Ms": 4801.773871999991,
-            "maxMs": 4801.773871999991,
-            "stdDevMs": 17.36624302690853,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 7539.235,
-            "medianMs": 7639.888,
-            "p95Ms": 7659.208,
-            "maxMs": 7659.208,
-            "stdDevMs": 52.59679916116573,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 224130128,
-          "opsPerSecond": 0.2087250772116387,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         },
         "n1280": {
           "id": "fn:classify-contract-changes@n1280",
-          "status": "completed",
+          "status": "failed",
           "inputs": {
             "export": 1280
           },
-          "durationMs": {
-            "minMs": 9675.682243999996,
-            "medianMs": 9758.107468000002,
-            "p95Ms": 9778.803753000015,
-            "maxMs": 9778.803753000015,
-            "stdDevMs": 44.542488308846885,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "cpuMs": {
-            "minMs": 15153.793,
-            "medianMs": 15288.872,
-            "p95Ms": 15322.076,
-            "maxMs": 15322.076,
-            "stdDevMs": 72.77668273255881,
-            "iterations": 3,
-            "warmupIterations": 1
-          },
-          "heapDeltaBytes": 360078656,
-          "opsPerSecond": 0.10247888776377224,
-          "configuration": {
-            "targetDurationMs": 2000,
-            "minIterations": 3,
-            "maxIterations": 10,
-            "warmupIterations": 1,
-            "minSampleMs": 1,
-            "batchSize": 1,
-            "gcEnabled": true
-          }
-        }
-      }
-    },
-    "end-to-end:overhead": {
-      "area": "end-to-end",
-      "derived": true,
-      "tiers": {
-        "n20": {
-          "id": "end-to-end:overhead@n20",
-          "status": "completed",
-          "derived": true,
-          "inputs": {
-            "export": 20
-          },
-          "durationMs": {
-            "medianMs": 134.71554800000104
-          }
-        },
-        "n40": {
-          "id": "end-to-end:overhead@n40",
-          "status": "completed",
-          "derived": true,
-          "inputs": {
-            "export": 40
-          },
-          "durationMs": {
-            "medianMs": 253.8010469999981
-          }
-        },
-        "n80": {
-          "id": "end-to-end:overhead@n80",
-          "status": "completed",
-          "derived": true,
-          "inputs": {
-            "export": 80
-          },
-          "durationMs": {
-            "medianMs": 551.8959284999992
-          }
-        },
-        "n160": {
-          "id": "end-to-end:overhead@n160",
-          "status": "completed",
-          "derived": true,
-          "inputs": {
-            "export": 160
-          },
-          "durationMs": {
-            "medianMs": 1124.3603079999984
-          }
-        },
-        "n320": {
-          "id": "end-to-end:overhead@n320",
-          "status": "completed",
-          "derived": true,
-          "inputs": {
-            "export": 320
-          },
-          "durationMs": {
-            "medianMs": 2248.2874889999985
-          }
-        },
-        "n640": {
-          "id": "end-to-end:overhead@n640",
-          "status": "completed",
-          "derived": true,
-          "inputs": {
-            "export": 640
-          },
-          "durationMs": {
-            "medianMs": 4633.629660000002
-          }
-        },
-        "n1280": {
-          "id": "end-to-end:overhead@n1280",
-          "status": "completed",
-          "derived": true,
-          "inputs": {
-            "export": 1280
-          },
-          "durationMs": {
-            "medianMs": 9388.616906999998
+          "error": {
+            "name": "Error",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
           }
         }
       }
@@ -1423,355 +465,268 @@
   "analysis": {
     "complexity": {
       "end-to-end:baseline": {
-        "class": "linear",
-        "exponent": 0.827070017696425,
-        "rSquared": 0.9896903829308866,
+        "class": null,
+        "exponent": null,
+        "rSquared": null,
+        "reason": "insufficient-data",
         "variable": "export",
-        "notation": "O(n)",
-        "points": 7
+        "unmeasured": [
+          {
+            "tier": "n20",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n40",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n80",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n160",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n320",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n640",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n1280",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          }
+        ],
+        "notation": null,
+        "points": 0
       },
       "end-to-end:with-package": {
-        "class": "linear",
-        "exponent": 1.0218109005914853,
-        "rSquared": 0.9999685344076541,
+        "class": null,
+        "exponent": null,
+        "rSquared": null,
+        "reason": "insufficient-data",
         "variable": "export",
-        "notation": "O(n)",
-        "points": 7
+        "unmeasured": [
+          {
+            "tier": "n20",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n40",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n80",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n160",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n320",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n640",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n1280",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          }
+        ],
+        "notation": null,
+        "points": 0
       },
       "fn:load-api-model": {
-        "class": "linear",
-        "exponent": 0.7413689162897611,
-        "rSquared": 0.9915288773761398,
+        "class": null,
+        "exponent": null,
+        "rSquared": null,
+        "reason": "insufficient-data",
         "variable": "export",
-        "notation": "O(n)",
-        "points": 7,
+        "unmeasured": [
+          {
+            "tier": "n20",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n40",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n80",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n160",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n320",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n640",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n1280",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          }
+        ],
+        "notation": null,
+        "points": 0,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "matches"
+        "agreement": "unknown"
       },
       "fn:normalize-api-package": {
-        "class": "linear",
-        "exponent": 0.76234823063003,
-        "rSquared": 0.9579262652019498,
+        "class": null,
+        "exponent": null,
+        "rSquared": null,
+        "reason": "insufficient-data",
         "variable": "export",
-        "notation": "O(n)",
-        "points": 7,
+        "unmeasured": [
+          {
+            "tier": "n20",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n40",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n80",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n160",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n320",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n640",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n1280",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          }
+        ],
+        "notation": null,
+        "points": 0,
         "expected": "linearithmic",
         "expectedNotation": "O(n log n)",
-        "agreement": "close"
+        "agreement": "unknown"
       },
       "fn:classify-contract-changes": {
-        "class": "linear",
-        "exponent": 1.0688968294257883,
-        "rSquared": 0.9993263317839514,
+        "class": null,
+        "exponent": null,
+        "rSquared": null,
+        "reason": "insufficient-data",
         "variable": "export",
-        "notation": "O(n)",
-        "points": 7,
+        "unmeasured": [
+          {
+            "tier": "n20",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n40",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n80",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n160",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n320",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n640",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          },
+          {
+            "tier": "n1280",
+            "status": "failed",
+            "message": "Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json"
+          }
+        ],
+        "notation": null,
+        "points": 0,
         "expected": "linear",
         "expectedNotation": "O(n)",
-        "agreement": "matches"
+        "agreement": "unknown"
       }
     },
-    "endToEnd": [
-      {
-        "n": 20,
-        "baselineMs": 0.20080099999995582,
-        "withPackageMs": 134.916349000001,
-        "overheadMs": 134.71554800000104,
-        "overheadPercent": 67089.08222570141,
-        "overheadCpuMs": 236.97066666666666,
-        "overheadHeapBytes": 46382688,
-        "cost": {
-          "lowUsdPerMillion": 2.664603496296296,
-          "highUsdPerMillion": 0.28065795298145224,
-          "opsPerSecondPerCore": 7.4230481547682405
-        }
-      },
-      {
-        "n": 40,
-        "baselineMs": 0.3295250000001033,
-        "withPackageMs": 254.1305719999982,
-        "overheadMs": 253.8010469999981,
-        "overheadPercent": 77020.27069263897,
-        "overheadCpuMs": 407.89399999999995,
-        "overheadHeapBytes": 95351960,
-        "cost": {
-          "lowUsdPerMillion": 4.586541422222221,
-          "highUsdPerMillion": 0.5287532387543585,
-          "opsPerSecondPerCore": 3.9400940690367108
-        }
-      },
-      {
-        "n": 80,
-        "baselineMs": 0.623509500000182,
-        "withPackageMs": 552.5194379999994,
-        "overheadMs": 551.8959284999992,
-        "overheadPercent": 88514.43779121859,
-        "overheadCpuMs": 889.414,
-        "overheadHeapBytes": 171113076,
-        "cost": {
-          "lowUsdPerMillion": 10.000966311111112,
-          "highUsdPerMillion": 1.4658520437580043,
-          "opsPerSecondPerCore": 1.8119358168086241
-        }
-      },
-      {
-        "n": 160,
-        "baselineMs": 1.3876769999997123,
-        "withPackageMs": 1125.7479849999982,
-        "overheadMs": 1124.3603079999984,
-        "overheadPercent": 81024.64103679975,
-        "overheadCpuMs": 1721.085,
-        "overheadHeapBytes": 402156464,
-        "cost": {
-          "lowUsdPerMillion": 19.35264466666667,
-          "highUsdPerMillion": 7.018597021462423,
-          "opsPerSecondPerCore": 0.8893946121050739
-        }
-      },
-      {
-        "n": 320,
-        "baselineMs": 2.373258999999962,
-        "withPackageMs": 2250.6607479999984,
-        "overheadMs": 2248.2874889999985,
-        "overheadPercent": 94734.18152001254,
-        "overheadCpuMs": 3531.2980000000002,
-        "overheadHeapBytes": 372585176,
-        "cost": {
-          "lowUsdPerMillion": 39.70748417777778,
-          "highUsdPerMillion": 13.002509020654518,
-          "opsPerSecondPerCore": 0.44478297588391763
-        }
-      },
-      {
-        "n": 640,
-        "baselineMs": 3.8476950000003853,
-        "withPackageMs": 4637.477355000003,
-        "overheadMs": 4633.629660000002,
-        "overheadPercent": 120426.11641514045,
-        "overheadCpuMs": 7266.4400000000005,
-        "overheadHeapBytes": 602391848,
-        "cost": {
-          "lowUsdPerMillion": 81.7070808888889,
-          "highUsdPerMillion": 43.326155536443004,
-          "opsPerSecondPerCore": 0.21581353568942743
-        }
-      },
-      {
-        "n": 1280,
-        "baselineMs": 6.580385999999635,
-        "withPackageMs": 9395.197292999997,
-        "overheadMs": 9388.616906999998,
-        "overheadPercent": 142675.77778872725,
-        "overheadCpuMs": 14733.938,
-        "overheadHeapBytes": 454909904,
-        "cost": {
-          "lowUsdPerMillion": 165.6749472888889,
-          "highUsdPerMillion": 66.29438694885899,
-          "opsPerSecondPerCore": 0.10651196122981826
-        }
-      }
-    ],
+    "endToEnd": [],
     "contribution": [
       {
         "id": "load-api-model",
         "group": "fn:load-api-model",
         "description": "Once per API check, loading both the baseline and the current API description (this function loads both).",
-        "rows": [
-          {
-            "n": 20,
-            "calls": 1,
-            "estimatedMs": 5.747792000009213,
-            "exclusiveMs": 5.747792000009213,
-            "shareOfTotal": 0.04260263520775507
-          },
-          {
-            "n": 40,
-            "calls": 1,
-            "estimatedMs": 11.070512999998755,
-            "exclusiveMs": 11.070512999998755,
-            "shareOfTotal": 0.043562303082522603
-          },
-          {
-            "n": 80,
-            "calls": 1,
-            "estimatedMs": 15.307834999999614,
-            "exclusiveMs": 15.307834999999614,
-            "shareOfTotal": 0.027705513955148184
-          },
-          {
-            "n": 160,
-            "calls": 1,
-            "estimatedMs": 24.076075000004494,
-            "exclusiveMs": 24.076075000004494,
-            "shareOfTotal": 0.021386736037555094
-          },
-          {
-            "n": 320,
-            "calls": 1,
-            "estimatedMs": 35.644026000009035,
-            "exclusiveMs": 35.644026000009035,
-            "shareOfTotal": 0.01583713850773971
-          },
-          {
-            "n": 640,
-            "calls": 1,
-            "estimatedMs": 66.94133799998963,
-            "exclusiveMs": 66.94133799998963,
-            "shareOfTotal": 0.014434860350922315
-          },
-          {
-            "n": 1280,
-            "calls": 1,
-            "estimatedMs": 119.87561000000278,
-            "exclusiveMs": 119.87561000000278,
-            "shareOfTotal": 0.012759243500859479
-          }
-        ]
+        "rows": []
       },
       {
         "id": "normalize-api-package",
         "group": "fn:normalize-api-package",
         "description": "Once per API check, normalizing both the baseline and the current model (this function normalizes both).",
-        "rows": [
-          {
-            "n": 20,
-            "calls": 1,
-            "estimatedMs": 0.24368600000161678,
-            "exclusiveMs": 0.24368600000161678,
-            "shareOfTotal": 0.0018062006703250988
-          },
-          {
-            "n": 40,
-            "calls": 1,
-            "estimatedMs": 0.5041579999960959,
-            "exclusiveMs": 0.5041579999960959,
-            "shareOfTotal": 0.00198385418971197
-          },
-          {
-            "n": 80,
-            "calls": 1,
-            "estimatedMs": 0.801207999989856,
-            "exclusiveMs": 0.801207999989856,
-            "shareOfTotal": 0.0014500992089799688
-          },
-          {
-            "n": 160,
-            "calls": 1,
-            "estimatedMs": 0.937210000003688,
-            "exclusiveMs": 0.937210000003688,
-            "shareOfTotal": 0.0008325220320102901
-          },
-          {
-            "n": 320,
-            "calls": 1,
-            "estimatedMs": 1.5747949999931734,
-            "exclusiveMs": 1.5747949999931734,
-            "shareOfTotal": 0.0006997034099397616
-          },
-          {
-            "n": 640,
-            "calls": 1,
-            "estimatedMs": 3.054558999996516,
-            "exclusiveMs": 3.054558999996516,
-            "shareOfTotal": 0.0006586682297657309
-          },
-          {
-            "n": 1280,
-            "calls": 1,
-            "estimatedMs": 6.232149999996182,
-            "exclusiveMs": 6.232149999996182,
-            "shareOfTotal": 0.0006633335954147039
-          }
-        ]
+        "rows": []
       },
       {
         "id": "classify-contract-changes",
         "group": "fn:classify-contract-changes",
         "description": "Once per API check, after both models are normalized.",
-        "rows": [
-          {
-            "n": 20,
-            "calls": 1,
-            "estimatedMs": 133.06228899999405,
-            "exclusiveMs": 133.06228899999405,
-            "shareOfTotal": 0.9862577069884472
-          },
-          {
-            "n": 40,
-            "calls": 1,
-            "estimatedMs": 250.37651700001152,
-            "exclusiveMs": 250.37651700001152,
-            "shareOfTotal": 0.9852278497213365
-          },
-          {
-            "n": 80,
-            "calls": 1,
-            "estimatedMs": 498.4119229999924,
-            "exclusiveMs": 498.4119229999924,
-            "shareOfTotal": 0.9020712914719083
-          },
-          {
-            "n": 160,
-            "calls": 1,
-            "estimatedMs": 1112.4477909999987,
-            "exclusiveMs": 1112.4477909999987,
-            "shareOfTotal": 0.9881854605318263
-          },
-          {
-            "n": 320,
-            "calls": 1,
-            "estimatedMs": 2349.7045479999942,
-            "exclusiveMs": 2349.7045479999942,
-            "shareOfTotal": 1.044006543450855
-          },
-          {
-            "n": 640,
-            "calls": 1,
-            "estimatedMs": 4790.991160999984,
-            "exclusiveMs": 4790.991160999984,
-            "shareOfTotal": 1.0331028691351918
-          },
-          {
-            "n": 1280,
-            "calls": 1,
-            "estimatedMs": 9758.107468000002,
-            "exclusiveMs": 9758.107468000002,
-            "shareOfTotal": 1.0386272010775544
-          }
-        ]
+        "rows": []
       }
     ],
     "cost": {
-      "typicalN": 160,
-      "typical": {
-        "n": 160,
-        "baselineMs": 1.3876769999997123,
-        "withPackageMs": 1125.7479849999982,
-        "overheadMs": 1124.3603079999984,
-        "overheadPercent": 81024.64103679975,
-        "overheadCpuMs": 1721.085,
-        "overheadHeapBytes": 402156464,
-        "cost": {
-          "lowUsdPerMillion": 19.35264466666667,
-          "highUsdPerMillion": 7.018597021462423,
-          "opsPerSecondPerCore": 0.8893946121050739
-        }
-      },
-      "largest": {
-        "n": 1280,
-        "baselineMs": 6.580385999999635,
-        "withPackageMs": 9395.197292999997,
-        "overheadMs": 9388.616906999998,
-        "overheadPercent": 142675.77778872725,
-        "overheadCpuMs": 14733.938,
-        "overheadHeapBytes": 454909904,
-        "cost": {
-          "lowUsdPerMillion": 165.6749472888889,
-          "highUsdPerMillion": 66.29438694885899,
-          "opsPerSecondPerCore": 0.10651196122981826
-        }
-      }
+      "typicalN": 160
     },
     "coverage": {
       "benchmarks": [],

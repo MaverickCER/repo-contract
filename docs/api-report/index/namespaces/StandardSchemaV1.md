@@ -85,8 +85,8 @@ The Standard Schema properties interface.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `Input` | `unknown` |
-| `Output` | `Input` |
+| <a id="type-parameter-input"></a> `Input` | `unknown` |
+| <a id="type-parameter-output"></a> `Output` | `Input` |
 
 #### Properties
 
@@ -146,7 +146,7 @@ The result interface if validation succeeds.
 
 | Type Parameter |
 | ------ |
-| `Output` |
+| <a id="type-parameter-output-1"></a> `Output` |
 
 #### Properties
 
@@ -176,8 +176,8 @@ The Standard Schema types interface.
 
 | Type Parameter | Default type |
 | ------ | ------ |
-| `Input` | `unknown` |
-| `Output` | `Input` |
+| <a id="type-parameter-input-1"></a> `Input` | `unknown` |
+| <a id="type-parameter-output-2"></a> `Output` | `Input` |
 
 #### Properties
 
@@ -211,7 +211,7 @@ Infers the input type of a Standard Schema.
 
 | Type Parameter |
 | ------ |
-| `Schema` *extends* [`StandardSchemaV1`](../README.md#standardschemav1) |
+| <a id="type-parameter-schema"></a> `Schema` *extends* [`StandardSchemaV1`](../README.md#standardschemav1) |
 
 ***
 
@@ -227,7 +227,7 @@ Infers the output type of a Standard Schema.
 
 | Type Parameter |
 | ------ |
-| `Schema` *extends* [`StandardSchemaV1`](../README.md#standardschemav1) |
+| <a id="type-parameter-schema-1"></a> `Schema` *extends* [`StandardSchemaV1`](../README.md#standardschemav1) |
 
 ***
 
@@ -245,4 +245,4 @@ The result interface of the validate function.
 
 | Type Parameter |
 | ------ |
-| `Output` |
+| <a id="type-parameter-output-3"></a> `Output` |
