@@ -34,19 +34,11 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 Every function the package exposes is measured on its own across the full size ladder, then its measured growth rate is compared with the big-O we documented for it. A function whose measured class **differs** from its documented one is the most useful thing in this report: either the documentation or the code is wrong.
 
-| Function | Varies | Documented | Measured | Agreement | At 160 | At 1280 |
-| --- | --- | --- | --- | --- | --- | --- |
-| `loadApiModel (both API descriptions)` | export | O(n) | n/a | ❔ not enough data | n/a | n/a |
-| `normalizeApiPackage` | export | O(n log n) | n/a | ❔ not enough data | n/a | n/a |
-| `classifyContractChanges (with type-assignability probing)` | export | O(n) | n/a | ❔ not enough data | n/a | n/a |
-
-> **Could not be determined.** The big-O of these could not be measured, so they are not checked against their documentation:
->
-> - `end-to-end:baseline` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
-> - `end-to-end:with-package` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
-> - `load-api-model` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
-> - `normalize-api-package` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
-> - `classify-contract-changes` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
+| Function | Documented | Measured | Agreement | At 160 | At 1280 |
+| --- | --- | --- | --- | --- | --- |
+| `loadApiModel (both API descriptions)` | O(n) | n/a | ❔ not enough data | n/a | n/a |
+| `normalizeApiPackage` | O(n log n) | n/a | ❔ not enough data | n/a | n/a |
+| `classifyContractChanges (with type-assignability probing)` | O(n) | n/a | ❔ not enough data | n/a | n/a |
 
 ### `loadApiModel (both API descriptions)`
 
@@ -68,13 +60,13 @@ Every function the package exposes is measured on its own across the full size l
 
 | exports | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 40 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 80 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 160 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 320 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 640 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 1280 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
+| 20 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 40 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 80 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 160 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 320 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 640 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 1280 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
 
 ### `normalizeApiPackage`
 
@@ -96,13 +88,13 @@ Every function the package exposes is measured on its own across the full size l
 
 | exports | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 40 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 80 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 160 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 320 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 640 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 1280 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
+| 20 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 40 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 80 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 160 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 320 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 640 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 1280 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
 
 ### `classifyContractChanges (with type-assignability probing)`
 
@@ -129,13 +121,13 @@ Every function the package exposes is measured on its own across the full size l
 
 | exports | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 40 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 80 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 160 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 320 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 640 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 1280 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
+| 20 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 40 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 80 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 160 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 320 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 640 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
+| 1280 | ❌ Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json |  |  |  |  |
 
 ## 3. What makes up one end-to-end operation
 
@@ -143,41 +135,41 @@ Each function's measured cost is multiplied by how many times one end-to-end ope
 
 ## Failed measurements
 
-- **end-to-end:baseline** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
+- **end-to-end:baseline** at n20: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:baseline** at n40: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:baseline** at n80: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:baseline** at n160: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:baseline** at n320: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:baseline** at n640: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:baseline** at n1280: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:with-package** at n20: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:with-package** at n40: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:with-package** at n80: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:with-package** at n160: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:with-package** at n320: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:with-package** at n640: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **end-to-end:with-package** at n1280: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:load-api-model** at n20: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:load-api-model** at n40: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:load-api-model** at n80: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:load-api-model** at n160: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:load-api-model** at n320: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:load-api-model** at n640: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:load-api-model** at n1280: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:normalize-api-package** at n20: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:normalize-api-package** at n40: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:normalize-api-package** at n80: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:normalize-api-package** at n160: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:normalize-api-package** at n320: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:normalize-api-package** at n640: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:normalize-api-package** at n1280: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:classify-contract-changes** at n20: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:classify-contract-changes** at n40: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:classify-contract-changes** at n80: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:classify-contract-changes** at n160: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:classify-contract-changes** at n320: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:classify-contract-changes** at n640: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
+- **fn:classify-contract-changes** at n1280: Error: Command failed: /opt/hostedtoolcache/node/24.21.0/x64/bin/node /home/runner/work/repo-contract/repo-contract/node_modules/.bin/tsc -p tsconfig.json
 
 ## Cost model
 
@@ -185,9 +177,9 @@ Estimates use two bracketing price shapes: **low** = CPU-priced compute ($0.040 
 
 ## Environment and method
 
-- Run: `2026-10-20T02:02:50.218Z` → `2026-10-20T02:02:53.930Z` (4 s), ci: CI (run 39355249621)
-- Machine: AMD EPYC 7763 64-Core Processor, 4 logical core(s) (2 physical), 15990 MB RAM, linux/x64, Node v24.21.0, GitHub Actions
-- Git: `9caf04b4ab765d7b8c0dfe0a98e734d2083782bd` on `chore/follow-ups`
+- Run: `2026-10-20T08:46:25.035Z` → `2026-10-20T08:46:28.402Z` (3 s), ci: CI (run 39393922433)
+- Machine: Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz, 4 logical core(s) (2 physical), 15989 MB RAM, linux/x64, Node v24.21.0, GitHub Actions
+- Git: `1831ca7deaf3e275b509755b9cba687091fc5811` on `dependabot/npm_and_yarn/internal-package-contract-v0.11.0`
 - Sizes: 20, 40, 80, 160, 320, 640, 1280 exports -- One exported function in the package's public API. 160 is a mid-sized library's surface; the ladder reaches 1,280. It stops there, not at 10,240, because every size compiles a real synthetic TypeScript package and runs API Extractor over it, which takes minutes at the largest sizes.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They exist to show how _this_ package's cost changes between runs on comparable hardware and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).
