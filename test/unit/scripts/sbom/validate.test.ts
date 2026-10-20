@@ -174,6 +174,22 @@ describe("validateSbomDocument", () => {
     if (result.ok) expect(result.value.toolVersion).toBe("unknown")
   })
 
+  it('ignores a tools entry whose "version" has a length but is not a string', () => {
+    const result = validateSbomDocument(
+      validDocument({
+        metadata: {
+          tools: {
+            components: [
+              { type: "application", group: "@cyclonedx", name: "cyclonedx-npm", version: ["6"] },
+            ],
+          },
+        },
+      }),
+    )
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.value.toolVersion).toBe("unknown")
+  })
+
   it('ignores a tools entry whose "version" is not a non-empty string', () => {
     const result = validateSbomDocument(
       validDocument({
@@ -219,5 +235,37 @@ describe("validateSbomDocument", () => {
     )
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.value.toolVersion).toBe("unknown")
+  })
+})
+
+describe("validateSbomDocument -- the root component's repository reference", () => {
+  const withRoot = (component: unknown) => validDocument({ metadata: { component } })
+  const reason =
+    "docs/sbom.cdx.json's root component has no repository (vcs) reference although package.json declares one: cyclonedx-npm could not read package.json at the path npm reported and fell back to the lockfile's bare entry. npm masks UUID-shaped text in its output, so a checkout under a UUID-named directory hits this; generate the SBOM from a path without one."
+
+  it("requires a vcs reference only when package.json declares a repository", () => {
+    const bare = withRoot({ name: "pkg" })
+    expect(validateSbomDocument(bare).ok).toBe(true)
+    expect(validateSbomDocument(bare, { rootHasRepository: false }).ok).toBe(true)
+    expect(validateSbomDocument(bare, { rootHasRepository: true })).toEqual({ ok: false, reason })
+  })
+
+  it("accepts a vcs reference among others and rejects every other shape", () => {
+    const vcs = withRoot({ externalReferences: [{ type: "website" }, { type: "vcs" }] })
+    expect(validateSbomDocument(vcs, { rootHasRepository: true }).ok).toBe(true)
+    for (const component of [
+      undefined,
+      "pkg",
+      { externalReferences: { type: "vcs" } },
+      { externalReferences: [null, "vcs", { type: "website" }] },
+    ]) {
+      expect(validateSbomDocument(withRoot(component), { rootHasRepository: true })).toEqual({
+        ok: false,
+        reason,
+      })
+    }
+    const noMetadata = validDocument()
+    delete noMetadata.metadata
+    expect(validateSbomDocument(noMetadata, { rootHasRepository: true }).ok).toBe(false)
   })
 })

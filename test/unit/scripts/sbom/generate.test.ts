@@ -58,7 +58,7 @@ describe("generateSbom", () => {
     const evidence = await generateSbom("/repo")
 
     expect(evidence).toEqual({ ok: false, reason: "The `cyclonedx-npm` CLI is not installed." })
-    expect(readFile).not.toHaveBeenCalled()
+    expect(readFile.mock.calls).toEqual([[path.join("/repo", "package.json"), "utf8"]])
   })
 
   it("fails with a clear reason when the file cyclonedx-npm just wrote cannot be read back", async () => {
@@ -161,6 +161,7 @@ describe("generateSbom -- the production inventory", () => {
     runCycloneDxNpm.mockReset().mockReturnValue({ ok: true })
     readFile.mockReset()
     readFile
+      .mockResolvedValueOnce("{}")
       .mockResolvedValueOnce(JSON.stringify(VALID_DOCUMENT))
       .mockRejectedValueOnce(new Error("gone"))
     const unreadable = await generateSbom("/repo")
@@ -170,10 +171,53 @@ describe("generateSbom -- the production inventory", () => {
 
     readFile.mockReset()
     readFile
+      .mockResolvedValueOnce("{}")
       .mockResolvedValueOnce(JSON.stringify(VALID_DOCUMENT))
       .mockResolvedValueOnce(JSON.stringify({ bomFormat: "SPDX" }))
     const invalid = await generateSbom("/repo")
     expect(invalid.ok).toBe(false)
     if (!invalid.ok) expect(invalid.reason).toContain("docs/sbom.production.cdx.json")
+  })
+})
+
+describe("generateSbom -- the root component's own package metadata", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mkdir.mockResolvedValue(undefined)
+    runCycloneDxNpm.mockReturnValue({ ok: true })
+  })
+
+  const withRoot = (references: readonly unknown[]) => ({
+    ...VALID_DOCUMENT,
+    metadata: { ...VALID_DOCUMENT.metadata, component: { externalReferences: references } },
+  })
+  const serve = (manifest: string, document: unknown) =>
+    readFile.mockImplementation((file: string) =>
+      Promise.resolve(file.endsWith("package.json") ? manifest : JSON.stringify(document)),
+    )
+
+  it("fails when package.json declares a repository the SBOM's root no longer carries", async () => {
+    serve(JSON.stringify({ repository: "github:o/r" }), withRoot([]))
+    const evidence = await generateSbom("/repo")
+    expect(evidence.ok).toBe(false)
+    if (!evidence.ok) {
+      expect(evidence.reason).toContain("root component has no repository (vcs) reference")
+      expect(evidence.reason).toContain("UUID")
+    }
+  })
+
+  it("passes when the root carries it, or when package.json declares none or cannot be read", async () => {
+    serve(JSON.stringify({ repository: "github:o/r" }), withRoot([{ type: "vcs", url: "x" }]))
+    expect((await generateSbom("/repo")).ok).toBe(true)
+    for (const manifest of ["{}", "null", "5", "{not json"]) {
+      serve(manifest, withRoot([]))
+      expect((await generateSbom("/repo")).ok).toBe(true)
+    }
+    readFile.mockImplementation((file: string) =>
+      file.endsWith("package.json")
+        ? Promise.reject(new Error("gone"))
+        : Promise.resolve(JSON.stringify(withRoot([]))),
+    )
+    expect((await generateSbom("/repo")).ok).toBe(true)
   })
 })

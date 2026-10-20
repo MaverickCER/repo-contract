@@ -48,6 +48,21 @@ function extractToolVersion(metadata: unknown): string {
 }
 
 /**
+ * Whether the document's root component (`metadata.component`) carries a `vcs` reference --
+ * cyclonedx-npm adds one only when it built that component from package.json itself.
+ * @param metadata - The parsed document's own top-level `"metadata"` field.
+ * @returns `true` if a `vcs` reference is present.
+ */
+function hasVcsReference(metadata: unknown): boolean {
+  const component = isPlainObject(metadata) ? metadata.component : undefined
+  const references = isPlainObject(component) ? component.externalReferences : undefined
+  return (
+    Array.isArray(references) &&
+    references.some((reference) => isPlainObject(reference) && reference.type === "vcs")
+  )
+}
+
+/**
  * Confirms `parsed` is a genuinely well-formed CycloneDX document -- carrying the exact
  * `bomFormat`/a real `specVersion`/a real `components` array -- and pulls out the small summary
  * this check's own policy needs. Never re-validates full spec conformance itself (that's
@@ -57,10 +72,14 @@ function extractToolVersion(metadata: unknown): string {
  * applies before trusting its own tool's JSON output (mirrors `checks/security-deps.ts`'s
  * `validateAuditReport`).
  * @param parsed - The parsed contents of docs/sbom.cdx.json.
+ * @param options - What the document must reflect from the package itself.
+ * @param options.rootHasRepository - Whether package.json declares a `repository`, which the root
+ *   component must then carry as a `vcs` reference.
  * @returns The extracted summary, or a rejection reason for the caller's own rationale.
  */
 export function validateSbomDocument(
   parsed: unknown,
+  options: { readonly rootHasRepository?: boolean } = {},
 ):
   | { readonly ok: true; readonly value: SbomSummary }
   | { readonly ok: false; readonly reason: string } {
@@ -81,6 +100,14 @@ export function validateSbomDocument(
 
   if (!Array.isArray(parsed.components)) {
     return { ok: false, reason: 'docs/sbom.cdx.json has no "components" array.' }
+  }
+
+  if (options.rootHasRepository && !hasVcsReference(parsed.metadata)) {
+    return {
+      ok: false,
+      reason:
+        "docs/sbom.cdx.json's root component has no repository (vcs) reference although package.json declares one: cyclonedx-npm could not read package.json at the path npm reported and fell back to the lockfile's bare entry. npm masks UUID-shaped text in its output, so a checkout under a UUID-named directory hits this; generate the SBOM from a path without one.",
+    }
   }
 
   return {

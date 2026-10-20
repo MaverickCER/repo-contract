@@ -8,7 +8,7 @@
     },
     "./helpers": {
       "source": "src/helpers/",
-      "environment": "Node-only for the log helpers",
+      "environment": "Node: node:crypto and node:fs/promises (the file system is injectable)",
       "tier": "Stable",
       "purpose": "Governed exceptions: `loadExceptionRegistry`, `reconcileExceptions`, `evaluateExceptionRecord`; `repoContractLogs` and its two hooks are beta"
     },

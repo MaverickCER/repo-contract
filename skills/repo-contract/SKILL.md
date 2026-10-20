@@ -51,7 +51,7 @@ From `examples/demo/repo-contract.config.ts`.
 - `warn` is visible and never blocks. Only `fail` fails the run.
 - Name a check in `dependsOn` only after it is declared. `dependsOn` orders execution; the policy still decides what a failed dependency means.
 - Ask for parsed output with `output: { format: "json" }`; without it a policy sees only raw `stdout` and `stderr`.
-- Prefer a `run` array; a string is for `shell: true`, which uses the platform shell.
+- Prefer a `run` array. A string runs without a shell and rejects shell operators; `shell: true` opts into one.
 
 ## Rely on
 
@@ -64,7 +64,7 @@ From `examples/demo/repo-contract.config.ts`.
 
 | Instead of | Do this |
 | --- | --- |
-| Reading `process.env` or importing `child_process` inside a check | Take both from the config, so it runs the same on a laptop, in CI and in tests. |
+| Reading `process.env` or importing `child_process` inside a check | Take both from the config, so it runs the same everywhere. |
 | Using the `format` preset as a gate | It runs `prettier --write`, which never fails on unformatted files. Use `{ ...format, run: ["prettier", "--check", "."] }`. |
 | A policy with no rationale, or one that only says it failed | Say what to fix, where, and why it matters. |
 

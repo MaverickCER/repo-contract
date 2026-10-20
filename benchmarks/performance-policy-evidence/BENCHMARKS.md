@@ -285,7 +285,7 @@ Each check printed about 10 KB of JSON (a linter with many findings).
 
 How many of the slowest checks the summary lists.
 
-**Expected: O(1).** Sorting every check by duration dominates; listing the first few lines of the sorted result adds almost nothing.
+**Expected: O(1).** Each listed check adds one table row, so cost rises with this value until it reaches the 640 checks held during the sweep, then stops: the list never outgrows the checks it ranks. Sorting all 640 costs the same throughout, which keeps the rise to about half.
 
 **Measured: O(1)** (exponent 0.01, 10 sizes) -- ✅ matches.
 

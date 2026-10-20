@@ -228,7 +228,7 @@ export default defineSuite({
           primaryValue: 640,
           expectedComplexity: "constant",
           complexityReason:
-            "Sorting every check by duration dominates; listing the first few lines of the sorted result adds almost nothing.",
+            "Each listed check adds one table row, so cost rises with this value until it reaches the 640 checks held during the sweep, then stops: the list never outgrows the checks it ranks. Sorting all 640 costs the same throughout, which keeps the rise to about half.",
         },
       ],
       covers: {

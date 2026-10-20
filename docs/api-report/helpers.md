@@ -96,7 +96,7 @@ registry via `reconcileExceptions`).
 
 | Type Parameter |
 | ------ |
-| `TRecord` |
+| <a id="type-parameter-trecord"></a> `TRecord` |
 
 #### Properties
 
@@ -134,8 +134,8 @@ The outcome of reconciling one run's findings against one exception registry.
 
 | Type Parameter |
 | ------ |
-| `TFinding` |
-| `TRecord` |
+| <a id="type-parameter-tfinding"></a> `TFinding` |
+| <a id="type-parameter-trecord-1"></a> `TRecord` |
 
 #### Properties
 
@@ -222,7 +222,7 @@ twice.
 
 | Type Parameter |
 | ------ |
-| `TRecord` |
+| <a id="type-parameter-trecord-2"></a> `TRecord` |
 
 #### Properties
 
@@ -704,7 +704,7 @@ or anything else a consumer's own record shape needs -- this function never inte
 
 | Type Parameter |
 | ------ |
-| `TRecord` |
+| <a id="type-parameter-trecord-3"></a> `TRecord` |
 
 #### Parameters
 
@@ -737,7 +737,7 @@ any matching of its own.
 
 | Type Parameter |
 | ------ |
-| `TRecord` |
+| <a id="type-parameter-trecord-4"></a> `TRecord` |
 
 #### Parameters
 
@@ -780,7 +780,7 @@ whose values happen to concatenate identically as plain text can never collide h
 
 | Type Parameter |
 | ------ |
-| `TRecord` |
+| <a id="type-parameter-trecord-5"></a> `TRecord` |
 
 #### Parameters
 
@@ -838,7 +838,7 @@ registry data -- which is deliberately left to propagate as a rejected `Promise`
 
 | Type Parameter |
 | ------ |
-| `T` |
+| <a id="type-parameter-t"></a> `T` |
 
 #### Parameters
 
@@ -880,7 +880,7 @@ earlier run.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`RepoContractLogsOptions`](#repocontractlogsoptions) | where and how to write. |
+| `options?` | [`RepoContractLogsOptions`](#repocontractlogsoptions) | where and how to write. |
 
 #### Returns
 
@@ -905,7 +905,7 @@ log of a check that passed is removed.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`RepoContractLogsOptions`](#repocontractlogsoptions) | where and how to write; the same options as [onEvidenceSaveToRepoContractLogs](#onevidencesavetorepocontractlogs). |
+| `options?` | [`RepoContractLogsOptions`](#repocontractlogsoptions) | where and how to write; the same options as [onEvidenceSaveToRepoContractLogs](#onevidencesavetorepocontractlogs). |
 
 #### Returns
 
@@ -950,8 +950,8 @@ namespace). This function does not re-validate it.
 
 | Type Parameter |
 | ------ |
-| `TFinding` |
-| `TRecord` *extends* \{ `id`: `string`; \} |
+| <a id="type-parameter-tfinding-1"></a> `TFinding` |
+| <a id="type-parameter-trecord-6"></a> `TRecord` *extends* \{ `id`: `string`; \} |
 
 #### Parameters
 
@@ -993,7 +993,7 @@ elsewhere agree on which files exist.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`RepoContractLogsOptions`](#repocontractlogsoptions) | where and how to write. |
+| `options?` | [`RepoContractLogsOptions`](#repocontractlogsoptions) | where and how to write. |
 
 #### Returns
 
@@ -1075,7 +1075,7 @@ Assumes `records` have unique ids (the caller reconciled them and validated its 
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `records` | readonly `Record`\<`string`, `unknown`\> & \{ `id`: `string`; \}[] | The reconciled records (`activeRecords` plus any `staleRecords`, in any order). |
+| `records` | readonly (`Record`\<`string`, `unknown`\> & \{ `id`: `string`; \})[] | The reconciled records (`activeRecords` plus any `staleRecords`, in any order). |
 
 #### Returns
 
@@ -1153,11 +1153,11 @@ Path containment is the caller's responsibility: repo-contract's own checks alwa
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `input` | \{ `isSymlink?`: (`path`) => `Promise`\<`boolean`\>; `path`: `string`; `readFile?`: (`path`) => `Promise`\<`string`\>; `records`: readonly `Record`\<`string`, `unknown`\> & \{ `id`: `string`; \}[]; `rename?`: (`from`, `to`) => `Promise`\<`void`\>; `writeFile?`: (`path`, `data`) => `Promise`\<`void`\>; \} | The target path, the records to persist, and (optional) filesystem-capability overrides. |
+| `input` | \{ `isSymlink?`: (`path`) => `Promise`\<`boolean`\>; `path`: `string`; `readFile?`: (`path`) => `Promise`\<`string`\>; `records`: readonly (`Record`\<`string`, `unknown`\> & \{ `id`: `string`; \})[]; `rename?`: (`from`, `to`) => `Promise`\<`void`\>; `writeFile?`: (`path`, `data`) => `Promise`\<`void`\>; \} | The target path, the records to persist, and (optional) filesystem-capability overrides. |
 | `input.isSymlink?` | (`path`) => `Promise`\<`boolean`\> | Whether `path` is a symlink. Default: `lstat(path).isSymbolicLink()`, treating a missing path as not a symlink. |
 | `input.path` | `string` | Where to write. Passed verbatim to every capability. |
 | `input.readFile?` | (`path`) => `Promise`\<`string`\> | Reads the current file. Default: `node:fs/promises` `readFile(path, "utf8")`. |
-| `input.records` | readonly `Record`\<`string`, `unknown`\> & \{ `id`: `string`; \}[] | The reconciled records; serialized via `serializeExceptionRegistry`. |
+| `input.records` | readonly (`Record`\<`string`, `unknown`\> & \{ `id`: `string`; \})[] | The reconciled records; serialized via `serializeExceptionRegistry`. |
 | `input.rename?` | (`from`, `to`) => `Promise`\<`void`\> | Replaces the target with the temp file. Default: `node:fs/promises` `rename`. |
 | `input.writeFile?` | (`path`, `data`) => `Promise`\<`void`\> | Writes the temp file. Default: `node:fs/promises` `writeFile(path, data, "utf8")`. |
 

@@ -193,7 +193,7 @@ wasting the crawl on vendored files that were never authored content.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`BrokenLinksOptions`](#) | configuration for this check; see [BrokenLinksOptions](#). |
+| `options?` | [`BrokenLinksOptions`](#) | configuration for this check; see [BrokenLinksOptions](#). |
 
 #### Returns
 
@@ -223,7 +223,7 @@ rather than relying on an unconfirmed flag.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`CommitlintOptions`](#) | configuration for this check; see [CommitlintOptions](#). |
+| `options?` | [`CommitlintOptions`](#) | configuration for this check; see [CommitlintOptions](#). |
 
 #### Returns
 
@@ -247,7 +247,7 @@ Dead/unused-code detection via knip.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`DeadCodeOptions`](#) | configuration for this check; see [DeadCodeOptions](#). |
+| `options?` | [`DeadCodeOptions`](#) | configuration for this check; see [DeadCodeOptions](#). |
 
 #### Returns
 
@@ -274,7 +274,7 @@ be allowed with a mandatory, reviewable `reason`; there is no blanket opt-out.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`DistNoUrlsOptions`](#distnourlsoptions) | configuration for this check; see [DistNoUrlsOptions](#distnourlsoptions). |
+| `options?` | [`DistNoUrlsOptions`](#distnourlsoptions) | configuration for this check; see [DistNoUrlsOptions](#distnourlsoptions). |
 
 #### Returns
 
@@ -298,7 +298,7 @@ Duplicated-code detection via jscpd.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`DuplicationOptions`](#) | configuration for this check; see [DuplicationOptions](#). |
+| `options?` | [`DuplicationOptions`](#) | configuration for this check; see [DuplicationOptions](#). |
 
 #### Returns
 
@@ -328,7 +328,7 @@ finding as equally blocking.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`LintOptions`](#) | configuration for this check; see [LintOptions](#). |
+| `options?` | [`LintOptions`](#) | configuration for this check; see [LintOptions](#). |
 
 #### Returns
 
@@ -361,7 +361,7 @@ alongside `markdownlint-cli2` itself.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`MarkdownlintOptions`](#) | configuration for this check; see [MarkdownlintOptions](#). |
+| `options?` | [`MarkdownlintOptions`](#) | configuration for this check; see [MarkdownlintOptions](#). |
 
 #### Returns
 
@@ -388,7 +388,7 @@ consumer's own repository already has. `severity: "error"` blocks;
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `options` | [`StylelintOptions`](#) | configuration for this check; see [StylelintOptions](#). |
+| `options?` | [`StylelintOptions`](#) | configuration for this check; see [StylelintOptions](#). |
 
 #### Returns
 

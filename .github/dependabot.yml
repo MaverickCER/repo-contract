@@ -28,8 +28,8 @@ updates:
       # Everything below 7 still updates.
       - dependency-name: "typescript"
         versions: [">= 7.0.0"]
-      # changesets/action v1 (used by the release workflow) targets Changesets CLI v2; CLI v3 needs the
-      # action's v2. Move both together, then remove this rule.
+      # Releases run through internal-package-contract's shared release workflow, which drives this
+      # Changesets CLI; a new major moves together with that workflow, not on its own.
       - dependency-name: "@changesets/cli"
         update-types: ["version-update:semver-major"]
     groups:

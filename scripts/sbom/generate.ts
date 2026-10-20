@@ -19,14 +19,15 @@ import { validateSbomDocument } from "./validate.js"
  */
 export async function generateSbom(root: string): Promise<SbomEvidence> {
   await mkdir(path.join(root, "docs"), { recursive: true })
+  const rootHasRepository = await declaresRepository(root)
 
   // Two documents, because they answer different questions. The full tree is the BUILD inventory (what
   // this repository's own tooling depends on); the production tree is the RUNTIME inventory (what a user
   // installs). Importing only the first into a security tool overstates a zero-dependency package's
   // footprint a thousandfold.
-  const full = await generateOne(root, BUILD_SBOM_PATH, false)
+  const full = await generateOne(root, BUILD_SBOM_PATH, false, rootHasRepository)
   if (!full.ok) return full
-  const production = await generateOne(root, PRODUCTION_SBOM_PATH, true)
+  const production = await generateOne(root, PRODUCTION_SBOM_PATH, true, rootHasRepository)
   if (!production.ok) return production
 
   return {
@@ -38,6 +39,19 @@ export async function generateSbom(root: string): Promise<SbomEvidence> {
   }
 }
 
+/**
+ * Whether the package's own package.json declares a `repository`, so its SBOM root must carry one.
+ * An unreadable or malformed package.json counts as no: cyclonedx-npm reports that itself.
+ * @param root - Repository root.
+ * @returns `true` if package.json has a `repository` field.
+ */
+async function declaresRepository(root: string): Promise<boolean> {
+  const manifest: unknown = await readFile(path.join(root, "package.json"), "utf8")
+    .then((text) => JSON.parse(text) as unknown)
+    .catch(() => undefined)
+  return typeof manifest === "object" && manifest !== null && "repository" in manifest
+}
+
 const BUILD_SBOM_PATH = "docs/sbom.cdx.json"
 const PRODUCTION_SBOM_PATH = "docs/sbom.production.cdx.json"
 
@@ -46,12 +60,14 @@ const PRODUCTION_SBOM_PATH = "docs/sbom.production.cdx.json"
  * @param root - Repository root.
  * @param outputFile - Repo-relative path to write.
  * @param production - Whether to leave development dependencies out.
+ * @param rootHasRepository - Whether package.json declares a `repository` (see validate.ts).
  * @returns the validated summary, or a rejection reason.
  */
 async function generateOne(
   root: string,
   outputFile: string,
   production: boolean,
+  rootHasRepository: boolean,
 ): Promise<
   | { readonly ok: true; readonly value: SbomSummary }
   | { readonly ok: false; readonly reason: string }
@@ -78,7 +94,7 @@ async function generateOne(
     return { ok: false, reason: `${outputFile} is not valid JSON.` }
   }
 
-  const validated = validateSbomDocument(parsed)
+  const validated = validateSbomDocument(parsed, { rootHasRepository })
   if (!validated.ok) {
     return { ok: false, reason: validated.reason.replaceAll("docs/sbom.cdx.json", outputFile) }
   }
