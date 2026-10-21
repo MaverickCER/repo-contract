@@ -12,6 +12,7 @@ function report(overrides: Record<string, unknown> = {}): Record<string, unknown
     numTotalTestSuites: 0,
     numFailedTests: 0,
     numFailedTestSuites: 0,
+    numPassedTests: 0,
     testResults: [],
     ...overrides,
   }
@@ -66,11 +67,44 @@ describe("evaluateVitestJsonPolicy", () => {
 
   it("passes and reports the exact total counts when nothing failed", () => {
     const result = evaluateVitestJsonPolicy(
-      output(report({ numTotalTests: 12, numTotalTestSuites: 3 })),
+      output(report({ numTotalTests: 12, numPassedTests: 12, numTotalTestSuites: 3 })),
     )
     expect(result).toEqual({
       outcome: "pass",
       rationale: "Vitest completed 12 test(s) with 0 failures across 3 suite(s).",
+    })
+  })
+
+  it.each([
+    ["no test matched", 0],
+    ["every test was skipped", 4],
+  ])("fails (not passes) when %s -- 0 tests ran", (_label, numTotalTests) => {
+    const result = evaluateVitestJsonPolicy(
+      output(report({ numTotalTests, numPassedTests: 0, numTotalTestSuites: 1 })),
+    )
+    expect(result).toEqual({
+      outcome: "fail",
+      rationale: `Vitest ran 0 tests (${String(numTotalTests)} skipped or todo). Check that the include/exclude config, file filters and -t pattern select the intended tests.`,
+    })
+  })
+
+  it("passes when a single test ran", () => {
+    const result = evaluateVitestJsonPolicy(
+      output(report({ numTotalTests: 3, numPassedTests: 1, numTotalTestSuites: 1 })),
+    )
+    expect(result).toEqual({
+      outcome: "pass",
+      rationale: "Vitest completed 3 test(s) with 0 failures across 1 suite(s).",
+    })
+  })
+
+  it("fails as invalid data when a report with no failures has no numeric numPassedTests", () => {
+    const result = evaluateVitestJsonPolicy(
+      output(report({ numTotalTests: 3, numPassedTests: "3" })),
+    )
+    expect(result).toEqual({
+      outcome: "fail",
+      rationale: "Vitest produced invalid JSON report data.",
     })
   })
 

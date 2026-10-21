@@ -19,6 +19,7 @@ interface VitestJsonTestSuite {
 interface VitestJsonReport {
   readonly numFailedTests: number
   readonly numFailedTestSuites: number
+  readonly numPassedTests: number
   readonly numTotalTests: number
   readonly numTotalTestSuites: number
   readonly testResults: readonly VitestJsonTestSuite[]
@@ -62,6 +63,21 @@ export function evaluateVitestJsonPolicy(output: ParsedOutput<unknown> | undefin
   }
 
   if (report.numFailedTests === 0 && report.numFailedTestSuites === 0) {
+    if (typeof report.numPassedTests !== "number") {
+      return { outcome: "fail", rationale: "Vitest produced invalid JSON report data." }
+    }
+
+    // With nothing failed, the passed count is the number of tests that ran.
+    // A run that executed nothing (no test file matched, a filter that
+    // selected nothing, every test skipped) has 0 failures by construction --
+    // that is no evidence the suite passes, so it must not read as a pass.
+    if (report.numPassedTests === 0) {
+      return {
+        outcome: "fail",
+        rationale: `Vitest ran 0 tests (${String(report.numTotalTests)} skipped or todo). Check that the include/exclude config, file filters and -t pattern select the intended tests.`,
+      }
+    }
+
     return {
       outcome: "pass",
       rationale: `Vitest completed ${String(report.numTotalTests)} test(s) with 0 failures across ${String(report.numTotalTestSuites)} suite(s).`,

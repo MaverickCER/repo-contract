@@ -66,19 +66,6 @@
       "whyPreferable": "Running the consumer's own installed tool is preferable to bundling a copy that could drift from the version they trust."
     },
     {
-      "id": "preset-command:licensee",
-      "version": 2,
-      "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `licensee --production --osi --errors-only --ndjson` resolves each installed package's license from that package's own local metadata under `node_modules` and makes no network request -- no remote license database is queried. `--ndjson` writes to stdout only.",
-      "attempted": "Reviewed what the command does with the flags the preset passes; the justification records the result.",
-      "command": "licensee",
-      "constraint": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array.",
-      "expires": "",
-      "residualRisk": "The command can do whatever the tool does with the consumer's repository, which is a capability they already hold.",
-      "revisitWhen": "The preset's flags change, or the tool's behavior with them does.",
-      "ruleBroken": "The `licensee` preset runs a command repo-contract does not bundle, which a preset may only do with a recorded reason.",
-      "whyPreferable": "Running the consumer's own installed tool is preferable to bundling a copy that could drift from the version they trust."
-    },
-    {
       "id": "preset-command:linkinator",
       "version": 2,
       "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `linkinator <start> --recurse --format json --skip node_modules` exists to make HTTP requests: it issues GET requests to every URL found in this repository's own committed docs content, to detect broken links. It sends no repository data anywhere -- it only requests URLs already present in the repo. This is the deliberate, documented network exception ADR 0007's Decision section calls out by name. `--format json` writes to stdout.",
@@ -107,10 +94,10 @@
     {
       "id": "preset-command:node",
       "version": 2,
-      "justification": "The `distNoUrls` preset spawns the consumer's own `node` binary (always present wherever repo-contract itself runs) as `node -e <scanner> <dir>`. The scanner is a fixed string constant in src/presets/dist-no-urls.ts, never built from external input; it uses only `node:fs`/`node:path` to read files under the one directory argument and prints a JSON report of URL strings found (file, line, URL -- never file contents) to stdout. It makes no network request, spawns nothing, reads no environment variable and writes no file.",
+      "justification": "Two presets spawn the consumer's own `node` binary (always present wherever repo-contract itself runs) with a fixed script string, never built from external input. `distNoUrls` runs `node -e <scanner> <dir>` (src/presets/dist-no-urls.ts): it uses only `node:fs`/`node:path` to read files under the one directory argument and prints a JSON report of URL strings found (file, line, URL -- never file contents) to stdout. It makes no network request, spawns nothing, reads no environment variable and writes no file. `license` runs `node -e <launcher>` (src/presets/license.ts): it resolves the consumer's installed `licensee` package from the working directory, checks whether `.licensee.json` exists there, writes one line to stderr saying which policy applies, and loads the licensee CLI in-process as `licensee --production [--osi] --errors-only --ndjson` -- `--osi` only when there is no `.licensee.json`, because any policy flag makes licensee ignore that file. licensee resolves each installed package's license from that package's own local metadata under `node_modules` and makes no network request -- no remote license database is queried. `--ndjson` writes to stdout only.",
       "attempted": "Reviewed what the command does with the flags the preset passes; the justification records the result.",
       "command": "node",
-      "constraint": "The `distNoUrls` preset spawns the consumer's own `node` binary (always present wherever repo-contract itself runs) as `node -e <scanner> <dir>`.",
+      "constraint": "The `distNoUrls` and `license` presets spawn the consumer's own `node` binary (always present wherever repo-contract itself runs) as `node -e <fixed script>`.",
       "expires": "",
       "residualRisk": "The command can do whatever the tool does with the consumer's repository, which is a capability they already hold.",
       "revisitWhen": "The preset's flags change, or the tool's behavior with them does.",

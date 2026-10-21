@@ -24,6 +24,16 @@ export function checkDependencyInstalled(
     return undefined
   }
 
+  return missingDependencyResult(packageName)
+}
+
+/**
+ * The "not installed" verdict on its own, for a preset that detects a missing tool some other way
+ * than ENOENT (the `license` preset runs licensee through `node`, so it is never ENOENT).
+ * @param packageName - the npm package a consumer would install to fix this.
+ * @returns the actionable, package-manager-neutral fail result.
+ */
+export function missingDependencyResult(packageName: string): PolicyResult {
   return {
     outcome: "fail",
     rationale: `\`${packageName}\` is required by this preset but was not found. Install \`${packageName}\` as a development dependency and run the contract again.`,
