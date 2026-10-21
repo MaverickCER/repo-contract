@@ -345,7 +345,8 @@ declare interface Evidence<TChecks extends CheckSchema = CheckSchema> {
 export declare const format: CheckDefinitionConfig;
 
 /**
- * Dependency license compliance via licensee.
+ * Dependency license compliance via licensee. The repository's own `.licensee.json` is the policy
+ * when it exists; otherwise a dependency's license must be OSI-approved (`--osi`).
  * @beta
  */
 export declare const license: CheckDefinitionConfig;
