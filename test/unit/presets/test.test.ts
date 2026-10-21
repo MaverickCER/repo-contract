@@ -38,6 +38,7 @@ describe("test preset", () => {
         numTotalTestSuites: 1,
         numFailedTests: 0,
         numFailedTestSuites: 0,
+        numPassedTests: 5,
         testResults: [],
       }),
     )

@@ -360,7 +360,7 @@ export default defineRepoContract({
       },
     },
     // `run` override (README's "Preset options are the preferred way..., a direct run override is
-    // an escape hatch"): the published `license` preset's default `run` is `--osi`-only.
+    // an escape hatch"): without a `.licensee.json`, the published `license` preset passes `--osi` only.
     // `minimatch` (src/helpers/exception-policy.ts's real, first runtime `dependencies` entry --
     // see specs/decisions/0013-reusable-exception-policy-helper.md) declares SPDX `BlueOak-1.0.0`,
     // which `licensee`'s own OSI classification does not recognize as approved, even though it is

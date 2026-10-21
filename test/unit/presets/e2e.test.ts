@@ -73,6 +73,96 @@ describe("e2e preset", () => {
     })
   })
 
+  it.each([
+    ["no test matched", 0, "Playwright ran 0 tests (0 skipped)."],
+    ["every test was skipped", 3, "Playwright ran 0 tests (3 skipped)."],
+  ])("fails (not passes) when %s -- 0 tests ran", async (_label, skipped, prefix) => {
+    const result = await e2e.policy(
+      fakeContext(
+        fakeCheckEvidence({
+          output: {
+            format: "json",
+            success: true,
+            value: { stats: { expected: 0, unexpected: 0, flaky: 0, skipped }, suites: [] },
+          },
+        }),
+      ),
+    )
+    expect(result).toEqual({
+      outcome: "fail",
+      rationale: `${prefix} Check that testDir/testMatch, --grep and --project select the intended tests.`,
+    })
+  })
+
+  it("reports 0 skipped when a 0-test report has no numeric skipped counter", async () => {
+    const result = await e2e.policy(
+      fakeContext(
+        fakeCheckEvidence({
+          output: {
+            format: "json",
+            success: true,
+            value: { stats: { expected: 0, unexpected: 0, flaky: 0, skipped: "3" }, suites: [] },
+          },
+        }),
+      ),
+    )
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("Playwright ran 0 tests (0 skipped).")
+  })
+
+  it("passes when only a flaky-free single test ran (the 0-test guard counts every run test)", async () => {
+    const result = await e2e.policy(
+      fakeContext(
+        fakeCheckEvidence({
+          output: {
+            format: "json",
+            success: true,
+            value: { stats: { expected: 1, unexpected: 0, flaky: 0, skipped: 0 }, suites: [] },
+          },
+        }),
+      ),
+    )
+    expect(result.outcome).toBe("pass")
+  })
+
+  it.each([
+    ["equal expected and unexpected counts", { expected: 2, unexpected: 2, flaky: 0 }, "fail"],
+    ["equal expected and flaky counts", { expected: 1, unexpected: 0, flaky: 1 }, "warn"],
+    ["only flaky tests", { expected: 0, unexpected: 0, flaky: 1 }, "warn"],
+  ])("does not treat a report with %s as a 0-test run", async (_label, counts, outcome) => {
+    const result = await e2e.policy(
+      fakeContext(
+        fakeCheckEvidence({
+          output: {
+            format: "json",
+            success: true,
+            value: { stats: { ...counts, skipped: 0 }, suites: [] },
+          },
+        }),
+      ),
+    )
+    expect(result.outcome).toBe(outcome)
+    expect(result.rationale).not.toContain("ran 0 tests")
+  })
+
+  it("fails as invalid data when stats.expected is not a number", async () => {
+    const result = await e2e.policy(
+      fakeContext(
+        fakeCheckEvidence({
+          output: {
+            format: "json",
+            success: true,
+            value: { stats: { unexpected: 0, flaky: 0, skipped: 0 }, suites: [] },
+          },
+        }),
+      ),
+    )
+    expect(result).toEqual({
+      outcome: "fail",
+      rationale: "Playwright produced invalid JSON report data.",
+    })
+  })
+
   it("warns when unexpected is 0 but flaky is greater than 0", async () => {
     const result = await e2e.policy(
       fakeContext(

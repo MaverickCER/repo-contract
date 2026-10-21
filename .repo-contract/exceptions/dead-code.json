@@ -73,9 +73,9 @@
     {
       "id": "dead-code:unused-dev-dependency:licensee",
       "version": 2,
-      "justification": "Spawned by literal command name via the license preset's `run: [\"licensee\", ...]` (src/presets/license.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "justification": "Loaded by the license preset's `node -e` launcher (src/presets/license.ts), which resolves `licensee/package.json` from the working directory inside a script string -- nothing `import`s the package, so knip cannot see the use.",
       "attempted": "Searched the repository for `licensee`: it appears in GUIDE.md, bin/preset-catalog.mjs, docs/api-report/presets.md, docs/sbom.cdx.json and 7 more.",
-      "constraint": "Spawned by literal command name via the license preset's `run: [\"licensee\", ...]` (src/presets/license.ts) -- nothing `import`s the package, so knip cannot see the use.",
+      "constraint": "Loaded by the license preset's `node -e` launcher (src/presets/license.ts), which resolves `licensee/package.json` from the working directory inside a script string -- nothing `import`s the package, so knip cannot see the use.",
       "expires": "",
       "kind": "unused-dev-dependency",
       "name": "licensee",

@@ -106,7 +106,8 @@ const license: CheckDefinitionConfig;
 
 **`Beta`**
 
-Dependency license compliance via licensee.
+Dependency license compliance via licensee. The repository's own `.licensee.json` is the policy
+when it exists; otherwise a dependency's license must be OSI-approved (`--osi`).
 
 ***
 

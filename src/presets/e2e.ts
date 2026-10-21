@@ -106,11 +106,28 @@ export const e2e: CheckDefinitionConfig = {
     const report = value as PlaywrightReport
     const stats = report.stats
 
-    if (!stats || typeof stats.unexpected !== "number" || typeof stats.flaky !== "number") {
-      // The outcome checks below compare `unexpected`/`flaky` numerically -- a
+    if (
+      !stats ||
+      typeof stats.expected !== "number" ||
+      typeof stats.unexpected !== "number" ||
+      typeof stats.flaky !== "number"
+    ) {
+      // The outcome checks below compare these counters numerically -- a
       // missing or non-numeric counter must fail cleanly, not slip through every
       // comparison as `false`.
       return { outcome: "fail", rationale: "Playwright produced invalid JSON report data." }
+    }
+
+    // A run that executed nothing (no test files matched, a `--grep` or
+    // project filter that selected nothing, every test skipped) has 0
+    // unexpected failures by construction -- that is no evidence the suite
+    // passes, so it must not read as a pass.
+    if (stats.expected + stats.unexpected + stats.flaky === 0) {
+      const skipped = typeof stats.skipped === "number" ? stats.skipped : 0
+      return {
+        outcome: "fail",
+        rationale: `Playwright ran 0 tests (${String(skipped)} skipped). Check that testDir/testMatch, --grep and --project select the intended tests.`,
+      }
     }
 
     if (stats.unexpected === 0 && stats.flaky === 0) {
