@@ -1,4 +1,4 @@
-import { mkdir, readFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { runCycloneDxNpm } from "./spawn.js"
 import type { SbomEvidence, SbomSummary } from "./types.js"
@@ -94,9 +94,50 @@ async function generateOne(
     return { ok: false, reason: `${outputFile} is not valid JSON.` }
   }
 
+  const withoutRunnerNpm = withoutNpmTool(parsed)
+  if (withoutRunnerNpm !== parsed) {
+    // cyclonedx-npm writes JSON.stringify(document, null, 2) with no trailing newline, so this
+    // rewrite changes nothing but the removed entry.
+    await writeFile(path.join(root, outputFile), JSON.stringify(withoutRunnerNpm, null, 2))
+    parsed = withoutRunnerNpm
+  }
+
   const validated = validateSbomDocument(parsed, { rootHasRepository })
   if (!validated.ok) {
     return { ok: false, reason: validated.reason.replaceAll("docs/sbom.cdx.json", outputFile) }
   }
   return { ok: true, value: validated.value }
+}
+
+/**
+ * The document without the `npm` entry in `metadata.tools`. cyclonedx-npm records the npm that ran
+ * it there, and that is whatever npm the machine happens to have: a CI runner image that moves from
+ * 11.19.0 to 11.19.1 (and back) rewrites the committed SBOM and fails the clean-tree gate although
+ * nothing about the dependency graph changed. The cyclonedx-npm and cyclonedx-library entries, which
+ * are pinned by the lockfile, stay.
+ * @param document - the parsed SBOM.
+ * @returns the same object when it has no such entry, otherwise a copy without it.
+ */
+function withoutNpmTool(document: unknown): unknown {
+  if (typeof document !== "object" || document === null) return document
+  const metadata = (document as { metadata?: unknown }).metadata
+  if (typeof metadata !== "object" || metadata === null) return document
+  const tools = (metadata as { tools?: unknown }).tools
+  if (typeof tools !== "object" || tools === null) return document
+  const components = (tools as { components?: unknown }).components
+  if (!Array.isArray(components)) return document
+  const kept = components.filter(
+    (component: unknown) =>
+      !(
+        typeof component === "object" &&
+        component !== null &&
+        (component as { name?: unknown }).name === "npm" &&
+        (component as { group?: unknown }).group === undefined
+      ),
+  )
+  if (kept.length === components.length) return document
+  return {
+    ...(document as object),
+    metadata: { ...metadata, tools: { ...tools, components: kept } },
+  }
 }
