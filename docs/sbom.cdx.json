@@ -7,11 +7,6 @@
     "tools": {
       "components": [
         {
-          "type": "application",
-          "name": "npm",
-          "version": "11.19.1"
-        },
-        {
           "type": "library",
           "name": "cyclonedx-library",
           "group": "@cyclonedx",
@@ -26288,8 +26283,8 @@
     {
       "type": "library",
       "name": "eslint",
-      "version": "10.12.0",
-      "bom-ref": "repo-contract@0.11.3|eslint@10.12.0",
+      "version": "10.13.0",
+      "bom-ref": "repo-contract@0.11.3|eslint@10.13.0",
       "licenses": [
         {
           "license": {
@@ -26298,15 +26293,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/eslint@10.12.0",
+      "purl": "pkg:npm/eslint@10.13.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/eslint/-/eslint-10.12.0.tgz",
+          "url": "https://registry.npmjs.org/eslint/-/eslint-10.13.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "9e91e3ac76f6a387a11f7984f98bb100147ed20c9bd1a556088a258090c0af00a21c422ca27066dd92a37a5e5bd14e7e6be31b12f232442182cc3dde28a2b634"
+              "content": "5288438c3e334b313085fe7c3373bbbdcff271cf0ed48edd36586d0f45b113c3f1f041cd24ab54c3306aaf3786862b11bafd9a838b0062cc2ccc225180a5d852"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -26327,7 +26322,7 @@
           "type": "library",
           "name": "ajv",
           "version": "6.15.0",
-          "bom-ref": "repo-contract@0.11.3|eslint@10.12.0|ajv@6.15.0",
+          "bom-ref": "repo-contract@0.11.3|eslint@10.13.0|ajv@6.15.0",
           "licenses": [
             {
               "license": {
@@ -26365,7 +26360,7 @@
           "type": "library",
           "name": "find-up",
           "version": "5.0.0",
-          "bom-ref": "repo-contract@0.11.3|eslint@10.12.0|find-up@5.0.0",
+          "bom-ref": "repo-contract@0.11.3|eslint@10.13.0|find-up@5.0.0",
           "licenses": [
             {
               "license": {
@@ -26403,7 +26398,7 @@
           "type": "library",
           "name": "ignore",
           "version": "5.3.2",
-          "bom-ref": "repo-contract@0.11.3|eslint@10.12.0|ignore@5.3.2",
+          "bom-ref": "repo-contract@0.11.3|eslint@10.13.0|ignore@5.3.2",
           "licenses": [
             {
               "license": {
@@ -26441,7 +26436,7 @@
           "type": "library",
           "name": "json-schema-traverse",
           "version": "0.4.1",
-          "bom-ref": "repo-contract@0.11.3|eslint@10.12.0|json-schema-traverse@0.4.1",
+          "bom-ref": "repo-contract@0.11.3|eslint@10.13.0|json-schema-traverse@0.4.1",
           "licenses": [
             {
               "license": {
@@ -26479,7 +26474,7 @@
           "type": "library",
           "name": "locate-path",
           "version": "6.0.0",
-          "bom-ref": "repo-contract@0.11.3|eslint@10.12.0|locate-path@6.0.0",
+          "bom-ref": "repo-contract@0.11.3|eslint@10.13.0|locate-path@6.0.0",
           "licenses": [
             {
               "license": {
@@ -26517,7 +26512,7 @@
           "type": "library",
           "name": "p-limit",
           "version": "3.1.0",
-          "bom-ref": "repo-contract@0.11.3|eslint@10.12.0|p-limit@3.1.0",
+          "bom-ref": "repo-contract@0.11.3|eslint@10.13.0|p-limit@3.1.0",
           "licenses": [
             {
               "license": {
@@ -26555,7 +26550,7 @@
           "type": "library",
           "name": "p-locate",
           "version": "5.0.0",
-          "bom-ref": "repo-contract@0.11.3|eslint@10.12.0|p-locate@5.0.0",
+          "bom-ref": "repo-contract@0.11.3|eslint@10.13.0|p-locate@5.0.0",
           "licenses": [
             {
               "license": {
@@ -28918,6 +28913,84 @@
     },
     {
       "type": "library",
+      "name": "globby",
+      "version": "16.2.4",
+      "bom-ref": "repo-contract@0.11.3|globby@16.2.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/globby@16.2.4",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/globby/-/globby-16.2.4.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "73c07f54d2e6c51726aaa7a7440f6dfbd2323a37fdf95ea54f13da5092ea38238d7509166741136205f4a9bb49a8fb2008dbac4fd319e497a2770f046fdb67da"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/globby"
+        }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "unicorn-magic",
+          "version": "0.4.1",
+          "bom-ref": "repo-contract@0.11.3|globby@16.2.4|unicorn-magic@0.4.1",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT",
+                "acknowledgement": "declared"
+              }
+            }
+          ],
+          "purl": "pkg:npm/unicorn-magic@0.4.1",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/unicorn-magic/-/unicorn-magic-0.4.1.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "9739573e8541d14cbf16f4da5205f7f516e2c588922a8737252a127f4d7ed1cd81e85477a9d6083cded08e8fc057b9fab2a2c2934e74f5c4f72d18f5a12675f8"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/globby/node_modules/unicorn-magic"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "globrex",
       "version": "0.1.2",
       "bom-ref": "repo-contract@0.11.3|globrex@0.1.2",
@@ -30593,8 +30666,8 @@
     {
       "type": "library",
       "name": "ip-address",
-      "version": "10.7.3",
-      "bom-ref": "repo-contract@0.11.3|ip-address@10.7.3",
+      "version": "10.7.4",
+      "bom-ref": "repo-contract@0.11.3|ip-address@10.7.4",
       "licenses": [
         {
           "license": {
@@ -30603,15 +30676,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/ip-address@10.7.3",
+      "purl": "pkg:npm/ip-address@10.7.4",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/ip-address/-/ip-address-10.7.3.tgz",
+          "url": "https://registry.npmjs.org/ip-address/-/ip-address-10.7.4.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "03591dabfb526f9423bcabc032022812f0c12202fba9aa953ff8e4bd2c1861167d884cef3e9a29c69db041fbb74ae6511eda47371327f05b346d2fa07f95e6c2"
+              "content": "0d604c2b278cdb90fbd27ac889392042d879f7f1be9da28e4dea7a86e17d8fe1a678adc3303eb466fc60e5de6a427cfedfc007828bba79a9f62c4097fa5aca0e"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -33724,8 +33797,8 @@
     {
       "type": "library",
       "name": "katex",
-      "version": "0.16.47",
-      "bom-ref": "repo-contract@0.11.3|katex@0.16.47",
+      "version": "0.18.10",
+      "bom-ref": "repo-contract@0.11.3|katex@0.18.10",
       "licenses": [
         {
           "license": {
@@ -33734,15 +33807,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/katex@0.16.47",
+      "purl": "pkg:npm/katex@0.18.10",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/katex/-/katex-0.16.47.tgz",
+          "url": "https://registry.npmjs.org/katex/-/katex-0.18.10.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "11ea3c62cd5da14d73fb1f0066c3e942efa9fd0719048e4f78ea3b40641dcb6c769b4314fe161a8016c63a65f0af92956c47d5b96bfd2e99d059e7a1a20bab8e"
+              "content": "fc1ea9f5e63d0d7eda1c17e99077698ab0d3679407f714f02fdcbcdfb3d6bb3bafe353b98c576a350c1540442c8a6634fe254d930058e3ee2131f850edde036f"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -33762,8 +33835,8 @@
         {
           "type": "library",
           "name": "commander",
-          "version": "8.3.0",
-          "bom-ref": "repo-contract@0.11.3|katex@0.16.47|commander@8.3.0",
+          "version": "15.0.0",
+          "bom-ref": "repo-contract@0.11.3|katex@0.18.10|commander@15.0.0",
           "licenses": [
             {
               "license": {
@@ -33772,15 +33845,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/commander@8.3.0",
+          "purl": "pkg:npm/commander@15.0.0",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/commander/-/commander-8.3.0.tgz",
+              "url": "https://registry.npmjs.org/commander/-/commander-15.0.0.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "3a44cbf6e99ff877b60d9914abc7fc27da1fef22fa449288db875521306635f6419ab8bdcd8650aca92e5e22a1c9f3d2bbcb5486754107588a5debef9e54785b"
+                  "content": "cfaeeee1987308bfd3c9dbb5949011b4465859b59a37ba182c76ecbb3a1cafacb837a59901a806dd1438156eb5575ff4fa3226a63dbddd77eb7189ddd6ac6d3e"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -35968,8 +36041,8 @@
     {
       "type": "library",
       "name": "markdown-it",
-      "version": "15.0.1",
-      "bom-ref": "repo-contract@0.11.3|markdown-it@15.0.1",
+      "version": "15.0.3",
+      "bom-ref": "repo-contract@0.11.3|markdown-it@15.0.3",
       "licenses": [
         {
           "license": {
@@ -35978,15 +36051,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/markdown-it@15.0.1",
+      "purl": "pkg:npm/markdown-it@15.0.3",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/markdown-it/-/markdown-it-15.0.1.tgz",
+          "url": "https://registry.npmjs.org/markdown-it/-/markdown-it-15.0.3.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "f7fee013de4534f91f516ae3248a076736b688b9ae2653c3d1434cc4f8bb6f152b6c2479db9619634afecf27deb34759239659fee3485d425c6b4a49bedc38d6"
+              "content": "f80cfb3a3cf78911aef0a60cbc9eb1561bebc4fdde13ebc4b495fbe4ec3cf17069710355ff49465f96729c82017ed444a380c2da3b2f78030369e96d9a6f10bd"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -36006,8 +36079,8 @@
         {
           "type": "library",
           "name": "argparse",
-          "version": "3.0.2",
-          "bom-ref": "repo-contract@0.11.3|markdown-it@15.0.1|argparse@3.0.2",
+          "version": "3.0.3",
+          "bom-ref": "repo-contract@0.11.3|markdown-it@15.0.3|argparse@3.0.3",
           "licenses": [
             {
               "license": {
@@ -36016,15 +36089,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/argparse@3.0.2",
+          "purl": "pkg:npm/argparse@3.0.3",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/argparse/-/argparse-3.0.2.tgz",
+              "url": "https://registry.npmjs.org/argparse/-/argparse-3.0.3.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "98574333a5aa58aada18bb156fe0bd09a84f9f34d739e7c038bab78d871c6b6619f1b116a6bfbe4f38fecd268a5bdf97f4be6e4b1726d4067763a699274f4e85"
+                  "content": "4a7f7c7ed57729fb0ef317cb3c71baa13f32f9bd32bdbacb8198e03c35ec85aacd635e6d4c08ea22c223bb84b7da797afe211434d138bfec8bd99866f28a0fdf"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -36122,8 +36195,8 @@
     {
       "type": "library",
       "name": "markdownlint-cli2",
-      "version": "0.23.3",
-      "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3",
+      "version": "0.24.0",
+      "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.24.0",
       "licenses": [
         {
           "license": {
@@ -36132,15 +36205,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/markdownlint-cli2@0.23.3",
+      "purl": "pkg:npm/markdownlint-cli2@0.24.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/markdownlint-cli2/-/markdownlint-cli2-0.23.3.tgz",
+          "url": "https://registry.npmjs.org/markdownlint-cli2/-/markdownlint-cli2-0.24.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "c40af9a3f4c6a42defea513a70a216e1be5e38546b457e6eed5b6369ef62c774402eff2734e77de173240ffd4e5d706da4c709e2e4066e94a8de1bf952a4b8b9"
+              "content": "739854d8c0e84e54b6df430bcdd365908cb12265eae5a73118acf89d8cf8683847ff606016da6c03b88af7f3a84c732067816e474c1e753400df52ba2e9f48fd"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -36161,7 +36234,7 @@
           "type": "library",
           "name": "argparse",
           "version": "2.0.1",
-          "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|argparse@2.0.1",
+          "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.24.0|argparse@2.0.1",
           "licenses": [
             {
               "license": {
@@ -36197,47 +36270,9 @@
         },
         {
           "type": "library",
-          "name": "globby",
-          "version": "16.2.4",
-          "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|globby@16.2.4",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/globby@16.2.4",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/globby/-/globby-16.2.4.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "73c07f54d2e6c51726aaa7a7440f6dfbd2323a37fdf95ea54f13da5092ea38238d7509166741136205f4a9bb49a8fb2008dbac4fd319e497a2770f046fdb67da"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/markdownlint-cli2/node_modules/globby"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "js-yaml",
-          "version": "5.4.1",
-          "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|js-yaml@5.4.1",
+          "version": "5.4.3",
+          "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.24.0|js-yaml@5.4.3",
           "licenses": [
             {
               "license": {
@@ -36246,15 +36281,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/js-yaml@5.4.1",
+          "purl": "pkg:npm/js-yaml@5.4.3",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/js-yaml/-/js-yaml-5.4.1.tgz",
+              "url": "https://registry.npmjs.org/js-yaml/-/js-yaml-5.4.3.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "dbc47f93e3408deb9fefe08a953c56655131246c1554bc18d3a0e012738ccf6804a5f3640dc0fb42fca254f4f4c72d175e153cbc7b1de0eb78d8e38f7491bb75"
+                  "content": "cb3ccdb60733c20a151cd8a00b22935dc40953863cb7f8a45385315d6d01beb2df1d3196661b0d70e4f6b3f6bbbe7f35ff82aa5673661e369410f96f5a737057"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -36270,128 +36305,14 @@
               "value": "node_modules/markdownlint-cli2/node_modules/js-yaml"
             }
           ]
-        },
-        {
-          "type": "library",
-          "name": "slash",
-          "version": "5.1.0",
-          "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|slash@5.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/slash@5.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/slash/-/slash-5.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "640ea84774ffa44caeab032000a4f4fe102ff28017724cdb926474524528b10f8c7384711a8264466c07807b9f69e9e5c80804d4cc60a5d72b7fbe72e977270e"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/markdownlint-cli2/node_modules/slash"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "smol-toml",
-          "version": "1.8.0",
-          "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|smol-toml@1.8.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "BSD-3-Clause",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/smol-toml@1.8.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/smol-toml/-/smol-toml-1.8.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "90266bd95ddc87d8b4d31f335d186350d55c8c6f628c44b9743b9d917bd45424f942524d416125489759ab23de99f7c7a0b35463039ca2ed05cbea23374b8749"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/markdownlint-cli2/node_modules/smol-toml"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "unicorn-magic",
-          "version": "0.4.1",
-          "bom-ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|unicorn-magic@0.4.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT",
-                "acknowledgement": "declared"
-              }
-            }
-          ],
-          "purl": "pkg:npm/unicorn-magic@0.4.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/unicorn-magic/-/unicorn-magic-0.4.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "9739573e8541d14cbf16f4da5205f7f516e2c588922a8737252a127f4d7ed1cd81e85477a9d6083cded08e8fc057b9fab2a2c2934e74f5c4f72d18f5a12675f8"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:development",
-              "value": "true"
-            },
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/markdownlint-cli2/node_modules/unicorn-magic"
-            }
-          ]
         }
       ]
     },
     {
       "type": "library",
       "name": "markdownlint",
-      "version": "0.41.1",
-      "bom-ref": "repo-contract@0.11.3|markdownlint@0.41.1",
+      "version": "0.42.0",
+      "bom-ref": "repo-contract@0.11.3|markdownlint@0.42.0",
       "licenses": [
         {
           "license": {
@@ -36400,15 +36321,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/markdownlint@0.41.1",
+      "purl": "pkg:npm/markdownlint@0.42.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/markdownlint/-/markdownlint-0.41.1.tgz",
+          "url": "https://registry.npmjs.org/markdownlint/-/markdownlint-0.42.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "a8729e5361356ddc8d013d3bee0a361554cd5ef61c92d379207b45e97c9e0f59743c2971cd2a76b54029015d7839123c0c65f81fd6cd2991337a5669e2a9fc20"
+              "content": "933b0257facf591167de3521701f75f581784207a1d20f6d7288285c569d192a3a6718faebad983aa597bf48c39fc9efe4a082c437cc28966fe8de0790d92f4e"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -36428,8 +36349,8 @@
         {
           "type": "library",
           "name": "string-width",
-          "version": "8.2.1",
-          "bom-ref": "repo-contract@0.11.3|markdownlint@0.41.1|string-width@8.2.1",
+          "version": "8.3.0",
+          "bom-ref": "repo-contract@0.11.3|markdownlint@0.42.0|string-width@8.3.0",
           "licenses": [
             {
               "license": {
@@ -36438,15 +36359,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/string-width@8.2.1",
+          "purl": "pkg:npm/string-width@8.3.0",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/string-width/-/string-width-8.2.1.tgz",
+              "url": "https://registry.npmjs.org/string-width/-/string-width-8.3.0.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "20868fd20de2cbd0b2cb5f30dccf5871a0ee76e8c40151cab776b7409835facaffa17f7a4db68652e6c6d212720a30814e1147fad169708ca8507527d6881a2c"
+                  "content": "65b9993342428a140df757569f1a22a53d8a384c87a84c9f4575328ee4615bc6ffc67a8f0e8ab88161150294d56bd75bdb037c9a6a229201416e387bd7e70679"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -36467,7 +36388,7 @@
           "type": "library",
           "name": "strip-ansi",
           "version": "7.2.0",
-          "bom-ref": "repo-contract@0.11.3|markdownlint@0.41.1|strip-ansi@7.2.0",
+          "bom-ref": "repo-contract@0.11.3|markdownlint@0.42.0|strip-ansi@7.2.0",
           "licenses": [
             {
               "license": {
@@ -36774,8 +36695,8 @@
     {
       "type": "library",
       "name": "micromark-core-commonmark",
-      "version": "2.0.3",
-      "bom-ref": "repo-contract@0.11.3|micromark-core-commonmark@2.0.3",
+      "version": "2.0.4",
+      "bom-ref": "repo-contract@0.11.3|micromark-core-commonmark@2.0.4",
       "licenses": [
         {
           "license": {
@@ -36784,15 +36705,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/micromark-core-commonmark@2.0.3",
+      "purl": "pkg:npm/micromark-core-commonmark@2.0.4",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/micromark-core-commonmark/-/micromark-core-commonmark-2.0.3.tgz",
+          "url": "https://registry.npmjs.org/micromark-core-commonmark/-/micromark-core-commonmark-2.0.4.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "44306b1c4312c5514b83ac6f9d799bd40cabd96ccb0168de4804c0a31c0a60957de1378d6af82821d0346bdcadcc3495cc1cb660a14af9e9823ce1226cb782ae"
+              "content": "c3111e13cbfc5d5bceaf19f54d98fbe2a62102d4d0b12aae7c7552dee355c93d4cba95f187268793cffdc4334f87d0662fbed03438164e467746c607076af2ef"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -36926,8 +36847,8 @@
     {
       "type": "library",
       "name": "micromark-extension-gfm-table",
-      "version": "2.1.1",
-      "bom-ref": "repo-contract@0.11.3|micromark-extension-gfm-table@2.1.1",
+      "version": "2.1.2",
+      "bom-ref": "repo-contract@0.11.3|micromark-extension-gfm-table@2.1.2",
       "licenses": [
         {
           "license": {
@@ -36936,15 +36857,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/micromark-extension-gfm-table@2.1.1",
+      "purl": "pkg:npm/micromark-extension-gfm-table@2.1.2",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/micromark-extension-gfm-table/-/micromark-extension-gfm-table-2.1.1.tgz",
+          "url": "https://registry.npmjs.org/micromark-extension-gfm-table/-/micromark-extension-gfm-table-2.1.2.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "b76394fdd5d78a8011ac2eb259f27886a07badcb75e1ef1fee6d1c6c8e615260f2c88970bf9bc4b68a29b47f083646cbcce6adccab956d098061c6d6a32cfa0e"
+              "content": "a51ce6e240d3bb4323966064c664bdc98870eb49e771f704c2ef4d35d3c54901055d2f7964ac882324d21eefe8dd178152b2ca604abeed86970919ff6cf07830"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -37381,6 +37302,44 @@
     },
     {
       "type": "library",
+      "name": "micromark-util-edit-map",
+      "version": "1.0.0",
+      "bom-ref": "repo-contract@0.11.3|micromark-util-edit-map@1.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/micromark-util-edit-map@1.0.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/micromark-util-edit-map/-/micromark-util-edit-map-1.0.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "3dada58e5b042fab15c056987b2ace2d261b42def726f19b3ce605abef401255e24a77c8e50e38eb9451675b07bfb9438c33a71910c36aa3d7a8296a58afead5"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/micromark-util-edit-map"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "micromark-util-encode",
       "version": "2.0.1",
       "bom-ref": "repo-contract@0.11.3|micromark-util-encode@2.0.1",
@@ -37648,8 +37607,8 @@
     {
       "type": "library",
       "name": "micromark-util-types",
-      "version": "2.0.2",
-      "bom-ref": "repo-contract@0.11.3|micromark-util-types@2.0.2",
+      "version": "2.0.3",
+      "bom-ref": "repo-contract@0.11.3|micromark-util-types@2.0.3",
       "licenses": [
         {
           "license": {
@@ -37658,15 +37617,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/micromark-util-types@2.0.2",
+      "purl": "pkg:npm/micromark-util-types@2.0.3",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/micromark-util-types/-/micromark-util-types-2.0.2.tgz",
+          "url": "https://registry.npmjs.org/micromark-util-types/-/micromark-util-types-2.0.3.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "630d04092a49a15885d6a4d4e030ba370b42e1a586b75124cda401f0a3cfc82451f33f5359e5741db1051933be658d70076db39b19c9aa13f24e93950a97874c"
+              "content": "a31076224d37848d20bfe54d9fdb67875b756047bd3033e9b558801207dd7f76101ec9f4a7319380276548225773086a9bca61684b8cef3784bb7410cd506b3e"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -37686,8 +37645,8 @@
     {
       "type": "library",
       "name": "micromark",
-      "version": "4.0.2",
-      "bom-ref": "repo-contract@0.11.3|micromark@4.0.2",
+      "version": "4.0.3",
+      "bom-ref": "repo-contract@0.11.3|micromark@4.0.3",
       "licenses": [
         {
           "license": {
@@ -37696,15 +37655,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/micromark@4.0.2",
+      "purl": "pkg:npm/micromark@4.0.3",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/micromark/-/micromark-4.0.2.tgz",
+          "url": "https://registry.npmjs.org/micromark/-/micromark-4.0.3.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "ce97bdf10ea4bdabe90abd4d3d548231e6c229f0fb080d8da99fabca478d84e348241a5cd6d14ab7d86e70b1b085ade3353348f251e972d5895a88a6545e0f7c"
+              "content": "a0661f4331d21b974e328bd0709ddfc93999956016a62d17034b09c09b3e8ba393f3ca35f89b70ffccf40a6768c122f11a18452bcf6b43fa17a61ff0374d8f37"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -43861,6 +43820,44 @@
     },
     {
       "type": "library",
+      "name": "re2js",
+      "version": "2.8.6",
+      "bom-ref": "repo-contract@0.11.3|re2js@2.8.6",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/re2js@2.8.6",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/re2js/-/re2js-2.8.6.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "c4b8108a5e242140ab033564f5f4529319053709b280b1635715eb2dceb9684d45d3e66c6fcaf1ba6141cb85cacaf80c0932fa922943ab7119d29884d9d3ff0e"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/re2js"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "react-is",
       "version": "16.13.1",
       "bom-ref": "repo-contract@0.11.3|react-is@16.13.1",
@@ -46228,6 +46225,44 @@
     },
     {
       "type": "library",
+      "name": "slash",
+      "version": "5.1.0",
+      "bom-ref": "repo-contract@0.11.3|slash@5.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT",
+            "acknowledgement": "declared"
+          }
+        }
+      ],
+      "purl": "pkg:npm/slash@5.1.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/slash/-/slash-5.1.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "640ea84774ffa44caeab032000a4f4fe102ff28017724cdb926474524528b10f8c7384711a8264466c07807b9f69e9e5c80804d4cc60a5d72b7fbe72e977270e"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/slash"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "slice-ansi",
       "version": "4.0.0",
       "bom-ref": "repo-contract@0.11.3|slice-ansi@4.0.0",
@@ -46305,8 +46340,8 @@
     {
       "type": "library",
       "name": "smol-toml",
-      "version": "1.9.0",
-      "bom-ref": "repo-contract@0.11.3|smol-toml@1.9.0",
+      "version": "1.9.1",
+      "bom-ref": "repo-contract@0.11.3|smol-toml@1.9.1",
       "licenses": [
         {
           "license": {
@@ -46315,15 +46350,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/smol-toml@1.9.0",
+      "purl": "pkg:npm/smol-toml@1.9.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/smol-toml/-/smol-toml-1.9.0.tgz",
+          "url": "https://registry.npmjs.org/smol-toml/-/smol-toml-1.9.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "86977e1cb38dec77595ea61c84c33ff8b6934db74ad00537367808278295c966d8f5b7d0a9d2fd703fb8c9fe9d528536029e15b14d099108ba171008d41da65d"
+              "content": "8fb5b23dd7f4089a2eb4cccca0f2c5fdb5571ed299213f516f87867846d6c3c5f6b79a22ae33e0a4bf8ea5a10d66b20b61a5ea6309d51feaa053055b97ea5425"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -50519,8 +50554,8 @@
         {
           "type": "library",
           "name": "markdown-it",
-          "version": "14.3.2",
-          "bom-ref": "repo-contract@0.11.3|typedoc@0.28.20|markdown-it@14.3.2",
+          "version": "14.3.3",
+          "bom-ref": "repo-contract@0.11.3|typedoc@0.28.20|markdown-it@14.3.3",
           "licenses": [
             {
               "license": {
@@ -50529,15 +50564,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/markdown-it@14.3.2",
+          "purl": "pkg:npm/markdown-it@14.3.3",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/markdown-it/-/markdown-it-14.3.2.tgz",
+              "url": "https://registry.npmjs.org/markdown-it/-/markdown-it-14.3.3.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "b071e36797c92a582b1b8aa7b3663055c74d7a9df98797c446b7e40f660db1bf54164d142076ab6e24da1ca54c94fb960288a29722bc16ffe3026d75b25b18ed"
+                  "content": "2fffed0c09234e324253aa4151205382cdca83822755a66e519a20fdbe95d7650a85c0d0ed2efcf3bee26db09a9d1131c0fb983f50990fb19dd9dc52cb519746"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -52887,7 +52922,7 @@
         "repo-contract@0.11.3|eslint-plugin-secure-coding@5.4.16",
         "repo-contract@0.11.3|eslint-plugin-security@4.2.0",
         "repo-contract@0.11.3|eslint-plugin-toplevel@1.2.0",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|fast-check@4.10.2",
         "repo-contract@0.11.3|github-actionlint@1.7.12",
         "repo-contract@0.11.3|globals@17.13.0",
@@ -52900,7 +52935,7 @@
         "repo-contract@0.11.3|licensee@12.0.2",
         "repo-contract@0.11.3|linkinator@8.1.0",
         "repo-contract@0.11.3|markdownlint-cli2-formatter-json@0.0.10",
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3",
+        "repo-contract@0.11.3|markdownlint-cli2@0.24.0",
         "repo-contract@0.11.3|oxlint@1.88.0",
         "repo-contract@0.11.3|pa11y@10.0.0",
         "repo-contract@0.11.3|prettier@3.9.10",
@@ -53743,7 +53778,7 @@
       "ref": "repo-contract@0.11.3|@eslint-community/eslint-plugin-eslint-comments@4.8.1",
       "dependsOn": [
         "repo-contract@0.11.3|escape-string-regexp@4.0.0",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|ignore@7.0.12"
       ]
     },
@@ -53751,7 +53786,7 @@
       "ref": "repo-contract@0.11.3|@eslint-community/eslint-utils@4.10.1",
       "dependsOn": [
         "repo-contract@0.11.3|@eslint-community/eslint-utils@4.10.1|eslint-visitor-keys@3.4.3",
-        "repo-contract@0.11.3|eslint@10.12.0"
+        "repo-contract@0.11.3|eslint@10.13.0"
       ]
     },
     {
@@ -53783,7 +53818,7 @@
     {
       "ref": "repo-contract@0.11.3|@eslint/js@10.0.1",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0"
+        "repo-contract@0.11.3|eslint@10.13.0"
       ]
     },
     {
@@ -53972,7 +54007,7 @@
       "ref": "repo-contract@0.11.3|@interlace/eslint-devkit@1.19.8",
       "dependsOn": [
         "repo-contract@0.11.3|@typescript-eslint/utils@8.71.2",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|oxc-resolver@11.24.2",
         "repo-contract@0.11.3|typescript@6.0.3"
       ]
@@ -54089,7 +54124,7 @@
         "repo-contract@0.11.3|@maverickcer/env-cap@0.7.0|@typescript/typescript6@6.0.2",
         "repo-contract@0.11.3|@maverickcer/env-cap@0.7.0|typescript@6.0.3",
         "repo-contract@0.11.3|@typescript-eslint/utils@8.71.2",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|typescript@6.0.3"
       ]
     },
@@ -54635,7 +54670,7 @@
         "repo-contract@0.11.3|@rnx-kit/eslint-plugin@0.9.9|eslint-plugin-react-hooks@5.2.0",
         "repo-contract@0.11.3|@rnx-kit/eslint-plugin@0.9.9|eslint-plugin-react@7.37.5",
         "repo-contract@0.11.3|enhanced-resolve@5.26.0",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|typescript-eslint@8.71.2"
       ]
     },
@@ -54652,7 +54687,7 @@
     {
       "ref": "repo-contract@0.11.3|@rnx-kit/eslint-plugin@0.9.9|eslint-plugin-react-hooks@5.2.0",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0"
+        "repo-contract@0.11.3|eslint@10.13.0"
       ]
     },
     {
@@ -54667,7 +54702,7 @@
         "repo-contract@0.11.3|array.prototype.tosorted@1.1.4",
         "repo-contract@0.11.3|doctrine@2.1.0",
         "repo-contract@0.11.3|es-iterator-helpers@1.4.0",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|estraverse@5.3.0",
         "repo-contract@0.11.3|hasown@2.0.4",
         "repo-contract@0.11.3|jsx-ast-utils@3.3.5",
@@ -55403,7 +55438,7 @@
         "repo-contract@0.11.3|@typescript-eslint/type-utils@8.71.2",
         "repo-contract@0.11.3|@typescript-eslint/utils@8.71.2",
         "repo-contract@0.11.3|@typescript-eslint/visitor-keys@8.71.2",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|ignore@7.0.12",
         "repo-contract@0.11.3|natural-compare@1.4.0",
         "repo-contract@0.11.3|ts-api-utils@2.5.0",
@@ -55418,7 +55453,7 @@
         "repo-contract@0.11.3|@typescript-eslint/typescript-estree@8.71.2",
         "repo-contract@0.11.3|@typescript-eslint/visitor-keys@8.71.2",
         "repo-contract@0.11.3|debug@4.4.3",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|typescript@6.0.3"
       ]
     },
@@ -55451,7 +55486,7 @@
         "repo-contract@0.11.3|@typescript-eslint/typescript-estree@8.71.2",
         "repo-contract@0.11.3|@typescript-eslint/utils@8.71.2",
         "repo-contract@0.11.3|debug@4.4.3",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|ts-api-utils@2.5.0",
         "repo-contract@0.11.3|typescript@6.0.3"
       ]
@@ -55481,7 +55516,7 @@
         "repo-contract@0.11.3|@typescript-eslint/scope-manager@8.71.2",
         "repo-contract@0.11.3|@typescript-eslint/types@8.71.2",
         "repo-contract@0.11.3|@typescript-eslint/typescript-estree@8.71.2",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|typescript@6.0.3"
       ]
     },
@@ -56211,7 +56246,7 @@
         "repo-contract@0.11.3|@typescript-eslint/utils@8.71.2",
         "repo-contract@0.11.3|data-cap@0.8.0|@typescript/typescript6@6.0.2",
         "repo-contract@0.11.3|data-cap@0.8.0|typescript@6.0.3",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|typescript@6.0.3"
       ]
     },
@@ -56636,21 +56671,21 @@
     {
       "ref": "repo-contract@0.11.3|eslint-compat-utils@0.5.1",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|semver@7.8.5"
       ]
     },
     {
       "ref": "repo-contract@0.11.3|eslint-config-prettier@10.1.8",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0"
+        "repo-contract@0.11.3|eslint@10.13.0"
       ]
     },
     {
       "ref": "repo-contract@0.11.3|eslint-fix-utils@0.4.4",
       "dependsOn": [
         "repo-contract@0.11.3|@types/estree@1.0.9",
-        "repo-contract@0.11.3|eslint@10.12.0"
+        "repo-contract@0.11.3|eslint@10.13.0"
       ]
     },
     {
@@ -56681,7 +56716,7 @@
         "repo-contract@0.11.3|debug@4.4.3",
         "repo-contract@0.11.3|eslint-import-context@0.1.9",
         "repo-contract@0.11.3|eslint-plugin-import-x@4.17.1",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|get-tsconfig@4.14.3",
         "repo-contract@0.11.3|is-bun-module@2.0.0",
         "repo-contract@0.11.3|stable-hash-x@0.2.0",
@@ -56692,7 +56727,7 @@
     {
       "ref": "repo-contract@0.11.3|eslint-json-compat-utils@0.2.3",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|esquery@1.7.0",
         "repo-contract@0.11.3|jsonc-eslint-parser@3.3.0"
       ]
@@ -56716,7 +56751,7 @@
         "repo-contract@0.11.3|chalk@4.1.2",
         "repo-contract@0.11.3|eslint-import-resolver-node@0.3.9",
         "repo-contract@0.11.3|eslint-module-utils@2.12.1",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|handlebars@4.7.10",
         "repo-contract@0.11.3|micromatch@4.0.8"
       ]
@@ -56727,7 +56762,7 @@
         "repo-contract@0.11.3|@eslint-community/eslint-utils@4.10.1",
         "repo-contract@0.11.3|@eslint-community/regexpp@4.12.2",
         "repo-contract@0.11.3|eslint-compat-utils@0.5.1",
-        "repo-contract@0.11.3|eslint@10.12.0"
+        "repo-contract@0.11.3|eslint@10.13.0"
       ]
     },
     {
@@ -56739,7 +56774,7 @@
         "repo-contract@0.11.3|debug@4.4.3",
         "repo-contract@0.11.3|eslint-import-context@0.1.9",
         "repo-contract@0.11.3|eslint-import-resolver-node@0.3.9",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|is-glob@4.0.3",
         "repo-contract@0.11.3|minimatch@10.2.6",
         "repo-contract@0.11.3|semver@7.8.5",
@@ -56758,7 +56793,7 @@
         "repo-contract@0.11.3|debug@4.4.3",
         "repo-contract@0.11.3|eslint-plugin-jsdoc@65.3.15|escape-string-regexp@5.0.0",
         "repo-contract@0.11.3|eslint-plugin-jsdoc@65.3.15|spdx-expression-parse@5.0.0",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|espree@11.2.0",
         "repo-contract@0.11.3|esquery@1.7.0",
         "repo-contract@0.11.3|html-entities@2.6.0",
@@ -56788,7 +56823,7 @@
         "repo-contract@0.11.3|eslint-plugin-n@18.4.1|globals@15.15.0",
         "repo-contract@0.11.3|eslint-plugin-n@18.4.1|ignore@5.3.2",
         "repo-contract@0.11.3|eslint-plugin-n@18.4.1|js-yaml@5.4.3",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|get-tsconfig@4.14.3",
         "repo-contract@0.11.3|globrex@0.1.2",
         "repo-contract@0.11.3|semver@7.8.5",
@@ -56814,7 +56849,7 @@
       "ref": "repo-contract@0.11.3|eslint-plugin-node-dependencies@2.3.0",
       "dependsOn": [
         "repo-contract@0.11.3|eslint-json-compat-utils@0.2.3",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|jsonc-eslint-parser@3.3.0",
         "repo-contract@0.11.3|npm-package-arg@13.0.2",
         "repo-contract@0.11.3|package-json@10.0.1",
@@ -56833,7 +56868,7 @@
         "repo-contract@0.11.3|eslint-fix-utils@0.4.4",
         "repo-contract@0.11.3|eslint-json-compat-utils@0.2.3",
         "repo-contract@0.11.3|eslint-plugin-package-json@1.10.1|detect-indent@7.0.2",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|jsonc-eslint-parser@3.3.0",
         "repo-contract@0.11.3|package-json-validator@1.6.1",
         "repo-contract@0.11.3|semver@7.8.5",
@@ -56849,7 +56884,7 @@
       "dependsOn": [
         "repo-contract@0.11.3|@eslint-community/regexpp@4.12.2",
         "repo-contract@0.11.3|@interlace/eslint-devkit@1.19.8",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|refa@0.12.1",
         "repo-contract@0.11.3|scslre@0.3.0"
       ]
@@ -56863,7 +56898,7 @@
     {
       "ref": "repo-contract@0.11.3|eslint-plugin-toplevel@1.2.0",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0"
+        "repo-contract@0.11.3|eslint@10.13.0"
       ]
     },
     {
@@ -56879,7 +56914,7 @@
       "ref": "repo-contract@0.11.3|eslint-visitor-keys@5.0.1"
     },
     {
-      "ref": "repo-contract@0.11.3|eslint@10.12.0",
+      "ref": "repo-contract@0.11.3|eslint@10.13.0",
       "dependsOn": [
         "repo-contract@0.11.3|@eslint-community/eslint-utils@4.10.1",
         "repo-contract@0.11.3|@eslint-community/regexpp@4.12.2",
@@ -56896,9 +56931,9 @@
         "repo-contract@0.11.3|escape-string-regexp@4.0.0",
         "repo-contract@0.11.3|eslint-scope@9.1.2",
         "repo-contract@0.11.3|eslint-visitor-keys@5.0.1",
-        "repo-contract@0.11.3|eslint@10.12.0|ajv@6.15.0",
-        "repo-contract@0.11.3|eslint@10.12.0|find-up@5.0.0",
-        "repo-contract@0.11.3|eslint@10.12.0|ignore@5.3.2",
+        "repo-contract@0.11.3|eslint@10.13.0|ajv@6.15.0",
+        "repo-contract@0.11.3|eslint@10.13.0|find-up@5.0.0",
+        "repo-contract@0.11.3|eslint@10.13.0|ignore@5.3.2",
         "repo-contract@0.11.3|espree@11.2.0",
         "repo-contract@0.11.3|esquery@1.7.0",
         "repo-contract@0.11.3|esutils@2.0.3",
@@ -56915,43 +56950,43 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|eslint@10.12.0|ajv@6.15.0",
+      "ref": "repo-contract@0.11.3|eslint@10.13.0|ajv@6.15.0",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0|json-schema-traverse@0.4.1",
+        "repo-contract@0.11.3|eslint@10.13.0|json-schema-traverse@0.4.1",
         "repo-contract@0.11.3|fast-deep-equal@3.1.3",
         "repo-contract@0.11.3|fast-json-stable-stringify@2.1.0",
         "repo-contract@0.11.3|uri-js@4.4.1"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|eslint@10.12.0|find-up@5.0.0",
+      "ref": "repo-contract@0.11.3|eslint@10.13.0|find-up@5.0.0",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0|locate-path@6.0.0",
+        "repo-contract@0.11.3|eslint@10.13.0|locate-path@6.0.0",
         "repo-contract@0.11.3|path-exists@4.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|eslint@10.12.0|ignore@5.3.2"
+      "ref": "repo-contract@0.11.3|eslint@10.13.0|ignore@5.3.2"
     },
     {
-      "ref": "repo-contract@0.11.3|eslint@10.12.0|json-schema-traverse@0.4.1"
+      "ref": "repo-contract@0.11.3|eslint@10.13.0|json-schema-traverse@0.4.1"
     },
     {
-      "ref": "repo-contract@0.11.3|eslint@10.12.0|locate-path@6.0.0",
+      "ref": "repo-contract@0.11.3|eslint@10.13.0|locate-path@6.0.0",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0|p-locate@5.0.0"
+        "repo-contract@0.11.3|eslint@10.13.0|p-locate@5.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|eslint@10.12.0|p-limit@3.1.0",
+      "ref": "repo-contract@0.11.3|eslint@10.13.0|p-limit@3.1.0",
       "dependsOn": [
         "repo-contract@0.11.3|yocto-queue@0.1.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|eslint@10.12.0|p-locate@5.0.0",
+      "ref": "repo-contract@0.11.3|eslint@10.13.0|p-locate@5.0.0",
       "dependsOn": [
-        "repo-contract@0.11.3|eslint@10.12.0|p-limit@3.1.0"
+        "repo-contract@0.11.3|eslint@10.13.0|p-limit@3.1.0"
       ]
     },
     {
@@ -57292,6 +57327,21 @@
       ]
     },
     {
+      "ref": "repo-contract@0.11.3|globby@16.2.4",
+      "dependsOn": [
+        "repo-contract@0.11.3|@sindresorhus/merge-streams@4.0.0",
+        "repo-contract@0.11.3|fast-glob@3.3.3",
+        "repo-contract@0.11.3|globby@16.2.4|unicorn-magic@0.4.1",
+        "repo-contract@0.11.3|ignore@7.0.12",
+        "repo-contract@0.11.3|is-path-inside@4.0.0",
+        "repo-contract@0.11.3|micromatch@4.0.8",
+        "repo-contract@0.11.3|slash@5.1.0"
+      ]
+    },
+    {
+      "ref": "repo-contract@0.11.3|globby@16.2.4|unicorn-magic@0.4.1"
+    },
+    {
       "ref": "repo-contract@0.11.3|globrex@0.1.2"
     },
     {
@@ -57474,7 +57524,7 @@
         "repo-contract@0.11.3|data-cap@0.8.0",
         "repo-contract@0.11.3|dependency-cruiser@18.6.0",
         "repo-contract@0.11.3|eslint-config-prettier@10.1.8",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|github-actionlint@1.7.12",
         "repo-contract@0.11.3|github-slugger@2.0.0",
         "repo-contract@0.11.3|globals@17.13.0",
@@ -57485,7 +57535,7 @@
         "repo-contract@0.11.3|knip@6.42.0",
         "repo-contract@0.11.3|licensee@12.0.2",
         "repo-contract@0.11.3|linkinator@8.1.0",
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3",
+        "repo-contract@0.11.3|markdownlint-cli2@0.24.0",
         "repo-contract@0.11.3|pa11y@10.0.0",
         "repo-contract@0.11.3|publint@0.3.25",
         "repo-contract@0.11.3|puppeteer-core@25.12.0#2",
@@ -57524,7 +57574,7 @@
       "ref": "repo-contract@0.11.3|interpret@3.1.1"
     },
     {
-      "ref": "repo-contract@0.11.3|ip-address@10.7.3"
+      "ref": "repo-contract@0.11.3|ip-address@10.7.4"
     },
     {
       "ref": "repo-contract@0.11.3|is-alphabetical@2.0.1"
@@ -57917,13 +57967,13 @@
       "ref": "repo-contract@0.11.3|just-diff@6.0.2"
     },
     {
-      "ref": "repo-contract@0.11.3|katex@0.16.47",
+      "ref": "repo-contract@0.11.3|katex@0.18.10",
       "dependsOn": [
-        "repo-contract@0.11.3|katex@0.16.47|commander@8.3.0"
+        "repo-contract@0.11.3|katex@0.18.10|commander@15.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|katex@0.16.47|commander@8.3.0"
+      "ref": "repo-contract@0.11.3|katex@0.18.10|commander@15.0.0"
     },
     {
       "ref": "repo-contract@0.11.3|keyv@5.6.0",
@@ -57944,7 +57994,7 @@
         "repo-contract@0.11.3|oxc-parser@0.154.0",
         "repo-contract@0.11.3|oxc-resolver@11.24.2",
         "repo-contract@0.11.3|picomatch@4.0.7",
-        "repo-contract@0.11.3|smol-toml@1.9.0",
+        "repo-contract@0.11.3|smol-toml@1.9.1",
         "repo-contract@0.11.3|strip-json-comments@5.0.3",
         "repo-contract@0.11.3|tinyglobby@0.2.17",
         "repo-contract@0.11.3|unbash@6.0.0",
@@ -58243,98 +58293,78 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|markdown-it@15.0.1",
+      "ref": "repo-contract@0.11.3|markdown-it@15.0.3",
       "dependsOn": [
         "repo-contract@0.11.3|entities@8.1.0",
         "repo-contract@0.11.3|linkify-it@6.1.0",
-        "repo-contract@0.11.3|markdown-it@15.0.1|argparse@3.0.2",
+        "repo-contract@0.11.3|markdown-it@15.0.3|argparse@3.0.3",
         "repo-contract@0.11.3|mdurl@2.1.0",
         "repo-contract@0.11.3|punycode.js@2.3.1",
         "repo-contract@0.11.3|uc.micro@3.0.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|markdown-it@15.0.1|argparse@3.0.2"
+      "ref": "repo-contract@0.11.3|markdown-it@15.0.3|argparse@3.0.3"
     },
     {
       "ref": "repo-contract@0.11.3|markdownlint-cli2-formatter-default@0.0.6",
       "dependsOn": [
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3"
+        "repo-contract@0.11.3|markdownlint-cli2@0.24.0"
       ]
     },
     {
       "ref": "repo-contract@0.11.3|markdownlint-cli2-formatter-json@0.0.10",
       "dependsOn": [
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3"
+        "repo-contract@0.11.3|markdownlint-cli2@0.24.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3",
+      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.24.0",
       "dependsOn": [
+        "repo-contract@0.11.3|globby@16.2.4",
         "repo-contract@0.11.3|jsonc-parser@3.3.1",
         "repo-contract@0.11.3|jsonpointer@5.0.1",
-        "repo-contract@0.11.3|markdown-it@15.0.1",
+        "repo-contract@0.11.3|markdown-it@15.0.3",
         "repo-contract@0.11.3|markdownlint-cli2-formatter-default@0.0.6",
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3|globby@16.2.4",
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3|js-yaml@5.4.1",
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3|smol-toml@1.8.0",
-        "repo-contract@0.11.3|markdownlint@0.41.1",
-        "repo-contract@0.11.3|micromatch@4.0.8"
+        "repo-contract@0.11.3|markdownlint-cli2@0.24.0|js-yaml@5.4.3",
+        "repo-contract@0.11.3|markdownlint@0.42.0",
+        "repo-contract@0.11.3|micromatch@4.0.8",
+        "repo-contract@0.11.3|smol-toml@1.9.1"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|argparse@2.0.1"
+      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.24.0|argparse@2.0.1"
     },
     {
-      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|globby@16.2.4",
+      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.24.0|js-yaml@5.4.3",
       "dependsOn": [
-        "repo-contract@0.11.3|@sindresorhus/merge-streams@4.0.0",
-        "repo-contract@0.11.3|fast-glob@3.3.3",
-        "repo-contract@0.11.3|ignore@7.0.12",
-        "repo-contract@0.11.3|is-path-inside@4.0.0",
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3|slash@5.1.0",
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3|unicorn-magic@0.4.1",
-        "repo-contract@0.11.3|micromatch@4.0.8"
+        "repo-contract@0.11.3|markdownlint-cli2@0.24.0|argparse@2.0.1"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|js-yaml@5.4.1",
+      "ref": "repo-contract@0.11.3|markdownlint@0.42.0",
       "dependsOn": [
-        "repo-contract@0.11.3|markdownlint-cli2@0.23.3|argparse@2.0.1"
-      ]
-    },
-    {
-      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|slash@5.1.0"
-    },
-    {
-      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|smol-toml@1.8.0"
-    },
-    {
-      "ref": "repo-contract@0.11.3|markdownlint-cli2@0.23.3|unicorn-magic@0.4.1"
-    },
-    {
-      "ref": "repo-contract@0.11.3|markdownlint@0.41.1",
-      "dependsOn": [
-        "repo-contract@0.11.3|markdownlint@0.41.1|string-width@8.2.1",
-        "repo-contract@0.11.3|micromark-core-commonmark@2.0.3",
+        "repo-contract@0.11.3|markdownlint@0.42.0|string-width@8.3.0",
+        "repo-contract@0.11.3|micromark-core-commonmark@2.0.4",
         "repo-contract@0.11.3|micromark-extension-directive@4.0.0",
         "repo-contract@0.11.3|micromark-extension-gfm-autolink-literal@2.1.0",
         "repo-contract@0.11.3|micromark-extension-gfm-footnote@2.1.0",
-        "repo-contract@0.11.3|micromark-extension-gfm-table@2.1.1",
+        "repo-contract@0.11.3|micromark-extension-gfm-table@2.1.2",
         "repo-contract@0.11.3|micromark-extension-math@3.1.0",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2",
-        "repo-contract@0.11.3|micromark@4.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3",
+        "repo-contract@0.11.3|micromark@4.0.3",
+        "repo-contract@0.11.3|re2js@2.8.6"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|markdownlint@0.41.1|string-width@8.2.1",
+      "ref": "repo-contract@0.11.3|markdownlint@0.42.0|string-width@8.3.0",
       "dependsOn": [
         "repo-contract@0.11.3|get-east-asian-width@1.7.0",
-        "repo-contract@0.11.3|markdownlint@0.41.1|strip-ansi@7.2.0"
+        "repo-contract@0.11.3|markdownlint@0.42.0|strip-ansi@7.2.0"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|markdownlint@0.41.1|strip-ansi@7.2.0",
+      "ref": "repo-contract@0.11.3|markdownlint@0.42.0|strip-ansi@7.2.0",
       "dependsOn": [
         "repo-contract@0.11.3|ansi-regex@6.4.0"
       ]
@@ -58371,7 +58401,7 @@
       "ref": "repo-contract@0.11.3|merge2@1.4.1"
     },
     {
-      "ref": "repo-contract@0.11.3|micromark-core-commonmark@2.0.3",
+      "ref": "repo-contract@0.11.3|micromark-core-commonmark@2.0.4",
       "dependsOn": [
         "repo-contract@0.11.3|decode-named-character-reference@1.3.0",
         "repo-contract@0.11.3|devlop@1.1.0",
@@ -58383,12 +58413,13 @@
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-chunked@2.0.1",
         "repo-contract@0.11.3|micromark-util-classify-character@2.0.1",
+        "repo-contract@0.11.3|micromark-util-edit-map@1.0.0",
         "repo-contract@0.11.3|micromark-util-html-tag-name@2.0.1",
         "repo-contract@0.11.3|micromark-util-normalize-identifier@2.0.1",
         "repo-contract@0.11.3|micromark-util-resolve-all@2.0.1",
         "repo-contract@0.11.3|micromark-util-subtokenize@2.1.0",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -58399,7 +58430,7 @@
         "repo-contract@0.11.3|micromark-factory-whitespace@2.0.1",
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2",
+        "repo-contract@0.11.3|micromark-util-types@2.0.3",
         "repo-contract@0.11.3|parse-entities@4.0.2"
       ]
     },
@@ -58409,30 +58440,30 @@
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-sanitize-uri@2.0.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
       "ref": "repo-contract@0.11.3|micromark-extension-gfm-footnote@2.1.0",
       "dependsOn": [
         "repo-contract@0.11.3|devlop@1.1.0",
-        "repo-contract@0.11.3|micromark-core-commonmark@2.0.3",
+        "repo-contract@0.11.3|micromark-core-commonmark@2.0.4",
         "repo-contract@0.11.3|micromark-factory-space@2.1.0",
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-normalize-identifier@2.0.1",
         "repo-contract@0.11.3|micromark-util-sanitize-uri@2.0.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|micromark-extension-gfm-table@2.1.1",
+      "ref": "repo-contract@0.11.3|micromark-extension-gfm-table@2.1.2",
       "dependsOn": [
         "repo-contract@0.11.3|devlop@1.1.0",
         "repo-contract@0.11.3|micromark-factory-space@2.1.0",
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -58440,11 +58471,11 @@
       "dependsOn": [
         "repo-contract@0.11.3|@types/katex@0.16.8",
         "repo-contract@0.11.3|devlop@1.1.0",
-        "repo-contract@0.11.3|katex@0.16.47",
+        "repo-contract@0.11.3|katex@0.18.10",
         "repo-contract@0.11.3|micromark-factory-space@2.1.0",
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -58452,7 +58483,7 @@
       "dependsOn": [
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -58461,14 +58492,14 @@
         "repo-contract@0.11.3|devlop@1.1.0",
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
       "ref": "repo-contract@0.11.3|micromark-factory-space@2.1.0",
       "dependsOn": [
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -58477,7 +58508,7 @@
         "repo-contract@0.11.3|micromark-factory-space@2.1.0",
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -58486,14 +58517,14 @@
         "repo-contract@0.11.3|micromark-factory-space@2.1.0",
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
       "ref": "repo-contract@0.11.3|micromark-util-character@2.1.1",
       "dependsOn": [
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -58507,20 +58538,26 @@
       "dependsOn": [
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
       "ref": "repo-contract@0.11.3|micromark-util-combine-extensions@2.0.1",
       "dependsOn": [
         "repo-contract@0.11.3|micromark-util-chunked@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
       "ref": "repo-contract@0.11.3|micromark-util-decode-numeric-character-reference@2.0.2",
       "dependsOn": [
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1"
+      ]
+    },
+    {
+      "ref": "repo-contract@0.11.3|micromark-util-edit-map@1.0.0",
+      "dependsOn": [
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -58538,7 +58575,7 @@
     {
       "ref": "repo-contract@0.11.3|micromark-util-resolve-all@2.0.1",
       "dependsOn": [
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -58555,35 +58592,36 @@
         "repo-contract@0.11.3|devlop@1.1.0",
         "repo-contract@0.11.3|micromark-util-chunked@2.0.1",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
       "ref": "repo-contract@0.11.3|micromark-util-symbol@2.0.1"
     },
     {
-      "ref": "repo-contract@0.11.3|micromark-util-types@2.0.2"
+      "ref": "repo-contract@0.11.3|micromark-util-types@2.0.3"
     },
     {
-      "ref": "repo-contract@0.11.3|micromark@4.0.2",
+      "ref": "repo-contract@0.11.3|micromark@4.0.3",
       "dependsOn": [
         "repo-contract@0.11.3|@types/debug@4.1.13",
         "repo-contract@0.11.3|debug@4.4.3",
         "repo-contract@0.11.3|decode-named-character-reference@1.3.0",
         "repo-contract@0.11.3|devlop@1.1.0",
-        "repo-contract@0.11.3|micromark-core-commonmark@2.0.3",
+        "repo-contract@0.11.3|micromark-core-commonmark@2.0.4",
         "repo-contract@0.11.3|micromark-factory-space@2.1.0",
         "repo-contract@0.11.3|micromark-util-character@2.1.1",
         "repo-contract@0.11.3|micromark-util-chunked@2.0.1",
         "repo-contract@0.11.3|micromark-util-combine-extensions@2.0.1",
         "repo-contract@0.11.3|micromark-util-decode-numeric-character-reference@2.0.2",
+        "repo-contract@0.11.3|micromark-util-edit-map@1.0.0",
         "repo-contract@0.11.3|micromark-util-encode@2.0.1",
         "repo-contract@0.11.3|micromark-util-normalize-identifier@2.0.1",
         "repo-contract@0.11.3|micromark-util-resolve-all@2.0.1",
         "repo-contract@0.11.3|micromark-util-sanitize-uri@2.0.1",
         "repo-contract@0.11.3|micromark-util-subtokenize@2.1.0",
         "repo-contract@0.11.3|micromark-util-symbol@2.0.1",
-        "repo-contract@0.11.3|micromark-util-types@2.0.2"
+        "repo-contract@0.11.3|micromark-util-types@2.0.3"
       ]
     },
     {
@@ -59531,6 +59569,9 @@
       "ref": "repo-contract@0.11.3|rc@1.2.8|strip-json-comments@2.0.1"
     },
     {
+      "ref": "repo-contract@0.11.3|re2js@2.8.6"
+    },
+    {
       "ref": "repo-contract@0.11.3|react-is@16.13.1"
     },
     {
@@ -59939,6 +59980,9 @@
       ]
     },
     {
+      "ref": "repo-contract@0.11.3|slash@5.1.0"
+    },
+    {
       "ref": "repo-contract@0.11.3|slice-ansi@4.0.0",
       "dependsOn": [
         "repo-contract@0.11.3|ansi-styles@4.3.0",
@@ -59950,7 +59994,7 @@
       "ref": "repo-contract@0.11.3|smart-buffer@4.2.0"
     },
     {
-      "ref": "repo-contract@0.11.3|smol-toml@1.9.0"
+      "ref": "repo-contract@0.11.3|smol-toml@1.9.1"
     },
     {
       "ref": "repo-contract@0.11.3|smtp-address-parser@1.1.0",
@@ -59969,7 +60013,7 @@
     {
       "ref": "repo-contract@0.11.3|socks@2.8.10",
       "dependsOn": [
-        "repo-contract@0.11.3|ip-address@10.7.3",
+        "repo-contract@0.11.3|ip-address@10.7.4",
         "repo-contract@0.11.3|smart-buffer@4.2.0"
       ]
     },
@@ -60610,7 +60654,7 @@
         "repo-contract@0.11.3|@gerrit0/mini-shiki@3.23.0",
         "repo-contract@0.11.3|lunr@2.3.9",
         "repo-contract@0.11.3|minimatch@10.2.6",
-        "repo-contract@0.11.3|typedoc@0.28.20|markdown-it@14.3.2",
+        "repo-contract@0.11.3|typedoc@0.28.20|markdown-it@14.3.3",
         "repo-contract@0.11.3|typescript@6.0.3",
         "repo-contract@0.11.3|yaml@2.9.1"
       ]
@@ -60628,7 +60672,7 @@
       ]
     },
     {
-      "ref": "repo-contract@0.11.3|typedoc@0.28.20|markdown-it@14.3.2",
+      "ref": "repo-contract@0.11.3|typedoc@0.28.20|markdown-it@14.3.3",
       "dependsOn": [
         "repo-contract@0.11.3|mdurl@2.1.0",
         "repo-contract@0.11.3|punycode.js@2.3.1",
@@ -60648,7 +60692,7 @@
         "repo-contract@0.11.3|@typescript-eslint/parser@8.71.2",
         "repo-contract@0.11.3|@typescript-eslint/typescript-estree@8.71.2",
         "repo-contract@0.11.3|@typescript-eslint/utils@8.71.2",
-        "repo-contract@0.11.3|eslint@10.12.0",
+        "repo-contract@0.11.3|eslint@10.13.0",
         "repo-contract@0.11.3|typescript@6.0.3"
       ]
     },

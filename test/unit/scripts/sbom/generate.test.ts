@@ -2,11 +2,12 @@ import path from "node:path"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type * as SpawnModule from "../../../../scripts/sbom/spawn.js"
 
-const { mkdir, readFile } = vi.hoisted(() => ({
+const { mkdir, readFile, writeFile } = vi.hoisted(() => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   readFile: vi.fn(),
+  writeFile: vi.fn<(file: string, data: string) => Promise<void>>().mockResolvedValue(undefined),
 }))
-vi.mock("node:fs/promises", () => ({ mkdir, readFile }))
+vi.mock("node:fs/promises", () => ({ mkdir, readFile, writeFile }))
 
 const { runCycloneDxNpm } = vi.hoisted(() => ({
   runCycloneDxNpm: vi.fn<typeof SpawnModule.runCycloneDxNpm>(),
@@ -32,6 +33,68 @@ describe("generateSbom", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mkdir.mockResolvedValue(undefined)
+    writeFile.mockResolvedValue(undefined)
+  })
+
+  describe("the machine's npm", () => {
+    const withTools = (components: unknown[]) => ({
+      ...VALID_DOCUMENT,
+      metadata: { tools: { components } },
+    })
+    const cyclonedx = {
+      type: "application",
+      group: "@cyclonedx",
+      name: "cyclonedx-npm",
+      version: "6.0.1",
+    }
+
+    it("is removed from each SBOM, because a runner image's npm version would otherwise rewrite it", async () => {
+      runCycloneDxNpm.mockReturnValue({ ok: true })
+      readFile.mockImplementation(async (file: string) =>
+        file.endsWith("package.json")
+          ? "{}"
+          : JSON.stringify(
+              withTools([{ type: "application", name: "npm", version: "11.19.1" }, cyclonedx]),
+              null,
+              2,
+            ),
+      )
+
+      const evidence = await generateSbom("/repo")
+
+      expect(evidence.ok).toBe(true)
+      expect(writeFile.mock.calls.map((call) => call[0])).toEqual([
+        path.join("/repo", "docs/sbom.cdx.json"),
+        path.join("/repo", "docs/sbom.production.cdx.json"),
+      ])
+      for (const call of writeFile.mock.calls) {
+        expect(call[1]).toBe(JSON.stringify(withTools([cyclonedx]), null, 2))
+      }
+    })
+
+    it("leaves a document without one untouched and unwritten", async () => {
+      runCycloneDxNpm.mockReturnValue({ ok: true })
+      readFile.mockImplementation(async (file: string) =>
+        file.endsWith("package.json") ? "{}" : JSON.stringify(withTools([cyclonedx])),
+      )
+
+      await generateSbom("/repo")
+
+      expect(writeFile).not.toHaveBeenCalled()
+    })
+
+    it("keeps a tool that is merely named npm inside a group", async () => {
+      runCycloneDxNpm.mockReturnValue({ ok: true })
+      readFile.mockImplementation(async (file: string) =>
+        file.endsWith("package.json")
+          ? "{}"
+          : JSON.stringify(withTools([{ type: "library", group: "@x", name: "npm" }, cyclonedx])),
+      )
+
+      await generateSbom("/repo")
+
+      expect(writeFile).not.toHaveBeenCalled()
+    })
   })
 
   it("ensures docs/ exists before spawning cyclonedx-npm", async () => {
