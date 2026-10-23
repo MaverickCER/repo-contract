@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.4
+
+### Patch Changes
+
+- fix(sbom): satisfy type-aware lint in the generator and its test
+- fix(sbom): drop the machine's npm from the SBOM tool list
+
 ## 0.11.3
 
 ### Patch Changes
