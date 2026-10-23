@@ -137,7 +137,7 @@ function withoutNpmTool(document: unknown): unknown {
   )
   if (kept.length === components.length) return document
   return {
-    ...(document as object),
+    ...document,
     metadata: { ...metadata, tools: { ...tools, components: kept } },
   }
 }

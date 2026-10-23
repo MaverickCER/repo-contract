@@ -5,7 +5,7 @@ import type * as SpawnModule from "../../../../scripts/sbom/spawn.js"
 const { mkdir, readFile, writeFile } = vi.hoisted(() => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   readFile: vi.fn(),
-  writeFile: vi.fn().mockResolvedValue(undefined),
+  writeFile: vi.fn<(file: string, data: string) => Promise<void>>().mockResolvedValue(undefined),
 }))
 vi.mock("node:fs/promises", () => ({ mkdir, readFile, writeFile }))
 
