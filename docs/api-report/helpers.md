@@ -40,7 +40,7 @@ exact entry.
 ##### default?
 
 ```ts
-readonly optional default?: ExceptionPolicy;
+readonly default?: ExceptionPolicy;
 ```
 
 This group's fallback policy when `category` matches neither an exact nor a glob key in `rules`. Falls through to the caller's `globalDefault` when omitted.
@@ -48,7 +48,7 @@ This group's fallback policy when `category` matches neither an exact nor a glob
 ##### rules?
 
 ```ts
-readonly optional rules?: Readonly<Record<string, ExceptionPolicy>>;
+readonly rules?: Readonly<Record<string, ExceptionPolicy>>;
 ```
 
 Keyed by exact `category` string or glob pattern. A literal `"*"` key is rejected by `validateExceptionPolicyConfig` -- see that function's own doc comment for why.
@@ -534,7 +534,7 @@ Where and how logs are written.
 ##### cwd?
 
 ```ts
-readonly optional cwd?: string;
+readonly cwd?: string;
 ```
 
 **`Beta`**
@@ -544,7 +544,7 @@ The repository root the folder is resolved against. Defaults to the current work
 ##### directory?
 
 ```ts
-readonly optional directory?: string;
+readonly directory?: string;
 ```
 
 **`Beta`**
@@ -554,7 +554,7 @@ The folder, relative to `cwd`. Defaults to `reports/contract/logs`.
 ##### fs?
 
 ```ts
-readonly optional fs?: Partial<RepoContractLogsFileSystem>;
+readonly fs?: Partial<RepoContractLogsFileSystem>;
 ```
 
 **`Beta`**
@@ -564,7 +564,7 @@ Overrides how files are read and written. A store with its own file operations i
 ##### mode?
 
 ```ts
-readonly optional mode?: RepoContractLogMode;
+readonly mode?: RepoContractLogMode;
 ```
 
 **`Beta`**
@@ -574,7 +574,7 @@ Which logs to keep. Defaults to `"failing"`: a log for a check that passed is re
 ##### onProblem?
 
 ```ts
-readonly optional onProblem?: (message) => void;
+readonly onProblem?: (message) => void;
 ```
 
 **`Beta`**
