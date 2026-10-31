@@ -47,7 +47,7 @@ Options accepted by [distNoUrls](#distnourls).
 ##### allow?
 
 ```ts
-readonly optional allow?: readonly DistNoUrlsAllowEntry[];
+readonly allow?: readonly DistNoUrlsAllowEntry[];
 ```
 
 URLs permitted in the output, each with a reason. Empty by default: the strictest policy is the default.
@@ -55,7 +55,7 @@ URLs permitted in the output, each with a reason. Empty by default: the strictes
 ##### dir?
 
 ```ts
-readonly optional dir?: string;
+readonly dir?: string;
 ```
 
 Build-output directory to scan, relative to the working directory. Defaults to `"dist"`.

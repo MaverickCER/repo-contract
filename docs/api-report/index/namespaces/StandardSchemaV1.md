@@ -38,7 +38,7 @@ The error message of the issue.
 ##### path?
 
 ```ts
-readonly optional path?: readonly (PropertyKey | PathSegment)[];
+readonly path?: readonly (PropertyKey | PathSegment)[];
 ```
 
 The path of the issue, if any.
@@ -54,7 +54,7 @@ Options passable to `validate`.
 ##### libraryOptions?
 
 ```ts
-readonly optional libraryOptions?: Record<string, unknown>;
+readonly libraryOptions?: Record<string, unknown>;
 ```
 
 Explicit support for additional vendor-specific parameters, if needed.
@@ -93,7 +93,7 @@ The Standard Schema properties interface.
 ##### types?
 
 ```ts
-readonly optional types?: Types<Input, Output>;
+readonly types?: Types<Input, Output>;
 ```
 
 Inferred types associated with the schema.
@@ -153,7 +153,7 @@ The result interface if validation succeeds.
 ##### issues?
 
 ```ts
-readonly optional issues?: undefined;
+readonly issues?: undefined;
 ```
 
 A falsy value for `issues` indicates success.
