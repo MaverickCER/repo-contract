@@ -22,7 +22,7 @@ Optional tuning. Every default is the conservative choice.
 ##### ignore?
 
 ```ts
-readonly optional ignore?: readonly string[];
+readonly ignore?: readonly string[];
 ```
 
 Globs of non-module files that can never influence a test (default: changesets, changelog, license, codeowners).
@@ -30,7 +30,7 @@ Globs of non-module files that can never influence a test (default: changesets, 
 ##### links?
 
 ```ts
-readonly optional links?: readonly LinkRule[];
+readonly links?: readonly LinkRule[];
 ```
 
 Couplings the import graph cannot see: when a changed file matches `when`, every test matching
@@ -39,7 +39,7 @@ one of `run` is affected. For fixtures, golden files, or anything a test reads w
 ##### notMutated?
 
 ```ts
-readonly optional notMutated?: readonly string[];
+readonly notMutated?: readonly string[];
 ```
 
 Globs of files that are never mutation targets (default: tests, test support and declaration files).
@@ -47,7 +47,7 @@ Globs of files that are never mutation targets (default: tests, test support and
 ##### tests?
 
 ```ts
-readonly optional tests?: readonly string[];
+readonly tests?: readonly string[];
 ```
 
 Globs of test entry files (default: `*.test.*` and `*.spec.*`).
@@ -55,7 +55,7 @@ Globs of test entry files (default: `*.test.*` and `*.spec.*`).
 ##### triggers?
 
 ```ts
-readonly optional triggers?: readonly string[];
+readonly triggers?: readonly string[];
 ```
 
 Globs of files whose change makes everything affected (default: package manifests, lockfiles, tool configs, CI).
@@ -107,7 +107,7 @@ readonly changedSymbols: readonly string[];
 ##### fullBecause?
 
 ```ts
-readonly optional fullBecause?: Widening;
+readonly fullBecause?: Widening;
 ```
 
 Present when `scope` is `"full"`: the first reason the narrow path was abandoned.
@@ -574,7 +574,7 @@ Repo-relative, forward-slash path.
 ##### renamedFrom?
 
 ```ts
-readonly optional renamedFrom?: string;
+readonly renamedFrom?: string;
 ```
 
 For `renamed`: the path the file had at the base.
@@ -588,7 +588,7 @@ For `renamed`: the path the file had at the base.
 ##### base?
 
 ```ts
-readonly optional base?: string;
+readonly base?: string;
 ```
 
 The ref to compare against. Defaults to the upstream branch, then `origin/main`, then `origin/master`.
@@ -602,7 +602,7 @@ readonly capabilities: GitCapabilities;
 ##### compilerOptions?
 
 ```ts
-readonly optional compilerOptions?: CompilerOptions;
+readonly compilerOptions?: CompilerOptions;
 ```
 
 Compiler options for module resolution. When absent they are read from the tsconfig.
@@ -610,7 +610,7 @@ Compiler options for module resolution. When absent they are read from the tscon
 ##### options?
 
 ```ts
-readonly optional options?: AffectedOptions;
+readonly options?: AffectedOptions;
 ```
 
 ##### ts
@@ -622,7 +622,7 @@ readonly ts: typeof ts;
 ##### tsconfig?
 
 ```ts
-readonly optional tsconfig?: string;
+readonly tsconfig?: string;
 ```
 
 The tsconfig to read the options from (default `tsconfig.json`, which may be absent).
@@ -654,7 +654,7 @@ Every changed path, module or not.
 ##### compilerOptions?
 
 ```ts
-readonly optional compilerOptions?: CompilerOptions;
+readonly compilerOptions?: CompilerOptions;
 ```
 
 `compilerOptions` for module resolution (`paths`, `baseUrl`, ...). Defaults to bundler resolution.
@@ -670,7 +670,7 @@ Current contents of every JS/TS module in the project (sources and tests), keyed
 ##### fullBecause?
 
 ```ts
-readonly optional fullBecause?: Widening;
+readonly fullBecause?: Widening;
 ```
 
 When set, the analysis is skipped and everything is reported affected for this reason.
@@ -678,7 +678,7 @@ When set, the analysis is skipped and everything is reported affected for this r
 ##### options?
 
 ```ts
-readonly optional options?: AffectedOptions;
+readonly options?: AffectedOptions;
 ```
 
 ##### ts
@@ -698,7 +698,7 @@ One thing worth changing, and how.
 ##### fix?
 
 ```ts
-readonly optional fix?: DoctorFix;
+readonly fix?: DoctorFix;
 ```
 
 Present only when the repair is safe to apply without a human deciding anything.
@@ -778,7 +778,7 @@ Facts about a repository, gathered by the caller; `diagnose` reads no file itsel
 ##### gitignore?
 
 ```ts
-readonly optional gitignore?: string;
+readonly gitignore?: string;
 ```
 
 The root `.gitignore`'s content, or `undefined` if there is none.
@@ -892,7 +892,7 @@ readonly when: string;
 ##### file?
 
 ```ts
-readonly optional file?: string;
+readonly file?: string;
 ```
 
 The config to read. Defaults to `tsconfig.json`, which may be absent; a named one may not.
@@ -1004,7 +1004,7 @@ The limits `prune` enforces; an absent limit is not enforced.
 ##### maxAgeMs?
 
 ```ts
-readonly optional maxAgeMs?: number;
+readonly maxAgeMs?: number;
 ```
 
 Entries older than this are removed.
@@ -1012,7 +1012,7 @@ Entries older than this are removed.
 ##### maxEntries?
 
 ```ts
-readonly optional maxEntries?: number;
+readonly maxEntries?: number;
 ```
 
 Only this many of the newest entries are kept.
@@ -1036,7 +1036,7 @@ The environment, passed in rather than read (`process.env` works as is).
 ##### requested?
 
 ```ts
-readonly optional requested?: RequestedScope;
+readonly requested?: RequestedScope;
 ```
 
 What the caller asked for; `"auto"` or absent leaves it to the environment.
@@ -1128,7 +1128,7 @@ The inputs of [planShards](#planshards).
 ##### max?
 
 ```ts
-readonly optional max?: number;
+readonly max?: number;
 ```
 
 The most shards `targetMinutes` may ask for.
@@ -1136,7 +1136,7 @@ The most shards `targetMinutes` may ask for.
 ##### shards?
 
 ```ts
-readonly optional shards?: number;
+readonly shards?: number;
 ```
 
 A fixed shard count. Wins over `targetMinutes`.
@@ -1144,7 +1144,7 @@ A fixed shard count. Wins over `targetMinutes`.
 ##### targetMinutes?
 
 ```ts
-readonly optional targetMinutes?: number;
+readonly targetMinutes?: number;
 ```
 
 Size the count so that no shard is expected to take much longer than this many minutes.
@@ -1160,7 +1160,7 @@ The files to split, in any order.
 ##### timingsMs?
 
 ```ts
-readonly optional timingsMs?: Readonly<Record<string, number>>;
+readonly timingsMs?: Readonly<Record<string, number>>;
 ```
 
 Recorded cost per file in milliseconds; files without one weigh the mean of those with one.
@@ -1198,7 +1198,7 @@ Why a run left the narrow path.
 ##### detail?
 
 ```ts
-readonly optional detail?: string;
+readonly detail?: string;
 ```
 
 ##### file
@@ -1819,7 +1819,7 @@ The flag if one was given, and the arguments without it.
 ##### failFast?
 
 ```ts
-readonly optional failFast?: boolean;
+readonly failFast?: boolean;
 ```
 
 ##### rest

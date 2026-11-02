@@ -2043,7 +2043,7 @@ Additional environment variables for the spawned process, applied on top of (or,
 ##### expensive?
 
 ```ts
-readonly optional expensive?: boolean;
+readonly expensive?: boolean;
 ```
 
 Marks a check as costly enough to be worth skipping when the run asked for fail-fast
@@ -2235,7 +2235,7 @@ Additional environment variables for the spawned process, applied on top of (or,
 ##### expensive?
 
 ```ts
-readonly optional expensive?: boolean;
+readonly expensive?: boolean;
 ```
 
 Marks a check as costly enough to be worth skipping when the run asked for fail-fast
@@ -2453,7 +2453,7 @@ The signal that terminated the process, if any. `null` for a normal exit or a sp
 ##### skipReason?
 
 ```ts
-readonly optional skipReason?: "fail-fast";
+readonly skipReason?: "fail-fast";
 ```
 
 Present only when the check never spawned because the run opted in to fail-fast
@@ -2868,7 +2868,7 @@ Restrict this run to only these check ids (and whatever they `dependsOn`, transi
 ##### failFast?
 
 ```ts
-readonly optional failFast?: boolean;
+readonly failFast?: boolean;
 ```
 
 Opt in to fail-fast: once a check that is not `expensive` has failed (it did not finish, or its

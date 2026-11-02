@@ -20,7 +20,7 @@ One check's part in a run.
 ##### cache?
 
 ```ts
-readonly optional cache?: CacheOutcome;
+readonly cache?: CacheOutcome;
 ```
 
 ##### durationMs
@@ -38,7 +38,7 @@ readonly id: string;
 ##### pillar?
 
 ```ts
-readonly optional pillar?: 
+readonly pillar?: 
   | "correctness"
   | "security"
   | "performance"
@@ -50,7 +50,7 @@ readonly optional pillar?:
 ##### shard?
 
 ```ts
-readonly optional shard?: number;
+readonly shard?: number;
 ```
 
 One-based shard the check ran as, when the run was sharded.
@@ -83,9 +83,7 @@ Always `"bypassed"`: nothing was replayed from the cache.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.cache
-```
+`ManifestFacts.cache`
 
 ##### checks
 
@@ -107,9 +105,7 @@ ISO 8601 time the manifest was made.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.createdAt
-```
+`ManifestFacts.createdAt`
 
 ##### inputHash
 
@@ -121,9 +117,7 @@ A digest of the inputs the run was computed from.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.inputHash
-```
+`ManifestFacts.inputHash`
 
 ##### package
 
@@ -148,9 +142,7 @@ readonly version: string;
 
 ###### Inherited from
 
-```ts
-ManifestFacts.package
-```
+`ManifestFacts.package`
 
 ##### schemaVersion
 
@@ -168,9 +160,7 @@ Always `"full"`: a manifest vouches only for a run that checked everything.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.scope
-```
+`ManifestFacts.scope`
 
 ##### sha256
 
@@ -190,9 +180,7 @@ Each tool's version.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.tools
-```
+`ManifestFacts.tools`
 
 ***
 
@@ -216,9 +204,7 @@ Always `"bypassed"`: nothing was replayed from the cache.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.cache
-```
+`ManifestFacts.cache`
 
 ##### checks
 
@@ -240,9 +226,7 @@ ISO 8601 time the manifest was made.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.createdAt
-```
+`ManifestFacts.createdAt`
 
 ##### inputHash
 
@@ -254,9 +238,7 @@ A digest of the inputs the run was computed from.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.inputHash
-```
+`ManifestFacts.inputHash`
 
 ##### package
 
@@ -281,9 +263,7 @@ readonly version: string;
 
 ###### Inherited from
 
-```ts
-ManifestFacts.package
-```
+`ManifestFacts.package`
 
 ##### scope
 
@@ -295,9 +275,7 @@ Always `"full"`: a manifest vouches only for a run that checked everything.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.scope
-```
+`ManifestFacts.scope`
 
 ##### tools
 
@@ -309,9 +287,7 @@ Each tool's version.
 
 ###### Inherited from
 
-```ts
-ManifestFacts.tools
-```
+`ManifestFacts.tools`
 
 ***
 
@@ -344,7 +320,7 @@ Facts a maturity level is computed from.
 ##### canaryClean?
 
 ```ts
-readonly optional canaryClean?: boolean;
+readonly canaryClean?: boolean;
 ```
 
 Whether the soundness canary has found no escapes; `undefined` if it has not run.
@@ -381,7 +357,7 @@ Whether any run has been recorded.
 ##### lastFullRunPassed?
 
 ```ts
-readonly optional lastFullRunPassed?: boolean;
+readonly lastFullRunPassed?: boolean;
 ```
 
 Whether the most recent full-scope run passed; `undefined` if there has been none.
@@ -425,7 +401,7 @@ readonly level: 0 | 1 | 2 | 3 | 4;
 ##### next?
 
 ```ts
-readonly optional next?: {
+readonly next?: {
   level: 1 | 2 | 3 | 4;
   missing: readonly string[];
 };
@@ -516,7 +492,7 @@ One line of the run log.
 ##### actor?
 
 ```ts
-readonly optional actor?: "human" | "agent";
+readonly actor?: "human" | "agent";
 ```
 
 Who produced the change: set by the caller from its own configuration, never inferred.
@@ -528,7 +504,7 @@ Who produced the change: set by the caller from its own configuration, never inf
 ##### affectedTests?
 
 ```ts
-readonly optional affectedTests?: number;
+readonly affectedTests?: number;
 ```
 
 ###### Inherited from
@@ -538,7 +514,7 @@ readonly optional affectedTests?: number;
 ##### base?
 
 ```ts
-readonly optional base?: string;
+readonly base?: string;
 ```
 
 ###### Inherited from
@@ -548,7 +524,7 @@ readonly optional base?: string;
 ##### change?
 
 ```ts
-readonly optional change?: string;
+readonly change?: string;
 ```
 
 Groups the runs of one change (a pull request, a branch) so a first pass can be told.
@@ -560,7 +536,7 @@ Groups the runs of one change (a pull request, a branch) so a first pass can be 
 ##### changedFiles?
 
 ```ts
-readonly optional changedFiles?: number;
+readonly changedFiles?: number;
 ```
 
 ###### Inherited from
@@ -580,7 +556,7 @@ readonly checks: readonly CheckRecord[];
 ##### coverage?
 
 ```ts
-readonly optional coverage?: number;
+readonly coverage?: number;
 ```
 
 ###### Inherited from
@@ -600,7 +576,7 @@ readonly durationMs: number;
 ##### exceptions?
 
 ```ts
-readonly optional exceptions?: number;
+readonly exceptions?: number;
 ```
 
 ###### Inherited from
@@ -610,7 +586,7 @@ readonly optional exceptions?: number;
 ##### mutationScore?
 
 ```ts
-readonly optional mutationScore?: number;
+readonly mutationScore?: number;
 ```
 
 ###### Inherited from
@@ -648,7 +624,7 @@ ISO 8601 start time.
 ##### suppressions?
 
 ```ts
-readonly optional suppressions?: number;
+readonly suppressions?: number;
 ```
 
 ###### Inherited from
@@ -658,7 +634,7 @@ readonly optional suppressions?: number;
 ##### totalTests?
 
 ```ts
-readonly optional totalTests?: number;
+readonly totalTests?: number;
 ```
 
 ###### Inherited from
@@ -668,7 +644,7 @@ readonly optional totalTests?: number;
 ##### widenings?
 
 ```ts
-readonly optional widenings?: readonly string[];
+readonly widenings?: readonly string[];
 ```
 
 The reasons the affected analysis widened.
@@ -692,7 +668,7 @@ The fields of a run record before they are validated.
 ##### actor?
 
 ```ts
-readonly optional actor?: "human" | "agent";
+readonly actor?: "human" | "agent";
 ```
 
 Who produced the change: set by the caller from its own configuration, never inferred.
@@ -700,19 +676,19 @@ Who produced the change: set by the caller from its own configuration, never inf
 ##### affectedTests?
 
 ```ts
-readonly optional affectedTests?: number;
+readonly affectedTests?: number;
 ```
 
 ##### base?
 
 ```ts
-readonly optional base?: string;
+readonly base?: string;
 ```
 
 ##### change?
 
 ```ts
-readonly optional change?: string;
+readonly change?: string;
 ```
 
 Groups the runs of one change (a pull request, a branch) so a first pass can be told.
@@ -720,7 +696,7 @@ Groups the runs of one change (a pull request, a branch) so a first pass can be 
 ##### changedFiles?
 
 ```ts
-readonly optional changedFiles?: number;
+readonly changedFiles?: number;
 ```
 
 ##### checks
@@ -732,7 +708,7 @@ readonly checks: readonly CheckRecord[];
 ##### coverage?
 
 ```ts
-readonly optional coverage?: number;
+readonly coverage?: number;
 ```
 
 ##### durationMs
@@ -744,13 +720,13 @@ readonly durationMs: number;
 ##### exceptions?
 
 ```ts
-readonly optional exceptions?: number;
+readonly exceptions?: number;
 ```
 
 ##### mutationScore?
 
 ```ts
-readonly optional mutationScore?: number;
+readonly mutationScore?: number;
 ```
 
 ##### scope
@@ -770,19 +746,19 @@ ISO 8601 start time.
 ##### suppressions?
 
 ```ts
-readonly optional suppressions?: number;
+readonly suppressions?: number;
 ```
 
 ##### totalTests?
 
 ```ts
-readonly optional totalTests?: number;
+readonly totalTests?: number;
 ```
 
 ##### widenings?
 
 ```ts
-readonly optional widenings?: readonly string[];
+readonly widenings?: readonly string[];
 ```
 
 The reasons the affected analysis widened.
@@ -798,7 +774,7 @@ What a set of runs shows about speed and trust. Ratios are absent when nothing s
 ##### affectedRatio?
 
 ```ts
-readonly optional affectedRatio?: number;
+readonly affectedRatio?: number;
 ```
 
 Affected tests as a share of all tests, over affected-scope runs that recorded both.
@@ -806,7 +782,7 @@ Affected tests as a share of all tests, over affected-scope runs that recorded b
 ##### cacheHitRatio?
 
 ```ts
-readonly optional cacheHitRatio?: number;
+readonly cacheHitRatio?: number;
 ```
 
 Of the checks that consulted the cache, the share it answered.
@@ -832,7 +808,7 @@ readonly failuresByPillar: Readonly<Record<string, number>>;
 ##### firstPassRate?
 
 ```ts
-readonly optional firstPassRate?: number;
+readonly firstPassRate?: number;
 ```
 
 The share of changes whose earliest recorded run passed.
@@ -840,19 +816,19 @@ The share of changes whose earliest recorded run passed.
 ##### latestExceptions?
 
 ```ts
-readonly optional latestExceptions?: number;
+readonly latestExceptions?: number;
 ```
 
 ##### latestSuppressions?
 
 ```ts
-readonly optional latestSuppressions?: number;
+readonly latestSuppressions?: number;
 ```
 
 ##### minutesSaved?
 
 ```ts
-readonly optional minutesSaved?: number;
+readonly minutesSaved?: number;
 ```
 
 Estimated minutes affected runs saved against the mean full run.
@@ -860,7 +836,7 @@ Estimated minutes affected runs saved against the mean full run.
 ##### mutationScore?
 
 ```ts
-readonly optional mutationScore?: {
+readonly mutationScore?: {
   delta: number;
   first: number;
   latest: number;
@@ -894,7 +870,7 @@ readonly passed: number;
 ##### passRate?
 
 ```ts
-readonly optional passRate?: number;
+readonly passRate?: number;
 ```
 
 ##### runs
@@ -926,13 +902,13 @@ Which runs to count.
 ##### actor?
 
 ```ts
-readonly optional actor?: "human" | "agent";
+readonly actor?: "human" | "agent";
 ```
 
 ##### since?
 
 ```ts
-readonly optional since?: string;
+readonly since?: string;
 ```
 
 Only runs started at or after this ISO 8601 time.
