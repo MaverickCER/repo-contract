@@ -52,7 +52,7 @@ new DependencyDeclaredLaterError(checkId, dependencyId): DependencyDeclaredLater
 ##### cause?
 
 ```ts
-optional cause?: unknown;
+cause?: unknown;
 ```
 
 ###### Inherited from
@@ -110,7 +110,7 @@ name: string;
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
@@ -269,7 +269,7 @@ new InvalidCheckConfigError(checkId, reason): InvalidCheckConfigError;
 ##### cause?
 
 ```ts
-optional cause?: unknown;
+cause?: unknown;
 ```
 
 ###### Inherited from
@@ -319,7 +319,7 @@ name: string;
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
@@ -479,7 +479,7 @@ new InvalidRepoContractConfigError(reason): InvalidRepoContractConfigError;
 ##### cause?
 
 ```ts
-optional cause?: unknown;
+cause?: unknown;
 ```
 
 ###### Inherited from
@@ -521,7 +521,7 @@ name: string;
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
@@ -698,7 +698,7 @@ new PolicyReadFailedParseValueError(
 ##### cause?
 
 ```ts
-optional cause?: unknown;
+cause?: unknown;
 ```
 
 ###### Inherited from
@@ -748,7 +748,7 @@ name: string;
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
@@ -928,7 +928,7 @@ new PolicyReadUnrequestedOutputError(
 ##### cause?
 
 ```ts
-optional cause?: unknown;
+cause?: unknown;
 ```
 
 ###### Inherited from
@@ -978,7 +978,7 @@ name: string;
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
@@ -1149,7 +1149,7 @@ new PolicyThrewError(checkId, cause): PolicyThrewError;
 ##### cause?
 
 ```ts
-optional cause?: unknown;
+cause?: unknown;
 ```
 
 ###### Inherited from
@@ -1199,7 +1199,7 @@ name: string;
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
@@ -1374,9 +1374,7 @@ new RepoContractError(message?): RepoContractError;
 
 ###### Inherited from
 
-```ts
-Error.constructor
-```
+`Error.constructor`
 
 ##### Constructor
 
@@ -1397,23 +1395,19 @@ new RepoContractError(message?, options?): RepoContractError;
 
 ###### Inherited from
 
-```ts
-Error.constructor
-```
+`Error.constructor`
 
 #### Properties
 
 ##### cause?
 
 ```ts
-optional cause?: unknown;
+cause?: unknown;
 ```
 
 ###### Inherited from
 
-```ts
-Error.cause
-```
+`Error.cause`
 
 ##### code
 
@@ -1431,9 +1425,7 @@ message: string;
 
 ###### Inherited from
 
-```ts
-Error.message
-```
+`Error.message`
 
 ##### name
 
@@ -1443,21 +1435,17 @@ name: string;
 
 ###### Inherited from
 
-```ts
-Error.name
-```
+`Error.name`
 
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
 
-```ts
-Error.stack
-```
+`Error.stack`
 
 ##### stackTraceLimit
 
@@ -1477,9 +1465,7 @@ not capture any frames.
 
 ###### Inherited from
 
-```ts
-Error.stackTraceLimit
-```
+`Error.stackTraceLimit`
 
 #### Methods
 
@@ -1546,9 +1532,7 @@ a();
 
 ###### Inherited from
 
-```ts
-Error.captureStackTrace
-```
+`Error.captureStackTrace`
 
 ##### prepareStackTrace()
 
@@ -1573,9 +1557,7 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 ###### Inherited from
 
-```ts
-Error.prepareStackTrace
-```
+`Error.prepareStackTrace`
 
 ***
 
@@ -1622,7 +1604,7 @@ new StandardSchemaValidateThrewError(checkId, cause): StandardSchemaValidateThre
 ##### cause?
 
 ```ts
-optional cause?: unknown;
+cause?: unknown;
 ```
 
 ###### Inherited from
@@ -1672,7 +1654,7 @@ name: string;
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
@@ -1831,7 +1813,7 @@ new UnknownCheckIdError(checkId): UnknownCheckIdError;
 ##### cause?
 
 ```ts
-optional cause?: unknown;
+cause?: unknown;
 ```
 
 ###### Inherited from
@@ -1881,7 +1863,7 @@ name: string;
 ##### stack?
 
 ```ts
-optional stack?: string;
+stack?: string;
 ```
 
 ###### Inherited from
@@ -2015,7 +1997,7 @@ One fully configured check: how to run it, how (if at all) to interpret its outp
 ##### cwd?
 
 ```ts
-readonly optional cwd?: string;
+readonly cwd?: string;
 ```
 
 Working directory for the spawned process. Defaults to the current process's `cwd`.
@@ -2027,7 +2009,7 @@ Working directory for the spawned process. Defaults to the current process's `cw
 ##### dependsOn?
 
 ```ts
-readonly optional dependsOn?: readonly string[];
+readonly dependsOn?: readonly string[];
 ```
 
 Other check ids (from this same `checks` record) that must reach a
@@ -2049,7 +2031,7 @@ specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md.
 ##### env?
 
 ```ts
-readonly optional env?: Readonly<Record<string, string>>;
+readonly env?: Readonly<Record<string, string>>;
 ```
 
 Additional environment variables for the spawned process, applied on top of (or, if `inheritEnv` is `false`, instead of) the inherited environment.
@@ -2079,7 +2061,7 @@ fail-fast. Defaults to `false`.
 ##### inheritEnv?
 
 ```ts
-readonly optional inheritEnv?: boolean;
+readonly inheritEnv?: boolean;
 ```
 
 Whether the spawned process inherits `process.env`. Defaults to `true` -- most check commands (npm scripts, locally-installed CLIs) need `PATH` and similar to resolve at all. Set to `false` for a minimal environment containing only `env` (plus whatever the OS itself always provides).
@@ -2091,7 +2073,7 @@ Whether the spawned process inherits `process.env`. Defaults to `true` -- most c
 ##### isolated?
 
 ```ts
-readonly optional isolated?: boolean;
+readonly isolated?: boolean;
 ```
 
 A full scheduling barrier at this check's own position in the `checks` object: it does not
@@ -2116,7 +2098,7 @@ specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md.
 ##### output?
 
 ```ts
-readonly optional output?: {
+readonly output?: {
   format: OutputFormat;
   schema?: StandardSchemaV1<unknown, unknown>;
 };
@@ -2133,7 +2115,7 @@ readonly format: OutputFormat;
 ###### schema?
 
 ```ts
-readonly optional schema?: StandardSchemaV1<unknown, unknown>;
+readonly schema?: StandardSchemaV1<unknown, unknown>;
 ```
 
 An optional Standard Schema-compliant validator (Zod, Valibot, ArkType, or any other
@@ -2196,7 +2178,7 @@ An array bypasses tokenization entirely and is used as argv verbatim.
 ##### shell?
 
 ```ts
-readonly optional shell?: boolean;
+readonly shell?: boolean;
 ```
 
 Opt into real shell execution instead of the safe argv-only default.
@@ -2213,7 +2195,7 @@ SECURITY.md before enabling this.
 ##### timeoutMs?
 
 ```ts
-readonly optional timeoutMs?: number;
+readonly timeoutMs?: number;
 ```
 
 Maximum time to let this check's process run before it is terminated and recorded with `status: "timed_out"`. No timeout by default.
@@ -2237,7 +2219,7 @@ One partially configured check: how to run it, how (if at all) to interpret its 
 ##### cwd?
 
 ```ts
-readonly optional cwd?: string;
+readonly cwd?: string;
 ```
 
 Working directory for the spawned process. Defaults to the current process's `cwd`.
@@ -2245,7 +2227,7 @@ Working directory for the spawned process. Defaults to the current process's `cw
 ##### env?
 
 ```ts
-readonly optional env?: Readonly<Record<string, string>>;
+readonly env?: Readonly<Record<string, string>>;
 ```
 
 Additional environment variables for the spawned process, applied on top of (or, if `inheritEnv` is `false`, instead of) the inherited environment.
@@ -2267,7 +2249,7 @@ fail-fast. Defaults to `false`.
 ##### inheritEnv?
 
 ```ts
-readonly optional inheritEnv?: boolean;
+readonly inheritEnv?: boolean;
 ```
 
 Whether the spawned process inherits `process.env`. Defaults to `true` -- most check commands (npm scripts, locally-installed CLIs) need `PATH` and similar to resolve at all. Set to `false` for a minimal environment containing only `env` (plus whatever the OS itself always provides).
@@ -2275,7 +2257,7 @@ Whether the spawned process inherits `process.env`. Defaults to `true` -- most c
 ##### isolated?
 
 ```ts
-readonly optional isolated?: boolean;
+readonly isolated?: boolean;
 ```
 
 A full scheduling barrier at this check's own position in the `checks` object: it does not
@@ -2296,7 +2278,7 @@ specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md.
 ##### output?
 
 ```ts
-readonly optional output?: {
+readonly output?: {
   format: OutputFormat;
   schema?: StandardSchemaV1<unknown, unknown>;
 };
@@ -2313,7 +2295,7 @@ readonly format: OutputFormat;
 ###### schema?
 
 ```ts
-readonly optional schema?: StandardSchemaV1<unknown, unknown>;
+readonly schema?: StandardSchemaV1<unknown, unknown>;
 ```
 
 An optional Standard Schema-compliant validator (Zod, Valibot, ArkType, or any other
@@ -2364,7 +2346,7 @@ An array bypasses tokenization entirely and is used as argv verbatim.
 ##### shell?
 
 ```ts
-readonly optional shell?: boolean;
+readonly shell?: boolean;
 ```
 
 Opt into real shell execution instead of the safe argv-only default.
@@ -2377,7 +2359,7 @@ SECURITY.md before enabling this.
 ##### timeoutMs?
 
 ```ts
-readonly optional timeoutMs?: number;
+readonly timeoutMs?: number;
 ```
 
 Maximum time to let this check's process run before it is terminated and recorded with `status: "timed_out"`. No timeout by default.
@@ -2452,7 +2434,7 @@ readonly exitCode: number | null;
 ##### output?
 
 ```ts
-readonly optional output?: ParsedOutput<unknown>;
+readonly output?: ParsedOutput<unknown>;
 ```
 
 The parsed interpretation of `stdout`, present only if this check's config requested a
@@ -2482,7 +2464,7 @@ policy must never read it as a pass.
 ##### spawnError?
 
 ```ts
-readonly optional spawnError?: string;
+readonly spawnError?: string;
 ```
 
 Populated only for `status === "spawn_error"` -- the underlying Node error message (e.g. "spawn foo ENOENT"). Never populated for any other status.
@@ -2490,7 +2472,7 @@ Populated only for `status === "spawn_error"` -- the underlying Node error messa
 ##### spawnErrorCode?
 
 ```ts
-readonly optional spawnErrorCode?: string;
+readonly spawnErrorCode?: string;
 ```
 
 Populated only for `status === "spawn_error"` -- the underlying Node `ErrnoException`'s structured `.code` (e.g. `"ENOENT"`, `"EACCES"`), when Node provides one. Never populated for any other status. Distinguishes "the executable does not exist" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message.
@@ -2766,7 +2748,7 @@ Options for [renderMarkdownSummary](#rendermarkdownsummary).
 ##### slowest?
 
 ```ts
-readonly optional slowest?: number;
+readonly slowest?: number;
 ```
 
 How many of the slowest checks to list when `evidence` is given; defaults to 5.
@@ -2774,7 +2756,7 @@ How many of the slowest checks to list when `evidence` is given; defaults to 5.
 ##### title?
 
 ```ts
-readonly optional title?: string;
+readonly title?: string;
 ```
 
 Heading text; defaults to `"Contract"`.
@@ -2804,7 +2786,7 @@ Every check to run, keyed by check id.
 ##### concurrency?
 
 ```ts
-readonly optional concurrency?: number;
+readonly concurrency?: number;
 ```
 
 Maximum number of checks to execute concurrently. Defaults to `os.availableParallelism()`. Must be a positive integer.
@@ -2827,7 +2809,7 @@ read `process.env` itself. Required: repo-contract never reads
 ##### killProcessTree?
 
 ```ts
-readonly optional killProcessTree?: SyncSpawner;
+readonly killProcessTree?: SyncSpawner;
 ```
 
 The trusted capability repo-contract calls, on Windows only, to forcibly terminate a check's
@@ -2843,7 +2825,7 @@ required) -- see specs/decisions/0011-process-spawning-and-ambient-environment-a
 ##### shell?
 
 ```ts
-readonly optional shell?: boolean;
+readonly shell?: boolean;
 ```
 
 Global default for every check's own `shell` when that check doesn't
@@ -2878,7 +2860,7 @@ Optional per-run controls for `runRepoContract`.
 ##### checks?
 
 ```ts
-readonly optional checks?: string[];
+readonly checks?: string[];
 ```
 
 Restrict this run to only these check ids (and whatever they `dependsOn`, transitively). Every configured check runs when omitted.
@@ -2897,7 +2879,7 @@ check still gets evidence and a policy invocation, and is never a pass.
 ##### onEvidence?
 
 ```ts
-readonly optional onEvidence?: (checkId, evidence) => void | Promise<void>;
+readonly onEvidence?: (checkId, evidence) => void | Promise<void>;
 ```
 
 Called once for each check as soon as it has reached a terminal state, before the run's other checks have
@@ -2921,7 +2903,7 @@ read-only.
 ##### onVerdict?
 
 ```ts
-readonly optional onVerdict?: (checkId, result) => void | Promise<void>;
+readonly onVerdict?: (checkId, result) => void | Promise<void>;
 ```
 
 Called once for each check as soon as its policy has returned a valid result, with that check's own
@@ -2945,7 +2927,7 @@ run does. The hook gets its own copy of the result.
 ##### signal?
 
 ```ts
-readonly optional signal?: AbortSignal;
+readonly signal?: AbortSignal;
 ```
 
 Abort the entire run. Checks already in flight are terminated; checks not yet started never spawn. Every configured check still receives a well-formed evidence entry (`status: "aborted"`) and still has its policy invoked.
@@ -2986,7 +2968,7 @@ either barrel's own stability classification.
 ##### ~standard
 
 ```ts
-readonly ~standard: Props<Input, Output>;
+readonly "~standard": Props<Input, Output>;
 ```
 
 The Standard Schema properties.
