@@ -190,6 +190,52 @@
       "members": [
         {
           "kind": "Function",
+          "canonicalReference": "repo-contract!createFileCacheStore:function(1)",
+          "docComment": "/**\n * Stores cache entries as files under a directory. Writes go to a temporary file in the same\n * directory and are renamed into place, so concurrent writers and readers never see a partial\n * entry. A directory that does not exist yet is created by the first write.\n *\n * @param directory - The directory the store lives in.\n *\n * @returns The store.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function createFileCacheStore(directory: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "FileCacheStore",
+              "canonicalReference": "repo-contract!FileCacheStore:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/file-cache-store.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "directory",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "createFileCacheStore"
+        },
+        {
+          "kind": "Function",
           "canonicalReference": "repo-contract!evaluateExceptionRecord:function(1)",
           "docComment": "/**\n * Evaluates one record against every one of its own classifications, taking the strictest\n * (`stricterOf`) of each classification's resolved policy -- a record matching both a forbidden\n * classification and an otherwise-fine one is forbidden overall. `classifications` is a non-empty\n * tuple by type: zero classifications would be a caller bug (which classification would silently\n * fall back to `globalDefault`?), never a case this function has to guess about at runtime. A\n * required field only counts as satisfied once `fieldValue(record, requirement).trim()` is\n * non-empty -- an empty field is valid *data*, but policy-insufficient, exactly as `\"exception\"`\n * mode's name implies. `fieldValue` may resolve a dotted path (e.g. `\"verification.verifiedBy\"`)\n * or anything else a consumer's own record shape needs -- this function never interprets\n * `requirement` itself, it only ever calls `fieldValue(record, requirement)` and trims the result.\n *\n * @param input - The record to evaluate, its classifications, the policy configuration and global default to resolve them against, and the field-value accessor -- see `ExceptionRecordEvaluation`'s own per-field doc comments.\n *\n * @returns The record's verdict, and which required fields (if any) are still missing.\n *\n * @public\n */\n",
           "excerptTokens": [
@@ -1148,6 +1194,168 @@
             "startIndex": 1,
             "endIndex": 2
           }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!FileCacheStore:interface",
+          "docComment": "/**\n * A directory used as a cache store: paths are relative and slash-separated, each maps to a file.\n * Structurally the same as `CacheStore` from `repo-contract/affected`, so it can be passed to\n * `createCache` there; declared here because the two published barrels stay independent.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface FileCacheStore "
+            }
+          ],
+          "fileUrlPath": "src/helpers/file-cache-store.ts",
+          "releaseTag": "Public",
+          "name": "FileCacheStore",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!FileCacheStore#list:member",
+              "docComment": "/**\n * Lists every file whose store-relative path starts with the prefix, sorted.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly list: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(prefix: string) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<readonly string[]>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "list",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!FileCacheStore#read:member",
+              "docComment": "/**\n * Reads a file by its store-relative path; resolves to `undefined` if there is none.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly read: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(relativePath: string) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string | undefined>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "read",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!FileCacheStore#remove:member",
+              "docComment": "/**\n * Deletes a file; one that is already gone is not an error.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly remove: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(relativePath: string) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "remove",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!FileCacheStore#write:member",
+              "docComment": "/**\n * Writes atomically: a reader sees the old content or the new, never part of either.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly write: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(relativePath: string, text: string) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "write",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Function",

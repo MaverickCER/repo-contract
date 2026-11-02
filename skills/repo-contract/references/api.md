@@ -1,6 +1,6 @@
 # repo-contract public API
 
-Every export a consumer can import, by entry point, for version 0.11.4. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
+Every export a consumer can import, by entry point, for version 0.12.0. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
 
 ## `repo-contract`
 
@@ -56,6 +56,8 @@ Every export a consumer can import, by entry point, for version 0.11.4. Generate
 - `CacheStats` (interface): `interface CacheStats`
 - `CacheStore` (interface): `interface CacheStore`
 - `CacheStoreInput` (interface): `interface CacheStoreInput`
+- `CanaryInput` (interface): `interface CanaryInput`
+- `CanaryResult` (interface): `interface CanaryResult`
 - `ChangedFile` (interface): `interface ChangedFile`
 - `ChangeKind` (typealias): `type ChangeKind = "added" | "modified" | "deleted" | "renamed"`
 - `computeAffected` (function): `function computeAffected(input: ComputeAffectedInput): AffectedResult`
@@ -73,6 +75,7 @@ Every export a consumer can import, by entry point, for version 0.11.4. Generate
 - `DoctorReport` (interface): `interface DoctorReport`
 - `DoctorSnapshot` (interface): `interface DoctorSnapshot`
 - `explainAffected` (function): `function explainAffected(result: AffectedResult): string[]`
+- `findEscapes` (function): `function findEscapes(input: CanaryInput): CanaryResult`
 - `FindingSeverity` (typealias): `type FindingSeverity = "warn" | "info"`
 - `GitCapabilities` (interface): `interface GitCapabilities`
 - `LinkRule` (interface): `interface LinkRule`
@@ -98,6 +101,7 @@ Every export a consumer can import, by entry point, for version 0.11.4. Generate
 - `resolveCacheMode` (function): `function resolveCacheMode(input: { readonly scope: RunScope; readonly env: Readonly<Record<string, string | undefined>>; readonly flag?: CacheMode; }): { readonly mode: CacheMode; readonly reason: string; }`
 - `resolveFailFast` (function): `function resolveFailFast(input: { readonly flag?: boolean; readonly env: Readonly<Record<string, string | undefined>>; }): boolean`
 - `resolveScope` (function): `function resolveScope(input: ResolveScopeInput): ScopeDecision`
+- `ResolveScopeInput` (interface): `interface ResolveScopeInput`
 - `RunScope` (typealias): `type RunScope = "affected" | "full"`
 - `ScopeDecision` (interface): `interface ScopeDecision`
 - `ScopeSource` (typealias): `type ScopeSource = "flag" | "env" | "ci-full" | "release" | "ci-event" | "default"`
@@ -115,6 +119,7 @@ Every export a consumer can import, by entry point, for version 0.11.4. Generate
 
 ## `repo-contract/helpers`
 
+- `createFileCacheStore` (function): `function createFileCacheStore(directory: string): FileCacheStore`
 - `evaluateExceptionRecord` (function): `function evaluateExceptionRecord<TRecord>(input: ExceptionRecordEvaluation<TRecord>): ExceptionDeterminant<TRecord>`
 - `evaluateExceptionRecords` (function): `function evaluateExceptionRecords<TRecord>(inputs: readonly ExceptionRecordEvaluation<TRecord>[]): readonly ExceptionDeterminant<TRecord>[]`
 - `ExceptionCategoryGroup` (interface): `interface ExceptionCategoryGroup`
@@ -126,6 +131,7 @@ Every export a consumer can import, by entry point, for version 0.11.4. Generate
 - `ExceptionRecordCore` (interface): `interface ExceptionRecordCore`
 - `ExceptionRecordEvaluation` (interface): `interface ExceptionRecordEvaluation<TRecord>`
 - `ExceptionVerdict` (typealias): `type ExceptionVerdict = "forbidden" | "insufficient" | "permitted"`
+- `FileCacheStore` (interface): `interface FileCacheStore`
 - `hashRequirementFields` (function): `function hashRequirementFields<TRecord>(record: TRecord, fields: readonly string[], fieldValue: (record: TRecord, requirement: string) => string): string`
 - `loadExceptionRegistry` (function): `function loadExceptionRegistry<T>(input: { readonly path: string; readonly schema: StandardSchemaV1<unknown, readonly T[]>; readonly readFile?: (path: string) => Promise<string>; }): Promise<{ ok: true; records: readonly T[]; } | { ok: false; errors: readonly string[]; }>`
 - `onEvidenceSaveToRepoContractLogs` (function, beta): `function onEvidenceSaveToRepoContractLogs(options?: RepoContractLogsOptions): (checkId: string, evidence: CheckEvidence) => void`
@@ -151,8 +157,8 @@ Every export a consumer can import, by entry point, for version 0.11.4. Generate
 - `CacheOutcome` (typealias): `type CacheOutcome = "hit" | "miss" | "off"`
 - `CheckRecord` (interface): `interface CheckRecord`
 - `createRunRecord` (function): `function createRunRecord(input: RunRecordInput): RunRecord`
-- `EvidenceManifest` (interface): `interface EvidenceManifest`
-- `ManifestInput` (interface): `interface ManifestInput`
+- `EvidenceManifest` (interface): `interface EvidenceManifest extends ManifestFacts`
+- `ManifestInput` (interface): `interface ManifestInput extends ManifestFacts`
 - `ManifestVerification` (interface): `interface ManifestVerification`
 - `MaturityInput` (interface): `interface MaturityInput`
 - `maturityLevel` (function): `function maturityLevel(input: MaturityInput): MaturityResult`

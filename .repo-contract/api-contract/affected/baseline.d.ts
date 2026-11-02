@@ -54,7 +54,7 @@ export declare type AffectedScope = "affected" | "full";
 /** A file to keep: a safe relative path and its content. */
 export declare interface ArtifactInput {
     readonly path: string;
-    readonly content: string | Uint8Array;
+    readonly content: Uint8Array;
 }
 
 /** A content-addressed computation cache over a `CacheStore`. */
@@ -152,6 +152,26 @@ export declare interface CacheStoreInput {
     readonly durationMs: number;
 }
 
+/** What the canary compares: the affected-scope answer against a full run's failures. */
+export declare interface CanaryInput {
+    /** The tests the affected analysis said to run. */
+    readonly affectedTests: readonly string[];
+    /** Every test the full run executed. */
+    readonly allTests: readonly string[];
+    /** The tests that failed in the full run. */
+    readonly failedInFullRun: readonly string[];
+}
+
+/** The canary's finding. */
+export declare interface CanaryResult {
+    /** True when the affected scope would have caught every failure the full run found. */
+    readonly clean: boolean;
+    /** Tests that failed in the full run although the affected scope left them out, sorted. */
+    readonly escapes: readonly string[];
+    /** How many tests the full run covered. */
+    readonly checked: number;
+}
+
 /** One changed path, as reported by the caller (typically from `git diff --name-status -M`). */
 export declare interface ChangedFile {
     /** Repo-relative, forward-slash path. */
@@ -243,7 +263,7 @@ export declare const DEFAULT_TRIGGERS: readonly string[];
 
 /**
  * Looks for settings that make the affected-scope feature slower or wrong. Findings are ordered
- * by severity, then id, so the most useful change is first.
+ * by severity (warnings first), then id, so the most useful change is first.
  * @param snapshot - Facts about the repository.
  * @returns The findings.
  */
@@ -298,6 +318,15 @@ export declare interface DoctorSnapshot {
  * @returns One line per affected test (or a single line saying why everything is affected), sorted.
  */
 export declare function explainAffected(result: AffectedResult): string[];
+
+/**
+ * Proves the affected scope sound against evidence: after a full run on the same change, any test
+ * that failed there but was not in the affected set is an escape -- a regression the narrow run
+ * would have shipped. Run it on merges to the main branch, where both answers exist.
+ * @param input - The affected tests, all tests and the full run's failures.
+ * @returns Whether the narrow scope was sound, and which tests escaped it.
+ */
+export declare function findEscapes(input: CanaryInput): CanaryResult;
 
 export declare type FindingSeverity = "warn" | "info";
 
@@ -527,7 +556,7 @@ export declare function resolveFailFast(input: {
 export declare function resolveScope(input: ResolveScopeInput): ScopeDecision;
 
 /** What `resolveScope` decides from. */
-declare interface ResolveScopeInput {
+export declare interface ResolveScopeInput {
     /** What the caller asked for; `"auto"` or absent leaves it to the environment. */
     readonly requested?: RequestedScope;
     /** The environment, passed in rather than read (`process.env` works as is). */

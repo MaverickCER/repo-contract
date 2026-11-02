@@ -138,6 +138,16 @@ declare interface CheckDefinitionConfig {
      * specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md.
      */
     readonly isolated?: boolean;
+    /**
+     * Marks a check as costly enough to be worth skipping when the run asked for fail-fast
+     * (`RunRepoContractOptions.failFast`) and a check that is not marked has already failed. Such a
+     * check that has not yet spawned then resolves to `status: "aborted"` evidence with `skipReason: "fail-fast"` instead of running.
+     * A check that is already running is never killed, and an `expensive` check failing never skips
+     * anything. Skipping is decided when the check's turn comes, so to make it certain, declare the
+     * expensive check after (or `dependsOn`) the cheap ones. Does nothing unless the run opts in to
+     * fail-fast. Defaults to `false`.
+     */
+    readonly expensive?: boolean;
     /** Decides whether this check's evidence is acceptable, once its process has finished running. */
     readonly policy: Policy;
 }
@@ -186,6 +196,13 @@ declare interface CheckEvidence {
     readonly stderr: string;
     /** Why the process reached its terminal state; see `CheckStatus`. */
     readonly status: CheckStatus;
+    /**
+     * Present only when the check never spawned because the run opted in to fail-fast
+     * (`RunRepoContractOptions.failFast`) and a cheaper check had already failed (see
+     * `CheckDefinitionConfig.expensive`). Such a check has `status: "aborted"`: it did not run, so a
+     * policy must never read it as a pass.
+     */
+    readonly skipReason?: "fail-fast";
     /** Populated only for `status === "spawn_error"` -- the underlying Node error message (e.g. "spawn foo ENOENT"). Never populated for any other status. */
     readonly spawnError?: string;
     /** Populated only for `status === "spawn_error"` -- the underlying Node `ErrnoException`'s structured `.code` (e.g. `"ENOENT"`, `"EACCES"`), when Node provides one. Never populated for any other status. Distinguishes "the executable does not exist" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message. */

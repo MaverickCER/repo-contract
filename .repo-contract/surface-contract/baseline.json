@@ -1,12 +1,12 @@
 {
   "packageName": "repo-contract",
-  "packageVersion": "0.11.4",
+  "packageVersion": "0.12.0",
   "surface": {
     "action": null,
     "cli": {
       "repo-contract": {
         "exitCode": 0,
-        "help": "Usage: repo-contract init\n\nScaffolds repo-contract.config.mts and scripts/contract.mjs from your package.json's declared\ndependencies, and wires \"scripts.contract\" into package.json. That's the only thing this command\ndoes -- checks always run afterwards via `npm run contract`, never through this CLI."
+        "help": "Usage: repo-contract <command> [options]\n\nCommands:\n  repo-contract init            Scaffold repo-contract.config.mts and scripts/contract.mjs\n  repo-contract affected        Show which tests and mutation targets the current changes can affect\n  repo-contract merge-mutation  Combine the mutation reports of a sharded run (fails if a shard is missing)\n  repo-contract metrics         Summarize the run log: pass rate, cache hits, time saved, failures by check\n  repo-contract doctor          Find settings that slow or break affected-scope runs, and fix the safe ones\n  repo-contract cache           Inspect and tidy the computation cache (stats, clear, prune, why)\n\nOptions:\n  -h, --help     Show this help\n  -V, --version  Print the version\n\nRun 'repo-contract <command> --help' for more on a command. Checks themselves run via\n`npm run contract`, never through this CLI."
       }
     },
     "schemas": {
@@ -55,6 +55,11 @@
                   }
                 ],
                 "description": "The signal that terminated the process, if any. `null` for a normal exit or a spawn failure."
+              },
+              "skipReason": {
+                "const": "fail-fast",
+                "description": "Present only when the check never spawned because the run opted in to fail-fast (`RunRepoContractOptions.failFast`) and a cheaper check had already failed (see `CheckDefinitionConfig.expensive`). Such a check has `status: \"aborted\"`: it did not run, so a policy must never read it as a pass.",
+                "type": "string"
               },
               "spawnError": {
                 "description": "Populated only for `status === \"spawn_error\"` -- the underlying Node error message (e.g. \"spawn foo ENOENT\"). Never populated for any other status.",
@@ -287,6 +292,11 @@
                   }
                 ],
                 "description": "The signal that terminated the process, if any. `null` for a normal exit or a spawn failure."
+              },
+              "skipReason": {
+                "const": "fail-fast",
+                "description": "Present only when the check never spawned because the run opted in to fail-fast (`RunRepoContractOptions.failFast`) and a cheaper check had already failed (see `CheckDefinitionConfig.expensive`). Such a check has `status: \"aborted\"`: it did not run, so a policy must never read it as a pass.",
+                "type": "string"
               },
               "spawnError": {
                 "description": "Populated only for `status === \"spawn_error\"` -- the underlying Node error message (e.g. \"spawn foo ENOENT\"). Never populated for any other status.",

@@ -42,28 +42,19 @@ export declare interface CheckRecord {
 export declare function createRunRecord(input: RunRecordInput): RunRecord;
 
 /** A signed-by-digest statement that a package version passed the full contract. */
-export declare interface EvidenceManifest {
+export declare interface EvidenceManifest extends ManifestFacts {
     readonly schemaVersion: 1;
-    readonly package: {
-        readonly name: string;
-        readonly version: string;
-    };
-    readonly createdAt: string;
-    readonly scope: "full";
-    readonly cache: "bypassed";
-    readonly inputHash: string;
-    readonly tools: Readonly<Record<string, string>>;
     readonly checks: readonly {
         readonly id: string;
-        readonly verdict: "pass" | "warn" | "fail";
+        readonly verdict: Verdict;
         readonly evidenceSha256: string;
     }[];
     /** A digest of every other field, so an edit to any of them is detectable. */
     readonly sha256: string;
 }
 
-/** What a release's full run is built from. */
-export declare interface ManifestInput {
+/** What a manifest states about a release, whichever form it is in. */
+declare interface ManifestFacts {
     readonly package: {
         readonly name: string;
         readonly version: string;
@@ -78,9 +69,13 @@ export declare interface ManifestInput {
     readonly inputHash: string;
     /** Each tool's version. */
     readonly tools: Readonly<Record<string, string>>;
+}
+
+/** What a release's full run is built from. */
+export declare interface ManifestInput extends ManifestFacts {
     readonly checks: readonly {
         readonly id: string;
-        readonly verdict: "pass" | "warn" | "fail";
+        readonly verdict: Verdict;
         /** The check's evidence; only its hash is kept. */
         readonly evidence: unknown;
     }[];
