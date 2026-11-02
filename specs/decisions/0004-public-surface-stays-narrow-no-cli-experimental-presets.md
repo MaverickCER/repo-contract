@@ -157,3 +157,47 @@ may still change in a 0.x release), not a caution against using it.
   detected state (e.g. relating a check that isn't even installed) is `init` inventing a standard,
   which is exactly what this package exists to avoid deciding on a repository's behalf. The
   generated config instead carries a short comment pointing at GUIDE.md's real example.
+
+## Amendment (2026-11-01): `affected`, a second subcommand, built to command-line conventions
+
+The 2026-09-09 amendment limited the `bin` to scaffolding. `repo-contract affected` is read-only
+analysis -- which tests and mutation targets can the working tree's changes affect
+([ADR 0021](0021-affected-scope-is-a-pure-analysis-that-only-ever-widens.md)) -- and it has to read
+git and the file system to answer, which a library entry point must not do. A developer asking "what
+do I need to run?" expects a command, as with `nx affected`, `turbo --filter` or `jest
+--changedSince`, not a script to write first.
+
+**Decision.** `bin/repo-contract.mjs` gains the `affected` subcommand. Running checks stays with
+`npm run contract`; `affected` only reports. When the choice is between this package's earlier
+habits and how command-line tools are normally built, the conventions win:
+
+- Data goes to stdout, diagnostics to stderr. A script can pipe `--tests`, `--sources` or `--mutate`
+  (one path per line) into another tool, or parse `--json` (versioned with `schemaVersion`), without
+  stripping prose.
+- Exit status: `0` on success -- including an answer of "run everything", which is reported on
+  stderr, not as a failure -- `1` when the command could not run (git missing, no TypeScript), `2` for
+  a usage error. The same convention now applies to `init` and to unknown commands (previously `1`).
+- `--help`/`-h` and `--version`/`-V` work at the top level and on each command and write to stdout
+  with status `0`. Options accept `--name value` and `--name=value`; `-C <dir>` runs as if started
+  there; an unknown option or stray argument is a usage error naming it, with a pointer to `--help`.
+- No prompts, no colour, no network, no files written: it behaves the same in a terminal, a hook and CI.
+
+**Consequences.** The package's `bin` now ships a file that spawns `git` and reads the environment
+(`bin/affected-runtime.mjs`, the only one), which ADR 0011 forbade for the published package; see its
+2026-11-01 amendment for how that boundary is kept narrow and still checked. Everything else in
+`bin/` stays injected and unit-testable, and the library entry points under `dist/` are unchanged.
+
+## Amendment (2026-11-02): `cache`, `doctor` and `metrics`
+
+Three more subcommands, built to the same conventions as `affected` (data on stdout, diagnostics on stderr, exit `0`
+success / `1` could not run / `2` usage error, `--help`/`--version` everywhere, `--name value` and `--name=value`, no
+prompts, colour or network):
+
+- `repo-contract cache stats|clear|prune|why` -- look at and tidy `.repo-contract/cache`. `why <check> --inputs <file>`
+  says which of a check's current inputs differ from its latest entry.
+- `repo-contract doctor [--fix]` -- finds settings that make affected runs slower or wrong. Read-only unless `--fix`,
+  which applies only mechanical repairs, shows each change first and is idempotent.
+- `repo-contract metrics` -- summarizes `.repo-contract/metrics/runs.jsonl`. Read-only.
+
+`affected` also gains `--shard <i>/<n>`, `--plan-shards`, `--shards`, `--target-minutes`, `--max-shards` and
+`--timings`. The reasoning is in [ADR 0023](0023-speed-features-are-opt-in-and-every-skip-is-visible.md).

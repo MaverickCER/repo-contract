@@ -1,16 +1,19 @@
 #!/usr/bin/env node
-// The one published executable surface this package ships -- scaffolding only, per
-// specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md's 2026-09-09
-// amendment. It recognizes exactly one subcommand, `init`; every other invocation prints usage
-// and exits non-zero. `init` performs zero process spawning and zero reads of the ambient
-// environment -- it only reads the consumer's local package.json (via node:fs) and writes local
-// files, extending specs/decisions/0011-process-spawning-and-ambient-environment-access-are-
-// consumer-supplied-capabilities-not-package-owned.md's invariant to this surface. This file is
-// scanned by the `AmbientCapabilities` check against the real published tarball, so it
-// deliberately never spells out the literal two-word token that scanner forbids -- not even in a
-// comment explaining why -- and never imports child_process/cross-spawn.
+// The one published executable surface this package ships. Two subcommands: `init` (scaffolding,
+// per specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md's
+// 2026-09-09 amendment) and `affected` (read-only analysis, that ADR's 2026-11-01 amendment).
+// `init` spawns nothing and reads no environment: it reads the consumer's local package.json and
+// writes local files. `affected` has to run git, read files and load the project's TypeScript, so
+// this entry point -- and nothing else shipped -- supplies those to the library (see the
+// "What `affected` takes from the machine" section below and the 2026-11-01 amendment to
+// specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
+// The `AmbientCapabilities` check scans the real published tarball and exempts only this entry
+// point, so the library bundles under dist/ stay free of both capabilities.
 
+import { execFile } from "node:child_process"
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { createRequire } from "node:module"
 import path from "node:path"
 import { DIST_OUTPUT, detectPresets } from "./preset-catalog.mjs"
 import { buildConfigTemplate, CONTRACT_RUNNER_TEMPLATE } from "./templates.mjs"
@@ -194,24 +197,227 @@ function report({ configResult, runnerResult, scriptStatus, detected, skipped })
   console.log(lines.join("\n"))
 }
 
-function main() {
+// --- What `affected` takes from the machine: git, files and the project's own TypeScript. ---
+// Kept in this entry point, not a module beside it, because AmbientCapabilities exempts only the
+// entry points named in package.json -- so this file is the one place in the package that spawns a
+// process or reads the environment (specs/decisions/0011-*.md, 2026-11-01 amendment).
+/** Output beyond this is an operational failure, never silently treated as "no changes". */
+const MAX_BUFFER = 512 * 1024 * 1024
+
+/**
+ * The environment to run git in: a hook run from a worktree of a bare repository sets `GIT_DIR`
+ * and friends, which would override the directory the caller asked about.
+ * @returns {NodeJS.ProcessEnv} A copy of the environment without those variables.
+ */
+function gitEnvironment() {
+  const env = { ...process.env }
+  for (const name of [
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_COMMON_DIR",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  ]) {
+    delete env[name]
+  }
+  return env
+}
+
+/**
+ * Builds the git and file capabilities for a repository.
+ * @param {string} dir - The repository (or a directory inside it).
+ * @returns {{ git: Function, readFile: Function }} The capabilities the engine needs.
+ */
+function createCapabilities(dir) {
+  return {
+    git: (args) =>
+      new Promise((resolve, reject) => {
+        execFile(
+          "git",
+          [...args],
+          { cwd: dir, env: gitEnvironment(), maxBuffer: MAX_BUFFER, encoding: "utf8" },
+          (error, stdout) => {
+            if (error === null) {
+              resolve(stdout)
+            } else if (
+              error.code === "ENOENT" ||
+              error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER"
+            ) {
+              // git missing, or output too large: not "git said no" -- the command cannot run.
+              reject(error)
+            } else {
+              resolve(undefined)
+            }
+          },
+        )
+      }),
+    readFile: (file) => readFile(path.resolve(dir, file), "utf8").catch(() => undefined),
+  }
+}
+
+/**
+ * Loads the TypeScript the project itself has installed.
+ * @param {string} dir - The project directory.
+ * @returns {Promise<object>} The `typescript` module.
+ */
+async function loadTypeScript(dir) {
+  return createRequire(path.join(dir, "package.json"))("typescript")
+}
+
+const ROOT_USAGE = `Usage: repo-contract <command> [options]
+
+Commands:
+  repo-contract init            Scaffold repo-contract.config.mts and scripts/contract.mjs
+  repo-contract affected        Show which tests and mutation targets the current changes can affect
+  repo-contract merge-mutation  Combine the mutation reports of a sharded run (fails if a shard is missing)
+  repo-contract metrics         Summarize the run log: pass rate, cache hits, time saved, failures by check
+  repo-contract doctor          Find settings that slow or break affected-scope runs, and fix the safe ones
+  repo-contract cache           Inspect and tidy the computation cache (stats, clear, prune, why)
+
+Options:
+  -h, --help     Show this help
+  -V, --version  Print the version
+
+Run 'repo-contract <command> --help' for more on a command. Checks themselves run via
+\`npm run contract\`, never through this CLI.`
+
+/**
+ * Reports a usage error the conventional way: the problem and a pointer on stderr, nothing on stdout.
+ * @param message - What was wrong.
+ * @param pointer - The command that shows help.
+ */
+function usageError(message, pointer) {
+  console.error(`${message}\nTry '${pointer}' for more information.`)
+  process.exitCode = 2
+}
+
+async function main() {
   const [, , command, ...rest] = process.argv
 
   if (command === "--help" || command === "-h") {
-    console.log(USAGE)
-    process.exitCode = 0
+    console.log(ROOT_USAGE)
+    return
+  }
+
+  if (command === "--version" || command === "-V") {
+    console.log(
+      JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version,
+    )
+    return
+  }
+
+  if (command === undefined) {
+    console.error(ROOT_USAGE)
+    process.exitCode = 2
+    return
+  }
+
+  if (command === "affected") {
+    const { runAffected } = await import("./affected-cli.mjs")
+    process.exitCode = await runAffected({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      engine: await import("../dist/affected.js"),
+      createCapabilities,
+      loadTypeScript,
+    })
+    return
+  }
+
+  if (command === "merge-mutation") {
+    const { runMergeMutation } = await import("./merge-mutation-cli.mjs")
+    process.exitCode = await runMergeMutation({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      engine: await import("../dist/affected.js"),
+      readFile: (file) => readFile(file, "utf8").catch(() => undefined),
+      writeFile: async (file, text) => {
+        await mkdir(path.dirname(file), { recursive: true })
+        await writeFile(file, text, "utf8")
+      },
+    })
+    return
+  }
+
+  if (command === "metrics") {
+    const { runMetrics } = await import("./metrics-cli.mjs")
+    process.exitCode = await runMetrics({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      engine: await import("../dist/metrics.js"),
+      readFile: (file) => readFile(file, "utf8").catch(() => undefined),
+      now: () => new Date(),
+    })
+    return
+  }
+
+  if (command === "doctor") {
+    const { runDoctor } = await import("./doctor-cli.mjs")
+    process.exitCode = await runDoctor({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      engine: await import("../dist/affected.js"),
+      createCapabilities: (dir) => ({
+        ...createCapabilities(dir),
+        writeFile: (file, text) => writeFile(path.join(dir, file), text, "utf8"),
+      }),
+    })
+    return
+  }
+
+  if (command === "cache") {
+    const { runCache } = await import("./cache-cli.mjs")
+    const [engine, helpers] = await Promise.all([
+      import("../dist/affected.js"),
+      import("../dist/helpers.js"),
+    ])
+    process.exitCode = await runCache({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      engine,
+      createStore: helpers.createFileCacheStore,
+      readFile: (file) => readFile(file, "utf8").catch(() => undefined),
+      now: () => new Date(),
+    })
     return
   }
 
   if (command !== "init") {
-    console.error(USAGE)
-    process.exitCode = 1
+    usageError(`repo-contract: unknown command '${command}'`, "repo-contract --help")
+    return
+  }
+
+  if (rest.includes("--help") || rest.includes("-h")) {
+    console.log(USAGE)
     return
   }
 
   if (rest.length > 0) {
-    console.error(`repo-contract init takes no arguments (got: ${rest.join(" ")})\n\n${USAGE}`)
-    process.exitCode = 1
+    usageError(
+      `repo-contract init takes no arguments (got: ${rest.join(" ")})`,
+      "repo-contract init --help",
+    )
     return
   }
 
@@ -223,4 +429,4 @@ function main() {
   }
 }
 
-main()
+await main()

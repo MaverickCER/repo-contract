@@ -104,7 +104,10 @@ module.exports = {
         // -- a real dependency-cruiser classification quirk with peer+dev dual declaration, not an
         // actual undeclared dependency. Excluded by resolved path, not by dependencyTypes, so a
         // genuinely undeclared package resolving anywhere else still fails this rule normally.
-        pathNot: ["node_modules/yaml/"],
+        // `typescript` is the same case: an optional peer dependency (type-only use in
+        // src/affected/, specs/decisions/0021-*) that is also a devDependency for this
+        // repository's own tests and scripts.
+        pathNot: ["node_modules/yaml/", "node_modules/typescript/"],
       },
     },
     {
@@ -131,6 +134,8 @@ module.exports = {
         // as it's common to use a devDependency for type-only imports: don't
         // consider type-only dependencyTypes for this rule
         dependencyTypesNot: ["type-only"],
+        // Intentional peer + dev declaration (see peer-deps-used below).
+        pathNot: ["node_modules/typescript/"],
       },
     },
 
@@ -183,7 +188,7 @@ module.exports = {
         // dual peerDependencies+devDependencies declaration exempted in no-non-package-json above;
         // see that rule's own comment for the full reasoning (identical here, dependency-cruiser
         // classifies the same edge as npm-dev alongside npm-peer).
-        pathNot: ["node_modules/@types/", "node_modules/yaml/"],
+        pathNot: ["node_modules/@types/", "node_modules/yaml/", "node_modules/typescript/"],
       },
     },
     {
@@ -210,6 +215,10 @@ module.exports = {
       from: {},
       to: {
         dependencyTypes: ["npm-peer"],
+        // Intentional: `typescript` is an optional peer dependency used for types only by
+        // src/affected/ (specs/decisions/0021-*), and a devDependency for this repository's own
+        // tooling -- the same dual declaration `yaml` has.
+        pathNot: ["node_modules/typescript/"],
       },
     },
     {
@@ -250,6 +259,22 @@ module.exports = {
       comment:
         "src/helpers/ is a second, independent published barrel (repo-contract/helpers, specs/decisions/0013-reusable-exception-policy-helper.md) -- like src/presets/, it must not depend on the runtime layers that consume checks.",
       from: { path: "^src/helpers" },
+      to: { path: "^src/(execution|evidence|policy)" },
+    },
+    {
+      name: "affected-must-not-import-execution-evidence-or-policy",
+      severity: "error",
+      comment:
+        "src/affected/ is a fourth independent published barrel (repo-contract/affected) -- pure analysis over supplied data, like src/helpers/, so it must not depend on the runtime layers that consume checks.",
+      from: { path: "^src/affected" },
+      to: { path: "^src/(execution|evidence|policy)" },
+    },
+    {
+      name: "metrics-must-not-import-execution-evidence-or-policy",
+      severity: "error",
+      comment:
+        "src/metrics/ is a fifth independent published barrel (repo-contract/metrics) -- pure record keeping over supplied data, like src/helpers/ -- so it must not depend on the runtime layers that consume checks.",
+      from: { path: "^src/metrics" },
       to: { path: "^src/(execution|evidence|policy)" },
     },
     {

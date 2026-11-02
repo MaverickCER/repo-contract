@@ -38,6 +38,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./affected": {
+      "import": {
+        "types": "./dist/affected.d.ts",
+        "default": "./dist/affected.js"
+      },
+      "require": {
+        "types": "./dist/affected.d.cts",
+        "default": "./dist/affected.cjs"
+      }
+    },
     "./helpers": {
       "import": {
         "types": "./dist/helpers.d.ts",
@@ -46,6 +56,16 @@
       "require": {
         "types": "./dist/helpers.d.cts",
         "default": "./dist/helpers.cjs"
+      }
+    },
+    "./metrics": {
+      "import": {
+        "types": "./dist/metrics.d.ts",
+        "default": "./dist/metrics.js"
+      },
+      "require": {
+        "types": "./dist/metrics.d.cts",
+        "default": "./dist/metrics.cjs"
       }
     },
     "./package.json": "./package.json",
@@ -69,9 +89,11 @@
     "repo-contract": "./bin/repo-contract.mjs"
   },
   "files": [
+    "affected",
     "bin",
     "dist",
     "helpers",
+    "metrics",
     "presets",
     "schemas",
     "src",
@@ -216,6 +238,14 @@
     "vitest": "^5.0.5",
     "yaml": "^2.0.0"
   },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
   "engines": {
     "node": ">=22.0.0"
   },
@@ -238,6 +268,12 @@
     "ambientCapabilities": {
       "forbiddenDependencies": [
         "cross-spawn"
+      ],
+      "child_process": [
+        "bin"
+      ],
+      "env": [
+        "bin"
       ]
     }
   }

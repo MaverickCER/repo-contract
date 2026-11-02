@@ -752,6 +752,18 @@ describe("validateRepoContractConfig", () => {
     }).toThrow(/isolated must be a boolean/)
   })
 
+  it("accepts a boolean expensive value and rejects any other", () => {
+    expect(() => {
+      validateRepoContractConfig(configWith({ run: "echo a", expensive: true, policy: okPolicy }))
+    }).not.toThrow()
+    expect(() => {
+      validateRepoContractConfig(configWith({ run: "echo a", expensive: false, policy: okPolicy }))
+    }).not.toThrow()
+    expect(() => {
+      validateRepoContractConfig(configWith({ run: "echo a", expensive: "yes", policy: okPolicy }))
+    }).toThrow(/expensive must be a boolean/)
+  })
+
   it("accepts an isolated check with an explicit dependsOn on it from a later-declared check -- no conflict is possible under the positional model", () => {
     // Under the old, position-independent model, isolated "a"'s implicit dependency on every
     // other check could conflict with "b"'s explicit dependsOn: ["a"] (a real mutual cycle). Under

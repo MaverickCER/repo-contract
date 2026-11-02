@@ -261,7 +261,7 @@
       "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
-      "id": "suppression:eslint:secure-coding/no-improper-type-validation:src/config/validate-config.ts:339",
+      "id": "suppression:eslint:secure-coding/no-improper-type-validation:src/config/validate-config.ts:340",
       "version": 2,
       "justification": "The rule's underlying premise -- typeof x === \"object\" can silently also match null or an array -- is false for this exact code path: null is already excluded by the preceding `schema === null` short-circuit before this typeof check ever runs, and an array that slips past it (typeof [] === \"object\") is still correctly rejected two lines later when it has no \"~standard\" property, so the bug class this rule guards against cannot actually reach a caller undetected.\n\nAlternatives considered: Rewriting to the rule's own suggested null/array-safe form (value != null && typeof value === \"object\" && !Array.isArray(value)) was already tried and rejected for the sibling case in format-schema-issues.ts, where it was itself flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition; here the null check is already redundant with the preceding `schema === null` branch, and adding an explicit !Array.isArray(schema) would only duplicate the \"~standard\" property check that already rejects arrays two lines below for the same reason.\n\nRemediation: None needed: the preceding short-circuit already rules out null, and the very next check in this same function already rejects any object (including an array) that lacks a \"~standard\" property, so no runtime gap exists for this rule to actually be guarding.",
       "attempted": "Rewriting to the rule's own suggested null/array-safe form (value != null && typeof value === \"object\" && !Array.isArray(value)) was already tried and rejected for the sibling case in format-schema-issues.ts, where it was itself flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition; here the null check is already redundant with the preceding `schema === null` branch, and adding an explicit !Array.isArray(schema) would only duplicate the \"~standard\" property check that already rejects arrays two lines below for the same reason.  Remediation: None needed: the preceding short-circuit already rules out null, and the very next check in this same function already rejects any object (including an array) that lacks a \"~standard\" property, so no runtime gap exists for this rule to actually be guarding.",
@@ -270,13 +270,13 @@
       "domain": "eslint",
       "expires": "",
       "file": "src/config/validate-config.ts",
-      "line": 339,
+      "line": 340,
       "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
       "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "secure-coding/no-improper-type-validation"
       ],
-      "ruleBroken": "The eslint rule `['secure-coding/no-improper-type-validation']` is disabled at src/config/validate-config.ts:339.",
+      "ruleBroken": "The eslint rule `['secure-coding/no-improper-type-validation']` is disabled at src/config/validate-config.ts:340.",
       "verificationMethod": "static-reasoning",
       "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },

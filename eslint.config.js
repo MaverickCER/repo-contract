@@ -110,6 +110,10 @@ export default tseslint.config(
       // Same shim, same reasoning, for the `./helpers` subpath (see
       // specs/decisions/0013-reusable-exception-policy-helper.md).
       "helpers/package.json",
+      // Same shim, same reasoning, for the `./affected` subpath.
+      "affected/package.json",
+      // Same shim, same reasoning, for the `./metrics` subpath.
+      "metrics/package.json",
       // docs/ is the published static site (docs/index.html), not a
       // TypeScript/source layer this package's module-boundary model
       // (`boundaries/elements` below) covers -- its one plain-JS asset,
@@ -187,6 +191,13 @@ export default tseslint.config(
         // specs/decisions/0013-reusable-exception-policy-helper.md), not an
         // internal layer only reachable through src/index.ts.
         { type: "helpers", pattern: "src/helpers" },
+        // src/affected/ is a fourth independent public barrel (src/affected/index.ts), published
+        // under `./affected` -- pure analysis over data and injected capabilities (it spawns
+        // nothing and reads nothing), so like src/helpers/ it is not an internal layer.
+        { type: "affected", pattern: "src/affected" },
+        // src/metrics/ is a fifth independent public barrel (src/metrics/index.ts), published under
+        // `./metrics` -- pure record keeping and summaries over supplied data.
+        { type: "metrics", pattern: "src/metrics" },
         // checks/ (including checks/shared/), scripts/ (including its
         // suppression-governance/architecture/adr-governance subdirectories), and
         // eslint-rules/ are each one architectural unit -- none needs a
@@ -299,6 +310,22 @@ export default tseslint.config(
                 "src/helpers is a second, independent published barrel (repo-contract/helpers) and must not depend on the runtime layers that consume checks -- execution, evidence, or policy.",
             },
             {
+              from: { element: { type: "metrics" } },
+              disallow: {
+                to: { element: { types: { anyOf: ["execution", "evidence", "policy"] } } },
+              },
+              message:
+                "src/metrics is a fifth, independent published barrel (repo-contract/metrics) -- pure record keeping over supplied data -- and must not depend on the runtime layers that consume checks -- execution, evidence, or policy.",
+            },
+            {
+              from: { element: { type: "affected" } },
+              disallow: {
+                to: { element: { types: { anyOf: ["execution", "evidence", "policy"] } } },
+              },
+              message:
+                "src/affected is a fourth, independent published barrel (repo-contract/affected) -- pure analysis over supplied data -- and must not depend on the runtime layers that consume checks -- execution, evidence, or policy.",
+            },
+            {
               from: [
                 {
                   element: {
@@ -311,6 +338,8 @@ export default tseslint.config(
                         "policy",
                         "presets",
                         "helpers",
+                        "affected",
+                        "metrics",
                         "standard-schema",
                       ],
                     },
@@ -672,7 +701,8 @@ export default tseslint.config(
   },
   {
     // Same narrow carve-out as the scripts/ block above, for the same reason, scoped to exactly
-    // three files: src/helpers/load-exception-registry.ts, write-exception-registry.ts and
+    // four files: src/helpers/load-exception-registry.ts, write-exception-registry.ts,
+    // file-cache-store.ts and
     // contract-logs.ts (whose folder is the caller's own `directory` option, under the caller's own `cwd`)
     // (specs/decisions/0013-reusable-exception-policy-helper.md) both take a caller-supplied
     // `path` -- the calling application's own registry-file location, e.g. its own check config
@@ -692,6 +722,9 @@ export default tseslint.config(
       "src/helpers/load-exception-registry.ts",
       "src/helpers/write-exception-registry.ts",
       "src/helpers/contract-logs.ts",
+      // The cache directory is the caller's own (`.repo-contract/cache` by default); every path
+      // inside it is validated segment by segment (no `..`, absolute, drive or backslash form).
+      "src/helpers/file-cache-store.ts",
     ],
     plugins: { "secure-coding": secureCoding, security },
     rules: {

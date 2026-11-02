@@ -436,7 +436,7 @@ All six exception-policy-backed checks (`security-socket`, `coderabbitai`, `secu
 
 ### Security — supply-chain alerts — `security-socket`
 
-- **Establishes**: that no installed dependency trips a [Socket.dev](https://socket.dev)
+- **Establishes**: that no installed dependency trips a Socket.dev
   supply-chain alert above a medium ("middle") rating, and that every lower-rated alert is covered
   by a finding-specific, content-bound _verified_ exception. A materially different semantic
   question from `security-deps` (known-CVE advisories, via `npm audit`) and `security-secrets`
