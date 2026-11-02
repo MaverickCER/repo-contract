@@ -12,10 +12,12 @@
 // this package's Node >=20.0.0 floor, and tsx is already a devDependency
 // (also used by test/unit/execution/run-checks.test.ts's SIGINT fixture).
 
-import { readFile, writeFile } from "node:fs/promises"
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { parseFailFastArgs, resolveFailFast } from "../dist/affected.js"
 import { runRepoContract } from "../dist/index.js"
+import { createRunRecord, serializeRunRecord } from "../dist/metrics.js"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const historyPath = path.join(root, "history.json")
@@ -44,9 +46,35 @@ const { prepare } = await import(
 )
 prepare({ cwd: root, out: process.stdout })
 
-const checks = process.argv.slice(2)
+// `--fail-fast` (or REPO_CONTRACT_FAIL_FAST=1) skips the slow checks once a cheap one has failed. Off
+// by default, so a run reports every problem, and never on for a release (see resolveFailFast).
+const { failFast: failFastFlag, rest: checks } = parseFailFastArgs(process.argv.slice(2))
+const failFast = resolveFailFast({ flag: failFastFlag, env: process.env })
+// The checks that dominate a run's time; the rest are cheap. Fail-fast skips only these.
+const EXPENSIVE = new Set([
+  "test-unit",
+  "test-integration",
+  "test-property",
+  "coverage",
+  "crap",
+  "mutation",
+])
+const runConfig = {
+  ...config,
+  checks: Object.fromEntries(
+    Object.entries(config.checks).map(([id, check]) => [
+      id,
+      EXPENSIVE.has(id) ? { ...check, expensive: true } : check,
+    ]),
+  ),
+}
 
-const { evidence, verdict } = await runRepoContract(config, checks.length > 0 ? { checks } : {})
+const startedAt = new Date()
+const { evidence, verdict } = await runRepoContract(runConfig, {
+  ...(checks.length > 0 ? { checks } : {}),
+  ...(failFast ? { failFast: true } : {}),
+})
+await recordRun(evidence, verdict, startedAt, checks.length === 0)
 
 await appendHistory(evidence, verdict)
 
@@ -68,6 +96,31 @@ function printCheck(id, checkVerdict, checkEvidence) {
   process.stdout.write(
     `[${status}] ${id} (${String(checkEvidence.durationMs)}ms)\n${checkVerdict.rationale}\n\n`,
   )
+}
+
+// Appends one line to the local run log that `repo-contract metrics` summarizes. Only a run of every
+// check is recorded: a subset is not comparable with the rest. A failure to write is reported, never fatal.
+async function recordRun(evidence, verdict, startedAt, complete) {
+  if (!complete) return
+  try {
+    const record = createRunRecord({
+      startedAt: startedAt.toISOString(),
+      durationMs: Date.now() - startedAt.getTime(),
+      scope: "full",
+      checks: Object.entries(verdict.checks).map(([id, checkVerdict]) => ({
+        id,
+        durationMs: evidence.checks[id].durationMs,
+        verdict: checkVerdict.outcome,
+      })),
+    })
+    const directory = path.join(root, ".repo-contract", "metrics")
+    await mkdir(directory, { recursive: true })
+    await appendFile(path.join(directory, "runs.jsonl"), serializeRunRecord(record), "utf8")
+  } catch (error) {
+    console.warn(
+      `[run-contract] could not record this run: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
 }
 
 async function appendHistory(evidence, verdict, shouldSave = true) {

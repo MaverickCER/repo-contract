@@ -276,9 +276,10 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     const dir = scratchDir("repo-contract-init-bad-command-")
     writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "x" }))
 
-    const result = spawnSync(binPath, ["doctor"], { cwd: dir, encoding: "utf8" })
-    expect(result.status).not.toBe(0)
-    expect(result.stderr).toContain("Usage: repo-contract init")
+    const result = spawnSync(binPath, ["frobnicate"], { cwd: dir, encoding: "utf8" })
+    expect(result.status).toBe(2)
+    expect(result.stderr).toContain("unknown command 'frobnicate'")
+    expect(result.stderr).toContain("repo-contract --help")
 
     rmSync(dir, { recursive: true, force: true })
   }, 20_000)

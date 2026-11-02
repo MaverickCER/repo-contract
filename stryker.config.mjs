@@ -49,6 +49,13 @@ const config = {
     "!src/execution/run-checks.ts",
     "!src/execution/spawn-check.ts",
     "!src/execution/dependency-scheduler.ts",
+    // The affected analysis spreads a change through the import graph with a queue that refuses a
+    // fact it already holds at an equal or smaller distance. That rule is the only thing that
+    // makes spreading through an import cycle stop, so a mutant that loosens it turns every
+    // cyclic import into an endless loop, which a test runner can only report as a timeout --
+    // the same reason dependency-scheduler.ts is left out. The file is a dozen lines, and
+    // test/unit/affected/worklist.test.ts exercises the rule directly, cycles included.
+    "!src/affected/worklist.ts",
     // The preset catalog (`repo-contract/presets`, a separate opt-in entry
     // point -- see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)
     // is thin adapter glue: a `run` command plus a policy that dispatches to

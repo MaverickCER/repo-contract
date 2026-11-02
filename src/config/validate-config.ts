@@ -144,6 +144,7 @@ function validateCheckDefinition(checkId: string, check: unknown, globalShell: b
   validateOutput(checkId, fields.output)
   validateDependsOn(checkId, fields.dependsOn)
   validateIsolated(checkId, fields.isolated)
+  validateExpensive(checkId, fields.expensive)
   validatePolicy(checkId, fields.policy)
 }
 
@@ -412,6 +413,17 @@ function validateDependsOn(checkId: string, dependsOn: unknown): void {
 function validateIsolated(checkId: string, isolated: unknown): void {
   if (isolated !== undefined && typeof isolated !== "boolean") {
     throw new InvalidCheckConfigError(checkId, "isolated must be a boolean when provided.")
+  }
+}
+
+/**
+ * Validates that `expensive`, if provided, is a boolean.
+ * @param checkId - identifies which check is being validated, used in thrown error messages.
+ * @param expensive - the check's raw `expensive` field to validate.
+ */
+function validateExpensive(checkId: string, expensive: unknown): void {
+  if (expensive !== undefined && typeof expensive !== "boolean") {
+    throw new InvalidCheckConfigError(checkId, "expensive must be a boolean when provided.")
   }
 }
 

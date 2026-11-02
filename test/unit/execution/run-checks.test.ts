@@ -700,3 +700,99 @@ describe("SELF_TERMINATE_DELAY_MS", () => {
     expect(SELF_TERMINATE_DELAY_MS).toBeGreaterThan(SIGKILL_GRACE_PERIOD_MS)
   })
 })
+
+describe("runChecks fail-fast", () => {
+  const exits = (code: number, marker: string): string[] => [
+    process.execPath,
+    "-e",
+    `process.stdout.write(${JSON.stringify(marker)}); process.exitCode = ${String(code)}`,
+  ]
+  const schema = (cheapCode: number): CheckSchema => ({
+    lint: { run: exits(cheapCode, "lint"), policy: okPolicy },
+    tests: { run: exits(0, "tests"), dependsOn: ["lint"], expensive: true, policy: okPolicy },
+  })
+  const byId = (results: Awaited<ReturnType<typeof runChecks>>, id: string) =>
+    results.find(([checkId]) => checkId === id)?.[2]
+
+  it("runs every check by default, so a run reports every problem", async () => {
+    const results = await runChecks(schema(1), 4, execution, undefined)
+    expect(byId(results, "tests")?.status).toBe("completed")
+    expect(byId(results, "tests")?.stdout).toBe("tests")
+    expect(byId(results, "tests")).not.toHaveProperty("skipReason")
+  })
+
+  it("does not skip anything when fail-fast is explicitly off", async () => {
+    const results = await runChecks(schema(1), 4, execution, { failFast: false })
+    expect(byId(results, "tests")?.status).toBe("completed")
+  })
+
+  it("skips an expensive check without spawning it once a cheap check has failed", async () => {
+    const seen: string[] = []
+    const results = await runChecks(schema(1), 4, execution, {
+      failFast: true,
+      onEvidence: (id, evidence) => {
+        seen.push(`${id}:${evidence.status}`)
+      },
+    })
+    const skipped = byId(results, "tests")
+    expect(skipped).toMatchObject({
+      status: "aborted",
+      skipReason: "fail-fast",
+      exitCode: null,
+      signal: null,
+      stdout: "",
+      stderr: "",
+      command: process.execPath,
+    })
+    expect(skipped?.args).toEqual(exits(0, "tests").slice(1))
+    expect(byId(results, "lint")?.status).toBe("completed")
+    expect(seen).toEqual(["lint:completed", "tests:aborted"])
+  })
+
+  it("runs the expensive check when every cheap check passed", async () => {
+    const results = await runChecks(schema(0), 4, execution, { failFast: true })
+    expect(byId(results, "tests")?.status).toBe("completed")
+    expect(byId(results, "tests")?.stdout).toBe("tests")
+  })
+
+  it("counts a cheap check that did not finish as a failure", async () => {
+    const checks: CheckSchema = {
+      lint: {
+        run: [process.execPath, "-e", "setTimeout(() => {}, 5000)"],
+        timeoutMs: 100,
+        policy: okPolicy,
+      },
+      tests: { run: exits(0, "tests"), dependsOn: ["lint"], expensive: true, policy: okPolicy },
+    }
+    const results = await runChecks(checks, 4, execution, { failFast: true })
+    expect(byId(results, "lint")?.status).toBe("timed_out")
+    expect(byId(results, "tests")).toMatchObject({ status: "aborted", skipReason: "fail-fast" })
+  })
+
+  it("is not triggered by an expensive check failing: its siblings still run", async () => {
+    const checks: CheckSchema = {
+      first: { run: exits(1, "first"), expensive: true, policy: okPolicy },
+      second: { run: exits(0, "second"), dependsOn: ["first"], expensive: true, policy: okPolicy },
+    }
+    const results = await runChecks(checks, 4, execution, { failFast: true })
+    expect(byId(results, "second")?.status).toBe("completed")
+  })
+
+  it("never skips a cheap check, even after another cheap check failed", async () => {
+    const checks: CheckSchema = {
+      lint: { run: exits(1, "lint"), policy: okPolicy },
+      format: { run: exits(0, "format"), dependsOn: ["lint"], policy: okPolicy },
+    }
+    const results = await runChecks(checks, 4, execution, { failFast: true })
+    expect(byId(results, "format")?.status).toBe("completed")
+  })
+
+  it("treats a check declared expensive: false as cheap", async () => {
+    const checks: CheckSchema = {
+      lint: { run: exits(1, "lint"), expensive: false, policy: okPolicy },
+      tests: { run: exits(0, "tests"), dependsOn: ["lint"], expensive: true, policy: okPolicy },
+    }
+    const results = await runChecks(checks, 4, execution, { failFast: true })
+    expect(byId(results, "tests")).toMatchObject({ status: "aborted", skipReason: "fail-fast" })
+  })
+})

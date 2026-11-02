@@ -13,6 +13,8 @@ export default defineConfig({
     index: "src/index.ts",
     presets: "src/presets/index.ts",
     helpers: "src/helpers/index.ts",
+    affected: "src/affected/index.ts",
+    metrics: "src/metrics/index.ts",
   },
   format: ["esm", "cjs"],
   // This package is Node-only by nature -- it uses node:os/node:fs-promises

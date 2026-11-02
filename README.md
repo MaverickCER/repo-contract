@@ -5,7 +5,7 @@
 [![Coverage: the lowest of line, statement, function and branch coverage](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/coverage-badge.json)](https://maverickcer.github.io/repo-contract/coverage.json)
 [![Mutation score: the share of applicable mutants the tests detect](https://img.shields.io/endpoint?url=https://maverickcer.github.io/repo-contract/mutation-badge.json)](https://maverickcer.github.io/repo-contract/mutation.json)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/MaverickCER/repo-contract/badge)](https://scorecard.dev/viewer/?uri=github.com/MaverickCER/repo-contract)
-[![Socket Badge](https://badge.socket.dev/npm/package/repo-contract/latest)](https://socket.dev/npm/package/repo-contract)
+![Socket Badge](https://badge.socket.dev/npm/package/repo-contract/latest)
 [![Node](https://img.shields.io/node/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
 [![License](https://img.shields.io/npm/l/repo-contract.svg)](LICENSE)
 
@@ -125,6 +125,83 @@ export default defineRepoContract({ spawn, env: process.env, checks: { typecheck
 
 **Using an AI agent?** Give it [the skill](https://raw.githubusercontent.com/MaverickCER/repo-contract/main/skills/repo-contract/SKILL.md): a short manual written from this package's own exports, with the rules a type signature cannot say.
 
+### See what a change affects
+
+```sh
+npx repo-contract affected --base origin/main            # what changed, and which tests can be affected
+npx repo-contract affected --base origin/main --explain  # ...and why each test is on the list
+npx repo-contract affected --tests | xargs vitest run    # pipe the test files to a runner
+npx repo-contract affected --json                        # machine-readable, versioned (schemaVersion 1)
+```
+
+It compares your working tree (staged, unstaged and untracked files included) with the merge base of `--base` (default: the upstream branch, then `origin/main`, then `origin/master`), works out which exports changed, and follows them through your imports to the tests that use them. It needs the project's own `typescript` (version 6 or earlier; TypeScript 7 has no compiler API). Output goes to stdout and diagnostics to stderr. The exit status is `0` on success, `1` if it could not run and `2` for a usage error.
+
+It narrows only when it can be sure. A lockfile, a tool config or CI file, a file it cannot place, a module that does not parse, a dynamic `import()` or `require()` it cannot read, or git failing makes it report **everything** (still exit `0`, with the reason on stderr). A coupling it cannot see, such as a test that reads a fixture without importing it, is declared in `package.json` and is otherwise treated as unplaced (so: everything):
+
+```json
+{
+  "repo-contract": {
+    "affected": {
+      "ignore": ["docs/**"],
+      "links": [{ "when": "test/fixtures/**", "run": ["test/golden/**"] }]
+    }
+  }
+}
+```
+
+`ignore`, `triggers`, `tests` and `notMutated` take globs; an unknown key is an error, so a typo cannot silently drop a link. Path aliases (`paths` in `tsconfig.json`, including through `extends`) are honoured; a tsconfig it cannot read, or one that uses project references, makes it report everything unless you point `--tsconfig` at the config that holds the paths. Why it works this way: [ADR 0021](specs/decisions/0021-affected-scope-is-a-pure-analysis-that-only-ever-widens.md). Release runs should always run everything.
+
+### Choose a run's scope and reuse results
+
+`repo-contract/affected` also has the two pieces a contract script needs to act on the answer. Both are pure: the environment and the store are passed in, so nothing reads `process.env` or the disk on your behalf.
+
+```ts
+import {
+  computeAffectedFromGit,
+  createCache,
+  parseScopeArgs,
+  resolveScope,
+  resolveCacheMode,
+} from "repo-contract/affected"
+import { createFileCacheStore } from "repo-contract/helpers"
+
+const args = parseScopeArgs(process.argv.slice(2)) // --scope auto|affected|full, --base <ref>
+if (!args.ok) throw new Error(args.error)
+const { scope, reason } = resolveScope({ requested: args.scope, env: process.env })
+const { mode } = resolveCacheMode({ scope, env: process.env })
+const cache = createCache({ store: createFileCacheStore(".repo-contract/cache"), mode })
+```
+
+- **Scope.** `auto` (the default) validates the affected part of the tree for a pull request or a local run, and all of it for any other CI event, for a CI system it does not recognise, and for a release (the `release` event or a `refs/tags/` ref), whatever `--scope` says. `CI_FULL=1` forces a full run over everything else; `REPO_CONTRACT_SCOPE` sets a default below the flag. The reason is returned so a run can print it.
+- **Cache.** A result is stored under a digest of the check, every input's name and content digest, the tool versions and the cache format, so it is only ever replayed for exactly the same inputs. An unreadable or inconsistent entry is a miss, never a replay. A **full run is always cold**: the cache is neither read nor written, so a release cannot be satisfied by an earlier result. `REPO_CONTRACT_CACHE=off|ro|rw` and a flag change the mode for other runs. `cache.why(check, inputs)` says which inputs differ from the check's latest entry.
+- **Housekeeping.** `repo-contract cache stats`, `clear` and `prune --max-age 7d --max-entries 200` work on `.repo-contract/cache` (`--cache-dir`, `-C`, `--json`). Keep the directory out of git.
+
+What the cache is keyed on is up to the caller: anything that can change a result and is left out of the inputs can make a stale result replay. That is why the shared checks hash their declared inputs and tool versions and why releases bypass the cache. The reasoning is in [ADR 0022](specs/decisions/0022-a-full-run-is-cold-and-a-cache-replays-only-identical-inputs.md).
+
+### Getting the most out of repo-contract
+
+Everything below is exercised by `test/integration/affected/workflow.test.ts`, so these commands and their output are tested, not illustrative. Each feature is opt-in; with none of them, a run reports every problem and runs everything.
+
+**Run less on a pull request.** `repo-contract affected --tests` lists only the tests a change can reach; `--explain` says why (`src/math.ts#double changed -> ...`). Give a CI checkout `fetch-depth: 0` or it cannot see the base commit and runs everything.
+
+**Split mutation testing across CI jobs.** Plan the matrix, then give each job its share; the shards together are exactly the mutation targets, with no overlap:
+
+```sh
+npx repo-contract affected --plan-shards --target-minutes 10 --max-shards 8 --timings timings.json
+# {"count": 3, "include": [{"shard": 1, "total": 3, "spec": "1/3"}, ...]}  -> strategy.matrix: ${{ fromJSON(...) }}
+npx repo-contract affected --mutate --shard 2/3 --timings timings.json     # this job's files
+```
+
+`--timings` is a JSON object of file to milliseconds from a previous run; without it every file weighs the same. Combine the shards' Stryker reports with `repo-contract merge-mutation --total 3 --out reports/mutation.json 1=s1.json 2=s2.json 3=s3.json` (or `mergeMutationReports` from `repo-contract/affected`). It exits `1` and writes nothing if a shard is missing, repeated or unreadable, or two shards mutated the same file, so a lost shard can never look like a better score.
+
+**Stop early, if you want to.** Mark slow checks `expensive: true` and pass `failFast: true` (or `--fail-fast`, `REPO_CONTRACT_FAIL_FAST=1` through `resolveFailFast`). Once a cheap check fails, expensive ones that have not started are recorded as `status: "aborted"` with `skipReason: "fail-fast"` and fail their policy; a release never fails fast. Declare the expensive check after (or `dependsOn`) the cheap ones to make the skip certain.
+
+**Find what is slowing you down.** `repo-contract doctor` reports a cache directory that is not ignored, a coverage config without the `json` reporter, a shallow CI checkout, missing hooks and `export *` barrels (which widen a change to everything behind them). `doctor --fix` applies only the safe fix (the `.gitignore` line) and shows it first. `repo-contract cache why tests --inputs inputs.json` names the inputs that changed since a check's last cached result.
+
+**Prove the narrow scope is sound.** After a merge, run everything once and call `findEscapes({ affectedTests, allTests, failedInFullRun })` (`repo-contract/affected`): any test that failed in the full run but was left out of the affected set is an escape, and `clean: false` means the analysis needs a wider rule.
+
+**Measure it.** Append `serializeRunRecord(createRunRecord({...}))` from `repo-contract/metrics` to `.repo-contract/metrics/runs.jsonl` after each run; `repo-contract metrics` (or `--json`) shows pass rate, cache hit ratio, how much of the suite affected runs needed, estimated minutes saved, first-pass rate and the mutation trend. `maturityLevel` turns the facts into a level from 0 to 4 and says what the next one needs; `buildEvidenceManifest` records that a release passed a full, cache-free run. Nothing leaves your machine. Why these are opt-in and how skips stay visible: [ADR 0023](specs/decisions/0023-speed-features-are-opt-in-and-every-skip-is-visible.md).
+
 ## Fit and capabilities
 
 **Use cases:** enforce a quality bar in one repository; share one standard across many through an internal package that owns the executors ([ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md)); roll out a new requirement safely as a dated `warn` that becomes `fail` ([ratchet](examples/day-one-walkthrough/README.md)); give CI bots and coding agents a concrete rationale to act on.
@@ -152,7 +229,7 @@ export default defineRepoContract({ spawn, env: process.env, checks: { typecheck
 
 ## Security and supply chain
 
-- **Guarantees:** no shell by default (a `run` array is argv; a string is tokenized), no ambient spawn or environment access, no network calls or telemetry, and the no-network property is enforced by a check in this repository's own contract ([SECURITY.md](SECURITY.md#runtime-security-model)).
+- **Guarantees:** no shell by default (a `run` array is argv; a string is tokenized), no ambient spawn or environment access in the library (the one exception is the `affected` command in the `bin`, which runs `git` — [ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md#amendment-2026-11-01-the-command-line-tool-is-a-consumer-of-its-own-library)), no network calls or telemetry, and the no-network property is enforced by a check in this repository's own contract ([SECURITY.md](SECURITY.md#runtime-security-model)).
 - **Trust boundaries:** it executes the commands your config names with the environment you pass, so the config and any policy you write are trusted code; what its guarantees do not cover is in [Application responsibilities](SECURITY.md#application-responsibilities).
 - **Dependencies and licence:** zero runtime dependencies, MIT licensed. Two CycloneDX SBOMs are committed, one for what installing the package adds and one for this repository's build tooling ([what each covers](SECURITY.md#sboms)).
 - **Reporting:** [private security advisory](https://github.com/MaverickCER/repo-contract/security/advisories/new); supported versions are in [SECURITY.md](SECURITY.md#supported-versions).

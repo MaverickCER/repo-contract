@@ -2040,6 +2040,24 @@ Additional environment variables for the spawned process, applied on top of (or,
 
 [`CheckDefinitionConfig`](#checkdefinitionconfig).[`env`](#env-1)
 
+##### expensive?
+
+```ts
+readonly expensive?: boolean;
+```
+
+Marks a check as costly enough to be worth skipping when the run asked for fail-fast
+(`RunRepoContractOptions.failFast`) and a check that is not marked has already failed. Such a
+check that has not yet spawned then resolves to `status: "aborted"` evidence with `skipReason: "fail-fast"` instead of running.
+A check that is already running is never killed, and an `expensive` check failing never skips
+anything. Skipping is decided when the check's turn comes, so to make it certain, declare the
+expensive check after (or `dependsOn`) the cheap ones. Does nothing unless the run opts in to
+fail-fast. Defaults to `false`.
+
+###### Inherited from
+
+[`CheckDefinitionConfig`](#checkdefinitionconfig).[`expensive`](#expensive-1)
+
 ##### inheritEnv?
 
 ```ts
@@ -2213,6 +2231,20 @@ readonly env?: Readonly<Record<string, string>>;
 ```
 
 Additional environment variables for the spawned process, applied on top of (or, if `inheritEnv` is `false`, instead of) the inherited environment.
+
+##### expensive?
+
+```ts
+readonly expensive?: boolean;
+```
+
+Marks a check as costly enough to be worth skipping when the run asked for fail-fast
+(`RunRepoContractOptions.failFast`) and a check that is not marked has already failed. Such a
+check that has not yet spawned then resolves to `status: "aborted"` evidence with `skipReason: "fail-fast"` instead of running.
+A check that is already running is never killed, and an `expensive` check failing never skips
+anything. Skipping is decided when the check's turn comes, so to make it certain, declare the
+expensive check after (or `dependsOn`) the cheap ones. Does nothing unless the run opts in to
+fail-fast. Defaults to `false`.
 
 ##### inheritEnv?
 
@@ -2417,6 +2449,17 @@ readonly signal: Signals | null;
 ```
 
 The signal that terminated the process, if any. `null` for a normal exit or a spawn failure.
+
+##### skipReason?
+
+```ts
+readonly skipReason?: "fail-fast";
+```
+
+Present only when the check never spawned because the run opted in to fail-fast
+(`RunRepoContractOptions.failFast`) and a cheaper check had already failed (see
+`CheckDefinitionConfig.expensive`). Such a check has `status: "aborted"`: it did not run, so a
+policy must never read it as a pass.
 
 ##### spawnError?
 
@@ -2821,6 +2864,17 @@ readonly checks?: string[];
 ```
 
 Restrict this run to only these check ids (and whatever they `dependsOn`, transitively). Every configured check runs when omitted.
+
+##### failFast?
+
+```ts
+readonly failFast?: boolean;
+```
+
+Opt in to fail-fast: once a check that is not `expensive` has failed (it did not finish, or its
+process exited non-zero), every `expensive` check that has not spawned yet is recorded as
+`status: "aborted"` with `skipReason: "fail-fast"` rather than run. Off by default, so a run reports every problem; a skipped
+check still gets evidence and a policy invocation, and is never a pass.
 
 ##### onEvidence?
 

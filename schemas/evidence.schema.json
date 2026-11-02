@@ -101,6 +101,11 @@
           "$ref": "#/definitions/CheckStatus",
           "description": "Why the process reached its terminal state; see `CheckStatus`."
         },
+        "skipReason": {
+          "type": "string",
+          "const": "fail-fast",
+          "description": "Present only when the check never spawned because the run opted in to fail-fast (`RunRepoContractOptions.failFast`) and a cheaper check had already failed (see `CheckDefinitionConfig.expensive`). Such a check has `status: \"aborted\"`: it did not run, so a policy must never read it as a pass."
+        },
         "spawnError": {
           "type": "string",
           "description": "Populated only for `status === \"spawn_error\"` -- the underlying Node error message (e.g. \"spawn foo ENOENT\"). Never populated for any other status."
