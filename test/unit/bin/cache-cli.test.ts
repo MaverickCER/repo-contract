@@ -184,7 +184,9 @@ describe("runCache", () => {
     expect((await invoke(["stats", "-C", "sub"])).dirs).toEqual([
       at("sub", ".repo-contract", "cache"),
     ])
-    expect((await invoke(["stats", "--cache-dir", "/tmp/c"])).dirs).toEqual(["/tmp/c"])
+    expect((await invoke(["stats", "--cache-dir", "/tmp/c"])).dirs).toEqual([
+      path.resolve("/tmp/c"),
+    ])
     expect((await invoke(["stats", "--cache-dir", "rel"])).dirs).toEqual([at("rel")])
   })
 
