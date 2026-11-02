@@ -67,3 +67,13 @@ describe("createFileCacheStore: a writer that finds the file in use", () => {
     expect(await readFile(path.join(root, "d", "a.json"), "utf8")).toBe("ours")
   })
 })
+
+describe("createFileCacheStore: a directory in the way", () => {
+  it("is a failure, not another writer's value, even when the error looks like contention", async () => {
+    const store = createFileCacheStore(root)
+    await mkdir(path.join(root, "a.json"))
+    failure.code = "EPERM"
+    await expect(store.write("a.json", "ours")).rejects.toThrow(/EPERM/)
+    expect(await readdir(root)).toEqual(["a.json"])
+  })
+})

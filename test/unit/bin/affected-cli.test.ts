@@ -341,7 +341,7 @@ describe("runAffected: options reach the engine", () => {
     const relative = await invoke(["-C", "pkg/app"])
     expect(relative.harness.dirs).toEqual([path.resolve("/work/project", "pkg/app")])
     const absolute = await invoke(["-C", "/elsewhere"])
-    expect(absolute.harness.dirs).toEqual(["/elsewhere"])
+    expect(absolute.harness.dirs).toEqual([path.resolve("/elsewhere")])
     const none = await invoke([])
     expect(none.harness.dirs).toEqual([path.resolve("/work/project")])
   })

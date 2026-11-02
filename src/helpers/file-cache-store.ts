@@ -39,11 +39,11 @@ function isContended(error: unknown): boolean {
 
 /**
  * @param file - An absolute path.
- * @returns Whether something is there.
+ * @returns Whether a file (not a directory) is there.
  */
-async function exists(file: string): Promise<boolean> {
+async function isFile(file: string): Promise<boolean> {
   return statFromFs(file).then(
-    () => true,
+    (stats) => stats.isFile(),
     () => false,
   )
 }
@@ -138,7 +138,7 @@ export function createFileCacheStore(directory: string): FileCacheStore {
         await rmFromFs(temporary, { force: true })
         // Windows refuses to replace a file another writer has open. Entries are named by what they
         // were computed from, so a concurrent writer's complete value stands in for ours.
-        if (!(isContended(error) && (await exists(target)))) {
+        if (!(isContended(error) && (await isFile(target)))) {
           throw error
         }
       }

@@ -178,7 +178,9 @@ describe("runCache", () => {
 
   it("locates the cache under the working directory by default, -C and --cache-dir", async () => {
     expect((await invoke(["stats"])).dirs).toEqual([at(".repo-contract", "cache")])
-    expect((await invoke(["stats", "-C", "/other"])).dirs).toEqual(["/other/.repo-contract/cache"])
+    expect((await invoke(["stats", "-C", "/other"])).dirs).toEqual([
+      path.resolve("/other", ".repo-contract", "cache"),
+    ])
     expect((await invoke(["stats", "-C", "sub"])).dirs).toEqual([
       at("sub", ".repo-contract", "cache"),
     ])
