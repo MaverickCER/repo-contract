@@ -68,6 +68,13 @@ declare interface CheckEvidence {
     readonly stderr: string;
     /** Why the process reached its terminal state; see `CheckStatus`. */
     readonly status: CheckStatus;
+    /**
+     * Present only when the check never spawned because the run opted in to fail-fast
+     * (`RunRepoContractOptions.failFast`) and a cheaper check had already failed (see
+     * `CheckDefinitionConfig.expensive`). Such a check has `status: "aborted"`: it did not run, so a
+     * policy must never read it as a pass.
+     */
+    readonly skipReason?: "fail-fast";
     /** Populated only for `status === "spawn_error"` -- the underlying Node error message (e.g. "spawn foo ENOENT"). Never populated for any other status. */
     readonly spawnError?: string;
     /** Populated only for `status === "spawn_error"` -- the underlying Node `ErrnoException`'s structured `.code` (e.g. `"ENOENT"`, `"EACCES"`), when Node provides one. Never populated for any other status. Distinguishes "the executable does not exist" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message. */
@@ -98,6 +105,15 @@ declare interface CheckEvidence {
  * @public
  */
 declare type CheckStatus = "completed" | "timed_out" | "signaled" | "host_terminated" | "spawn_error" | "aborted";
+
+/**
+ * Stores cache entries as files under a directory. Writes go to a temporary file in the same
+ * directory and are renamed into place, so concurrent writers and readers never see a partial
+ * entry. A directory that does not exist yet is created by the first write.
+ * @param directory - The directory the store lives in.
+ * @returns The store.
+ */
+export declare function createFileCacheStore(directory: string): FileCacheStore;
 
 /**
  * Evaluates one record against every one of its own classifications, taking the strictest
@@ -281,6 +297,22 @@ export declare interface ExceptionRecordEvaluation<TRecord> {
  * @public
  */
 export declare type ExceptionVerdict = "forbidden" | "insufficient" | "permitted";
+
+/**
+ * A directory used as a cache store: paths are relative and slash-separated, each maps to a file.
+ * Structurally the same as `CacheStore` from `repo-contract/affected`, so it can be passed to
+ * `createCache` there; declared here because the two published barrels stay independent.
+ */
+export declare interface FileCacheStore {
+    /** Reads a file by its store-relative path; resolves to `undefined` if there is none. */
+    readonly read: (relativePath: string) => Promise<string | undefined>;
+    /** Writes atomically: a reader sees the old content or the new, never part of either. */
+    readonly write: (relativePath: string, text: string) => Promise<void>;
+    /** Deletes a file; one that is already gone is not an error. */
+    readonly remove: (relativePath: string) => Promise<void>;
+    /** Lists every file whose store-relative path starts with the prefix, sorted. */
+    readonly list: (prefix: string) => Promise<readonly string[]>;
+}
 
 /**
  * A deterministic digest of a set of fields' current values on `record`, via `node:crypto` --

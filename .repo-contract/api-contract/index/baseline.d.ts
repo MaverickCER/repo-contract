@@ -115,6 +115,16 @@ export declare interface CheckDefinitionConfig {
      * specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md.
      */
     readonly isolated?: boolean;
+    /**
+     * Marks a check as costly enough to be worth skipping when the run asked for fail-fast
+     * (`RunRepoContractOptions.failFast`) and a check that is not marked has already failed. Such a
+     * check that has not yet spawned then resolves to `status: "aborted"` evidence with `skipReason: "fail-fast"` instead of running.
+     * A check that is already running is never killed, and an `expensive` check failing never skips
+     * anything. Skipping is decided when the check's turn comes, so to make it certain, declare the
+     * expensive check after (or `dependsOn`) the cheap ones. Does nothing unless the run opts in to
+     * fail-fast. Defaults to `false`.
+     */
+    readonly expensive?: boolean;
     /** Decides whether this check's evidence is acceptable, once its process has finished running. */
     readonly policy: Policy;
 }
@@ -163,6 +173,13 @@ export declare interface CheckEvidence {
     readonly stderr: string;
     /** Why the process reached its terminal state; see `CheckStatus`. */
     readonly status: CheckStatus;
+    /**
+     * Present only when the check never spawned because the run opted in to fail-fast
+     * (`RunRepoContractOptions.failFast`) and a cheaper check had already failed (see
+     * `CheckDefinitionConfig.expensive`). Such a check has `status: "aborted"`: it did not run, so a
+     * policy must never read it as a pass.
+     */
+    readonly skipReason?: "fail-fast";
     /** Populated only for `status === "spawn_error"` -- the underlying Node error message (e.g. "spawn foo ENOENT"). Never populated for any other status. */
     readonly spawnError?: string;
     /** Populated only for `status === "spawn_error"` -- the underlying Node `ErrnoException`'s structured `.code` (e.g. `"ENOENT"`, `"EACCES"`), when Node provides one. Never populated for any other status. Distinguishes "the executable does not exist" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message. */
@@ -668,6 +685,13 @@ export declare interface RunRepoContractOptions {
     readonly signal?: AbortSignal;
     /** Restrict this run to only these check ids (and whatever they `dependsOn`, transitively). Every configured check runs when omitted. */
     readonly checks?: string[];
+    /**
+     * Opt in to fail-fast: once a check that is not `expensive` has failed (it did not finish, or its
+     * process exited non-zero), every `expensive` check that has not spawned yet is recorded as
+     * `status: "aborted"` with `skipReason: "fail-fast"` rather than run. Off by default, so a run reports every problem; a skipped
+     * check still gets evidence and a policy invocation, and is never a pass.
+     */
+    readonly failFast?: boolean;
     /**
      * Called once for each check as soon as it has reached a terminal state, before the run's other checks have
      * necessarily finished and before any policy runs. For progress output and for writing a check's raw output

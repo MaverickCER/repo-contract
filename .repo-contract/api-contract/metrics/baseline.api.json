@@ -498,7 +498,16 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export interface EvidenceManifest "
+              "text": "export interface EvidenceManifest extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "ManifestFacts",
+              "canonicalReference": "repo-contract!~ManifestFacts:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " "
             }
           ],
           "fileUrlPath": "src/metrics/manifest.ts",
@@ -506,33 +515,6 @@
           "name": "EvidenceManifest",
           "preserveMemberOrder": false,
           "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!EvidenceManifest#cache:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly cache: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "\"bypassed\""
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "cache",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!EvidenceManifest#checks:member",
@@ -544,7 +526,16 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "readonly {\n        readonly id: string;\n        readonly verdict: \"pass\" | \"warn\" | \"fail\";\n        readonly evidenceSha256: string;\n    }[]"
+                  "text": "readonly {\n        readonly id: string;\n        readonly verdict: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Verdict",
+                  "canonicalReference": "repo-contract!Verdict:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        readonly evidenceSha256: string;\n    }[]"
                 },
                 {
                   "kind": "Content",
@@ -557,88 +548,7 @@
               "name": "checks",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!EvidenceManifest#createdAt:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly createdAt: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "createdAt",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!EvidenceManifest#inputHash:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly inputHash: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "inputHash",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!EvidenceManifest#package:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly package: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        readonly name: string;\n        readonly version: string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "package",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
+                "endIndex": 4
               }
             },
             {
@@ -670,33 +580,6 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!EvidenceManifest#scope:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly scope: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "\"full\""
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "scope",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
               "canonicalReference": "repo-contract!EvidenceManifest#sha256:member",
               "docComment": "/**\n * A digest of every other field, so an edit to any of them is detectable.\n */\n",
               "excerptTokens": [
@@ -721,50 +604,14 @@
                 "startIndex": 1,
                 "endIndex": 2
               }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!EvidenceManifest#tools:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly tools: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Readonly",
-                  "canonicalReference": "!Readonly:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Record",
-                  "canonicalReference": "!Record:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<string, string>>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "tools",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 5
-              }
             }
           ],
-          "extendsTokenRanges": []
+          "extendsTokenRanges": [
+            {
+              "startIndex": 1,
+              "endIndex": 2
+            }
+          ]
         },
         {
           "kind": "Interface",
@@ -773,7 +620,16 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export interface ManifestInput "
+              "text": "export interface ManifestInput extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "ManifestFacts",
+              "canonicalReference": "repo-contract!~ManifestFacts:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " "
             }
           ],
           "fileUrlPath": "src/metrics/manifest.ts",
@@ -781,33 +637,6 @@
           "name": "ManifestInput",
           "preserveMemberOrder": false,
           "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!ManifestInput#cache:member",
-              "docComment": "/**\n * Always `\"bypassed\"`: nothing was replayed from the cache.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly cache: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "\"bypassed\""
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "cache",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!ManifestInput#checks:member",
@@ -819,7 +648,16 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "readonly {\n        readonly id: string;\n        readonly verdict: \"pass\" | \"warn\" | \"fail\";\n        readonly evidence: unknown;\n    }[]"
+                  "text": "readonly {\n        readonly id: string;\n        readonly verdict: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Verdict",
+                  "canonicalReference": "repo-contract!Verdict:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        readonly evidence: unknown;\n    }[]"
                 },
                 {
                   "kind": "Content",
@@ -832,160 +670,16 @@
               "name": "checks",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!ManifestInput#createdAt:member",
-              "docComment": "/**\n * ISO 8601 time the manifest was made.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly createdAt: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "createdAt",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!ManifestInput#inputHash:member",
-              "docComment": "/**\n * A digest of the inputs the run was computed from.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly inputHash: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "inputHash",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!ManifestInput#package:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly package: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        readonly name: string;\n        readonly version: string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "package",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!ManifestInput#scope:member",
-              "docComment": "/**\n * Always `\"full\"`: a manifest vouches only for a run that checked everything.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly scope: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "\"full\""
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "scope",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "repo-contract!ManifestInput#tools:member",
-              "docComment": "/**\n * Each tool's version.\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly tools: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Readonly",
-                  "canonicalReference": "!Readonly:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Record",
-                  "canonicalReference": "!Record:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<string, string>>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isReadonly": true,
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "tools",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 5
+                "endIndex": 4
               }
             }
           ],
-          "extendsTokenRanges": []
+          "extendsTokenRanges": [
+            {
+              "startIndex": 1,
+              "endIndex": 2
+            }
+          ]
         },
         {
           "kind": "Interface",

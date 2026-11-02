@@ -332,6 +332,33 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CheckDefinitionConfig#expensive:member",
+              "docComment": "/**\n * Marks a check as costly enough to be worth skipping when the run asked for fail-fast\n * (`RunRepoContractOptions.failFast`) and a check that is not marked has already failed. Such a\n * check that has not yet spawned then resolves to `status: \"aborted\"` evidence with `skipReason: \"fail-fast\"` instead of running.\n * A check that is already running is never killed, and an `expensive` check failing never skips\n * anything. Skipping is decided when the check's turn comes, so to make it certain, declare the\n * expensive check after (or `dependsOn`) the cheap ones. Does nothing unless the run opts in to\n * fail-fast. Defaults to `false`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly expensive?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "expensive",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "repo-contract!CheckDefinitionConfig#inheritEnv:member",
               "docComment": "/**\n * Whether the spawned process inherits `process.env`. Defaults to `true` -- most check commands (npm scripts, locally-installed CLIs) need `PATH` and similar to resolve at all. Set to `false` for a minimal environment containing only `env` (plus whatever the OS itself always provides).\n */\n",
               "excerptTokens": [
@@ -753,6 +780,33 @@
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CheckEvidence#skipReason:member",
+              "docComment": "/**\n * Present only when the check never spawned because the run opted in to fail-fast\n * (`RunRepoContractOptions.failFast`) and a cheaper check had already failed (see\n * `CheckDefinitionConfig.expensive`). Such a check has `status: \"aborted\"`: it did not run, so a\n * policy must never read it as a pass.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly skipReason?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"fail-fast\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "skipReason",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
               }
             },
             {
@@ -3392,6 +3446,33 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "checks",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RunRepoContractOptions#failFast:member",
+              "docComment": "/**\n * Opt in to fail-fast: once a check that is not `expensive` has failed (it did not finish, or its\n * process exited non-zero), every `expensive` check that has not spawned yet is recorded as\n * `status: \"aborted\"` with `skipReason: \"fail-fast\"` rather than run. Off by default, so a run reports every problem; a skipped\n * check still gets evidence and a policy invocation, and is never a pass.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly failFast?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "failFast",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
