@@ -35,6 +35,16 @@ describe("checkTerminatedAbnormally", () => {
     ).toContain("SIGKILL")
   })
 
+  it("reports a fail-fast skip as a fail that says nothing ran, never as a pass", () => {
+    const result = checkTerminatedAbnormally(
+      fakeCheckEvidence({ status: "aborted", exitCode: null, skipReason: "fail-fast" }),
+      "Tests",
+    )
+    expect(result?.outcome).toBe("fail")
+    expect(result?.rationale).toContain("Tests did not run")
+    expect(result?.rationale).toContain("fail-fast")
+  })
+
   it("falls back to 'unknown' when a signaled result carries no signal", () => {
     const result = checkTerminatedAbnormally(
       fakeCheckEvidence({ status: "signaled", signal: null }),

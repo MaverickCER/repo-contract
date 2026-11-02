@@ -17,6 +17,8 @@ const ENTRIES = [
   { name: "index", dtsPath: "./.dts/index.js" },
   { name: "presets", dtsPath: "./.dts/presets/index.js" },
   { name: "helpers", dtsPath: "./.dts/helpers/index.js" },
+  { name: "affected", dtsPath: "./.dts/affected/index.js" },
+  { name: "metrics", dtsPath: "./.dts/metrics/index.js" },
 ]
 
 for (const { name, dtsPath } of ENTRIES) {

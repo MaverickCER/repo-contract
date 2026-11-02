@@ -41,6 +41,12 @@ export function checkTerminatedAbnormally(
         rationale: `${toolName} did not finish: its process exceeded the configured timeout and was terminated.${suffix}`,
       }
     case "aborted":
+      if (result.skipReason === "fail-fast") {
+        return {
+          outcome: "fail",
+          rationale: `${toolName} did not run: fail-fast skipped it after an earlier check failed.`,
+        }
+      }
       return {
         outcome: "fail",
         rationale: `${toolName} did not finish: the run was aborted before its process completed.${suffix}`,

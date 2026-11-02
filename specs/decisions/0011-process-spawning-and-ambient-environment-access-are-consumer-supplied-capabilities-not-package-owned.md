@@ -219,3 +219,29 @@ The invariant is mechanically checked against the published artifact, not merely
   optional spawner export can be evaluated then, for whatever future
   major/minor version is current at the time -- there is no committed
   `1.0.0` scope this decision is locked against.
+
+## Amendment (2026-11-01): the command-line tool is a consumer of its own library
+
+The invariant above is about the package's _library_ entry points -- `repo-contract`,
+`repo-contract/presets`, `repo-contract/helpers` and `repo-contract/affected` -- which still never
+import a process-spawning implementation or read `process.env`, and which `AmbientCapabilities`
+still verifies against the packed `dist/`. It was never meant to make a command-line tool
+impossible: a CLI _is_ the program that supplies capabilities to a library, and `repo-contract
+affected` ([ADR 0004](0004-public-surface-stays-narrow-no-cli-experimental-presets.md), 2026-11-01
+amendment) has to run `git`.
+
+**Decision.** Exactly one shipped file, the `bin` entry point (`bin/repo-contract.mjs`), may import
+`node:child_process` and read `process.env`. For `repo-contract affected` it does only three things: run
+`git` with the caller's directory authoritative (the `GIT_DIR` family stripped, as `scripts/git-env.ts`
+does), read working-tree files, and load the project's own TypeScript. Everything that decides or prints
+anything (`bin/affected-cli.mjs`, the engine in `dist/affected.js`) receives those as parameters.
+`AmbientCapabilities` is configured to forbid `child_process` and `env` everywhere in the packed tarball
+except the `bin` entry point -- which also means the invariant above is, for the first time, enforced for
+the library bundles and not only described (until now the check was configured with a dependency list
+only, so it enforced neither). `fs` stays unenforced: `repo-contract/helpers` and `repo-contract/presets`
+read files by design, and this decision never claimed otherwise. It exempts entry points named in the manifest,
+not arbitrary files, which is why this code lives in the entry point itself.
+
+**Consequences.** A supply-chain scanner reading the tarball will see shell access and environment
+access in that one file, plainly named and explained; the library bundles remain clean. The cost is
+accepted knowingly in exchange for a command that works like other command-line tools.

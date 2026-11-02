@@ -63,6 +63,9 @@ export {
   repoContractLogs,
 } from "./contract-logs.js"
 
+export type { FileCacheStore } from "./file-cache-store.js"
+export { createFileCacheStore } from "./file-cache-store.js"
+
 export { loadExceptionRegistry } from "./load-exception-registry.js"
 
 export { reconcileExceptions, serializeExceptionRegistry } from "./reconcile-exceptions.js"

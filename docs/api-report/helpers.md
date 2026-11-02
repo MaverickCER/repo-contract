@@ -279,6 +279,89 @@ The record to evaluate.
 
 ***
 
+### FileCacheStore
+
+A directory used as a cache store: paths are relative and slash-separated, each maps to a file.
+Structurally the same as `CacheStore` from `repo-contract/affected`, so it can be passed to
+`createCache` there; declared here because the two published barrels stay independent.
+
+#### Properties
+
+##### list
+
+```ts
+readonly list: (prefix) => Promise<readonly string[]>;
+```
+
+Lists every file whose store-relative path starts with the prefix, sorted.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `prefix` | `string` |
+
+###### Returns
+
+`Promise`\<readonly `string`[]\>
+
+##### read
+
+```ts
+readonly read: (relativePath) => Promise<string | undefined>;
+```
+
+Reads a file by its store-relative path; resolves to `undefined` if there is none.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `relativePath` | `string` |
+
+###### Returns
+
+`Promise`\<`string` \| `undefined`\>
+
+##### remove
+
+```ts
+readonly remove: (relativePath) => Promise<void>;
+```
+
+Deletes a file; one that is already gone is not an error.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `relativePath` | `string` |
+
+###### Returns
+
+`Promise`\<`void`\>
+
+##### write
+
+```ts
+readonly write: (relativePath, text) => Promise<void>;
+```
+
+Writes atomically: a reader sees the old content or the new, never part of either.
+
+###### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `relativePath` | `string` |
+| `text` | `string` |
+
+###### Returns
+
+`Promise`\<`void`\>
+
+***
+
 ### RepoContractLogs
 
 **`Beta`**
@@ -682,6 +765,30 @@ const REPO_CONTRACT_LOG_EVIDENCE_MARKER: "=== evidence ===" = "=== evidence ==="
 Starts the part of a log that is the check's evidence, so the verdict above it can be rewritten alone.
 
 ## Functions
+
+### createFileCacheStore()
+
+```ts
+function createFileCacheStore(directory): FileCacheStore;
+```
+
+Stores cache entries as files under a directory. Writes go to a temporary file in the same
+directory and are renamed into place, so concurrent writers and readers never see a partial
+entry. A directory that does not exist yet is created by the first write.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `directory` | `string` | The directory the store lives in. |
+
+#### Returns
+
+[`FileCacheStore`](#filecachestore)
+
+The store.
+
+***
 
 ### evaluateExceptionRecord()
 

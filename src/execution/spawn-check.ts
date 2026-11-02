@@ -250,6 +250,7 @@ function terminalEvidence(
  * @param runSignal - the whole run's abort signal, if any; already-aborted before this is called means the check never spawns
  * @param activeHandles - the shared registry this check's kill handle is added to while running, so a host-process SIGINT/SIGTERM can terminate it
  * @param execution - the run's trusted execution capabilities (`spawn`, `env`, resolved global `shell` default) -- see `ExecutionCapability`
+ * @param skip - when true the check is not spawned at all and resolves to `status: "aborted"` evidence marked `skipReason: "fail-fast"`
  * @returns a fully-formed `CheckEvidence` reflecting however the process ended; this function itself never rejects
  */
 export async function spawnCheck(
@@ -258,10 +259,18 @@ export async function spawnCheck(
   runSignal: AbortSignal | undefined,
   activeHandles: Set<ActiveCheckHandle>,
   execution: ExecutionCapability,
+  skip = false,
 ): Promise<CheckEvidence> {
   const startedAt = new Date()
   const effectiveShell = check.shell ?? execution.shell
   const { command, args } = resolveCommand(checkId, check, effectiveShell)
+
+  if (skip) {
+    return {
+      ...terminalEvidence(command, args, startedAt, "aborted", null, null),
+      skipReason: "fail-fast",
+    }
+  }
 
   if (runSignal?.aborted === true) {
     return terminalEvidence(command, args, startedAt, "aborted", null, null)

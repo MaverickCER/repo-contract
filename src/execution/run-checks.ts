@@ -230,11 +230,19 @@ export async function runChecks(
         [hostAbortController.signal],
   )
 
+  // Set once a check that is not `expensive` has failed; read only when failFast is on.
+  let cheapCheckFailed = false
+
   const worker = async ([checkId, check]: readonly [
     string,
     CheckDefinition,
   ]): Promise<CheckExecutionEntry> => {
-    const evidence = await spawnCheck(checkId, check, runSignal, activeHandles, execution)
+    const expensive = check.expensive === true
+    const skip = options?.failFast === true && expensive && cheapCheckFailed
+    const evidence = await spawnCheck(checkId, check, runSignal, activeHandles, execution, skip)
+    if (!expensive && (evidence.status !== "completed" || evidence.exitCode !== 0)) {
+      cheapCheckFailed = true
+    }
     // The hook gets its own top-level copy, so nothing it assigns reaches the evidence the run goes on to use; the
     // nested values are shared and, like the whole record, are read-only.
     notify(options?.onEvidence, checkId, { ...evidence })

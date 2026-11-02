@@ -222,6 +222,32 @@
       "whyPreferable": "A link that was verified by hand and recorded is preferable to deleting a correct reference or switching the crawl off."
     },
     {
+      "id": "docs-links:https://socket.dev/",
+      "version": 2,
+      "justification": "socket.dev answers every non-browser client with an HTTP 403 bot challenge: curl returned 403 for this URL on 2026-11-02 even with a browser user agent, so neither the crawler nor a scripted check can read the page. The URL is the vendor's public site or this package's public Socket page, linked as a badge target; the 403 reflects the challenge, not a defect in the link.",
+      "attempted": "Requested the URL with curl, with and without a browser user agent; both received the bot challenge.",
+      "constraint": "The site serves a bot challenge to non-browser clients, so the content cannot be verified by script.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://socket.dev/ as unreachable.",
+      "url": "https://socket.dev/",
+      "whyPreferable": "A link whose limits are recorded is preferable to deleting a correct reference or switching the crawl off."
+    },
+    {
+      "id": "docs-links:https://socket.dev/npm/package/repo-contract",
+      "version": 2,
+      "justification": "socket.dev answers every non-browser client with an HTTP 403 bot challenge: curl returned 403 for this URL on 2026-11-02 even with a browser user agent, so neither the crawler nor a scripted check can read the page. The URL is the vendor's public site or this package's public Socket page, linked as a badge target; the 403 reflects the challenge, not a defect in the link.",
+      "attempted": "Requested the URL with curl, with and without a browser user agent; both received the bot challenge.",
+      "constraint": "The site serves a bot challenge to non-browser clients, so the content cannot be verified by script.",
+      "expires": "",
+      "residualRisk": "The link could break later without the crawl being able to say so.",
+      "revisitWhen": "The crawl can reach the target, or the target moves.",
+      "ruleBroken": "DocsLinks reports https://socket.dev/npm/package/repo-contract as unreachable.",
+      "url": "https://socket.dev/npm/package/repo-contract",
+      "whyPreferable": "A link whose limits are recorded is preferable to deleting a correct reference or switching the crawl off."
+    },
+    {
       "id": "docs-links:https://standardschema.dev/",
       "version": 2,
       "justification": "Confirmed live via direct curl (HTTP 200, 2026-09-18); linkinator intermittently reports it unreachable (HTTP 0) during CI's crawl, a transient network/TLS blip, not a genuine broken link.",

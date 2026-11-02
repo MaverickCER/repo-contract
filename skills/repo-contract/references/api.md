@@ -41,6 +41,78 @@ Every export a consumer can import, by entry point, for version 0.11.4. Generate
 - `ValidatedCheckSchema` (typealias): `type ValidatedCheckSchema<T> = { readonly [K in keyof T]: T[K] extends CheckDefinitionConfig ? Omit<T[K], "dependsOn"> & { readonly dependsOn?: readonly (Exclude<keyof T, K> & string)[]; } : never; }`
 - `Verdict` (interface): `interface Verdict<TChecks extends CheckSchema = CheckSchema>`
 
+## `repo-contract/affected`
+
+- `AffectedOptions` (interface): `interface AffectedOptions`
+- `AffectedResult` (interface): `interface AffectedResult`
+- `AffectedScope` (typealias): `type AffectedScope = "affected" | "full"`
+- `ArtifactInput` (interface): `interface ArtifactInput`
+- `Cache_2` (interface): `interface Cache`
+- `CACHE_FORMAT` (variable): `CACHE_FORMAT = 1`
+- `CacheEntry` (interface): `interface CacheEntry<TValue = unknown>`
+- `cacheKey` (function): `function cacheKey(input: { readonly check: string; readonly inputs: Readonly<Record<string, string>>; readonly tools: Readonly<Record<string, string>>; }): string`
+- `CacheLookup` (typealias): `type CacheLookup<TValue = unknown> = { readonly hit: true; readonly entry: CacheEntry<TValue>; } | { readonly hit: false; readonly reason: "miss" | "corrupt" | "disabled"; }`
+- `CacheMode` (typealias): `type CacheMode = "read-write" | "read-only" | "off"`
+- `CacheStats` (interface): `interface CacheStats`
+- `CacheStore` (interface): `interface CacheStore`
+- `CacheStoreInput` (interface): `interface CacheStoreInput`
+- `ChangedFile` (interface): `interface ChangedFile`
+- `ChangeKind` (typealias): `type ChangeKind = "added" | "modified" | "deleted" | "renamed"`
+- `computeAffected` (function): `function computeAffected(input: ComputeAffectedInput): AffectedResult`
+- `computeAffectedFromGit` (function): `function computeAffectedFromGit(input: ComputeAffectedFromGitInput): Promise<AffectedResult>`
+- `ComputeAffectedFromGitInput` (interface): `interface ComputeAffectedFromGitInput`
+- `ComputeAffectedInput` (interface): `interface ComputeAffectedInput`
+- `createCache` (function): `function createCache(options: { readonly store: CacheStore; readonly mode: CacheMode; readonly now?: () => Date; }): Cache`
+- `DEFAULT_IGNORE` (variable): `DEFAULT_IGNORE: readonly string[]`
+- `DEFAULT_NOT_MUTATED` (variable): `DEFAULT_NOT_MUTATED: readonly string[]`
+- `DEFAULT_TESTS` (variable): `DEFAULT_TESTS: readonly string[]`
+- `DEFAULT_TRIGGERS` (variable): `DEFAULT_TRIGGERS: readonly string[]`
+- `diagnose` (function): `function diagnose(snapshot: DoctorSnapshot): DoctorReport`
+- `DoctorFinding` (interface): `interface DoctorFinding`
+- `DoctorFix` (interface): `interface DoctorFix`
+- `DoctorReport` (interface): `interface DoctorReport`
+- `DoctorSnapshot` (interface): `interface DoctorSnapshot`
+- `explainAffected` (function): `function explainAffected(result: AffectedResult): string[]`
+- `FindingSeverity` (typealias): `type FindingSeverity = "warn" | "info"`
+- `GitCapabilities` (interface): `interface GitCapabilities`
+- `LinkRule` (interface): `interface LinkRule`
+- `loadCompilerOptions` (function): `function loadCompilerOptions(input: LoadCompilerOptionsInput): Promise<{ readonly options?: TypeScript.CompilerOptions; } | { readonly because: Widening; }>`
+- `LoadCompilerOptionsInput` (interface): `interface LoadCompilerOptionsInput`
+- `mergeMutationReports` (function): `function mergeMutationReports(reports: readonly ShardReport[], total: number): MergeResult`
+- `MergeResult` (typealias): `type MergeResult = { readonly ok: true; readonly report: unknown; } | { readonly ok: false; readonly error: string; }`
+- `MissExplanation` (typealias): `type MissExplanation = { readonly kind: "no-previous"; } | { readonly kind: "same-inputs"; } | { readonly kind: "changed"; readonly changed: readonly string[]; readonly added: readonly string[]; readonly removed: readonly string[]; readonly comparedWith: string; }`
+- `packArtifacts` (function): `function packArtifacts(files: readonly ArtifactInput[]): PackedArtifacts`
+- `PackedArtifact` (interface): `interface PackedArtifact`
+- `PackedArtifacts` (interface): `interface PackedArtifacts`
+- `parseAffectedConfig` (function): `function parseAffectedConfig(value: unknown): { readonly options: AffectedOptions; } | { readonly error: string; }`
+- `ParsedScopeArgs` (typealias): `type ParsedScopeArgs = { readonly ok: true; readonly scope?: RequestedScope; readonly base?: string; readonly rest: readonly string[]; } | { readonly ok: false; readonly error: string; }`
+- `parseFailFastArgs` (function): `function parseFailFastArgs(argv: readonly string[]): { readonly failFast?: boolean; readonly rest: readonly string[]; }`
+- `parseNameStatus` (function): `function parseNameStatus(output: string): ChangedFile[] | undefined`
+- `parseScopeArgs` (function): `function parseScopeArgs(argv: readonly string[]): ParsedScopeArgs`
+- `parseShardSpec` (function): `function parseShardSpec(text: string): ShardSpec`
+- `planFixes` (function): `function planFixes(findings: readonly DoctorFinding[], files: Readonly<Record<string, string | undefined>>): PlannedChange[]`
+- `PlannedChange` (interface): `interface PlannedChange`
+- `planShards` (function): `function planShards(input: ShardPlanInput): ShardPlan`
+- `PruneLimits` (interface): `interface PruneLimits`
+- `RequestedScope` (typealias): `type RequestedScope = RunScope | "auto"`
+- `resolveCacheMode` (function): `function resolveCacheMode(input: { readonly scope: RunScope; readonly env: Readonly<Record<string, string | undefined>>; readonly flag?: CacheMode; }): { readonly mode: CacheMode; readonly reason: string; }`
+- `resolveFailFast` (function): `function resolveFailFast(input: { readonly flag?: boolean; readonly env: Readonly<Record<string, string | undefined>>; }): boolean`
+- `resolveScope` (function): `function resolveScope(input: ResolveScopeInput): ScopeDecision`
+- `RunScope` (typealias): `type RunScope = "affected" | "full"`
+- `ScopeDecision` (interface): `interface ScopeDecision`
+- `ScopeSource` (typealias): `type ScopeSource = "flag" | "env" | "ci-full" | "release" | "ci-event" | "default"`
+- `shardMatrix` (function): `function shardMatrix(count: number): ShardMatrix`
+- `ShardMatrix` (interface): `interface ShardMatrix`
+- `ShardPlan` (interface): `interface ShardPlan`
+- `ShardPlanInput` (interface): `interface ShardPlanInput`
+- `ShardReport` (interface): `interface ShardReport`
+- `ShardSpec` (typealias): `type ShardSpec = { readonly ok: true; readonly index: number; readonly total: number; } | { readonly ok: false; readonly error: string; }`
+- `TypeScriptApi` (typealias): `type TypeScriptApi = typeof TypeScript`
+- `unpackArtifacts` (function): `function unpackArtifacts(value: unknown): UnpackResult`
+- `UnpackResult` (typealias): `type UnpackResult = { readonly ok: true; readonly files: readonly { readonly path: string; readonly content: Uint8Array; }[]; } | { readonly ok: false; readonly error: string; }`
+- `Widening` (interface): `interface Widening`
+- `WideningReason` (typealias): `type WideningReason = "global-trigger" | "unplaced-file" | "parse-error" | "dynamic-import" | "module-side-effect" | "git-failed" | "tsconfig"`
+
 ## `repo-contract/helpers`
 
 - `evaluateExceptionRecord` (function): `function evaluateExceptionRecord<TRecord>(input: ExceptionRecordEvaluation<TRecord>): ExceptionDeterminant<TRecord>`
@@ -72,6 +144,33 @@ Every export a consumer can import, by entry point, for version 0.11.4. Generate
 - `StandardSchemaV1` (namespace): `namespace StandardSchemaV1`
 - `validateExceptionPolicyConfig` (function): `function validateExceptionPolicyConfig(config: ExceptionPolicyConfig, validRequirements?: readonly string[]): readonly string[]`
 - `writeExceptionRegistry` (function): `function writeExceptionRegistry(input: { readonly path: string; readonly records: readonly (Record<string, unknown> & { readonly id: string; })[]; readonly readFile?: (path: string) => Promise<string>; readonly writeFile?: (path: string, data: string) => Promise<void>; readonly rename?: (from: string, to: string) => Promise<void>; readonly isSymlink?: (path: string) => Promise<boolean>; }): Promise<{ readonly ok: true; readonly written: boolean; } | { readonly ok: false; readonly error: string; }>`
+
+## `repo-contract/metrics`
+
+- `buildEvidenceManifest` (function): `function buildEvidenceManifest(input: ManifestInput): EvidenceManifest`
+- `CacheOutcome` (typealias): `type CacheOutcome = "hit" | "miss" | "off"`
+- `CheckRecord` (interface): `interface CheckRecord`
+- `createRunRecord` (function): `function createRunRecord(input: RunRecordInput): RunRecord`
+- `EvidenceManifest` (interface): `interface EvidenceManifest`
+- `ManifestInput` (interface): `interface ManifestInput`
+- `ManifestVerification` (interface): `interface ManifestVerification`
+- `MaturityInput` (interface): `interface MaturityInput`
+- `maturityLevel` (function): `function maturityLevel(input: MaturityInput): MaturityResult`
+- `MaturityResult` (interface): `interface MaturityResult`
+- `parseRunLog` (function): `function parseRunLog(text: string): { readonly records: readonly RunRecord[]; readonly errors: readonly RunLogError[]; }`
+- `Pillar` (typealias): `type Pillar = (typeof PILLARS)[number]`
+- `pillarCoverage` (function): `function pillarCoverage(checks: readonly { readonly id: string; readonly pillar?: Pillar; }[]): PillarCoverage`
+- `PillarCoverage` (interface): `interface PillarCoverage`
+- `PILLARS` (variable): `PILLARS: readonly ["correctness", "security", "performance", "accessibility", "compliance", "maintainability"]`
+- `RunLogError` (interface): `interface RunLogError`
+- `RunRecord` (interface): `interface RunRecord extends RunRecordInput`
+- `RunRecordInput` (interface): `interface RunRecordInput`
+- `RunSummary` (interface): `interface RunSummary`
+- `serializeRunRecord` (function): `function serializeRunRecord(record: RunRecord): string`
+- `summarizeRuns` (function): `function summarizeRuns(records: readonly RunRecord[], filter?: SummaryFilter): RunSummary`
+- `SummaryFilter` (interface): `interface SummaryFilter`
+- `Verdict` (typealias): `type Verdict = "pass" | "warn" | "fail"`
+- `verifyEvidenceManifest` (function): `function verifyEvidenceManifest(value: unknown, evidence?: Readonly<Record<string, unknown>>): ManifestVerification`
 
 ## `repo-contract/presets`
 
