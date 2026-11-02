@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
@@ -19,7 +19,7 @@ interface Report {
 const root = path.resolve(__dirname, "../../..")
 const bin = path.join(root, "bin/repo-contract.mjs")
 const version = (
-  JSON.parse(execFileSync("cat", [path.join(root, "package.json")]).toString()) as {
+  JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as {
     version: string
   }
 ).version
