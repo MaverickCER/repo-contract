@@ -1,3 +1,4 @@
+import path from "node:path"
 import { describe, expect, it } from "vitest"
 import {
   MERGE_MUTATION_USAGE,
@@ -5,6 +6,9 @@ import {
   runMergeMutation,
 } from "../../../bin/merge-mutation-cli.mjs"
 import { mergeMutationReports } from "../../../src/affected/index.js"
+
+/** A path under the pretend working directory, spelled the way this platform spells it. */
+const at = (...parts: string[]): string => path.resolve("/work/project", ...parts)
 
 const report = (files: Record<string, unknown>) =>
   JSON.stringify({ schemaVersion: "2", thresholds: {}, files })
@@ -15,7 +19,7 @@ async function invoke(argv: string[], files: Record<string, string> = {}, failWr
   const written: Record<string, string> = {}
   const code = await runMergeMutation({
     argv,
-    cwd: "/work/project",
+    cwd: at(),
     version: "9.9.9",
     stdout: (t: string) => out.push(t),
     stderr: (t: string) => err.push(t),
@@ -81,8 +85,8 @@ describe("parseMergeMutationArgs", () => {
 
 describe("runMergeMutation", () => {
   const files = {
-    "/work/project/a.json": report({ "src/a.ts": { mutants: [] } }),
-    "/work/project/b.json": report({ "src/b.ts": { mutants: [] } }),
+    [at("a.json")]: report({ "src/a.ts": { mutants: [] } }),
+    [at("b.json")]: report({ "src/b.ts": { mutants: [] } }),
   }
 
   it("prints help, the version, and usage errors with exit 2", async () => {
@@ -109,7 +113,7 @@ describe("runMergeMutation", () => {
     )
     expect(code).toBe(0)
     expect(stdout).toBe("")
-    expect(Object.keys(written)).toEqual(["/work/project/out/m.json"])
+    expect(Object.keys(written)).toEqual([at("out", "m.json")])
     expect(stderr).toContain("merged 2 shards into out/m.json")
   })
 
@@ -133,7 +137,7 @@ describe("runMergeMutation", () => {
     const missing = await invoke(["--total", "1", "1=nope.json"], files)
     expect(missing.code).toBe(1)
     expect(missing.stderr).toContain("could not read nope.json")
-    const bad = await invoke(["--total", "1", "1=bad.json"], { "/work/project/bad.json": "{" })
+    const bad = await invoke(["--total", "1", "1=bad.json"], { [at("bad.json")]: "{" })
     expect(bad.code).toBe(1)
     expect(bad.stderr).toContain("bad.json is not valid JSON")
   })
@@ -150,8 +154,8 @@ describe("runMergeMutation", () => {
 
   it("uses -C as the base for every path", async () => {
     const { written } = await invoke(["-C", "pkg", "--total", "1", "--out", "m.json", "1=a.json"], {
-      "/work/project/pkg/a.json": report({}),
+      [at("pkg", "a.json")]: report({}),
     })
-    expect(Object.keys(written)).toEqual(["/work/project/pkg/m.json"])
+    expect(Object.keys(written)).toEqual([at("pkg", "m.json")])
   })
 })

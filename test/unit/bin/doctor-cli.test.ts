@@ -1,6 +1,10 @@
+import path from "node:path"
 import { describe, expect, it } from "vitest"
 import { DOCTOR_USAGE, parseDoctorArgs, runDoctor } from "../../../bin/doctor-cli.mjs"
 import { diagnose, planFixes } from "../../../src/affected/index.js"
+
+/** A path under the pretend working directory, spelled the way this platform spells it. */
+const at = (...parts: string[]): string => path.resolve("/work/project", ...parts)
 
 interface Repo {
   files: Record<string, string>
@@ -27,7 +31,7 @@ async function invoke(argv: string[], repo: Repo = healthy, failWrites = false) 
   const files = { ...repo.files }
   const code = await runDoctor({
     argv,
-    cwd: "/work/project",
+    cwd: at(),
     version: "9.9.9",
     stdout: (text: string) => out.push(text),
     stderr: (text: string) => err.push(text),
@@ -270,6 +274,6 @@ describe("runDoctor", () => {
         }
       },
     })
-    expect(dirs).toEqual(["/work/pkg"])
+    expect(dirs).toEqual([path.resolve("/work", "pkg")])
   })
 })

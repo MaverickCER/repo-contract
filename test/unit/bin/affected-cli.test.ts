@@ -343,7 +343,7 @@ describe("runAffected: options reach the engine", () => {
     const absolute = await invoke(["-C", "/elsewhere"])
     expect(absolute.harness.dirs).toEqual(["/elsewhere"])
     const none = await invoke([])
-    expect(none.harness.dirs).toEqual(["/work/project"])
+    expect(none.harness.dirs).toEqual([path.resolve("/work/project")])
   })
 
   it("loads TypeScript from the directory it runs in", async () => {
@@ -444,7 +444,7 @@ describe("runAffected: failures exit 1 with one clear line on stderr", () => {
     expect(code).toBe(1)
     expect(stdout).toBe("")
     expect(stderr).toBe(
-      "repo-contract affected: could not load TypeScript from /work/project: Cannot find module 'typescript'\n" +
+      `repo-contract affected: could not load TypeScript from ${path.resolve("/work/project")}: Cannot find module 'typescript'\n` +
         "Install it with: npm install --save-dev typescript\n",
     )
   })

@@ -5,6 +5,7 @@ import {
   readFile as readFileFromFs,
   rename as renameFromFs,
   rm as rmFromFs,
+  stat as statFromFs,
   writeFile as writeFileFromFs,
 } from "node:fs/promises"
 import path from "node:path"
@@ -26,6 +27,26 @@ export interface FileCacheStore {
 }
 
 const TEMPORARY = /\.\d+\.[0-9a-f]+\.tmp$/
+
+/**
+ * @param error - What a file operation threw.
+ * @returns Whether it means another writer has the file in use right now.
+ */
+function isContended(error: unknown): boolean {
+  const { code } = error as NodeJS.ErrnoException
+  return code === "EPERM" || code === "EBUSY" || code === "EACCES"
+}
+
+/**
+ * @param file - An absolute path.
+ * @returns Whether something is there.
+ */
+async function exists(file: string): Promise<boolean> {
+  return statFromFs(file).then(
+    () => true,
+    () => false,
+  )
+}
 
 /**
  * @param error - What a file operation threw.
@@ -115,7 +136,11 @@ export function createFileCacheStore(directory: string): FileCacheStore {
         await renameFromFs(temporary, target)
       } catch (error) {
         await rmFromFs(temporary, { force: true })
-        throw error
+        // Windows refuses to replace a file another writer has open. Entries are named by what they
+        // were computed from, so a concurrent writer's complete value stands in for ours.
+        if (!(isContended(error) && (await exists(target)))) {
+          throw error
+        }
       }
     },
 

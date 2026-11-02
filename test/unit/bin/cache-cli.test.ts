@@ -1,7 +1,11 @@
+import path from "node:path"
 import { describe, expect, it } from "vitest"
 import { CACHE_USAGE, parseCacheArgs, runCache } from "../../../bin/cache-cli.mjs"
 import { createCache } from "../../../src/affected/cache.js"
 import type { CacheStore } from "../../../src/affected/cache.js"
+
+/** A path under the pretend working directory, spelled the way this platform spells it. */
+const at = (...parts: string[]): string => path.resolve("/work/project", ...parts)
 
 function memoryStore(): CacheStore & { files: Map<string, string> } {
   const files = new Map<string, string>()
@@ -48,7 +52,7 @@ async function invoke(
   const store = options.store ?? memoryStore()
   const code = await runCache({
     argv,
-    cwd: "/work/project",
+    cwd: at(),
     version: "9.9.9",
     stdout: (text: string) => out.push(text),
     stderr: (text: string) => err.push(text),
@@ -173,13 +177,13 @@ describe("runCache", () => {
   })
 
   it("locates the cache under the working directory by default, -C and --cache-dir", async () => {
-    expect((await invoke(["stats"])).dirs).toEqual(["/work/project/.repo-contract/cache"])
+    expect((await invoke(["stats"])).dirs).toEqual([at(".repo-contract", "cache")])
     expect((await invoke(["stats", "-C", "/other"])).dirs).toEqual(["/other/.repo-contract/cache"])
     expect((await invoke(["stats", "-C", "sub"])).dirs).toEqual([
-      "/work/project/sub/.repo-contract/cache",
+      at("sub", ".repo-contract", "cache"),
     ])
     expect((await invoke(["stats", "--cache-dir", "/tmp/c"])).dirs).toEqual(["/tmp/c"])
-    expect((await invoke(["stats", "--cache-dir", "rel"])).dirs).toEqual(["/work/project/rel"])
+    expect((await invoke(["stats", "--cache-dir", "rel"])).dirs).toEqual([at("rel")])
   })
 
   describe("stats", () => {
@@ -368,7 +372,7 @@ describe("cache why", () => {
       .store({ check: "tests", key: KEY, inputs, value: 1, durationMs: 1 })
       .then(() => store)
   }
-  const inputsFile = (inputs: unknown) => ({ "/work/project/inputs.json": JSON.stringify(inputs) })
+  const inputsFile = (inputs: unknown) => ({ [at("inputs.json")]: JSON.stringify(inputs) })
 
   it("parses the check and --inputs, in either value form", () => {
     expect(parseCacheArgs(["why", "tests", "--inputs", "in.json"])).toEqual({
@@ -454,7 +458,7 @@ describe("cache why", () => {
     expect(missing.stderr).toContain("could not read inputs file inputs.json")
     for (const body of ["{", "[]", '{"a": 1}', "null"]) {
       const bad = await invoke(["why", "tests", "--inputs", "inputs.json"], {
-        files: { "/work/project/inputs.json": body },
+        files: { [at("inputs.json")]: body },
       })
       expect(bad.code).toBe(1)
       expect(bad.stderr).toContain(

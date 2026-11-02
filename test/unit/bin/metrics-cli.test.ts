@@ -1,3 +1,4 @@
+import path from "node:path"
 import { describe, expect, it } from "vitest"
 import { METRICS_USAGE, parseMetricsArgs, runMetrics } from "../../../bin/metrics-cli.mjs"
 import {
@@ -6,6 +7,9 @@ import {
   serializeRunRecord,
   summarizeRuns,
 } from "../../../src/metrics/index.js"
+
+/** A path under the pretend working directory, spelled the way this platform spells it. */
+const at = (...parts: string[]): string => path.resolve("/work/project", ...parts)
 
 const record = (patch: Record<string, unknown> = {}) =>
   serializeRunRecord(
@@ -18,7 +22,7 @@ const record = (patch: Record<string, unknown> = {}) =>
     }),
   )
 
-const LOG = "/work/project/.repo-contract/metrics/runs.jsonl"
+const LOG = at(".repo-contract", "metrics", "runs.jsonl")
 
 async function invoke(argv: string[], files: Record<string, string> = {}) {
   const out: string[] = []
@@ -26,7 +30,7 @@ async function invoke(argv: string[], files: Record<string, string> = {}) {
   const read: string[] = []
   const code = await runMetrics({
     argv,
-    cwd: "/work/project",
+    cwd: at(),
     version: "9.9.9",
     stdout: (t: string) => out.push(t),
     stderr: (t: string) => err.push(t),
@@ -119,7 +123,7 @@ describe("runMetrics", () => {
 
   it("reads a log given with --log, relative to -C", async () => {
     const { read } = await invoke(["-C", "pkg", "--log", "out/runs.jsonl"], {})
-    expect(read).toEqual(["/work/project/pkg/out/runs.jsonl"])
+    expect(read).toEqual([at("pkg", "out", "runs.jsonl")])
   })
 
   it("shows ratios only when they are supported by the data", async () => {
