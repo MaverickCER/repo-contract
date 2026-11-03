@@ -164,6 +164,11 @@
     "verify": "npm run docs:api && npm run docs:benchmarks && npm run contract",
     "version": "changeset version && npm run build && npm run sbom && internal-package-contract skill && internal-package-contract site"
   },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true,
+    "unrs-resolver@1.12.2": true
+  },
   "overrides": {
     "adm-zip": "0.6.1",
     "esbuild": "^0.28.1",
@@ -212,7 +217,7 @@
     "fast-check": "^4.9.0",
     "github-actionlint": "^1.7.12",
     "globals": "^17.9.0",
-    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.13.2",
+    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.13.3",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-reports": "^3.2.0",
@@ -248,11 +253,6 @@
   },
   "engines": {
     "node": ">=22.0.0"
-  },
-  "allowScripts": {
-    "esbuild@0.28.2": true,
-    "fsevents@2.3.3": true,
-    "unrs-resolver@1.12.2": true
   },
   "internal-package-contract": {
     "copies": [
