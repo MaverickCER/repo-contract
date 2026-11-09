@@ -739,7 +739,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@1edf1bef02f3ba49e2d19d140ded398a148a0fb1 # v0.13.3
+    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@2bcc5856c58883f02e5e46763ba81dfe423b4efb # v0.14.0
     with:
       docs-script: docs:api
       content-artifact-name: pages-content
@@ -754,6 +754,6 @@ jobs:
     permissions:
       pull-requests: read
     steps:
-      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+      - uses: amannn/action-semantic-pull-request@2252a14e810aa9b85c2d560bd7070c802206ecf6 # v6.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
