@@ -185,9 +185,9 @@ Estimates use two bracketing price shapes: **low** = CPU-priced compute ($0.040 
 
 ## Environment and method
 
-- Run: `2026-11-09T20:15:31.248Z` → `2026-11-09T20:15:33.698Z` (2 s), ci: CI (run 42688972549)
-- Machine: AMD EPYC 9V45 96-Core Processor, 4 logical core(s) (2 physical), 15983 MB RAM, linux/x64, Node v24.22.2, GitHub Actions
-- Git: `6a44026fb94c96831f0f0a3fd88fd58afb21b25c` on `chore/bump-internal-package-contract-v0.16.0`
+- Run: `2026-11-10T00:07:33.351Z` → `2026-11-10T00:07:37.163Z` (4 s), ci: CI (run 42723432906)
+- Machine: AMD EPYC 7763 64-Core Processor, 4 logical core(s) (2 physical), 15983 MB RAM, linux/x64, Node v24.22.2, GitHub Actions
+- Git: `339a167f0909bfc64f008de8be4c80cd36db513c` on `chore/bump-internal-package-contract-v0.16.0`
 - Sizes: 20, 40, 80, 160, 320, 640, 1280 exports -- One exported function in the package's public API. 160 is a mid-sized library's surface; the ladder reaches 1,280. It stops there, not at 10,240, because every size compiles a real synthetic TypeScript package and runs API Extractor over it, which takes minutes at the largest sizes.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They exist to show how _this_ package's cost changes between runs on comparable hardware and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).
