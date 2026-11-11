@@ -4,7 +4,18 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-_The end-to-end benchmark produced no complete result at the typical workload size, so no cost summary is available. See the failed/skipped section._
+For a typical workload of **160 exports** per operation, routing the work through `repo-contract` adds **1.81 s** per operation compared with a bare-minimum baseline (**628× the baseline**). Overall, it grows O(n) with workload size (measured exponent 1.04). At list prices that is on the order of **~$10 per million operations** of compute.
+
+> The relative figure and the growth class are the steadier ones: both come from the same run, so they depend far less on the machine than a time does, though runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
+
+| Cost | Typical (160 exports) | Largest (1280 exports) |
+| --- | --- | --- |
+| Added latency per operation | 1.81 s | 14.6 s |
+| Added latency, relative to baseline | 628× baseline | 1,161× baseline |
+| Added CPU time per operation | 2.71 s | 21.4 s |
+| Added memory per operation (heap delta) | 89.6 MiB | 387.8 MiB |
+| Compute cost per 1M operations (order of magnitude) | ~$10 | ~$100 |
+| Single-core throughput ceiling of the overhead alone | 1 ops/s | 0 ops/s |
 
 ## 1. End-to-end: the package's total impact
 
@@ -29,6 +40,15 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 | exports | Baseline | With package | Added | Added vs baseline | Added CPU | Est. $ / 1M ops |
 | --- | --- | --- | --- | --- | --- | --- |
+| 20 | 445 µs | 220 ms | 219 ms | 494× baseline | 352 ms | $0.457 – $3.96 |
+| 40 | 697 µs | 414 ms | 413 ms | 593× baseline | 620 ms | $0.861 – $6.97 |
+| 80 | 1.48 ms | 804 ms | 802 ms | 543× baseline | 1.17 s | $2.13 – $13.17 |
+| 160 | 2.89 ms | 1.82 s | 1.81 s | 628× baseline | 2.71 s | $3.78 – $30.47 |
+| 320 | 4.47 ms | 3.53 s | 3.53 s | 790× baseline | 5.14 s | $25.37 – $57.82 |
+| 640 | 7.24 ms | 7.24 s | 7.23 s | 1,000× baseline | 10.6 s | $41.71 – $119.10 |
+| 1280 | 12.6 ms | 14.6 s | 14.6 s | 1,161× baseline | 21.4 s | $92.04 – $241.03 |
+
+**How the total grows:** O(n) (linear), exponent 1.04 over 7 sizes.
 
 ## 2. Function by function
 
@@ -36,17 +56,9 @@ Every function the package exposes is measured on its own across the full size l
 
 | Function | Varies | Documented | Measured | Agreement | At 160 | At 1280 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `loadApiModel (both API descriptions)` | export | O(n) | n/a | ❔ not enough data | n/a | n/a |
-| `normalizeApiPackage` | export | O(n log n) | n/a | ❔ not enough data | n/a | n/a |
-| `classifyContractChanges (with type-assignability probing)` | export | O(n) | n/a | ❔ not enough data | n/a | n/a |
-
-> **Could not be determined.** The big-O of these could not be measured, so they are not checked against their documentation:
->
-> - `end-to-end:baseline` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
-> - `end-to-end:with-package` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
-> - `load-api-model` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
-> - `normalize-api-package` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
-> - `classify-contract-changes` (varying export): only 0 export sizes gave a usable measurement and a growth rate needs at least 2; lost: n20 failed (Command failed: …/node …/tsc -p tsconfig.json); n40 failed (Command failed: …/node …/tsc -p tsconfig.json); n80 failed (Command failed: …/node …/tsc -p tsconfig.json); n160 failed (Command failed: …/node …/tsc -p tsconfig.json); n320 failed (Command failed: …/node …/tsc -p tsconfig.json); n640 failed (Command failed: …/node …/tsc -p tsconfig.json); n1280 failed (Command failed: …/node …/tsc -p tsconfig.json)
+| `loadApiModel (both API descriptions)` | export | O(n) | O(n) | ✅ matches | 39.4 ms | 195 ms |
+| `normalizeApiPackage` | export | O(n log n) | O(n) | 🟡 close (neighbouring class) | 1.33 ms | 8.48 ms |
+| `classifyContractChanges (with type-assignability probing)` | export | O(n) | O(n) | ✅ matches | 1.74 s | 14.3 s |
 
 ### `loadApiModel (both API descriptions)`
 
@@ -66,15 +78,17 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** Once per API check, loading both the baseline and the current API description (this function loads both).
 
+**Measured: O(n)** (exponent 0.72, 7 sizes) -- ✅ matches.
+
 | exports | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 40 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 80 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 160 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 320 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 640 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 1280 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
+| 20 | 11.4 ms | 12.8 ms | 43.5 ms | 1.6 MiB | 88 |
+| 40 | 19.7 ms | 21.2 ms | 67.8 ms | 2.9 MiB | 51 |
+| 80 | 26.6 ms | 28.4 ms | 79.0 ms | 5.5 MiB | 38 |
+| 160 | 39.4 ms | 42.5 ms | 95.0 ms | 10.4 MiB | 25 |
+| 320 | 62.0 ms | 64.0 ms | 119 ms | 20.0 MiB | 16 |
+| 640 | 107 ms | 115 ms | 193 ms | 38.7 MiB | 9 |
+| 1280 | 195 ms | 200 ms | 315 ms | 18.2 MiB | 5 |
 
 ### `normalizeApiPackage`
 
@@ -94,15 +108,17 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** Once per API check, normalizing both the baseline and the current model (this function normalizes both).
 
+**Measured: O(n)** (exponent 0.72, 7 sizes) -- 🟡 close (neighbouring class).
+
 | exports | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 40 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 80 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 160 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 320 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 640 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 1280 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
+| 20 | 451 µs | 474 µs | 464 µs | 65.7 KiB | 2,216 |
+| 40 | 741 µs | 837 µs | 1.67 ms | 128.8 KiB | 1,349 |
+| 80 | 1.32 ms | 1.46 ms | 4.13 ms | 254.9 KiB | 757 |
+| 160 | 1.33 ms | 1.40 ms | 4.34 ms | 492.1 KiB | 751 |
+| 320 | 2.65 ms | 3.80 ms | 9.88 ms | 986.5 KiB | 377 |
+| 640 | 4.65 ms | 7.35 ms | 17.8 ms | 1.8 MiB | 215 |
+| 1280 | 8.48 ms | 9.44 ms | 32.5 ms | 3.6 MiB | 118 |
 
 ### `classifyContractChanges (with type-assignability probing)`
 
@@ -127,57 +143,39 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** Once per API check, after both models are normalized.
 
+**Measured: O(n)** (exponent 1.05, 7 sizes) -- ✅ matches.
+
 | exports | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 40 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 80 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 160 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 320 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 640 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
-| 1280 | ❌ Command failed: …/node …/tsc -p tsconfig.json |  |  |  |  |
+| 20 | 202 ms | 211 ms | 311 ms | 44.8 MiB | 5 |
+| 40 | 389 ms | 394 ms | 571 ms | 97.5 MiB | 3 |
+| 80 | 763 ms | 773 ms | 1.09 s | 169.3 MiB | 1 |
+| 160 | 1.74 s | 1.74 s | 2.62 s | 83.1 MiB | 1 |
+| 320 | 3.45 s | 3.46 s | 5.02 s | 415.8 MiB | 0 |
+| 640 | 7.10 s | 7.22 s | 10.4 s | 237.4 MiB | 0 |
+| 1280 | 14.3 s | 14.3 s | 21.0 s | 234.1 MiB | 0 |
 
 ## 3. What makes up one end-to-end operation
 
 Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls, so where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time): every moment of the operation belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly -- not against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
 
-## Failed measurements
+**At 160 exports** (whole operation: 1.82 s)
 
-- **end-to-end:baseline** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:baseline** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **end-to-end:with-package** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:load-api-model** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:normalize-api-package** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n20: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n40: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n80: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n160: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n320: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n640: Error: Command failed: …/node …/tsc -p tsconfig.json
-- **fn:classify-contract-changes** at n1280: Error: Command failed: …/node …/tsc -p tsconfig.json
+| Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
+| --- | --- | --- | --- | --- |
+| `classify-contract-changes` | 1 | 1.74 s | 1.74 s | 96% |
+| `load-api-model` | 1 | 39.4 ms | 39.4 ms | 2.2% |
+| `normalize-api-package` | 1 | 1.33 ms | 1.33 ms | 0.1% |
+| _unattributed_ |  |  | 34.4 ms | 1.9% |
+
+**At 1280 exports** (whole operation: 14.6 s)
+
+| Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
+| --- | --- | --- | --- | --- |
+| `classify-contract-changes` | 1 | 14.3 s | 14.3 s | 98% |
+| `load-api-model` | 1 | 195 ms | 195 ms | 1.3% |
+| `normalize-api-package` | 1 | 8.48 ms | 8.48 ms | 0.1% |
+| _unattributed_ |  |  | 105 ms | 0.7% |
 
 ## Cost model
 
@@ -185,9 +183,9 @@ Estimates use two bracketing price shapes: **low** = CPU-priced compute ($0.040 
 
 ## Environment and method
 
-- Run: `2026-11-03T09:24:21.304Z` → `2026-11-03T09:24:25.083Z` (4 s), ci: CI (run 41608056902)
-- Machine: AMD EPYC 9V74 80-Core Processor, 4 logical core(s) (2 physical), 15984 MB RAM, linux/x64, Node v24.22.1, GitHub Actions
-- Git: `129f48e79bf2184a31658f47480f331c4796d9ac` on `chore/dependency-updates-v3`
+- Run: `2026-11-11T11:56:25.238Z` → `2026-11-11T12:00:46.137Z` (261 s), ci: CI (run 43013441445)
+- Machine: Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz, 4 logical core(s) (2 physical), 15982 MB RAM, linux/x64, Node v24.22.2, GitHub Actions
+- Git: `edac848e771159164c3871993f65a7b5ccb346c8` on `docs/v1-claims-evidence`
 - Sizes: 20, 40, 80, 160, 320, 640, 1280 exports -- One exported function in the package's public API. 160 is a mid-sized library's surface; the ladder reaches 1,280. It stops there, not at 10,240, because every size compiles a real synthetic TypeScript package and runs API Extractor over it, which takes minutes at the largest sizes.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They exist to show how _this_ package's cost changes between runs on comparable hardware and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).
