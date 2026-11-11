@@ -118,7 +118,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # --gate: a measured growth class worse than the documented one, or an overhead ratio past the
-          # budget in benchmarks/budgets.mjs, fails this job (and so `required`); the comment is always posted.
+          # budget in benchmarks/budgets.mjs (deliberately wide there, with the measurements that say why),
+          # fails this job (and so `required`); the comment is always posted.
           node node_modules/internal-package-contract/scripts/benchmark/render-summary.mjs \
             --budgets benchmarks/budgets.mjs \
             --marker "<!-- repo-contract-benchmark-summary -->" \
