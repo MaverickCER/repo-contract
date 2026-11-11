@@ -159,6 +159,7 @@ import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
 import { agentSkillCheck } from "internal-package-contract/checks/agent-skill"
 import { ambientCapabilitiesCheck } from "internal-package-contract/checks/ambient-capabilities"
 import { apiContract } from "internal-package-contract/checks/api-contract"
+import { generatedRegionsCheck } from "internal-package-contract/checks/generated-regions"
 import { npmScriptCheck } from "internal-package-contract/checks/npm-script"
 import { accessibility } from "./checks/accessibility.js"
 import { adrGovernance } from "./checks/adr-governance.js"
@@ -265,7 +266,7 @@ export default defineRepoContract({
     // IPC-sourced (internal-package-contract/checks/api-contract); needs a fresh dist/.dts/, unlike
     // api-docs-report above -- see module doc comment for why it's declared here, first among the
     // readers, rather than back among the writers. Diffs every entry point's real, current public
-    // surface (index/presets/helpers) against its own committed baseline under
+    // surface (index/presets/helpers/affected/metrics) against its own committed baseline under
     // `.repo-contract/api-contract/<target>/` and fails when this branch's changesets under-declare
     // the resulting bump.
     "api-contract": apiContract,
@@ -361,21 +362,20 @@ export default defineRepoContract({
     },
     // `run` override (README's "Preset options are the preferred way..., a direct run override is
     // an escape hatch"): without a `.licensee.json`, the published `license` preset passes `--osi` only.
-    // `minimatch` (src/helpers/exception-policy.ts's real, first runtime `dependencies` entry --
-    // see specs/decisions/0013-reusable-exception-policy-helper.md) declares SPDX `BlueOak-1.0.0`,
-    // which `licensee`'s own OSI classification does not recognize as approved, even though it is
-    // Blue Oak Council Gold-rated (a permissive, MIT-equivalent license by design; Blue Oak
-    // deliberately did not pursue OSI approval, treating it as unnecessary bureaucracy for an
-    // already-simple, already-permissive license). `licensee` ships first-class support for
-    // exactly this distinction via `--blueoak=<rating>`, added here as an additional acceptance
-    // criterion alongside (not instead of) `--osi` -- this repository's own self-hosting config
+    // There are no runtime `dependencies` today (ADR 0017 replaced `minimatch` with the
+    // dependency-free `globMatch`), but the acceptance criterion stays wider than `--osi` alone:
+    // Blue Oak Council Gold-rated licenses such as `BlueOak-1.0.0` are permissive, MIT-equivalent
+    // licenses that deliberately never sought OSI approval, and `licensee` ships first-class
+    // support for exactly that distinction via `--blueoak=<rating>`. It is added here as an
+    // additional acceptance criterion alongside (not instead of) `--osi`, so a future dependency
+    // under such a license is judged on its terms -- this repository's own self-hosting config
     // only, not a change to the published preset's default behavior for other consumers.
     license: {
       ...license,
       run: ["licensee", "--production", "--osi", "--blueoak=gold", "--errors-only", "--ndjson"],
       // The published preset's own pass rationale ("...non-OSI-approved license") is worded for
       // its default --osi-only `run` -- `--blueoak=gold` above widens the acceptance criterion, so
-      // a dependency accepted via Blue Oak Gold rather than OSI approval (minimatch, per this
+      // a dependency accepted via Blue Oak Gold rather than OSI approval (none today, per this
       // entry's own comment above) must never be described by a rationale implying OSI was the
       // only test applied; a reader trusting that rationale alone would wrongly conclude every
       // production dependency is specifically OSI-approved. Wraps the preset's own policy (which
@@ -428,8 +428,8 @@ export default defineRepoContract({
     "dist-no-urls": distNoUrls(),
     "dead-code": deadCode,
     "adr-governance": adrGovernance,
-    // Conventional Commits are the sole versioning input (Changesets derives the bump +
-    // changelog from them); commitlint enforces the format across `origin/main..HEAD`. See
+    // Conventional Commits drive the generated changesets (the shared workflow writes one per
+    // releasable commit type) and the changelog; commitlint enforces the format across `origin/main..HEAD`. See
     // specs/decisions/0009-conventional-commits-versioning-and-local-gates.md. A pure reader -- it runs the
     // `commitlint` binary against git history and touches nothing.
     commitlint: commitlint(),
@@ -465,6 +465,10 @@ export default defineRepoContract({
     // The agent skill is written from docs/skill.json and what the package already says about itself; this
     // fails when what is committed is not what would be written now, or is over its word budget.
     "agent-skill": agentSkillCheck(),
+    // Facts a document states that package.json already holds (what installing the package adds) are
+    // written by `internal-package-contract generate` from docs/surface.json; this fails when a region is
+    // stale, so ADOPTION.md cannot drift from package.json the way hand-written dependency notes did.
+    "generated-regions": generatedRegionsCheck(),
     // Declared last among the readers so its own scheduling barrier (see checks/mutation.ts and
     // this file's own doc comment) blocks as little else as possible.
     mutation: { ...mutation, dependsOn: ["suppression-governance"] },

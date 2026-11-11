@@ -2,15 +2,9 @@
   "entries": {
     ".": {
       "source": "src/",
-      "environment": "isomorphic, zero deps",
+      "environment": "Node >=22; zero dependencies. The engine spawns processes only through the capability you pass, so it is server and CLI only",
       "tier": "Stable",
       "purpose": "`defineRepoContract`, `runRepoContract`, `serializeRun`, `renderMarkdownSummary`, the `Evidence`, `Verdict` and `Policy` types, and the error classes"
-    },
-    "./helpers": {
-      "source": "src/helpers/",
-      "environment": "Node: node:crypto and node:fs/promises (the file system is injectable)",
-      "tier": "Stable",
-      "purpose": "Governed exceptions: `loadExceptionRegistry`, `reconcileExceptions`, `evaluateExceptionRecord`; `repoContractLogs` and its two hooks are beta"
     },
     "./presets": {
       "source": "src/presets/",
@@ -18,11 +12,32 @@
       "tier": "Experimental",
       "purpose": "Ready-made checks for common tools: `typecheck`, `lint`, `format`, `test`, `securityDeps`, `license` and others, to spread and override"
     },
+    "./helpers": {
+      "source": "src/helpers/",
+      "environment": "Node: node:crypto and node:fs/promises (the file system is injectable)",
+      "tier": "Stable",
+      "purpose": "Governed exceptions: `loadExceptionRegistry`, `reconcileExceptions`, `evaluateExceptionRecord`; `repoContractLogs` and its two hooks are beta"
+    },
+    "./affected": {
+      "source": "src/affected/",
+      "environment": "Node >=22; pure: the TypeScript compiler API, git output and the cache store are passed in",
+      "tier": "Experimental",
+      "purpose": "Scope a run to what a change can reach and reuse unchanged results: `computeAffectedFromGit`, `resolveScope`, `parseScopeArgs`, `createCache`, `resolveCacheMode`"
+    },
+    "./metrics": {
+      "source": "src/metrics/",
+      "environment": "Node >=22; pure",
+      "tier": "Experimental",
+      "purpose": "Run records and what they prove: `createRunRecord`, `serializeRunRecord`, `summarizeRuns`, `pillarCoverage`, `maturityLevel`, `buildEvidenceManifest`, `verifyEvidenceManifest`"
+    },
     "./schema": {
       "source": "schemas/",
       "environment": "static JSON",
       "tier": "Stable",
       "purpose": "The JSON Schemas for the evidence and verdict documents `serializeRun` writes"
     }
+  },
+  "dependencies": {
+    "typescript": "Only for `repo-contract/affected` and the `repo-contract affected` command, which read the project's own compiler (version 6 or earlier) to follow imports. Nothing else loads it."
   }
 }

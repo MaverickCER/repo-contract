@@ -1,0 +1,21 @@
+{
+  "name": "affected-scope",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Example: run only what a pull request can affect, shard the mutation work, and see when repo-contract widens to everything. See ./README.md.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "walkthrough": "tsx run.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@types/node": "^20.19.43",
+    "repo-contract": "file:../..",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3"
+  }
+}

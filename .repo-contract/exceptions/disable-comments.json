@@ -1,6 +1,66 @@
 {
   "exceptions": [
     {
+      "id": "suppression:coverage:v8-ignore-start:src/execution/process-tree.ts:83",
+      "version": 2,
+      "justification": "Windows-only taskkill branch. It is exercised for real by test/unit/cross-platform/windows-taskkill.test.ts on the CI Windows runner, but v8 coverage is collected only in the ubuntu `contract` job, where this branch cannot execute.",
+      "attempted": "Covering it from Linux: the branch is behind a platform check that no test can flip without faking the OS, which would test the fake, not the code.",
+      "category": "platform-limitation",
+      "constraint": "Coverage is collected per process on one OS; the branch runs on another.",
+      "domain": "coverage",
+      "expires": "",
+      "file": "src/execution/process-tree.ts",
+      "line": 83,
+      "residualRisk": "A change to the Windows branch is caught by the Windows unit run, not by the coverage threshold.",
+      "revisitWhen": "The code at this location changes, or coverage can be merged from the platform or process that exercises it.",
+      "rule": [
+        "v8-ignore-start"
+      ],
+      "ruleBroken": "Coverage directives hide code from the thresholds the `coverage` check enforces; every one must say why the lines cannot be exercised in-process.",
+      "verificationMethod": "existing-test-suite",
+      "whyPreferable": "Recording why the lines are invisible to in-process coverage is preferable to deleting a guard that is tested elsewhere, or to lowering the thresholds for everyone."
+    },
+    {
+      "id": "suppression:coverage:v8-ignore-start:src/execution/run-checks.ts:319",
+      "version": 2,
+      "justification": "An internal invariant guard: `dependsOn` ids are validated by validate-config before the scheduler runs, so an unknown id here is provably unreachable. The throw stays so a broken invariant fails loudly instead of miscounting the dependency graph.",
+      "attempted": "Reaching it from a test: every path that could pass an unknown id is rejected earlier by validateConfig, which has its own tests.",
+      "category": "unreachable-invariant",
+      "constraint": "Unreachable by construction; removing the guard would trade a loud failure for a silent miscount.",
+      "domain": "coverage",
+      "expires": "",
+      "file": "src/execution/run-checks.ts",
+      "line": 319,
+      "residualRisk": "None beyond the guard's own correctness, which is a single comparison and a throw.",
+      "revisitWhen": "The code at this location changes, or coverage can be merged from the platform or process that exercises it.",
+      "rule": [
+        "v8-ignore-start"
+      ],
+      "ruleBroken": "Coverage directives hide code from the thresholds the `coverage` check enforces; every one must say why the lines cannot be exercised in-process.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "Recording why the lines are invisible to in-process coverage is preferable to deleting a guard that is tested elsewhere, or to lowering the thresholds for everyone."
+    },
+    {
+      "id": "suppression:coverage:v8-ignore-start:src/execution/run-checks.ts:69",
+      "version": 2,
+      "justification": "The body runs only when the host process receives a real SIGINT/SIGTERM. test/unit/execution/run-checks.test.ts exercises it in a child process (signalling the test worker itself would kill the runner), and v8 coverage is per process, so that real exercise is invisible here.",
+      "attempted": "Sending the signal to the worker process: it terminates the test run. Mocking process.on: it tests the mock, not the handler.",
+      "category": "tooling-limit",
+      "constraint": "v8 coverage does not merge the child process's execution into the parent's report.",
+      "domain": "coverage",
+      "expires": "",
+      "file": "src/execution/run-checks.ts",
+      "line": 69,
+      "residualRisk": "A regression in the signal handler is caught by the child-process test, not by the coverage threshold.",
+      "revisitWhen": "The code at this location changes, or coverage can be merged from the platform or process that exercises it.",
+      "rule": [
+        "v8-ignore-start"
+      ],
+      "ruleBroken": "Coverage directives hide code from the thresholds the `coverage` check enforces; every one must say why the lines cannot be exercised in-process.",
+      "verificationMethod": "existing-test-suite",
+      "whyPreferable": "Recording why the lines are invisible to in-process coverage is preferable to deleting a guard that is tested elsewhere, or to lowering the thresholds for everyone."
+    },
+    {
       "id": "suppression:eslint:@typescript-eslint/no-namespace:src/standard-schema/types.ts:33",
       "version": 2,
       "justification": "Preserves an exact, re-diffable structural match to @standard-schema/spec's own published dist/index.d.ts, which uses this same interface+namespace merge for StandardSchemaV1.Props/.Result/.Issue/etc. -- an ES2015-module-only alternative cannot express a member nested under the interface's own name, so a namespace here isn't a stylistic choice, it's what keeps this file diffable against upstream verbatim.\n\nAlternatives considered: A separately-named type/module (e.g. StandardSchemaV1Props, StandardSchemaV1Result) instead of StandardSchemaV1.Props/StandardSchemaV1.Result would satisfy the rule, but every real Standard-Schema-compliant consumer -- and the spec itself -- references these as StandardSchemaV1.<Member>; diverging from that referencing convention would make this vendored file harder to recognize as a faithful copy and harder to re-diff against a future spec version.\n\nRemediation: None needed: declare namespace here compiles to zero runtime code (an ambient, type-only declaration merged with the interface of the same name) -- the rule's actual concern (the runtime IIFE-style namespace object TypeScript emits for a non-declare namespace) does not apply, since nothing here is emitted at all.",
@@ -241,7 +301,7 @@
       "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
-      "id": "suppression:eslint:n/no-process-env:repo-contract.config.ts:212",
+      "id": "suppression:eslint:n/no-process-env:repo-contract.config.ts:213",
       "version": 2,
       "justification": "This is repo-contract's own top-level self-hosting config (repo-contract.config.ts), not published library code -- src/ never reads process.env itself (see specs/decisions/0011), and RepoContractConfig.env is a required, consumer-supplied field. Here, repo-contract is the consumer of its own library, and supplying the real ambient environment to its own checks is exactly the responsibility ADR 0011 places on a consumer, not a config smell.\n\nAlternatives considered: Route environment access through a wrapper/config module instead of reading process.env inline.\n\nRemediation: A wrapper would only relocate this same read one file over, not remove it -- n/no-process-env exists to catch config values read ad hoc instead of through an app's config layer, which doesn't apply to a top-level consumer script whose entire job is supplying the ambient environment to the library it configures.",
       "attempted": "Route environment access through a wrapper/config module instead of reading process.env inline.  Remediation: A wrapper would only relocate this same read one file over, not remove it -- n/no-process-env exists to catch config values read ad hoc instead of through an app's config layer, which doesn't apply to a top-level consumer script whose entire job is supplying the ambient environment to the library it configures.",
@@ -250,7 +310,7 @@
       "domain": "eslint",
       "expires": "",
       "file": "repo-contract.config.ts",
-      "line": 212,
+      "line": 213,
       "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
       "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
@@ -319,6 +379,46 @@
       "ruleBroken": "The eslint rule `['secure-coding/no-improper-type-validation']` is disabled at src/parsing/format-schema-issues.ts:41.",
       "verificationMethod": "static-reasoning",
       "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
+    },
+    {
+      "id": "suppression:stryker:Regex:test/_ipc/ci-jobs.ts:71",
+      "version": 2,
+      "justification": "A managed copy of internal-package-contract's runtime/ci-jobs.ts, byte-identical to the canonical source (`ManagedFiles` fails on drift). The directive marks the regex anchors as equivalent mutants there: a job id holds no quote, so the anchors are precision, not behaviour. This repository's Stryker `mutate` covers `src/**` only, so the directive is inert here.",
+      "attempted": "Editing the copy: forbidden, `ManagedFiles` would fail; the comment is governed at its canonical source.",
+      "category": "rule-not-applicable",
+      "constraint": "Managed copies are edited upstream only, and `test/` is outside this repository's mutation scope.",
+      "domain": "stryker",
+      "expires": "",
+      "file": "test/_ipc/ci-jobs.ts",
+      "line": 71,
+      "residualRisk": "None here: no mutant is generated for `test/` in this repository, so nothing is hidden from its mutation gate.",
+      "revisitWhen": "The managed copy changes (sync --apply --update), or `mutate` in stryker.config.mjs widens to `test/`.",
+      "rule": [
+        "Regex"
+      ],
+      "ruleBroken": "Every `Stryker disable` must say what it hides from mutation testing and why; this one hides nothing in this repository.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "A record that names the copy as inert is preferable to excluding managed copies from suppression governance, which would also hide a real directive added upstream."
+    },
+    {
+      "id": "suppression:stryker:Regex:test/_ipc/ci-jobs.ts:76",
+      "version": 2,
+      "justification": "A managed copy of internal-package-contract's runtime/ci-jobs.ts, byte-identical to the canonical source (`ManagedFiles` fails on drift). The directive marks the regex anchors as equivalent mutants there: a job id holds no bracket, so the anchors are precision, not behaviour. This repository's Stryker `mutate` covers `src/**` only, so the directive is inert here.",
+      "attempted": "Editing the copy: forbidden, `ManagedFiles` would fail; the comment is governed at its canonical source.",
+      "category": "rule-not-applicable",
+      "constraint": "Managed copies are edited upstream only, and `test/` is outside this repository's mutation scope.",
+      "domain": "stryker",
+      "expires": "",
+      "file": "test/_ipc/ci-jobs.ts",
+      "line": 76,
+      "residualRisk": "None here: no mutant is generated for `test/` in this repository, so nothing is hidden from its mutation gate.",
+      "revisitWhen": "The managed copy changes (sync --apply --update), or `mutate` in stryker.config.mjs widens to `test/`.",
+      "rule": [
+        "Regex"
+      ],
+      "ruleBroken": "Every `Stryker disable` must say what it hides from mutation testing and why; this one hides nothing in this repository.",
+      "verificationMethod": "static-reasoning",
+      "whyPreferable": "A record that names the copy as inert is preferable to excluding managed copies from suppression governance, which would also hide a real directive added upstream."
     },
     {
       "id": "suppression:typescript:@ts-expect-error:test/unit/crap/policy.test.ts:149",

@@ -1,6 +1,20 @@
 {
   "exceptions": [
     {
+      "id": "dead-code:unlisted-binary:run-barrels.mjs",
+      "version": 2,
+      "justification": "Not a binary of this repository: test/e2e/consumer-install-bun.test.ts writes `run-barrels.mjs` into a scratch consumer directory at run time and hands it to Bun (`spawnSync(\"bun\", [\"run-barrels.mjs\"])`) to import every entry point of the packed tarball under Bun. knip reads that argument as a command it cannot find in package.json or node_modules/.bin.",
+      "attempted": "Searched the repository for `run-barrels.mjs`: it appears only in test/e2e/consumer-install-bun.test.ts, as a file name the test creates.",
+      "constraint": "knip treats the first argument of a spawned `bun` as a binary name; the file exists only inside the test's temporary consumer.",
+      "expires": "",
+      "kind": "unlisted-binary",
+      "name": "run-barrels.mjs",
+      "residualRisk": "If the test stops creating that file, knip can no longer say so, and this record then hides a stale reference.",
+      "revisitWhen": "The Bun e2e test changes how it runs its probe script, or knip learns that the file is created by the test.",
+      "ruleBroken": "knip reports `run-barrels.mjs` as an unlisted binary.",
+      "whyPreferable": "Recording what the name is is preferable to renaming a test artifact to dodge the scanner, or to ignoring the binary for every future knip run."
+    },
+    {
       "id": "dead-code:unused-dev-dependency:@arethetypeswrong/cli",
       "version": 2,
       "justification": "Spawned by literal command name (\"attw\") via the arethetypeswrong preset's `run: [\"attw\", ...]` (src/presets/arethetypeswrong.ts) -- nothing `import`s the package, so knip cannot see the use.",
@@ -127,6 +141,20 @@
       "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
+      "id": "dead-code:unused-export:evaluateBranchProtection",
+      "version": 2,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. Newly surfaced, not new dead code: test/unit/scripts/openssf-scorecard/github-scoring.test.ts now imports github-checks.ts directly, which made the file reachable to knip for the first time (retiring its `unused-file` entry and the `ghApiJson` entry it kept alive) and exposed that `evaluateBranchProtection`, like the local-checks.ts evaluators above, is imported only by the still-unreachable run.ts.",
+      "attempted": "Searched the repository for `evaluateBranchProtection`: it appears in scripts/openssf-scorecard/github-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
+      "kind": "unused-export",
+      "name": "evaluateBranchProtection",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluateBranchProtection` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
+    },
+    {
       "id": "dead-code:unused-export:evaluateCiTests",
       "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. This finding is newly surfaced (not new dead code): adding a direct unit test for the neighboring `evaluateDangerousWorkflow` export made local-checks.ts itself reachable to knip for the first time, which retired its own `unused-file` entry below but exposed that every other export local-checks.ts has is, like `ghApiJson`/`repoSlug` above, used only by the still-unreachable run.ts. See those entries for the identical reachability gap.",
@@ -141,6 +169,34 @@
       "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
+      "id": "dead-code:unused-export:evaluateCodeReview",
+      "version": 2,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. Newly surfaced, not new dead code: test/unit/scripts/openssf-scorecard/github-scoring.test.ts now imports github-checks.ts directly, which made the file reachable to knip for the first time (retiring its `unused-file` entry and the `ghApiJson` entry it kept alive) and exposed that `evaluateCodeReview`, like the local-checks.ts evaluators above, is imported only by the still-unreachable run.ts.",
+      "attempted": "Searched the repository for `evaluateCodeReview`: it appears in scripts/openssf-scorecard/github-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
+      "kind": "unused-export",
+      "name": "evaluateCodeReview",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluateCodeReview` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
+    },
+    {
+      "id": "dead-code:unused-export:evaluateContributors",
+      "version": 2,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. Newly surfaced, not new dead code: test/unit/scripts/openssf-scorecard/github-scoring.test.ts now imports github-checks.ts directly, which made the file reachable to knip for the first time (retiring its `unused-file` entry and the `ghApiJson` entry it kept alive) and exposed that `evaluateContributors`, like the local-checks.ts evaluators above, is imported only by the still-unreachable run.ts.",
+      "attempted": "Searched the repository for `evaluateContributors`: it appears in scripts/openssf-scorecard/github-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
+      "kind": "unused-export",
+      "name": "evaluateContributors",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluateContributors` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
+    },
+    {
       "id": "dead-code:unused-export:evaluateLicense",
       "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
@@ -152,6 +208,20 @@
       "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
       "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
       "ruleBroken": "knip reports `evaluateLicense` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
+    },
+    {
+      "id": "dead-code:unused-export:evaluateMaintained",
+      "version": 2,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. Newly surfaced, not new dead code: test/unit/scripts/openssf-scorecard/github-scoring.test.ts now imports github-checks.ts directly, which made the file reachable to knip for the first time (retiring its `unused-file` entry and the `ghApiJson` entry it kept alive) and exposed that `evaluateMaintained`, like the local-checks.ts evaluators above, is imported only by the still-unreachable run.ts.",
+      "attempted": "Searched the repository for `evaluateMaintained`: it appears in scripts/openssf-scorecard/github-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
+      "kind": "unused-export",
+      "name": "evaluateMaintained",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluateMaintained` as an unused export.",
       "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
@@ -197,6 +267,20 @@
       "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
+      "id": "dead-code:unused-export:evaluateSignedReleases",
+      "version": 2,
+      "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. Newly surfaced, not new dead code: test/unit/scripts/openssf-scorecard/github-scoring.test.ts now imports github-checks.ts directly, which made the file reachable to knip for the first time (retiring its `unused-file` entry and the `ghApiJson` entry it kept alive) and exposed that `evaluateSignedReleases`, like the local-checks.ts evaluators above, is imported only by the still-unreachable run.ts.",
+      "attempted": "Searched the repository for `evaluateSignedReleases`: it appears in scripts/openssf-scorecard/github-checks.ts, scripts/openssf-scorecard/run.ts.",
+      "constraint": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
+      "expires": "",
+      "kind": "unused-export",
+      "name": "evaluateSignedReleases",
+      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
+      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
+      "ruleBroken": "knip reports `evaluateSignedReleases` as an unused export.",
+      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
+    },
+    {
       "id": "dead-code:unused-export:evaluateTokenPermissions",
       "version": 2,
       "justification": "Genuinely used by scripts/openssf-scorecard/run.ts -- but run.ts is reachable only by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. See the neighboring `evaluateCiTests` entry for why this whole batch of local-checks.ts exports is newly flagged rather than newly dead.",
@@ -208,20 +292,6 @@
       "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
       "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
       "ruleBroken": "knip reports `evaluateTokenPermissions` as an unused export.",
-      "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
-    },
-    {
-      "id": "dead-code:unused-export:ghApiJson",
-      "version": 2,
-      "justification": "Genuinely used by every gh-API-backed evaluator in scripts/openssf-scorecard/github-checks.ts (Branch-Protection, Code-Review, Signed-Releases, Contributors, Maintained) and by run.ts's own repo-metadata lookup -- but those callers are reachable only by being imported by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use. gh-api.ts's own `packageVersion`/`ghApiRaw` are now imported directly and statically by checks/openssf-scorecard.ts (for provenance metadata and the live weight-table fetch), which is what makes gh-api.ts itself, `GhApiResult`, and `yaml` (transitively, via weights.ts) newly visible to knip -- `ghApiJson`/`repoSlug` specifically are not among those statically-reachable exports, the same reachability gap as every other spawned-only file in this directory.",
-      "attempted": "Searched the repository for `ghApiJson`: it appears in scripts/openssf-scorecard/gh-api.ts, scripts/openssf-scorecard/github-checks.ts, scripts/openssf-scorecard/run.ts.",
-      "constraint": "Genuinely used by every gh-API-backed evaluator in scripts/openssf-scorecard/github-checks.ts (Branch-Protection, Code-Review, Signed-Releases, Contributors, Maintained) and by run.ts's own repo-metadata lookup -- but those callers are reachable only by being imported by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]`, so knip's static import graph never resolves the use.",
-      "expires": "",
-      "kind": "unused-export",
-      "name": "ghApiJson",
-      "residualRisk": "If the export gains a use or is removed, knip can no longer say so, and this record then hides an unused export.",
-      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
-      "ruleBroken": "knip reports `ghApiJson` as an unused export.",
       "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
     },
     {
@@ -237,20 +307,6 @@
       "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
       "ruleBroken": "knip reports `repoSlug` as an unused export.",
       "whyPreferable": "Recording why the export is needed is preferable to deleting something the repository relies on, or to ignoring the export for every future knip run."
-    },
-    {
-      "id": "dead-code:unused-file:scripts/openssf-scorecard/github-checks.ts",
-      "version": 2,
-      "justification": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see the `repoSlug`/`ghApiJson` entries above for the identical reachability gap this whole directory shares.",
-      "attempted": "Searched the repository for `scripts/openssf-scorecard/github-checks.ts`: it appears in no file other than this record.",
-      "constraint": "Imported only by scripts/openssf-scorecard/run.ts, itself reachable solely by being spawned via `tsx` from checks/openssf-scorecard.ts's `run: [...]` -- see the `repoSlug`/`ghApiJson` entries above for the identical reachability gap this whole directory shares.",
-      "expires": "",
-      "kind": "unused-file",
-      "name": "scripts/openssf-scorecard/github-checks.ts",
-      "residualRisk": "If the file stops being used, knip can no longer say so, and this record then hides an unused file.",
-      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
-      "ruleBroken": "knip reports `scripts/openssf-scorecard/github-checks.ts` as an unused file.",
-      "whyPreferable": "Recording why the file is needed is preferable to deleting something the repository relies on, or to ignoring the file for every future knip run."
     },
     {
       "id": "dead-code:unused-file:scripts/openssf-scorecard/run.ts",

@@ -66,6 +66,18 @@ const SHARED_PROBE_BODY = `
   const resolved = helpers.resolveExceptionPolicy({ group: "g", category: "x" }, {}, { mode: "allowed" });
   if (resolved.mode !== "allowed") throw new Error("resolveExceptionPolicy did not fall back to the supplied globalDefault");
 
+  const affected = require("repo-contract/affected");
+  if (typeof affected.parseScopeArgs !== "function") throw new Error("repo-contract/affected did not export parseScopeArgs");
+  if (typeof affected.resolveScope !== "function") throw new Error("repo-contract/affected did not export resolveScope");
+  if (typeof affected.createCache !== "function") throw new Error("repo-contract/affected did not export createCache");
+  const parsedScope = affected.parseScopeArgs(["--scope", "affected", "x"]);
+  if (!parsedScope.ok || parsedScope.scope !== "affected" || parsedScope.rest.join(",") !== "x") throw new Error("parseScopeArgs did not parse --scope affected");
+
+  const metrics = require("repo-contract/metrics");
+  if (typeof metrics.createRunRecord !== "function") throw new Error("repo-contract/metrics did not export createRunRecord");
+  if (typeof metrics.serializeRunRecord !== "function") throw new Error("repo-contract/metrics did not export serializeRunRecord");
+  if (typeof metrics.buildEvidenceManifest !== "function") throw new Error("repo-contract/metrics did not export buildEvidenceManifest");
+
   const schema = JSON.parse(readFileSync(require.resolve("repo-contract/schema"), "utf8"));
   if (typeof schema.$schema !== "string") throw new Error("schema export missing $schema");
   if (typeof schema.$id !== "string") throw new Error("schema export missing $id");

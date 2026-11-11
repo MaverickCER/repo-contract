@@ -40,7 +40,7 @@ interface EvaluateSuppressionGovernancePolicyInput {
  * evidence->verdict function that never re-parses or re-scans source (ADR 0001). Finding-centric:
  * every raw finding gets exactly one decision; a stale exception record (its finding gone) fails;
  * a scaffolded stub (blank `justification`) fails whenever its rule resolves to `"exception"` mode
- * (an `"allowed"`-mode rule -- e.g. `no-console`, `@ts-expect-error` -- permits a blank stub, and
+ * (an `"allowed"`-mode rule permits a blank stub, and
  * `"forbidden"` fails a stub regardless of what is in it).
  *
  * The reconciled records are re-validated here (`validateExceptionRegistry`) as defense in depth

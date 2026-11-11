@@ -585,12 +585,11 @@ export default tseslint.config(
   },
   {
     // `no-unsupported-features/node-builtins` checks real usages against
-    // this package's own published `engines.node` floor (>=20.0.0) -- exactly
+    // this package's own published `engines.node` floor (>=22.0.0) -- exactly
     // right for src/ and test/, which run under that floor, but not for
-    // these files: none of them ship (package.json's `files` allowlist is
-    // just dist/schemas/README/LICENSE), so their real runtime is whatever
-    // Node the contributor's machine or CI job uses -- already newer than
-    // 20.0.0 today (several devDependencies here already require Node 22+).
+    // these files: none of them ship (package.json's `files` allowlist names
+    // the barrel directories, bin, dist, schemas, src and the Markdown docs), so their real runtime
+    // is whatever Node the contributor's machine or CI job uses -- Node 24 in CI.
     files: [
       "checks/**/*.ts",
       "scripts/**/*.ts",
@@ -609,8 +608,9 @@ export default tseslint.config(
   {
     // Both flagged for the same reason: `composeSignals` in
     // src/execution/abort-signals.ts feature-detects `AbortSignal.any`
-    // (`typeof AbortSignal.any === "function"`) specifically *because*
-    // it's newer than this package's `engines.node >=20.0.0` floor, falling
+    // (`typeof AbortSignal.any === "function"`) because it was added in
+    // Node 20.3, after the Node 20 floor this package once had; the fallback
+    // stays so the manual composition keeps its own tests, falling
     // back to a manual composition where it's absent -- see that file's own
     // doc comment. Its own test, spawn-check.test.ts's "disposes its
     // composed abort signal" test, and run-checks.test.ts's "disposes the

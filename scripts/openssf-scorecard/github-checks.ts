@@ -1,5 +1,5 @@
 import { sync as spawnSync } from "cross-spawn"
-import { ghApiJson } from "./gh-api.js"
+import { ghApiGraphql, ghApiJson } from "./gh-api.js"
 import type { ScorecardCheckResult } from "./types.js"
 
 /**
@@ -84,45 +84,107 @@ export function evaluateBranchProtection(
   }
 }
 
+/** One merged pull request, reduced to what Code-Review scores. */
+export interface MergedPullRequest {
+  readonly number: number
+  readonly author: string
+  /** Everyone who left an `APPROVED` review. */
+  readonly approvers: readonly string[]
+}
+
 /**
- * Simplified proxy for upstream's Code-Review check, documented as such: the
- * real upstream check inspects the last 30 commits' actual review approval
- * status. This evaluation instead reads whether `required_approving_review_count
- * >= 1` is configured in branch protection -- a real, verifiable signal that
- * review is MANDATORY going forward, but not proof any specific past commit
- * was actually reviewed.
- * @param slug - The `owner/repo` slug.
- * @param defaultBranch - The branch to check the review requirement on.
+ * Upstream scores Code-Review from what happened to recent changes: the share of them that were
+ * approved by someone other than their author. A branch-protection rule that requires a review is
+ * not that evidence, because a rule can be bypassed (an administrator merging without approval is the
+ * common case); so this scores the merged pull requests themselves, rounded down as upstream's
+ * proportional score is.
+ * @param pullRequests - Recently merged pull requests into the default branch.
+ * @param requiredReviews - The approving-review count branch protection requires, for the reason text.
  * @returns The Code-Review sub-check result.
  */
-export function evaluateCodeReview(slug: string, defaultBranch: string): ScorecardCheckResult {
-  const result = ghApiJson<BranchProtection>(`repos/${slug}/branches/${defaultBranch}/protection`)
-  if (!result.ok) {
-    if (result.reason === "not-found") {
-      return {
-        name: "Code-Review",
-        score: 0,
-        reason: `Branch "${defaultBranch}" has no branch protection, so no review requirement is enforced.`,
-        details: [],
-      }
-    }
-    return unavailable("Code-Review", result.message)
-  }
-  const required = result.value.required_pull_request_reviews?.required_approving_review_count ?? 0
-  if (required >= 1) {
+export function scoreCodeReview(
+  pullRequests: readonly MergedPullRequest[],
+  requiredReviews: number,
+): ScorecardCheckResult {
+  if (pullRequests.length === 0) {
     return {
       name: "Code-Review",
-      score: 10,
-      reason: `Branch protection requires at least ${String(required)} approving review(s) before merge.`,
+      score: "not-applicable",
+      reason: "No merged pull requests were found to assess.",
       details: [],
     }
   }
+  const unreviewed = pullRequests.filter(
+    (pr) => !pr.approvers.some((approver) => approver !== pr.author),
+  )
+  const reviewed = pullRequests.length - unreviewed.length
   return {
     name: "Code-Review",
-    score: 0,
-    reason: `Branch protection does not require any approving review before merge.`,
-    details: [],
+    score: Math.floor((10 * reviewed) / pullRequests.length),
+    reason:
+      `${String(reviewed)} of ${String(pullRequests.length)} recently merged pull request(s) had an approving review from someone other than their author. ` +
+      `Branch protection requires ${String(requiredReviews)} approving review(s); a merge that bypasses that rule counts as unreviewed here, as it does upstream.`,
+    details:
+      unreviewed.length === 0
+        ? []
+        : [
+            `Merged without an approving review from someone else: ${unreviewed.map((pr) => `#${String(pr.number)}`).join(", ")}`,
+          ],
   }
+}
+
+interface ReviewQuery {
+  readonly data?: {
+    readonly repository?: {
+      readonly pullRequests?: {
+        readonly nodes?: readonly {
+          readonly number: number
+          readonly author: { readonly login: string } | null
+          readonly reviews: {
+            readonly nodes: readonly { readonly author: { readonly login: string } | null }[]
+          }
+        }[]
+      }
+    }
+  }
+}
+
+/**
+ * @param slug - The `owner/repo` slug.
+ * @param defaultBranch - The branch whose merged pull requests are scored.
+ * @returns The Code-Review sub-check result.
+ */
+export function evaluateCodeReview(slug: string, defaultBranch: string): ScorecardCheckResult {
+  const [owner = "", name = ""] = slug.split("/")
+  const query = `query($owner: String!, $name: String!, $base: String!) {
+    repository(owner: $owner, name: $name) {
+      pullRequests(baseRefName: $base, states: MERGED, last: 30) {
+        nodes { number author { login } reviews(states: APPROVED, first: 20) { nodes { author { login } } } }
+      }
+    }
+  }`
+  const reviews = ghApiGraphql<ReviewQuery>(query, { owner, name, base: defaultBranch })
+  if (!reviews.ok) return unavailable("Code-Review", reviews.message)
+  const nodes = reviews.value.data?.repository?.pullRequests?.nodes
+  if (nodes === undefined) {
+    return unavailable("Code-Review", "the GitHub GraphQL API returned no pull request list.")
+  }
+  const protection = ghApiJson<BranchProtection>(
+    `repos/${slug}/branches/${defaultBranch}/protection`,
+  )
+  const required = protection.ok
+    ? (protection.value.required_pull_request_reviews?.required_approving_review_count ?? 0)
+    : 0
+  return scoreCodeReview(
+    nodes.map((pr) => ({
+      number: pr.number,
+      author: pr.author?.login ?? "",
+      approvers: pr.reviews.nodes.flatMap((review) =>
+        review.author === null ? [] : [review.author.login],
+      ),
+    })),
+    required,
+  )
 }
 
 interface ReleaseAsset {
@@ -244,28 +306,30 @@ interface Contributor {
  * hand-rolled quickly). This evaluation instead reports the same underlying
  * fact GitHub's own `contributors` endpoint gives directly: how many
  * distinct human accounts (excluding bots) have contributed at all, without
- * claiming to determine their employer.
+ * claiming to determine their employer, and scores it proportionally toward upstream's bar of three
+ * (upstream normalizes one organization to 3, two to 6).
+ * @param logins - The distinct human contributors.
+ * @returns The Contributors sub-check result.
+ */
+export function scoreContributors(logins: readonly string[]): ScorecardCheckResult {
+  return {
+    name: "Contributors",
+    score: Math.min(10, Math.floor((10 * logins.length) / 3)),
+    reason: `${String(logins.length)} distinct human contributor(s) found. Upstream counts the organizations contributors belong to; this evaluation counts people, which can only over-count organizations.`,
+    details: [`Contributors: ${logins.join(", ") || "none"}`],
+  }
+}
+
+/**
  * @param slug - The `owner/repo` slug.
  * @returns The Contributors sub-check result.
  */
 export function evaluateContributors(slug: string): ScorecardCheckResult {
   const result = ghApiJson<readonly Contributor[]>(`repos/${slug}/contributors?per_page=100`)
   if (!result.ok) return unavailable("Contributors", result.message)
-  const humans = result.value.filter((c) => c.type !== "Bot")
-  if (humans.length >= 3) {
-    return {
-      name: "Contributors",
-      score: 10,
-      reason: `${String(humans.length)} distinct human contributor(s) found (organizational diversity not independently verified -- see this check's own README).`,
-      details: [],
-    }
-  }
-  return {
-    name: "Contributors",
-    score: 0,
-    reason: `${String(humans.length)} distinct human contributor(s) found -- upstream's >=3-organization bar is not met.`,
-    details: [`Contributors: ${humans.map((c) => c.login ?? "unknown").join(", ") || "none"}`],
-  }
+  return scoreContributors(
+    result.value.filter((c) => c.type !== "Bot").map((c) => c.login ?? "unknown"),
+  )
 }
 
 interface RepoMeta {
@@ -276,43 +340,43 @@ interface RepoMeta {
 
 /**
  * Upstream scoring: 10 for at least one commit weekly over the previous 90
- * days; 0 if archived; requires the project to be >90 days old to assess at
- * all. This evaluation checks the same applicability precondition and the
- * same `pushed_at` recency signal, without upstream's own finer-grained
- * weekly-commit-cadence and issue-activity scoring.
+ * days; 0 if archived; 0 for a project created within the last 90 days.
+ * This evaluation applies the same two zero rules and the same `pushed_at`
+ * recency signal, without upstream's finer-grained weekly-commit-cadence
+ * and issue-activity scoring.
+ * @param meta - The repository's `created_at`, `pushed_at` and `archived` fields.
+ * @param now - The current time, in milliseconds since the epoch.
+ * @returns The Maintained sub-check result.
+ */
+export function scoreMaintained(meta: RepoMeta, now: number): ScorecardCheckResult {
+  const { created_at: createdAt, pushed_at: pushedAt, archived } = meta
+  if (archived) {
+    return { name: "Maintained", score: 0, reason: "Repository is archived.", details: [] }
+  }
+  const ageDays = (now - new Date(createdAt).getTime()) / 86_400_000
+  if (ageDays < 90) {
+    return {
+      name: "Maintained",
+      score: 0,
+      reason: `Repository is ${String(Math.round(ageDays))} day(s) old. Upstream scores a repository created within the last 90 days as 0, so this evaluation does too.`,
+      details: [],
+    }
+  }
+  const daysSincePush = (now - new Date(pushedAt).getTime()) / 86_400_000
+  return {
+    name: "Maintained",
+    score: Math.max(0, 10 - Math.floor(daysSincePush / 7)),
+    reason: `Most recent push was ${String(Math.round(daysSincePush))} day(s) ago.`,
+    details: [],
+  }
+}
+
+/**
  * @param slug - The `owner/repo` slug.
  * @returns The Maintained sub-check result.
  */
 export function evaluateMaintained(slug: string): ScorecardCheckResult {
   const result = ghApiJson<RepoMeta>(`repos/${slug}`)
   if (!result.ok) return unavailable("Maintained", result.message)
-  const { created_at: createdAt, pushed_at: pushedAt, archived } = result.value
-  if (archived) {
-    return { name: "Maintained", score: 0, reason: "Repository is archived.", details: [] }
-  }
-  const ageDays = (Date.now() - new Date(createdAt).getTime()) / 86_400_000
-  if (ageDays < 90) {
-    return {
-      name: "Maintained",
-      score: "not-applicable",
-      reason: `Repository is ${String(Math.round(ageDays))} day(s) old -- upstream's Maintained check requires >90 days of history to assess.`,
-      details: [],
-    }
-  }
-  const daysSincePush = (Date.now() - new Date(pushedAt).getTime()) / 86_400_000
-  if (daysSincePush <= 7) {
-    return {
-      name: "Maintained",
-      score: 10,
-      reason: `Most recent push was ${String(Math.round(daysSincePush))} day(s) ago.`,
-      details: [],
-    }
-  }
-  const score = Math.max(0, 10 - Math.floor(daysSincePush / 7))
-  return {
-    name: "Maintained",
-    score,
-    reason: `Most recent push was ${String(Math.round(daysSincePush))} day(s) ago.`,
-    details: [],
-  }
+  return scoreMaintained(result.value, Date.now())
 }

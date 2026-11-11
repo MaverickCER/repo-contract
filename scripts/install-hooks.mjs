@@ -11,7 +11,7 @@
 // this.
 //
 // Idempotent and deliberately unobtrusive, for BOTH settings:
-//   - no-op when CI is set: the release workflow's own bots (release-please,
+//   - no-op when CI is set: the release workflow's own bots (changesets/action,
 //     api-baseline) commit and push and must not be intercepted or reconfigured.
 //   - no-op outside a git checkout (run from an unpacked tarball, etc.).
 //   - never overrides a value a contributor set themselves.

@@ -37,7 +37,7 @@ const DESCRIPTION_SEPARATOR = /--/
  * array, both to keep `rule` non-empty (disable-comments.json rejects an empty rule list as
  * malformed) and because `resolve-policy.ts`'s `resolveRequirement` special-cases exactly this
  * literal value to mean "every rule in this domain, resolved to the strictest policy among them" --
- * deliberately not treated as an ordinary glob pattern (`minimatch("*", pattern)` tests `"*"` as a
+ * deliberately not treated as an ordinary glob pattern (`globMatch("*", pattern)` tests `"*"` as a
  * literal target, which does not match a pattern like `"security/*"`).
  * @param canonicalContent - The comment's decoration-stripped content.
  * @returns The recognized `eslint` suppression, or `undefined` if `canonicalContent` isn't an eslint-disable directive.
@@ -108,14 +108,40 @@ export const prettierRecognizer: SuppressionRecognizer = (canonicalContent) => {
   return { domain: "prettier", rule: ["prettier-ignore"], reason }
 }
 
+// Coverage tools' ignore directives: "v8 ignore start|stop|next|file", "c8 ignore ...", "istanbul ignore
+// next|if|else|file". A `stop` closes a range opened by `start` and names no new exemption, so it is
+// not a suppression of its own; every other form hides code from the coverage threshold and is
+// governed like a disable comment. The reason, when the author wrote one after a `--`, is kept.
+// The optional ` -- ` separator is stripped in code, not in the pattern: an optional group around
+// `\s*` is what eslint-plugin-security's detect-unsafe-regex flags as unsafe.
+const COVERAGE_DIRECTIVE = /^(v8|c8|istanbul) ignore (start|stop|next|file|if|else)\b/
+
+/**
+ * `v8 ignore`, `c8 ignore` and `istanbul ignore` directives, which exclude code from the coverage
+ * report and therefore from the thresholds the `coverage` check enforces.
+ * @param canonicalContent - The comment's decoration-stripped content.
+ * @returns The recognized `coverage` suppression, or `undefined` for a `stop` marker or a non-directive.
+ */
+export const coverageRecognizer: SuppressionRecognizer = (canonicalContent) => {
+  const match = COVERAGE_DIRECTIVE.exec(canonicalContent)
+  if (!match || match[2] === "stop") return undefined
+  // `ignore next 3` counts lines; the count is part of the directive, not the reason.
+  const rest = canonicalContent
+    .slice(match[0].length)
+    .trim()
+    .replace(/^\d+\s*/, "")
+  const reason = rest.startsWith("--") ? rest.slice(2).trim() : rest
+  return { domain: "coverage", rule: [`${match[1]}-ignore-${match[2]}`], reason }
+}
+
 // Stryker's own directive grammar: "Stryker disable [next-line] <all | mutator[,mutator...]>".
 // Unlike ESLint's bare-disable case, "all" is Stryker's own literal token for "every mutator" --
 // there's no "rule list omitted" case to placeholder with a synthetic "*" for, so a bare-all
 // directive's `rule` is `["all"]` verbatim. This matters beyond naming: `all` doubles as the exact
 // string a domain policy uses to forbid it (see policy-config.ts's `stryker.rules.all`), and
-// scripts/suppression-governance/resolve-policy.ts's `resolveRequirement` falls back to `minimatch(rule, pattern)`
+// scripts/suppression-governance/resolve-policy.ts's `resolveRequirement` falls back to `globMatch(rule, pattern)`
 // for any rule that isn't an exact match -- a policy key of `"*"` would glob-match every mutator
-// name (`minimatch("ConditionalExpression", "*")` is `true`), silently forbidding every stryker
+// name (`globMatch("ConditionalExpression", "*")` is `true`), silently forbidding every stryker
 // suppression instead of just the "all" ones. The literal string "all" has no such glob meaning.
 // Single literal spaces, not `\s+`, between each fixed word -- three independent `\s+` groups in
 // one pattern is enough for eslint-plugin-security's detect-unsafe-regex to flag as unsafe (its
@@ -136,7 +162,14 @@ export const strykerRecognizer: SuppressionRecognizer = (canonicalContent) => {
   if (!match) return undefined
 
   const remainder = canonicalContent.slice(match[0].length)
-  const [ruleListText = "", ...reasonParts] = remainder.split(DESCRIPTION_SEPARATOR)
+  // Stryker's own grammar ends the mutator list at a colon (`Mutator1,Mutator2: reason`); the
+  // `--` separator is the eslint-style convention. Whichever comes first ends the list.
+  const colon = remainder.indexOf(":")
+  const dashes = remainder.search(DESCRIPTION_SEPARATOR)
+  const listEnd = colon !== -1 && (dashes === -1 || colon < dashes) ? colon : dashes
+  const ruleListText = listEnd === -1 ? remainder : remainder.slice(0, listEnd)
+  const reasonText =
+    listEnd === -1 ? "" : remainder.slice(listEnd + (listEnd === colon ? 1 : 2)).trim()
   const parsedRules = ruleListText.trim().split(RULE_SEPARATOR).filter(Boolean)
   // A Stryker directive with no mutator list -- a bare "Stryker disable" /
   // "Stryker disable next-line", or a stray separator -- is governed as if
@@ -145,7 +178,7 @@ export const strykerRecognizer: SuppressionRecognizer = (canonicalContent) => {
   // a directive with no rule list onto the every-rule wildcard.
   const rule = parsedRules.length === 0 ? ["all"] : parsedRules
 
-  return { domain: "stryker", rule, reason: reasonParts.join("--").trim() }
+  return { domain: "stryker", rule, reason: reasonText }
 }
 
 /** Tried in order; the first recognizer to match a comment's canonical content wins. */
@@ -153,6 +186,7 @@ const RECOGNIZERS: readonly SuppressionRecognizer[] = [
   eslintRecognizer,
   typescriptRecognizer,
   prettierRecognizer,
+  coverageRecognizer,
   strykerRecognizer,
 ]
 

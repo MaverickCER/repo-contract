@@ -455,7 +455,7 @@ npm run contract</code></pre>
               ><span class="adoption-card-title">API reference</span
               ><span class="adoption-card-desc"
                 >Every exported type, field and error code, generated from source and byte-compared
-                against it on every commit.</span
+                against it on every contract run.</span
               ><span class="external-link-note">Read the API reference ↗</span></a
             ><a
               class="adoption-card"
@@ -478,7 +478,8 @@ npm run contract</code></pre>
               ><span class="adoption-card-title">Benchmarks</span
               ><span class="adoption-card-desc"
                 >What each operation costs, how that cost grows with size, and what the package
-                adds, recorded at every merge.</span
+                adds, recorded on every same-repo pull request that touches the source, where a
+                worse growth class or an overhead ratio past its budget fails the job.</span
               ><span class="external-link-note">View the benchmark history ↗</span></a
             >
           </div>

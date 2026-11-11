@@ -8,10 +8,11 @@
 
 ## Checks
 
-- [ ] `npm run contract` passes locally — the pre-push hook runs it, and CI re-runs it
-      across Linux, macOS, Windows, and the Node version matrix.
-- [ ] Every commit is a Conventional Commit, and any public-API change is declared with the
-      right type (`feat!:` / `BREAKING CHANGE:` for a breaking change).
+- [ ] `npm run contract` passes locally — the pre-push hook runs it, and CI re-runs it on
+      Ubuntu, runs the unit and e2e suites on Linux, macOS and Windows, and installs the packed
+      tarball on the Node 22 floor.
+- [ ] Every commit is a Conventional Commit, and any public-API change has a changeset at the
+      matching level (`feat!:` / `BREAKING CHANGE:` commits mark a breaking change).
 
 <!--
 The Code Owner reviews the residual risk automation can't judge — see CODE_REVIEW.md §4 for

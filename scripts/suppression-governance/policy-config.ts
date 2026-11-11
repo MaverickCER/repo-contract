@@ -118,8 +118,10 @@ export const suppressionPolicy: SuppressionPolicyConfig = {
       "security/*": {
         mode: "forbidden",
       },
+      // Was "allowed" (a blank stub passed); every disable now needs a written record, like the rest.
       "no-console": {
-        mode: "allowed",
+        mode: "exception",
+        requirements: BASE_EXCEPTION_REQUIREMENTS,
       },
       "react-hooks/exhaustive-deps": {
         mode: "exception",
@@ -142,8 +144,25 @@ export const suppressionPolicy: SuppressionPolicyConfig = {
       "@ts-nocheck": {
         mode: "forbidden",
       },
+      // Was "allowed"; an expected type error is a deliberate hole in the type-check and gets a record.
       "@ts-expect-error": {
-        mode: "allowed",
+        mode: "exception",
+        requirements: BASE_EXCEPTION_REQUIREMENTS,
+      },
+    },
+  },
+
+  // Code hidden from the coverage report escapes the `coverage` thresholds, so each directive carries
+  // a record saying why the lines cannot be exercised in-process (today: Windows-only and real-signal paths).
+  coverage: {
+    default: {
+      mode: "exception",
+      requirements: BASE_EXCEPTION_REQUIREMENTS,
+    },
+    rules: {
+      // Hiding a whole file from coverage is never acceptable.
+      "*-ignore-file": {
+        mode: "forbidden",
       },
     },
   },

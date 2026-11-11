@@ -9,15 +9,16 @@
 //
 // Run via `npm run contract`, which invokes this through `tsx` -- plain
 // `node` has no built-in loader for repo-contract.config.ts's TypeScript on
-// this package's Node >=20.0.0 floor, and tsx is already a devDependency
+// this package's Node >=22.0.0 floor, and tsx is already a devDependency
 // (also used by test/unit/execution/run-checks.test.ts's SIGINT fixture).
 
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { execFileSync } from "node:child_process"
 import { parseFailFastArgs, resolveFailFast } from "../dist/affected.js"
 import { runRepoContract } from "../dist/index.js"
-import { createRunRecord, serializeRunRecord } from "../dist/metrics.js"
+import { buildEvidenceManifest, createRunRecord, serializeRunRecord } from "../dist/metrics.js"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const historyPath = path.join(root, "history.json")
@@ -75,6 +76,7 @@ const { evidence, verdict } = await runRepoContract(runConfig, {
   ...(failFast ? { failFast: true } : {}),
 })
 await recordRun(evidence, verdict, startedAt, checks.length === 0)
+await writeManifest(evidence, verdict, checks.length === 0 && verdict.passed)
 
 await appendHistory(evidence, verdict)
 
@@ -119,6 +121,51 @@ async function recordRun(evidence, verdict, startedAt, complete) {
   } catch (error) {
     console.warn(
       `[run-contract] could not record this run: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+}
+
+// Writes the evidence manifest this repository's own README describes: a digest-sealed statement that a
+// full, cache-free run of every check passed, with each check's verdict, the hash of its evidence,
+// the tool versions, and the commit it looked at. Only a passing run of every check gets one (a
+// subset or a failure proves nothing about the release), and only when the commit can be read. The
+// file lives under reports/, which is not committed; the release workflow is where it would be attested.
+async function writeManifest(evidence, verdict, complete) {
+  if (!complete) return
+  // The manifest names a commit, so it is written only when the tree IS that commit: a dirty
+  // working tree would make it say that HEAD passed when HEAD plus local edits did.
+  if (execFileSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }).trim() !== "")
+    return
+  try {
+    const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"))
+    const commit = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: root,
+      encoding: "utf8",
+    }).trim()
+    const manifest = buildEvidenceManifest({
+      package: { name: packageJson.name, version: packageJson.version },
+      createdAt: new Date().toISOString(),
+      scope: "full",
+      cache: "bypassed",
+      inputHash: commit,
+      tools: { node: process.versions.node, "repo-contract": packageJson.version },
+      subject: { commit },
+      checks: Object.entries(verdict.checks).map(([id, checkVerdict]) => ({
+        id,
+        verdict: checkVerdict.outcome,
+        evidence: evidence.checks[id],
+      })),
+    })
+    const directory = path.join(root, "reports")
+    await mkdir(directory, { recursive: true })
+    await writeFile(
+      path.join(directory, "evidence-manifest.json"),
+      `${JSON.stringify(manifest, null, 2)}\n`,
+      "utf8",
+    )
+  } catch (error) {
+    console.warn(
+      `[run-contract] could not write the evidence manifest: ${error instanceof Error ? error.message : String(error)}`,
     )
   }
 }

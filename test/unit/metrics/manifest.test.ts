@@ -74,6 +74,38 @@ describe("buildEvidenceManifest", () => {
     )
   })
 
+  it("records what the run looked at when a subject is given, and seals it into the digest", () => {
+    const withSubject = buildEvidenceManifest({
+      ...input,
+      subject: { commit: "8d5e308c0ffee", ref: "refs/tags/v1.2.3" },
+    })
+    expect(withSubject.subject).toEqual({ commit: "8d5e308c0ffee", ref: "refs/tags/v1.2.3" })
+    expect(withSubject.sha256).not.toBe(buildEvidenceManifest(input).sha256)
+    const edited = { ...withSubject, subject: { commit: "0000000", ref: "refs/tags/v1.2.3" } }
+    expect(verifyEvidenceManifest(edited).ok).toBe(false)
+    // A commit alone is enough; the ref is optional and never written as undefined.
+    const commitOnly = buildEvidenceManifest({ ...input, subject: { commit: "abcdef1" } })
+    expect(commitOnly.subject).toStrictEqual({ commit: "abcdef1" })
+    expect(JSON.stringify(commitOnly)).not.toContain('"ref"')
+  })
+
+  it("refuses a subject whose commit is not an object id", () => {
+    expect(() => buildEvidenceManifest({ ...input, subject: { commit: "main" } })).toThrow(
+      "hexadecimal object id",
+    )
+    expect(() => buildEvidenceManifest({ ...input, subject: { commit: "" } })).toThrow()
+    // Anchored at both ends: hex must be the whole id, not a prefix or a suffix of something else.
+    for (const commit of ["zz12345678", "12345678zz", "123456"]) {
+      expect(() => buildEvidenceManifest({ ...input, subject: { commit } })).toThrow(
+        "hexadecimal object id",
+      )
+    }
+  })
+
+  it("leaves manifests without a subject exactly as before", () => {
+    expect(JSON.stringify(buildEvidenceManifest(input))).not.toContain("subject")
+  })
+
   it("refuses duplicate check ids", () => {
     expect(() =>
       buildEvidenceManifest({ ...input, checks: [input.checks[0]!, input.checks[0]!] }),

@@ -672,13 +672,14 @@ makes.
 
 ## Regression detection
 
-repo-contract has no built-in baseline system and no persistence layer. The core engine
-does not read or write files on its own initiative beyond spawning the commands you
-configure and parsing that command's own captured stdout when you set
-`output: { format: "json" | "text" }`. A handful of published presets (`securitySecrets`,
-`duplication`, `markdownlint`) additionally read back a fixed report file their own `run`
-command was told to write — always that preset's own single, hardcoded path, never a scan
-of arbitrary files.
+repo-contract has no built-in baseline system. The core engine does not read or write files
+on its own initiative beyond spawning the commands you configure and parsing that command's
+own captured stdout when you set `output: { format: "json" | "text" }`. A handful of published
+presets (`securitySecrets`, `duplication`, `markdownlint`) additionally read back a fixed report
+file their own `run` command was told to write — always that preset's own single, hardcoded
+path, never a scan of arbitrary files. The opt-in pieces added in 0.12.0 write only where you
+point them: `createFileCacheStore` (`repo-contract/helpers`) keeps the result cache in the
+directory you name, and `repo-contract/metrics` builds the run records that the caller (here `scripts/run-contract.mjs`) appends to a log file.
 
 If your repository wants regression detection, persist the evidence or relevant
 measurements yourself and compare them in your policy:
@@ -801,6 +802,14 @@ is itself always a real Node-only spawning mechanism. See
 [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md) for
 what "tested" covers.
 
+### Package managers
+
+npm is the supported and fully tested package manager: every CI job installs with it. pnpm, Yarn 1
+and Yarn Berry with the `node-modules` linker are tested for one thing, in CI's `package-managers`
+job (`scripts/package-managers-smoke.mjs`): the packed tarball installs and every entry point
+imports, as ESM and as CommonJS. Nothing wider is claimed for them. Yarn Plug'n'Play and pnpm
+without `node-modules` hoisting are unsupported.
+
 ## Accessibility
 
 repo-contract has no user interface. It produces machine-readable `Evidence`/`Verdict`
@@ -809,9 +818,9 @@ is the consumer's surface, and WCAG / accessibility conformance applies there.
 
 ## Advanced: governed exceptions
 
-**Experimental** (see [VERSIONING.md](VERSIONING.md)): its TypeScript signature and runtime
-behavior may both change in a minor or patch release, the same classification
-`repo-contract/presets` carries.
+**Stable** since [ADR 0019](specs/decisions/0019-helpers-promoted-presets-stay-experimental.md) (see
+[VERSIONING.md](VERSIONING.md)): a changed signature or behavior is a breaking change. Only the
+`exceptions-walkthrough` example is still Experimental, and `repoContractLogs` with its two hooks is listed as beta in `docs/surface.json`.
 
 If you've ever wanted a check to permit a specific, named, justified exception to an
 otherwise-blocking finding — "this dependency's advisory is a known false positive," "this
@@ -852,7 +861,7 @@ const determinant = evaluateExceptionRecord({
 ```
 
 `resolveExceptionPolicy` alone answers "what policy applies to this classification" — exact
-match, then glob (via [minimatch](https://www.npmjs.com/package/minimatch)), then the
+match, then glob (via the package's own dependency-free `globMatch`, [ADR 0017](specs/decisions/0017-own-glob-matcher-replaces-minimatch.md)), then the
 group's own default, then your global default. `loadExceptionRegistry` reads and validates
 one exception-registry file's envelope (`{ "exceptions": [...] }`) from disk against a
 [Standard Schema](https://standardschema.dev) you supply — a missing file is a normal,

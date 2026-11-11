@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { composeSignals } from "../../../src/execution/abort-signals.js"
 
-/** Temporarily removes the native `AbortSignal.any` so a test can exercise `composeSignals`'s manual-composition fallback path (the real gap between this package's `engines.node >=20.0.0` floor and `AbortSignal.any`'s actual Node 20.3.0 debut), then restores it -- isolated here so the `delete`'s type-unsafety is suppressed in exactly one place. */
+/** Temporarily removes the native `AbortSignal.any` so a test can exercise `composeSignals`'s manual-composition fallback path (a gap that existed under the package's original `engines.node >=20.0.0` floor, before `AbortSignal.any`'s Node 20.3.0 debut; the floor is now `>=22`, so the fallback is kept only as defence in depth), then restores it -- isolated here so the `delete`'s type-unsafety is suppressed in exactly one place. */
 function withoutNativeAbortSignalAny(run: () => void): void {
   // eslint-disable-next-line @typescript-eslint/unbound-method -- reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.
   const original: typeof AbortSignal.any = AbortSignal.any

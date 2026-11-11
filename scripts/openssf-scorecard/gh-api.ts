@@ -152,3 +152,34 @@ export function ghApiJson<T>(apiPath: string): GhApiResult<T> {
 export function ghApiRaw(apiPath: string): GhApiResult<string> {
   return spawnGhApi([apiPath, "-H", "Accept: application/vnd.github.raw"])
 }
+
+/**
+ * Calls `gh api graphql` with a query and its variables, parsed the same way `ghApiJson` parses a
+ * REST response. Used where one GraphQL query replaces dozens of REST calls (Code-Review reads 30
+ * pull requests and their reviews at once).
+ * @param query - The GraphQL query text.
+ * @param variables - String variables, passed with `-f name=value`.
+ * @returns The parsed JSON body, or a classified failure.
+ */
+export function ghApiGraphql<T>(
+  query: string,
+  variables: Readonly<Record<string, string>>,
+): GhApiResult<T> {
+  const args = [
+    "graphql",
+    "-f",
+    `query=${query}`,
+    ...Object.entries(variables).flatMap(([name, value]) => ["-f", `${name}=${value}`]),
+  ]
+  const raw = spawnGhApi(args)
+  if (!raw.ok) return raw
+  try {
+    return { ok: true, value: JSON.parse(raw.value) as T }
+  } catch (error) {
+    return {
+      ok: false,
+      reason: "error",
+      message: `gh api graphql did not return parseable JSON: ${error instanceof Error ? error.message : String(error)}`,
+    }
+  }
+}

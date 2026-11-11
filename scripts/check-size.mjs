@@ -25,17 +25,20 @@ const root = path.resolve(here, "..")
 // budget, it's fine for this script to know it by default so bare `npm run
 // size` still works with zero arguments.
 const ENTRIES = [
-  // Includes cross-spawn (bundled? no -- external, see tsup.config.ts) --
-  // this reports only this package's own compiled source, since cross-spawn
-  // and yaml are both external and resolved from node_modules at install
-  // time, not inlined here.
+  // This reports only this package's own compiled source: there are no runtime dependencies, so
+  // nothing is inlined from node_modules (see tsup.config.ts).
   { label: "index (esm)", file: "dist/index.js" },
   { label: "index (cjs)", file: "dist/index.cjs" },
-  // `./presets` is an equally published `exports` entrypoint (package.json) -- omitting it here
-  // left checks/size.ts's own "presets (esm)"/"presets (cjs)" budgets permanently unmatchable
-  // (the report never had an entry for them to compare against at all).
+  // Every published `exports` entry point is measured, in both formats; an entry missing here
+  // would leave its budget in checks/size.ts permanently unmatchable.
   { label: "presets (esm)", file: "dist/presets.js" },
   { label: "presets (cjs)", file: "dist/presets.cjs" },
+  { label: "helpers (esm)", file: "dist/helpers.js" },
+  { label: "helpers (cjs)", file: "dist/helpers.cjs" },
+  { label: "affected (esm)", file: "dist/affected.js" },
+  { label: "affected (cjs)", file: "dist/affected.cjs" },
+  { label: "metrics (esm)", file: "dist/metrics.js" },
+  { label: "metrics (cjs)", file: "dist/metrics.cjs" },
 ]
 
 function parseArgs(argv) {

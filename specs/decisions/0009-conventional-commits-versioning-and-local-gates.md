@@ -210,9 +210,9 @@ current "How releases work" section for the operational detail.
 Everything else this ADR decided is unaffected: Conventional Commits remain the sole versioning
 input (`api-contract` still fails a PR whose declared bump is lower than what the API diff
 requires), commitlint/the PR-title check are unchanged, and pre-1.0 minor/patch deflation still
-applies -- Changesets' own default pre-1.0 behavior, not a configuration option this repo sets
-explicitly (contrast release-please's explicit `bump-minor-pre-major`/`bump-patch-for-minor-pre-major`
-flags). A changeset (hand-written or auto-generated from the commit's own Conventional Commit
+applies -- a rule of the shared release workflow's changeset generator (Changesets itself applies
+exactly the bump a changeset declares), which replaces release-please's explicit
+`bump-minor-pre-major`/`bump-patch-for-minor-pre-major` flags. A changeset (hand-written or auto-generated from the commit's own Conventional Commit
 subject) is now the actual version-bump input Changesets consumes; the commit message remains
 the source Conventional-Commits signal either way, so `api-contract`'s own bump-agreement check
 needed no logic change, only its comments' tool name updated.

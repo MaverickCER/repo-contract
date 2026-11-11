@@ -59,17 +59,22 @@ const registrySchema: StandardSchemaV1<unknown, readonly NetworkExceptionRecord[
 }
 
 /**
- * Scope: `src/**\/*.ts` only -- the entire built/published surface (see
- * package.json's "files"/exports; `npm pack --dry-run` confirms dist/ is
- * built from nothing else). Reuses suppression-governance's own whole-repo
- * walker (already excludes node_modules/dist/coverage/.stryker-tmp/etc. and
- * fixtures directories) rather than re-implementing file discovery, then
- * filters to this check's own, narrower scope.
+ * Scope: everything that ships. `src/**\/*.ts` is what `dist/` is built from (see package.json's
+ * "files"/exports; `npm pack --dry-run` confirms dist/ is built from nothing else), and `bin/**\/*.mjs`
+ * is the hand-written CLI that ships beside it, unbundled -- `init`, `affected`, `cache`, `doctor`,
+ * `metrics` and `merge-mutation`. A network call in the CLI would reach a consumer's machine just as
+ * one in the library would. Reuses suppression-governance's own whole-repo walker (already excludes
+ * node_modules/dist/coverage/.stryker-tmp/etc. and fixtures directories) rather than re-implementing
+ * file discovery, then filters to this check's own scope. Declaration files (`.d.mts`) carry no code.
  * @param repoRelativePath - A repo-relative, POSIX-separated file path, as produced by `listSourceFiles`.
- * @returns `true` if this file is inside this check's `src/**\/*.ts` scope.
+ * @returns `true` if this file is inside this check's scope.
  */
 function isInScope(repoRelativePath: string): boolean {
-  return repoRelativePath.startsWith("src/") && repoRelativePath.endsWith(".ts")
+  if (repoRelativePath.startsWith("src/")) return repoRelativePath.endsWith(".ts")
+  if (repoRelativePath.startsWith("bin/")) {
+    return repoRelativePath.endsWith(".mjs") && !repoRelativePath.endsWith(".d.mts")
+  }
+  return false
 }
 
 const RESTRICTED_MODULE_SPECIFIERS: ReadonlySet<string> = new Set([
@@ -109,7 +114,9 @@ export function scanSourceFile(
   text: string,
 ): readonly NetworkCapabilityFinding[] {
   const findings: NetworkCapabilityFinding[] = []
-  const sourceFile = ts.createSourceFile(relativePath, text, ts.ScriptTarget.Latest, true)
+  // `.mjs` is parsed as JavaScript (the TypeScript parser reads it fine; a `.ts` kind would reject JS-only syntax).
+  const kind = relativePath.endsWith(".mjs") ? ts.ScriptKind.JS : ts.ScriptKind.TS
+  const sourceFile = ts.createSourceFile(relativePath, text, ts.ScriptTarget.Latest, true, kind)
 
   /**
    * Records one finding at `node`'s own source position.

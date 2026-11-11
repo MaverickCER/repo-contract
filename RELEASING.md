@@ -1,10 +1,10 @@
 # Releasing (maintainers)
 
 Maintainer-facing. Contributors don't run any of this — a normal change is just a PR;
-a changeset now appears automatically even if you don't add one by hand (see
+a changeset is generated for a `feat`, `fix`, `perf` or `revert` commit when you add none (see
 [`CONTRIBUTING.md`](CONTRIBUTING.md#making-a-change)).
 
-Releases are fully automated by [Changesets](https://github.com/changesets/changesets)
+Releases are driven by [Changesets](https://github.com/changesets/changesets)
 and npm's [OIDC trusted publishing](https://docs.npmjs.com/trusted-publishers), via a
 shared, centrally-maintained workflow hosted in
 [`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml)
@@ -22,20 +22,19 @@ nothing, then a release PR" friction pattern this repo used to hit, among others
 
 ## How releases work
 
-1. Every PR lands with a changeset in `.changeset/` — either hand-written (Markdown,
-   `patch`/`minor`/`major` + a consumer-facing description) or generated automatically
-   from the commit's own Conventional Commit subject if the PR didn't add one (`feat:`
-   → minor, a breaking-change marker → major, everything else → patch as the default;
-   see the shared workflow's own comment for the exact rule and its one narrow
-   exemption for meta-tooling-only commits). Either way, no PR merges without a
-   version-impact record.
+1. A release is driven by the commits on `main`. The shared workflow writes a changeset
+   into `.changeset/` for each `feat`, `fix`, `perf` or `revert` commit that has none
+   (while the package is `0.x`: a breaking commit gives `minor`, everything else `patch`);
+   `chore`, `docs`, `ci`, `test`, `build`, `refactor` and bot commits release nothing. A
+   hand-written `.changeset/*.md` (Markdown, `patch`/`minor`/`major` plus a consumer-facing
+   description) always wins over the generated one. Separately, the `api-contract` check
+   fails a PR whose public-API change has no changeset at the matching level.
 2. On each push to `main`, the shared workflow runs `changesets/action`. If any
    unreleased changesets are pending, it opens or updates a pull request titled
-   **"Version Packages"** from the branch **`changeset-release/main`**, dispatches
+   **"Version Packages"** from the branch **`changeset-release/main`** and dispatches
    this repo's own `ci.yml` onto that branch (a `GITHUB_TOKEN`-pushed branch never
-   otherwise triggers `push`/`pull_request` workflows), and — once that dispatched
-   run comes back green — **merges the PR automatically**. No one has to notice it's
-   ready and click merge.
+   otherwise triggers `push`/`pull_request` workflows). A maintainer reads that PR and
+   merges it; nothing merges it automatically.
 3. That merge triggers the shared workflow again. This time there are no pending
    changesets, so it runs `npm run release` (`changeset publish`), which runs
    `prepublishOnly` (the full `npm run contract` gate) and then publishes to npm over
@@ -55,7 +54,7 @@ release-please era) stays as-is; only future entries render through Changesets.
 [`.github/workflows/api-baseline.yml`](https://github.com/MaverickCER/repo-contract/blob/main/.github/workflows/api-baseline.yml) is a thin caller of
 [`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract)'s own
 reusable `api-baseline-sync.yml` workflow, which regenerates every entry point's own
-`.repo-contract/api-contract/<target>/baseline.*` (`index`, `presets`, `helpers`) on the Version
+`.repo-contract/api-contract/<target>/baseline.*` (`index`, `presets`, `helpers`, `affected`, `metrics`) on the Version
 Packages PR branch (`changeset-release/main`), so it lands in the same merge as the version bump.
 If that job is ever disabled, run `npm run contract:baseline`
 (`internal-package-contract update-baseline`) after the release and commit the result — that is

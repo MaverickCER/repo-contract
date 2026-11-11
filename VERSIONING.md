@@ -50,7 +50,7 @@ the package reaches 1.0 — see [Pre-1.0 status](#pre-10-status) below):
 ## Experimental
 
 **`repo-contract/presets`** (the whole subpath, including every preset it exports) --
-the only library surface that stays Experimental (consumers that cannot tolerate a changed preset
+an Experimental library surface, with `./affected` and `./metrics` below (consumers that cannot tolerate a changed preset
 pin a tilde range: `internal-package-contract` uses `~0.8.8`) --
 a new pre-1.0 surface shipped before a real feedback cycle, per this section's own stated
 convention (see [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)). An Experimental
@@ -66,10 +66,20 @@ behavior:
 > interpretation (e.g. a finding that used to fail now warns) → potentially major; a bug fix that
 > restores documented behavior → patch or minor depending on impact.
 
+**`repo-contract/affected`** (the whole subpath) and the `affected`, `cache`, `doctor` and
+`merge-mutation` commands (0.12.0): scope resolution, the affected-test analysis, the result cache
+and the shard tools. Experimental because real use will reshape how a run is narrowed; a change
+can land in a minor or patch release while `0.x`. Promotion to Stable follows the same rule as
+presets: a real feedback cycle with no breaking change needed.
+
+**`repo-contract/metrics`** (the whole subpath) and the `metrics` command (0.12.0): run records,
+their log format, `summarizeRuns`, `pillarCoverage`, `maturityLevel` and the evidence manifest.
+Experimental for the same reason, with the same promotion rule.
+
 The CLI that scaffolds a contract, `bin/repo-contract.mjs`, is classified Experimental in its own
 right below.
 
-**`bin/repo-contract.mjs`** (the `repo-contract init` command) — a third Experimental surface,
+**`bin/repo-contract.mjs`** (the `repo-contract init` command) — a further Experimental surface,
 added per [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)'s
 2026-09-09 amendment: its detection table (which preset maps to which npm dependency) and its
 generated file content may both change in a minor or patch release. **Experimental here is a
@@ -136,8 +146,7 @@ How a `0.x` bump is chosen is **this repository's release tooling, not [Changese
 package is `0.x`: a `feat!:` / `BREAKING CHANGE:` commit generates a `minor` changeset, a `feat:` a
 `patch`, and the API-contract gate requires only a `minor` for a breaking API diff. So **no commit and
 no API diff can publish `1.0.0` by itself**: crossing to `1.0.0` takes a human-authored `major`
-changeset, and the release workflow then refuses to auto-merge that version pull request — a person
-reads and merges it.
+changeset, and a person reads and merges that version pull request, as for every release.
 
 ### What `1.0.0` will promise
 

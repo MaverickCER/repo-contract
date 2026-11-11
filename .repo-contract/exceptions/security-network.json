@@ -1,3 +1,17 @@
 {
-  "exceptions": []
+  "exceptions": [
+    {
+      "id": "security-network:restricted-named-import:bin/repo-contract.mjs:16:10",
+      "version": 1,
+      "justification": "`repo-contract affected` must run the project's OWN TypeScript (the compiler API it needs is the consumer's, version 6 or earlier), so the CLI resolves the literal module name \"typescript\" from the project directory with createRequire(<dir>/package.json). The specifier is a constant; nothing computed from input is ever loaded, and the loaded module is a build-time dependency the consumer already installed. Accepted as a risk rather than a false positive: the capability is real (a module is loaded at run time), bounded to one constant name, and reviewed here.",
+      "alternatives": "A static `import \"typescript\"` would load repo-contract's own copy, or fail when a project has none, instead of the project's compiler; an `import()` of the same literal has the same dynamic-load shape under this scan. Passing the compiler in through the library API (`repo-contract/affected` takes `ts` as an argument) is already how the library avoids this; the CLI is the one place that has to find it.",
+      "capability": "restricted-named-import",
+      "column": 10,
+      "exceptionType": "accepted-risk",
+      "file": "bin/repo-contract.mjs",
+      "line": 16,
+      "method": "independent-human-review",
+      "remediation": "Remove when TypeScript 7 ships a compiler API and the CLI can import a pinned dependency instead of the project's copy, or when the CLI is folded into a consumer-supplied runner."
+    }
+  ]
 }

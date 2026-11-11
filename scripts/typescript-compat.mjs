@@ -14,10 +14,11 @@
 // Exits 0 only if the packed tarball's declarations compile cleanly, with `moduleResolution:
 // "nodenext"` and `strict: true`, under the newest release of each TypeScript major a consumer may
 // have installed: 5, 6 and 7 (7 is the native compiler; it type-checks but ships no compiler API,
-// which this package's published surface does not use). Override the list on the command line:
-// `node scripts/typescript-compat.mjs <artifacts-dir> [version ...]`. There is no 5.0 floor here:
-// this package declares no `typescript` peer, and the oldest 5.x cannot even parse the newest
-// `@types/node` the scratch project installs.
+// which only `repo-contract affected` needs at runtime -- that command refuses 7 with a message).
+// Override the list on the command line: `node scripts/typescript-compat.mjs <artifacts-dir>
+// [version ...]`. There is no 5.0 floor here: the optional `typescript >=5.0.0` peer exists for
+// `affected` alone, and the oldest 5.x cannot even parse the newest `@types/node` the scratch
+// project installs.
 
 import { spawnSync } from "node:child_process"
 import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs"
@@ -80,6 +81,29 @@ function checkIn(dir, version) {
     `import crossSpawn from "cross-spawn"
 import { defineRepoContract } from "repo-contract"
 import { lint } from "repo-contract/presets"
+import { hashRequirementFields } from "repo-contract/helpers"
+import { parseScopeArgs, resolveScope } from "repo-contract/affected"
+import type { ScopeDecision } from "repo-contract/affected"
+import { createRunRecord, serializeRunRecord } from "repo-contract/metrics"
+import type { RunRecord } from "repo-contract/metrics"
+
+// Every published barrel is imported, so a declaration that fails to compile under this TypeScript
+// in any of them fails here.
+const digest: string = hashRequirementFields(
+  { justification: "x" },
+  ["justification"],
+  (record, field) => String(record[field as keyof typeof record]),
+)
+const parsed = parseScopeArgs(["--scope", "auto"])
+const scope: ScopeDecision = resolveScope({ requested: parsed.ok ? parsed.scope : undefined, env: {} })
+const record: RunRecord = createRunRecord({
+  startedAt: new Date(0).toISOString(),
+  durationMs: 1,
+  scope: scope.scope,
+  checks: [],
+})
+void digest
+void serializeRunRecord(record)
 
 export default defineRepoContract({
   spawn: crossSpawn,

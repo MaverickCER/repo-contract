@@ -136,11 +136,11 @@ Nothing in `src/**` opens a socket, and that is mechanically enforced by a check
 plus an independent, ESLint-free repository check), not merely documented. See
 [ADR 0007](decisions/0007-no-network-surface.md) and [SECURITY.md](../SECURITY.md).
 
-### The public API is exactly three curated barrels
+### The public API is five curated barrels
 
-`src/index.ts`, `src/presets/index.ts`, and `src/helpers/index.ts` are the entire public surface.
-A symbol is public only if one of those three explicitly re-exports it. See
-[Module layout](#module-layout).
+`src/index.ts`, `src/presets/index.ts`, `src/helpers/index.ts`, `src/affected/index.ts` and
+`src/metrics/index.ts` are the entire public surface. A symbol is public only if one of those five
+explicitly re-exports it. See [Module layout](#module-layout).
 
 ## Execution phase
 
@@ -423,6 +423,17 @@ src/
     index.ts                 third, independent curated barrel -- repo-contract/helpers
     exception-policy.ts      the generic exception-policy primitive (resolve/evaluate/hash)
     load-exception-registry.ts  reads + validates one exception registry file's envelope
+  affected/
+    index.ts                 fourth curated barrel -- repo-contract/affected (Experimental)
+    compute-affected.ts      git diff + import graph -> the tests a change can reach, or everything
+    scope.ts                 resolveScope(): affected / full / auto from flags, env and CI event
+    cache.ts                 content-addressed result cache over a caller-supplied store
+    shard.ts, fail-fast.ts, doctor.ts  exact disjoint shards, fail-fast, `doctor --fix`
+  metrics/
+    index.ts                 fifth curated barrel -- repo-contract/metrics (Experimental)
+    record.ts, summary.ts    run records, their log format, summarizeRuns()
+    maturity.ts              pillarCoverage() and maturityLevel()
+    manifest.ts              buildEvidenceManifest() / verifyEvidenceManifest()
 ```
 
 Nothing outside `src/index.ts`'s explicit re-export list is part of the public API, regardless of
@@ -434,7 +445,11 @@ are never re-exported from the root barrel, and the root barrel is never re-expo
 `src/helpers/index.ts` is a third such barrel, published under `./helpers` (see
 [ADR 0013](decisions/0013-reusable-exception-policy-helper.md)) — a generic, reusable
 exception-policy primitive that decides nothing and matches nothing on its own; it never
-re-exports from, or is re-exported by, either of the other two. `scripts/schema-types.ts` exists
+re-exports from, or is re-exported by, either of the other two. `src/affected/index.ts` and
+`src/metrics/index.ts` (0.12.0, Experimental) are the fourth and fifth barrels, published under
+`./affected` and `./metrics` (see [ADR 0021](decisions/0021-affected-scope-is-a-pure-analysis-that-only-ever-widens.md) and
+[ADR 0022](decisions/0022-a-full-run-is-cold-and-a-cache-replays-only-identical-inputs.md)); both are pure libraries whose inputs (the compiler
+API, git output, the store, the environment) are passed in, and neither imports the engine. `scripts/schema-types.ts` exists
 solely as a target for `ts-json-schema-generator` (see
 [ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md)); it is not part of the
 runtime.
@@ -443,8 +458,11 @@ runtime.
 this package's one executable surface (`repo-contract init`, see
 [ADR 0004](decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)'s
 2026-09-09 amendment). It is the first hand-written, unbundled top-level JS this package has ever
-published: not compiled by tsup, not routed through `src/index.ts`, and it imports nothing from
-`src/` — only `node:fs`/`node:path`. It writes files; it never executes the pipeline above.
+published: not compiled by tsup and not routed through `src/index.ts`. `init` imports only
+`node:fs`/`node:path` and writes files; the `affected`, `cache`, `doctor`, `metrics` and
+`merge-mutation` commands added in 0.12.0 import the built `dist/affected.js` and
+`dist/metrics.js` barrels and spawn `git` through `node:child_process`. None of them executes the
+pipeline above.
 
 ## Self-hosting
 

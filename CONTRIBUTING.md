@@ -42,7 +42,7 @@ so this one command after `npm install` is the whole setup. Use Node 24 locally
    behaves the same way — a real Socket.dev supply-chain scan when `@socketsecurity/cli` is
    installed and authenticated, otherwise a `warn` naming why not (this repository's own CI holds
    no Socket org token). Neither `warn` blocks a push or CI. Open a pull request; CI re-runs the
-   contract across the OS and Node matrix.
+   contract on Ubuntu and the unit and e2e suites on Linux, macOS and Windows.
 
 `npm run setup` wires two local git settings — the hooks and the commit-message template. The
 hooks are the local half of the gate CI enforces, so leave them on. Only the commit-message
@@ -56,13 +56,13 @@ See [ADR 0009](specs/decisions/0009-conventional-commits-versioning-and-local-ga
 
 ## Commits and versioning
 
-[`VERSIONING.md`](VERSIONING.md) maps each commit type to its release effect. A changeset
-appears automatically for every PR even if you don't add one by hand — the shared release
-workflow derives one from your PR's Conventional Commit title if none exists (`feat:` →
-minor, a breaking-change marker → major, everything else → patch). Add your own
-`.changeset/*.md` file (`npx changeset`) only when you want a richer, consumer-facing
-description than the commit subject alone, or need to force a higher bump than the
-prefix implies — a hand-written changeset always takes precedence over the generated one.
+[`VERSIONING.md`](VERSIONING.md) maps each commit type to its release effect. Once your PR
+is on `main`, the shared release workflow writes a changeset for each `feat`, `fix`, `perf`
+or `revert` commit that has none (pre-1.0: a breaking commit → `minor`, the rest → `patch`);
+other commit types release nothing. Add your own `.changeset/*.md` file (`npx changeset`)
+when you want a richer, consumer-facing description than the commit subject alone, or need
+a higher bump than the type implies — a hand-written changeset always takes precedence over
+the generated one.
 If a change touches the public TypeScript API by more than your changesets declare, the
 `api-contract` check fails the PR and tells you exactly what to add. When you're unsure
 whether a change is breaking, ask in the pull request rather than guess.
@@ -82,7 +82,7 @@ npm run adr:new "the decision, stated as a sentence"
 ```
 
 That scaffolds the next-numbered file with the required sections; fill them in, using the
-neighbouring ADRs as a guide for depth. Touching `src/execution/` or `src/policy/`? Either
+neighbouring ADRs as a guide for depth. Touching `src/execution/`, `src/policy/`, `src/affected/` or `src/metrics/`? Either
 add an ADR or reference an existing one (`ADR 0002`) in a commit message — `adr-governance`
 enforces it.
 
@@ -93,5 +93,5 @@ Maintainer release and publishing steps are in [`RELEASING.md`](RELEASING.md).
 Releases are cut by [Changesets](https://github.com/changesets/changesets) via a shared
 workflow hosted in `internal-package-contract`: merging to `main` maintains a "Version
 Packages" PR that bumps the version and `CHANGELOG.md` from pending changesets, and that
-PR auto-merges itself once its own CI is green — publishing to npm over OIDC with no
-human needing to click merge. Nothing here is a manual step for a contributor.
+PR is merged by a maintainer once its own CI is green — publishing to npm over OIDC.
+Nothing here is a manual step for a contributor.

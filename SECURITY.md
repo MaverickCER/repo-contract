@@ -6,8 +6,9 @@
 - Process spawning and environment access are capabilities **the consumer supplies**, not
   owned by the package.
 - The `init` CLI only scaffolds local config/hook files; neither it nor the library engine
-  makes network calls or collects telemetry — and the no-network property is enforced by a
-  check, not merely documented.
+  makes network calls or collects telemetry. An AST scan of `src/` fails the contract on any
+  network import or global, and a scan of the packed tarball rejects `child_process` and
+  `process.env` outside `bin/`.
 
 The rest of this document defines the security boundaries and threat model for
 `repo-contract`: what protections the package intentionally provides, what responsibilities
@@ -110,12 +111,14 @@ the most security-sensitive part of the package.
   This is enforced by CI (`no-eval`/`no-implied-eval`/`no-new-func` are lint errors, not just
   documentation), not just asserted here.
 - **No network calls anywhere in the package's shipped surface (`src/**` — the programmatic API
-  and every published preset).** Mechanically enforced in two independent layers: an ESLint rule
-  (`no-restricted-imports`/`no-restricted-globals`) rejects network-capable imports and globals at
-  development time, and an independent, ESLint-free repository check
-  (`scripts/security-network/scan.ts`) statically scans the same surface — including every
-  preset's spawned command against a reviewed allowlist — so a silently weakened lint rule or a
-  suppressed violation still fails the build. This governs repo-contract's own code; it does not,
+  and every published preset — and `bin/**`, the CLI).** Mechanically enforced in two independent
+  layers: an ESLint rule (`no-restricted-imports`/`no-restricted-globals`) rejects network-capable
+  imports and globals at development time, and an independent, ESLint-free repository check
+  (`scripts/security-network/scan.ts`) statically scans both `src/` and the shipped `bin/` —
+  including every preset's spawned command against a reviewed allowlist — so a silently weakened
+  lint rule or a suppressed violation still fails the build. The one reviewed exception is the
+  CLI's `createRequire(...)("typescript")`, which loads the project's own compiler for `affected`
+  (`.repo-contract/exceptions/security-network.json`). This governs repo-contract's own code; it does not,
   and cannot, prevent a command _you_ configure from making network calls, or a preset's spawned
   external tool (e.g. `brokenLinks`'s `linkinator`) from doing so on your explicit behalf — see
   [ADR 0007](specs/decisions/0007-no-network-surface.md) for the full threat model, exactly what's
@@ -129,7 +132,7 @@ particular:
 - **You own what commands you configure.** repo-contract does not attempt to detect or block a
   dangerous `run` command — if you configure `rm -rf /` with `shell: true`, it will run it.
 - **You own persistence.** repo-contract never writes evidence, reports, or baseline files to
-  disk on its own initiative. If you persist evidence (for baseline comparison, audit trails,
+  disk on its own initiative; the opt-in result cache writes only to the path you pass, and run records are appended by the caller. If you persist evidence (for baseline comparison, audit trails,
   etc.), you are responsible for where it goes and who can read it — including whatever secrets
   a check's captured output might contain.
 - **You own secret hygiene in check output.** If a configured command might print sensitive
@@ -145,7 +148,7 @@ particular:
   in that same credentialed job, unlike this repository's own
   former release-please-based pipeline's separate credential-free `verify` job. This is a known,
   accepted trade-off of standardizing on the shared workflow every consumer uses, not an
-  oversight — but per this section's own guidance immediately below, a repository in this
+  oversight — but per this section's own guidance above, a repository in this
   position should set `inheritEnv: false` plus an explicit, minimal `env` on every check
   reachable from that job, which `repo-contract.config.ts` does not yet do here. Track that as a
   follow-up, not a promise already kept by this migration.
