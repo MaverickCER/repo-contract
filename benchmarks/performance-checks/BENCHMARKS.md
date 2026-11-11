@@ -4,18 +4,18 @@ What does adopting this package add to latency, CPU, memory and compute spend --
 
 ## What adopting this package costs
 
-For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **46.8 ms** per operation compared with a bare-minimum baseline (**5.9% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 1.00). At list prices that is on the order of **~$0.1 – $1 per million operations** of compute.
+For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **29.2 ms** per operation compared with a bare-minimum baseline (**4.6% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 1.00). At list prices that is on the order of **~$0.1 – $1 per million operations** of compute.
 
 > The relative figure and the growth class are the steadier ones: both come from the same run, so they depend far less on the machine than a time does, though runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below) -- good for comparing one package with another, not for budgeting.
 
 | Cost | Typical (80 checks) | Largest (2560 checks) |
 | --- | --- | --- |
-| Added latency per operation | 46.8 ms | 1.13 s |
-| Added latency, relative to baseline | 5.9% | 4.5% |
-| Added CPU time per operation | 43.8 ms | 2.39 s |
-| Added memory per operation (heap delta) | 10.8 MiB | 17.9 MiB |
-| Compute cost per 1M operations (order of magnitude) | ~$0.1 – $1 | ~$1 – $10 |
-| Single-core throughput ceiling of the overhead alone | 21 ops/s | 1 ops/s |
+| Added latency per operation | 29.2 ms | 1.53 s |
+| Added latency, relative to baseline | 4.6% | 7.9% |
+| Added CPU time per operation | 34.4 ms | 2.36 s |
+| Added memory per operation (heap delta) | 10.9 MiB | 42.3 MiB |
+| Compute cost per 1M operations (order of magnitude) | ~$0.1 – $1 | ~$10 |
+| Single-core throughput ceiling of the overhead alone | 34 ops/s | 1 ops/s |
 
 ## 1. End-to-end: the package's total impact
 
@@ -40,14 +40,14 @@ The baseline is an empty or minimal function, so it costs almost nothing and the
 
 | checks | Baseline | With package | Added | Added vs baseline | Added CPU | Est. $ / 1M ops |
 | --- | --- | --- | --- | --- | --- | --- |
-| 20 | 207 ms | 253 ms | 45.8 ms | 22% | 17.4 ms | $0.095 – $0.196 |
-| 40 | 401 ms | 444 ms | 43.7 ms | 11% | 28.7 ms | $0.091 – $0.323 |
-| 80 | 795 ms | 842 ms | 46.8 ms | 5.9% | 43.8 ms | $0.098 – $0.493 |
-| 160 | 1.58 s | 1.67 s | 95.2 ms | 6.0% | 126 ms | $0.198 – $1.42 |
-| 320 | 3.10 s | 3.30 s | 207 ms | 6.7% | 263 ms | $0.432 – $2.96 |
-| 640 | 6.22 s | 6.42 s | 205 ms | 3.3% | 485 ms | $0.427 – $5.45 |
-| 1280 | 12.4 s | 13.3 s | 956 ms | 7.7% | 1.40 s | $1.99 – $15.73 |
-| 2560 | 25.2 s | 26.3 s | 1.13 s | 4.5% | 2.39 s | $2.35 – $26.83 |
+| 20 | 155 ms | 192 ms | 36.5 ms | 24% | 12.8 ms | $0.076 – $0.144 |
+| 40 | 314 ms | 342 ms | 28.4 ms | 9.1% | 20.3 ms | $0.059 – $0.228 |
+| 80 | 637 ms | 666 ms | 29.2 ms | 4.6% | 34.4 ms | $0.061 – $0.387 |
+| 160 | 1.27 s | 1.32 s | 49.1 ms | 3.9% | 104 ms | $0.102 – $1.17 |
+| 320 | 2.50 s | 2.57 s | 69.6 ms | 2.8% | 189 ms | $0.145 – $2.12 |
+| 640 | 5.07 s | 5.29 s | 222 ms | 4.4% | 495 ms | $0.463 – $5.57 |
+| 1280 | 9.87 s | 10.3 s | 465 ms | 4.7% | 1.14 s | $0.970 – $12.80 |
+| 2560 | 19.4 s | 21.0 s | 1.53 s | 7.9% | 2.36 s | $3.19 – $26.56 |
 
 **How the total grows:** O(n) (linear), exponent 1.00 over 8 sizes.
 
@@ -57,19 +57,19 @@ Every function the package exposes is measured on its own across the full size l
 
 | Function | Varies | Documented | Measured | Agreement | At 80 | At 2560 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `runChecks (scheduler and process orchestration)` (no-dependencies) | check | O(n) | O(n) | ✅ matches | 808 ms | 25.9 s |
-| `runChecks (scheduler and process orchestration)` (few-dependencies) | check | O(n) | O(n) | ✅ matches | 858 ms | 26.2 s |
-| `runChecks (scheduler and process orchestration)` (frequent-barriers) | check | O(n) | O(n) | ✅ matches | 923 ms | 30.3 s |
-| `runChecks (scheduler and process orchestration)` (with-reporting-hook) | check | O(n) | O(n) | ✅ matches | 899 ms | 26.7 s |
-| `runRepoContract` (plain) | check | O(n) | O(n) | ✅ matches | 840 ms | 1.67 s (at 160) |
-| `runRepoContract` (plain) | concurrency | O(1) | n/a | ❔ not enough data | 872 ms (at 16) | 872 ms (at 16) |
-| `runRepoContract` (with-hooks) | check | O(n) | O(n) | ✅ matches | 899 ms | 1.76 s (at 160) |
-| `runRepoContract` (with-hooks) | concurrency | O(1) | n/a | ❔ not enough data | 869 ms (at 16) | 869 ms (at 16) |
+| `runChecks (scheduler and process orchestration)` (no-dependencies) | check | O(n) | O(n) | ✅ matches | 653 ms | 20.8 s |
+| `runChecks (scheduler and process orchestration)` (few-dependencies) | check | O(n) | O(n) | ✅ matches | 687 ms | 21.0 s |
+| `runChecks (scheduler and process orchestration)` (frequent-barriers) | check | O(n) | O(n) | ✅ matches | 777 ms | 23.7 s |
+| `runChecks (scheduler and process orchestration)` (with-reporting-hook) | check | O(n) | O(n) | ✅ matches | 714 ms | 21.1 s |
+| `runRepoContract` (plain) | check | O(n) | O(n) | ✅ matches | 719 ms | 1.39 s (at 160) |
+| `runRepoContract` (plain) | concurrency | O(1) | n/a | ❔ not enough data | 703 ms (at 16) | 703 ms (at 16) |
+| `runRepoContract` (with-hooks) | check | O(n) | O(n) | ✅ matches | 713 ms | 1.39 s (at 160) |
+| `runRepoContract` (with-hooks) | concurrency | O(1) | n/a | ❔ not enough data | 724 ms (at 16) | 724 ms (at 16) |
 
 > **Could not be determined.** The big-O of these could not be measured, so they are not checked against their documentation:
 >
-> - `run-repo-contract (plain)` (varying concurrency): over the largest 5 concurrency sizes the timings do not follow one growth rate (R² 0.78, and a fit below 0.8 is not trusted; fitted exponent -0.36). The cost probably changes regime between sizes (a cache, a threshold, a batch size) or run-to-run noise outweighs the growth
-> - `run-repo-contract (with-hooks)` (varying concurrency): over the largest 5 concurrency sizes the timings do not follow one growth rate (R² 0.76, and a fit below 0.8 is not trusted; fitted exponent -0.35). The cost probably changes regime between sizes (a cache, a threshold, a batch size) or run-to-run noise outweighs the growth
+> - `run-repo-contract (plain)` (varying concurrency): over the largest 5 concurrency sizes the timings do not follow one growth rate (R² 0.76, and a fit below 0.8 is not trusted; fitted exponent -0.34). The cost probably changes regime between sizes (a cache, a threshold, a batch size) or run-to-run noise outweighs the growth
+> - `run-repo-contract (with-hooks)` (varying concurrency): over the largest 5 concurrency sizes the timings do not follow one growth rate (R² 0.72, and a fit below 0.8 is not trusted; fitted exponent -0.33). The cost probably changes regime between sizes (a cache, a threshold, a batch size) or run-to-run noise outweighs the growth
 
 ### `runChecks (scheduler and process orchestration)`
 
@@ -105,14 +105,14 @@ Every check is independent, so the scheduler can always keep eight running.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 209 ms | 220 ms | 74.4 ms | 3.3 MiB | 5 |
-| 40 | 414 ms | 419 ms | 139 ms | 6.5 MiB | 2 |
-| 80 | 808 ms | 817 ms | 271 ms | 11.2 MiB | 1 |
-| 160 | 1.61 s | 1.62 s | 532 ms | 22.4 MiB | 1 |
-| 320 | 3.39 s | 3.42 s | 1.17 s | 44.8 MiB | 0 |
-| 640 | 6.56 s | 6.59 s | 2.17 s | 44.2 MiB | 0 |
-| 1280 | 13.0 s | 13.0 s | 4.30 s | 36.5 MiB | 0 |
-| 2560 | 25.9 s | 26.1 s | 8.52 s | 46.4 MiB | 0 |
+| 20 | 188 ms | 200 ms | 60.6 ms | 2.8 MiB | 5 |
+| 40 | 327 ms | 333 ms | 101 ms | 6.4 MiB | 3 |
+| 80 | 653 ms | 657 ms | 203 ms | 11.0 MiB | 2 |
+| 160 | 1.30 s | 1.31 s | 402 ms | 22.0 MiB | 1 |
+| 320 | 2.60 s | 2.71 s | 789 ms | 43.9 MiB | 0 |
+| 640 | 5.37 s | 5.39 s | 1.67 s | 42.4 MiB | 0 |
+| 1280 | 10.5 s | 10.8 s | 3.22 s | 33.1 MiB | 0 |
+| 2560 | 20.8 s | 20.8 s | 6.23 s | 42.0 MiB | 0 |
 
 #### Variant `few-dependencies`
 
@@ -122,48 +122,48 @@ Every fifth check depends on its predecessor and one check in the middle is an i
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 259 ms | 266 ms | 74.7 ms | 3.3 MiB | 4 |
-| 40 | 447 ms | 459 ms | 143 ms | 6.6 MiB | 2 |
-| 80 | 858 ms | 863 ms | 282 ms | 11.4 MiB | 1 |
-| 160 | 1.68 s | 1.69 s | 550 ms | 22.8 MiB | 1 |
-| 320 | 3.32 s | 3.35 s | 1.09 s | 45.5 MiB | 0 |
-| 640 | 6.53 s | 6.54 s | 2.16 s | 45.5 MiB | 0 |
-| 1280 | 13.0 s | 13.1 s | 4.33 s | 39.1 MiB | 0 |
-| 2560 | 26.2 s | 26.3 s | 8.63 s | 16.2 MiB | 0 |
+| 20 | 206 ms | 214 ms | 55.3 ms | 3.3 MiB | 5 |
+| 40 | 353 ms | 365 ms | 103 ms | 6.5 MiB | 3 |
+| 80 | 687 ms | 689 ms | 211 ms | 11.2 MiB | 1 |
+| 160 | 1.36 s | 1.37 s | 410 ms | 22.4 MiB | 1 |
+| 320 | 2.76 s | 2.77 s | 848 ms | 44.8 MiB | 0 |
+| 640 | 5.44 s | 5.48 s | 1.68 s | 43.9 MiB | 0 |
+| 1280 | 10.7 s | 10.8 s | 3.30 s | 35.9 MiB | 0 |
+| 2560 | 21.0 s | 21.0 s | 6.32 s | 48.7 MiB | 0 |
 
 #### Variant `frequent-barriers`
 
 Every twentieth check is isolated, which forces everything before it to finish and everything after it to wait: the most serialized realistic shape.
 
-**Measured: O(n)** (exponent 1.01, 8 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 1.00, 8 sizes) -- ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 233 ms | 239 ms | 78.3 ms | 3.3 MiB | 4 |
-| 40 | 462 ms | 463 ms | 142 ms | 6.6 MiB | 2 |
-| 80 | 923 ms | 935 ms | 270 ms | 11.8 MiB | 1 |
-| 160 | 1.86 s | 1.89 s | 531 ms | 23.1 MiB | 1 |
-| 320 | 3.71 s | 3.76 s | 1.04 s | 46.8 MiB | 0 |
-| 640 | 7.58 s | 7.63 s | 2.11 s | 50.9 MiB | 0 |
-| 1280 | 15.1 s | 15.1 s | 4.22 s | 13.1 MiB | 0 |
-| 2560 | 30.3 s | 30.8 s | 8.42 s | 32.0 MiB | 0 |
+| 20 | 189 ms | 194 ms | 59.5 ms | 3.3 MiB | 5 |
+| 40 | 375 ms | 381 ms | 102 ms | 6.5 MiB | 3 |
+| 80 | 777 ms | 787 ms | 208 ms | 11.7 MiB | 1 |
+| 160 | 1.49 s | 1.49 s | 376 ms | 22.6 MiB | 1 |
+| 320 | 2.95 s | 2.96 s | 743 ms | 45.9 MiB | 0 |
+| 640 | 5.92 s | 5.98 s | 1.48 s | 48.7 MiB | 0 |
+| 1280 | 12.1 s | 12.3 s | 3.13 s | 9.5 MiB | 0 |
+| 2560 | 23.7 s | 24.0 s | 5.91 s | 63.2 MiB | 0 |
 
 #### Variant `with-reporting-hook`
 
 The shape of a real contract (few dependencies) with an `onEvidence` hook that reads each check's evidence, as a progress printer or a log writer does.
 
-**Measured: O(n)** (exponent 0.98, 8 sizes) -- ✅ matches.
+**Measured: O(n)** (exponent 0.99, 8 sizes) -- ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 266 ms | 267 ms | 87.4 ms | 3.3 MiB | 4 |
-| 40 | 469 ms | 484 ms | 172 ms | 6.6 MiB | 2 |
-| 80 | 899 ms | 915 ms | 308 ms | 11.4 MiB | 1 |
-| 160 | 1.75 s | 1.75 s | 608 ms | 22.8 MiB | 1 |
-| 320 | 3.46 s | 3.46 s | 1.17 s | 45.5 MiB | 0 |
-| 640 | 6.79 s | 6.81 s | 2.33 s | 45.6 MiB | 0 |
-| 1280 | 13.7 s | 13.8 s | 4.74 s | 38.8 MiB | 0 |
-| 2560 | 26.7 s | 27.5 s | 9.10 s | 50.2 MiB | 0 |
+| 20 | 219 ms | 224 ms | 64.0 ms | 3.3 MiB | 5 |
+| 40 | 390 ms | 401 ms | 126 ms | 6.5 MiB | 3 |
+| 80 | 714 ms | 741 ms | 234 ms | 11.2 MiB | 1 |
+| 160 | 1.41 s | 1.41 s | 450 ms | 22.3 MiB | 1 |
+| 320 | 2.67 s | 2.73 s | 824 ms | 44.7 MiB | 0 |
+| 640 | 5.46 s | 5.53 s | 1.74 s | 44.0 MiB | 0 |
+| 1280 | 11.0 s | 11.1 s | 3.52 s | 35.2 MiB | 0 |
+| 2560 | 21.1 s | 21.2 s | 6.41 s | 47.4 MiB | 0 |
 
 ### `runRepoContract`
 
@@ -195,10 +195,10 @@ No hooks: the shape of a run that only wants its verdict.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 259 ms | 270 ms | 78.3 ms | 3.0 MiB | 4 |
-| 40 | 450 ms | 452 ms | 155 ms | 6.0 MiB | 2 |
-| 80 | 840 ms | 860 ms | 289 ms | 11.8 MiB | 1 |
-| 160 | 1.67 s | 1.67 s | 572 ms | 23.6 MiB | 1 |
+| 20 | 218 ms | 219 ms | 63.8 ms | 3.0 MiB | 5 |
+| 40 | 376 ms | 379 ms | 128 ms | 5.9 MiB | 3 |
+| 80 | 719 ms | 722 ms | 239 ms | 11.6 MiB | 1 |
+| 160 | 1.39 s | 1.40 s | 457 ms | 23.1 MiB | 1 |
 
 ##### Varying `concurrency`
 
@@ -208,11 +208,11 @@ How many checks run at a time.
 
 | concurrencys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 2.41 s | 2.50 s | 260 ms | 11.8 MiB | 0 |
-| 2 | 1.35 s | 1.37 s | 289 ms | 11.8 MiB | 1 |
-| 4 | 900 ms | 922 ms | 294 ms | 11.8 MiB | 1 |
-| 8 | 862 ms | 883 ms | 297 ms | 11.8 MiB | 1 |
-| 16 | 872 ms | 898 ms | 304 ms | 11.8 MiB | 1 |
+| 1 | 1.91 s | 1.91 s | 194 ms | 11.6 MiB | 1 |
+| 2 | 1.03 s | 1.04 s | 196 ms | 11.6 MiB | 1 |
+| 4 | 729 ms | 734 ms | 225 ms | 11.6 MiB | 1 |
+| 8 | 718 ms | 719 ms | 235 ms | 11.6 MiB | 1 |
+| 16 | 703 ms | 707 ms | 225 ms | 11.6 MiB | 1 |
 
 #### Variant `with-hooks`
 
@@ -222,10 +222,10 @@ Both `onEvidence` and `onVerdict` read their argument, as a progress printer or 
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 268 ms | 272 ms | 81.0 ms | 3.0 MiB | 4 |
-| 40 | 466 ms | 473 ms | 165 ms | 6.0 MiB | 2 |
-| 80 | 899 ms | 905 ms | 314 ms | 11.8 MiB | 1 |
-| 160 | 1.76 s | 1.77 s | 595 ms | 23.6 MiB | 1 |
+| 20 | 211 ms | 213 ms | 59.8 ms | 3.0 MiB | 5 |
+| 40 | 368 ms | 371 ms | 122 ms | 5.9 MiB | 3 |
+| 80 | 713 ms | 721 ms | 239 ms | 11.6 MiB | 1 |
+| 160 | 1.39 s | 1.42 s | 440 ms | 23.1 MiB | 1 |
 
 ##### Varying `concurrency`
 
@@ -235,30 +235,30 @@ How many checks run at a time.
 
 | concurrencys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 2.42 s | 2.47 s | 259 ms | 11.8 MiB | 0 |
-| 2 | 1.30 s | 1.30 s | 270 ms | 11.8 MiB | 1 |
-| 4 | 895 ms | 900 ms | 299 ms | 11.8 MiB | 1 |
-| 8 | 885 ms | 888 ms | 304 ms | 11.8 MiB | 1 |
-| 16 | 869 ms | 874 ms | 299 ms | 11.8 MiB | 1 |
+| 1 | 1.90 s | 1.90 s | 193 ms | 11.6 MiB | 1 |
+| 2 | 1.01 s | 1.02 s | 194 ms | 11.6 MiB | 1 |
+| 4 | 718 ms | 737 ms | 229 ms | 11.6 MiB | 1 |
+| 8 | 715 ms | 726 ms | 238 ms | 11.6 MiB | 1 |
+| 16 | 724 ms | 726 ms | 234 ms | 11.6 MiB | 1 |
 
 ## 3. What makes up one end-to-end operation
 
 Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls, so where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time): every moment of the operation belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly -- not against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
 
-**At 80 checks** (whole operation: 842 ms)
+**At 80 checks** (whole operation: 666 ms)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `run-checks` | 1 | 858 ms | 858 ms | 102% |
+| `run-checks` | 1 | 687 ms | 687 ms | 103% |
 | `run-repo-contract` | 0 | 0 | 0 | 0.0% |
 | _unattributed_ |  |  | 0 | 0.0% |
 
-**At 2560 checks** (whole operation: 26.3 s)
+**At 2560 checks** (whole operation: 21.0 s)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `run-checks` | 1 | 26.2 s | 26.2 s | 100% |
-| _unattributed_ |  |  | 50.1 ms | 0.2% |
+| `run-checks` | 1 | 21.0 s | 21.0 s | 100% |
+| _unattributed_ |  |  | 0 | 0.0% |
 
 ## Cost model
 
@@ -266,9 +266,9 @@ Estimates use two bracketing price shapes: **low** = CPU-priced compute ($0.040 
 
 ## Environment and method
 
-- Run: `2026-11-03T09:05:42.312Z` → `2026-11-03T09:22:44.479Z` (1022 s), ci: CI (run 41608056902)
-- Machine: AMD EPYC 9V74 80-Core Processor, 4 logical core(s) (2 physical), 15984 MB RAM, linux/x64, Node v24.22.1, GitHub Actions
-- Git: `129f48e79bf2184a31658f47480f331c4796d9ac` on `chore/dependency-updates-v3`
+- Run: `2026-11-11T07:02:33.771Z` → `2026-11-11T07:16:08.623Z` (815 s), ci: CI (run 42975026328)
+- Machine: AMD EPYC 9V74 80-Core Processor, 4 logical core(s) (2 physical), 15983 MB RAM, linux/x64, Node v24.22.2, GitHub Actions
+- Git: `f971baef5bef1f677014cd827bc0fadcb6498399` on `chore/bump-internal-package-contract-v0.17.0`
 - Sizes: 20, 40, 80, 160, 320, 640, 1280, 2560 checks -- One configured check that spawns a process. 100 is a large real repository's contract (this one runs around forty); the ladder reaches 2,560 to expose how scheduling scales. It stops there, not at 10,240, because every check spawns a real process and larger sizes take minutes per sample.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They exist to show how _this_ package's cost changes between runs on comparable hardware and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).
