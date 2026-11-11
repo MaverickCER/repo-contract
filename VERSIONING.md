@@ -51,7 +51,7 @@ the package reaches 1.0 — see [Pre-1.0 status](#pre-10-status) below):
 
 **`repo-contract/presets`** (the whole subpath, including every preset it exports) --
 an Experimental library surface, with `./affected` and `./metrics` below (consumers that cannot tolerate a changed preset
-pin a tilde range: `internal-package-contract` uses `~0.8.8`) --
+pin a tilde range: `internal-package-contract` uses `~0.12.0`) --
 a new pre-1.0 surface shipped before a real feedback cycle, per this section's own stated
 convention (see [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)). An Experimental
 surface may change shape, including in a breaking way, in a minor or patch release without that

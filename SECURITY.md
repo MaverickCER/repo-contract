@@ -139,19 +139,15 @@ particular:
   values, keep that in mind before persisting or transmitting the resulting evidence.
 - **You own environment scoping.** `inheritEnv`/`env` are the tools; deciding what a given check
   actually needs is a per-repository judgment call repo-contract does not make for you.
-  Concretely, for this repository's own release pipeline: `.github/workflows/release.yml` calls
-  into the shared, centrally-maintained `release-npm-changesets.yml` reusable workflow hosted in
-  `internal-package-contract` (matching data-cap/env-cap) — a single job that grants
-  `id-token: write` for npm OIDC trusted publishing and runs `npm run release`
-  (`changeset publish`), which **does** run `prepublishOnly` (`npm run docs:api`,
-  `npm run docs:benchmarks` and `npm run contract`, which includes the AmbientCapabilities check)
-  in that same credentialed job, unlike this repository's own
-  former release-please-based pipeline's separate credential-free `verify` job. This is a known,
-  accepted trade-off of standardizing on the shared workflow every consumer uses, not an
-  oversight — but per this section's own guidance above, a repository in this
-  position should set `inheritEnv: false` plus an explicit, minimal `env` on every check
-  reachable from that job, which `repo-contract.config.ts` does not yet do here. Track that as a
-  follow-up, not a promise already kept by this migration.
+  Concretely, for this repository's own pipeline: every check of `npm run contract` runs with
+  `inheritEnv: false` and the explicit allowlist in `scripts/contract-env.mjs` (the shell's
+  furniture, Node's settings, CI metadata and the two tokens checks are written to use), so a
+  check never sees the rest of the environment of the process that started it. The release path
+  is the shared `release-npm-changesets.yml` workflow from `internal-package-contract` (v0.17.0):
+  its check job runs `npm run verify` with no publishing credential and requires a passing
+  `contract` run on the exact commit being released, and its publish job, the only one holding
+  the npm OIDC token, runs no repository code (`--ignore-scripts`). `prepublishOnly` is not part
+  of that path.
 
 ## SBOMs
 

@@ -13,6 +13,7 @@
 // (also used by test/unit/execution/run-checks.test.ts's SIGINT fixture).
 
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises"
+import { scopedEnv } from "./contract-env.mjs"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { execFileSync } from "node:child_process"
@@ -60,12 +61,20 @@ const EXPENSIVE = new Set([
   "crap",
   "mutation",
 ])
+// Every check runs with an explicit, minimal environment (scripts/contract-env.mjs), never the
+// whole of this process's: the release job inherits secrets, and a check never needs them.
+const env = scopedEnv(process.env)
 const runConfig = {
   ...config,
   checks: Object.fromEntries(
     Object.entries(config.checks).map(([id, check]) => [
       id,
-      EXPENSIVE.has(id) ? { ...check, expensive: true } : check,
+      {
+        ...check,
+        inheritEnv: false,
+        env: { ...env, ...check.env },
+        ...(EXPENSIVE.has(id) ? { expensive: true } : {}),
+      },
     ]),
   ),
 }

@@ -825,7 +825,7 @@ export default tseslint.config(
     // to be a type declaration -- correct only for genuine ambient
     // declaration files, which in this repo means exactly the
     // hand-written *.d.mts siblings of scripts/**/*.mjs, eslint-rules/**/*.mjs, and
-    // bin/**/*.mjs (see their own config block further down).
+    // bin/**/*.mjs carry the eval ban in their own block near the end of this config.
     files: ["scripts/**/*.d.mts", "eslint-rules/**/*.d.mts", "bin/**/*.d.mts"],
     plugins: { "@rnx-kit": rnxKit },
     rules: {
@@ -1096,6 +1096,17 @@ export default tseslint.config(
         "error",
         { considerDefaultExhaustiveForUnions: true },
       ],
+    },
+  },
+  {
+    // The shipped executables: SECURITY.md promises no eval, no Function construction and no
+    // dynamic code execution anywhere in the package, and `src/` has these rules above; the
+    // published `bin/` must carry the same ban, or the promise stops at the library.
+    files: ["bin/**/*.mjs"],
+    rules: {
+      "no-eval": "error",
+      "no-implied-eval": "error",
+      "no-new-func": "error",
     },
   },
   // Last on purpose -- turns off every core/stylistic rule that would

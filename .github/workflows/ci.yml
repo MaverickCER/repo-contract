@@ -81,9 +81,10 @@ jobs:
 
       - run: npm ci
 
-      # Two references for the same-run ratios: main's committed results (the previous run) and the last
-      # release's (a fixed point, so a series of small regressions cannot ratchet "previous" upward
-      # unnoticed). The same two the reusable benchmark-pr workflow uses for env-cap and data-cap.
+      # Two committed references: main's results (the previous run) and the last release's (a fixed
+      # point, so a series of small regressions cannot ratchet "previous" upward unnoticed). Their
+      # overhead ratios are judged only when they were measured on this CPU model. The same two the
+      # reusable benchmark-pr workflow uses for env-cap and data-cap.
       - name: Snapshot main's and the last release's committed results
         run: |
           mkdir -p /tmp/benchmark-previous /tmp/benchmark-release
@@ -96,6 +97,26 @@ jobs:
               echo '{}' > "/tmp/benchmark-release/${dir}.json"
             fi
           done
+
+      # The overhead ratio is machine-bound for fast work (how much of a bare baseline is process
+      # start-up differs by CPU), so the reference that is judged is main measured here, on this runner,
+      # minutes apart from the pull request: main's suite files at its commit, run by this checkout's
+      # runner at the suite's typical size only. Mirrors the reusable benchmark-pr workflow's step.
+      - name: Measure main's end-to-end pair on this runner
+        run: |
+          mkdir -p /tmp/benchmark-main
+          git worktree add --detach /tmp/main-checkout origin/main
+          (cd /tmp/main-checkout && npm ci --ignore-scripts && npm run build)
+          for dir in performance-checks performance-policy-evidence performance-api-contract performance-exceptions; do
+            if [ -f "/tmp/main-checkout/benchmarks/${dir}/suite.mjs" ]; then
+              node node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs \
+                "/tmp/main-checkout/benchmarks/${dir}/suite.mjs" --only end-to-end --typical-only \
+                --out "/tmp/benchmark-main/${dir}"
+            else
+              mkdir -p "/tmp/benchmark-main/${dir}" && echo '{}' > "/tmp/benchmark-main/${dir}/results.json"
+            fi
+          done
+          git worktree remove --force /tmp/main-checkout
 
       - run: npm run benchmark
 
@@ -123,10 +144,10 @@ jobs:
             --budgets benchmarks/budgets.mjs \
             --marker "<!-- repo-contract-benchmark-summary -->" \
             --gate \
-            --example "Checks (\`benchmarks/performance-checks\`)|/tmp/benchmark-previous/performance-checks.json|benchmarks/performance-checks/results.json|benchmarks/history/checks.json|/tmp/benchmark-release/performance-checks.json" \
-            --example "Policy & evidence (\`benchmarks/performance-policy-evidence\`)|/tmp/benchmark-previous/performance-policy-evidence.json|benchmarks/performance-policy-evidence/results.json|benchmarks/history/policy-evidence.json|/tmp/benchmark-release/performance-policy-evidence.json" \
-            --example "API contract (\`benchmarks/performance-api-contract\`)|/tmp/benchmark-previous/performance-api-contract.json|benchmarks/performance-api-contract/results.json|benchmarks/history/api-contract.json|/tmp/benchmark-release/performance-api-contract.json" \
-            --example "Exception helpers (\`benchmarks/performance-exceptions\`)|/tmp/benchmark-previous/performance-exceptions.json|benchmarks/performance-exceptions/results.json|benchmarks/history/exceptions.json|/tmp/benchmark-release/performance-exceptions.json" \
+            --example "Checks (\`benchmarks/performance-checks\`)|/tmp/benchmark-previous/performance-checks.json|benchmarks/performance-checks/results.json|benchmarks/history/checks.json|/tmp/benchmark-release/performance-checks.json|/tmp/benchmark-main/performance-checks/results.json" \
+            --example "Policy & evidence (\`benchmarks/performance-policy-evidence\`)|/tmp/benchmark-previous/performance-policy-evidence.json|benchmarks/performance-policy-evidence/results.json|benchmarks/history/policy-evidence.json|/tmp/benchmark-release/performance-policy-evidence.json|/tmp/benchmark-main/performance-policy-evidence/results.json" \
+            --example "API contract (\`benchmarks/performance-api-contract\`)|/tmp/benchmark-previous/performance-api-contract.json|benchmarks/performance-api-contract/results.json|benchmarks/history/api-contract.json|/tmp/benchmark-release/performance-api-contract.json|/tmp/benchmark-main/performance-api-contract/results.json" \
+            --example "Exception helpers (\`benchmarks/performance-exceptions\`)|/tmp/benchmark-previous/performance-exceptions.json|benchmarks/performance-exceptions/results.json|benchmarks/history/exceptions.json|/tmp/benchmark-release/performance-exceptions.json|/tmp/benchmark-main/performance-exceptions/results.json" \
             > /tmp/summary.md || GATE_FAILED=1
           PR="${{ github.event.pull_request.number }}"
           MARKER="<!-- repo-contract-benchmark-summary -->"
@@ -257,6 +278,26 @@ jobs:
       # install + import (both ESM and CommonJS), proving the built artifact
       # (not just the source tree) actually works from a clean install.
       - run: npx node scripts/run-test-category.mjs e2e
+      # The path-sensitive work runs on every OS here, where `contract` (Ubuntu only, 17 minutes)
+      # cannot: the packed tarball is installed into a scratch project and every entry point and
+      # the CLI are imported and run, the way `published-floor` does on the Node floor, and the
+      # build and tests must leave the tree exactly as it was checked out -- a generated file that
+      # differs on Windows or macOS would otherwise be found only by a consumer.
+      - name: Pack the tarball and smoke it as a consumer
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          npm pack --ignore-scripts --pack-destination artifacts
+          node scripts/smoke-consumer.mjs artifacts
+      - name: Working tree is clean after the build, tests and smoke
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain -- . ':!artifacts')" ]; then
+            echo "::error::The build, tests or tarball smoke left the working tree dirty on ${{ matrix.os }}:"
+            git status --porcelain -- . ':!artifacts'
+            git diff -- . ':!artifacts' | head -200
+            exit 1
+          fi
 
   # The platform-independent checks `verify` used to repeat per-OS above,
   # now run exactly once: typecheck, lint, format, the architecture smoke

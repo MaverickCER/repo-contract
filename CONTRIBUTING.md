@@ -40,9 +40,10 @@ so this one command after `npm install` is the whole setup. Use Node 24 locally
    CodeRabbit GitHub App instead — see
    [ADR 0014](specs/decisions/0014-coderabbit-as-a-surfaced-check.md)). The `security-socket` check
    behaves the same way — a real Socket.dev supply-chain scan when `@socketsecurity/cli` is
-   installed and authenticated, otherwise a `warn` naming why not (this repository's own CI holds
-   no Socket org token). Neither `warn` blocks a push or CI. Open a pull request; CI re-runs the
-   contract on Ubuntu and the unit and e2e suites on Linux, macOS and Windows.
+   installed and authenticated, otherwise a `warn` naming why not (this repository's CI holds a
+   Socket token as the `SOCKET_SECURITY_API_KEY` secret, so the scan runs there). Neither `warn` blocks a push or CI. Open a pull request; CI re-runs the
+   contract on Ubuntu, and on Linux, macOS and Windows the unit and e2e suites, the packed tarball
+   installed and imported as a consumer, and a clean-tree check after them.
 
 `npm run setup` wires two local git settings — the hooks and the commit-message template. The
 hooks are the local half of the gate CI enforces, so leave them on. Only the commit-message

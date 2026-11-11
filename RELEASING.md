@@ -113,11 +113,11 @@ again).
 - **Let Actions open the Version Packages PR.** GitHub → Settings → Actions →
   General → Workflow permissions: tick **"Allow GitHub Actions to create and approve
   pull requests"**. Without it, `changesets/action` cannot open the PR at all.
-- **Dependency pin sync (no token).** Nothing here sends a cross-repository event any more, so there
-  is no personal access token to create or rotate. This repo keeps its internal-package-contract pin
-  current with `sync-internal-package-contract.yml`, which runs daily (and on demand from the Actions
-  tab) using this repo's own `GITHUB_TOKEN`, and internal-package-contract picks up a new repo-contract
-  release the same way. The only one-time setting is the "Allow GitHub Actions to create and approve
+- **Dependency pin sync.** This repo keeps its internal-package-contract pin current with
+  `sync-internal-package-contract.yml`, which runs daily (and on demand from the Actions tab). The
+  workflow it reuses pushes a branch and opens a pull request, which needs the `PIN_SYNC_TOKEN`
+  secret (a fine-grained token with contents, pull-requests and workflows write); without it the
+  daily run fails and the pin is bumped by hand. The only one-time setting is the "Allow GitHub Actions to create and approve
   pull requests" box above.
 - **npm trusted publishing.** Already registered from before this migration — no
   change needed. Registration on npmjs.com is keyed to `workflow: release.yml` in
