@@ -13,8 +13,10 @@
 //
 // Exits 0 only if the packed tarball's declarations compile cleanly, with `moduleResolution:
 // "nodenext"` and `strict: true`, under the newest release of each TypeScript major a consumer may
-// have installed: 5, 6 and 7 (7 is the native compiler; it type-checks but ships no compiler API,
-// which only `repo-contract affected` needs at runtime -- that command refuses 7 with a message).
+// have installed: 5, 6 and 7. TypeScript 7 is the native compiler and ships no compiler API, which
+// `repo-contract/affected` needs for both its types and its runtime (the command refuses 7 with a
+// message). So under 7 every other barrel must compile, and a consumer that imports `affected` must
+// fail with the compiler-API error -- the documented limit is asserted, not assumed.
 // Override the list on the command line: `node scripts/typescript-compat.mjs <artifacts-dir>
 // [version ...]`. There is no 5.0 floor here: the optional `typescript >=5.0.0` peer exists for
 // `affected` alone, and the oldest 5.x cannot even parse the newest `@types/node` the scratch
@@ -76,26 +78,36 @@ function checkIn(dir, version) {
     dir,
   )
 
+  // `affected` needs the compiler API's types, which TypeScript 7 does not ship: under 7 it is
+  // compiled on its own below and must fail, so the main consumer leaves it out there.
+  const affectedImports =
+    version === "7"
+      ? ""
+      : `import { parseScopeArgs, resolveScope } from "repo-contract/affected"
+import type { ScopeDecision } from "repo-contract/affected"
+`
+  const affectedUse =
+    version === "7"
+      ? `const scope = { scope: "full" as const }`
+      : `const parsed = parseScopeArgs(["--scope", "auto"])
+const scope: ScopeDecision = resolveScope({ requested: parsed.ok ? parsed.scope : undefined, env: {} })`
   writeFileSync(
     path.join(dir, "consumer.ts"),
     `import crossSpawn from "cross-spawn"
 import { defineRepoContract } from "repo-contract"
 import { lint } from "repo-contract/presets"
 import { hashRequirementFields } from "repo-contract/helpers"
-import { parseScopeArgs, resolveScope } from "repo-contract/affected"
-import type { ScopeDecision } from "repo-contract/affected"
-import { createRunRecord, serializeRunRecord } from "repo-contract/metrics"
+${affectedImports}import { createRunRecord, serializeRunRecord } from "repo-contract/metrics"
 import type { RunRecord } from "repo-contract/metrics"
 
-// Every published barrel is imported, so a declaration that fails to compile under this TypeScript
-// in any of them fails here.
+// Every published barrel this TypeScript can type is imported, so a declaration that fails to
+// compile under it in any of them fails here.
 const digest: string = hashRequirementFields(
   { justification: "x" },
   ["justification"],
   (record, field) => String(record[field as keyof typeof record]),
 )
-const parsed = parseScopeArgs(["--scope", "auto"])
-const scope: ScopeDecision = resolveScope({ requested: parsed.ok ? parsed.scope : undefined, env: {} })
+${affectedUse}
 const record: RunRecord = createRunRecord({
   startedAt: new Date(0).toISOString(),
   durationMs: 1,
@@ -130,6 +142,35 @@ export default defineRepoContract({
 
   run("npx", ["tsc", "-p", "tsconfig.json"], dir)
   console.log(`consumer.ts compiled cleanly under typescript@${version}.`)
+
+  if (version === "7") {
+    // The documented limit, asserted: `affected`'s declarations name compiler-API types that
+    // TypeScript 7's package does not export, so importing the barrel must fail with exactly that.
+    writeFileSync(
+      path.join(dir, "affected.ts"),
+      `import { parseScopeArgs } from "repo-contract/affected"
+void parseScopeArgs(["--scope", "auto"])
+`,
+    )
+    writeFileSync(
+      path.join(dir, "tsconfig.affected.json"),
+      JSON.stringify({ extends: "./tsconfig.json", include: ["affected.ts"] }),
+    )
+    const result = spawnSync("npx", ["tsc", "-p", "tsconfig.affected.json"], {
+      cwd: dir,
+      encoding: "utf8",
+    })
+    const output = `${result.stdout}${result.stderr}`
+    if (result.status === 0 || !output.includes("TS2694")) {
+      console.error(
+        `expected repo-contract/affected to fail under typescript@7 with TS2694 (no compiler API types); got exit ${String(result.status)}:\n${output}`,
+      )
+      process.exit(1)
+    }
+    console.log(
+      "repo-contract/affected fails under typescript@7 with the documented compiler-API error.",
+    )
+  }
 }
 
 for (const version of versions) check(version)

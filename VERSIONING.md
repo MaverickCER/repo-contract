@@ -68,7 +68,8 @@ behavior:
 
 **`repo-contract/affected`** (the whole subpath) and the `affected`, `cache`, `doctor` and
 `merge-mutation` commands (0.12.0): scope resolution, the affected-test analysis, the result cache
-and the shard tools. Experimental because real use will reshape how a run is narrowed; a change
+and the shard tools. Needs TypeScript 5 or 6, for its types as well as its runtime (TypeScript 7
+ships no compiler API); every other entry point type-checks under 7. Experimental because real use will reshape how a run is narrowed; a change
 can land in a minor or patch release while `0.x`. Promotion to Stable follows the same rule as
 presets: a real feedback cycle with no breaking change needed.
 
