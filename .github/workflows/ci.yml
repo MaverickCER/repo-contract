@@ -109,7 +109,7 @@ jobs:
           (cd /tmp/main-checkout && npm ci --ignore-scripts && npm run build)
           for dir in performance-checks performance-policy-evidence performance-api-contract performance-exceptions; do
             if [ -f "/tmp/main-checkout/benchmarks/${dir}/suite.mjs" ]; then
-              node node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs \
+              npx tsx node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs \
                 "/tmp/main-checkout/benchmarks/${dir}/suite.mjs" --only end-to-end --typical-only \
                 --out "/tmp/benchmark-main/${dir}"
             else
