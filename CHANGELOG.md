@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.13.0
+
+### Minor Changes
+
+- 761ad71: `buildEvidenceManifest` accepts an optional `subject` (`{ commit, ref? }`) and seals it into the manifest's digest, so a manifest says what a full run looked at, not only that one passed; manifests without a subject are unchanged.
+  
+  Gates widened: the `security-network` scan covers the shipped `bin/` as well as `src/` (one reviewed record: the CLI loads the project's own TypeScript for `affected`); every published barrel has a gzip budget (helpers 9 KiB, affected 23 KiB, metrics 5 KiB, both formats); `v8`/`c8`/`istanbul ignore` directives are governed suppressions with records, and `no-console` and `@ts-expect-error` disables need a record too; the Bun, Deno and Node consumer tests import every barrel and the Node one runs the CLI's `--help`; the TypeScript compat consumer imports every barrel, and under TypeScript 7 proves that `repo-contract/affected` fails with the compiler-API error its documentation names while every other barrel compiles; CI runs each example's main README command and checks its outcome; a `required` CI check stands for every job the ruleset could not name, and `contract` fails instead of skipping when `verify` or `lint` fails.
+  
+  Documentation now matches the tooling and the gates behind it. RELEASING and CONTRIBUTING describe the real release rules: changesets are generated from `feat`, `fix`, `perf` and `revert` commits on `main` (pre-1.0: breaking → minor, the rest → patch), other commit types release nothing, and a maintainer merges the Version Packages PR. `repo-contract/affected` and `repo-contract/metrics` now appear in VERSIONING (Experimental), `docs/surface.json`, the skill, the architecture spec's five barrels, the API-baseline list and the ADR-governance path list. The mutation sentence names what is excluded and the static mutants that are not counted; the network-scan sentence says what is scanned where; the persistence paragraph covers the opt-in cache and run log. Stale references to minimatch, release-please, a Node 20 floor, a TypeScript 5 toolchain, "three barrels" and an OS matrix for the contract are corrected, and `init` is no longer the only CLI command the architecture spec describes.
+  
+  The `benchmark-pr` job now fails on a worse growth class or an overhead ratio past its budget (`--gate`, judged against the last run on main and the last release), after posting the summary; the `performance-api-contract` suite measures again (its fixture's tsconfig lacked the `rootDir` TypeScript 6 requires, so every tier had failed silently since 2026-10-19). `npm run contract` writes an evidence manifest for its own passing full runs to `reports/evidence-manifest.json`.
+
+### Patch Changes
+
+- 761ad71: Claims now match the evidence behind them. `docs/OpenSSF-Scorecard.md` leads with the official OpenSSF Scorecard result fetched from the public Scorecard API, lists every check where this repository's own evaluation differs and why, and computes its "not evaluated" list from the upstream check list (it had said no SBOM was generated). The local evaluation now scores Code-Review from approvals on merged pull requests rather than the branch-protection setting, scores Maintained as 0 for a repository younger than 90 days as upstream does, and scores Contributors proportionally. The evidence manifest's documentation now says its digest detects accidental edits and is not a signature, and the README says which features the workflow test covers and which have unit tests instead.
+  
+  What installing the package adds is now generated into ADOPTION.md from `package.json` by `internal-package-contract generate`, and the contract gains the shared `GeneratedRegions` check so it cannot go stale.
+
 ## 0.12.0
 
 ### Minor Changes
