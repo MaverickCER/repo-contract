@@ -6,15 +6,15 @@ import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 
 /**
- * Fails whenever a published preset (`src/presets/*.ts`) spawns an external command with no
- * complete reviewed record in `.repo-contract/exceptions/preset-commands.json`, a stale record
- * whose command is gone, or a `run:` property whose command isn't a statically-resolvable string
- * literal. A pure evidence->verdict function -- the scan script owns loading, reconciling, and
+ * Fails on three conditions. A published preset (`src/presets/*.ts`) spawns an external command
+ * with no complete reviewed record in `.repo-contract/exceptions/preset-commands.json`. A stale
+ * record's command is gone. A `run:` property's command isn't a statically-resolvable string
+ * literal. A pure evidence->verdict function: the scan script owns loading, reconciling, and
  * writing the registry.
  *
- * The only field a record needs is a non-empty `justification` (the whole review: what capability
- * the command has under the flags the preset passes, and why repo-contract spawning it on a
- * consumer's behalf is acceptable). No policy config, no per-command allowlist -- every command is
+ * The only field a record needs is a non-empty `justification`, which carries the whole review.
+ * It says what capability the command has under the flags the preset passes. It also says why
+ * repo-contract spawning it on a consumer's behalf is acceptable. No policy config, no per-command allowlist: every command is
  * held to the same one bar.
  * @param input - Wraps the scan evidence.
  * @param input.evidence - The `PresetCommandsEvidence` emitted by scan.ts.
@@ -82,18 +82,18 @@ export function evaluatePresetCommandsPolicy(input: {
   }
 
   const nonLiteralLines = evidence.nonLiteral.map(
-    (nl) => `- ${nl.file}:${String(nl.line)} -- ${nl.detail}`,
+    (nl) => `- ${nl.file}:${String(nl.line)}: ${nl.detail}`,
   )
   const staleLines = evidence.staleExceptions.map(
     (record) =>
-      `- Stale record in ${evidence.registryPath}: ${JSON.stringify(record.id)} -- no preset spawns "${record.command}" any more; delete this entry.`,
+      `- Stale record in ${evidence.registryPath}: ${JSON.stringify(record.id)}. No preset spawns "${record.command}" any more; delete this entry.`,
   )
   const underjustified = evidence.findings.filter(
     (finding) => evidence.activeExceptions[finding.id]?.justification.trim().length === 0,
   )
   const underjustifiedLines = underjustified.map(
     (finding) =>
-      `- ${finding.command} (${finding.file}:${String(finding.line)}) -- fill in "justification". ${guidanceFor(finding.command)}`,
+      `- ${finding.command} (${finding.file}:${String(finding.line)}): fill in "justification". ${guidanceFor(finding.command)}`,
   )
 
   if (nonLiteralLines.length === 0 && staleLines.length === 0 && underjustifiedLines.length === 0) {
@@ -115,7 +115,7 @@ export function evaluatePresetCommandsPolicy(input: {
 }
 
 // The reconciled successor to scripts/security-network/network-surface.mjs's former
-// ALLOWED_PRESET_COMMANDS allowlist -- see specs/decisions/0007-no-network-surface.md's amendment.
+// ALLOWED_PRESET_COMMANDS allowlist: see specs/decisions/0007-no-network-surface.md's amendment.
 export const presetCommands: CheckDefinitionConfig = {
   run: ["tsx", "scripts/preset-commands/scan.ts"],
   output: { format: "json" },

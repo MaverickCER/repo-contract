@@ -2,7 +2,7 @@
  * Runs `worker` over `items` with at most `concurrency` invocations in
  * flight at once, preserving each result at its original index regardless
  * of completion order. Has no knowledge of aborting, killing, or check
- * evidence -- a pure, reusable bounded-parallelism primitive; abort-
+ * evidence: a pure, reusable bounded-parallelism primitive; abort-
  * awareness lives entirely in the caller's `worker` function (see
  * spawn-check.ts).
  * @param items - the items to process, each passed to `worker` along with its index
@@ -20,10 +20,10 @@ export async function runWithConcurrency<T, R>(
   const iterator = entries[Symbol.iterator]()
 
   // The first worker rejection is recorded and rethrown after every
-  // still-running sibling worker has settled, rather than let `Promise.all`
-  // reject eagerly while other `runNext` loops keep awaiting workers whose
-  // later rejections would then have no handler -- an `unhandledRejection`
-  // (fatal under Node's `--unhandled-rejections=throw`). The error itself is
+  // still-running sibling worker has settled. An eager `Promise.all` rejection
+  // would leave other `runNext` loops awaiting workers whose later rejections
+  // have no handler: an `unhandledRejection`, which is fatal under Node's
+  // `--unhandled-rejections=throw`. The error itself is
   // still propagated verbatim, matching how `dependency-scheduler.ts`
   // forwards a worker rejection unwrapped.
   let firstRejection: { readonly error: unknown } | undefined
@@ -45,13 +45,12 @@ export async function runWithConcurrency<T, R>(
   }
 
   // `Math.max`/`Math.min` both propagate a `NaN` argument straight through
-  // (NaN poisons them), so a caller-supplied `concurrency` of `NaN` would
-  // otherwise survive as `workerCount`, and `Array.from({ length: NaN }, ...)`
-  // spec-clamps a NaN length to zero -- silently returning an empty result
-  // array for every item, with no error to explain why. `validateRepoContractConfig`
-  // already rejects a non-integer/NaN `concurrency` before it can reach this
-  // internal, non-exported function via the public API, but this guard
-  // defends the primitive itself rather than relying solely on that upstream promise.
+  // (NaN poisons them). A caller-supplied `concurrency` of `NaN` would
+  // otherwise survive as `workerCount`. `Array.from({ length: NaN }, ...)`
+  // spec-clamps a NaN length to zero, silently returning an empty result
+  // array with no error to explain why. `validateRepoContractConfig`
+  // already rejects a non-integer/NaN `concurrency` on the public API path.
+  // This guard defends the primitive itself rather than relying solely on that upstream promise.
   const effectiveConcurrency = Number.isFinite(concurrency) ? concurrency : 1
   const workerCount = Math.max(1, Math.min(effectiveConcurrency, items.length))
   await Promise.all(Array.from({ length: workerCount }, () => runNext()))

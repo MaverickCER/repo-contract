@@ -99,7 +99,7 @@ describe("parseOutput", () => {
       async (format) => {
         const stdout = format === "json" ? '{"a":1}' : "hi"
         const result = await parseOutput(format, stdout, "check-id", transformSchema())
-        // transformSchema() computes Number(value) * 2 -- text/json each parse to a non-numeric
+        // transformSchema() computes Number(value) * 2: text/json each parse to a non-numeric
         // value here, so Number(...) is NaN; the point of this case is only that schema.validate()
         // runs identically regardless of which parser produced `value`.
         expect(result.success).toBe(true)

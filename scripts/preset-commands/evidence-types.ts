@@ -1,23 +1,23 @@
 /**
- * Shapes for the `preset-commands` self-hosting check -- `scripts/preset-commands/scan.ts`
+ * Shapes for the `preset-commands` self-hosting check. `scripts/preset-commands/scan.ts`
  * discovers every external command a published preset (`src/presets/*.ts`) spawns as its `run:`
- * property's first token, reconciles `.repo-contract/exceptions/preset-commands.json` against that
- * set, and `checks/preset-commands.ts`'s policy reads (never re-derives) the result. See
+ * property's first token. It reconciles `.repo-contract/exceptions/preset-commands.json` against
+ * that set. `checks/preset-commands.ts`'s policy reads (never re-derives) the result. See
  * specs/decisions/0007-no-network-surface.md and
  * specs/decisions/0013-reusable-exception-policy-helper.md's "review surface" amendment.
  *
  * Replaces the former `ALLOWED_PRESET_COMMANDS` allowlist in
- * `scripts/security-network/network-surface.mjs`: instead of "a command not on the list fails",
- * every* preset command now needs its own reviewed record. The record's `id` is keyed by the
- * command name alone (`preset-command:<command>`), so one review covers a command however many
- * presets spawn it, and editing a preset file never churns the registry.
+ * `scripts/security-network/network-surface.mjs`. The allowlist meant "a command not on the list
+ * fails". Now *every* preset command needs its own reviewed record. The record's `id` is keyed by
+ * the command name alone (`preset-command:<command>`). One review therefore covers a command
+ * however many presets spawn it, and editing a preset file never churns the registry.
  */
 
 /** One external command a published preset spawns, discovered from its `run:` first token. */
 export interface PresetCommandFinding {
-  /** `preset-command:<command>` -- see `derivePresetCommandId`. */
+  /** `preset-command:<command>`: see `derivePresetCommandId`. */
   readonly id: string
-  /** The command name (the `run:` array's first element). */
+  /** The command name (the `run:` array's first element), or `consumer-supplied/<file>` when the array starts with a spread of a command the consumer passes. */
   readonly command: string
   /** A preset file that spawns it (the first one discovered), for the reviewer. */
   readonly file: string
@@ -25,16 +25,16 @@ export interface PresetCommandFinding {
   readonly line: number
 }
 
-/** A `run:` property whose first element is not a statically-resolvable string literal -- a hard failure, never reconcilable (no command name to key a record by). */
+/** A `run:` property whose first element is not a statically-resolvable string literal: a hard failure, never reconcilable (no command name to key a record by). */
 export interface NonLiteralPresetCommand {
   readonly file: string
   readonly line: number
   readonly detail: string
 }
 
-/** One row of preset-commands.json. `justification` is the whole review: what capability the command has under the flags the preset passes, and why repo-contract spawning it on a consumer's behalf is acceptable. */
+/** One row of preset-commands.json. `justification` is the whole review. It states what capability the command has under the flags the preset passes. It also states why repo-contract spawning it on a consumer's behalf is acceptable. */
 export interface PresetCommandExceptionRecord {
-  /** `preset-command:<command>` -- must equal `derivePresetCommandId(record)`. */
+  /** `preset-command:<command>`: must equal `derivePresetCommandId(record)`. */
   readonly id: string
   readonly version: 1
   readonly justification: string

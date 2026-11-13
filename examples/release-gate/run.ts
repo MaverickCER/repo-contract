@@ -1,10 +1,10 @@
-// Prints this demo's real verdict to stdout -- this is what produced the
+// Prints this demo's real verdict to stdout: this is what produced the
 // output block in the site's release-gate example, copy-pasted verbatim. Run it
 // yourself with `npm run demo` (or `tsx run.ts`) from this directory.
 //
 // Mirrors repo-contract's own scripts/run-contract.mjs and
 // ../internal-boilerplate-contract/bin/contract.mjs: import the public API,
-// load the contract, run it, print a plain summary, set process.exitCode --
+// load the contract, run it, print a plain summary, set process.exitCode;
 // never call process.exit() (see runRepoContract's own contract).
 import { fileURLToPath } from "node:url"
 
@@ -19,7 +19,7 @@ const { verdict } = await runRepoContract(config)
 //  - indent every line under its `[OUTCOME] id` header, not just the first;
 //  - rewrite this directory's absolute path to a relative one (ESLint's JSON
 //    reporter emits an absolute `filePath`; Prettier already prints relative).
-//    Neither changes what a policy decided -- only how this demo prints it.
+//    Neither changes what a policy decided: only how this demo prints it.
 const here = fileURLToPath(new URL("./", import.meta.url))
 const present = (rationale: string): string =>
   rationale.split(here).join("").split("\n").join("\n  ")

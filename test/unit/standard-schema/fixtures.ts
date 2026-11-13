@@ -11,7 +11,7 @@ export function successSchema<T>(): StandardSchemaV1<T, T> {
   }
 }
 
-/** A schema whose `validate()` succeeds with a transformed value -- proves a schema can coerce/normalize, not just check. */
+/** A schema whose `validate()` succeeds with a transformed value: proves a schema can coerce/normalize, not just check. */
 export function transformSchema(): StandardSchemaV1<unknown, number> {
   return {
     "~standard": {
@@ -33,7 +33,7 @@ export function failureSchema(issues: readonly StandardSchemaV1.Issue[]): Standa
   }
 }
 
-/** A schema whose `validate()` succeeds, but only after resolving asynchronously -- proves `parseOutput` awaits a `Promise<Result>`, not just a synchronous `Result`. */
+/** A schema whose `validate()` succeeds, but only after resolving asynchronously: proves `parseOutput` awaits a `Promise<Result>`, not just a synchronous `Result`. */
 export function asyncSuccessSchema<T>(): StandardSchemaV1<T, T> {
   return {
     "~standard": {
@@ -44,7 +44,7 @@ export function asyncSuccessSchema<T>(): StandardSchemaV1<T, T> {
   }
 }
 
-/** A schema whose `validate()` throws synchronously -- a bug in the schema itself, distinct from a validation failure. */
+/** A schema whose `validate()` throws synchronously: a bug in the schema itself, distinct from a validation failure. */
 export function throwingSchema(error: unknown): StandardSchemaV1 {
   return {
     "~standard": {
@@ -57,7 +57,7 @@ export function throwingSchema(error: unknown): StandardSchemaV1 {
   }
 }
 
-/** A schema whose `validate()` returns a `Promise` that rejects -- the async counterpart to `throwingSchema`. */
+/** A schema whose `validate()` returns a `Promise` that rejects: the async counterpart to `throwingSchema`. */
 export function rejectingSchema(error: Error): StandardSchemaV1 {
   return {
     "~standard": {
@@ -69,7 +69,7 @@ export function rejectingSchema(error: Error): StandardSchemaV1 {
 }
 
 /**
- * A *callable* schema -- `typeof schema === "function"`, with `"~standard"` attached as a property
+ * A *callable* schema: `typeof schema === "function"`, with `"~standard"` attached as a property
  * on the function itself, mirroring ArkType's own `Type` values (themselves callable functions).
  * Proves `output.schema` accepts a function, not just a plain object.
  */

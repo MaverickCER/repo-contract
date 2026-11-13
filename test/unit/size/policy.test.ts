@@ -16,7 +16,7 @@ function report(entries: readonly SizeReportEntry[]): SizeReport {
 }
 
 describe("evaluateSizePolicy", () => {
-  it("passes when every budgeted file is exactly at its budget -- the boundary is inclusive", () => {
+  it("passes when every budgeted file is exactly at its budget: the boundary is inclusive", () => {
     const result = evaluateSizePolicy({ evidence: report(passingEntries()) })
     expect(result.outcome).toBe("pass")
   })

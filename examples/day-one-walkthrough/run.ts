@@ -3,7 +3,7 @@
 //
 // Mirrors repo-contract's own scripts/run-contract.mjs and
 // ../internal-boilerplate-contract/bin/contract.mjs: import the public API, load the contract, run
-// it, print a plain summary, set process.exitCode -- never call process.exit().
+// it, print a plain summary, set process.exitCode; never call process.exit().
 import { runRepoContract } from "repo-contract"
 
 import config from "./repo-contract.config.js"

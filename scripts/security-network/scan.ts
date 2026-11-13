@@ -1,18 +1,18 @@
 // Entry point for the "security-network" self-hosting check, invoked via
 // `run: ["tsx", "scripts/security-network/scan.ts"]` in repo-contract.config.ts.
 // Prints ONLY the JSON evidence to stdout (for `output: { format: "json" }`
-// to parse) -- mirrors scripts/adr-governance/check.ts's/scripts/suppression-
+// to parse): mirrors scripts/adr-governance/check.ts's/scripts/suppression-
 // governance/check.ts's own stdout contract.
 //
 // This is the second of two independent layers enforcing the "no network
 // calls" invariant (see eslint.config.js's own doc comment on the first).
 // It deliberately does not invoke ESLint, load eslint.config.js, or depend
-// on any ESLint rule still being configured correctly -- an AST scan of the
-// real source files, built from the language's own compiler API (the same
-// approach scripts/suppression-governance/discover-suppressions.ts already
-// uses, for the identical reason: a suppression-governance-style guarantee
-// must survive its own primary enforcement mechanism being silently
-// weakened or bypassed). See specs/decisions/0007-no-network-surface.md.
+// on any ESLint rule still being configured correctly. It is an AST scan of
+// the real source files, built from the language's own compiler API.
+// scripts/suppression-governance/discover-suppressions.ts takes the same
+// approach for the identical reason. A suppression-governance-style
+// guarantee must survive its own primary enforcement mechanism being
+// silently weakened or bypassed. See specs/decisions/0007-no-network-surface.md.
 
 import { mkdir, readFile } from "node:fs/promises"
 import path from "node:path"
@@ -60,9 +60,9 @@ const registrySchema: StandardSchemaV1<unknown, readonly NetworkExceptionRecord[
 
 /**
  * Scope: everything that ships. `src/**\/*.ts` is what `dist/` is built from (see package.json's
- * "files"/exports; `npm pack --dry-run` confirms dist/ is built from nothing else), and `bin/**\/*.mjs`
- * is the hand-written CLI that ships beside it, unbundled -- `init`, `affected`, `cache`, `doctor`,
- * `metrics` and `merge-mutation`. A network call in the CLI would reach a consumer's machine just as
+ * "files"/exports; `npm pack --dry-run` confirms dist/ is built from nothing else).
+ * `bin/**\/*.mjs` is the hand-written CLI that ships beside it, unbundled: `init`, `affected`,
+ * `cache`, `doctor`, `metrics` and `merge-mutation`. A network call in the CLI would reach a consumer's machine just as
  * one in the library would. Reuses suppression-governance's own whole-repo walker (already excludes
  * node_modules/dist/coverage/.stryker-tmp/etc. and fixtures directories) rather than re-implementing
  * file discovery, then filters to this check's own scope. Declaration files (`.d.mts`) carry no code.
@@ -102,7 +102,7 @@ function lineAndColumn(
  * Walks one already-parsed source file's AST, looking for every prohibited
  * (or unverifiable) network capability this module's own doc comment and
  * specs/decisions/0007-no-network-surface.md describe. Never executes
- * anything it finds -- this is pure static analysis over the parsed syntax
+ * anything it finds: this is pure static analysis over the parsed syntax
  * tree, the same "prefer AST-based analysis over fragile regular
  * expressions" approach discover-suppressions.ts already uses.
  * @param relativePath - The file's repo-relative path, used only to label findings.
@@ -142,7 +142,7 @@ export function scanSourceFile(
 
   /**
    * Shared by static `import`, static `export ... from`, dynamic `import(...)`, and a bare
-   * `require(...)` call -- all four resolve a module by a specifier expression, and all four are
+   * `require(...)` call: all four resolve a module by a specifier expression, and all four are
    * checked the same way.
    * @param specifier - The specifier expression, or `undefined` for a call with no arguments at all, or a re-export clause with no `from`.
    * @param namedElements - The static import's/export's named elements (for named-import restriction checks), or `undefined` for a dynamic import/require call, which cannot express one syntactically.
@@ -190,9 +190,9 @@ export function scanSourceFile(
       } else {
         // A namespace import (`import * as m`), a default import, a dynamic
         // `import("node:module")`, an `import m = require("module")`, or a
-        // bare `require("module")` cannot name individual elements -- but
-        // every one of them hands back the whole module object, from which
-        // the restricted name (`createRequire`) is still reachable. Flag the
+        // bare `require("module")` cannot name individual elements. Every one
+        // of them still hands back the whole module object. The restricted
+        // name (`createRequire`) is reachable from that object. Flag the
         // import itself rather than let this be the gap that defeats the
         // "close that path at its only real chokepoint" guarantee.
         addFinding(
@@ -207,7 +207,7 @@ export function scanSourceFile(
   /**
    * Recursively walks the whole tree rooted at `node`, dispatching each recognized shape to the
    * appropriate check above. (Preset `run:` command review moved to its own `preset-commands`
-   * check -- see scripts/preset-commands/scan.ts and ADR 0007's amendment.)
+   * check: see scripts/preset-commands/scan.ts and ADR 0007's amendment.)
    * @param node - The AST node (or subtree root) to inspect.
    */
   function visit(node: ts.Node): void {
@@ -222,7 +222,7 @@ export function scanSourceFile(
       ts.isImportEqualsDeclaration(node) &&
       ts.isExternalModuleReference(node.moduleReference)
     ) {
-      // TypeScript's own `import x = require("...")` form -- a real module
+      // TypeScript's own `import x = require("...")` form: a real module
       // load that the plain `require(...)` call branch below never sees
       // because it is a declaration, not a CallExpression.
       checkModuleSpecifier(node.moduleReference.expression, undefined, node)
@@ -274,7 +274,7 @@ export function scanSourceFile(
 }
 
 /**
- * The pure static scan -- every in-scope file looked at, every raw finding across all of them, in
+ * The pure static scan: every in-scope file looked at, every raw finding across all of them, in
  * deterministic order. No registry, no I/O beyond reading source. Exercised directly by
  * test/unit/security-network/scan.test.ts against fixture directories.
  * @param root - Absolute path to the repository (or fixture root) being scanned.
@@ -288,7 +288,7 @@ export async function scanForNetworkCapability(root: string): Promise<{
   const scopedFiles = allFiles.filter((relativePath) => isInScope(relativePath))
 
   // Read all in-scope files in parallel, then scan them in the deterministic
-  // `scopedFiles` order -- matching discover-suppressions.ts, which reads the
+  // `scopedFiles` order: matching discover-suppressions.ts, which reads the
   // same `listSourceFiles()` set with `Promise.all` for the same reason.
   const texts = await Promise.all(
     scopedFiles.map((relativePath) => readFile(path.join(root, relativePath), "utf8")),
@@ -303,7 +303,7 @@ export async function scanForNetworkCapability(root: string): Promise<{
 }
 
 /**
- * Collapses byte-identical findings (same file/line/column/capability/detail -- indistinguishable)
+ * Collapses byte-identical findings (same file/line/column/capability/detail: indistinguishable)
  * before reconciliation. Findings that share an `id` but differ in `detail` are left for
  * `reconcileExceptions` to surface as an integrity failure.
  * @param findings - Every finding from the scan.

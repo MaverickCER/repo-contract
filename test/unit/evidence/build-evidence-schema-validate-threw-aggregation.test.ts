@@ -22,7 +22,7 @@ function rawEvidence(): CheckEvidence {
   }
 }
 
-describe("buildEvidence -- schema validate() threw aggregation", () => {
+describe("buildEvidence: schema validate() threw aggregation", () => {
   it("aggregates every affected check's StandardSchemaValidateThrewError into one AggregateError", async () => {
     const check: CheckDefinition = {
       run: "echo",

@@ -88,7 +88,7 @@ describe("evaluateSecurityDepsPolicy", () => {
     })
   })
 
-  it("requires the full field set even for a critical-severity finding -- no severity-tiered forbidding", () => {
+  it("requires the full field set even for a critical-severity finding: no severity-tiered forbidding", () => {
     const f = finding({ severity: "critical" })
     const result = evaluateSecurityDepsPolicy({
       evidence: evidence([{ finding: f, record: record(f, COMPLETE) }]),
@@ -115,7 +115,9 @@ describe("evaluateSecurityDepsPolicy", () => {
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("Stale exception")
     expect(result.rationale).toContain(gone.id)
-    expect(result.rationale).toContain("npm audit no longer reports this vulnerability")
+    expect(result.rationale).toContain(
+      ". The npm audit report no longer lists this vulnerability; delete this entry.",
+    )
   })
 
   it("fails on a finding with no reconciled record at all (registry integrity failure)", () => {

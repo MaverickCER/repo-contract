@@ -62,12 +62,12 @@ describe("renderMarkdownSummary() whole output", () => {
         "",
         "### Warnings",
         "",
-        "- **docs** -- 1 link unreachable",
+        "- **docs**: 1 link unreachable",
         "",
         "### Passed",
         "",
-        "- **lint** -- 0 errors.",
-        "- **types** -- clean",
+        "- **lint**: 0 errors.",
+        "- **types**: clean",
         "",
         "### Slowest checks",
         "",
@@ -99,7 +99,7 @@ describe("renderMarkdownSummary() whole output", () => {
         "",
         "### Passed",
         "",
-        "- **lint** -- ok",
+        "- **lint**: ok",
         "",
       ].join("\n"),
     )
@@ -124,7 +124,7 @@ describe("renderMarkdownSummary() whole output", () => {
         false,
       ),
     )
-    expect(markdown).toContain("```\n\n### Warnings\n\n- **b** -- meh\n")
+    expect(markdown).toContain("```\n\n### Warnings\n\n- **b**: meh\n")
     expect(markdown).not.toContain("```\n\n\n")
   })
 
@@ -139,7 +139,7 @@ describe("renderMarkdownSummary() whole output", () => {
         true,
       ),
     )
-    expect(markdown).toContain("- **a** -- \n- **b** -- \n- **c** -- only\n")
+    expect(markdown).toContain("- **a**: \n- **b**: \n- **c**: only\n")
   })
 
   it("lists the slowest checks, limited by the option or to five", () => {

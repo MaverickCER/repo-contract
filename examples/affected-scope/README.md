@@ -1,13 +1,13 @@
 # Affected scope: run only what a pull request can affect
 
 **"I changed one function. Why does the whole suite run?"** It need not. `repo-contract`
-can work out which tests, and which files mutation testing, a change can reach, and says
-when it cannot be sure (then it runs everything).
+can work out which tests a change can reach, and which files mutation testing must cover.
+It says when it cannot be sure, and then it runs everything.
 
 This package builds a real git repository, makes one change, and runs the real commands.
-`npm run walkthrough` prints each command and its output and **fails** if the affected set,
-the shard split, the widening or the `doctor` verdict differs from what is written here, so
-those outcomes are tested, not illustrative.
+`npm run walkthrough` prints each command and its output. It **fails** if the affected set,
+the shard split, the widening or the `doctor` verdict differs from what is written here.
+Those outcomes are tested, not illustrative.
 
 ## The project
 
@@ -103,5 +103,5 @@ runs the package's real command line.
 
 ## Where to read more
 
-- [Getting the most out of repo-contract](../../README.md#getting-the-most-out-of-repo-contract) — this walkthrough plus caching, fail-fast, metrics and the soundness check.
-- [ADR 0023](../../specs/decisions/0023-speed-features-are-opt-in-and-every-skip-is-visible.md) — the design and the rules for widening.
+- [Speed features and their proof](../../GUIDE.md#speed-features-and-their-proof): this walkthrough plus caching, fail-fast, metrics and the soundness check.
+- [ADR 0023](../../specs/decisions/0023-speed-features-are-opt-in-and-every-skip-is-visible.md): the design and the rules for widening.

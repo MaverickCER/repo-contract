@@ -1,0 +1,21 @@
+{
+  "findings": [
+    {
+      "rule": "return-value",
+      "file": "src/greet.ts",
+      "line": 16,
+      "severity": "error",
+      "score": 0.92,
+      "reason": "The greeting omits a trailing newline that the caller's protocol requires."
+    },
+    {
+      "rule": "no-logging-in-library",
+      "file": "src/greet.ts",
+      "line": 15,
+      "severity": "warn",
+      "score": 0.7,
+      "reason": "greet() logs every name; leave logging to the caller."
+    }
+  ],
+  "summary": { "score": 0.4 }
+}

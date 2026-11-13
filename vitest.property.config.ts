@@ -15,7 +15,7 @@ export default mergeConfig(
         reportOnFailure: true,
         include: ["src/**/*.ts"],
         exclude: ["src/types.ts"],
-        // No "text" reporter -- see vitest.unit.config.ts's comment.
+        // No "text" reporter: see vitest.unit.config.ts's comment.
         reporter: ["html", "lcov", "json", "json-summary"],
         reportsDirectory: "coverage/property",
       },

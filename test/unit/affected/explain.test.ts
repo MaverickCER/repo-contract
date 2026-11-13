@@ -29,7 +29,7 @@ describe("explainAffected", () => {
           },
         }),
       ),
-    ).toEqual(["full run: global-trigger (package.json) -- lockfile"])
+    ).toEqual(["full run: global-trigger (package.json: lockfile)"])
   })
 
   it("omits the detail when there is none, and says so when there is no reason", () => {

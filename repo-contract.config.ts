@@ -1,166 +1,110 @@
 /**
- * repo-contract's own self-hosting contract -- the package validating
- * itself using itself, exercising the real public API against real checks
- * with real policies (see specs/architecture.md and CONTRIBUTING.md). Run
- * via `npm run contract` (scripts/run-contract.mjs).
+ * repo-contract's self-hosting contract: the package checks itself through its own public API,
+ * with real checks and real policies (see specs/architecture.md and CONTRIBUTING.md). Run it with
+ * `npm run contract` (scripts/run-contract.mjs).
  *
- * Each check's own `run`/`policy` lives in its own file under checks/, or --
- * for the checks a published preset now covers, see the note further down
- * -- in src/presets/, or -- for `api-contract`/`api-docs-report`, see the note further down still --
- * imported directly from `internal-package-contract` (IPC), the shared devDependency this
- * repository, env-cap, and data-cap all now consume for exactly this kind of fleet-wide check. This
- * file owns only the dependency graph between them, and their
- * declaration order (see specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md):
- * declaration order is the required topological order, and drives real scheduling, not just
- * documentation -- a `dependsOn` id must be declared earlier than the check declaring it, and an
- * `isolated` check is a full barrier at its own declared position.
+ * Checks come from three places. Most have a `run` and `policy` under checks/. Checks a published
+ * preset covers come from src/presets/. Shared fleet checks come from `internal-package-contract`
+ * (IPC), the devDependency this repository, env-cap and data-cap all consume.
  *
- * The `checks` object below is organized in three declaration-order phases, relying on that
- * barrier semantics rather than per-check `dependsOn` wiring wherever possible:
+ * This file owns the dependency graph and the declaration order. Declaration order is the
+ * topological order and drives scheduling (see
+ * specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md). A `dependsOn` id
+ * must be declared before the check that names it. An `isolated` check is a full barrier at its
+ * position.
  *
- * 1. **Writers** -- `suppression-governance`, `api-docs-report`, `sbom`, `lint`,
- *    `format`, `schema` -- every check that writes to a file other checks (or a human) later reads.
- *    Declared first so nothing reads their output before it's written. `api-docs-report`
- *    (IPC's generic `npmScriptCheck` factory wired to this repo's own `docs:api:report` script --
- *    TypeDoc + typedoc-plugin-markdown, reading `src/**` directly, no build required) genuinely
- *    regenerates `docs/api-report/*.md` on every run, failing only if that regeneration produces a
- *    diff from what's already committed -- a real write, unlike `api-contract` below, which is why
- *    it stays here rather than among the readers. `sbom` (`checks/sbom.ts` /
- *    `scripts/sbom/*.ts`) genuinely regenerates `docs/sbom.cdx.json` (a real CycloneDX SBOM, via
- *    `@cyclonedx/cyclonedx-npm`) the same way, and -- unlike `openssf-scorecard` below, which also
- *    writes a doc but stays among the readers -- needs no other check's evidence via `dependsOn`,
- *    so nothing stops it from sitting here with the rest of the genuine writers; see that check's
- *    own module doc comment for the full reasoning, including why its own output can be byte-
- *    identical run to run (unlike `openssf-scorecard`'s timestamped doc) and therefore needs no
- *    special CI-gate exclusion.
- *    `lint` (`eslint --fix`/`oxlint --fix`) and `format` (`prettier --write .`) both rewrite the
- *    whole source tree in place, and `schema` regenerates `schemas/*.schema.json` plus
- *    `scripts/suppression-governance/disable-comments.schema.json` from their source types -- all
- *    three belong here, not among the readers below, for the same reason as the original four: a
- *    reader that concurrently reads or lints the same files (`test-unit`'s
- *    `test/unit/schema/schema-conformance.test.ts` parsing the generated schemas, `typecheck`/
- *    `architecture`/`crap`/`duplication`/`security-secrets`/`dead-code`/`security-network` all
- *    reading `src/**`) must never race an in-place rewrite of that same content -- confirmed safe
- *    to co-locate with the original four writers: `lint`/`format` never touch any of
- *    suppression-governance's/api-docs-report's/sbom's/schema's own generated output
- *    (`.prettierignore`/each ESLint `files` glob excludes every one of them by path or extension),
- *    and `schema` only ever reads its own TypeScript source types, never another writer's output.
- *    `lint` and `format` do rewrite the same files as each other, though, so `format` carries an
- *    explicit `dependsOn: ["lint"]` -- phase co-location alone does not serialize two writers.
- * 2. **`build`** (`isolated: true`) -- verifies the writers' output still compiles (now including
- *    whatever `lint --fix`/`format --write` just rewrote, not just the original four writers'
- *    output). Because it's declared right after every writer and is itself a scheduling barrier, it
- *    automatically depends on all of them (nothing is declared before it except writers) and every
- *    check declared after it automatically waits for it -- zero per-check `dependsOn` wiring needed
- *    on either side.
- * 3. **Readers** -- everything else: every check that only reads and reports, run concurrently
- *    against the now-built, now-written state. `api-contract` (also IPC-sourced -- see the note
- *    further down) is declared first among them, immediately after the build barrier, because
- *    unlike `api-docs-report` above it needs a fresh `dist/.dts/` (diffed against each entry
- *    point's committed baseline under `.repo-contract/api-contract/<target>/`), not source read
- *    directly -- the same reasoning IPC's own `contract.ts` documents for its identical placement.
- *    It can still write, rarely: bootstrapping a target's baseline the first time it's ever checked
- *    (see internal-package-contract's `scripts/api-contract/update-baseline.ts`), the one case this
- *    repository's own former copy of this engine also called out; its position here remains
- *    conservative for that reason even though nothing else reads its output afterward. `coverage`,
- *    `crap`, and `mutation` still attach their own genuine evidence dependencies via `dependsOn`
- *    (see each one's own note below) --
- *    `isolated`/declaration order alone only ever expresses "wait for the build," never a specific
- *    sibling's evidence. `test-unit` and `test-integration` are also `isolated: true`, for the same
- *    pure-scheduling, resource-contention reason as `mutation` below -- see their own note at their
- *    declaration site.
+ * The `checks` object uses three phases, so barriers replace most per-check `dependsOn` wiring:
  *
- * - `coverage` depends on `test-unit`/`test-integration`/`test-property` --
- *   it only aggregates+reports the coverage artifacts those three already
- *   produced (see scripts/check-coverage.mjs); it never executes a test
- *   itself.
- * - `crap` depends on `coverage` -- it reads that same aggregate coverage
- *   artifact, never a separately-computed one.
- * - `mutation` depends on `suppression-governance` -- its own policy reads
- *   that check's evidence to verify every Stryker-domain suppression in the
- *   registry before trusting a comment-ignored mutant (see
- *   specs/decisions/0006-suppression-governance.md).
- *   Separately, `mutation` is also `isolated: true` (declared in its own
- *   check file, checks/mutation.ts, not here -- unlike `dependsOn` it names
- *   no other check, so it needs no assembly-time context): Stryker spawns
- *   its own concurrent worker processes internally, and running it
- *   alongside this repository's own full concurrent test suite starves
- *   timing margins elsewhere under heavy load -- a real, observed flake in
- *   run-checks.test.ts's SIGINT-cleanup test, caused by resource contention
- *   rather than a logic bug. `isolated` is pure scheduling, not a data
- *   dependency on any other check's evidence -- see
- *   specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md. `mutation` is declared near the
- *   end of the readers so its barrier blocks as little as possible.
- *   `test-unit`/`test-integration` earn the identical `isolated: true` treatment for the identical
- *   reason -- both spawn real, heavy child processes per test (`tsc`, real `git`) on top of
- *   Vitest's own internal worker pool, and running either concurrently with the rest of this
- *   phase's reader fleet reproduced the same class of flake `mutation` was isolated for, this time
- *   surfacing as a generic Vitest `STACK_TRACE_ERROR` on a different, unrelated handful of cases
- *   each run -- see their own declaration-site comment.
+ * 1. **Writers** (`suppression-governance`, `api-docs-report`, `sbom`, `lint`, `format`,
+ *    `schema`) write files that other checks or people read, so they come first.
+ *    - `api-docs-report` regenerates `docs/api-report/*.md` from `src/**` with TypeDoc and fails
+ *      on a diff. It needs no build, unlike `api-contract`.
+ *    - `sbom` regenerates `docs/sbom.cdx.json` with `@cyclonedx/cyclonedx-npm`. The output is
+ *      byte-identical run to run, so the clean-tree CI step needs no exclusion for it. It reads
+ *      no other check's evidence, unlike `openssf-scorecard`, so it can sit here.
+ *    - `lint` and `format` rewrite the source tree in place, and `schema` regenerates
+ *      `schemas/*.schema.json`. A reader of the same files (`test-unit`'s schema-conformance test,
+ *      `typecheck`, `architecture`, `crap` and others) must never race those rewrites.
+ *    - `.prettierignore` and the ESLint `files` globs exclude every other writer's output, and
+ *      `schema` reads only its own source types. So the writers do not race each other, except
+ *      `lint` and `format`, which rewrite the same files: `format` has `dependsOn: ["lint"]`.
+ * 2. **`build`** (`isolated: true`) proves the writers' output still compiles. As a barrier
+ *    declared after every writer, it waits for all of them, and every later check waits for it.
+ * 3. **Readers** (everything else) only read and report, concurrently.
+ *    - `api-contract` comes first. It needs a fresh `dist/.dts/` to diff against each entry
+ *      point's baseline under `.repo-contract/api-contract/<target>/`. It writes only when it
+ *      bootstraps a missing baseline (IPC's `scripts/api-contract/update-baseline.ts`).
+ *    - `coverage`, `crap` and `mutation` attach evidence dependencies with `dependsOn`, because
+ *      declaration order only expresses "wait for the build".
+ *    - `test-unit`, `test-integration` and `mutation` are `isolated: true` for resource
+ *      contention, not data. Each spawns heavy child processes. Running them beside the other
+ *      readers caused real flakes: the SIGINT-cleanup test in run-checks.test.ts, and Vitest
+ *      `STACK_TRACE_ERROR`s. `mutation` sets `isolated` in checks/mutation.ts and is declared near
+ *      the end, so its barrier blocks as little as possible.
  *
- * `coverage`, `crap`, and `mutation` therefore attach their `dependsOn`
- * here, at assembly, rather than in their own check file -- this is the one
- * place every check id is actually in scope to depend on.
+ * The evidence dependencies:
  *
- * `typecheck`, `format`, `license`, `publint`, `arethetypeswrong`,
- * `security-secrets`, and `duplication` are NOT defined under checks/ --
- * they're consumed directly from `src/presets/`, the same published preset
- * catalog an outside consumer would import via `repo-contract/presets` (see
- * specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). This repository dogfoods
- * its own public presets rather than maintaining a parallel private copy;
- * where a value needs to differ from a preset's generic default
- * (`duplication`'s scanned path), it's supplied via factory options, the
- * preferred mechanism. `arethetypeswrong` goes further still -- see that
- * check's own inline comment below -- because this repository's multiple
- * entrypoints trigger a real upstream attw bug no `run`-spread override
- * alone could work around.
+ * - `coverage` depends on `test-unit`, `test-integration` and `test-property`. It only
+ *   aggregates the coverage those three produced (scripts/check-coverage.mjs).
+ * - `crap` depends on `coverage` and reads that same aggregate.
+ * - `mutation` depends on `suppression-governance`. Its policy checks each Stryker suppression
+ *   against the registry before it trusts an ignored mutant
+ *   (specs/decisions/0006-suppression-governance.md).
  *
- * `api-contract` and `api-docs-report` are likewise NOT defined under checks/ -- they're imported
- * directly from `internal-package-contract` (`internal-package-contract/checks/api-contract`,
- * `internal-package-contract/checks/npm-script`'s generic factory). This repository used to host
- * both engines itself (`checks/api-contract.ts` + `scripts/api-contract/*`, `checks/api-docs.ts` +
- * `scripts/api-docs/*` + `scripts/api-docs-html/*`); they moved out to IPC once this repository's
- * own migration off release-please onto Changesets meant every repo in the fleet -- repo-contract,
- * env-cap, data-cap -- needed the identical "does this branch's declared semver bump cover its real
- * API diff" rule, not a Conventional-Commits-flavored original here and a Changesets-flavored port
- * there. IPC's own `contract.ts` documents the mirror image of this note: repo-contract is the one
- * fleet member whose *published* runtime code IPC itself imports and wraps (every `checks/*.ts` in
- * IPC calls real `defineRepoContract`/`runRepoContract`), which is why that direction's own sync
- * workflow (`sync-repo-contract-version.yml`) adds a changeset on every bump and this repository's
- * own listener (`sync-internal-package-contract.yml`, added alongside this migration) does not --
- * see that workflow's own comment. `api-docs-report` replaces the committed API-Extractor-format
- * `docs/api-report/*.api.md` reports with TypeDoc + `typedoc-plugin-markdown` output instead (see
- * `typedoc.json`/`typedoc.markdown.json`); `api-contract` replaces API Extractor's own contract
- * diffing with the identical engine, still API-Extractor-backed under the hood, just no longer a
- * private copy of it.
+ * They are attached here, not in each check file, because this is the one place every check id is
+ * in scope.
  *
- * `dead-code` and `security-deps` are the two deliberate exceptions: neither
- * uses its own published preset (both still published, unchanged, for
- * external consumers) -- each self-hosts a `checks/*.ts` instead, reconciling
- * a `.repo-contract/exceptions/*.json` registry against every raw finding.
- * `dead-code` (`checks/dead-code.ts` / `scripts/dead-code/check.ts`) runs
- * knip with no config-time exempt list at all; see that check's own doc
- * comment and specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's
- * amendment for why: a preset's `exemptUnusedDevDependencies` option needs
- * its exempt list before knip ever runs, which a *reconciled* registry
- * structurally cannot supply (the registry that would suppress a finding can
- * only be built from findings that already ran unsuppressed). `security-deps`
- * (`checks/security-deps.ts`) exists for the identical structural reason,
- * generalized: the published `securityDeps` preset only ever reports a raw
- * `npm audit` count, with no way to accept a specific, justified, reviewable
- * finding at all -- the earlier alternative (silently filtering a
- * hardcoded in-source package-name Set before the preset ever saw the
- * report) is exactly the unreviewable shortcut `security-socket.ts`'s own
- * exception-policy model exists to replace; `security-deps.ts` reuses that
- * identical model (see specs/decisions/0013-reusable-exception-policy-helper.md)
- * instead of a second one-off.
+ * `typecheck`, `format`, `license`, `publint`, `arethetypeswrong`, `security-secrets` and
+ * `duplication` come from `src/presets/`, the catalog a consumer imports from `repo-contract/presets`
+ * (specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). This
+ * repository uses its own presets instead of a private copy. Where a value differs from a preset's
+ * default (`duplication`'s scanned path), a factory option supplies it. `arethetypeswrong` also
+ * overrides `run`, because this repository's several entry points trigger an upstream attw bug (see
+ * its inline comment).
+ *
+ * `api-contract` and `api-docs-report` come from IPC. This repository hosted both engines until
+ * the fleet moved from release-please to Changesets. Then repo-contract, env-cap and data-cap all
+ * needed the same rule: the declared semver bump must cover the real API diff. `api-contract` still
+ * uses API Extractor underneath. `api-docs-report` writes TypeDoc Markdown (`typedoc.json`,
+ * `typedoc.markdown.json`) in place of API Extractor reports. IPC imports repo-contract's runtime,
+ * so IPC's `sync-repo-contract-version.yml` adds a changeset on every bump. This repository's
+ * `sync-internal-package-contract.yml` does not (see that workflow's comment).
+ *
+ * `dead-code` and `security-deps` do not use their published presets, which stay unchanged for
+ * consumers. Each runs a `checks/*.ts` that reconciles a `.repo-contract/exceptions/*.json`
+ * registry against every raw finding. A preset's `exemptUnusedDevDependencies` list must exist
+ * before knip runs, and a reconciled registry is built from findings, so it cannot supply one
+ * (specs/decisions/0008-self-hosting-tool-and-dependency-choices.md, amendment). The `securityDeps`
+ * preset reports only a raw `npm audit` count, with no way to accept a justified finding. So
+ * `security-deps` reuses the exception-policy model of `security-socket.ts`
+ * (specs/decisions/0013-reusable-exception-policy-helper.md).
  */
 import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
 import { agentSkillCheck } from "internal-package-contract/checks/agent-skill"
 import { ambientCapabilitiesCheck } from "internal-package-contract/checks/ambient-capabilities"
 import { apiContract } from "internal-package-contract/checks/api-contract"
+import { gitHygiene } from "internal-package-contract/checks/git-hygiene"
+import { promptBlocksCheck } from "internal-package-contract/checks/prompt-blocks"
+import { engineMatrixCheck } from "internal-package-contract/checks/engine-matrix"
+import { noMinify } from "internal-package-contract/checks/no-minify"
+import { packedConsumerCheck } from "internal-package-contract/checks/packed-consumer"
+import { docsFragments } from "internal-package-contract/checks/docs-fragments"
+import { cleanCheckoutCheck } from "internal-package-contract/checks/clean-checkout"
+import { landingPageCheck } from "internal-package-contract/checks/landing-page"
+import { branchProtection } from "internal-package-contract/checks/branch-protection"
+import { benchmarkGuides } from "internal-package-contract/checks/benchmark-guides"
+import { benchmarkComplexityCheck } from "internal-package-contract/checks/benchmark-complexity"
+import { securityDevDeps } from "internal-package-contract/checks/security-dev-deps"
+import { codeScanning } from "internal-package-contract/checks/code-scanning"
+import { envContractCheck } from "internal-package-contract/checks/env-contract"
 import { generatedRegionsCheck } from "internal-package-contract/checks/generated-regions"
+import { managedFilesCheck } from "internal-package-contract/checks/managed-files"
 import { npmScriptCheck } from "internal-package-contract/checks/npm-script"
+import { pinConsistency } from "internal-package-contract/checks/pin-consistency"
+import { proseCheck } from "internal-package-contract/checks/prose"
+import { readmeStructureCheck } from "internal-package-contract/checks/readme-structure"
+import { scorecardWorkflowCheck } from "internal-package-contract/checks/scorecard-workflow"
+import { surfaceContract } from "internal-package-contract/checks/surface-contract"
 import { accessibility } from "./checks/accessibility.js"
 import { adrGovernance } from "./checks/adr-governance.js"
 import { coderabbitai } from "./checks/coderabbitai.js"
@@ -205,7 +149,7 @@ import {
 export default defineRepoContract({
   // repo-contract's own checks are exactly the kind of npm-installed CLI
   // tools (eslint, tsc, vitest, prettier, ...) that resolve to `.cmd` shims
-  // on Windows -- cross-spawn is the right choice *here*, as a devDependency
+  // on Windows: cross-spawn is the right choice *here*, as a devDependency
   // of this repository's own self-hosting tooling, even though the
   // published library no longer carries it as a runtime dependency of its
   // own. See specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md.
@@ -213,15 +157,15 @@ export default defineRepoContract({
   // eslint-disable-next-line n/no-process-env -- this is the top-level self-hosting config, not published library code (see package.json's "files"); supplying the real ambient environment to repo-contract's own checks is exactly what this repository, as a consumer, is supposed to do.
   env: process.env,
   // Windows-only: lets a timed-out/aborted/host-SIGINT-killed check's full process tree (not just
-  // its immediate process) actually get cleaned up on the windows-latest CI runner -- see
+  // its immediate process) actually get cleaned up on the windows-latest CI runner; see
   // RepoContractConfig.killProcessTree's own doc comment. cross-spawn's own `sync` export matches
   // node:child_process.spawnSync's shape.
   killProcessTree: crossSpawnSync,
   checks: {
-    // -- Writers --
+    // (Writers)
     "suppression-governance": suppressionGovernance,
     // IPC's generic npm-script factory, wired to this repo's own `docs:api:report` script
-    // (TypeDoc + typedoc-plugin-markdown, reading src/** directly -- no dist/ dependency).
+    // (TypeDoc + typedoc-plugin-markdown, reading src/** directly: no dist/ dependency).
     // `mustNotChange: ["docs/api-report"]` reruns that generation through a hash-diff wrapper and
     // fails if it regenerates anything, i.e. the committed report is stale. See module doc comment.
     "api-docs-report": npmScriptCheck({
@@ -230,46 +174,50 @@ export default defineRepoContract({
       mustNotChange: ["docs/api-report"],
     }),
     // Regenerates docs/sbom.cdx.json (a real CycloneDX SBOM for this repository's own npm
-    // dependency graph) on every run via @cyclonedx/cyclonedx-npm -- a real write, and, thanks to
+    // dependency graph) on every run via @cyclonedx/cyclonedx-npm: a real write, and, thanks to
     // `--output-reproducible` (scripts/sbom/spawn.ts), a byte-identical one given an unchanged
     // package-lock.json, so it needs no special exclusion from the "working tree is clean" CI gate
     // the way docs/OpenSSF-Scorecard.md does. Declared here rather than among the readers below
     // (where `openssf-scorecard`, which also writes a doc, lives) because it reads no other
-    // check's evidence via `dependsOn` -- see checks/sbom.ts's own module doc comment.
+    // check's evidence via `dependsOn`: see checks/sbom.ts's own module doc comment.
     sbom,
-    // Rewrites the whole source tree in place (`eslint --fix`/`oxlint --fix`) -- a writer, not a
+    // Rewrites the whole source tree in place (`eslint --fix`/`oxlint --fix`): a writer, not a
     // reader, for the same reason format/schema below are: a reader that concurrently lints or
     // reads the same files it's rewriting must never race that rewrite. See module doc comment.
     lint,
-    // Rewrites the whole source tree in place (`prettier --write .`) -- same reasoning as `lint`
+    // Rewrites the whole source tree in place (`prettier --write .`): same reasoning as `lint`
     // above. `.prettierignore` already excludes every other writer's own generated output
-    // (schemas/*.schema.json, .repo-contract -- which now also holds the suppression registry
-    // .repo-contract/exceptions/disable-comments.json -- docs/api-report), so co-locating it here
+    // (schemas/*.schema.json, .repo-contract (which now also holds the suppression registry
+    // .repo-contract/exceptions/disable-comments.json) docs/api-report), so co-locating it here
     // introduces no new race against those. `dependsOn: ["lint"]` because
     // `lint` and `format` are the only two writers that rewrite the *same* files (`src/**`):
     // co-location in this phase keeps readers off that content but does not serialize the two
     // writers against each other, so an explicit edge does.
     format: { ...format, dependsOn: ["lint"] },
-    // Regenerates schemas/*.schema.json and disable-comments.schema.json from their source types
-    // -- a writer `test-unit` (test/unit/schema/schema-conformance.test.ts parses the generated
+    // Regenerates schemas/*.schema.json and disable-comments.schema.json from their source types:
+    // a writer `test-unit` (test/unit/schema/schema-conformance.test.ts parses the generated
     // files) and `security-secrets` (scans them for secrets) both read. Declared here, not among
     // the readers below, for the same "don't race a concurrent rewrite" reason as `lint`/`format`
-    // above -- confirmed safe: `schema` only ever reads its own TypeScript source types, never
+    // above: confirmed safe: `schema` only ever reads its own TypeScript source types, never
     // another writer's output, so it has nothing to wait on within this phase.
     schema,
 
-    // -- Build barrier -- verifies the writers' output still compiles; every reader below
+    // (Build barrier) verifies the writers' output still compiles; every reader below
     // automatically waits for it purely by declaration order (see module doc comment above).
     build: { ...build, isolated: true },
 
-    // -- Readers --
+    // (Readers)
     // IPC-sourced (internal-package-contract/checks/api-contract); needs a fresh dist/.dts/, unlike
-    // api-docs-report above -- see module doc comment for why it's declared here, first among the
+    // api-docs-report above: see module doc comment for why it's declared here, first among the
     // readers, rather than back among the writers. Diffs every entry point's real, current public
     // surface (index/presets/helpers/affected/metrics) against its own committed baseline under
     // `.repo-contract/api-contract/<target>/` and fails when this branch's changesets under-declare
     // the resulting bump.
     "api-contract": apiContract,
+    // IPC-sourced: diffs the CLI help (top level and every listed command) and the exported JSON
+    // Schemas against .repo-contract/surface-contract/baseline.json, so a removed command, flag or
+    // schema constraint needs a changeset at the right level. Needs the built bin, so it reads here.
+    "surface-contract": surfaceContract(),
     typecheck,
     // `isolated: true` on both `test-unit` and `test-integration` below is the same pure-scheduling
     // fix already applied to `mutation` (see that check's own comment and
@@ -279,7 +227,7 @@ export default defineRepoContract({
     // worker pool, and running either concurrently with the rest of this phase's reader fleet
     // (`accessibility`'s real headless Chrome, `dead-code`'s whole-project `knip` walk,
     // `coderabbitai`'s and `arethetypeswrong`'s own real subprocess spawns, etc.) oversubscribes the
-    // machine -- confirmed by three consecutive full `npm run contract` runs each failing a
+    // machine; confirmed by three consecutive full `npm run contract` runs each failing a
     // different, unrelated handful of `test-unit`/`test-integration` cases with a generic
     // `STACK_TRACE_ERROR`, every one of which passed cleanly when the same file was run alone.
     // Isolating both removes that contention exactly the way it already does for `mutation`; it
@@ -289,16 +237,16 @@ export default defineRepoContract({
     // reads disable-comments.json and asserts it's already synchronized with
     // real source; `suppression-governance`'s own check writes that same
     // file as a side effect of running. With no ordering between them, the
-    // two race on that file concurrently -- confirmed: passed every time run
+    // two race on that file concurrently. Confirmed: passed every time run
     // in isolation, failed when run concurrently with a stale registry (see
     // specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md).
     // This dependsOn makes the registry write settle first, always, instead
-    // of by scheduling luck -- the same fix already applied for `mutation`
+    // of by scheduling luck: the same fix already applied for `mutation`
     // below, which reads this same check's evidence for the same reason.
     // `dependsOn` stays even though `isolated` below already forces this check to run after every
     // earlier one (including `suppression-governance`) in a *full* run: `isolated` alone gives no
     // such guarantee on a partial `options.checks` run (e.g. `npm run contract -- test-integration`
-    // by itself) -- only `dependsOn` pulls a required check into that run's transitive closure. See
+    // by itself): only `dependsOn` pulls a required check into that run's transitive closure. See
     // this same distinction in `mutation`'s own comment below.
     "test-integration": {
       ...testIntegration,
@@ -309,20 +257,20 @@ export default defineRepoContract({
     // running this repository's own contract end to end: `test-property` and
     // `test-integration` both real-git-fixture-test adr-governance and
     // diff-files.ts (mkdtemp'd, disposable repos, real `execFileSync("git",
-    // ...)` calls -- see each test file's own doc comment; this list also
+    // ...)` calls; see each test file's own doc comment; this list also
     // covered api-contract's own real-git integration test before it moved to
-    // internal-package-contract's own suite alongside the rest of that engine
-    // -- see module doc comment) -- concurrently-scheduled real git subprocess spawning was
+    // internal-package-contract's own suite alongside the rest of that engine:
+    // see module doc comment); concurrently-scheduled real git subprocess spawning was
     // observed, once, to write a fixture's own commits onto this checkout's
     // actual local branch instead of its intended scratch directory (a
     // handful of "establish baseline"/"add baseline"-style commits authored
     // `Test <test@example.com>`, never pushed, fully reproducible only under
-    // a full, unfiltered `npm run contract` -- every individual check and
+    // a full, unfiltered `npm run contract`; every individual check and
     // every partial combination tried in isolation, including `mutation`
     // alone despite its own concurrency: 4 Stryker workers, ran clean). Exact
     // mechanism unconfirmed (a real OS/Node-level `cwd` race under extreme
     // concurrent subprocess load is suspected, not a single fixture's own
-    // isolation bug -- test/integration/install-hooks/install-hooks.integration.test.ts's
+    // isolation bug: test/integration/install-hooks/install-hooks.integration.test.ts's
     // two calls missing GIT_CEILING_DIRECTORIES were a real, separate,
     // already-fixed bug, and every git-fixture test's own git() helper now
     // sets it too, but the corruption still reproduced afterward). Isolating
@@ -333,7 +281,7 @@ export default defineRepoContract({
     "test-property": { ...testProperty, isolated: true },
     architecture,
     // GitHub Actions correctness + security via actionlint (see checks/github-actions.ts). A pure
-    // reader -- lints `.github/workflows/*` and touches nothing; needs no build, declared here only
+    // reader: lints `.github/workflows/*` and touches nothing; needs no build, declared here only
     // to keep it in the concurrently-scheduled reader phase.
     "github-actions": githubActions,
     coverage: { ...coverage, dependsOn: ["test-unit", "test-integration", "test-property"] },
@@ -343,7 +291,7 @@ export default defineRepoContract({
     duplication: duplication({ path: "src" }),
     publint,
     // Redirects to a file rather than spreading the preset's stdout-based
-    // `run`/`policy` -- see scripts/run-attw-to-file.mjs for why (a real,
+    // `run`/`policy`: see scripts/run-attw-to-file.mjs for why (a real,
     // reproducible attw bug this repository's own multiple entrypoints
     // trigger). `evaluateAttwReport` (exported from the preset module for
     // exactly this situation) keeps the interpretation logic itself
@@ -360,30 +308,30 @@ export default defineRepoContract({
         return parsed.ok ? evaluateAttwReport(parsed.value) : parsed.result
       },
     },
-    // `run` override (README's "Preset options are the preferred way..., a direct run override is
-    // an escape hatch"): without a `.licensee.json`, the published `license` preset passes `--osi` only.
+    // A `run` override, the escape hatch GUIDE.md's "Preset options are the preferred way" section
+    // allows. Without a `.licensee.json`, the published `license` preset passes `--osi` only.
     // There are no runtime `dependencies` today (ADR 0017 replaced `minimatch` with the
     // dependency-free `globMatch`), but the acceptance criterion stays wider than `--osi` alone:
     // Blue Oak Council Gold-rated licenses such as `BlueOak-1.0.0` are permissive, MIT-equivalent
     // licenses that deliberately never sought OSI approval, and `licensee` ships first-class
     // support for exactly that distinction via `--blueoak=<rating>`. It is added here as an
     // additional acceptance criterion alongside (not instead of) `--osi`, so a future dependency
-    // under such a license is judged on its terms -- this repository's own self-hosting config
+    // under such a license is judged on its terms: this repository's own self-hosting config
     // only, not a change to the published preset's default behavior for other consumers.
     license: {
       ...license,
       run: ["licensee", "--production", "--osi", "--blueoak=gold", "--errors-only", "--ndjson"],
       // The published preset's own pass rationale ("...non-OSI-approved license") is worded for
-      // its default --osi-only `run` -- `--blueoak=gold` above widens the acceptance criterion, so
+      // its default --osi-only `run`: `--blueoak=gold` above widens the acceptance criterion, so
       // a dependency accepted via Blue Oak Gold rather than OSI approval (none today, per this
       // entry's own comment above) must never be described by a rationale implying OSI was the
       // only test applied; a reader trusting that rationale alone would wrongly conclude every
       // production dependency is specifically OSI-approved. Wraps the preset's own policy (which
       // still does all the real stdout parsing/interpretation) and rewrites only that one known,
-      // exact stock string -- every other outcome (fail, missing dependency, abnormal termination)
+      // exact stock string: every other outcome (fail, missing dependency, abnormal termination)
       // passes through unchanged.
       // Explicitly typed (rather than left for contextual inference, like every other check
-      // below) -- an untyped `async (ctx) =>` here previously widened `defineRepoContract`'s own
+      // below): an untyped `async (ctx) =>` here previously widened `defineRepoContract`'s own
       // `TChecks` inference for the *entire* `checks` object, surfacing as spurious `Type 'string'
       // is not assignable to type 'never'` errors on unrelated `dependsOn` arrays elsewhere in this
       // same file. `PolicyContext` is the exact type `license.policy` (imported above) itself
@@ -402,7 +350,7 @@ export default defineRepoContract({
           }
         }
         // The preset's own failure heading has the identical --osi-only wording problem as its
-        // pass rationale above -- a failed run here would otherwise report a stricter policy
+        // pass rationale above: a failed run here would otherwise report a stricter policy
         // ("without an OSI-approved license") than the one actually enforced (also accepting Blue
         // Oak Gold), leaving a reader unable to tell from the rationale alone whether a listed
         // dependency's license was rejected by both criteria or just misreported. The dynamic
@@ -430,7 +378,7 @@ export default defineRepoContract({
     "adr-governance": adrGovernance,
     // Conventional Commits drive the generated changesets (the shared workflow writes one per
     // releasable commit type) and the changelog; commitlint enforces the format across `origin/main..HEAD`. See
-    // specs/decisions/0009-conventional-commits-versioning-and-local-gates.md. A pure reader -- it runs the
+    // specs/decisions/0009-conventional-commits-versioning-and-local-gates.md. A pure reader: it runs the
     // `commitlint` binary against git history and touches nothing.
     commitlint: commitlint(),
     "security-network": securityNetwork,
@@ -439,18 +387,18 @@ export default defineRepoContract({
     // reviewed record in .repo-contract/exceptions/preset-commands.json.
     "preset-commands": presetCommands,
     // New security check built on the repo-contract/helpers exception-policy primitive (see
-    // specs/decisions/0013-reusable-exception-policy-helper.md) -- `unavailable` (the CLI isn't
+    // specs/decisions/0013-reusable-exception-policy-helper.md): `unavailable` (the CLI isn't
     // installed, or this environment holds no Socket org token, as is the case for this
     // repository's own CI today) is a warn, not a hard dependency on real Socket credentials
     // existing everywhere this contract runs.
     "security-socket": securitySocket,
     // Promotes the former local-only `coderabbit review --agent` pre-push shell step (see
     // .githooks/pre-push and specs/decisions/0014-coderabbit-as-a-surfaced-check.md) into a real,
-    // always-declared check -- `not-applicable`/`unavailable` (CI, no CLI installed, a detached
+    // always-declared check: `not-applicable`/`unavailable` (CI, no CLI installed, a detached
     // checkout) is a warn on every single run, by design: a local skip must surface the exact same
     // warning CI always shows, never a silent pass.
     coderabbitai,
-    // `dependsOn: ["security-deps"]` here (not in checks/openssf-scorecard.ts) --
+    // `dependsOn: ["security-deps"]` here (not in checks/openssf-scorecard.ts):
     // see this file's own doc comment on why `coverage`/`crap`/`mutation`
     // attach `dependsOn` at assembly instead of in their own check file. A
     // genuine evidence dependency: `policy` reads
@@ -469,6 +417,28 @@ export default defineRepoContract({
     // written by `internal-package-contract generate` from docs/surface.json; this fails when a region is
     // stale, so ADOPTION.md cannot drift from package.json the way hand-written dependency notes did.
     "generated-regions": generatedRegionsCheck(),
+    // IPC standard checks this repository runs as they are. checks/standard-coverage.ts maps every
+    // standard check to the check here that covers it, or says why none does, and
+    // test/unit/config/standard-coverage.test.ts fails when a standard check is in neither list.
+    "readme-structure": readmeStructureCheck(),
+    "code-scanning": codeScanning(),
+    "scorecard-workflow": scorecardWorkflowCheck(),
+    "pin-consistency": pinConsistency(),
+    "managed-files": managedFilesCheck(),
+    "env-contract": envContractCheck(),
+    "git-hygiene": gitHygiene,
+    "prompt-blocks": promptBlocksCheck(),
+    "engine-matrix": engineMatrixCheck(),
+    "no-minify": noMinify(),
+    "packed-consumer": { ...packedConsumerCheck(), dependsOn: ["test-unit"] },
+    "docs-fragments": docsFragments,
+    prose: proseCheck(),
+    "clean-checkout": cleanCheckoutCheck(),
+    "landing-page": landingPageCheck(),
+    "branch-protection": branchProtection,
+    "benchmark-guides": benchmarkGuides(),
+    "benchmark-complexity": benchmarkComplexityCheck(),
+    "security-dev-deps": securityDevDeps(),
     // Declared last among the readers so its own scheduling barrier (see checks/mutation.ts and
     // this file's own doc comment) blocks as little else as possible.
     mutation: { ...mutation, dependsOn: ["suppression-governance"] },

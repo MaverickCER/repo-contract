@@ -8,7 +8,7 @@ import { testSpawn } from "../../helpers/test-spawn.js"
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
 
-/** The default execution capability for every spawnCheck() call in this file that isn't itself testing shell/env/spawn precedence -- matches today's implicit defaults (shell: false). */
+/** The default execution capability for every spawnCheck() call in this file that isn't itself testing shell/env/spawn precedence: matches today's implicit defaults (shell: false). */
 const execution: ExecutionCapability = { spawn: testSpawn, env: testEnv, shell: false }
 
 /** Polls `predicate` until it's true or `deadlineMs` elapses, then throws. Used to observe `activeHandles` mid-flight, before a still-running spawnCheck() promise has settled. */
@@ -22,7 +22,7 @@ async function waitUntil(predicate: () => boolean, deadlineMs = 5000): Promise<v
   }
 }
 
-describe("spawnCheck -- command resolution", () => {
+describe("spawnCheck: command resolution", () => {
   it("array-form run is used as argv verbatim, without tokenization", async () => {
     const check: CheckDefinition = {
       run: [process.execPath, "-e", "process.stdout.write('ok')"],
@@ -67,7 +67,7 @@ describe("spawnCheck -- command resolution", () => {
   })
 })
 
-describe("spawnCheck -- environment", () => {
+describe("spawnCheck: environment", () => {
   it("inherits process.env by default", async () => {
     process.env.SPAWN_CHECK_TEST_INHERITED = "inherited-value"
     try {
@@ -87,11 +87,11 @@ describe("spawnCheck -- environment", () => {
   })
 
   it("omits an env entry whose value is undefined, even when supplied via config.env directly (not just process.env's own coercion behavior)", async () => {
-    // Regression coverage: buildEnv's `value !== undefined` guard isn't dead code kept only to
-    // satisfy NodeJS.ProcessEnv's type -- execution.env is a consumer-supplied value, not
-    // necessarily process.env itself, and a plain object literal with a real `undefined` value
-    // (unlike process.env, which coerces an assigned undefined to the string "undefined") reaches
-    // this exact guard. validate-config.ts's own per-value check explicitly allows undefined here.
+    // Regression coverage: buildEnv's `value !== undefined` guard isn't dead code kept only for
+    // NodeJS.ProcessEnv's type. execution.env is a consumer-supplied value, not necessarily
+    // process.env. Assigning undefined on process.env coerces it to the string "undefined". A plain
+    // object literal can hold a real `undefined` value, and that reaches this guard. The per-value
+    // check in validate-config.ts explicitly allows undefined here.
     const check: CheckDefinition = {
       run: [
         process.execPath,
@@ -150,8 +150,8 @@ describe("spawnCheck -- environment", () => {
     // The env is passed to the child, never read back into a message, code,
     // or evidence field by repo-contract itself. A spawn that fails outright
     // (ENOENT) is the one path that forwards a Node-produced string
-    // (`error.message`) verbatim -- that string names the command, never the
-    // environment -- so it's the sharpest place to assert the boundary holds.
+    // (`error.message`) verbatim (that string names the command, never the
+    // environment) so it's the sharpest place to assert the boundary holds.
     const secret = "s3cr3t-token-should-never-surface-a1b2c3"
     const check: CheckDefinition = {
       run: ["definitely-not-a-real-binary-xyz-env-leak"],
@@ -167,7 +167,7 @@ describe("spawnCheck -- environment", () => {
   })
 })
 
-describe("spawnCheck -- already-aborted runSignal", () => {
+describe("spawnCheck: already-aborted runSignal", () => {
   it("resolves immediately with well-formed, empty 'aborted' evidence, never spawning a process", async () => {
     const controller = new AbortController()
     controller.abort()
@@ -184,17 +184,16 @@ describe("spawnCheck -- already-aborted runSignal", () => {
   })
 })
 
-describe("spawnCheck -- timeoutMs firing with no runSignal at all", () => {
+describe("spawnCheck: timeoutMs firing with no runSignal at all", () => {
   it("terminates the process and resolves to 'timed_out' when runSignal is undefined", async () => {
-    // Regression test: every other "timed_out" coverage in this suite (spawn-check.status.property
-    // test) always supplies a real, merely-not-yet-aborted AbortController as runSignal, and every
-    // `runSignal: undefined` call in this file uses either no timeout or one far too long to fire
-    // (30000ms) -- so this exact combination (a real, short timeoutMs firing while runSignal is
-    // undefined, not merely unaborted) was never previously exercised anywhere. onEffectiveAbort's
-    // `runSignal?.aborted === true` check specifically needs runSignal to be undefined, not just
-    // falsy-aborted, to distinguish `?.` from a bare `.` -- and composeSignals' `[timeoutController
-    // .signal]` fallback array (used only when runSignal is undefined) needs a real timeout that
-    // actually fires to prove it's still wired in.
+    // Regression test for a combination never exercised before: a short timeoutMs firing while
+    // runSignal is undefined, not merely unaborted. Every other "timed_out" coverage in this suite
+    // (spawn-check.status.property test) supplies a not-yet-aborted AbortController as runSignal.
+    // Every `runSignal: undefined` call in this file uses no timeout or one too long to fire
+    // (30000ms). onEffectiveAbort's `runSignal?.aborted === true` check needs runSignal to be
+    // undefined, not just falsy-aborted, to distinguish `?.` from a bare `.`. The
+    // `[timeoutController.signal]` fallback array in composeSignals is used only when runSignal is
+    // undefined. It needs a timeout that fires to prove it is still wired in.
     const check: CheckDefinition = {
       run: [process.execPath, "-e", "setTimeout(() => {}, 30000)"],
       timeoutMs: 100,
@@ -205,8 +204,9 @@ describe("spawnCheck -- timeoutMs firing with no runSignal at all", () => {
   })
 
   it("does not fire almost immediately for a timeoutMs above setTimeout's 32-bit limit (it is clamped)", async () => {
-    // 5e9 > 2^31-1: Node's setTimeout would truncate the delay to ~1ms and
-    // the check would be recorded 'timed_out' milliseconds after spawn.
+    // A 5e9 delay exceeds 2^31-1, so Node's setTimeout would truncate it to
+    // ~1ms. The check would then be recorded 'timed_out' milliseconds after
+    // spawn.
     const check: CheckDefinition = {
       run: [process.execPath, "-e", "process.stdout.write('done')"],
       timeoutMs: 5_000_000_000,
@@ -218,7 +218,7 @@ describe("spawnCheck -- timeoutMs firing with no runSignal at all", () => {
   })
 })
 
-describe("spawnCheck -- terminalEvidence timing", () => {
+describe("spawnCheck: terminalEvidence timing", () => {
   it("durationMs is the real, small, non-negative elapsed time, not the sum of two timestamps", async () => {
     const check: CheckDefinition = {
       run: [process.execPath, "-e", "process.stdout.write('x')"],
@@ -230,7 +230,7 @@ describe("spawnCheck -- terminalEvidence timing", () => {
   })
 })
 
-describe("spawnCheck -- spawn_error evidence", () => {
+describe("spawnCheck: spawn_error evidence", () => {
   it("records spawnError and spawnErrorCode for a nonexistent command", async () => {
     const check: CheckDefinition = {
       run: ["definitely-not-a-real-binary-xyz-spawn-check"],
@@ -253,7 +253,7 @@ describe("spawnCheck -- spawn_error evidence", () => {
   })
 })
 
-describe("spawnCheck -- stderr capture", () => {
+describe("spawnCheck: stderr capture", () => {
   it("captures real stderr output, distinct from stdout", async () => {
     const check: CheckDefinition = {
       run: [process.execPath, "-e", "process.stderr.write('err-output')"],
@@ -265,13 +265,13 @@ describe("spawnCheck -- stderr capture", () => {
   })
 })
 
-describe("spawnCheck -- bounded output capture", () => {
+describe("spawnCheck: bounded output capture", () => {
   const CAP_BYTES = 10 * 1024 * 1024
-  // Comfortably larger than the cap (so truncation is unambiguous) but
-  // still small/fast enough to write and assert on in a unit test; the
-  // marker text appended after truncation adds a small, fixed overhead
-  // beyond the cap itself, so assertions below allow generous slack rather
-  // than asserting an exact byte count.
+  // Comfortably larger than the cap, so truncation is unambiguous, but
+  // still small enough to write and assert on in a unit test. The marker
+  // text appended after truncation adds a small, fixed overhead beyond the
+  // cap. So assertions below allow generous slack rather than an exact byte
+  // count.
   const OVERAGE_BYTES = CAP_BYTES * 2
 
   it("truncates stdout that exceeds the captured-output cap instead of retaining it in full", async () => {
@@ -283,7 +283,7 @@ describe("spawnCheck -- bounded output capture", () => {
     expect(evidence.stdout.length).toBeGreaterThan(CAP_BYTES)
     expect(evidence.stdout.length).toBeLessThan(CAP_BYTES + 100)
     expect(evidence.stdout).toContain("...[output truncated at")
-    // The process still ran to a real, normal completion -- truncation
+    // The process still ran to a real, normal completion: truncation
     // bounds only the retained text, it does not kill the child.
     expect(evidence.status).toBe("completed")
     expect(evidence.exitCode).toBe(0)
@@ -325,14 +325,14 @@ describe("spawnCheck -- bounded output capture", () => {
   })
 })
 
-describe("spawnCheck -- activeHandles registry and manual kill", () => {
-  // POSIX-only: on Windows, cross-spawn routes a bare, non-existent command
-  // through `cmd.exe /c ...`, so `child.pid` is the real (transient) cmd.exe
-  // pid rather than `undefined`, and the handle is registered before cmd exits
-  // with a "not recognized" code. cross-spawn then synthesizes the ENOENT
-  // `error` event, and cleanup() still deregisters the handle -- the check's
-  // resolved evidence is identical -- but the "never assigned a pid" invariant
-  // this test pins simply doesn't hold there.
+describe("spawnCheck: activeHandles registry and manual kill", () => {
+  // POSIX-only. On Windows, cross-spawn routes a bare, non-existent command
+  // through `cmd.exe /c ...`. So `child.pid` is the transient cmd.exe pid
+  // rather than `undefined`. The handle is registered before cmd exits with
+  // a "not recognized" code. Then cross-spawn synthesizes the ENOENT
+  // `error` event, and cleanup() still deregisters the handle. The check's
+  // resolved evidence is identical, but the "never assigned a pid"
+  // invariant this test pins doesn't hold there.
   it.skipIf(process.platform === "win32")(
     "never registers a handle for a spawn that fails before ever getting a pid",
     async () => {
@@ -346,7 +346,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
       // Checked synchronously, before any "error"/"close" event has had a
       // chance to fire: a real ENOENT spawn never assigns child.pid at all
       // (confirmed empirically), so activeHandles must still be empty right
-      // here -- not just by the time cleanup() eventually runs.
+      // here; not just by the time cleanup() eventually runs.
       expect(activeHandles.size).toBe(0)
 
       await promise
@@ -388,7 +388,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
       const evidence = await promise
 
       // "host_terminated", not "signaled": ActiveCheckHandle.kill is repo-contract itself
-      // requesting this signal (via run-checks.ts's host SIGINT/SIGTERM cleanup) -- "signaled" is
+      // requesting this signal (via run-checks.ts's host SIGINT/SIGTERM cleanup); "signaled" is
       // reserved for a signal repo-contract did NOT request. See CheckStatus's doc comment.
       expect(evidence.status).toBe("host_terminated")
       expect(evidence.exitCode).toBeNull()
@@ -399,7 +399,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
   )
 
   it.skipIf(process.platform === "win32")(
-    "reports 'host_terminated' (not 'aborted') when runSignal is aborted first and then handle.kill() is called -- the real host-Ctrl+C ordering",
+    "reports 'host_terminated' (not 'aborted') when runSignal is aborted first and then handle.kill() is called: the real host-Ctrl+C ordering",
     async () => {
       // run-checks.ts's SIGINT/SIGTERM handler aborts hostAbortController
       // (composed into runSignal) BEFORE calling handle.kill(), so the
@@ -433,11 +433,11 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
       const { tmpdir } = await import("node:os")
       const path = await import("node:path")
 
-      // Proves the child's SIGTERM handler is actually registered before
-      // this test sends SIGTERM -- without this, `handle.kill("SIGTERM")`
-      // can race ahead of the child's startup and hit it while the
-      // default (terminating) behavior is still in effect, which would
-      // make the test pass without ever exercising escalation at all.
+      // Proves the child's SIGTERM handler is registered before this test
+      // sends SIGTERM. Without this, `handle.kill("SIGTERM")` can race
+      // ahead of the child's startup. It would hit the child while the
+      // default (terminating) behavior is still in effect. The test would
+      // then pass without exercising escalation.
       const readyFile = path.join(tmpdir(), `spawn-check-sigterm-ready-${String(process.pid)}`)
       rmSync(readyFile, { force: true })
 
@@ -459,7 +459,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
 
       handle?.kill("SIGTERM")
 
-      // Resolves only once the SIGKILL escalation actually lands -- a
+      // Resolves only once the SIGKILL escalation actually lands: a
       // SIGTERM-ignoring process would otherwise never emit "close" at all,
       // so this `await` itself is the assertion that escalation happened.
       const evidence = await promise
@@ -479,7 +479,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
       const path = await import("node:path")
 
       // Distinct from the "manual kill()" test above: this signal is sent via a bare
-      // process.kill(pid, ...) call, entirely bypassing ActiveCheckHandle/activeHandles --
+      // process.kill(pid, ...) call, entirely bypassing ActiveCheckHandle/activeHandles;
       // simulating a genuinely external actor (another process, a human running `kill`), not
       // repo-contract's own host-SIGINT/SIGTERM cleanup. The child writes its own pid to a ready
       // file so this test can target it directly, the same readiness-signaling technique the
@@ -519,7 +519,7 @@ describe("spawnCheck -- activeHandles registry and manual kill", () => {
   )
 })
 
-describe("spawnCheck -- cleanup clears the pending timeout", () => {
+describe("spawnCheck: cleanup clears the pending timeout", () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -536,7 +536,7 @@ describe("spawnCheck -- cleanup clears the pending timeout", () => {
     // `timeoutHandle` (real, since timeoutMs is set) and `escalationHandle`
     // (undefined here, since no kill was ever issued) independently. A
     // weaker "was called" assertion can't tell either individual clearTimeout
-    // call apart from the other -- removing just one still leaves the other
+    // call apart from the other: removing just one still leaves the other
     // satisfying "was called at least once".
     expect(clearTimeoutSpy).toHaveBeenCalledTimes(2)
   })
@@ -544,8 +544,8 @@ describe("spawnCheck -- cleanup clears the pending timeout", () => {
   // POSIX-only: on Windows, cross-spawn's non-existent-command emulation drives
   // the child through `cmd.exe`, which produces both a real "close" event and a
   // synthesized ENOENT "error" event, so cleanup() (and with it clearTimeout)
-  // runs twice. That double-cleanup is harmless -- clearTimeout no-ops on an
-  // already-cleared handle and the resolved evidence is unchanged -- but the
+  // runs twice. That double-cleanup is harmless (clearTimeout no-ops on an
+  // already-cleared handle and the resolved evidence is unchanged) but the
   // exact call count this test pins is a POSIX single-event-path property.
   it.skipIf(process.platform === "win32")("on a spawn error", async () => {
     const clearTimeoutSpy = vi.spyOn(global, "clearTimeout")
@@ -555,26 +555,25 @@ describe("spawnCheck -- cleanup clears the pending timeout", () => {
       policy: okPolicy,
     }
     await spawnCheck("id", check, undefined, new Set(), execution)
-    // Same reasoning as "on normal completion" above -- see that test.
+    // Same reasoning as "on normal completion" above: see that test.
     expect(clearTimeoutSpy).toHaveBeenCalledTimes(2)
   })
 })
 
-describe("spawnCheck -- disposes its composed abort signal", () => {
+describe("spawnCheck: disposes its composed abort signal", () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
   it("removes the listeners it added to runSignal once the check completes, via composeSignals's manual-fallback dispose", async () => {
     // Forces composeSignals's manual-composition fallback (see
-    // src/execution/abort-signals.ts) so its dispose() has an observable
-    // effect (removeEventListener) to assert on -- the native AbortSignal.any
-    // path's own dispose is a documented no-op. AbortSignal.any is read and
-    // deleted synchronously below, before spawnCheck's own synchronous
-    // composeSignals(...) call (which happens before its first await), and
-    // restored in `finally`; matches
-    // test/unit/execution/abort-signals.test.ts's own
-    // withoutNativeAbortSignalAny helper.
+    // src/execution/abort-signals.ts). Its dispose() has an observable
+    // effect (removeEventListener) to assert on. The native AbortSignal.any
+    // path's dispose is a documented no-op. AbortSignal.any is deleted
+    // synchronously below, before spawnCheck's synchronous
+    // composeSignals(...) call, and restored in `finally`.
+    // composeSignals(...) runs before spawnCheck's first await. This
+    // matches the helper in abort-signals.test.ts.
     // eslint-disable-next-line @typescript-eslint/unbound-method -- reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.
     const originalAny = AbortSignal.any
     const mutableAbortSignal = AbortSignal as unknown as Record<string, unknown>
@@ -588,7 +587,7 @@ describe("spawnCheck -- disposes its composed abort signal", () => {
       }
       await spawnCheck("id", check, controller.signal, new Set(), execution)
       // The manual fallback's dispose removes exactly the one "abort"
-      // listener composeSignals added to runSignal -- if spawn-check.ts's
+      // listener composeSignals added to runSignal: if spawn-check.ts's
       // own disposeEffectiveSignal() call were ever deleted, this listener
       // would never be removed and this assertion would fail.
       expect(removeEventListenerSpy).toHaveBeenCalledWith("abort", expect.any(Function))

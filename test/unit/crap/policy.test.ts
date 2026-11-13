@@ -18,7 +18,7 @@ function report(functions: readonly CrapFunction[]): CrapReport {
 }
 
 describe("evaluateCrapPolicy", () => {
-  it("passes when every function is exactly at the threshold -- the boundary is inclusive", () => {
+  it("passes when every function is exactly at the threshold: the boundary is inclusive", () => {
     const result = evaluateCrapPolicy({ evidence: report([fn({ crap: CRAP_THRESHOLD })]) })
     expect(result.outcome).toBe("pass")
   })
@@ -36,7 +36,7 @@ describe("evaluateCrapPolicy", () => {
     expect(result.rationale).toContain("0 function(s) analyzed")
   })
 
-  it("passes when a function is exactly at the complexity ceiling -- the boundary is inclusive", () => {
+  it("passes when a function is exactly at the complexity ceiling: the boundary is inclusive", () => {
     const result = evaluateCrapPolicy({
       evidence: report([fn({ complexity: MAX_COMPLEXITY })]),
     })
@@ -58,7 +58,7 @@ describe("evaluateCrapPolicy", () => {
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("Complexity ceiling exceeded")
     expect(result.rationale).toContain(
-      `src/c.ts:4 branchy — complexity ${String(MAX_COMPLEXITY + 1)} (maximum ${String(MAX_COMPLEXITY)})`,
+      `src/c.ts:4 branchy: complexity ${String(MAX_COMPLEXITY + 1)} (maximum ${String(MAX_COMPLEXITY)})`,
     )
   })
 
@@ -91,8 +91,8 @@ describe("evaluateCrapPolicy", () => {
   })
 
   it("ignores this repo's own configured threshold echo, only ever trusting this file's own constant", () => {
-    // A malicious/stale report claiming a much higher threshold must not weaken the gate --
-    // the policy is documented to never read report.threshold.
+    // A malicious or stale report's higher threshold must not weaken the gate. The policy never
+    // reads report.threshold.
     const result = evaluateCrapPolicy({
       evidence: { threshold: 9999, functions: [fn({ crap: CRAP_THRESHOLD + 1 })] },
     })

@@ -15,7 +15,7 @@ import { testSpawn } from "../helpers/test-spawn.js"
 const node = process.execPath
 
 describe("runRepoContract", () => {
-  it("handles zero checks -- passed is vacuously true, evidence.checks is empty", async () => {
+  it("handles zero checks: passed is vacuously true, evidence.checks is empty", async () => {
     const { evidence, verdict } = await runRepoContract({
       checks: {},
       spawn: testSpawn,
@@ -142,7 +142,7 @@ describe("runRepoContract", () => {
     })
   })
 
-  it("still invokes the policy, once, when output.schema fails validation -- indistinguishable from a plain parse failure by the time policy sees it", async () => {
+  it("still invokes the policy, once, when output.schema fails validation: indistinguishable from a plain parse failure by the time policy sees it", async () => {
     let policyInvocations = 0
     const { verdict } = await runRepoContract({
       checks: {
@@ -179,19 +179,17 @@ describe("runRepoContract", () => {
   })
 
   it("throws InvalidRepoContractConfigError synchronously for a malformed config, before anything spawns", () => {
-    // spawn/env are deliberately included and valid here, even though this test's own point is
-    // checks: null: this assertion only checks the error *class* (both the checks-shape and
-    // spawn/env checks throw the same InvalidRepoContractConfigError class), so without a valid
-    // spawn/env, a config with checks:null but missing spawn would ALSO throw
-    // InvalidRepoContractConfigError -- for "spawn must be a function" -- which would still satisfy
-    // this class-only assertion for the wrong reason, masking a real regression in the checks:null
-    // check specifically.
+    // spawn/env are deliberately valid here, even though this test is about checks: null. The
+    // assertion checks only the error *class*. The checks-shape and spawn/env checks both throw
+    // InvalidRepoContractConfigError. Without a valid spawn, checks: null would also throw it, for
+    // "spawn must be a function". The class-only assertion would then pass for the wrong reason.
+    // That would mask a regression in the checks: null check.
     const malformed = {
       checks: null,
       spawn: testSpawn,
       env: testEnv,
     } as unknown as RepoContractConfig
-    // A genuine synchronous throw -- `runRepoContract` is not `async`, so a config problem throws
+    // A genuine synchronous throw: `runRepoContract` is not `async`, so a config problem throws
     // to this non-awaiting caller directly, before any Promise is even created (see
     // runRepoContract's own doc comment). `expect(() => ...).toThrow(...)`, not
     // `expect(runRepoContract(...)).rejects.toThrow(...)`, which only tests promise rejection.
@@ -238,8 +236,8 @@ describe("runRepoContract", () => {
     }
     expect(thrown).toBeInstanceOf(PolicyThrewError)
     // The message repo-contract authors carries only the check id and fixed
-    // text. (`cause` deliberately preserves the original throw verbatim for
-    // the consumer -- that is not a leak of anything repo-contract added.)
+    // text. `cause` deliberately preserves the original throw verbatim for the consumer. That is
+    // not a leak of anything repo-contract added.
     expect((thrown as PolicyThrewError).message).not.toContain(secret)
     expect((thrown as PolicyThrewError).message).toContain("broken")
   })
@@ -287,17 +285,16 @@ describe("runRepoContract", () => {
     expect(spans[1]?.[0]).toBeGreaterThanOrEqual(spans[0]?.[1] ?? Infinity)
   })
 
-  it("a config-level shell: true actually reaches the spawned process, not just validation -- a check with no shell of its own still gets real shell interpretation", async () => {
-    // Regression coverage for run-repo-contract.ts's `execution.shell = config.shell ?? false`:
-    // this can only be distinguished from a config.shell that's silently dropped by observing real
-    // shell-operator behavior (`&&`) at actual spawn time, through the full public pipeline -- a
-    // validate-config.ts-level test alone only proves the *value* is accepted, not that it's wired
-    // through to execution.
+  it("a config-level shell: true actually reaches the spawned process, not just validation: a check with no shell of its own still gets real shell interpretation", async () => {
+    // Regression coverage for run-repo-contract.ts's `execution.shell = config.shell ?? false`.
+    // Only shell-operator behavior (`&&`) at spawn time, through the full public pipeline,
+    // distinguishes this from a silently dropped config.shell. A validate-config.ts-level test only
+    // proves the *value* is accepted, not that it reaches execution.
     const { evidence } = await runRepoContract({
       checks: {
         // No shell of its own: relies entirely on the config-level default reaching spawnCheck.
         both: {
-          // `node` (process.execPath) is quoted -- on Windows this is commonly
+          // `node` (process.execPath) is quoted: on Windows this is commonly
           // "C:\Program Files\nodejs\node.exe", and unquoted would be split into two
           // tokens by the real shell this runs through (shell: true below).
           run: `"${node}" -e "process.stdout.write('a')" && "${node}" -e "process.stdout.write('b')"`,
@@ -312,7 +309,7 @@ describe("runRepoContract", () => {
     expect(evidence.checks.both.stdout).toBe("ab")
   })
 
-  it("propagates a run-level AbortSignal through the whole pipeline -- an aborted check still gets a verdict entry", async () => {
+  it("propagates a run-level AbortSignal through the whole pipeline: an aborted check still gets a verdict entry", async () => {
     const controller = new AbortController()
     controller.abort("cancelled")
 
@@ -343,10 +340,10 @@ describe("runRepoContract", () => {
       `repo-contract-cycle-test-${String(process.pid)}-${String(Date.now())}.marker`,
     )
     try {
-      // `a` depends on `b`, but `b` is declared *after* `a` -- a forward reference, which the new
+      // `a` depends on `b`, but `b` is declared *after* `a`: a forward reference, which the new
       // declaration-order model rejects (dependsOn may only reference an earlier-declared check;
       // see DependencyDeclaredLaterError). A real cycle (`a`->`b`->`a`) is no longer expressible at
-      // all once every edge must point backward -- whichever of the two is declared second would
+      // all once every edge must point backward: whichever of the two is declared second would
       // already be a forward reference on its own, well before a cycle could ever form.
       expect(() =>
         runRepoContract({
@@ -434,7 +431,7 @@ describe("runRepoContract", () => {
     })
   })
 
-  it("evidence.checks.<id> remains fully present and unaffected by verdict.checks.<id>'s shape -- evidence and policy interpretation stay independent", async () => {
+  it("evidence.checks.<id> remains fully present and unaffected by verdict.checks.<id>'s shape: evidence and policy interpretation stay independent", async () => {
     const { evidence, verdict } = await runRepoContract({
       checks: {
         tests: {
@@ -454,7 +451,7 @@ describe("runRepoContract", () => {
     })
   })
 
-  it("a failing check's rationale alone identifies the specific reason -- no need to rerun anything or inspect evidence separately", async () => {
+  it("a failing check's rationale alone identifies the specific reason: no need to rerun anything or inspect evidence separately", async () => {
     const { verdict } = await runRepoContract({
       checks: {
         lint: {
@@ -477,7 +474,7 @@ describe("runRepoContract", () => {
     expect(verdict.checks.lint.rationale).toContain("src/bar.ts:41:7")
   })
 
-  it("a passing policy can still communicate a warn outcome for noteworthy, non-blocking evidence -- warn does not fail the run", async () => {
+  it("a passing policy can still communicate a warn outcome for noteworthy, non-blocking evidence: warn does not fail the run", async () => {
     const { verdict } = await runRepoContract({
       checks: {
         "security-deps": {
@@ -543,7 +540,7 @@ describe("runRepoContract", () => {
 
   it("runRepoContract() itself never calls process.exit(), even on a failing multi-check run", async () => {
     // Scoped to runRepoContract()'s own execution path specifically, per VERSIONING.md's Stable-tier
-    // guarantee -- not a claim that no code anywhere in this repository calls process.exit() (the
+    // guarantee: not a claim that no code anywhere in this repository calls process.exit() (the
     // separate, repository-wide n/no-process-exit ESLint rule on src/** covers that). The spy throws
     // rather than silently recording a call, so a violation fails loudly at the call site itself.
     const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
@@ -582,8 +579,8 @@ describe("runRepoContract", () => {
     }
   })
 
-  it("every configured check id appears exactly once as a key in both evidence.checks and verdict.checks -- completed/timed_out/spawn_error, no abort involved", async () => {
-    // Deliberately no AbortController here -- each status below is self-contained and settles at
+  it("every configured check id appears exactly once as a key in both evidence.checks and verdict.checks: completed/timed_out/spawn_error, no abort involved", async () => {
+    // Deliberately no AbortController here: each status below is self-contained and settles at
     // its own pace with no cross-check timing dependency, so this stays fully deterministic. The
     // aborted case is exercised separately, in isolation, in the next test below.
     const { evidence, verdict } = await runRepoContract({
@@ -619,7 +616,7 @@ describe("runRepoContract", () => {
     expect(evidence.checks.brokenSpawn.status).toBe("spawn_error")
   })
 
-  it("an aborted check still receives a well-formed evidence/verdict entry -- the configured check id appears exactly once even when the run itself is aborted", async () => {
+  it("an aborted check still receives a well-formed evidence/verdict entry: the configured check id appears exactly once even when the run itself is aborted", async () => {
     const controller = new AbortController()
     controller.abort("cancelled")
 

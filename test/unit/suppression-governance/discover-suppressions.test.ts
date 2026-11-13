@@ -136,12 +136,12 @@ describe("discoverSuppressionsInFile", () => {
   })
 
   it("does not desync on a template literal substitution, and still finds a real suppression afterward", () => {
-    // `${...}` template substitutions require the scanner's own `reScanTemplateToken` to resume
-    // correctly after the substitution's closing brace -- skip that and the substitution's closing
-    // backtick is misread as opening a new, unterminated template literal that swallows every
-    // subsequent token (including comments) until some later, unrelated backtick closes it. This
-    // reproduces that shape: a real interpolation, followed by a comment containing a backtick of
-    // its own, followed by a genuine suppression that must still be found.
+    // `${...}` template substitutions require the scanner's `reScanTemplateToken` to resume after
+    // the substitution's closing brace. Without it, the substitution's closing backtick is misread
+    // as opening a new, unterminated template literal. That literal swallows every later token
+    // (including comments) until some unrelated backtick closes it. This reproduces that shape: an
+    // interpolation, then a comment containing a backtick, then a suppression that must still be
+    // found.
     const text = [
       "const label = `@ts-${sentinel}`",
       "// an unrelated comment mentioning `sentinel` in backticks",

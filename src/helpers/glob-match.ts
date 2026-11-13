@@ -1,8 +1,8 @@
 /**
- * A small, dependency-free glob matcher -- the replacement for the `minimatch` runtime dependency
+ * A small, dependency-free glob matcher: the replacement for the `minimatch` runtime dependency
  * (see specs/decisions/0017-own-glob-matcher-replaces-minimatch.md). Pure string logic: it reads no
  * environment variable, touches no filesystem, imports nothing, and builds no `RegExp` from its
- * input -- a pattern is tokenized and matched by a position-set simulation that is polynomial in
+ * input. A pattern is tokenized and matched by a position-set simulation that is polynomial in
  * the sizes of the pattern and the value, so no pattern can cause catastrophic backtracking.
  *
  * Supported syntax (exactly what exception-policy category keys use, e.g. `"security/*"`):
@@ -38,7 +38,7 @@ const TOKEN = /\\(.)|\*\*\/|\*\*|\*|\?|\[([^\]]+)\]|[\s\S]/g
 
 /**
  * Finds the first brace group (scanning closing braces left to right) whose body holds a comma and
- * no braces of its own -- the innermost expandable group. `{x}` (no comma) is never expandable.
+ * no braces of its own: the innermost expandable group. `{x}` (no comma) is never expandable.
  * @param pattern - the glob to search.
  * @returns the group's span and its comma-separated alternatives, or `undefined` when none is left.
  */

@@ -52,7 +52,7 @@ describe("renderScorecardMarkdown", () => {
   })
 
   it("renders the real weight used for an evaluated check, so the weighted score can be reconstructed from this table alone", () => {
-    // (10*10 + 6*2.5) / (10+2.5) = 115/12.5 = 9.2 -- the fixture's own
+    // (10*10 + 6*2.5) / (10+2.5) = 115/12.5 = 9.2: the fixture's own
     // `weightedAverage` matches what the per-row scores/weights below
     // actually compute to, so this test also proves the rendered aggregate
     // is reconstructable from the table, not just an arbitrary passed-in
@@ -129,7 +129,7 @@ describe("renderScorecardMarkdown", () => {
     expect(markdown).toContain("**Weighted score:** N/A (no checks were evaluated)")
     // No fetch was ever attempted in this case (see
     // checks/openssf-scorecard.ts's own "skip the fetch when there's
-    // nothing to weight" short-circuit) -- claiming live-fetched weights
+    // nothing to weight" short-circuit): claiming live-fetched weights
     // were used here would be false.
     expect(markdown).not.toContain("live-fetched per-check weights")
     expect(markdown).not.toContain("fell back to equal weighting")

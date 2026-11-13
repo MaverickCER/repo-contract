@@ -103,7 +103,7 @@ describe("license preset", () => {
     })
   })
 
-  it("fails (not passes) when licensee exits non-zero with empty stdout -- it never evaluated anything", async () => {
+  it("fails (not passes) when licensee exits non-zero with empty stdout: it never evaluated anything", async () => {
     const result = await license.policy(
       fakeContext(
         fakeCheckEvidence({

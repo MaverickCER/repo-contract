@@ -4,7 +4,7 @@ import { testEnv } from "../helpers/test-env.js"
 import { testSpawn } from "../helpers/test-spawn.js"
 
 /**
- * A smoke test of the package's public barrel itself -- every other test
+ * A smoke test of the package's public barrel itself: every other test
  * file imports directly from internal submodules for precision, but nothing
  * else exercises `src/index.ts`'s actual re-exports. This both provides
  * coverage of the barrel file and guards against a re-export typo/omission

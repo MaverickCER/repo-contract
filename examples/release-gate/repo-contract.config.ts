@@ -4,7 +4,7 @@
  * `typecheck`, `format` and `lint` are the same three real, published `repo-contract/presets` entries as
  * in `../demo`, run against the same deliberately imperfect `src/greet.ts`. The new part is `release`:
  * it runs no command of its own. Its policy receives the evidence of every other check
- * (`ctx.evidence.checks`) -- by the time any policy runs, every check has finished -- and decides
+ * (`ctx.evidence.checks`) (by the time any policy runs, every check has finished) and decides
  * what the combination means. A script that ran three commands could report three results; this one
  * reports a single decision and says which check caused it.
  *

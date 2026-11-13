@@ -12,14 +12,13 @@ interface ComposedSignal {
  * supported Node the native path runs. The manual fallback is kept as defence
  * in depth for a host that removes or shims the global, and stays unit-tested.
  *
- * The native path's `dispose` is a no-op -- `AbortSignal.any` manages its own
+ * The native path's `dispose` is a no-op: `AbortSignal.any` manages its own
  * source-signal listeners internally and doesn't leak them. The manual
  * fallback's `dispose` removes the "abort" listeners it added to each input
- * `signal`; without calling it, a long-lived input (like a whole run's shared
- * `AbortSignal`, composed fresh for every check the run spawns) would
- * accumulate one permanent, never-removed listener per composed signal for
- * the rest of its own lifetime, regardless of whether that particular
- * composition ever actually needed to abort. Callers should call `dispose()`
+ * `signal`. Without it, a long-lived input would keep one listener per
+ * composed signal for the rest of its lifetime, whether or not that
+ * composition ever aborted. A whole run's shared `AbortSignal`, composed
+ * fresh for every check the run spawns, is such an input. Callers should call `dispose()`
  * once the composed signal is no longer needed, whether or not it ever
  * aborted.
  * @param signals - the signals to combine; the composed signal aborts as soon as any one of them does
@@ -27,10 +26,10 @@ interface ComposedSignal {
  */
 export function composeSignals(signals: readonly AbortSignal[]): ComposedSignal {
   if (typeof AbortSignal.any === "function") {
-    // Expression-bodied no-op, not `() => {}` (an empty block body trips
-    // @typescript-eslint/no-empty-function): the native AbortSignal.any
+    // Expression-bodied no-op, not `() => {}`: an empty block body trips
+    // @typescript-eslint/no-empty-function. The native AbortSignal.any
     // manages its own source-signal listeners internally and doesn't leak
-    // them, so there's nothing for this composition's own dispose to
+    // them. So there's nothing for this composition's own dispose to
     // release.
     return { signal: AbortSignal.any(signals as AbortSignal[]), dispose: () => undefined }
   }

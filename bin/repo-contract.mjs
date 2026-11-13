@@ -1,35 +1,38 @@
 #!/usr/bin/env node
-// The one published executable surface this package ships. Two subcommands: `init` (scaffolding,
-// per specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md's
-// 2026-09-09 amendment) and `affected` (read-only analysis, that ADR's 2026-11-01 amendment).
-// `init` spawns nothing and reads no environment: it reads the consumer's local package.json and
-// writes local files. `affected` has to run git, read files and load the project's TypeScript, so
-// this entry point -- and nothing else shipped -- supplies those to the library (see the
-// "What `affected` takes from the machine" section below and the 2026-11-01 amendment to
+// The one executable this package ships. It has six commands: `init`, `affected`, `doctor`,
+// `metrics`, `merge-mutation` and `cache` (`repo-contract --help` lists them).
+// The amendments to specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md
+// cover `init` (2026-09-09), `affected` (2026-11-01), and `cache`, `doctor` and `metrics`
+// (2026-11-02).
+// `init` spawns nothing and reads no environment: it reads the local package.json and writes local
+// files. `metrics`, `merge-mutation` and `cache` read and write files only. `affected` and `doctor`
+// must run git and read files, and `affected` also loads the project's TypeScript. So this entry
+// point, and nothing else shipped, supplies those capabilities to the library (see "What `affected`
+// takes from the machine" below and the 2026-11-01 amendment to
 // specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
-// The `AmbientCapabilities` check scans the real published tarball and exempts only this entry
-// point, so the library bundles under dist/ stay free of both capabilities.
+// The `AmbientCapabilities` check scans the published tarball and exempts only this entry point,
+// so the library bundles under dist/ stay free of both capabilities.
 
 import { execFile } from "node:child_process"
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import path from "node:path"
-import { DIST_OUTPUT, detectPresets } from "./preset-catalog.mjs"
+import { AGENT_COMMAND, DIST_OUTPUT, detectPresets } from "./preset-catalog.mjs"
 import { buildConfigTemplate, CONTRACT_RUNNER_TEMPLATE } from "./templates.mjs"
 import { patchContractScript } from "./package-json-patch.mjs"
 
 const USAGE = `Usage: repo-contract init
 
 Scaffolds repo-contract.config.mts and scripts/contract.mjs from your package.json's declared
-dependencies, and wires "scripts.contract" into package.json. That's the only thing this command
-does -- checks always run afterwards via \`npm run contract\`, never through this CLI.`
+dependencies, and wires "scripts.contract" into package.json. That is all this command does.
+Checks always run afterwards via \`npm run contract\`, never through this CLI.`
 
 const CONTRACT_SCRIPT_VALUE = "tsx scripts/contract.mjs"
 
 /**
  * Reads and validates the consumer's package.json at `cwd`. Throws with a message suitable for
- * printing directly (no stack trace needed) when it's missing, unparsable, or not an object --
+ * printing directly (no stack trace needed) when it's missing, unparsable, or not an object:
  * every such failure is a preflight failure: nothing is written.
  * @param cwd - Directory `init` was invoked from.
  * @returns The parsed package.json content and its raw source text.
@@ -37,7 +40,7 @@ const CONTRACT_SCRIPT_VALUE = "tsx scripts/contract.mjs"
 function readPackageJson(cwd) {
   const packageJsonPath = path.join(cwd, "package.json")
   if (!existsSync(packageJsonPath)) {
-    throw new Error(`no package.json found at ${packageJsonPath} -- run \`npm init\` first.`)
+    throw new Error(`no package.json found at ${packageJsonPath}. Run \`npm init\` first.`)
   }
   const text = readFileSync(packageJsonPath, "utf8")
   let parsed
@@ -79,9 +82,9 @@ function preflight(cwd) {
 
 /**
  * Writes `content` to `filePath` if it doesn't already exist. Uses exclusive-create (`"wx"`)
- * rather than a separate existsSync check followed by a write -- the two-step form has a race
+ * rather than a separate existsSync check followed by a write: the two-step form has a race
  * between the check and the write; exclusive-create makes "don't overwrite an existing file"
- * atomic instead. Existing files are never touched -- an existing-state conflict is handled by
+ * atomic instead. Existing files are never touched: an existing-state conflict is handled by
  * skipping, never by overwriting.
  * @param filePath - Absolute path to write.
  * @param content - File content.
@@ -98,7 +101,7 @@ function writeIfAbsent(filePath, content) {
 }
 
 /**
- * Whether `name` is declared in `packageJson.devDependencies` -- the same devDependencies-only
+ * Whether `name` is declared in `packageJson.devDependencies`: the same devDependencies-only
  * convention `detectPresets` uses (see preset-catalog.mjs).
  * @param packageJson - Parsed package.json content.
  * @param name - Package name to look up.
@@ -116,12 +119,12 @@ function runInit(cwd) {
   const tsxInstalled = isDevDependencyDeclared(parsed, "tsx")
 
   // Always compute (and, for a malformed "scripts" field, validate) the package.json patch
-  // before writing anything else -- a failure here must mean zero writes, never a config/runner
-  // file left behind with no matching package.json change. Computing it doesn't write anything
-  // by itself, so this happens regardless of tsx: an existing "scripts.contract" -- matching or
-  // conflicting -- must still be detected and reported correctly even when tsx is missing. Only
-  // *writing a brand-new value* is gated on tsx being installed: a generated "scripts.contract"
-  // that shells out to a missing tsx would fail on its first real run.
+  // before writing anything else. A failure here must mean zero writes, never a config/runner
+  // file left behind with no matching package.json change. Computing it writes nothing, so it
+  // happens regardless of tsx. An existing "scripts.contract" (matching or conflicting) must
+  // still be detected and reported correctly when tsx is missing. Only *writing a brand-new
+  // value* is gated on tsx being installed. A generated "scripts.contract" that shells out to a
+  // missing tsx would fail on its first real run.
   const patch = patchContractScript(text, CONTRACT_SCRIPT_VALUE)
   const writeNewScript = patch.status === "created" && tsxInstalled
 
@@ -163,10 +166,14 @@ function report({ configResult, runnerResult, scriptStatus, detected, skipped })
     lines.push('"scripts.contract" already set to this value.', "")
   else if (scriptStatus === "tsx-missing")
     lines.push(
-      'Skipped "scripts.contract" -- install tsx as a devDependency, then run `repo-contract init` again.',
+      'Skipped "scripts.contract": install tsx as a devDependency, then run `repo-contract init` again.',
       "",
     )
-  else lines.push('"scripts.contract" already exists with a different value -- left untouched.', "")
+  else
+    lines.push(
+      '"scripts.contract" already exists with a different value, so it was left untouched.',
+      "",
+    )
 
   lines.push("Detected:")
   for (const preset of detected) lines.push(`  ✓ ${preset}`)
@@ -178,7 +185,9 @@ function report({ configResult, runnerResult, scriptStatus, detected, skipped })
       lines.push(
         dependency === DIST_OUTPUT
           ? `  - ${preset} (package.json names no dist/ build output)`
-          : `  - ${preset} (${dependency} not installed)`,
+          : dependency === AGENT_COMMAND
+            ? `  - ${preset} (runs the AI agent you name; see GUIDE.md#ai-review-checks)`
+            : `  - ${preset} (${dependency} not installed)`,
       )
     lines.push("")
   }
@@ -197,9 +206,9 @@ function report({ configResult, runnerResult, scriptStatus, detected, skipped })
   console.log(lines.join("\n"))
 }
 
-// --- What `affected` takes from the machine: git, files and the project's own TypeScript. ---
+// --- What `affected` takes from the machine: git, files and the project's own TypeScript.
 // Kept in this entry point, not a module beside it, because AmbientCapabilities exempts only the
-// entry points named in package.json -- so this file is the one place in the package that spawns a
+// entry points named in package.json. So this file is the one place in the package that spawns a
 // process or reads the environment (specs/decisions/0011-*.md, 2026-11-01 amendment).
 /** Output beyond this is an operational failure, never silently treated as "no changes". */
 const MAX_BUFFER = 512 * 1024 * 1024
@@ -244,7 +253,7 @@ function createCapabilities(dir) {
               error.code === "ENOENT" ||
               error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER"
             ) {
-              // git missing, or output too large: not "git said no" -- the command cannot run.
+              // git missing, or output too large: not "git said no"; the command cannot run.
               reject(error)
             } else {
               resolve(undefined)

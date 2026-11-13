@@ -1,12 +1,12 @@
 /**
- * `exampleAdoptionPolicy` -- a pattern you can build on top of repo-contract, NOT a repo-contract
+ * `exampleAdoptionPolicy`: a pattern you can build on top of repo-contract, NOT a repo-contract
  * primitive.
  *
  * repo-contract has no concept of a "rollout", a "schedule", or an "effective date". It calls your
  * policy and records the `"pass" | "warn" | "fail"` it returns. Everything below is ordinary policy
  * code: it looks at today's date and the requirement's own state, and decides which of those three
  * outcomes to return. An organization that wants to introduce a new shared requirement across many
- * repositories at once -- without breaking every consumer's build on the day it lands -- can wrap
+ * repositories at once (without breaking every consumer's build on the day it lands) can wrap
  * the requirement's real check in a function like this so that, before a chosen date, a
  * not-yet-satisfied repository gets an actionable `"warn"` with a countdown instead of a `"fail"`.
  *
@@ -31,7 +31,7 @@ export interface RequirementState {
   /** Whether this repository currently satisfies the requirement. */
   readonly satisfied: boolean
   /**
-   * A specific, actionable sentence describing the current state -- the file that is missing, the
+   * A specific, actionable sentence describing the current state: the file that is missing, the
    * measured value versus the target, the exact command to run. Appended to every rationale.
    */
   readonly detail: string
@@ -85,7 +85,7 @@ export function exampleAdoptionPolicy(
       outcome: "warn",
       rationale:
         `${schedule.requirement}: not satisfied. Becomes blocking on ${schedule.enforcedFrom} ` +
-        `(${String(remaining)} day(s) from now) -- fix it before then to keep the build green. ` +
+        `(${String(remaining)} day(s) from now). Fix it before then to keep the build green. ` +
         `${state.detail}`,
     }
   }

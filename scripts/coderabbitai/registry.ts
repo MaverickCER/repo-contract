@@ -12,9 +12,9 @@ export type { CoderabbitExceptionRecord } from "./evidence-types.js"
 const SEVERITY_VALUES = new Set(["critical", "major", "minor", "unknown"])
 
 /**
- * `"validated-false-positive"` is excluded from a CodeRabbit exception's allowed set -- unlike a
- * deterministic scanner, there is no more-authoritative tool to mechanically re-run against an
- * AI-generated finding to confirm it "doesn't actually apply". A CodeRabbit finding judged
+ * `"validated-false-positive"` is excluded from a CodeRabbit exception's allowed set. Unlike with
+ * a deterministic scanner, there is no more-authoritative tool to mechanically re-run. Nothing can
+ * confirm that an AI-generated finding "doesn't actually apply". A CodeRabbit finding judged
  * incorrect is still only ever dismissed via `"accepted-risk"` / `"tooling-limitation"` / etc.,
  * backed by `method: "independent-human-review"`.
  */

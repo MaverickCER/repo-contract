@@ -3,7 +3,7 @@ import { runWithConcurrencyGraph } from "../../../src/execution/dependency-sched
 
 const noDeps = (): readonly number[] => []
 
-describe("runWithConcurrencyGraph -- zero-edges equivalence with runWithConcurrency", () => {
+describe("runWithConcurrencyGraph: zero-edges equivalence with runWithConcurrency", () => {
   it("returns an empty array for zero items", async () => {
     const results = await runWithConcurrencyGraph<number, number>([], 4, noDeps, (item) =>
       Promise.resolve(item * 2),
@@ -79,7 +79,7 @@ describe("runWithConcurrencyGraph -- zero-edges equivalence with runWithConcurre
     expect(order).toEqual([1, 2, 3])
   })
 
-  it("still processes every item when concurrency is 0 or negative -- clamps up to at least 1 worker", async () => {
+  it("still processes every item when concurrency is 0 or negative: clamps up to at least 1 worker", async () => {
     const results = await runWithConcurrencyGraph([1, 2, 3], 0, noDeps, (item) =>
       Promise.resolve(item * 2),
     )
@@ -98,11 +98,11 @@ describe("runWithConcurrencyGraph -- zero-edges equivalence with runWithConcurre
   it("does not launch a newly-unblocked dependent after the whole operation has already failed", async () => {
     // 0 = A, fails fast; 1 = B, no dependencies, settles slowly; 2 = C,
     // depends on B. A and B both start immediately (concurrency 2). A's
-    // rejection fails the whole call well before B settles -- when B does
-    // settle, it still unblocks C internally (remaining/ready bookkeeping
-    // is unconditional), but C's worker must never actually be invoked,
-    // since that would be real wasted work (a real spawned process, in
-    // repo-contract's actual usage) after the run has already failed.
+    // rejection fails the whole call well before B settles. When B does
+    // settle, it still unblocks C internally, because the remaining/ready
+    // bookkeeping is unconditional. But C's worker must never be invoked.
+    // In repo-contract that would be a spawned process: wasted work after
+    // the run has already failed.
     const calls: number[] = []
     const promise = runWithConcurrencyGraph(
       [0, 1, 2],
@@ -123,17 +123,17 @@ describe("runWithConcurrencyGraph -- zero-edges equivalence with runWithConcurre
     )
 
     await expect(promise).rejects.toThrow("boom")
-    // Give B's delayed settlement -- and any wrongly-triggered follow-up
-    // launch of C -- a chance to actually happen before asserting.
+    // Give B's delayed settlement (and any wrongly-triggered follow-up
+    // launch of C) a chance to actually happen before asserting.
     await new Promise((resolve) => setTimeout(resolve, 60))
     expect(calls).toEqual([0, 1])
   })
 })
 
-describe("runWithConcurrencyGraph -- dependency ordering", () => {
-  it("does not start a dependent until its dependency has settled -- linear chain", async () => {
+describe("runWithConcurrencyGraph: dependency ordering", () => {
+  it("does not start a dependent until its dependency has settled: linear chain", async () => {
     const order: number[] = []
-    // item 1 depends on item 0
+    // Item 1 depends on item 0.
     await runWithConcurrencyGraph(
       [0, 1],
       4,
@@ -161,7 +161,7 @@ describe("runWithConcurrencyGraph -- dependency ordering", () => {
     expect(order).toEqual([0, 1, 2, 3, 4])
   })
 
-  it("handles a diamond -- D starts only after both B and C settle, whichever finishes last", async () => {
+  it("handles a diamond: D starts only after both B and C settle, whichever finishes last", async () => {
     // 0 = A, 1 = B, 2 = C, 3 = D. B and C both depend on A; D depends on both B and C.
     const settleOrder: string[] = []
     const names = ["A", "B", "C", "D"]
@@ -172,9 +172,9 @@ describe("runWithConcurrencyGraph -- dependency ordering", () => {
       4,
       (_item, index) => deps[index] ?? [],
       async (item) => {
-        // B (fast) and C (slow) both become ready at the same time once A
-        // settles -- C is deliberately slower so D's dependency on *both*
-        // is actually exercised, not just on whichever happens to be first.
+        // B (fast) and C (slow) both become ready once A settles. C is
+        // deliberately slower, so D's dependency on *both* is exercised,
+        // not just on whichever settles first.
         if (item === 2) await new Promise((resolve) => setTimeout(resolve, 20))
         settleOrder.push(names[item] ?? "?")
       },
@@ -186,7 +186,7 @@ describe("runWithConcurrencyGraph -- dependency ordering", () => {
   })
 
   it("makes every dependent of a single node ready together, once, bounded by concurrency", async () => {
-    // 0 = root; 1,2,3,4 all depend on 0.
+    // Item 0 is the root; items 1, 2, 3 and 4 all depend on it.
     let maxInFlight = 0
     let inFlight = 0
     const settled: number[] = []
@@ -220,8 +220,8 @@ describe("runWithConcurrencyGraph -- dependency ordering", () => {
   })
 
   it("deduplicates repeated indexes within one item's own dependency list", async () => {
-    // item 1 lists dependency 0 twice -- must not double-decrement and
-    // must still resolve correctly (not stall, not double-count).
+    // Item 1 lists dependency 0 twice. It must not double-decrement, and
+    // must still resolve correctly (no stall, no double count).
     const results = await runWithConcurrencyGraph(
       [0, 1],
       4,
@@ -246,12 +246,12 @@ describe("runWithConcurrencyGraph -- dependency ordering", () => {
   })
 
   it("rejects rather than hanging forever if the whole graph is a cycle, stalled before starting", async () => {
-    // item 0 depends on item 1 and vice versa -- a cycle that should never
-    // reach this primitive in practice (validate-config.ts's cycle
-    // detector catches it first), constructed here deliberately to test
-    // the stall guard in isolation. Nothing is ever ready, so this exercises
-    // the "stalled before starting" guard specifically, not the
-    // post-settlement one below.
+    // Item 0 depends on item 1 and vice versa. This cycle should never
+    // reach this primitive in practice, because validate-config.ts's cycle
+    // detector catches it first. It is built here deliberately to test the
+    // stall guard in isolation. Nothing is ever ready, so this exercises
+    // the "stalled before starting" guard, not the post-settlement one
+    // below.
     await expect(
       runWithConcurrencyGraph(
         [0, 1],
@@ -260,16 +260,16 @@ describe("runWithConcurrencyGraph -- dependency ordering", () => {
         (item) => Promise.resolve(item),
       ),
     ).rejects.toThrow(
-      "runWithConcurrencyGraph: stalled before starting -- the dependency graph passed in is not acyclic.",
+      "runWithConcurrencyGraph: stalled before starting. The dependency graph passed in is not acyclic.",
     )
   })
 
   it("rejects rather than hanging forever if a cycle stalls the graph only after some items have already settled", async () => {
-    // item 0 has no dependencies and settles normally; items 1 and 2
-    // mutually depend on each other and are never reachable -- exercises
-    // the post-settlement stall guard specifically (some progress is made
-    // before the stall is detected), distinct from the "nothing is ever
-    // ready" case above.
+    // Item 0 has no dependencies and settles normally. Items 1 and 2 depend
+    // on each other and are never reachable. This exercises the
+    // post-settlement stall guard: some progress is made before the stall
+    // is detected. That distinguishes it from the "nothing is ever ready"
+    // case above.
     await expect(
       runWithConcurrencyGraph(
         [0, 1, 2],
@@ -282,7 +282,7 @@ describe("runWithConcurrencyGraph -- dependency ordering", () => {
         (item) => Promise.resolve(item),
       ),
     ).rejects.toThrow(
-      "runWithConcurrencyGraph: stalled with unsettled items remaining -- the dependency graph passed in is not acyclic.",
+      "runWithConcurrencyGraph: stalled with unsettled items remaining. The dependency graph passed in is not acyclic.",
     )
   })
 
@@ -292,10 +292,10 @@ describe("runWithConcurrencyGraph -- dependency ordering", () => {
     // by this primitive itself (config-level validation is
     // run-checks.ts's/validate-config.ts's job, not this general-purpose
     // scheduler's). An index outside `0..items.length-1` can never be
-    // satisfied -- nothing pushes its dependent onto a `dependents[]` bucket
-    // that doesn't exist -- so it is dropped at the single snapshot point
-    // rather than left to inflate `remaining` forever and stall the whole
-    // run with a bogus "not acyclic" rejection on an otherwise acyclic graph.
+    // satisfied, because no `dependents[]` bucket exists for it. So it is
+    // dropped at the single snapshot point. Otherwise it would inflate
+    // `remaining` forever and stall the run with a bogus "not acyclic"
+    // rejection on an acyclic graph.
     await expect(
       runWithConcurrencyGraph(
         [0, 1],

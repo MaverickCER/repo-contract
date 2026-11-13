@@ -1,19 +1,19 @@
 import type { ExceptionRecordCore } from "../../src/helpers/index.js"
 
 /**
- * The small, closed vocabulary of *why* an exception is legitimate -- deliberately short, and
- * owned here in `scripts/shared/` (unpublished), never in `src/helpers/**` (published): the
- * generic core has no opinion about a consumer's own classification of "why", only about which
- * named fields must be non-empty (see `src/helpers/exception-policy.ts`'s `ExceptionPolicy`). A
- * ~150-term cross-organization taxonomy (privacy, SRE, compliance, cost, etc.) was considered and
- * rejected for this repository's actual scale -- see specs/decisions/0013-reusable-exception-policy-helper.md
- * for the reasoning. Each retrofitted check may narrow which members apply to it (e.g. a
- * dependency-advisory check excluding `"validated-false-positive"`, since an advisory either
- * applies to the installed version or it doesn't -- there is no "false positive" reading of an
- * advisory the way there is for a static-analysis finding).
+ * The small, closed vocabulary of *why* an exception is legitimate. It is deliberately short.
+ * It is owned here in `scripts/shared/` (unpublished), never in `src/helpers/**` (published).
+ * The generic core has no opinion about a consumer's own classification of "why". It only cares
+ * which named fields must be non-empty (see `src/helpers/exception-policy.ts`'s
+ * `ExceptionPolicy`). A ~150-term cross-organization taxonomy (privacy, SRE, compliance, cost,
+ * etc.) was considered and rejected for this repository's actual scale. See
+ * specs/decisions/0013-reusable-exception-policy-helper.md for the reasoning. Each retrofitted
+ * check may narrow which members apply to it. For example, a dependency-advisory check may
+ * exclude `"validated-false-positive"`. An advisory either applies to the installed version or it
+ * doesn't, so it has no "false positive" reading the way a static-analysis finding does.
  *
  * - `"validated-false-positive"`: the finding does not actually apply here. Only satisfiable
- *   alongside `method: "mechanical-reverification"` -- re-running the same tool that raised the
+ *   alongside `method: "mechanical-reverification"`: re-running the same tool that raised the
  *   finding, scoped narrowly, and confirming it no longer fires. Never satisfiable by opinion
  *   alone.
  * - `"accepted-risk"`: the finding is real, and is knowingly tolerated.
@@ -36,18 +36,18 @@ export const EXCEPTION_TYPES = [
 export type ExceptionType = (typeof EXCEPTION_TYPES)[number]
 
 /**
- * How an exception's claim was substantiated -- a required root field on every security-family
+ * How an exception's claim was substantiated: a required root field on every security-family
  * exception record (security-network, security-socket, coderabbitai).
  *
- * - `"mechanical-reverification"`: real, tool-backed evidence -- the same tool that raised the
+ * - `"mechanical-reverification"`: real, tool-backed evidence; the same tool that raised the
  *   finding, re-run narrowly, confirms it no longer applies (or applies differently than claimed).
  *   The only method that can back `exceptionType: "validated-false-positive"`.
- * - `"independent-human-review"`: a human's own accountable judgment call -- covers everything
- *   mechanical re-verification cannot reach (an accepted-risk decision, an AI-authored finding
- *   with no more-authoritative oracle to re-run against). repo-contract enforces that this field
- *   is a recognized value and non-empty; it does not verify that a human actually reviewed
- *   anything -- that is a GitHub branch-protection / CODEOWNERS concern (ADR 0011's
- *   "don't own ambient platform capabilities you don't need" posture), and is why the
+ * - `"independent-human-review"`: a human's own accountable judgment call. It covers everything
+ *   mechanical re-verification cannot reach: an accepted-risk decision, or an AI-authored finding
+ *   with no more-authoritative oracle to re-run against. repo-contract enforces that this field
+ *   is a recognized value and non-empty. It does not verify that a human actually reviewed
+ *   anything. That is a GitHub branch-protection / CODEOWNERS concern, per ADR 0011's
+ *   "don't own ambient platform capabilities you don't need" posture. It is also why the
  *   deferred `exception-governance` PR-approval gate exists.
  */
 export const EXCEPTION_METHODS = ["mechanical-reverification", "independent-human-review"] as const
@@ -56,16 +56,16 @@ export type ExceptionMethod = (typeof EXCEPTION_METHODS)[number]
 
 /**
  * The four root fields every security-family exception record carries on top of the shared core
- * (`id`/`version`/`justification`). Each is strictly defined so a reviewer knows exactly what
- * question it answers, and a stub scaffolded for a new finding starts every one of them empty
- * (`""` -- valid registry data, only policy-insufficient).
+ * (`id`/`version`/`justification`). Each is strictly defined, so a reviewer knows exactly what
+ * question it answers. A stub scaffolded for a new finding starts every one of them empty
+ * (`""`: valid registry data, only policy-insufficient).
  *
- * - `alternatives` -- what *other* approaches were considered instead of waiving this finding, and
+ * - `alternatives`: what *other* approaches were considered instead of waiving this finding, and
  *   why each was rejected. Not "there is no alternative"; the specific options weighed.
- * - `remediation` -- what has actually been attempted, or is concretely planned and tracked, to
+ * - `remediation`: what has actually been attempted, or is concretely planned and tracked, to
  *   remove the need for this waiver, and its current status.
- * - `method` -- an `EXCEPTION_METHODS` member: how the waiver's own claim was substantiated.
- * - `exceptionType` -- an `EXCEPTION_TYPES` member: what *kind* of waiver this is.
+ * - `method`: an `EXCEPTION_METHODS` member saying how the waiver's own claim was substantiated.
+ * - `exceptionType`: an `EXCEPTION_TYPES` member naming what *kind* of waiver this is.
  */
 export interface SecurityExceptionFields {
   readonly alternatives: string
@@ -74,7 +74,7 @@ export interface SecurityExceptionFields {
   readonly exceptionType: "" | ExceptionType
 }
 
-/** The four `SecurityExceptionFields` key names, in canonical order -- every security-registry schema lists these among its `metadataKeys`. */
+/** The four `SecurityExceptionFields` key names, in canonical order: every security-registry schema lists these among its `metadataKeys`. */
 export const SECURITY_EXCEPTION_FIELD_KEYS = [
   "alternatives",
   "remediation",
@@ -83,11 +83,11 @@ export const SECURITY_EXCEPTION_FIELD_KEYS = [
 ] as const
 
 /**
- * Validates the four `SecurityExceptionFields` on a candidate record: each a string; `method` and
- * `exceptionType` each either `""` or a recognized member (of `EXCEPTION_METHODS` /
- * `allowedExceptionTypes`); and the cross-field refinement that a `"validated-false-positive"`
- * claim, once its `method` is filled in at all, must be `"mechanical-reverification"` (a
- * false-positive claim rests on a re-run, never opinion). An all-empty stub passes -- completeness
+ * Validates the four `SecurityExceptionFields` on a candidate record. Each must be a string.
+ * `method` and `exceptionType` must each be `""` or a recognized member (of `EXCEPTION_METHODS` /
+ * `allowedExceptionTypes`). A cross-field refinement also applies: once a
+ * `"validated-false-positive"` claim has any `method`, it must be `"mechanical-reverification"`.
+ * A false-positive claim rests on a re-run, never opinion. An all-empty stub passes: completeness
  * is the policy's concern, not the validator's.
  * @param raw - The untrusted parsed record object.
  * @param index - The record's index in the registry array, for error messages.
@@ -161,10 +161,11 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * The fields a `version: 2` record carries on top of `id`/`version`/`justification` and the registry's own:
- * which rule is broken, what was tried first, the constraint that forced the exception, why the outcome is
- * preferable, what risk remains and when to reopen it. `expires` must be present: a `YYYY-MM-DD` date, or `""` for none.
- * The same format the standard (`internal-package-contract`) requires of every registry.
+ * The fields a `version: 2` record carries on top of `id`/`version`/`justification` and the
+ * registry's own. They record which rule is broken and what was tried first. They also record the
+ * constraint that forced the exception, why the outcome is preferable, what risk remains and when
+ * to reopen it. `expires` must be present: a `YYYY-MM-DD` date, or `""` for none. This is the same
+ * format the standard (`internal-package-contract`) requires of every registry.
  */
 const EXCEPTION_V2_FIELD_KEYS = [
   "ruleBroken",
@@ -217,7 +218,7 @@ function validateV2Fields(
 }
 
 /**
- * A per-registry validator plugged into `validateExceptionRegistry` -- it owns everything about
+ * A per-registry validator plugged into `validateExceptionRegistry`: it owns everything about
  * one registry's own record shape beyond the three-field core (`id`/`version`/`justification`)
  * every `.repo-contract/exceptions/*.json` record shares. `validateExceptionRegistry` handles the
  * core, the id namespace, unknown-field rejection, and id uniqueness; this fills in the rest.
@@ -225,7 +226,7 @@ function validateV2Fields(
 export interface ExceptionRegistrySchema<TRecord extends { readonly id: string }> {
   /** The mandatory `id` prefix for this registry, e.g. `"suppression:"`. A record whose id does not start with it is a namespace (integrity) failure, never a "stale" record. */
   readonly namespace: string
-  /** Every own key a record of this registry may carry *beyond* the core `id`/`version`/`justification`. Any other own key fails validation -- canonical serialization can then never silently drop a hand-added field. */
+  /** Every own key a record of this registry may carry *beyond* the core `id`/`version`/`justification`. Any other own key fails validation: canonical serialization can then never silently drop a hand-added field. */
   readonly metadataKeys: readonly string[]
   /**
    * Validates `raw`'s registry-specific fields on top of the already-validated `core`, and rebuilds
@@ -312,14 +313,14 @@ function validateOneExceptionRecord<TRecord extends { readonly id: string }>(
 
 /**
  * Validates an untrusted parsed value as one exception registry's `exceptions` array against
- * `schema` -- the one generic validator every `.repo-contract/exceptions/*.json` registry shares.
- * Owns the three-field core (`id` non-empty and correctly namespaced, `version` the number `2` or the legacy `1`,
- * `justification` a string -- an *empty* justification is valid registry data, only
- * policy-insufficient), unknown-own-key rejection, and id uniqueness across the whole array;
- * `schema.validateRecord` owns everything registry-specific. Every problem found is reported
- * (`ok: false` with the full list, never just the first); a single bad record fails the whole
- * registry rather than being silently dropped.
- * @param value - The parsed (otherwise untrusted) value -- expected to be an array of record objects.
+ * `schema`: the one generic validator every `.repo-contract/exceptions/*.json` registry shares.
+ * It owns the three-field core: `id` non-empty and correctly namespaced, `version` the number `2`
+ * or the legacy `1`, and `justification` a string. An *empty* justification is valid registry
+ * data, only policy-insufficient. It also owns unknown-own-key rejection and id uniqueness across
+ * the whole array. `schema.validateRecord` owns everything registry-specific. Every problem found
+ * is reported (`ok: false` with the full list, never only the first). A single bad record fails
+ * the whole registry rather than being silently dropped.
+ * @param value - The parsed (otherwise untrusted) value: expected to be an array of record objects.
  * @param schema - The per-registry schema (namespace, permitted metadata keys, field validator).
  * @returns Every valid, freshly-rebuilt record, or every validation error found.
  */
@@ -362,9 +363,9 @@ export function validateExceptionRegistry<TRecord extends { readonly id: string 
 /**
  * Widens an array of typed exception records to the flat `Record<string, unknown> & { id }` shape
  * `serializeExceptionRegistry`/`writeExceptionRegistry` (`repo-contract/helpers`) accept. A typed
- * record is structurally exactly that (flat, string `id`); TypeScript will not infer the implicit
- * index signature through an `interface`, so this one narrow assertion lives here rather than being
- * repeated at each check's write call.
+ * record is structurally exactly that (flat, string `id`). TypeScript will not infer the implicit
+ * index signature through an `interface`. This one narrow assertion therefore lives here rather
+ * than being repeated at each check's write call.
  * @param records - The typed records to widen. Each must carry a string `id`.
  * @returns The same array, typed as flat string-keyed records.
  */

@@ -1,6 +1,6 @@
 // Static, permanent guardrail that each Vitest verification category's
-// execution boundary is actually mutually exclusive -- never executes the
-// test suite or spawns Vitest to discover this; it only walks the
+// execution boundary is actually mutually exclusive. It never executes the
+// test suite or spawns Vitest to discover this. It only walks the
 // filesystem and reads each category's own vitest.<name>.config.ts as text.
 //
 // Two checks:
@@ -10,10 +10,10 @@
 //      category's own directory.
 //
 // Invoked by scripts/check-architecture.mjs as a second, clearly separate
-// section of the `architecture` check's evidence -- not because test-category
-// boundaries are architecture in the production-dependency-graph sense, but
-// because both are cheap, static, no-execution checks about the shape of the
-// repository.
+// section of the `architecture` check's evidence. Test-category boundaries
+// are not architecture in the production-dependency-graph sense. They live
+// there because both are cheap, static, no-execution checks about the shape
+// of the repository.
 
 import { readFileSync, readdirSync } from "node:fs"
 import path from "node:path"

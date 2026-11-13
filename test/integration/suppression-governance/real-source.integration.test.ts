@@ -19,18 +19,18 @@ import type {
 
 /**
  * Proves the committed disable-comments.json is currently reconciled with this repository's own
- * real source -- previously only ever verified as a side effect of actually running the full
+ * real source: previously only ever verified as a side effect of actually running the full
  * `suppression-governance` check via `npm run contract`, never as part of `npm test`.
  *
  * Deliberately calls the execution-layer functions directly (listSourceFiles -> discoverSuppressions
  * -> reconcileExceptions) rather than `runSuppressionGovernanceCheck`, which has a real `writeFile`
- * side effect on disagreement -- this composition has no write path at all.
+ * side effect on disagreement: this composition has no write path at all.
  */
 
 const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url))
 
 // A real, on-disk Stryker mutation-testing sandbox is a temporary, deliberately-mutated copy of
-// this repository -- Stryker instruments every `mutate`-scope file, shifting line numbers. This
+// this repository: Stryker instruments every `mutate`-scope file, shifting line numbers. This
 // test's premise ("the committed registry has zero drift against the current source tree") is
 // about the real, committed repository, not a sandbox copy. Detected structurally.
 const runningInsideMutationSandbox = REPO_ROOT.split(path.sep).includes(".stryker-tmp")

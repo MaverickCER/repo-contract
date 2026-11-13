@@ -26,7 +26,7 @@ describe("computeAffected: caller mistakes widen instead of guessing", () => {
       detail: "changed module was not supplied to the analysis",
     })
     expect(explainAffected(result)).toEqual([
-      "full run: unplaced-file (src/a.ts) -- changed module was not supplied to the analysis",
+      "full run: unplaced-file (src/a.ts: changed module was not supplied to the analysis)",
     ])
   })
 

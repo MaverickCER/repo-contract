@@ -132,7 +132,7 @@ export function cacheKey(input: {
 
 /**
  * Decides the cache mode of a run. A full run is always cold (the cache is neither read nor
- * written), so a release can never be satisfied by an earlier result; otherwise the command line
+ * written), so a release can never be satisfied by an earlier result. Otherwise the command line
  * wins over `REPO_CONTRACT_CACHE` (`off`, `ro` or `rw`), which wins over the default of read-write.
  * @param input - The run's scope, the environment as data, and any mode given on the command line.
  * @param input.scope - The run's scope.

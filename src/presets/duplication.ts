@@ -35,7 +35,7 @@ interface JscpdReport {
 
 /** Options accepted by {@link duplication}. */
 interface DuplicationOptions {
-  /** Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `"."` -- narrow it (e.g. `"src"`) to scope the scan to your own source tree. */
+  /** Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope the scan to your own source tree. */
   readonly path?: string
 }
 
@@ -43,15 +43,15 @@ interface DuplicationOptions {
 // relative and resolve against the *host* process's cwd, not the check's own
 // `cwd` option: jscpd writes here and this policy's `readFile` reads from here,
 // so a check configured with a different `cwd` would look in the wrong place.
-// This preset does not expose an output-path option -- a consumer needing one
+// This preset does not expose an output-path option: a consumer needing one
 // runs jscpd via a custom `run`/`policy` instead.
 const REPORT_PATH = "reports/jscpd/jscpd-report.json"
 
-// jscpd's JSON reporter writes its report to disk -- it never prints JSON to
-// stdout, which instead carries decorative progress/summary text -- so the
+// jscpd's JSON reporter writes its report to disk. It never prints JSON to
+// stdout, which instead carries decorative progress/summary text. So the
 // report is read from disk directly. jscpd's own `--threshold`/`--exit-code`
-// flags are deliberately not used: this preset reads the raw clone count
-// from evidence and owns the pass/fail decision itself, exactly as the
+// flags are deliberately not used. This preset reads the raw clone count
+// from evidence and owns the pass/fail decision itself, as the
 // deadCode/securityDeps presets already do for their own tools.
 /**
  * Duplicated-code detection via jscpd.
@@ -72,11 +72,11 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
       if (terminated) return terminated
 
       const parsed = await readJsonReport<JscpdReport>(
-        // Provably equivalent, not a coverage gap: `JSON.parse` coerces
-        // whatever `readFile` returns via that value's own `toString()`
-        // (confirmed empirically for a Buffer, which is what a mutated/
-        // unrecognized encoding argument produces here) -- and `Buffer`'s
-        // default `toString()` encoding is itself utf8, so parsing succeeds
+        // Provably equivalent, not a coverage gap. `JSON.parse` coerces
+        // whatever `readFile` returns via that value's own `toString()`.
+        // That is confirmed empirically for a Buffer, which is what a mutated/
+        // unrecognized encoding argument produces here. `Buffer`'s default
+        // `toString()` encoding is itself utf8, so parsing succeeds
         // identically either way. No test can observe a difference through
         // this policy's output.
         () => readFile(REPORT_PATH, "utf8"),
@@ -84,7 +84,7 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
         "jscpd produced invalid JSON evidence.",
       )
       if (!parsed.ok) return parsed.result
-      // `readJsonReport<T>` narrows only at the type level -- the value is `unknown` at
+      // `readJsonReport<T>` narrows only at the type level: the value is `unknown` at
       // runtime. Guard it is a real object before trusting the cast, so `.statistics` /
       // `.duplicates` never throw a TypeError out of the policy (matching markdownlint.ts).
       const value: unknown = parsed.value
@@ -102,14 +102,14 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
         typeof total.percentage !== "number" ||
         !Number.isFinite(total.percentage)
       ) {
-        // `total.percentage` feeds `.toFixed(2)` below -- a missing or non-finite
+        // `total.percentage` feeds `.toFixed(2)` below: a missing or non-finite
         // value would throw or render "NaN" instead of failing cleanly.
         return { outcome: "fail", rationale: "jscpd produced invalid JSON report data." }
       }
 
-      // Re-annotated rather than used directly: `Array.isArray` narrows its
+      // Re-annotated rather than used directly. `Array.isArray` narrows its
       // argument to `any[]` regardless of the checked value's declared type (a
-      // long-standing TypeScript limitation), so `report.duplicates` would
+      // long-standing TypeScript limitation). So `report.duplicates` would
       // otherwise silently lose its `JscpdDuplicate` element type below.
       const duplicates: readonly JscpdDuplicate[] = report.duplicates
 
@@ -122,7 +122,7 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
 
       const details = duplicates.map(
         (duplicate) =>
-          `${duplicate.firstFile.name}:${String(duplicate.firstFile.start)} duplicates ${duplicate.secondFile.name}:${String(duplicate.secondFile.start)} -- ${String(duplicate.lines)} lines / ${String(duplicate.tokens)} tokens`,
+          `${duplicate.firstFile.name}:${String(duplicate.firstFile.start)} duplicates ${duplicate.secondFile.name}:${String(duplicate.secondFile.start)} (${String(duplicate.lines)} lines / ${String(duplicate.tokens)} tokens)`,
       )
 
       return {

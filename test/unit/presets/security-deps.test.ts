@@ -83,7 +83,7 @@ describe("securityDeps preset", () => {
     })
   })
 
-  it("fails (not passes) when a severity count is missing from the summary -- NaN must not read as 0", async () => {
+  it("fails (not passes) when a severity count is missing from the summary: NaN must not read as 0", async () => {
     const result = await securityDeps.policy(
       fakeContext(
         fakeCheckEvidence({
@@ -91,7 +91,7 @@ describe("securityDeps preset", () => {
             format: "json",
             success: true,
             // `high` omitted: `undefined + n === NaN`, and both `NaN > 0`
-            // and `undefined > 0` are false -- the old code returned "pass".
+            // and `undefined > 0` are false; the old code returned "pass".
             value: { metadata: { vulnerabilities: { info: 0, low: 0, moderate: 0, critical: 0 } } },
           },
         }),
@@ -121,7 +121,7 @@ describe("securityDeps preset", () => {
     expect(result.rationale).toContain("3 info-severity")
   })
 
-  it("sums all four blocking severities correctly -- the exact count in the rationale catches a miscalculated sum", async () => {
+  it("sums all four blocking severities correctly: the exact count in the rationale catches a miscalculated sum", async () => {
     // Distinct, non-overlapping magnitudes: any single severity's count
     // being dropped, double-counted, or subtracted instead of added would
     // produce a total other than 15.

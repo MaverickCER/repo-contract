@@ -15,30 +15,30 @@ const CONFIG_FILE_MARKER = "repo-contract license preset: using .licensee.json"
 const OSI_MARKER = "repo-contract license preset: no .licensee.json, using --osi"
 /** The launcher's only stderr line when `licensee` cannot be resolved from the working directory. */
 const MISSING_MARKER = "repo-contract license preset: licensee is not installed"
-/** The launcher's exit code alongside `MISSING_MARKER` -- the shell's own "command not found". */
+/** The launcher's exit code alongside `MISSING_MARKER`: the shell's own "command not found". */
 const MISSING_EXIT_CODE = 127
 
 // licensee reads `.licensee.json` only when no policy flag (`--osi`,
-// `--spdx`, `--blueoak`, `--packages`) is on its command line -- any one of
+// `--spdx`, `--blueoak`, `--packages`) is on its command line: any one of
 // them replaces the file entirely. A fixed `run` can't pass `--osi` "only
-// when there is no file", so the preset runs this launcher instead: it looks
+// when there is no file", so the preset runs this launcher instead. It looks
 // for `.licensee.json` in the check's own working directory at spawn time
-// (the same directory licensee itself reads it from), adds `--osi` only when
-// there is none, and then runs the consumer's installed licensee CLI
+// (the same directory licensee itself reads it from). It adds `--osi` only
+// when there is none, then runs the consumer's installed licensee CLI
 // in-process with those arguments. The repository's own file is the policy
 // when it exists; OSI approval is the default when it doesn't.
 //
 // `--production` scopes evaluation to the dependency graph actually shipped
-// to consumers -- devDependencies never end up in a consumer's install, so
-// their licenses carry no obligation onto this package's own license. Same
+// to consumers. A devDependency never ends up in a consumer's install, so
+// its license carries no obligation onto this package's own license. Same
 // runtime-only rationale the securityDeps preset already applies to `npm
 // audit --omit=dev`. `--errors-only` keeps the ndjson evidence limited to
-// the packages actually driving the verdict, matching the
-// deadCode/duplication presets' report-issues-only shape.
+// the packages that drive the verdict. That matches the deadCode and
+// duplication presets' report-issues-only shape.
 //
-// licensee is resolved from the working directory with Node's own module
+// `licensee` is resolved from the working directory with Node's own module
 // resolution (a local devDependency, as `missingDependencyResult` tells a
-// consumer to install), and loaded with `require` -- no second spawn, so no
+// consumer to install). It is loaded with `require`: no second spawn, so no
 // PATH lookup and no Windows `.cmd` shim. The first stderr line records
 // which policy applied, so the verdict can say so; stderr keeps its prefix
 // when it is truncated, so that line always survives.
@@ -98,10 +98,10 @@ export const license: CheckDefinitionConfig = {
     const trimmed = result.stdout.trim()
 
     // `--errors-only` makes licensee exit non-zero *because* it found an
-    // offending dependency -- so a non-zero exit with ndjson on stdout is the
+    // offending dependency. So a non-zero exit with ndjson on stdout is the
     // expected failure path, handled below. But a non-zero exit with *empty*
     // stdout means licensee never evaluated anything (node_modules not
-    // installed, an unreadable dependency tree, an internal `die()`): the
+    // installed, an unreadable dependency tree, an internal `die()`). The
     // error is on stderr and there is nothing to parse. Treating that as
     // "found 0 offending dependencies" would let the compliance gate pass on
     // a run that never actually ran. Only an empty stdout from a process that
@@ -128,10 +128,10 @@ export const license: CheckDefinitionConfig = {
     try {
       entries = trimmed
         .split("\n")
-        // licensee emits one JSON object per line; a blank line between
-        // records (some versions/locales do this, as can a leading
-        // informational line) is not invalid evidence -- skip it rather than
-        // feeding "" to JSON.parse and discarding the real violation list.
+        // `licensee` emits one JSON object per line. A blank line between
+        // records (some versions/locales print one, as can a leading
+        // informational line) is not invalid evidence. Skip it rather than
+        // feed "" to JSON.parse and discard the real violation list.
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .map((line) => JSON.parse(line) as LicenseeEntry)

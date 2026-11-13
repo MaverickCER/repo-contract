@@ -1,14 +1,15 @@
 /**
- * Affected-scope analysis: given a diff, which tests (and mutation targets) can the change
- * affect? Symbol-level -- changed files are diffed against their base to find the exports whose
- * behavior may differ, and those are followed through the import graph -- with every case the
- * analysis cannot reason about widening the answer toward a full run, never narrowing it on a
- * guess. Pure: file contents, the diff and the TypeScript compiler API come in as data and
- * capabilities, so this barrel reads no file and runs no process (see
+ * Affected scope: given a diff, list the tests and mutation targets the change can reach. Changed
+ * files are compared with their base to find the exports whose behavior may differ, and those
+ * exports are followed through the import graph. A case the analysis cannot reason about widens
+ * the answer toward a full run; it never narrows on a guess.
+ *
+ * Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities,
+ * so this barrel reads no file and runs no process (see
  * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
  *
- * A third independent public barrel, published under its own `./affected` subpath, like
- * `src/presets/index.ts` and `src/helpers/index.ts`; never re-exported from the package root.
+ * Experimental, and published under its own `./affected` subpath; never re-exported from the
+ * package root.
  * @packageDocumentation
  */
 export { computeAffected } from "./compute-affected.js"

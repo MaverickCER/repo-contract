@@ -8,7 +8,7 @@ import { runWithConcurrencyGraph } from "../../src/execution/dependency-schedule
  * one of its own dependencies has settled. Items only ever depend on
  * strictly earlier indexes, which trivially guarantees the generated graph
  * is acyclic (cycle rejection is exercised separately, deterministically,
- * below -- not left to chance generation).
+ * below: not left to chance generation).
  */
 
 const ITEM_COUNT = 6
@@ -33,15 +33,15 @@ const graphArbitrary = fc
   )
   .map((masks) => masks.map((mask, index) => bitmaskToDeps(mask, index)))
 
-describe("runWithConcurrencyGraph -- property-based", () => {
+describe("runWithConcurrencyGraph: property-based", () => {
   it("every item runs exactly once, and no item starts before all of its dependencies have settled", async () => {
     await fc.assert(
       fc.asyncProperty(
         graphArbitrary,
         fc.integer({ min: 1, max: ITEM_COUNT }),
         async (deps, concurrency) => {
-          // A logical, monotonically-increasing counter -- not wall-clock
-          // time -- so ordering assertions never depend on timer resolution.
+          // A logical, monotonically-increasing counter (not wall-clock
+          // time) so ordering assertions never depend on timer resolution.
           let clock = 0
           const tick = (): number => {
             clock += 1
@@ -80,7 +80,7 @@ describe("runWithConcurrencyGraph -- property-based", () => {
     )
   })
 
-  it("a 2-cycle is always rejected -- runWithConcurrencyGraph never silently hangs or partially runs a cyclic graph", async () => {
+  it("a 2-cycle is always rejected: runWithConcurrencyGraph never silently hangs or partially runs a cyclic graph", async () => {
     const items = ["a", "b"]
     const cyclicDeps = [[1], [0]]
 

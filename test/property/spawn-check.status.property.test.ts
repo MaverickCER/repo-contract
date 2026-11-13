@@ -6,22 +6,22 @@ import { testEnv } from "../helpers/test-env.js"
 import { testSpawn } from "../helpers/test-spawn.js"
 
 /**
- * Model-based test (an explicit predictive model checked against the real system, rather than a
- * plain example-based assertion): models specs/architecture.md's documented CheckStatus priority
- * ("the run-level AbortSignal ... takes priority over ... the check's own timeoutMs") as an
- * explicit expected outcome per scenario, then verifies the real spawnCheck() -- a real
- * subprocess, real timers, real AbortController -- conforms to it.
+ * Model-based test: an explicit predictive model checked against the system, rather than a plain
+ * example-based assertion. The model is specs/architecture.md's documented CheckStatus priority
+ * ("the run-level AbortSignal ... takes priority over ... the check's own timeoutMs"). It gives an
+ * expected outcome per scenario. The test then verifies that spawnCheck() conforms, using a
+ * subprocess, timers and an AbortController.
  *
- * The scenario set is deliberately small and curated rather than freely generated: each pair's
- * delays are far enough apart (a >=200ms gap) that ordering is unambiguous on any real CI runner,
- * avoiding the flakiness a fully random race would introduce -- see
- * specs/verification-taxonomy.md's property-test resource-boundaries note. Run exhaustively via
- * `it.each`, not sampled via `fc.constantFrom` + `numRuns: SCENARIOS.length`: that combination
- * samples independently with replacement, so a given run is not guaranteed to draw every scenario
- * -- confirmed empirically, roughly 6% of runs drew zero "timed_out" scenarios, leaving the
- * timeout-wins-when-it-fires-first direction (the second and fourth scenarios below) unverified
- * for that run. `it.each` still generalizes over both possible winners (that's the model-based
- * property under test), it just guarantees every one of the four actually runs, every time.
+ * The scenario set is deliberately small and curated rather than freely generated. Each pair's
+ * delays are at least 200ms apart, so ordering is unambiguous on any CI runner. A fully random race
+ * would be flaky. See specs/verification-taxonomy.md's property-test resource-boundaries note.
+ *
+ * Run exhaustively via `it.each`, not sampled via `fc.constantFrom` + `numRuns: SCENARIOS.length`.
+ * That combination samples independently with replacement, so a run may not draw every scenario.
+ * Empirically, about 6% of runs drew zero "timed_out" scenarios. Those runs left the
+ * timeout-wins-when-it-fires-first direction (the second and fourth scenarios below) unverified.
+ * `it.each` still generalizes over both possible winners (the model-based property under test). It
+ * guarantees all four scenarios run every time.
  */
 
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
@@ -34,7 +34,7 @@ const SCENARIOS = [
   { abortDelayMs: 250, timeoutMs: 40, expectedStatus: "timed_out" },
 ] as const
 
-describe("spawnCheck -- CheckStatus priority (model-based)", () => {
+describe("spawnCheck: CheckStatus priority (model-based)", () => {
   it.each(SCENARIOS)(
     "abort always wins over timeout when it fires first, and vice versa (abortDelayMs=$abortDelayMs, timeoutMs=$timeoutMs -> $expectedStatus)",
     async (scenario) => {

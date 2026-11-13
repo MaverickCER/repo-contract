@@ -2,7 +2,7 @@ import type { CheckDefinitionConfig } from "../types.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
-/** linkinator's own `--format json` contract -- not published as a TypeScript type by the tool. */
+/** linkinator's own `--format json` contract: not published as a TypeScript type by the tool. */
 interface LinkinatorLink {
   readonly url: string
   readonly status: number
@@ -22,12 +22,12 @@ interface BrokenLinksOptions {
 
 /**
  * @param link One linkinator link result with `state === "BROKEN"`.
- * @returns A single-line `url -- HTTP status (linked from parent)` summary.
+ * @returns A single-line `url returned HTTP status (linked from parent)` summary.
  */
 function formatBrokenLink(link: LinkinatorLink): string {
   const parent = link.parent ? ` (linked from ${link.parent})` : ""
 
-  return `${link.url} -- HTTP ${String(link.status)}${parent}`
+  return `${link.url} returned HTTP ${String(link.status)}${parent}`
 }
 
 /**
@@ -55,11 +55,11 @@ export function brokenLinks(options: BrokenLinksOptions = {}): CheckDefinitionCo
         return { outcome: "fail", rationale: "linkinator output could not be parsed as JSON." }
       }
 
-      // Valid JSON of an unexpected shape (a future linkinator reporter
-      // change, `null`, a primitive, or any leading non-JSON line that still
-      // parses to something without `.links`) must produce a clean fail, not
-      // a TypeError that escapes the policy and crashes the whole run --
-      // matching how dead-code.ts / duplication.ts guard their own reports.
+      // Valid JSON of an unexpected shape must produce a clean fail, not a
+      // TypeError that escapes the policy and crashes the whole run. Examples:
+      // a future linkinator reporter change, `null`, a primitive, or any
+      // leading non-JSON line that still parses to something without `.links`.
+      // dead-code.ts and duplication.ts guard their own reports the same way.
       const value: unknown = result.output.value
 
       if (typeof value !== "object" || value === null) {

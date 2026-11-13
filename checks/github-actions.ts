@@ -8,9 +8,9 @@ interface EvaluateGitHubActionsPolicyInput {
 
 /**
  * Fails on any actionlint tool-infrastructure failure, or any actionlint finding in this
- * repository's own `.github/workflows/*` -- workflow correctness and security-oriented static
- * analysis are owned by actionlint (rhysd/actionlint), this policy only decides whether that
- * analysis satisfies the contract. See
+ * repository's own `.github/workflows/*`. Actionlint (rhysd/actionlint) owns workflow correctness
+ * and security-oriented static analysis. This policy only decides whether that analysis satisfies
+ * the contract. See
  * specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md.
  * @param root0 - the policy input.
  * @param root0.evidence - the github-actions check's evidence to evaluate.
@@ -53,7 +53,7 @@ export function evaluateGitHubActionsPolicy({
 }
 
 // GitHub Actions correctness + security via actionlint, run through the `github-actionlint` npm
-// wrapper (a devDependency -- never a runtime dependency of the published package). The wrapper
+// wrapper (a devDependency: never a runtime dependency of the published package). The wrapper
 // resolves the official actionlint binary on first use; scripts/github-actions/lint.mjs shells out
 // to it and prints the normalized JSON evidence this policy interprets. See
 // specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md for why the

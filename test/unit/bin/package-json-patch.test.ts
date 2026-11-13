@@ -72,7 +72,7 @@ describe("patchContractScript", () => {
     expect(text).toBe(input)
   })
 
-  it("never overwrites an existing contract script with a different value -- reports conflict and returns the input byte-for-byte", () => {
+  it("never overwrites an existing contract script with a different value: reports conflict and returns the input byte-for-byte", () => {
     const input = `{
   "name": "x",
   "scripts": {
@@ -115,7 +115,7 @@ describe("patchContractScript", () => {
     ["scripts with a sibling", `{"name":"x","scripts":{"build":"tsc"}}`],
     ["empty scripts", `{"name":"x","scripts":{}}`],
   ])(
-    'produces valid JSON for a single-line (minified) package.json: %s -- regression test for indent detection splicing real file content in as "indentation"',
+    'produces valid JSON for a single-line (minified) package.json (%s), a regression test for indent detection splicing real file content in as "indentation"',
     (_label, input) => {
       const { text, status } = patchContractScript(input, SCRIPT_VALUE)
       expect(status).toBe("created")
@@ -141,7 +141,7 @@ describe("patchContractScript", () => {
     expect(JSON.parse(text)).toEqual({ scripts: { contract: SCRIPT_VALUE } })
   })
 
-  it("touches only scripts.contract -- every other property is byte-identical outside that one insertion", () => {
+  it("touches only scripts.contract: every other property is byte-identical outside that one insertion", () => {
     const input = `{
   "name": "x",
   "version": "2.0.0",

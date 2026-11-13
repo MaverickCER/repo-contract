@@ -1,8 +1,9 @@
 /**
- * Reads the commit messages on the current branch (`base..HEAD`). Shared by the `api-contract`
- * gate (which infers the declared SemVer bump from them) and `adr-governance` (which scans them
- * for `ADR NNNN` references) now that versioning is Conventional-Commits-driven -- see
- * specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
+ * Reads the commit messages on the current branch (`base..HEAD`). The `adr-governance` check scans
+ * them for `ADR NNNN` references. The `api-contract` gate, which infers the declared SemVer bump
+ * from commit messages, now comes from internal-package-contract and no longer uses this module.
+ * See specs/decisions/0009-conventional-commits-versioning-and-local-gates.md for
+ * Conventional-Commits-driven versioning.
  */
 
 import { runGit } from "./diff-files.js"
@@ -10,7 +11,7 @@ import { runGit } from "./diff-files.js"
 /**
  * Every commit message on `base..HEAD`, plus any `extra` messages appended (e.g. a CI-supplied
  * PR title). Each element is a full, multi-line message (subject + body + footers), trimmed.
- * Returns `[]` -- never throws -- when `base` doesn't resolve (no `origin/main` fetched
+ * Returns `[]` (never throws) when `base` doesn't resolve (no `origin/main` fetched
  * locally, an unborn HEAD, ...), mirroring `listChangedFiles`'s "no prior state is a
  * legitimate condition" philosophy.
  * @param root - repository working-tree path.

@@ -1,8 +1,8 @@
-// `npm run check` -- the one command a contributor runs before opening a PR.
+// `npm run check`: the one command a contributor runs before opening a PR.
 //
 // Runs the same fast, offline subset the pre-commit hook runs (`npm run
-// precommit`), streams its output through unchanged, and -- only on success --
-// prints what to do next. The child's exact exit code is propagated, so this is
+// precommit`) and streams its output through unchanged. Only on success does
+// it print what to do next. The child's exact exit code is propagated, so this is
 // a faithful pass-through wrapper, not a second gate with its own opinion.
 
 import { spawnSync } from "node:child_process"

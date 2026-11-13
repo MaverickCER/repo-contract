@@ -34,7 +34,7 @@ const createStub = (_finding: Finding, id: string): Record => ({
 
 const subject = fc.stringMatching(/^[a-z]{1,4}$/)
 
-/** Distinct findings (unique subjects) -- the precondition `reconcileExceptions` requires of `deriveId`. */
+/** Distinct findings (unique subjects): the precondition `reconcileExceptions` requires of `deriveId`. */
 const distinctFindings: fc.Arbitrary<Finding[]> = fc.uniqueArray(
   fc.record({ subject, detail: fc.integer() }),
   { selector: (f) => f.subject, maxLength: 12 },
@@ -50,7 +50,7 @@ const record: fc.Arbitrary<Record> = fc.record({
   extra: fc.option(fc.string(), { nil: undefined }),
 })
 
-describe("reconcileExceptions -- invariants", () => {
+describe("reconcileExceptions: invariants", () => {
   it("emits exactly one active record per finding, and the id set is a bijection with the findings", () => {
     fc.assert(
       fc.property(distinctFindings, fc.array(record, { maxLength: 12 }), (findings, existing) => {
@@ -67,7 +67,7 @@ describe("reconcileExceptions -- invariants", () => {
     )
   })
 
-  it("never removes a stale record -- every existing id absent from the findings appears in staleRecords", () => {
+  it("never removes a stale record: every existing id absent from the findings appears in staleRecords", () => {
     fc.assert(
       fc.property(distinctFindings, fc.array(record, { maxLength: 12 }), (findings, existing) => {
         const result = reconcileExceptions({ existing, findings, deriveId, createStub })
@@ -132,7 +132,7 @@ describe("reconcileExceptions -- invariants", () => {
   })
 })
 
-describe("serializeExceptionRegistry -- determinism", () => {
+describe("serializeExceptionRegistry: determinism", () => {
   it("is byte-identical regardless of record order, and idempotent through a JSON round-trip", () => {
     fc.assert(
       fc.property(fc.uniqueArray(record, { selector: (r) => r.id, maxLength: 12 }), (records) => {

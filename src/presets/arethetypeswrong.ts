@@ -3,7 +3,7 @@ import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
- * attw's own `--format json` contract -- not published as a TypeScript type
+ * attw's own `--format json` contract: not published as a TypeScript type
  * by the tool. `problems` is a flat record keyed by problem kind (e.g.
  * "FalseCJS", "NoResolution"), each entry carrying whichever context fields
  * that kind of problem produces.
@@ -37,18 +37,18 @@ function formatProblem(problem: AttwProblem): string {
 }
 
 /**
- * Interprets an already-parsed attw JSON report -- exported (unlike this
- * package's other internal evaluators) because a repository whose package
- * has enough entrypoints to make attw's own `--format json` output exceed
- * ~64KB can hit a real, reproducible upstream bug: attw truncates its own
- * stdout when it's a pipe (confirmed independently of repo-contract, via
- * plain shell piping) rather than a TTY or regular file. Redirecting attw's
- * output to a file sidesteps that bug; a consumer doing so needs this same
- * interpretation logic without re-deriving it. repo-contract's own
+ * Interprets an already-parsed attw JSON report. It is exported (unlike this
+ * package's other internal evaluators) because of a real, reproducible
+ * upstream bug. A package with enough entrypoints makes attw's own
+ * `--format json` output exceed ~64KB. attw then truncates its own stdout
+ * when it's a pipe rather than a TTY or regular file (confirmed
+ * independently of repo-contract, via plain shell piping). Redirecting
+ * attw's output to a file sidesteps that bug. A consumer doing so needs this
+ * same interpretation logic without re-deriving it. repo-contract's own
  * `repo-contract.config.ts` does exactly this once it has more than one real
  * entrypoint (see that file's `arethetypeswrong` override).
- * Accepts `unknown` and validates the shape itself: its inputs are always
- * untrusted parsed JSON (a tool's stdout, a report file), and valid JSON of an
+ * Accepts `unknown` and validates the shape itself. Its inputs are always
+ * untrusted parsed JSON (a tool's stdout, a report file). Valid JSON of an
  * unexpected shape must produce a clean fail verdict here rather than a
  * `TypeError` in the caller.
  * @param report - the parsed attw JSON report to evaluate.
@@ -89,9 +89,9 @@ export function evaluateAttwReport(report: unknown): PolicyResult {
 // evaluates exactly what `files`/`exports` in package.json would ship, not
 // the working tree directly. Relevant only to repositories that publish an
 // npm package. Unlike repo-contract's own internal `arethetypeswrong` check,
-// this preset does not exclude any entrypoint -- `--exclude-entrypoints` is
+// this preset does not exclude any entrypoint. `--exclude-entrypoints` is
 // specific to whichever of a consumer's own `exports` subpaths are
-// non-code (e.g. a bare JSON schema export), so it's left as a `run`
+// non-code (e.g. a bare JSON schema export). So it's left as a `run`
 // override for the consumer to add, rather than guessed at generically here.
 /**
  * Published-package type-resolution correctness via `@arethetypeswrong/cli`.

@@ -1,7 +1,7 @@
 // The spawned entrypoint this check's `run: [...]` invokes. Computes every
-// sub-check EXCEPT Vulnerabilities (which needs the security-deps check's
-// own evidence, only available to the in-process `policy` function via
-// `dependsOn` -- see checks/openssf-scorecard.ts) and prints the result as
+// sub-check EXCEPT Vulnerabilities. Vulnerabilities needs the security-deps
+// check's own evidence, which only the in-process `policy` function gets via
+// `dependsOn` (see checks/openssf-scorecard.ts). This prints its result as
 // JSON for that policy function to parse, merge with Vulnerabilities, and
 // render into docs/OpenSSF-Scorecard.md.
 import { pathToFileURL } from "node:url"
@@ -30,7 +30,7 @@ interface RepoMeta {
   readonly name: string
 }
 
-/** Computes every non-Vulnerabilities sub-check and prints the JSON result to stdout. Synchronous throughout -- every gh-API/local-file call this makes is itself synchronous (`gh-api.ts` uses `spawnSync`). */
+/** Computes every non-Vulnerabilities sub-check and prints the JSON result to stdout. Synchronous throughout: every gh-API/local-file call this makes is itself synchronous (`gh-api.ts` uses `spawnSync`). */
 function main(): void {
   const root = process.cwd()
   const slug = repoSlug(root)
@@ -51,8 +51,8 @@ function main(): void {
   if (repoMetaResult.ok) {
     const { default_branch: defaultBranch, license, name } = repoMetaResult.value
     // License is re-evaluated here (not in `localResults` above) once the
-    // real GitHub-detected SPDX id is known -- `evaluateLicense`'s own local-
-    // file fallback still applies when the API call itself is unavailable.
+    // real GitHub-detected SPDX id is known. When the API call itself is
+    // unavailable, `evaluateLicense`'s own local-file fallback still applies.
     localResults[0] = evaluateLicense(root, license?.spdx_id)
     githubResults.push(
       evaluateBranchProtection(slug, defaultBranch),

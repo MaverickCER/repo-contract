@@ -34,7 +34,7 @@ const validate = (records: readonly unknown[]) =>
   validateExceptionRegistry(records, CODERABBIT_EXCEPTION_SCHEMA)
 
 describe("CODERABBIT_EXCEPTION_TYPES", () => {
-  it("excludes validated-false-positive -- no tool exists to mechanically re-verify an AI finding", () => {
+  it("excludes validated-false-positive: no tool exists to mechanically re-verify an AI finding", () => {
     expect(CODERABBIT_EXCEPTION_TYPES).not.toContain("validated-false-positive")
     expect(CODERABBIT_EXCEPTION_TYPES).toContain("accepted-risk")
   })

@@ -9,7 +9,7 @@
  *   per matched pair ──evaluateExceptionRecord──▶ permitted | insufficient | forbidden (+ missing fields)
  *   per unwaived finding ──resolveExceptionPolicy──▶ is a waiver even allowed for this severity?
  *
- * `repo-contract/helpers` decides nothing about what a "finding" is or how it maps to a record --
+ * `repo-contract/helpers` decides nothing about what a "finding" is or how it maps to a record:
  * `deriveAdvisoryId` and the policy config below are entirely this example's own.
  */
 import { fileURLToPath } from "node:url"
@@ -69,7 +69,7 @@ function describePermitted(finding: DependencyAdvisory, record: AdvisoryExceptio
   return {
     blocking: false,
     line:
-      `permitted  ${deriveAdvisoryId(finding)} (${finding.severity}) -- waiver v${String(record.version)}, ` +
+      `permitted  ${deriveAdvisoryId(finding)} (${finding.severity}): waiver v${String(record.version)}, ` +
       `sign-off ${signoff.slice(0, 12)}. Re-approve if the justification text changes.`,
   }
 }
@@ -121,14 +121,14 @@ export function buildAdvisoryPolicy(): Policy {
       const policy = resolveExceptionPolicy(classificationFor(finding)[0], advisoryPolicyConfig, GLOBAL_DEFAULT)
 
       if (policy.mode === "allowed") {
-        outcomes.push({ blocking: false, line: `allowed    ${id} (${finding.severity}) -- accepted by policy, no waiver needed.` })
+        outcomes.push({ blocking: false, line: `allowed    ${id} (${finding.severity}): accepted by policy, no waiver needed.` })
         continue
       }
 
       if (policy.mode === "forbidden") {
         outcomes.push({
           blocking: true,
-          line: `forbidden  ${id} (${finding.severity}) -- ${finding.title}. This severity cannot be waived; upgrade the dependency.`,
+          line: `forbidden  ${id} (${finding.severity}): ${finding.title}. This severity cannot be waived; upgrade the dependency.`,
         })
         continue
       }
@@ -137,7 +137,7 @@ export function buildAdvisoryPolicy(): Policy {
       if (record === undefined) {
         outcomes.push({
           blocking: true,
-          line: `unwaived   ${id} (${finding.severity}) -- ${finding.title}. Add a justified entry to exceptions.json or upgrade.`,
+          line: `unwaived   ${id} (${finding.severity}): ${finding.title}. Add a justified entry to exceptions.json or upgrade.`,
         })
         continue
       }
@@ -155,12 +155,12 @@ export function buildAdvisoryPolicy(): Policy {
       } else if (determinant.verdict === "insufficient") {
         outcomes.push({
           blocking: true,
-          line: `insufficient ${id} (${finding.severity}) -- waiver is missing: ${determinant.missing.join(", ")}. Fill those fields in exceptions.json.`,
+          line: `insufficient ${id} (${finding.severity}): waiver is missing ${determinant.missing.join(", ")}. Fill those fields in exceptions.json.`,
         })
       } else {
         outcomes.push({
           blocking: true,
-          line: `forbidden  ${id} (${finding.severity}) -- policy forbids a waiver here.`,
+          line: `forbidden  ${id} (${finding.severity}): policy forbids a waiver here.`,
         })
       }
     }
@@ -168,7 +168,7 @@ export function buildAdvisoryPolicy(): Policy {
     for (const stale of staleRecords) {
       outcomes.push({
         blocking: true,
-        line: `stale      ${stale.id} -- waiver matches no current advisory. Remove it from exceptions.json.`,
+        line: `stale      ${stale.id}: waiver matches no current advisory. Remove it from exceptions.json.`,
       })
     }
 

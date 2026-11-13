@@ -19,29 +19,29 @@
         } catch (error) {}
       })()
     </script>
-    <title>repo-contract — one contract for your engineering standards</title>
+    <title>repo-contract: deterministic and AI checks, one engineering standard</title>
     <meta
       name="description"
-      content="Define your engineering standards once, share them across repositories, and get an actionable rationale for every outcome. repo-contract runs the tools you already use and evaluates their results against repository-owned policy, locally and in CI."
+      content="Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason."
     />
     <link rel="canonical" href="https://maverickcer.github.io/repo-contract/" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://maverickcer.github.io/repo-contract/" />
     <meta
       property="og:title"
-      content="repo-contract — one contract for your engineering standards"
+      content="repo-contract: deterministic and AI checks, one engineering standard"
     />
     <meta
       property="og:description"
-      content="Define your engineering standards once, share them across repositories, and get an actionable rationale for every outcome. repo-contract runs the tools you already use and evaluates their results against repository-owned policy, locally and in CI."
+      content="Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason."
     />
     <meta
       name="twitter:title"
-      content="repo-contract — one contract for your engineering standards"
+      content="repo-contract: deterministic and AI checks, one engineering standard"
     />
     <meta
       name="twitter:description"
-      content="Define your engineering standards once, share them across repositories, and get an actionable rationale for every outcome. repo-contract runs the tools you already use and evaluates their results against repository-owned policy, locally and in CI."
+      content="Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason."
     />
     <meta
       property="og:image"
@@ -90,23 +90,23 @@
     <main id="main">
       <section class="hero" id="top" aria-labelledby="hero-heading">
         <div class="container">
-          <p class="section-eyebrow">Engineering standards, made executable</p>
+          <p class="section-eyebrow">Deterministic and AI checks, one contract</p>
           <h1 id="hero-heading">
-            Define your engineering standards once. Share them across repositories. Get actionable
-            rationale for every outcome.
+            Use deterministic and AI checks to enforce a baseline engineering standard across your
+            org.
           </h1>
           <p class="hero-lede">
             Your linters, test runners and security scanners can tell you what happened. They
             don&#39;t define what your organization considers acceptable.
           </p>
           <p class="hero-support">
-            repo-contract is that missing layer: one typed, versioned contract that runs the tools
-            you already use, evaluates their results against policy your repository owns, and
-            returns one verdict, locally and in CI.
+            repo-contract is that layer. You list your tools as checks in one typed file, the
+            contract, and write the policies that judge their results. Each check then reports pass,
+            warn or fail with a reason, on a laptop and in CI.
           </p>
           <p class="hero-outcome">
-            Give every repository a consistent, versioned engineering standard without forcing every
-            team to adopt the same tools or migrate its CI.
+            Published as an npm package, the contract becomes your baseline standard: every
+            repository that extends it runs the same checks and can add its own.
           </p>
           <p class="hero-meta">Pre-1.0 · v0.13.0 · MIT</p>
           <div class="code-block">
@@ -141,7 +141,7 @@ npm run contract</code></pre>
       <section class="section" id="why" aria-labelledby="why-heading">
         <div class="container container--narrow">
           <p class="section-eyebrow">Why it exists</p>
-          <h2 id="why-heading">Your engineering standard is probably scattered.</h2>
+          <h2 id="why-heading">Your quality rules are probably scattered.</h2>
           <p class="section-lede">
             A mature repository enforces dozens of requirements: tests, coverage, public-API
             compatibility, dependency vulnerabilities, mutation score, architecture boundaries,
@@ -174,8 +174,8 @@ npm run contract</code></pre>
             </ol>
           </div>
           <p>
-            Individual tools answer individual questions. Your engineering standard is the answer to
-            all of them together.
+            Individual tools answer individual questions. Your contract is the answer to all of them
+            together.
           </p>
         </div>
       </section>
@@ -188,9 +188,9 @@ npm run contract</code></pre>
           <p class="section-lede">
             A <strong>check</strong> runs a command. <strong>Evidence</strong> records what
             happened: exit code, timing, captured and parsed output. A <strong>policy</strong> you
-            write decides whether that evidence meets your standard, and can read any other
-            check&#39;s evidence to do it. The <strong>verdict</strong> aggregates every policy
-            result, with a mandatory rationale on each.
+            write decides whether that evidence meets your rules, and can read any other check&#39;s
+            evidence to do it. The <strong>verdict</strong> aggregates every policy result, with a
+            mandatory reason on each.
           </p>
           <div class="diagram">
             <p class="sr-only">
@@ -264,8 +264,8 @@ npm run contract</code></pre>
           <p>
             <code>release</code> runs no command of its own. Its policy reads the evidence of the
             other three checks and says which one blocks the release, what passed, and what was only
-            a warning. <code>warn</code> does not block the run; <code>fail</code> does. The
-            rationale is a plain string, so a person, a bot or a log can use it equally.
+            a warning. <code>warn</code> does not block the run; <code>fail</code> does. The reason
+            is a plain string, so a person, a bot or a log can use it equally.
           </p>
         </div>
       </section>
@@ -328,9 +328,8 @@ npm run contract</code></pre>
           </h2>
           <p class="section-lede">
             Keep your CI. Shared ESLint configs, reusable workflows and template repositories all
-            distribute individual checks. repo-contract distributes the whole standard (the checks,
-            the policies that relate them, and the rationale for their outcomes) as one versioned
-            package.
+            distribute individual checks. repo-contract distributes a standard: one versioned
+            package with the checks, the policies that relate them, and the reason for each outcome.
           </p>
           <div class="table-scroll">
             <table class="comparison-table">
@@ -362,11 +361,11 @@ npm run contract</code></pre>
                 </tr>
                 <tr>
                   <th scope="row">&quot;CI failed&quot;</th>
-                  <td>An actionable rationale on every outcome, including pass</td>
+                  <td>A reason to act on for every outcome, including pass</td>
                 </tr>
                 <tr>
                   <th scope="row">Each repository reinvents the glue</th>
-                  <td>One shared contract package, inherited</td>
+                  <td>One standard, inherited as a dependency</td>
                 </tr>
               </tbody>
             </table>
@@ -389,11 +388,11 @@ npm run contract</code></pre>
                 in your <code>package.json</code> and generates a starting point.
               </li>
               <li>Write its policy, then run the contract locally and in CI.</li>
-              <li>Move the next standard into the contract.</li>
+              <li>Move the next rule into the contract.</li>
               <li>
-                Share it across repositories once more than one needs it: an internal package wraps
-                repo-contract and owns the executors, every project of that type extends it, and
-                changes arrive through normal dependency updates.
+                Publish it as your standard once more than one repository needs it: an internal
+                package wraps the contract and owns the executors, every project of that type
+                extends it, and changes arrive through normal dependency updates.
               </li>
               <li>
                 Introduce a new shared requirement as a dated <code>warn</code> that becomes a
@@ -421,8 +420,9 @@ npm run contract</code></pre>
           <p class="section-eyebrow">For decision-makers</p>
           <h2 id="brief-heading">A one-page brief for your manager</h2>
           <p class="section-lede">
-            repo-contract lets every repository follow one shared, versioned engineering standard,
-            and explains every decision it makes.
+            repo-contract runs a team&#39;s deterministic and AI checks on every developer&#39;s
+            machine and in CI, and shares them across repositories as one baseline engineering
+            standard.
           </p>
           <p>
             It answers what this is, why it matters, what it costs, what could go wrong and what is

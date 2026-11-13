@@ -74,7 +74,7 @@ describe("DOCS_LINK_EXCEPTION_SCHEMA", () => {
     expect(validate([validRecord({ id: "socket:x" })]).ok).toBe(false)
   })
 
-  it("accepts a local (non-http(s)) url -- a local link is waivable exactly like an external one", () => {
+  it("accepts a local (non-http(s)) url: a local link is waivable exactly like an external one", () => {
     const result = validate([validRecord({ id: "docs-links:/missing.md", url: "/missing.md" })])
     expect(result.ok, result.ok ? "" : result.errors.join("\n")).toBe(true)
     if (result.ok) {

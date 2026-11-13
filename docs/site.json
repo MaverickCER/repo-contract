@@ -1,16 +1,16 @@
 {
   "siteUrl": "https://maverickcer.github.io/repo-contract/",
   "repoUrl": "https://github.com/maverickcer/repo-contract",
-  "title": "repo-contract — one contract for your engineering standards",
-  "description": "Define your engineering standards once, share them across repositories, and get an actionable rationale for every outcome. repo-contract runs the tools you already use and evaluates their results against repository-owned policy, locally and in CI.",
+  "title": "repo-contract: deterministic and AI checks, one engineering standard",
+  "description": "Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason.",
   "ogImage": "assets/og-image.png",
   "maturity": "repo-contract is pre-1.0. A `0.x` minor may carry a breaking change to the Stable tier before 1.0, so pin the version and read the changelog on every minor upgrade.",
   "hero": {
-    "eyebrow": "Engineering standards, made executable",
-    "heading": "Define your engineering standards once. Share them across repositories. Get actionable rationale for every outcome.",
+    "eyebrow": "Deterministic and AI checks, one contract",
+    "heading": "Use deterministic and AI checks to enforce a baseline engineering standard across your org.",
     "lede": "Your linters, test runners and security scanners can tell you what happened. They don't define what your organization considers acceptable.",
-    "support": "repo-contract is that missing layer: one typed, versioned contract that runs the tools you already use, evaluates their results against policy your repository owns, and returns one verdict, locally and in CI.",
-    "outcome": "Give every repository a consistent, versioned engineering standard without forcing every team to adopt the same tools or migrate its CI."
+    "support": "repo-contract is that layer. You list your tools as checks in one typed file, the contract, and write the policies that judge their results. Each check then reports pass, warn or fail with a reason, on a laptop and in CI.",
+    "outcome": "Published as an npm package, the contract becomes your baseline standard: every repository that extends it runs the same checks and can add its own."
   },
   "install": {
     "label": "Quick start",
@@ -33,7 +33,7 @@
   },
   "problem": {
     "eyebrow": "Why it exists",
-    "heading": "Your engineering standard is probably scattered.",
+    "heading": "Your quality rules are probably scattered.",
     "lede": "A mature repository enforces dozens of requirements: tests, coverage, public-API compatibility, dependency vulnerabilities, mutation score, architecture boundaries, documentation. The tools that check them are excellent. The rules about what their results should mean end up spread across places no single tool owns.",
     "listLabel": "Where the rules live today",
     "items": [
@@ -45,12 +45,12 @@
       "code-review habits"
     ],
     "conclusion": "no single place answers: what does \"acceptable\" mean here?",
-    "closing": "Individual tools answer individual questions. Your engineering standard is the answer to all of them together."
+    "closing": "Individual tools answer individual questions. Your contract is the answer to all of them together."
   },
   "model": {
     "eyebrow": "How it works",
     "heading": "Your tools produce results. Your repository decides what they mean.",
-    "lede": "A **check** runs a command. **Evidence** records what happened: exit code, timing, captured and parsed output. A **policy** you write decides whether that evidence meets your standard, and can read any other check's evidence to do it. The **verdict** aggregates every policy result, with a mandatory rationale on each.",
+    "lede": "A **check** runs a command. **Evidence** records what happened: exit code, timing, captured and parsed output. A **policy** you write decides whether that evidence meets your rules, and can read any other check's evidence to do it. The **verdict** aggregates every policy result, with a mandatory reason on each.",
     "flow": [
       "ESLint · Vitest · tsc · Stryker · npm audit · your own checks",
       "↓ repo-contract",
@@ -70,7 +70,7 @@
       "label": "examples/release-gate",
       "url": "https://github.com/maverickcer/repo-contract/tree/main/examples/release-gate"
     },
-    "explanation": "`release` runs no command of its own. Its policy reads the evidence of the other three checks and says which one blocks the release, what passed, and what was only a warning. `warn` does not block the run; `fail` does. The rationale is a plain string, so a person, a bot or a log can use it equally."
+    "explanation": "`release` runs no command of its own. Its policy reads the evidence of the other three checks and says which one blocks the release, what passed, and what was only a warning. `warn` does not block the run; `fail` does. The reason is a plain string, so a person, a bot or a log can use it equally."
   },
   "guarantees": {
     "eyebrow": "Guarantees",
@@ -100,15 +100,15 @@
   "comparison": {
     "eyebrow": "Why not just CI",
     "heading": "CI distributes how checks run. repo-contract distributes what your organization considers acceptable.",
-    "lede": "Keep your CI. Shared ESLint configs, reusable workflows and template repositories all distribute individual checks. repo-contract distributes the whole standard (the checks, the policies that relate them, and the rationale for their outcomes) as one versioned package.",
+    "lede": "Keep your CI. Shared ESLint configs, reusable workflows and template repositories all distribute individual checks. repo-contract distributes a standard: one versioned package with the checks, the policies that relate them, and the reason for each outcome.",
     "caption": "Where common approaches stop and repo-contract begins",
     "rows": [
       ["Rules scattered across workflows and scripts", "One repository-owned contract"],
       ["Individual checks", "Checks, the relationships between them, and their policies"],
       ["CI-specific orchestration logic", "The same contract, run locally and in CI"],
       ["Exit codes and CI job state", "Structured evidence with a stable, versioned shape"],
-      ["\"CI failed\"", "An actionable rationale on every outcome, including pass"],
-      ["Each repository reinvents the glue", "One shared contract package, inherited"]
+      ["\"CI failed\"", "A reason to act on for every outcome, including pass"],
+      ["Each repository reinvents the glue", "One standard, inherited as a dependency"]
     ],
     "columns": ["Today", "With repo-contract"]
   },
@@ -120,8 +120,8 @@
     "steps": [
       "Wrap one existing check. `npx repo-contract init` detects what is already in your `package.json` and generates a starting point.",
       "Write its policy, then run the contract locally and in CI.",
-      "Move the next standard into the contract.",
-      "Share it across repositories once more than one needs it: an internal package wraps repo-contract and owns the executors, every project of that type extends it, and changes arrive through normal dependency updates.",
+      "Move the next rule into the contract.",
+      "Publish it as your standard once more than one repository needs it: an internal package wraps the contract and owns the executors, every project of that type extends it, and changes arrive through normal dependency updates.",
       "Introduce a new shared requirement as a dated `warn` that becomes a `fail` on a chosen date, so nobody's build breaks overnight. The [day-one walkthrough](https://github.com/maverickcer/repo-contract/tree/main/examples/day-one-walkthrough) is a runnable example."
     ],
     "notFor": {
@@ -131,20 +131,20 @@
   },
   "brief": {
     "heading": "A one-page brief for your manager",
-    "oneLine": "repo-contract lets every repository follow one shared, versioned engineering standard, and explains every decision it makes.",
+    "oneLine": "repo-contract runs a team's deterministic and AI checks on every developer's machine and in CI, and shares them across repositories as one baseline engineering standard.",
     "problem": "Each team keeps its quality rules in different places, so nobody can say what \"acceptable\" means across the organization. New requirements are hard to introduce without breaking people's builds.",
-    "whatItDoes": "It runs the checks a team already has, such as tests, linting and security scans. It then applies one agreed standard to their results and gives a single verdict, with a plain-language reason, on a developer's machine and in CI.",
+    "whatItDoes": "It runs the checks a team already has, such as tests, linting and security scans. It then applies one agreed contract to their results and gives a single verdict, with a plain-language reason, on a developer's machine and in CI.",
     "whyItMatters": [
-      "Every team is held to the same written-down standard.",
+      "Every team is held to the same written-down rules.",
       "A new requirement can start as a warning with a date and later become a blocker, so nobody is surprised.",
       "Exceptions can be recorded with a reason instead of living in someone's memory."
     ],
     "whatItCosts": "Adopting it in one repository is a small change: install the package, run a generator and keep the existing tools. It replaces none of them, and it is free, open source software under the MIT licence.",
     "whatCouldGoWrong": [
-      "The standard is only as good as the policies a team writes. The package enforces what you define; it does not decide what is good.",
+      "The contract is only as good as the policies a team writes. The package enforces what you define; it does not decide what is good.",
       "It sees only what a check measures, so it does not replace judgement in code review."
     ],
-    "whatWeAsk": "Agree that one repository trials it for a few weeks, then judge from the results whether to share a standard across teams."
+    "whatWeAsk": "Agree that one repository trials it for a few weeks, then judge from the results whether to make it the standard across teams."
   },
   "resources": {
     "eyebrow": "Proof, not promises",

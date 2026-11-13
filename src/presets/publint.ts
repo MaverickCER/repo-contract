@@ -4,7 +4,7 @@ import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
- * publint has no machine-readable output mode -- only a plain-text CLI
+ * publint has no machine-readable output mode: only a plain-text CLI
  * reporter (see its own `src/cli.js` `formatMessages`). Its process exit
  * code reflects only 'error'-level findings; 'warning'/'suggestion'-level
  * findings never affect it. This preset reads the same three section

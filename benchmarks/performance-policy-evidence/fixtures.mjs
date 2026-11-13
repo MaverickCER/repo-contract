@@ -1,9 +1,9 @@
 // Tiered synthetic evidence/policy generator for the `evaluate-evidence-and-policy` benchmark
 // (measures src/evidence/build-evidence.ts's `buildEvidence` and src/policy/run-policies.ts's
-// `runPolicies` -- the two stages repo-contract runs immediately after `runChecks`, see
+// `runPolicies`: the two stages repo-contract runs immediately after `runChecks`, see
 // src/run-repo-contract.ts). Deliberately plain JS, dependency-free.
 //
-// No real process is ever spawned here (unlike the sibling `performance-checks` category) --
+// No real process is ever spawned here (unlike the sibling `performance-checks` category):
 // `buildEvidence`/`runPolicies` never spawn anything themselves, they only interpret already-
 // captured `CheckEvidence`. Isolating them from real spawn overhead is the point: this category
 // measures pure CPU-bound evidence-assembly + policy-evaluation cost (JSON parsing at increasing
@@ -46,7 +46,7 @@ function buildPayload(checkIndex, targetBytes) {
 }
 
 /**
- * Builds `checkCount` synthetic `CheckExecutionEntry` triples (the shape `runChecks` returns --
+ * Builds `checkCount` synthetic `CheckExecutionEntry` triples (the shape `runChecks` returns:
  * `[checkId, CheckDefinition, CheckEvidence]`) with real JSON stdout of roughly `payloadBytes`
  * each, plus a real, non-trivial `policy` that reads both its own parsed output and its
  * `dependsOn` dependencies' evidence (about 15% of checks declare one dependency on an earlier

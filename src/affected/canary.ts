@@ -20,7 +20,7 @@ export interface CanaryResult {
 
 /**
  * Proves the affected scope sound against evidence: after a full run on the same change, any test
- * that failed there but was not in the affected set is an escape -- a regression the narrow run
+ * that failed there but was not in the affected set is an escape; a regression the narrow run
  * would have shipped. Run it on merges to the main branch, where both answers exist.
  * @param input - The affected tests, all tests and the full run's failures.
  * @returns Whether the narrow scope was sound, and which tests escaped it.

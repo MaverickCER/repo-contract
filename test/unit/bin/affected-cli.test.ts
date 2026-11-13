@@ -326,7 +326,7 @@ describe("runAffected: a full result is still success, with the reason on stderr
   it("includes the detail in the stderr notice when there is one", async () => {
     const { stderr } = await invoke([], { work: base, refs: [] })
     expect(stderr).toBe(
-      "repo-contract affected: running everything (git-failed: merge-base -- no base to compare against)\n",
+      "repo-contract affected: running everything (git-failed: merge-base, no base to compare against)\n",
     )
   })
 })

@@ -1,6 +1,6 @@
 import type { CheckEvidence, Evidence, PolicyContext } from "../../../src/types.js"
 
-/** Not published -- shared only by test/unit/presets/**\/*.test.ts. */
+/** Not published: shared only by test/unit/presets/**\/*.test.ts. */
 export function fakeCheckEvidence(overrides: Partial<CheckEvidence> = {}): CheckEvidence {
   return {
     command: "tool",
@@ -17,7 +17,7 @@ export function fakeCheckEvidence(overrides: Partial<CheckEvidence> = {}): Check
   }
 }
 
-/** Wraps `result` into a minimal `PolicyContext` -- no preset in this package reads `evidence`/`dependencies`, only `result` (and, for `deadCode`, `result.args`). */
+/** Wraps `result` into a minimal `PolicyContext`: no preset in this package reads `evidence`/`dependencies`, only `result` (and, for `deadCode`, `result.args`). */
 export function fakeContext(result: CheckEvidence): PolicyContext {
   const evidence: Evidence = {
     version: 1,

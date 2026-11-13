@@ -1,4 +1,4 @@
-// `repo-contract cache` -- look at and tidy the computation cache under `.repo-contract/cache`.
+// `repo-contract cache`: look at and tidy the computation cache under `.repo-contract/cache`.
 // Everything the command touches is injected (argv, stdout/stderr, the store, the cache engine,
 // the clock) so it is unit-testable without a process or a directory; bin/repo-contract.mjs wires
 // the real ones. Conventions: data goes to stdout and diagnostics to stderr; exit status is 0 on

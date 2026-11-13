@@ -23,7 +23,7 @@ describe("evaluateArchitecturePolicy", () => {
     expect(result.rationale).toContain("0 errors")
   })
 
-  it("fails when dependency-cruiser itself could not be evaluated -- a tool-infrastructure failure, not a rule violation", () => {
+  it("fails when dependency-cruiser itself could not be evaluated: a tool-infrastructure failure, not a rule violation", () => {
     const evidence: ArchitectureEvidence = {
       dependencyGraph: { ok: false, error: "spawn depcruise ENOENT" },
       testCategoryBoundaries: { ok: true, filesScanned: 32, violations: [] },
@@ -134,7 +134,7 @@ describe("evaluateArchitecturePolicy", () => {
     expect(result.rationale).toContain("some-file.test.ts belongs to 0 category directories")
   })
 
-  it("fails when the ADR-structure scan itself could not be evaluated -- a tool-infrastructure failure, not a rule violation", () => {
+  it("fails when the ADR-structure scan itself could not be evaluated: a tool-infrastructure failure, not a rule violation", () => {
     const evidence: ArchitectureEvidence = {
       ...cleanEvidence,
       adrStructure: { ok: false, error: "ENOENT: specs/decisions/ not found" },

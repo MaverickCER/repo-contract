@@ -18,18 +18,18 @@ const POLICY_OUTCOMES: readonly PolicyOutcome[] = ["pass", "fail", "warn"]
 
 /**
  * Exact phrases `PolicyResult.rationale`'s own doc comment names as
- * defeating the whole point of a structured rationale -- deferring a reader
+ * defeating the whole point of a structured rationale: deferring a reader
  * back to raw, unstructured output instead of stating what happened. A
  * fixed, deliberately narrow blocklist, not a general vagueness detector:
- * catching every genuinely non-specific rationale is undecidable, but these
+ * catching every genuinely non-specific rationale is undecidable. These
  * exact phrases (and the close variants a check author reaches for first)
- * are common enough, and specific enough, to catch soundly with zero false
- * positives on a legitimate rationale that happens to mention "the report"
- * or "the log" as part of a real, specific sentence -- each pattern requires
- * "see"/"check" immediately before it, not just co-occurrence anywhere in
- * the string.
+ * are common enough, and specific enough, to catch soundly. There are zero
+ * false positives on a legitimate rationale that happens to mention "the
+ * report" or "the log" as part of a real, specific sentence. Each pattern
+ * requires "see"/"check" immediately before it, not mere co-occurrence
+ * anywhere in the string.
  */
-// Flat, fully-enumerated phrase alternatives -- no nested or back-to-back
+// Flat, fully-enumerated phrase alternatives: no nested or back-to-back
 // optional-quantified groups (e.g. `(?:the\s+)?` followed by another `\s+`),
 // which trip this project's own `security/detect-unsafe-regex` ReDoS
 // guard even when not genuinely exponential. Enumerating the handful of
@@ -50,7 +50,7 @@ const VAGUE_RATIONALE_PATTERNS: readonly { readonly label: string; readonly patt
 ]
 
 /**
- * Whether `rationale` matches one of `VAGUE_RATIONALE_PATTERNS` -- see that
+ * Whether `rationale` matches one of `VAGUE_RATIONALE_PATTERNS`: see that
  * constant's own doc comment for what this deliberately does and doesn't
  * catch.
  * @param rationale - a candidate `PolicyResult.rationale` string, already known to be a string
@@ -60,7 +60,7 @@ function matchedVagueRationalePattern(rationale: string): string | undefined {
   return VAGUE_RATIONALE_PATTERNS.find(({ pattern }) => pattern.test(rationale))?.label
 }
 
-/** `ParsedOutput`'s own field names -- the only properties reading `result.output` when it's `undefined` can throw on, so only these can trigger `PolicyReadUnrequestedOutputError` below. */
+/** `ParsedOutput`'s own field names: the only properties reading `result.output` when it's `undefined` can throw on, so only these can trigger `PolicyReadUnrequestedOutputError` below. */
 const OUTPUT_PROPERTIES: ReadonlySet<string | undefined> = new Set([
   "success",
   "value",
@@ -71,7 +71,7 @@ const OUTPUT_PROPERTIES: ReadonlySet<string | undefined> = new Set([
 /**
  * Recognizes the one `TypeError` message shape Node/V8 produces for reading a
  * property off `undefined` ("Cannot read properties of undefined (reading
- * 'x')"), and returns `x`. Returns `undefined` for any other error -- a
+ * 'x')"), and returns `x`. Returns `undefined` for any other error: a
  * `TypeError` with a different message, or anything that isn't a `TypeError`
  * at all.
  * @param error - the value caught from invoking (or awaiting) a check's `policy`
@@ -87,17 +87,17 @@ function readPropertyOfUndefined(error: unknown): string | undefined {
  * Narrows `readPropertyOfUndefined` to the specific shape
  * `PolicyReadUnrequestedOutputError` covers: the read property must also be
  * one of `ParsedOutput`'s own fields. This meaningfully narrows false
- * positives -- an unrelated `TypeError` reading some other property name
- * never matches -- but is not proof the read actually came from
- * `result.output` itself: V8's own error message carries only the property
- * name, never the object expression it was read from, so a policy's own
- * unrelated bug that happens to read `.success`/`.value`/`.error`/`.format`
- * off some other `undefined` value (a `Result`-shaped helper's own return
- * value, for instance) can still be misclassified as this specific mistake.
- * The residual risk from that is a misleading message, never a lost error --
- * `cause` always preserves the original `TypeError` verbatim regardless of
- * which class wraps it, so the true cause is still recoverable by a consumer
- * that inspects it.
+ * positives (an unrelated `TypeError` reading some other property name
+ * never matches). But it is not proof the read actually came from
+ * `result.output` itself. V8's own error message carries only the property
+ * name, never the object expression it was read from. So a policy's own
+ * unrelated bug can still be misclassified as this specific mistake, when
+ * it reads `.success`/`.value`/`.error`/`.format` off some other
+ * `undefined` value (a `Result`-shaped helper's own return value, for
+ * instance). The residual risk from that is a misleading message, never a
+ * lost error. `cause` always preserves the original `TypeError` verbatim
+ * regardless of which class wraps it, so a consumer that inspects it can
+ * still recover the true cause.
  * @param error - the value caught from invoking (or awaiting) a check's `policy`
  * @returns the read property name, or `undefined` if `error` doesn't match this exact shape
  */
@@ -113,16 +113,16 @@ function unrequestedOutputProperty(error: unknown): string | undefined {
  * failure's own `TypeError` message shape against this check's own `output`
  * evidence:
  *  - `output === undefined` (this check never requested a format) and the
- *    read property is one of `ParsedOutput`'s own fields --
+ *    read property is one of `ParsedOutput`'s own fields;
  *    `PolicyReadUnrequestedOutputError`.
  *  - `output.success === false` (this check requested a format, but that
  *    parse failed, so `result.output` has no `value` field) and *any*
- *    property was read off the resulting `undefined` -- `PolicyReadFailedParseValueError`.
+ *    property was read off the resulting `undefined`: `PolicyReadFailedParseValueError`.
  * A `TypeError` that doesn't match either shape, or a check whose `output`
  * matches neither state, always falls back to the plain `PolicyThrewError`
  * every other policy failure already gets. Both upgrades are best-effort
  * inference from the failure's own message text, not a verified trace back
- * to `result.output` -- see `unrequestedOutputProperty`'s own doc comment
+ * to `result.output`: see `unrequestedOutputProperty`'s own doc comment
  * for the specific, known false-positive channel this leaves open.
  * @param checkId - the failing check's id
  * @param output - that check's own `CheckEvidence.output`, tested against the two shapes above
@@ -151,18 +151,18 @@ function wrapPolicyFailure(
 /**
  * Describes why `value` is not a valid `PolicyResult`, or `undefined` if it
  * is one. A TypeScript-authored policy can never fail the shape checks below
- * (the type checker already guarantees `outcome`/`rationale`'s own types),
- * but nothing stops a JavaScript consumer, or a typo'd literal (`"failed"`
- * instead of `"fail"`), from returning something else at runtime -- and
- * `passed` below is computed by comparing `outcome` against `"fail"`, so an
+ * (the type checker already guarantees `outcome`/`rationale`'s own types).
+ * But nothing stops a JavaScript consumer, or a typo'd literal (`"failed"`
+ * instead of `"fail"`), from returning something else at runtime. `passed`
+ * below is computed by comparing `outcome` against `"fail"`, so an
  * unvalidated garbage value would otherwise be silently treated as
- * non-failing. The one check TypeScript genuinely cannot enforce --
- * `rationale` being specific rather than a vague deferral to raw output --
- * IS caught here too, against `VAGUE_RATIONALE_PATTERNS` (ADR 0016): a real, structural
+ * non-failing. The one check TypeScript cannot enforce is `rationale` being
+ * specific rather than a vague deferral to raw output. That IS caught here
+ * too, against `VAGUE_RATIONALE_PATTERNS` (ADR 0016). It is a structural
  * backstop for the "never 'see output above'" rule `PolicyResult`'s own doc
- * comment states, previously asserted only in prose and CODE_REVIEW.md,
- * enforced nowhere a JavaScript consumer or a future check could regress
- * against without CI catching it.
+ * comment states. That rule was previously asserted only in prose and
+ * CODE_REVIEW.md, so a JavaScript consumer or a future check could regress
+ * against it without CI catching it.
  * @param value - the raw, `await`-ed return value of a check's `policy` call
  * @returns a human-readable reason `value` is invalid, or `undefined` if it is a valid `PolicyResult`
  */
@@ -184,7 +184,7 @@ function invalidPolicyResultReason(value: unknown): string | undefined {
   if (vaguePattern !== undefined) {
     return (
       `"rationale" defers a reader back to raw, unstructured output instead of stating what ` +
-      `happened (matched the ${vaguePattern} pattern) -- see PolicyResult's own doc comment. ` +
+      `happened (matched the ${vaguePattern} pattern). See PolicyResult's own doc comment. ` +
       `State the specific finding directly in "rationale" instead.`
     )
   }
@@ -195,32 +195,36 @@ function invalidPolicyResultReason(value: unknown): string | undefined {
  * Invokes every check's `policy` against the complete, already-assembled
  * `evidence` and aggregates the results into a `Verdict`. Each check's
  * `PolicyResult` is stored verbatim under `checks[checkId]`; `passed` is
- * `true` only if every check's `outcome` is `"pass"` or `"warn"` -- no
+ * `true` only if every check's `outcome` is `"pass"` or `"warn"`: no
  * check's failure is ever collapsed into another's or into one generic
  * message.
  *
- * Every `policy` call is isolated: the call itself is wrapped in `try/catch`
- * (a policy doesn't have to be `async` to misbehave), and its returned
- * value is `await`-ed inside that same `try`, so a promise that rejects
- * later is caught identically to a synchronous throw. The resolved value is
- * then validated against the `PolicyResult` contract itself (`outcome` is
- * exactly `"pass"`, `"fail"`, or `"warn"`; `rationale` is a string) before
- * it is trusted -- a malformed result is treated exactly like a throw
- * rather than silently coerced into a pass. Every one of these failure
+ * Every `policy` call is isolated. The call itself is wrapped in `try/catch`
+ * (a policy doesn't have to be `async` to misbehave). Its returned value is
+ * `await`-ed inside that same `try`, so a promise that rejects later is
+ * caught identically to a synchronous throw. The resolved value is then
+ * validated against the `PolicyResult` contract itself before it is
+ * trusted: `outcome` is exactly `"pass"`, `"fail"`, or `"warn"`, and
+ * `rationale` is a string. A malformed result is treated exactly like a
+ * throw rather than silently coerced into a pass. Every one of these failure
  * modes is wrapped in `PolicyThrewError`, with the original thrown value
  * (or a descriptive validation error, for a malformed result) preserved via
- * `cause` -- never stringified or discarded. Two specific, common mistakes
- * get a more actionable error instead, chosen by `wrapPolicyFailure` (see
- * its own doc comment): reading a `result.output` property on a check that
- * never requested a format (`PolicyReadUnrequestedOutputError`), and reading
- * `result.output.value` on a check whose requested parse actually failed
- * (`PolicyReadFailedParseValueError`) -- both still preserve the original
- * `TypeError` via `cause`, exactly like the plain `PolicyThrewError` case.
- * One policy failing this way never stops any other check's policy from
- * running. If more than one policy fails this way in the same run, this
- * function throws a native `AggregateError` whose `errors` holds one such
- * error per failing check, rather than surfacing only the first one found;
- * if exactly one policy fails, it throws that single error directly.
+ * `cause`: never stringified or discarded.
+ *
+ * Two specific, common mistakes get a more actionable error instead, chosen
+ * by `wrapPolicyFailure` (see its own doc comment):
+ * - reading a `result.output` property on a check that never requested a
+ *   format (`PolicyReadUnrequestedOutputError`);
+ * - reading `result.output.value` on a check whose requested parse failed
+ *   (`PolicyReadFailedParseValueError`).
+ *
+ * Both still preserve the original `TypeError` via `cause`, like the plain
+ * `PolicyThrewError` case. One policy failing this way never stops any
+ * other check's policy from running. If more than one policy fails this way
+ * in the same run, this function throws a native `AggregateError`. Its
+ * `errors` holds one such error per failing check, rather than surfacing
+ * only the first one found. If exactly one policy fails, it throws that
+ * single error directly.
  * @param entries - each check's id, definition, and final (possibly parsed-output) evidence to invoke its policy against
  * @param evidence - the complete, already-assembled evidence for the whole run, passed to every policy call
  * @param onVerdict - told of each check's `PolicyResult` as soon as it is valid; a hook that throws is ignored
@@ -242,7 +246,7 @@ export async function runPolicies(
   await Promise.all(
     entries.map(async ([checkId, check, checkEvidence], entryIndex) => {
       // Derived on the fly from data that already exists (this check's own
-      // dependsOn plus the already-fully-assembled evidence.checks) --
+      // dependsOn plus the already-fully-assembled evidence.checks):
       // never persisted, so Evidence's own shape/schema doesn't grow. `{}`
       // for a check with no dependsOn, never undefined.
       // validate-config.ts guarantees every dependsOn id names a check in this run, and the phasing

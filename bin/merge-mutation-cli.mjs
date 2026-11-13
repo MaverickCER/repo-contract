@@ -1,4 +1,4 @@
-// `repo-contract merge-mutation` -- combine the Stryker reports of a sharded mutation run into
+// `repo-contract merge-mutation`: combine the Stryker reports of a sharded mutation run into
 // the one report an unsharded run would have produced. It fails, rather than merging what it has,
 // if a shard is missing, repeated, out of range, unreadable, or mutated a file another shard did.
 // All input and output is injected (argv, stdout/stderr, file access, the engine) so the command is

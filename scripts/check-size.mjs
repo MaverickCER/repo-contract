@@ -1,17 +1,19 @@
-// Lightweight, dependency-free bundle size reporter (Node builtins only --
+// Lightweight, dependency-free bundle size reporter (Node builtins only:
 // this is dev/CI tooling, not something that ships or runs at runtime).
 //
 // Report-only: measures gzip size for a fixed set of entry points and never
-// fails on what it measures -- a missing file or an over-budget size is a
-// fact to report, not this script's judgment call to make. The one thing
-// that IS this script's job to enforce is that it ran at all: a malformed
-// --budget/--json argument, or an inability to write --json's output file,
-// still fails the process (an uncaught throw here). The required size
-// itself is owned by checks/size.ts, which passes it in via --budget purely
-// so this script's own console/JSON output can be annotated with it --
-// repo-contract's `size` check's policy makes the actual pass/fail decision
-// from its own copy of that number, never from anything this script decides
-// or echoes back.
+// fails on what it measures. A missing file or an over-budget size is a
+// fact to report, not this script's judgment call to make.
+//
+// The one thing that IS this script's job to enforce is that it ran at all.
+// A malformed --budget/--json argument still fails the process (an uncaught
+// throw here). An inability to write --json's output file fails it too.
+//
+// The required size itself is owned by checks/size.ts. It passes the size in
+// via --budget purely to annotate this script's own console/JSON output.
+// The `size` check's policy in repo-contract makes the actual pass/fail
+// decision from its own copy of that number. It never uses anything this
+// script decides or echoes back.
 
 import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
@@ -21,9 +23,9 @@ import { gzipSync } from "node:zlib"
 const here = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(here, "..")
 
-// Which dist/ entry points exist is build shape, not policy -- unlike the
-// budget, it's fine for this script to know it by default so bare `npm run
-// size` still works with zero arguments.
+// Which dist/ entry points exist is build shape, not policy. Unlike the
+// budget, it's fine for this script to know it by default, so bare
+// `npm run size` still works with zero arguments.
 const ENTRIES = [
   // This reports only this package's own compiled source: there are no runtime dependencies, so
   // nothing is inlined from node_modules (see tsup.config.ts).

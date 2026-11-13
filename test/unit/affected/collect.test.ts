@@ -253,7 +253,7 @@ describe("computeAffectedFromGit: choosing the base", () => {
     })
     expect(result.affectedTests).toEqual(["test/b.test.ts", "test/other.test.ts"])
     expect(explainAffected(result)).toEqual([
-      "full run: git-failed (merge-base) -- no base to compare against",
+      "full run: git-failed (merge-base: no base to compare against)",
     ])
   })
 

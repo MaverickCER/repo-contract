@@ -1,13 +1,15 @@
 # metrics
 
-Run records and what they show: a file-based, append-only log of what each run did, summaries of
-speed and trust over it, which of the six pillars the configured checks cover, and a maturity
-level computed from those facts. Pure: records come in as data and go out as text, so this
-barrel reads no file and runs no process (see
+Run records: an append-only log of what each contract run did, and what that log shows. It
+summarizes speed and trust, maps the configured checks onto the six pillars, and computes a
+maturity level from those facts.
+
+Pure: records come in as data and go out as text, so this barrel reads no file and runs no
+process (see
 specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
 
-A fourth independent public barrel, published under its own `./metrics` subpath; never
-re-exported from the package root.
+Experimental, and published under its own `./metrics` subpath; never re-exported from the
+package root.
 
 ## Interfaces
 
@@ -1069,10 +1071,11 @@ If a field is missing or out of range.
 function maturityLevel(input): MaturityResult;
 ```
 
-Computes a maturity level deterministically from recorded facts: 1 once there are runs and
-correctness is covered; 2 with the security and maintainability pillars and a passing full run;
-3 with every pillar, exceptions within budget and zero-tolerance policies; 4 with a clean
-soundness canary and an evidence manifest.
+Computes a maturity level deterministically from recorded facts:
+- 1 once there are runs and correctness is covered.
+- 2 with the security and maintainability pillars and a passing full run.
+- 3 with every pillar, exceptions within budget and zero-tolerance policies.
+- 4 with a clean soundness canary and an evidence manifest.
 
 #### Parameters
 

@@ -1,4 +1,4 @@
-// `repo-contract metrics` -- summarize the run log (`.repo-contract/metrics/runs.jsonl`): how
+// `repo-contract metrics`: summarize the run log (`.repo-contract/metrics/runs.jsonl`): how
 // often runs pass, which checks fail, how much the cache and affected scope save. Read-only. All
 // input and output is injected (argv, stdout/stderr, the file reader, the engine, the clock) so
 // the command is unit-testable without a process or a directory; bin/repo-contract.mjs wires the

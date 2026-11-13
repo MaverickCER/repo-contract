@@ -35,7 +35,7 @@ describe("tokenizeRunString", () => {
       "tool",
       "C:\\path\\to\\thing",
     ])
-    // A single-quoted span still ends only at the closing quote -- the
+    // A single-quoted span still ends only at the closing quote: the
     // backslash never escapes it.
     expect(tokenizeRunString("tool 'a\\'", "t")).toEqual(["tool", "a\\"])
   })
@@ -44,7 +44,7 @@ describe("tokenizeRunString", () => {
     expect(tokenizeRunString("echo a\\", "echo")).toEqual(["echo", "a\\"])
   })
 
-  it("does not expand glob characters -- they round-trip as literal argv content", () => {
+  it("does not expand glob characters: they round-trip as literal argv content", () => {
     expect(tokenizeRunString('eslint "src/**/*.ts"', "lint")).toEqual(["eslint", "src/**/*.ts"])
     expect(tokenizeRunString("eslint src/**/*.ts", "lint")).toEqual(["eslint", "src/**/*.ts"])
   })
@@ -62,7 +62,7 @@ describe("tokenizeRunString", () => {
     expect(tokenizeRunString("grep $100 file.txt", "grep")).toEqual(["grep", "$100", "file.txt"])
   })
 
-  it("is deterministic -- the same input always produces the same output", () => {
+  it("is deterministic: the same input always produces the same output", () => {
     const input = 'npm run test -- --grep="foo bar" --watch=false'
     expect(tokenizeRunString(input, "tests")).toEqual(tokenizeRunString(input, "tests"))
   })
@@ -102,10 +102,10 @@ describe("tokenizeRunString", () => {
     },
   )
 
-  // Distinct from a bare unquoted newline: a backslash *before* the newline
-  // would be consumed as an escape (splicing a literal newline into the token
-  // and skipping the bare-newline rejection) if it weren't caught first, so it
-  // gets its own line-continuation-specific message.
+  // Distinct from a bare unquoted newline. A backslash *before* the newline
+  // would otherwise be consumed as an escape. That would splice a literal
+  // newline into the token and skip the bare-newline rejection. So it is caught
+  // first and gets its own line-continuation message.
   it.each([
     { label: "LF", input: "echo a\\\necho b" },
     { label: "CR", input: "echo a\\\recho b" },
@@ -181,7 +181,7 @@ describe("tokenizeRunString", () => {
     )
   })
 
-  describe("fuzz corpus generated via shell-quote (used only as a source of varied input strings, never as an equivalence oracle -- see the runtime-dependency rationale in the implementation plan)", () => {
+  describe("fuzz corpus generated via shell-quote (used only as a source of varied input strings, never as an equivalence oracle; see the runtime-dependency rationale in the implementation plan)", () => {
     const corpus = [
       "npm run build",
       "eslint . --max-warnings 0",
@@ -195,9 +195,9 @@ describe("tokenizeRunString", () => {
     it.each(corpus)(
       "either tokenizes to a non-empty argv or throws InvalidCheckConfigError: %s",
       (input) => {
-        // shell-quote is used here only to confirm the corpus itself is
-        // realistic/varied shell-shaped input -- its own parse result is
-        // never compared against tokenizeRunString's output.
+        // The shell-quote parse only confirms the corpus is realistic, varied
+        // shell-shaped input. Its result is never compared against
+        // tokenizeRunString's output.
         expect(() => shellQuoteParse(input)).not.toThrow()
 
         let result: readonly string[] | undefined

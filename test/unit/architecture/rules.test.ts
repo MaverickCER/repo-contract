@@ -3,21 +3,21 @@ import { describe, expect, it } from "vitest"
 
 /**
  * Proves the layering-rule *mechanism* .dependency-cruiser.cjs relies on is
- * sound -- both that a forbidden import direction is actually flagged (a
- * true positive) and that a legitimate one is not (a true negative) -- using
- * small, dedicated fixture module trees under ./fixtures/ shaped like the
- * real src/execution -> src/policy (forbidden) and src/evidence ->
- * src/execution (permitted) relationships ADR 0001 describes. This is rule
- * *quality*, distinct from rule *existence*: an overly-broad rule that
- * rejects legitimate architecture would fail the true-negative case here
- * even though the rule "exists" and technically runs.
+ * sound. A forbidden import direction must be flagged (a true positive). A
+ * legitimate one must not be (a true negative). Small, dedicated fixture
+ * module trees under ./fixtures/ mirror the relationships ADR 0001
+ * describes: src/execution -> src/policy (forbidden) and src/evidence ->
+ * src/execution (permitted). This is rule *quality*, distinct from rule
+ * *existence*. An overly-broad rule that rejects legitimate architecture
+ * would fail the true-negative case here, even though the rule "exists" and
+ * runs.
  *
  * Uses dependency-cruiser's own Node API directly against the fixture
- * files -- never spawns the `depcruise` CLI or touches the real
+ * files: never spawns the `depcruise` CLI or touches the real
  * .dependency-cruiser.cjs/src/ (see scripts/check-architecture.mjs for
  * that).
  */
-describe(".dependency-cruiser.cjs-style layering rules -- true positive / true negative", () => {
+describe(".dependency-cruiser.cjs-style layering rules: true positive / true negative", () => {
   it("flags a forbidden import direction (execution-shaped -> policy-shaped)", async () => {
     const result = await cruise(["test/unit/architecture/fixtures/violating"], {
       outputType: "json",
@@ -52,11 +52,11 @@ describe(".dependency-cruiser.cjs-style layering rules -- true positive / true n
         forbidden: [
           // Mirrors .dependency-cruiser.cjs's real
           // execution-must-not-import-evidence-or-policy rule's exact shape (from: execution, to:
-          // evidence), applied to this fixture's one real edge -- evidence/build.ts importing
+          // evidence), applied to this fixture's one real edge; evidence/build.ts importing
           // execution/run.ts, the *opposite* direction. A rule engine that matched from/to as an
-          // unordered pair (rather than strictly directional) would wrongly flag this edge too;
-          // this fails loudly if that regresses, rather than testing an unrelated `to: policy`
-          // pattern the fixture's one real edge could never match regardless of directionality.
+          // unordered pair (rather than strictly directional) would wrongly flag this edge too.
+          // This test fails loudly if that regresses. A `to: policy` pattern would test nothing
+          // here, because the fixture's one edge could never match it in either direction.
           {
             name: "no-execution-to-evidence",
             severity: "error",

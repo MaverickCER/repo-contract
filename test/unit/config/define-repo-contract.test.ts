@@ -16,11 +16,11 @@ describe("defineRepoContract", () => {
     expect(defineRepoContract(config)).toBe(config)
   })
 
-  it("does not throw for a structurally invalid config -- validation happens in runRepoContract, not here", () => {
+  it("does not throw for a structurally invalid config: validation happens in runRepoContract, not here", () => {
     // Cast to defineRepoContract's own parameter type (rather than a
     // hand-named one) so this stays a pure runtime-behavior test even as
     // that type gains compile-time constraints (e.g. ValidatedCheckSchema's
-    // dependsOn checking) -- this test is deliberately bypassing them, not
+    // dependsOn checking): this test is deliberately bypassing them, not
     // exercising them.
     const malformed = {
       checks: { tests: { run: 5, policy: okPolicy } },
@@ -32,18 +32,17 @@ describe("defineRepoContract", () => {
 
   describe("type inference", () => {
     // Deliberately no manual `ctx: PolicyContext<...>` annotation anywhere
-    // below -- that would interfere with defineRepoContract's own generic
+    // below: that would interfere with defineRepoContract's own generic
     // inference, and it isn't how a real consumer authors a config either.
     //
-    // `output.value` is `unknown` for every format (see InferParsedValue's
-    // doc comment in types.ts for why "text" isn't special-cased to
-    // `string`), and `output` itself is always optional/possibly-undefined
-    // on `ctx.result` regardless of whether that check's own config
-    // requested a format -- narrowed with `ctx.result.output?.success`, not
-    // a compile-time-absent key. Both are deliberate simplifications made
-    // after a real, confirmed TypeScript inference limitation for a record
-    // of heterogeneous per-check generics with policy callbacks (see
-    // specs/decisions/).
+    // `output.value` is `unknown` for every format. InferParsedValue's doc
+    // comment in types.ts explains why "text" isn't special-cased to `string`.
+    // `output` itself is always optional on `ctx.result`, even when that
+    // check's config requested a format. It is narrowed with
+    // `ctx.result.output?.success`, not a compile-time-absent key. Both are
+    // deliberate simplifications. They follow a confirmed TypeScript inference
+    // limitation for a record of heterogeneous per-check generics with policy
+    // callbacks (see specs/decisions/).
 
     it("types result.output.value as unknown for a check with output.format: 'json'", () => {
       defineRepoContract({

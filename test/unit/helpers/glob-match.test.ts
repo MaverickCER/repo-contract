@@ -144,7 +144,7 @@ describe("globMatch", () => {
     expect(globMatch("-", "[a-c-e]")).toBe(true)
   })
 
-  it("every token consumes exactly what it should -- never backward, never beyond", () => {
+  it("every token consumes exactly what it should: never backward, never beyond", () => {
     expect(globMatch("ab", "ab*b")).toBe(false)
     expect(globMatch("ab", "ab**b")).toBe(false)
     expect(globMatch("ab", "ab**/b")).toBe(false)

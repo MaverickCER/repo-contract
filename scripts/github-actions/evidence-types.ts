@@ -4,30 +4,30 @@
  * checks/github-actions.ts's policy.
  *
  * The specialized analysis is owned by `actionlint` (rhysd/actionlint, run through the
- * `github-actionlint` npm wrapper) -- this repository owns only whether that analysis satisfies the
- * contract and how its result participates in the verdict. See
+ * `github-actionlint` npm wrapper). This repository owns only two things: whether that analysis
+ * satisfies the contract, and how its result participates in the verdict. See
  * specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md.
  */
 
 /** One actionlint finding, normalized from actionlint's own `-format '{{json .}}'` output. */
 export interface ActionlintFinding {
-  /** actionlint's human-readable explanation of the problem. */
+  /** The human-readable explanation actionlint gives for the problem. */
   readonly message: string
   /** Path to the offending workflow file, relative to the repository root. */
   readonly file: string
-  /** 1-based line number of the offending syntax. */
+  /** The 1-based line number of the offending syntax. */
   readonly line: number
-  /** 1-based column number of the offending syntax. */
+  /** The 1-based column number of the offending syntax. */
   readonly column: number
-  /** actionlint's rule category for this finding (e.g. `"expression"`, `"syntax-check"`, `"shellcheck"`). */
+  /** The rule category actionlint assigns to this finding (e.g. `"expression"`, `"syntax-check"`, `"shellcheck"`). */
   readonly kind: string
 }
 
 /**
- * `ok: false` means `actionlint` itself failed to run (its binary could not be downloaded or
- * executed, or it produced unparseable output) -- a tool-infrastructure failure, never conflated
- * with "actionlint ran and reported findings" (mirrors every other check's
- * `CheckStatus`/`ParsedOutput.success` distinction).
+ * `ok: false` means `actionlint` itself failed to run. Either its binary could not be downloaded
+ * or executed, or it produced unparseable output. Such a tool-infrastructure failure is never
+ * conflated with "actionlint ran and reported findings". This mirrors every other check's
+ * `CheckStatus`/`ParsedOutput.success` distinction.
  */
 export type GitHubActionsEvidence =
   | {

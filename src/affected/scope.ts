@@ -100,9 +100,9 @@ export interface ResolveScopeInput {
 
 /**
  * Decides whether a run validates the affected part of the tree or all of it. A release is always
- * full, and `CI_FULL` forces full over anything else; otherwise an explicit request wins, then
- * `REPO_CONTRACT_SCOPE`, then the CI event (a pull request compares with its base, every other
- * event, and a CI system with no pull request, validates everything), and a local run compares
+ * full, and `CI_FULL` forces full over anything else. Otherwise an explicit request wins, then
+ * `REPO_CONTRACT_SCOPE`, then the CI event. In CI, a pull request compares with its base; every
+ * other event, and a CI system with no pull request, validates everything. A local run compares
  * with its base branch.
  * @param input - The request and the environment, as data.
  * @returns The scope and why.

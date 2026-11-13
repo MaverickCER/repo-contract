@@ -6,12 +6,12 @@
 //
 // It mirrors repo-contract's own scripts/run-contract.mjs: import the public API,
 // load the contract definition, run it, print a color-free summary, and set
-// process.exitCode -- never call process.exit() (see runRepoContract's own
+// process.exitCode; never call process.exit() (see runRepoContract's own
 // contract).
 //
 // The one load-bearing detail: contract.ts is resolved relative to THIS file (so
 // the definition always comes from the installed package), but runRepoContract is
-// called with NO cwd override, so every check defaults to process.cwd() -- the
+// called with NO cwd override, so every check defaults to process.cwd(); the
 // consumer's repository, where `npm run contract` was invoked. The package owns
 // the contract; the consumer owns the execution context.
 
@@ -21,7 +21,7 @@ import { runRepoContract } from "repo-contract"
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 // pathToFileURL, not a bare path: on Windows `import()` rejects an absolute path
-// like `D:\...` as an unsupported URL scheme -- it needs a real file:// URL.
+// like `D:\...` as an unsupported URL scheme; it needs a real file:// URL.
 const configUrl = pathToFileURL(path.join(packageRoot, "contract.ts")).href
 
 // tsx registers an ESM loader so the TypeScript contract.ts can be imported on

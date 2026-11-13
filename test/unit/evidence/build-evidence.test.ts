@@ -114,7 +114,7 @@ describe("buildEvidence", () => {
 
     const { evidence } = await buildEvidence(results, new Date(0), new Date(1000))
 
-    // buildEvidence parses whenever a `format` was requested -- it never
+    // buildEvidence parses whenever a `format` was requested: it never
     // branches on `status`. For a spawn_error the stdout is empty, so the
     // parse is a well-formed failure (`success: false`), not a crash; the
     // pipeline still doesn't throw, and spawnError is carried through

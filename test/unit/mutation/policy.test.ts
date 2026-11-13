@@ -7,11 +7,11 @@ import type {
 } from "../../../scripts/suppression-governance/evidence-types.js"
 import type { CheckEvidence, Evidence, PolicyContext } from "../../../src/types.js"
 
-// Same real-fs-collision rationale as test/unit/presets/duplication.test.ts (and
-// test/unit/presets/security-secrets.test.ts, which reads its own JSON report the same
-// dynamic-`import("node:fs/promises")` way `checks/mutation.ts` does) -- mutation's own policy
-// reads a fixed relative path with no injectable cwd, and this repository's own `mutation` check
-// touches that exact same real path concurrently during `npm run contract`.
+// Same real-fs-collision rationale as test/unit/presets/duplication.test.ts. The mutation policy
+// reads a fixed relative path with no injectable cwd. This repository's `mutation` check touches
+// that same path concurrently during `npm run contract`. test/unit/presets/security-secrets.test.ts
+// has the same constraint: it reads its JSON report via the same dynamic
+// `import("node:fs/promises")` that `checks/mutation.ts` uses.
 const { readFile } = vi.hoisted(() => ({ readFile: vi.fn() }))
 vi.mock("node:fs/promises", () => ({ readFile }))
 
@@ -187,7 +187,7 @@ describe("mutation policy", () => {
     expect(result.rationale).toContain("Stryker produced no mutants")
   })
 
-  it("passes on killed mutants alone -- the suppression gate is skipped entirely with no comment-ignored mutants", async () => {
+  it("passes on killed mutants alone: the suppression gate is skipped entirely with no comment-ignored mutants", async () => {
     readFile.mockResolvedValue(JSON.stringify(strykerReport([killedMutant()])))
     const result = await mutation.policy(contextWithDependencies({}))
     expect(result.outcome).toBe("pass")
@@ -249,10 +249,10 @@ describe("mutation policy", () => {
       ),
     )
     const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.rationale).toContain("- src/example.ts:999:1 — X: y")
+    expect(result.rationale).toContain("- src/example.ts:999:1 (X: y)")
   })
 
-  it("tells the reader what to do for each failing category -- Survived, No coverage, and Timed out each get their own actionable instruction, not just a bare label", async () => {
+  it("tells the reader what to do for each failing category: Survived, No coverage, and Timed out each get their own actionable instruction, not just a bare label", async () => {
     readFile.mockResolvedValue(
       JSON.stringify(
         strykerReport([
@@ -378,13 +378,13 @@ describe("mutation policy", () => {
     expect(result.rationale).toContain("Stryker suppression registry unverifiable")
   })
 
-  it("fails specifically because of an unrelated, under-justified Stryker record -- proving a true global gate, not an incidental per-mutant match", async () => {
+  it("fails specifically because of an unrelated, under-justified Stryker record: proving a true global gate, not an incidental per-mutant match", async () => {
     readFile.mockResolvedValue(
       JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
     )
     // Fully justified, at the exact location of the reported comment-ignored mutant.
     const related = fullyJustifiedPair()
-    // Insufficient, and deliberately at a different file/line, unrelated to the reported mutant --
+    // Insufficient, and deliberately at a different file/line, unrelated to the reported mutant:
     // Stryker's own report gives no per-mutant back-reference to a specific disable comment, so
     // this must still fail the whole check.
     const unrelatedFinding = strykerFinding({
@@ -406,7 +406,7 @@ describe("mutation policy", () => {
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
     expect(result.outcome).toBe("fail")
-    // The unrelated record must be named -- not merely that *something* failed.
+    // The unrelated record must be named: not merely that *something* failed.
     expect(result.rationale).toContain("src/unrelated-other-file.ts:999")
     // And the fully-justified record must not itself be flagged as an offender.
     expect(result.rationale).not.toContain("src/example.ts:10")
@@ -455,8 +455,8 @@ describe("mutation policy", () => {
     readFile.mockResolvedValue(
       JSON.stringify(
         strykerReport([
-          // A real value the type declares as StrykerMutantStatus, but the runtime JSON isn't
-          // trusted to actually match -- see this file's own KNOWN_MUTANT_STATUSES comment.
+          // The type declares this value as a StrykerMutantStatus, but the runtime JSON isn't
+          // trusted to match: see this file's KNOWN_MUTANT_STATUSES comment.
           { id: 9, mutatorName: "X", replacement: "y", status: "Pending" },
         ]),
       ),
@@ -494,7 +494,7 @@ describe("mutation policy", () => {
     )
     const result = await mutation.policy(contextWithDependencies({}))
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("src/example.ts — X: y")
+    expect(result.rationale).toContain("src/example.ts (X: y)")
   })
 
   it("computes the exact mutation score from Killed/RuntimeError/CompileError against every applicable mutant", async () => {
@@ -520,8 +520,8 @@ describe("mutation policy", () => {
     }
     const result = await mutation.policy(contextWithDependencies(dependencies))
     expect(result.outcome).toBe("pass")
-    // 1 Killed / 1 applicable (the Ignored mutant is excluded from applicableMutants entirely) --
-    // if it were wrongly counted in the denominator this would read 50.00%, not 100.00%.
+    // The score is 1 Killed / 1 applicable, because the Ignored mutant is excluded from
+    // applicableMutants. Counting it in the denominator would read 50.00%, not 100.00%.
     expect(result.rationale).toContain("Detected mutation score: 100.00% (2 Total).")
   })
 })

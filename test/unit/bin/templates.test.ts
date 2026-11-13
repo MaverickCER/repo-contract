@@ -7,9 +7,9 @@ import { buildConfigTemplate, CONTRACT_RUNNER_TEMPLATE } from "../../../bin/temp
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..")
 
 /**
- * Extracts the fenced ```ts code block in GUIDE.md that contains `marker` as its first line --
+ * Extracts the fenced ```ts code block in GUIDE.md that contains `marker` as its first line:
  * the single source of truth this test pins CONTRACT_RUNNER_TEMPLATE against, so the generated
- * runner and README's own documented runner example can never silently drift apart.
+ * runner and GUIDE.md's documented runner example can never silently drift apart.
  */
 function extractFencedBlock(documentText: string, marker: string): string {
   const markerIndex = documentText.indexOf(marker)
@@ -44,7 +44,7 @@ describe("buildConfigTemplate", () => {
   })
 
   it("produces content that never spells the ambient-capability scanner's forbidden substrings verbatim as its own bin/templates.mjs source, only as this function's runtime output", () => {
-    // This test only proves the *output* is correct -- the source-level constant-splitting that
+    // This test only proves the *output* is correct: the source-level constant-splitting that
     // keeps bin/templates.mjs itself scanner-clean is covered by
     // the `AmbientCapabilities` check directly, not by unit tests of its output.
     const content = buildConfigTemplate(["securityDeps"])

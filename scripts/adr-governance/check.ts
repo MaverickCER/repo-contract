@@ -37,7 +37,7 @@ function findReferencedAdrNumbers(text: string): string[] {
 
 /**
  * Which of the referenced numbers actually correspond to a real, currently-existing file under
- * `specs/decisions/` -- cross-validated against the real directory listing, not just regex-shape.
+ * `specs/decisions/`: cross-validated against the real directory listing, not only by regex shape.
  * @param root - Absolute path to the repository being checked.
  * @param numbers - Candidate 4-digit ADR numbers to resolve.
  * @returns The subset of `numbers` that resolve to a real file.
@@ -54,10 +54,10 @@ async function resolveAdrNumbers(root: string, numbers: readonly string[]): Prom
 }
 
 /**
- * The check's full logic, factored out of the bottom-of-file script invocation so
- * `test/integration/adr-governance/check.integration.test.ts` can exercise the complete real path
- * (git diff -> commit-message scan -> ADR resolution -> evidence) in-process against a scratch
- * fixture repository, without spawning a subprocess.
+ * The check's full logic, factored out of the bottom-of-file script invocation. This lets
+ * `test/integration/adr-governance/check.integration.test.ts` exercise the complete real path
+ * (git diff -> commit-message scan -> ADR resolution -> evidence) in-process. It runs against a
+ * scratch fixture repository, without spawning a subprocess.
  * @param root - Absolute path to the repository being checked.
  * @param baseRef - Git ref to diff against, e.g. `origin/main`.
  * @returns The evidence for `output: { format: "json" }`.
@@ -71,9 +71,9 @@ export async function runAdrGovernanceCheck(
   const isGoverned = (p: string): boolean =>
     GOVERNED_PATH_PREFIXES.some((prefix) => p.startsWith(prefix))
 
-  // A file moved *out of* a governed prefix is still a change to the engine's shape -- git
-  // reports it as a rename whose `path` is the new (ungoverned) location, so `renamedFrom` has
-  // to be checked too. Report the governed side of such a move.
+  // A file moved *out of* a governed prefix is still a change to the engine's shape. Git reports
+  // it as a rename whose `path` is the new (ungoverned) location. `renamedFrom` has to be checked
+  // too. Report the governed side of such a move.
   const governedFilesTouched = files
     .filter((f) => isGoverned(f.path) || (f.renamedFrom !== undefined && isGoverned(f.renamedFrom)))
     .map((f) => (isGoverned(f.path) ? f.path : (f.renamedFrom ?? f.path)))

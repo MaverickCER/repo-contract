@@ -7,10 +7,10 @@ import { AGGREGATE_COVERAGE_FINAL_PATH } from "../../../scripts/aggregate-covera
 import { crap } from "../../../checks/crap.js"
 
 /**
- * Proves the shared-path contract for both consumers of the aggregate coverage artifact: the
- * writer (aggregateCoverage()) and the reader (the `crap` check's own `run` command) must agree on
- * the exact same path, imported from one shared module rather than each restating its own literal
- * -- see specs/decisions/0005-independent-verification-boundaries-coverage-is-a-union.md.
+ * Proves the shared-path contract for both consumers of the aggregate coverage artifact. The writer
+ * (aggregateCoverage()) and the reader (the `crap` check's `run` command) must agree on the same
+ * path. Both import it from one shared module rather than each restating a literal. See
+ * specs/decisions/0005-independent-verification-boundaries-coverage-is-a-union.md.
  */
 
 let root: string
@@ -34,7 +34,7 @@ describe("crap and coverage read the byte-identical aggregate coverage artifact"
     expect(path.relative(root, finalPath).split(path.sep).join("/")).toBe(
       AGGREGATE_COVERAGE_FINAL_PATH,
     )
-    // Not just a claimed path -- the file must actually exist there, real and unmocked, and
+    // Not just a claimed path: the file must actually exist there, real and unmocked, and
     // contain real, valid coverage-map JSON, not merely some non-empty (possibly garbage) text.
     const written = await readFile(finalPath, "utf8")
     const parsed: unknown = JSON.parse(written)

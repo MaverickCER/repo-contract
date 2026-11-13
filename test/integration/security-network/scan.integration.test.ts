@@ -20,7 +20,7 @@ import type {
 const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url))
 const runningInsideMutationSandbox = REPO_ROOT.split(path.sep).includes(".stryker-tmp")
 
-describe("security-network scan -- full real path", () => {
+describe("security-network scan: full real path", () => {
   it.runIf(!runningInsideMutationSandbox)(
     "this repository's own src/ is network-free, bin/ has only the recorded finding, and the registry reconciles clean (read-only composition, no write)",
     async () => {
@@ -30,7 +30,7 @@ describe("security-network scan -- full real path", () => {
       // restricted import (`createRequire`, to load the project's TypeScript for `affected`) is
       // the finding the registry records.
       expect(findings.map((finding) => finding.id)).toEqual([
-        "security-network:restricted-named-import:bin/repo-contract.mjs:16:10",
+        "security-network:restricted-named-import:bin/repo-contract.mjs:19:10",
       ])
 
       const registry = JSON.parse(

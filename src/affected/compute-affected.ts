@@ -106,10 +106,10 @@ const matches = (path: string, patterns: readonly string[]): boolean =>
  * Computes which tests (and which mutation targets) a change can affect.
  *
  * The analysis is symbol-level: each changed module is diffed against its base to find the exported
- * names whose behavior may differ, and those names are followed through the import graph --
- * including re-exports and `export *` -- to every module that uses them. Anything it cannot reason
- * about does not narrow the result: a changed file the graph cannot place, a global trigger such as
- * a lockfile, or a file that does not parse makes the whole result `"full"`, and a module that loads
+ * names whose behavior may differ. Those names are followed through the import graph (including
+ * re-exports and `export *`) to every module that uses them. Anything it cannot reason about does
+ * not narrow the result. A changed file the graph cannot place, a global trigger such as a
+ * lockfile, or a file that does not parse makes the whole result `"full"`. A module that loads
  * code dynamically is treated as affected by everything. Narrowing is only ever an optimization of
  * a sound answer, never a guess.
  * @param input - Module contents, the diff, and the TypeScript compiler API.

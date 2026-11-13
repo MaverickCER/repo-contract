@@ -1,15 +1,16 @@
 import type { CheckEvidence, PolicyResult } from "../../types.js"
 
 /**
- * Every preset in `src/presets/*.ts` (except `securityDeps`, which shells out
- * to `npm` itself -- something that cannot be "missing" in any environment
- * capable of running `npm run <script>` at all) calls this first, before its
- * own pass/fail/warn logic. `CheckEvidence.status === "spawn_error"` already
- * distinguishes "the OS couldn't even launch the executable" from "the tool
- * ran and exited non-zero" -- but not every spawn failure means the package
- * is missing (a permission error or an invalid executable format lands here
- * too), so this checks the structured `spawnErrorCode` for `"ENOENT"`
- * specifically rather than treating every spawn error as "not installed."
+ * Every preset in `src/presets/*.ts` calls this first, before its own
+ * pass/fail/warn logic. The exception is `securityDeps`, which shells out to
+ * `npm` itself: something that cannot be "missing" in any environment
+ * capable of running `npm run <script>` at all. `CheckEvidence.status ===
+ * "spawn_error"` already distinguishes "the OS couldn't even launch the
+ * executable" from "the tool ran and exited non-zero". But not every spawn
+ * failure means the package is missing (a permission error or an invalid
+ * executable format lands here too). So this checks the structured
+ * `spawnErrorCode` for `"ENOENT"` specifically, rather than treating every
+ * spawn error as "not installed."
  * A non-ENOENT spawn error falls through to the preset's normal handling,
  * unchanged, rather than getting a misleading "not installed" message.
  * @param result - the check's raw execution evidence to inspect.

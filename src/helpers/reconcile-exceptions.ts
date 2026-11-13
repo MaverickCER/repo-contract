@@ -1,11 +1,11 @@
 /**
- * The registry-lifecycle half of `repo-contract/helpers` -- `reconcileExceptions` diffs a check's
+ * The registry-lifecycle half of `repo-contract/helpers`: `reconcileExceptions` diffs a check's
  * raw findings against its already-loaded exception registry, and `serializeExceptionRegistry`
  * renders the reconciled records back to their canonical on-disk form. Both are pure; the only
  * I/O is `writeExceptionRegistry` in its own module. See
  * specs/decisions/0013-reusable-exception-policy-helper.md's "The exception registry is the review
- * surface" section for the model these serve: a check emits 100% of its findings, reconciliation
- * maintains one record per finding (a fresh stub for a new one), and stale records are surfaced,
+ * surface" section for the model these serve. A check emits 100% of its findings. Reconciliation
+ * maintains one record per finding (a fresh stub for a new one). Stale records are surfaced,
  * never removed.
  */
 
@@ -34,9 +34,9 @@ export interface ExceptionReconciliation<TFinding, TRecord> {
   readonly matchedPairs: readonly { readonly finding: TFinding; readonly record: TRecord }[]
   /** Every record to persist as live: matched records verbatim, plus one fresh `createStub` per unmatched finding. Never contains a stale record. */
   readonly activeRecords: readonly TRecord[]
-  /** Existing records whose id matched no finding this run -- surfaced for the policy to fail on, **never removed** by this function (retiring one is an explicit human edit). */
+  /** Existing records whose id matched no finding this run: surfaced for the policy to fail on, **never removed** by this function (retiring one is an explicit human edit). */
   readonly staleRecords: readonly TRecord[]
-  /** The ids of the stubs created this run -- a subset of `activeRecords`' ids. */
+  /** The ids of the stubs created this run: a subset of `activeRecords`' ids. */
   readonly newStubIds: readonly string[]
 }
 
@@ -45,21 +45,21 @@ export interface ExceptionReconciliation<TFinding, TRecord> {
  * exception registry. Pure and add-only: it never mutates a matched record and never removes a
  * stale one.
  *
- * `deriveId` must be **injective** over `findings` -- every independently-governable finding needs
+ * `deriveId` must be **injective** over `findings`: every independently-governable finding needs
  * a distinct id, or the mechanism cannot tell which finding a record's `justification` belongs to.
  * A collision is returned as `{ ok: false }` (a real condition a check must surface: the source
  * genuinely holds two identical directives), naming both finding indices so the check can point a
  * developer at them.
  *
  * `createStub(finding, id)` is handed the canonical id and its result's `id` is asserted equal to
- * it -- a `createStub` that derives its own identity differently is a `{ ok: false }` bug report,
+ * it: a `createStub` that derives its own identity differently is a `{ ok: false }` bug report,
  * never a silently-mismatched record.
  *
  * Precondition: `existing` has already passed the check's registry validator (unique ids, correct
  * namespace). This function does not re-validate it.
  * @param input - The already-loaded registry, this run's findings, and the check-owned identity + stub callbacks.
  * @param input.existing - The validated records currently on disk.
- * @param input.findings - Every raw finding this run produced -- nothing filtered.
+ * @param input.findings - Every raw finding this run produced: nothing filtered.
  * @param input.deriveId - The finding's check-namespaced semantic id. Must be injective over `findings`.
  * @param input.createStub - Builds a fresh record for an unmatched finding; receives the canonical id and must return a record carrying it.
  * @returns The reconciliation, or the first integrity problem found.
@@ -83,7 +83,7 @@ export function reconcileExceptions<TFinding, TRecord extends { readonly id: str
     if (prior !== undefined) {
       return {
         ok: false,
-        error: `deriveId is not injective: findings at index ${String(prior)} and ${String(index)} both map to id ${JSON.stringify(id)} -- every independently-governable finding must have a distinct id; make the two directives distinguishable.`,
+        error: `deriveId is not injective: findings at index ${String(prior)} and ${String(index)} both map to id ${JSON.stringify(id)}. Every independently-governable finding must have a distinct id. Make the two directives distinguishable.`,
       }
     }
     idByFirstIndex.set(id, index)

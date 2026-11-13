@@ -17,13 +17,18 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const execution: ExecutionCapability = { spawn: testSpawn, env: testEnv, shell: false }
 
 // The host-process SIGINT/SIGTERM cleanup path can only be exercised by sending
-// a real signal to a real child process. Windows has no POSIX signal delivery:
-// `child.kill("SIGINT")` there ignores the name and abruptly terminates the
-// child (TerminateProcess), so run-checks.ts's cooperative `process.once`
-// handler never runs and there is nothing for these tests to observe.
+// a real signal to a real child process. Windows has no POSIX signal delivery.
+// There, `child.kill("SIGINT")` ignores the name and abruptly terminates the
+// child (TerminateProcess). So run-checks.ts's cooperative `process.once`
+// handler never runs. These tests would have nothing to observe.
 const itSkipOnWindows = it.skipIf(process.platform === "win32")
 
-/** Same technique as abort-signals.test.ts's own helper of the same name (duplicated locally rather than imported, since that one is private to its own test file): temporarily removes the native `AbortSignal.any` so a test can force `composeSignals`'s manual-composition fallback path, where `dispose()` has a real, observable effect (removing a real "abort" listener) instead of being an unconditional no-op. */
+/**
+ * Temporarily removes the native `AbortSignal.any` so a test can force `composeSignals`'s
+ * manual-composition fallback path. There, `dispose()` has an observable effect (it removes an
+ * "abort" listener) instead of being a no-op. Same technique as the helper of the same name in
+ * abort-signals.test.ts, duplicated because that one is private to its test file.
+ */
 async function withoutNativeAbortSignalAny(run: () => Promise<void>): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/unbound-method -- reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.
   const original: typeof AbortSignal.any = AbortSignal.any
@@ -165,7 +170,7 @@ describe("runChecks", () => {
     expect(results.every(([, , evidence]) => evidence.status === "completed")).toBe(true)
   })
 
-  it("does not start a dependent check's process until its dependency has settled -- real subprocesses, real timestamps", async () => {
+  it("does not start a dependent check's process until its dependency has settled: real subprocesses, real timestamps", async () => {
     const checks: CheckSchema = {
       a: {
         run: [process.execPath, "-e", "setTimeout(() => { process.stdout.write('a') }, 150)"],
@@ -182,16 +187,15 @@ describe("runChecks", () => {
 
     expect(byId.a?.stdout).toBe("a")
     expect(byId.b?.stdout).toBe("b")
-    // b's own process must not have been spawned until a's had already
-    // settled -- proven with a's/b's own real, independently-captured
-    // startedAt/completedAt timestamps, not an artificial delay asserted
-    // as the only signal.
+    // `b`'s process must not have been spawned until `a`'s had settled. The
+    // proof is `a`'s and `b`'s independently captured startedAt/completedAt
+    // timestamps, not an artificial delay.
     expect(new Date(byId.b!.startedAt).getTime()).toBeGreaterThanOrEqual(
       new Date(byId.a!.completedAt).getTime(),
     )
   })
 
-  it("a diamond dependency shape -- D starts only after both B and C have settled", async () => {
+  it("a diamond dependency shape: D starts only after both B and C have settled", async () => {
     const checks: CheckSchema = {
       a: { run: [process.execPath, "-e", "process.stdout.write('a')"], policy: okPolicy },
       b: {
@@ -215,7 +219,7 @@ describe("runChecks", () => {
 
     const dStart = new Date(byId.d!.startedAt).getTime()
     expect(dStart).toBeGreaterThanOrEqual(new Date(byId.b!.completedAt).getTime())
-    // c is deliberately the slower of the two -- proves d waited for
+    // `c` is deliberately the slower of the two. That proves `d` waited for
     // *both*, not just whichever settled first.
     expect(dStart).toBeGreaterThanOrEqual(new Date(byId.c!.completedAt).getTime())
     expect(new Date(byId.b!.startedAt).getTime()).toBeGreaterThanOrEqual(
@@ -227,17 +231,16 @@ describe("runChecks", () => {
   })
 
   it("still respects the concurrency cap once many dependents become ready together", async () => {
-    // runChecks itself never invokes a check's policy (that's a separate,
-    // later phase -- see run-policies.ts), so concurrency here can't be
-    // observed via a policy callback the way it could be at the
-    // run-repo-contract.ts level. The dependency-graph scheduler's own
-    // concurrency enforcement is already directly proven, with real
-    // in-worker tracking, by dependency-scheduler.test.ts's fan-out test;
-    // this test's job is narrower: prove a fan-out of dependents (more of
-    // them than the concurrency cap) still completes correctly once
-    // unblocked together through the real runChecks/spawnCheck path, not a
-    // synthetic worker -- matching the existing "respects the configured
-    // concurrency limit" test's own approach for the no-dependency case.
+    // `runChecks` never invokes a check's policy; that is a separate, later
+    // phase (see run-policies.ts). So concurrency here can't be observed
+    // via a policy callback, as it could at the run-repo-contract.ts level.
+    // dependency-scheduler.test.ts's fan-out test already proves the
+    // scheduler's concurrency enforcement, with in-worker tracking. This
+    // test's job is narrower. A fan-out of dependents, more than the
+    // concurrency cap, must still complete once unblocked together. It runs
+    // through the real runChecks/spawnCheck path, not a synthetic worker.
+    // The "respects the configured concurrency limit" test takes the same
+    // approach for the no-dependency case.
     const checks: CheckSchema = {
       root: { run: [process.execPath, "-e", "process.stdout.write('root')"], policy: okPolicy },
       ...Object.fromEntries(
@@ -281,7 +284,7 @@ describe("runChecks", () => {
     expect(soloStart).toBeGreaterThanOrEqual(new Date(byId.b!.completedAt).getTime())
   })
 
-  it("two non-isolated checks are unaffected by a sibling's isolated flag -- neither waits on the other", async () => {
+  it("two non-isolated checks are unaffected by a sibling's isolated flag: neither waits on the other", async () => {
     const checks: CheckSchema = {
       a: {
         run: [process.execPath, "-e", "setTimeout(() => { process.stdout.write('a') }, 100)"],
@@ -300,10 +303,10 @@ describe("runChecks", () => {
     const results = await runChecks(checks, 4, execution, undefined)
     const byId = Object.fromEntries(results.map(([checkId, , evidence]) => [checkId, evidence]))
 
-    // b must have started before a completed -- proves the isolated
-    // sibling's implicit "depends on everyone else" edges are one-directional
-    // and never leak a reverse constraint onto the non-isolated checks
-    // themselves.
+    // `b` must have started before `a` completed. That proves the isolated
+    // sibling's implicit "depends on everyone else" edges are
+    // one-directional. They never leak a reverse constraint onto the
+    // non-isolated checks.
     expect(new Date(byId.b!.startedAt).getTime()).toBeLessThan(
       new Date(byId.a!.completedAt).getTime(),
     )
@@ -336,11 +339,11 @@ describe("runChecks", () => {
     expect(new Date(byId.fastSolo!.startedAt).getTime()).toBeGreaterThanOrEqual(
       new Date(byId.a!.completedAt).getTime(),
     )
-    // fastSolo, declared after slowSolo, waits for it to fully complete before starting: an
-    // isolated check is a full barrier at its own declared position, waiting for *every* check
-    // declared earlier -- isolated or not (see ADR 0002). Two isolated checks are therefore always
-    // sequential relative to each other now, unlike the old position-independent model where
-    // neither waited for the other.
+    // `fastSolo`, declared after `slowSolo`, waits for it to fully complete before starting. An
+    // isolated check is a full barrier at its declared position. It waits for *every* check
+    // declared earlier, isolated or not (see ADR 0002). Two isolated checks are therefore always
+    // sequential relative to each other now. In the old position-independent model, neither waited
+    // for the other.
     expect(new Date(byId.fastSolo!.startedAt).getTime()).toBeGreaterThanOrEqual(
       new Date(byId.slowSolo!.completedAt).getTime(),
     )
@@ -361,11 +364,11 @@ describe("runChecks", () => {
     const results = await runChecks(checks, 4, execution, undefined)
     const byId = Object.fromEntries(results.map(([checkId, , evidence]) => [checkId, evidence]))
 
-    // "reader" is a plain (non-isolated) check declared *after* the isolated "barrier" -- it must
-    // not start until "barrier" has fully completed, exercising dependencyIndexesFor's
-    // isolatedIndexes/earlierIsolated edge for a non-isolated check (distinct from an isolated
-    // check's own "everything declared earlier" edge, covered by the sequential-isolated-checks
-    // test above).
+    // "reader" is a plain (non-isolated) check declared *after* the isolated "barrier". It must not
+    // start until "barrier" has fully completed. This exercises dependencyIndexesFor's
+    // isolatedIndexes/earlierIsolated edge for a non-isolated check. An isolated check's
+    // "everything declared earlier" edge is different; the sequential-isolated-checks test above
+    // covers it.
     expect(new Date(byId.reader!.startedAt).getTime()).toBeGreaterThanOrEqual(
       new Date(byId.barrier!.completedAt).getTime(),
     )
@@ -412,7 +415,7 @@ describe("runChecks", () => {
     expect(byId.b?.stdout).toBe("")
   })
 
-  it("a global AbortSignal fired mid-run gives every check well-formed evidence -- in-flight checks are aborted, and checks still queued behind the concurrency limit never spawn", async () => {
+  it("a global AbortSignal fired mid-run gives every check well-formed evidence: in-flight checks are aborted, and checks still queued behind the concurrency limit never spawn", async () => {
     const controller = new AbortController()
     const checks: CheckSchema = {
       // Long-running, will be in-flight when we abort.
@@ -443,10 +446,10 @@ describe("runChecks", () => {
   })
 
   it("disposes the composed run signal once the run completes, releasing the fallback listener it attached to a supplied options.signal", async () => {
-    // Regression test for the composed runSignal's cleanup: `dispose()` is a genuine no-op on the
-    // native AbortSignal.any path (per composeSignals's own doc comment), so this must force the
-    // manual-composition fallback for the effect of (not) calling `dispose()` to be observable at
-    // all -- otherwise this couldn't distinguish "disposeRunSignal() runs" from "it doesn't".
+    // Regression test for the composed runSignal's cleanup. `dispose()` is a no-op on the native
+    // AbortSignal.any path (per composeSignals's doc comment). So this must force the
+    // manual-composition fallback for (not) calling `dispose()` to be observable. Otherwise this
+    // couldn't distinguish "disposeRunSignal() runs" from "it doesn't".
     await withoutNativeAbortSignalAny(async () => {
       const controller = new AbortController()
       const checks: CheckSchema = {
@@ -454,10 +457,10 @@ describe("runChecks", () => {
       }
       await runChecks(checks, 4, execution, { signal: controller.signal })
 
-      // composeSignals' manual fallback attaches its own "abort" listener to every input signal,
-      // including this externally-supplied one -- runChecks must remove it once the run
-      // completes, or every run would leak one permanent listener onto a caller-owned,
-      // potentially long-lived AbortSignal.
+      // composeSignals' manual fallback attaches an "abort" listener to every input signal,
+      // including this externally supplied one. runChecks must remove it once the run completes.
+      // Otherwise every run would leak a permanent listener onto a caller-owned, potentially
+      // long-lived AbortSignal.
       expect(getEventListeners(controller.signal, "abort")).toHaveLength(0)
     })
   })
@@ -471,9 +474,9 @@ describe("runChecks", () => {
     }
     const promise = runChecks(checks, 4, execution, undefined)
 
-    // Poll briefly rather than asserting immediately -- the handler is
-    // installed synchronously before the check's process spawns, but we
-    // still yield at least one tick to be safe against scheduling.
+    // Poll briefly rather than asserting immediately. The handler is
+    // installed synchronously before the check's process spawns. We still
+    // yield at least one tick to be safe against scheduling.
     const deadline = Date.now() + 2000
     while (process.listenerCount("SIGINT") === sigintBefore && Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 5))
@@ -527,31 +530,30 @@ describe("runChecks", () => {
   })
 
   it("throws when a requested subset's dependsOn forms a cycle, for a caller that bypasses validateRepoContractConfig", async () => {
-    // runChecks is called directly here, skipping the validateRepoContractConfig pass that
-    // normally rejects a forward-referencing (and therefore, structurally, any cyclic) dependsOn
-    // before this point -- exercising what happens for a caller (e.g. a future internal refactor,
-    // or a test) that reaches runChecks without going through runRepoContract first.
-    // resolveCheckDependencies itself no longer guards against a cycle (it's provably unreachable
-    // via the normal path, see its own doc comment) -- the underlying graph scheduler's own stall
-    // detection is what actually catches it here.
+    // `runChecks` is called directly here, skipping the validateRepoContractConfig pass. That pass
+    // normally rejects a forward-referencing dependsOn before this point, and so any cyclic one.
+    // This exercises a caller that reaches runChecks without going through runRepoContract first,
+    // e.g. a future internal refactor or a test. resolveCheckDependencies no longer guards against
+    // a cycle, since the normal path makes one unreachable (see its doc comment). The graph
+    // scheduler's stall detection is what catches it here.
     const checks: CheckSchema = {
       a: { run: [process.execPath, "-e", ""], dependsOn: ["b"], policy: okPolicy },
       b: { run: [process.execPath, "-e", ""], dependsOn: ["a"], policy: okPolicy },
     }
     await expect(runChecks(checks, 4, execution, { checks: ["a"] })).rejects.toThrow(
-      /stalled before starting -- the dependency graph passed in is not acyclic/,
+      /stalled before starting\. The dependency graph passed in is not acyclic/,
     )
   })
 
   itSkipOnWindows(
     "SIGINT while checks are in flight kills every spawned process tree before the host process exits",
     async () => {
-      // Runs run-checks.ts inside a real child Node process (via tsx, so the
-      // fixture can import the TypeScript source directly with no build step
-      // required), sends that child process a real SIGINT, and asserts the
-      // grandchild check process it spawned is also gone -- this is the only
-      // way to actually exercise "the *host* process receiving SIGINT" since
-      // vitest's own process is the host for every other test here.
+      // Runs run-checks.ts inside a child Node process, via tsx so the
+      // fixture can import the TypeScript source with no build step. The test
+      // sends that child a SIGINT and asserts the grandchild check process it
+      // spawned is also gone. Vitest's process is the host for every other
+      // test here. So this is the only way to exercise "the *host* process
+      // receiving SIGINT".
       const fixture = path.join(here, "fixtures", "sigint-cleanup.ts")
       const tsxBin = path.join(here, "..", "..", "..", "node_modules", ".bin", "tsx")
       const pidFilePath = path.join(
@@ -595,12 +597,12 @@ describe("runChecks", () => {
             return false
           }
         }
-        // `pidResolves` alone is not enough for the final assertion: under the heavy concurrent
-        // load this suite runs at on CI (macOS runners especially) a pid is recycled within
-        // seconds, so once the fixture's grandchild is gone its pid can already belong to an
-        // unrelated process. Only a *genuine* surviving grandchild -- whose argv still carries the
-        // unique per-run `pidFilePath` -- is a killTree failure. `ps -ww` (no command-column
-        // truncation, honoured by both BSD/macOS and GNU ps) is POSIX; this test skips on Windows.
+        // `pidResolves` alone is not enough for the final assertion. Under the heavy concurrent
+        // load of this suite on CI (macOS runners especially), a pid can be recycled within
+        // seconds. Once the fixture's grandchild is gone, its pid can already belong to an
+        // unrelated process. Only a surviving grandchild whose argv still carries the unique
+        // per-run `pidFilePath` is a killTree failure. `ps -ww` (no command-column truncation,
+        // honoured by both BSD/macOS and GNU ps) is POSIX; this test skips on Windows.
         const ourGrandchildIsAlive = (pid: number): boolean => {
           if (!pidResolves(pid)) return false
           const probe = spawnSync("ps", ["-ww", "-p", String(pid), "-o", "args="], {
@@ -608,11 +610,11 @@ describe("runChecks", () => {
           })
           return probe.status === 0 && probe.stdout.includes(pidFilePath)
         }
-        // A generous deadline: under heavy concurrent load (e.g. this whole suite running alongside
-        // Stryker's own worker processes as part of the self-hosting `npm run contract`), the
-        // host fixture's own SIGKILL-escalation timer (spawn-check.ts's killWithEscalation) may not
-        // get scheduled promptly -- that's real contention, not a logic bug in killTree, so the fix
-        // is patience here, not a tighter deadline.
+        // A generous deadline. Heavy concurrent load can delay the host fixture's
+        // SIGKILL-escalation timer (spawn-check.ts's killWithEscalation). An example is this suite
+        // running alongside Stryker's worker processes in the self-hosting `npm run contract`. That
+        // is contention, not a logic bug in killTree, so the fix is patience here, not a tighter
+        // deadline.
         const deadline = Date.now() + 15000
         while (pidResolves(grandchildPid) && Date.now() < deadline) {
           await new Promise((resolve) => setTimeout(resolve, 50))
@@ -630,12 +632,11 @@ describe("runChecks", () => {
   itSkipOnWindows(
     "does not spawn a check still queued behind the concurrency limit once SIGINT cleanup has begun",
     async () => {
-      // Regression test: installTerminationHandlers' handler used to kill only the checks already
-      // active at the instant the signal arrived, then immediately remove its own listeners --
-      // leaving nothing to supervise a check that the concurrency pool/scheduler launched
-      // *afterward*, once the killed check's slot freed. With concurrency: 1 and two checks
-      // declared, `second` can only ever be considered once `first`'s slot frees -- exactly the
-      // window this test exercises.
+      // Regression test. installTerminationHandlers' handler used to kill only the checks active
+      // when the signal arrived, then remove its listeners at once. Nothing then supervised a check
+      // that the concurrency pool/scheduler launched *afterward*, once the killed check's slot
+      // freed. With concurrency: 1 and two checks declared, `second` can only start once `first`'s
+      // slot frees. That is the window this test exercises.
       const fixture = path.join(here, "fixtures", "sigint-cleanup-queued.ts")
       const tsxBin = path.join(here, "..", "..", "..", "node_modules", ".bin", "tsx")
       const runId = `${String(process.pid)}-${String(Date.now())}`
@@ -672,7 +673,7 @@ describe("runChecks", () => {
         })
 
         // The host process has now fully exited (including its own
-        // SELF_TERMINATE_DELAY_MS wait) -- `second` had every opportunity to spawn and write its
+        // SELF_TERMINATE_DELAY_MS wait): `second` had every opportunity to spawn and write its
         // marker file if the queued-check bug were still present.
         expect(existsSync(queuedMarkerPath)).toBe(false)
       } finally {
@@ -686,15 +687,13 @@ describe("runChecks", () => {
 
 describe("SELF_TERMINATE_DELAY_MS", () => {
   it("is SIGKILL_GRACE_PERIOD_MS plus a 250ms margin, not equal to or less than it", () => {
-    // Pins the actual numeric relationship the SIGINT/SIGTERM handler's
-    // self-terminate timer depends on (installTerminationHandlers, above --
-    // real values, not a re-derivation of the same expression, so a
-    // regression that shrinks or removes the margin (e.g. `- 250` instead of
-    // `+ 250`) fails this assertion. The handler body itself is only
-    // testable end-to-end via a real signal sent to a child process (see the
-    // "SIGINT while checks are in flight" test above), which can't
-    // distinguish this constant's exact value from a nearby one -- this test
-    // covers the value directly instead.
+    // Pins the real values the self-terminate timer in the SIGINT/SIGTERM
+    // handler (installTerminationHandlers) depends on, not a re-derivation of
+    // the same expression. So a regression that shrinks or removes the margin
+    // (e.g. `- 250` instead of `+ 250`) fails here. The handler body is only
+    // testable end-to-end with a real signal sent to a child process (see the
+    // "SIGINT while checks are in flight" test above). That test cannot tell
+    // this constant's exact value from a nearby one, so this one checks it.
     expect(SELF_TERMINATE_DELAY_MS).toBe(2250)
     expect(SIGKILL_GRACE_PERIOD_MS).toBe(2000)
     expect(SELF_TERMINATE_DELAY_MS).toBeGreaterThan(SIGKILL_GRACE_PERIOD_MS)

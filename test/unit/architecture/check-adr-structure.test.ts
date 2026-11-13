@@ -39,7 +39,7 @@ afterEach(async () => {
   await rm(root, { recursive: true, force: true })
 })
 
-describe("checkAdrStructure -- true positive / true negative", () => {
+describe("checkAdrStructure: true positive / true negative", () => {
   it("reports zero violations on a correctly-shaped ADR tree", async () => {
     await writeAdr("0001", "first-decision", ALL_HEADINGS)
     await writeAdr("0002", "second-decision", ALL_HEADINGS)
@@ -49,7 +49,7 @@ describe("checkAdrStructure -- true positive / true negative", () => {
     expect(result).toEqual({ ok: true, filesScanned: 2, violations: [] })
   })
 
-  it("accepts a numbering gap with no duplicate -- gaps are deliberately allowed, not accidentally allowed", async () => {
+  it("accepts a numbering gap with no duplicate: gaps are deliberately allowed, not accidentally allowed", async () => {
     await writeAdr("0001", "first-decision", ALL_HEADINGS)
     await writeAdr("0003", "third-decision", ALL_HEADINGS)
 

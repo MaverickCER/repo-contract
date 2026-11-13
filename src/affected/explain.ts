@@ -10,10 +10,9 @@ import type { AffectedResult } from "./types.js"
 export function explainAffected(result: AffectedResult): string[] {
   if (result.scope === "full") {
     const because = result.fullBecause
+    const detail = because?.detail === undefined ? "" : `: ${because.detail}`
     return [
-      `full run: ${because === undefined ? "unknown reason" : `${because.reason} (${because.file})`}${
-        because?.detail === undefined ? "" : ` -- ${because.detail}`
-      }`,
+      `full run: ${because === undefined ? "unknown reason" : `${because.reason} (${because.file}${detail})`}`,
     ]
   }
   return result.affectedTests.map((test) => {

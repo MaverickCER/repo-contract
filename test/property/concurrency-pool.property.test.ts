@@ -8,7 +8,7 @@ import { runWithConcurrency } from "../../src/execution/concurrency-pool.js"
  * simultaneously, and every item's result lands at its original index
  * regardless of completion order.
  */
-describe("runWithConcurrency -- property-based", () => {
+describe("runWithConcurrency: property-based", () => {
   it("never runs more than the configured concurrency limit at once, and preserves result order", async () => {
     await fc.assert(
       fc.asyncProperty(

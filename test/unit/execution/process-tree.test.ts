@@ -58,17 +58,17 @@ describe("killTree", () => {
     await new Promise((resolve) => child.once("spawn", resolve))
     expect(child.pid).toBeDefined()
 
-    // killProcessTree (Windows-only; a no-op without it, see RepoContractConfig.killProcessTree's
-    // doc comment) is supplied here since this test's own point is "killTree actually terminates
-    // the process on any platform," not the documented no-capability fallback -- that fallback
-    // gets its own dedicated coverage below.
+    // `killProcessTree` is Windows-only, and killTree is a no-op without it (see
+    // RepoContractConfig.killProcessTree's doc comment). This test supplies it because its point is
+    // "killTree terminates the process on any platform". The no-capability fallback has its own
+    // coverage below.
     killTree(child.pid!, "SIGKILL", spawnSync)
     await waitForExit(child)
 
     expect(isAlive(child.pid!)).toBe(false)
   })
 
-  it("kills an entire real process tree -- a grandchild spawned by the killed process is also gone", async () => {
+  it("kills an entire real process tree: a grandchild spawned by the killed process is also gone", async () => {
     // Parent spawns a grandchild (also node), then both sleep. Killing only
     // the parent PID (not the tree) would leave the grandchild orphaned.
     const script = `
@@ -112,7 +112,7 @@ describe("killTree", () => {
       vi.restoreAllMocks()
     })
 
-    it("refuses pid 0, negative, and non-integer pids without ever calling process.kill -- 0 would signal the host's own group", () => {
+    it("refuses pid 0, negative, and non-integer pids without ever calling process.kill: 0 would signal the host's own group", () => {
       const killSpy = vi.spyOn(process, "kill")
       for (const bad of [0, -1, -12345, 1.5, Number.NaN]) {
         expect(() => {
@@ -136,15 +136,15 @@ describe("killTree", () => {
   })
 
   // EPERM (signaling a process owned by another user) and other unexpected
-  // process.kill errors can't be triggered for real in CI without
-  // cross-user permissions -- the one narrow, justified mock in this suite,
-  // isolated to exactly this error-classification behavior rather than
-  // mocking child_process itself.
-  // Forces the win32 branch via withPlatform so this suite can verify the JS-level
-  // killProcessTree call-through contract on any OS -- the real taskkill behavior itself is
-  // exercised only on a real Windows runner, by test/unit/cross-platform/windows-taskkill.test.ts.
+  // process.kill errors can't be triggered in CI without cross-user
+  // permissions. This is the one narrow, justified mock in this suite. It
+  // covers only this error-classification behavior rather than mocking
+  // child_process itself.
+  // Forces the win32 branch via withPlatform, so the JS-level killProcessTree call-through contract
+  // is verified on any OS. Only a Windows runner exercises taskkill itself, in
+  // test/unit/cross-platform/windows-taskkill.test.ts.
   describe("killProcessTree capability (forced win32)", () => {
-    it("is a documented no-op -- never throws, never calls anything -- when killProcessTree is omitted", () => {
+    it("is a documented no-op when killProcessTree is omitted: never throws, never calls anything", () => {
       withPlatform("win32", () => {
         expect(() => {
           killTree(12345, "SIGTERM")
@@ -179,7 +179,7 @@ describe("killTree", () => {
   })
 
   describe.skipIf(process.platform === "win32")(
-    "process.kill error classification (mocked -- EPERM is not reproducible in CI)",
+    "process.kill error classification (mocked: EPERM is not reproducible in CI)",
     () => {
       afterEach(() => {
         vi.restoreAllMocks()
@@ -209,7 +209,7 @@ describe("killTree", () => {
         }).toThrow("kill EINVAL")
       })
 
-      it("rethrows a thrown value that carries a code property but is not an Error instance -- classification requires both", () => {
+      it("rethrows a thrown value that carries a code property but is not an Error instance: classification requires both", () => {
         vi.spyOn(process, "kill").mockImplementation(() => {
           // eslint-disable-next-line @typescript-eslint/only-throw-error -- deliberately not an Error instance, to prove isErrnoException requires both `instanceof Error` and a `code` property, not either alone.
           throw { code: "ESRCH" }

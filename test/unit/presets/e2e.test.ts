@@ -76,7 +76,7 @@ describe("e2e preset", () => {
   it.each([
     ["no test matched", 0, "Playwright ran 0 tests (0 skipped)."],
     ["every test was skipped", 3, "Playwright ran 0 tests (3 skipped)."],
-  ])("fails (not passes) when %s -- 0 tests ran", async (_label, skipped, prefix) => {
+  ])("fails (not passes) when %s: 0 tests ran", async (_label, skipped, prefix) => {
     const result = await e2e.policy(
       fakeContext(
         fakeCheckEvidence({
@@ -183,7 +183,7 @@ describe("e2e preset", () => {
 
   it("fails with exactly the header and no detail lines when unexpected > 0 but no suites carry a failing spec", async () => {
     // A data inconsistency by construction (stats say 1 unexpected, but no
-    // spec in the tree is actually !ok) -- proves collectFailingSpecs
+    // spec in the tree is actually !ok): proves collectFailingSpecs
     // genuinely starts from an empty list, not a placeholder.
     const result = await e2e.policy(
       fakeContext(
@@ -239,7 +239,7 @@ describe("e2e preset", () => {
     expect(result.rationale).toBe(
       [
         "Playwright reported 2 unexpected failure(s):",
-        "- login.spec.ts:12 logs in — timeout",
+        "- login.spec.ts:12 logs in: timeout",
         "- firefox broken elsewhere",
       ].join("\n"),
     )
@@ -274,7 +274,7 @@ describe("e2e preset", () => {
     const report = {
       stats: { expected: 0, unexpected: 1, flaky: 0, skipped: 0 },
       suites: [
-        // No `specs` at all on this suite -- only its nested suite carries one.
+        // No `specs` at all on this suite: only its nested suite carries one.
         {
           title: "outer",
           suites: [

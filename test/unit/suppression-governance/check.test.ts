@@ -44,7 +44,7 @@ describe("deriveSuppressionId", () => {
     ).toBe("suppression:stryker:ConditionalExpression,EqualityOperator:src/b.ts:10")
   })
 
-  it("distinguishes two directives that differ only by line -- moving a directive changes its id", () => {
+  it("distinguishes two directives that differ only by line: moving a directive changes its id", () => {
     const a = deriveSuppressionId({ domain: "eslint", rule: ["x"], file: "src/c.ts", line: 5 })
     const b = deriveSuppressionId({ domain: "eslint", rule: ["x"], file: "src/c.ts", line: 6 })
     expect(a).not.toBe(b)

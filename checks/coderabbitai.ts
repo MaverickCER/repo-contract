@@ -54,11 +54,11 @@ function evaluateFinding(
 }
 
 /**
- * Evaluates the `coderabbitai` check's own emitted evidence -- a pure evidence->verdict function.
+ * Evaluates the `coderabbitai` check's own emitted evidence: a pure evidence->verdict function.
  * `not-applicable` (CI, review delegated to the GitHub App) / `unavailable` is a `warn`, always
  * visibly recorded. `error` warns (the run has no suggestions to offer). A malformed/unreconcilable registry
  * (`registryError`) fails regardless of status. A `reviewed` run: any `forbidden` / `insufficient` / `unmatched`
- * verdict or stale record warns, listed individually -- CodeRabbit's findings are advisory suggestions.
+ * verdict or stale record warns, listed individually; CodeRabbit's findings are advisory suggestions.
  * @param input - Wraps the evidence to evaluate.
  * @param input.evidence - The `CoderabbitEvidence` emitted by review.ts.
  * @returns The check's `PolicyResult`.
@@ -98,7 +98,7 @@ export function evaluateCoderabbitPolicy(input: {
         : ""
     return {
       outcome: "warn",
-      rationale: `coderabbitai did not run (${evidence.reason}) -- findings were not evaluated. Expected in CI, where review is delegated to the ${evidence.expectedProvider}.${note}`,
+      rationale: `coderabbitai did not run (${evidence.reason}), so findings were not evaluated. Expected in CI, where review is delegated to the ${evidence.expectedProvider}.${note}`,
     }
   }
 
@@ -109,7 +109,7 @@ export function evaluateCoderabbitPolicy(input: {
         : ""
     return {
       outcome: "warn",
-      rationale: `coderabbitai did not run (${evidence.reason}) -- findings were not evaluated. Install the CodeRabbit CLI (https://docs.coderabbit.ai/cli) and run from a real branch to enable real enforcement.${note}`,
+      rationale: `coderabbitai did not run (${evidence.reason}), so findings were not evaluated. Install the CodeRabbit CLI (https://docs.coderabbit.ai/cli) and run from a real branch to enable real enforcement.${note}`,
     }
   }
 
@@ -159,7 +159,7 @@ export function evaluateCoderabbitPolicy(input: {
 
   const staleLines = evidence.staleExceptions.map(
     (record) =>
-      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)} -- CodeRabbit no longer raises this finding (or its wording changed); delete this entry.`,
+      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)}. CodeRabbit no longer raises this finding (or its wording changed); delete this entry.`,
   )
 
   const determinants = evidence.findings.map((finding) => ({
@@ -182,11 +182,11 @@ export function evaluateCoderabbitPolicy(input: {
         : d.verdict === "unmatched"
           ? "no reconciled exception record (registry integrity failure)"
           : `exception incomplete (missing: ${d.missing.join(", ")})`
-    return `- ${d.finding.file} [${d.finding.severity}]: ${detail} -- ${d.finding.summary}`
+    return `- ${d.finding.file} [${d.finding.severity}]: ${detail}. Finding: ${d.finding.summary}`
   })
 
   // Advisory: CodeRabbit's findings are suggestions, adopted where they improve the code. A review of the same
-  // diff words them differently on every run, so no record can be relied on to match the next one; they are
+  // diff words them differently on every run, so no record can be relied on to match the next one. They are
   // reported, never a reason to stop a commit.
   return {
     outcome: "warn",
@@ -199,7 +199,7 @@ export function evaluateCoderabbitPolicy(input: {
 }
 
 // Promotes the former local-only `coderabbit review --agent` shell step into a real, always-
-// declared check -- see specs/decisions/0014-coderabbit-as-a-surfaced-check.md. Its own
+// declared check: see specs/decisions/0014-coderabbit-as-a-surfaced-check.md. Its own
 // non-execution (in CI, or locally when the CLI isn't installed) is recorded and surfaced as a
 // warn on every run.
 export const coderabbitai: CheckDefinitionConfig = {

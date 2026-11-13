@@ -2,20 +2,20 @@ import { describe, expect, it } from "vitest"
 import { LINKINATOR_SKIP_PATTERNS } from "../../../scripts/check-docs.mjs"
 
 /**
- * scripts/check-docs.mjs exempts a few URL shapes from linkinator's live crawl
- * (see that file's own comment for why each is unverifiable-by-construction).
- * linkinator applies every `--skip` value as a bare `new RegExp(value)` with no
- * flags, tested against the full href -- these cases pin that the changelog
- * release-URL exemption stays scoped to this repo and can't be widened by a
- * spoofed host or a query-string injection.
+ * scripts/check-docs.mjs exempts a few URL shapes from linkinator's live crawl.
+ * That file's comment explains why each is unverifiable by construction. The
+ * crawler applies every `--skip` value as a bare `new RegExp(value)` with no
+ * flags, tested against the full href. These cases pin that the changelog
+ * release-URL exemption stays scoped to this repo. A spoofed host or a
+ * query-string injection must not widen it.
  */
 
-// Mirror linkinator's own matcher: `new RegExp(x).test(href)`, no flags.
+// Mirrors the linkinator matcher: `new RegExp(x).test(href)`, no flags.
 function isSkipped(href: string): boolean {
   return LINKINATOR_SKIP_PATTERNS.some((pattern) => new RegExp(pattern).test(href))
 }
 
-describe("LINKINATOR_SKIP_PATTERNS -- changelog release URLs", () => {
+describe("LINKINATOR_SKIP_PATTERNS: changelog release URLs", () => {
   it.each([
     "https://github.com/MaverickCER/repo-contract/compare/repo-contract-v0.1.0...repo-contract-v0.1.1",
     "https://github.com/maverickcer/repo-contract/releases/tag/repo-contract-v0.1.0",
@@ -26,16 +26,16 @@ describe("LINKINATOR_SKIP_PATTERNS -- changelog release URLs", () => {
   })
 
   it.each([
-    // another owner's fork, or a typo'd owner -- must still be crawled
+    // Another owner's fork, or a typo'd owner: must still be crawled.
     "https://github.com/someone-else/repo-contract/compare/a...b",
     "https://github.com/maverikcer/repo-contract/compare/a...b",
-    // this owner, but a different repo
+    // This owner, but a different repo.
     "https://github.com/maverickcer/other-repo/compare/a...b",
-    // spoofed host / path smuggled into a query string
+    // Spoofed host, or a path smuggled into a query string.
     "https://notgithub.com/maverickcer/repo-contract/compare/a...b",
     "https://github.com.evil.example/maverickcer/repo-contract/compare/a...b",
     "https://evil.example/?x=github.com/maverickcer/repo-contract/compare/a",
-    // real, verifiable links on this repo -- never skipped
+    // Verifiable links on this repo: never skipped.
     "https://github.com/maverickcer/repo-contract/issues/1",
     "https://github.com/maverickcer/repo-contract/commit/abc1234",
   ])("does not skip: %s", (href) => {
@@ -43,7 +43,7 @@ describe("LINKINATOR_SKIP_PATTERNS -- changelog release URLs", () => {
   })
 })
 
-describe("LINKINATOR_SKIP_PATTERNS -- the generated HTML API reference", () => {
+describe("LINKINATOR_SKIP_PATTERNS: the generated HTML API reference", () => {
   it.each([
     "https://maverickcer.github.io/repo-contract/api/",
     "https://maverickcer.github.io/repo-contract/api/repo-contract/index.html",
@@ -53,19 +53,19 @@ describe("LINKINATOR_SKIP_PATTERNS -- the generated HTML API reference", () => {
   })
 
   it.each([
-    // the already-live landing page -- a broken link to it must still be caught
+    // The already-live landing page: a broken link to it must still be caught.
     "https://maverickcer.github.io/repo-contract/",
     "https://maverickcer.github.io/repo-contract/index.html",
-    // a path that merely starts with "api" but isn't the /api/ subpath
+    // A path that starts with "api" but isn't the /api/ subpath.
     "https://maverickcer.github.io/repo-contract/apiary/",
-    // spoofed host / path smuggled into a query string
+    // Spoofed host, or a path smuggled into a query string.
     "https://evil.example/?x=maverickcer.github.io/repo-contract/api/",
   ])("does not skip: %s", (href) => {
     expect(isSkipped(href)).toBe(false)
   })
 })
 
-describe('LINKINATOR_SKIP_PATTERNS -- TypeDoc\'s generated source ("Defined in") links', () => {
+describe('LINKINATOR_SKIP_PATTERNS: TypeDoc\'s generated source ("Defined in") links', () => {
   it.each([
     "https://github.com/MaverickCER/repo-contract/blob/8e4ed4641dd0ec0415599fec12cdfffd094d98a3/src/errors.ts",
     "https://github.com/maverickcer/repo-contract/blob/main/src/index.ts",
@@ -75,16 +75,16 @@ describe('LINKINATOR_SKIP_PATTERNS -- TypeDoc\'s generated source ("Defined in")
   })
 
   it.each([
-    // another owner's fork, or a typo'd owner -- must still be crawled
+    // Another owner's fork, or a typo'd owner: must still be crawled.
     "https://github.com/someone-else/repo-contract/blob/main/src/index.ts",
     "https://github.com/maverikcer/repo-contract/blob/main/src/index.ts",
-    // this owner, but a different repo
+    // This owner, but a different repo.
     "https://github.com/maverickcer/other-repo/blob/main/src/index.ts",
-    // spoofed host / path smuggled into a query string
+    // Spoofed host, or a path smuggled into a query string.
     "https://notgithub.com/maverickcer/repo-contract/blob/main/src/index.ts",
     "https://github.com.evil.example/maverickcer/repo-contract/blob/main/src/index.ts",
     "https://evil.example/?x=github.com/maverickcer/repo-contract/blob/main",
-    // real, verifiable links on this repo -- never skipped
+    // Verifiable links on this repo: never skipped.
     "https://github.com/maverickcer/repo-contract/issues/1",
     "https://github.com/maverickcer/repo-contract/commit/abc1234",
   ])("does not skip: %s", (href) => {

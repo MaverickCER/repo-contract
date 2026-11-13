@@ -16,7 +16,7 @@ import { defineRepoContract } from "repo-contract"
 import { format, lint, typecheck } from "repo-contract/presets"
 
 export default defineRepoContract({
-  // repo-contract never spawns a process or reads process.env itself -- the
+  // repo-contract never spawns a process or reads process.env itself: the
   // consumer supplies both (see repo-contract's own
   // specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
   // Plain node:child_process.spawn is enough for this example's three
@@ -33,9 +33,9 @@ export default defineRepoContract({
     // deciding whether it holds, so the read-only `--check` form is substituted.
     // The preset's own policy (exit 0 = pass) already fits it exactly.
     Format: { ...format, run: ["prettier", "--check", "."] },
-    // `tsc --noEmit -p tsconfig.json` -- already read-only.
+    // `tsc --noEmit -p tsconfig.json`: already read-only.
     Types: typecheck,
-    // `eslint . --format json` with no `--fix` -- already read-only.
+    // `eslint . --format json` with no `--fix`: already read-only.
     Lint: lint(),
   },
 })

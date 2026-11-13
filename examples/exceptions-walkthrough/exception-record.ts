@@ -2,7 +2,7 @@
  * The shape of one waiver in `exceptions.json`, and a hand-written Standard Schema that validates
  * the whole `exceptions` array.
  *
- * `repo-contract/helpers` does not install or depend on Zod, Valibot, or ArkType -- `loadExceptionRegistry`
+ * `repo-contract/helpers` does not install or depend on Zod, Valibot, or ArkType: `loadExceptionRegistry`
  * takes any [Standard Schema](https://standardschema.dev). A real project would almost always reach
  * for whichever schema library it already uses; this file hand-writes one instead, with no
  * dependency, to show that the interface is small enough to satisfy directly.
@@ -11,7 +11,7 @@ import type { StandardSchemaV1 } from "repo-contract/helpers"
 
 /** One justified, versioned exception to an otherwise-blocking advisory. */
 export interface AdvisoryException {
-  /** `<package>:<advisoryId>` -- matches `deriveAdvisoryId` in findings.ts. */
+  /** `<package>:<advisoryId>`: matches `deriveAdvisoryId` in findings.ts. */
   readonly id: string
   /** Bumped whenever `justification` or `alternatives` is edited, so a stale sign-off is visible. */
   readonly version: number
@@ -22,11 +22,11 @@ export interface AdvisoryException {
 }
 
 // Structurally required and non-empty. `alternatives` is checked separately: it must be a string,
-// but may be empty here -- whether an empty `alternatives` is *acceptable* is a policy question
+// but may be empty here; whether an empty `alternatives` is *acceptable* is a policy question
 // (`evaluateExceptionRecord`'s `missing`), not a schema question.
 const NON_EMPTY_STRING_FIELDS = ["id", "justification"] as const
 
-/** The fields a reviewer signs off on -- see `hashRequirementFields` usage in exception-policy.ts. */
+/** The fields a reviewer signs off on: see `hashRequirementFields` usage in exception-policy.ts. */
 export const SIGNED_OFF_FIELDS = ["justification", "alternatives"] as const
 
 /** Reads one field's current string value off a record (`""` when absent or non-string). */

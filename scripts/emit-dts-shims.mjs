@@ -1,10 +1,10 @@
 // Writes thin re-export shims for the .d.ts/.d.cts files tsup doesn't
-// generate for the bundled entry point. tsup's own dts pipeline
+// generate for the bundled entry point. The dts pipeline in tsup
 // (rollup-plugin-dts) hardcodes declarationMap: false and can't produce
-// declaration maps -- see tsup.config.ts's `dts: false` comment and
+// declaration maps. See tsup.config.ts's `dts: false` comment and
 // tsconfig.build.json. Real declarations (with working maps) are emitted
-// separately by `tsc -p tsconfig.build.json` into dist/.dts/; this script
-// just points package.json#exports's "." entry at the right file inside
+// separately by `tsc -p tsconfig.build.json` into dist/.dts/. This script
+// only points package.json#exports's "." entry at the right file inside
 // that tree.
 
 import { writeFileSync, mkdirSync } from "node:fs"

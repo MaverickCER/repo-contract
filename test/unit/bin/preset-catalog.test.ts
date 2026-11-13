@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import * as presets from "../../../src/presets/index.js"
 import {
+  AGENT_COMMAND,
   detectPresets,
   FACTORY_PRESETS,
   DIST_OUTPUT,
@@ -8,7 +9,7 @@ import {
 } from "../../../bin/preset-catalog.mjs"
 
 describe("PRESET_DEPENDENCIES", () => {
-  it("has exactly one entry per preset published from src/presets/index.ts -- no drift", () => {
+  it("has exactly one entry per preset published from src/presets/index.ts: no drift", () => {
     const publishedPresetNames = Object.keys(presets).sort()
     const catalogNames = Object.keys(PRESET_DEPENDENCIES).sort()
     expect(catalogNames).toEqual(publishedPresetNames)
@@ -36,7 +37,7 @@ describe("detectPresets", () => {
     expect(skipped.map((s) => s.preset)).toContain("lint")
   })
 
-  it("ignores dependencies -- only devDependencies count, matching every preset's own documented convention", () => {
+  it("ignores dependencies: only devDependencies count, matching every preset's own documented convention", () => {
     const { detected, skipped } = detectPresets({ dependencies: { eslint: "^9.0.0" } })
     expect(detected).not.toContain("lint")
     expect(skipped.map((s) => s.preset)).toContain("lint")
@@ -53,6 +54,13 @@ describe("detectPresets", () => {
     const { skipped } = detectPresets({})
     const lint = skipped.find((s) => s.preset === "lint")
     expect(lint?.dependency).toBe("eslint")
+  })
+
+  it("never detects aiReview, which runs the agent a consumer names", () => {
+    expect(PRESET_DEPENDENCIES.aiReview).toBe(AGENT_COMMAND)
+    const { detected, skipped } = detectPresets({ devDependencies: { [AGENT_COMMAND]: "1.0.0" } })
+    expect(detected).not.toContain("aiReview")
+    expect(skipped).toContainEqual({ preset: "aiReview", dependency: AGENT_COMMAND })
   })
 
   it("detects distNoUrls only when package.json publishes a built dist/", () => {
@@ -83,11 +91,12 @@ describe("detectPresets", () => {
     )
   })
 
-  it("produces a valid config for a repository with none of the 16 tool-specific dependencies -- only securityDeps", () => {
+  it("produces a valid config for a repository with none of the 16 tool-specific dependencies: only securityDeps", () => {
     const { detected, skipped } = detectPresets({
       devDependencies: { "some-unrelated-tool": "1.0.0" },
     })
     expect(detected).toEqual(["securityDeps"])
-    expect(skipped).toHaveLength(16)
+    // The 16 tools, plus aiReview, which is never detected.
+    expect(skipped).toHaveLength(17)
   })
 })

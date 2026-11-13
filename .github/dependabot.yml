@@ -1,16 +1,12 @@
 # Automated dependency and workflow-action update PRs.
 #
-# Rationale (see the release-readiness audit, finding F1): every runtime
-# dependency vulnerability already surfaces through this repo's own
-# `security-deps` check (`npm audit --omit=dev`), and the SHA-pinned actions
-# across the four workflows drift silently without something rewriting them.
-# Dependabot rewrites a pinned action SHA *and* refreshes the `# vX.Y.Z` tag
-# comment next to it, which is exactly the form `.github/workflows/*` already
-# use.
+# The `security-deps` check (`npm audit`) reports a vulnerable dependency, but nothing else
+# updates one. The workflows pin every action by SHA, and those pins go stale silently.
+# Dependabot rewrites a pinned SHA and its `# vX.Y.Z` comment, the form the workflows use.
 #
-# Dev-dependency PRs are grouped into one weekly PR to keep the noise down --
-# none of them reach consumers (the published package has no runtime
-# dependencies at all), so they do not need per-package review.
+# Dev-dependency PRs are grouped into one weekly PR to keep the noise down.
+# None of them reach consumers (the published package has no runtime
+# dependencies at all). So they do not need per-package review.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -33,8 +29,8 @@ updates:
       - dependency-name: "@changesets/cli"
         update-types: ["version-update:semver-major"]
     groups:
-      # One PR per week for the whole dev/verification toolchain -- minor, patch,
-      # AND major. None of it reaches consumers, so a batched bump is fine; a
+      # One PR per week for the whole dev/verification toolchain: minor, patch,
+      # AND major. None of it reaches consumers, so a batched bump is fine. A
       # major that actually breaks the build shows up as a red PR, not a silent
       # merge. Production deps are deliberately left out of every group (there are
       # none today; if one is ever added it gets its own reviewable PR).

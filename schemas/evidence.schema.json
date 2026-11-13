@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://maverickcer.github.io/repo-contract/schema/evidence.schema.json",
   "title": "repo-contract Evidence",
-  "description": "Machine-readable record of what happened when a repo-contract configuration was executed -- one entry per configured check, describing the command run, its exit status, captured output, and (if requested) parsed output. Says nothing about whether the result was acceptable -- see the paired Verdict schema for that. Generated from src/types.ts's Evidence type -- never hand-authored.",
+  "description": "Machine-readable record of what happened when a repo-contract configuration was executed. It has one entry per configured check, describing the command run, its exit status, captured output, and (if requested) parsed output. Says nothing about whether the result was acceptable; the paired Verdict schema says that. Generated from src/types.ts's Evidence type, never hand-authored.",
   "$ref": "#/definitions/EvidenceSchemaSource",
   "definitions": {
     "EvidenceSchemaSource": {
@@ -43,7 +43,7 @@
         "durationMs",
         "checks"
       ],
-      "description": "Versioned, immutable record of one complete `runRepoContract` execution -- every configured check's evidence, plus timing for the run as a whole. Says nothing about whether any of it was acceptable; see `Verdict`. Additive fields are a compatible change; changing or removing an existing field requires bumping this version number (see `VERSIONING.md`)."
+      "description": "Versioned, immutable record of one complete `runRepoContract` execution: every configured check's evidence, plus timing for the run as a whole. Says nothing about whether any of it was acceptable; see `Verdict`. Adding, removing or changing a direct member of this interface requires bumping `version`. This repository's `api-contract` check fails the change otherwise. It does not compare the members of `CheckEvidence`, so changes there are held to the rule in `VERSIONING.md` by review only."
     },
     "CheckEvidence": {
       "type": "object",
@@ -76,7 +76,7 @@
             "number",
             "null"
           ],
-          "description": "`null` when the process never exited normally -- see `signal` and `status`."
+          "description": "`null` when the process never exited normally: see `signal` and `status`."
         },
         "signal": {
           "anyOf": [
@@ -108,15 +108,15 @@
         },
         "spawnError": {
           "type": "string",
-          "description": "Populated only for `status === \"spawn_error\"` -- the underlying Node error message (e.g. \"spawn foo ENOENT\"). Never populated for any other status."
+          "description": "Populated only for `status === \"spawn_error\"`: the underlying Node error message (e.g. \"spawn foo ENOENT\"). Never populated for any other status."
         },
         "spawnErrorCode": {
           "type": "string",
-          "description": "Populated only for `status === \"spawn_error\"` -- the underlying Node `ErrnoException`'s structured `.code` (e.g. `\"ENOENT\"`, `\"EACCES\"`), when Node provides one. Never populated for any other status. Distinguishes \"the executable does not exist\" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message."
+          "description": "Populated only for `status === \"spawn_error\"`: the underlying Node `ErrnoException`'s structured `.code` (e.g. `\"ENOENT\"`, `\"EACCES\"`), when Node provides one. Never populated for any other status. Distinguishes \"the executable does not exist\" from other spawn failures (permission denied, invalid executable format, etc.) without parsing `spawnError`'s free-text message."
         },
         "output": {
           "$ref": "#/definitions/ParsedOutput%3Cunknown%3E",
-          "description": "The parsed interpretation of `stdout`, present only if this check's config requested a `format`. If that config also supplied `output.schema`, a successful parse is additionally validated (and possibly transformed) by that schema before landing here -- see this interface's own doc comment above and `CheckDefinitionConfig.output.schema`."
+          "description": "The parsed interpretation of `stdout`, present only if this check's config requested a `format`. If that config also supplied `output.schema`, a successful parse is additionally validated (and possibly transformed) by that schema before landing here: see this interface's own doc comment above and `CheckDefinitionConfig.output.schema`."
         }
       },
       "required": [
@@ -131,7 +131,7 @@
         "stderr",
         "status"
       ],
-      "description": "What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined` -- a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n\n`output.value` is the value produced by the configured `format` parser, optionally validated and (if a schema transforms/coerces it) replaced by `output.schema` (see `CheckDefinitionConfig.output.schema`) -- so it is not necessarily the raw parser result once a check's config supplies a schema. It is typed `unknown` for every format regardless, including `\"text\"` (even though `parseText` always produces a `string` at runtime) and regardless of whether a schema was supplied -- neither repo-contract nor TypeScript's generic inference can reliably carry a specific check's own literal `output.format` (or a specific `schema`'s own inferred output type) through to that same check's `policy` parameter once several checks with heterogeneous formats live together in one `checks` record (a real TypeScript inference limitation hit and confirmed during implementation, not a hypothetical -- see specs/decisions/ for the isolated repro). This is a deliberate, acknowledged tradeoff, not a gap this package is attempting to close: a schema still gives its own author real compile-time input/output typing via `StandardSchemaV1<Input, Output>` for their own code, just not threaded through this shared `CheckEvidence` shape. A policy author narrows or casts `.value` themselves, exactly as they already must for `\"json\"`/`\"text\"` with no schema supplied."
+      "description": "What actually happened when one configured check ran. `output` is present only if that check's config requested a format, and is otherwise `undefined`: a policy narrows with `ctx.result.output?.success` (or an `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.\n\n`output.value` is the value the configured `format` parser produced. If the check's config supplies `output.schema` (see `CheckDefinitionConfig.output.schema`), the schema validates it and may replace it with a transformed value, so it is not always the raw parser result.\n\nIt is typed `unknown` for every format, including `\"text\"` (where `parseText` always produces a `string`), with or without a schema. TypeScript's generic inference cannot carry one check's literal `output.format`, or its schema's output type, through to that check's `policy` once several checks with different formats share one `checks` record. That limit was confirmed during implementation; specs/decisions/ holds the isolated repro. This is a deliberate tradeoff. A schema still types its author's own code through `StandardSchemaV1<Input, Output>`, but not this shared `CheckEvidence` shape. A policy author narrows or casts `.value`, as they already must for `\"json\"` or `\"text\"` without a schema."
     },
     "global.NodeJS.Signals": {
       "type": "string",
@@ -185,7 +185,7 @@
         "spawn_error",
         "aborted"
       ],
-      "description": "Why a check's process ended up in its terminal state. `\"completed\"` means the process ran to exit on its own -- the exit code may still be non-zero, and that is for the check's policy to interpret, never this package. The other five values all mean the process did not exit on its own; repo-contract terminated it, or it was terminated for a reason repo-contract can observe but did not cause.\n\n`\"signaled\"` specifically means a signal repo-contract did *not* itself request -- an externally-caused termination. A check killed because the *host* process running repo-contract received its own SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler cleanup) is instead `\"host_terminated\"`: repo-contract did request that signal, just not via `options.signal` or `timeoutMs` (see `\"aborted\"`/`\"timed_out\"`), so it must not be conflated with an externally-caused `\"signaled\"`."
+      "description": "Why a check's process ended up in its terminal state. `\"completed\"` means the process ran to exit on its own: the exit code may still be non-zero, and that is for the check's policy to interpret, never this package. The other five values all mean the process did not exit on its own; repo-contract terminated it, or it was terminated for a reason repo-contract can observe but did not cause.\n\n`\"signaled\"` specifically means a signal repo-contract did *not* itself request: an externally-caused termination. A check is instead `\"host_terminated\"` when the *host* process running repo-contract received its own SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler cleanup). In that case repo-contract did request the signal, though not via `options.signal` or `timeoutMs` (see `\"aborted\"`/`\"timed_out\"`). So it must not be conflated with an externally-caused `\"signaled\"`."
     },
     "ParsedOutput<unknown>": {
       "anyOf": [
@@ -227,7 +227,7 @@
         "json",
         "text"
       ],
-      "description": "Output interpretation a check can explicitly request. No format requested means no parsing -- the consumer gets raw stdout/stderr only. Format conversion (e.g. YAML) is deliberately not a core concern of this package -- JSON and plain text cover every check this package or its consumers actually run; a check whose tool emits another format converts it in its own `run` step or reads it directly in its `policy` function, using whatever library it already depends on, rather than this package carrying an optional peer dependency on everyone's behalf."
+      "description": "Output interpretation a check can explicitly request. No format requested means no parsing: the consumer gets raw stdout/stderr only. Other formats (e.g. YAML) are left out on purpose: JSON and plain text cover every check this package or its consumers run. A check whose tool emits another format converts it in its own `run` step, or reads it in its `policy` function with a library it already depends on. That keeps this package free of an optional peer dependency carried on everyone's behalf."
     },
     "ParsedOutputFailure": {
       "type": "object",
@@ -251,7 +251,7 @@
         "success",
         "error"
       ],
-      "description": "A requested parse of a check's stdout failed. The raw stdout on the parent `CheckEvidence` is preserved unchanged -- a parse failure is never silently reinterpreted or discarded."
+      "description": "A requested parse of a check's stdout failed. The raw stdout on the parent `CheckEvidence` is preserved unchanged: a parse failure is never silently reinterpreted or discarded."
     }
   }
 }

@@ -8,7 +8,7 @@ import { randomUUID } from "node:crypto"
 import { serializeExceptionRegistry } from "./reconcile-exceptions.js"
 
 /**
- * Whether `error` carries `code === "ENOENT"` -- a missing file, a normal state the symlink probe
+ * Whether `error` carries `code === "ENOENT"`: a missing file, a normal state the symlink probe
  * and the "already up to date" comparison both treat as "no file yet", never a failure. Reads
  * `.code` defensively: every filesystem capability here is caller-overridable and could reject
  * with something other than a real `Error`.
@@ -29,7 +29,7 @@ function isEnoent(error: unknown): boolean {
 
 /**
  * Writes one exception registry to disk in its canonical form (`serializeExceptionRegistry`),
- * atomically and idempotently -- the sole filesystem-writing primitive in `repo-contract/helpers`.
+ * atomically and idempotently: the sole filesystem-writing primitive in `repo-contract/helpers`.
  *
  * - **Symlinked target** -> `{ ok: false }`: a governance registry is never a symlink, and writing
  *   through one would escape `.repo-contract/exceptions/`.
@@ -37,10 +37,10 @@ function isEnoent(error: unknown): boolean {
  * - **On-disk bytes already equal the canonical form** -> `{ ok: true, written: false }`, no
  *   write. A reconcile that changed nothing therefore never dirties the working tree.
  * - **Different** -> the canonical bytes are written to a sibling temp file (`<path>.<uuid>.tmp`)
- *   and `rename`d over the target -- the target is replaced atomically, and partial serialized
+ *   and `rename`d over the target: the target is replaced atomically, and partial serialized
  *   content is never written to the target path. A `rename` failure (e.g. a Windows lock on the
  *   target) returns `{ ok: false }` deterministically; the temp file is left in place (harmless, a
- *   uuid name, and the run has already failed) -- `.gitignore` covers `.repo-contract/exceptions/*.tmp`.
+ *   uuid name, and the run has already failed): `.gitignore` covers `.repo-contract/exceptions/*.tmp`.
  *
  * Path containment is the caller's responsibility: repo-contract's own checks always pass
  * `.repo-contract/exceptions/<name>.json`. `readFile`/`writeFile`/`rename`/`isSymlink` default to
@@ -70,7 +70,7 @@ export async function writeExceptionRegistry(input: {
     path,
     records,
     // No explicit encoding on either call: `readFile` returns a Buffer that `.toString()` decodes
-    // as utf8 by default, and `writeFile` writes a string as utf8 by default -- so there is no
+    // as utf8 by default, and `writeFile` writes a string as utf8 by default; so there is no
     // encoding literal for a mutant to flip.
     readFile = (target: string) => readFileFromFs(target).then((buffer) => buffer.toString()),
     writeFile = (target: string, data: string) => writeFileFromFs(target, data),
@@ -118,7 +118,7 @@ export async function writeExceptionRegistry(input: {
 
 /**
  * The default `isSymlink`: `lstat(path).isSymbolicLink()`, with a missing path reported as not a
- * symlink. A non-`ENOENT` `lstat` failure propagates -- a genuinely unreadable path is not
+ * symlink. A non-`ENOENT` `lstat` failure propagates: a genuinely unreadable path is not
  * silently treated as safe.
  * @param target - the path to probe.
  * @returns whether `target` is a symbolic link.

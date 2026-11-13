@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # A bot-authored commit that only refreshes derived/generated content
-# (badges, evidence docs, refreshed benchmark numbers) sits on top of a SHA
-# already verified by this same workflow run's own `contract`/`lint` jobs --
-# but GitHub never lets a GITHUB_TOKEN push trigger `pull_request`-based
-# workflows (an anti-recursion guard), so the new commit's required status
-# checks would otherwise sit pending forever. Rather than paying for a full
-# re-run (mutation testing included) of a check whose answer can't have
-# changed -- no source file differs from the already-graded parent -- this
-# posts a commit status on the new SHA carrying forward the parent's own real
-# conclusion. Required status checks accept a status from the classic
-# Statuses API (not only a Checks-API check run) as satisfying a same-named
-# requirement, and the Statuses API needs only `statuses: write`, not a
-# GitHub-App-associated token the Checks API requires.
+# (badges, evidence docs, refreshed benchmark numbers) sits on top of a SHA.
+# This same workflow run's own `contract`/`lint` jobs already verified that SHA.
+# But GitHub never lets a GITHUB_TOKEN push trigger `pull_request`-based
+# workflows (an anti-recursion guard). Without this script, the new commit's
+# required status checks would sit pending forever. No source file differs from the
+# already-graded parent, so the check's answer cannot have changed. Rather
+# than pay for a full re-run (mutation testing included), this posts a commit
+# status on the new SHA. It carries forward the parent's own real conclusion.
+# Required status checks accept a status from the classic Statuses API (not
+# only a Checks-API check run) as satisfying a same-named requirement. The
+# Statuses API needs only `statuses: write`, not the GitHub-App-associated
+# token the Checks API requires.
 set -euo pipefail
 
 repo="$1"          # owner/repo

@@ -39,7 +39,7 @@ function remediation(from: string): string {
 /**
  * Commit-message governance via commitlint, using whatever commitlint
  * config the consumer's own repository already has (commitlint ships no
- * rules of its own -- e.g. `@commitlint/config-conventional`). Exit-code
+ * rules of its own: e.g. `@commitlint/config-conventional`). Exit-code
  * based rather than `--format json`: commitlint has no broadly-documented,
  * stable JSON CLI output, so this preset reads its plain-text report the
  * same way the `format`/`typecheck` presets already do for their tools,

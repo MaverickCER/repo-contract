@@ -4,9 +4,9 @@
  *
  * The official result is produced by OpenSSF's own `scorecard` binary, run by
  * `.github/workflows/scorecard.yml` (`ossf/scorecard-action`, `publish_results: true`), so it is the
- * number a reviewer should cite. repo-contract's own evaluation is kept beside it because it runs on
- * every `npm run contract`, before anything is pushed; showing both, and every check where they
- * differ, keeps the local evaluation from being read as the official score.
+ * number a reviewer should cite. The local evaluation by repo-contract is kept beside it because it
+ * runs on every `npm run contract`, before anything is pushed. Showing both, and every check where
+ * they differ, keeps the local evaluation from being read as the official score.
  */
 import type { GhApiResult, ScorecardCheckResult } from "./types.js"
 
@@ -88,8 +88,8 @@ function parseCheck(value: unknown): OfficialCheck | undefined {
 }
 
 /**
- * Reads the API's response body. Anything that is not the documented shape is rejected whole, so the
- * document never renders half of a result as if it were all of it.
+ * Reads the API's response body. Anything that is not the documented shape is rejected whole. The
+ * document therefore never renders half of a result as if it were all of it.
  * @param body - The parsed JSON body of the Scorecard API response.
  * @returns The result, or `undefined` if the body is not a complete result.
  */
@@ -114,9 +114,9 @@ export function parseOfficialResult(body: unknown): OfficialScorecard | undefine
 }
 
 /**
- * Fetches the published result. A network failure or a project Scorecard has not published is a
- * reason to render "could not be fetched", never a reason to fail the check (see
- * `checks/openssf-scorecard.ts`: it passes on regenerating the document, not on the score).
+ * Fetches the published result. A network failure, or a project Scorecard has not published, is a
+ * reason to render "could not be fetched". It is never a reason to fail the check, because
+ * `checks/openssf-scorecard.ts` passes on regenerating the document, not on the score.
  * @param slug - The `owner/repo` slug.
  * @returns The result, or why it could not be read.
  */

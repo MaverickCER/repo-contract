@@ -5,12 +5,12 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { checkTestBoundaries } from "../../../scripts/check-test-boundaries.mjs"
 
 /**
- * True positive / true negative for scripts/check-test-boundaries.mjs -- this guardrail's own
+ * True positive / true negative for scripts/check-test-boundaries.mjs: this guardrail's own
  * verification was previously only a one-time manual check during implementation, never a
- * permanent regression test. This closes that gap the same way rules.test.ts already does for the
- * dependency-cruiser layering rules: real fixture files, for each of the script's two independent
- * sub-checks (file ownership, config `include` scoping), plus a clean tree proving neither
- * sub-check is falsely triggered.
+ * permanent regression test. This closes that gap the way rules.test.ts does for the
+ * dependency-cruiser layering rules. It uses fixture files for each of the script's two independent
+ * sub-checks: file ownership and config `include` scoping. A clean tree proves neither sub-check is
+ * falsely triggered.
  */
 
 let root: string
@@ -46,7 +46,7 @@ afterEach(async () => {
   await rm(root, { recursive: true, force: true })
 })
 
-describe("checkTestBoundaries -- true positive / true negative", () => {
+describe("checkTestBoundaries: true positive / true negative", () => {
   it("reports zero violations on a correctly-shaped tree", async () => {
     await writeCorrectTree()
 

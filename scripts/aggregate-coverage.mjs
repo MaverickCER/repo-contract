@@ -1,15 +1,17 @@
 // Pure aggregation of coverage produced by independently-run, coverage-producing
-// verification categories (unit, integration, property -- see the
-// coverage-contribution matrix in specs/verification-taxonomy.md for why e2e
-// and architecture are absent from this list). Never executes tests, never
-// discovers test files, never reports or enforces thresholds -- those are
-// scripts/run-test-category.mjs's and scripts/report-coverage.mjs's jobs
-// respectively (threshold enforcement itself lives only in repo-contract's
-// `coverage` check policy).
+// verification categories: unit, integration and property. The
+// coverage-contribution matrix in specs/verification-taxonomy.md explains why
+// e2e and architecture are absent from this list.
+//
+// Never executes tests and never discovers test files. That is
+// scripts/run-test-category.mjs's job. Never reports or enforces thresholds
+// either. Reporting is scripts/report-coverage.mjs's job, and threshold
+// enforcement itself lives only in repo-contract's `coverage` check policy.
 //
 // The merge is a UNION of covered source locations across the contributing
-// runs, computed via istanbul-lib-coverage's CoverageMap#merge -- the same
-// mechanism `nyc merge` uses -- not a summed/averaged percentage. Adding a
+// runs, not a summed/averaged percentage. It is computed via
+// istanbul-lib-coverage's CoverageMap#merge (the same mechanism `nyc merge`
+// uses). Adding a
 // future coverage-producing category means adding one entry to
 // COVERAGE_SOURCES below; nothing else in this file changes.
 
@@ -35,9 +37,9 @@ export function aggregateCoverage(root = DEFAULT_ROOT) {
 
   for (const source of COVERAGE_SOURCES) {
     const filePath = path.join(root, "coverage", source, "coverage-final.json")
-    // One read in a try/catch rather than existsSync-then-readFileSync: same
-    // "missing artifact" handling with one filesystem call instead of two,
-    // and no time-of-check/time-of-use gap between the two.
+    // One read in a try/catch rather than existsSync-then-readFileSync. The
+    // "missing artifact" handling is the same, with one filesystem call
+    // instead of two and no time-of-check/time-of-use gap between them.
     let contents
     try {
       contents = readFileSync(filePath, "utf8")
@@ -59,10 +61,10 @@ export function aggregateCoverage(root = DEFAULT_ROOT) {
 
   const context = libReport.createContext({ dir: outDir, coverageMap: map })
   // "text" is given an explicit `file` so it writes coverage-summary.txt
-  // instead of its default (stdout) -- callers of aggregateCoverage() (the
-  // `coverage` check's scripts/check-coverage.mjs in particular) need their
-  // own stdout to stay clean JSON; a human wanting the console table gets it
-  // via `npm run test:coverage`'s own separate reporting instead.
+  // instead of its default (stdout). Callers of aggregateCoverage() need
+  // their own stdout to stay clean JSON, the `coverage` check's
+  // scripts/check-coverage.mjs in particular. A human wanting the console
+  // table gets it via `npm run test:coverage`'s own separate reporting.
   reports.create("text", { file: "coverage-summary.txt" }).execute(context)
   for (const reporterName of ["html", "lcov", "json", "json-summary"]) {
     reports.create(reporterName).execute(context)

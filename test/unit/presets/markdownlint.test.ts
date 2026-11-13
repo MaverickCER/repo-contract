@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest"
 import { markdownlint } from "../../../src/presets/markdownlint.js"
 import { enoentEvidence, fakeContext, fakeCheckEvidence } from "./fixtures.js"
 
-// Same real-fs-collision rationale as duplication.test.ts -- see that
+// Same real-fs-collision rationale as duplication.test.ts: see that
 // file's comment. `markdownlint`'s policy reads a fixed relative path with
 // no injectable cwd, and this repository's own `docs` check touches the
 // adjacent `reports/` tree concurrently during `npm run contract`.
@@ -43,7 +43,7 @@ describe("markdownlint preset", () => {
     expect(result).toEqual({
       outcome: "fail",
       rationale:
-        "markdownlint-cli2 did not produce its expected JSON report -- confirm your " +
+        "markdownlint-cli2 did not produce its expected JSON report. Confirm your " +
         ".markdownlint-cli2.jsonc configures outputFormatters to write " +
         '"reports/markdownlint.json" (requires the markdownlint-cli2-formatter-json package).',
     })

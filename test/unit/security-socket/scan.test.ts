@@ -35,7 +35,7 @@ describe("loadShippedPackageVersions", () => {
     expect(shipped).toEqual(new Set())
   })
 
-  it("includes a peerDependencies-only package -- declaring a peer range is itself a shipped supply-chain choice, unlike a devDependency", async () => {
+  it("includes a peerDependencies-only package: declaring a peer range is itself a shipped supply-chain choice, unlike a devDependency", async () => {
     await writeLock({ "node_modules/eslint": { version: "10.9.0", peer: true } })
     const shipped = await loadShippedPackageVersions(root)
     expect(shipped).toEqual(new Set(["eslint@10.9.0"]))
@@ -97,13 +97,13 @@ describe("loadShippedPackageVersions", () => {
     expect(await loadShippedPackageVersions(root)).toBeUndefined()
   })
 
-  it("does NOT fail closed on a dev entry with a missing or malformed version -- it was never going to count as shipped", async () => {
+  it("does NOT fail closed on a dev entry with a missing or malformed version: it was never going to count as shipped", async () => {
     await writeLock({ "node_modules/dev-no-version": { dev: true } })
     const shipped = await loadShippedPackageVersions(root)
     expect(shipped).toEqual(new Set())
   })
 
-  it("fails closed (returns undefined) on a peer entry with a malformed version -- peer entries are shipped, so their version must be valid", async () => {
+  it("fails closed (returns undefined) on a peer entry with a malformed version: peer entries are shipped, so their version must be valid", async () => {
     await writeLock({ "node_modules/peer-bad-version": { peer: true, version: 42 } })
     expect(await loadShippedPackageVersions(root)).toBeUndefined()
   })

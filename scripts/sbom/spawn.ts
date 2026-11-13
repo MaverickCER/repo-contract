@@ -2,23 +2,25 @@ import { sync as spawnSync } from "cross-spawn"
 import path from "node:path"
 
 /**
- * The CycloneDX spec version this repository deliberately targets -- confirmed, not assumed, by
- * reading the installed `@cyclonedx/cyclonedx-npm@6.0.1`'s own `--help` output directly (2026-09-30):
- * `--sv, --spec-version <version>` lists `"1.2", "1.3", "1.4", "1.5", "1.6"` as its only valid
- * choices, defaulting to `"1.6"` -- this tool has no 1.7 support at all (an earlier plan for this
- * work assumed 1.6 or 1.7 as "current stable"; only 1.6 is real for this exact tool version). Passed
- * explicitly below, rather than relying on the tool's own default, so a future `cyclonedx-npm`
- * upgrade that changes its default can never silently re-target this repository's own committed
- * docs/sbom.cdx.json to a different spec version without a visible diff to this constant. See
- * README.md's own SBOM section for the same confirmation, stated for a reader who won't open this
- * file. Not exported -- its one real consumer is `runCycloneDxNpm` below, in this same file; a
- * test asserting the targeted spec version does so against the real generated document instead
- * (see `test/integration/sbom/generate.integration.test.ts`), which is what actually proves this
- * constant took effect, rather than re-importing and echoing it back.
+ * The CycloneDX spec version this repository deliberately targets. This was confirmed, not
+ * assumed, by reading the installed `@cyclonedx/cyclonedx-npm@6.0.1`'s own `--help` output
+ * directly (2026-09-30). `--sv, --spec-version <version>` lists `"1.2", "1.3", "1.4", "1.5",
+ * "1.6"` as its only valid choices, defaulting to `"1.6"`. This tool has no 1.7 support at all.
+ * An earlier plan for this work assumed 1.6 or 1.7 as "current stable"; only 1.6 is real for this
+ * exact tool version.
+ *
+ * Passed explicitly below rather than relying on the tool's own default. A future `cyclonedx-npm`
+ * upgrade that changes its default can then never silently re-target this repository's own
+ * committed docs/sbom.cdx.json to a different spec version without a visible diff to this
+ * constant. README.md's own SBOM section states the same confirmation for a reader who won't open
+ * this file. Not exported: its one real consumer is `runCycloneDxNpm` below, in this same file. A
+ * test asserting the targeted spec version checks the real generated document instead (see
+ * `test/integration/sbom/generate.integration.test.ts`). That is what proves this constant took
+ * effect, rather than re-importing and echoing it back.
  */
 const CYCLONEDX_SPEC_VERSION = "1.6"
 
-/** The outcome of one `cyclonedx-npm` invocation -- see `runCycloneDxNpm`'s own doc comment. */
+/** The outcome of one `cyclonedx-npm` invocation: see `runCycloneDxNpm`'s own doc comment. */
 export type CycloneDxNpmResult =
   | { readonly ok: true }
   | {
@@ -39,43 +41,45 @@ function withoutNodeEnv(environment: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 }
 
 /**
- * Runs `cyclonedx-npm` against `<root>/package-lock.json`, writing its own real, already-spec-
- * compliant CycloneDX JSON document directly to `<root>/docs/sbom.cdx.json` via the tool's own
- * `--output-file` -- this repository never re-serializes that document itself (no
- * `JSON.parse`/`JSON.stringify` round-trip here at all): the file on disk afterward is byte-for-byte
- * the real generator's own output, which is exactly what keeps it schema-valid and reproducible
- * across runs (`--output-reproducible` below; confirmed directly, twice in a row, sha1-identical
- * against this repository's own real package-lock.json).
+ * Runs `cyclonedx-npm` against `<root>/package-lock.json`. The tool writes its own real,
+ * already-spec-compliant CycloneDX JSON document via its own `--output-file`, to
+ * `options.outputFile` under `root` (default `docs/sbom.cdx.json`). This function never
+ * re-serializes that document; there is no `JSON.parse`/`JSON.stringify` round-trip here. The
+ * file on disk afterward is byte-for-byte the real generator's own output. That is what keeps it
+ * schema-valid and reproducible across runs (`--output-reproducible` below). Two runs in a row
+ * against this repository's own real package-lock.json were confirmed sha1-identical. The one
+ * later rewrite is generate.ts's `withoutNpmTool`, which drops only the runner's `npm` tool entry
+ * in the generator's own formatting.
  *
  * Flag-by-flag:
- * - `--package-lock-only`: sources the dependency graph from package-lock.json alone (per this
- *   check's own task -- see README.md's SBOM section), not whatever happens to be physically present
- *   under node_modules/ on this particular machine.
+ * - `--package-lock-only`: sources the dependency graph from package-lock.json alone, per this
+ *   check's own task (see README.md's SBOM section). It ignores whatever happens to be physically
+ *   present under node_modules/ on this particular machine.
  * - `--ignore-npm-errors`: this repository's own package-lock.json currently resolves a real,
- *   pre-existing peer-dependency mismatch (`eslint-plugin-react-hooks`, nested under
- *   `@rnx-kit/eslint-plugin`, wants `eslint <=9`; this repository runs `eslint@10`) that makes
- *   cyclonedx-npm's own internal `npm ls --json --long --all --package-lock-only` step exit non-zero
- *   (`ELSPROBLEMS`) before producing any BOM at all -- confirmed by direct invocation against this
- *   repository's real lockfile (2026-09-30). This flag is cyclonedx-npm's own documented escape
- *   hatch for exactly this class of resolvable-but-technically-invalid tree ("might be used ... if
- *   `npm install` was run with `--force` or `--legacy-peer-deps`"); the resulting BOM was confirmed
- *   complete (1203 components against this repository's own real tree) and schema-valid regardless.
- *   Fixing that underlying peer conflict is out of scope for this check.
+ *   pre-existing peer-dependency mismatch. `eslint-plugin-react-hooks`, nested under
+ *   `@rnx-kit/eslint-plugin`, wants `eslint <=9`; this repository runs `eslint@10`. That makes
+ *   cyclonedx-npm's own internal `npm ls --json --long --all --package-lock-only` step exit
+ *   non-zero (`ELSPROBLEMS`) before producing any BOM at all. Direct invocation against this
+ *   repository's real lockfile confirmed it (2026-09-30). This flag is cyclonedx-npm's own
+ *   documented escape hatch for this class of resolvable-but-technically-invalid tree ("might be
+ *   used ... if `npm install` was run with `--force` or `--legacy-peer-deps`"). The resulting BOM
+ *   was confirmed complete (1203 components against this repository's own real tree) and
+ *   schema-valid regardless. Fixing that underlying peer conflict is out of scope for this check.
  * - `--output-reproducible`: strips time-/random-based values (the document's own top-level
- *   `metadata.timestamp` and `serialNumber`) -- see this function's own doc comment above for why
+ *   `metadata.timestamp` and `serialNumber`); see this function's own doc comment above for why
  *   that determinism matters here.
  * - `--spec-version CYCLONEDX_SPEC_VERSION`: see that constant's own doc comment.
  * - `--output-format JSON`: this check never generates the XML alternative.
  * - `--validate`: cyclonedx-npm's own ajv-backed validation of the resulting document before it's
- *   even written -- a cheap first line of defense. README.md's own SBOM section documents the
+ *   even written; a cheap first line of defense. README.md's own SBOM section documents the
  *   further, independent, out-of-band validation this repository performed against the real
  *   published CycloneDX JSON schema.
  *
- * Not directly unit-tested -- mirrors `scripts/openssf-scorecard/gh-api.ts`'s own `spawnGhApi`
- * (also untested at the unit tier): a thin, essentially return-what-the-OS-gave-us wrapper around a
- * real subprocess. Exercised for real by `test/integration/sbom/generate.integration.test.ts`
- * instead. `generateSbom` (generate.ts), this function's one real caller, is unit-tested with this
- * function mocked -- see that file's own tests, mirroring how
+ * Not directly unit-tested. It mirrors `scripts/openssf-scorecard/gh-api.ts`'s own `spawnGhApi`
+ * (also untested at the unit tier): a thin, return-what-the-OS-gave-us wrapper around a real
+ * subprocess. `test/integration/sbom/generate.integration.test.ts` exercises it for real instead.
+ * `generateSbom` (generate.ts), this function's one real caller, is unit-tested with this function
+ * mocked (see that file's own tests). That mirrors how
  * `test/unit/scripts/openssf-scorecard/weights.test.ts` mocks `gh-api.ts`'s `ghApiRaw` rather than
  * `cross-spawn` itself.
  * @param root - Repository root `cyclonedx-npm` should scan and write its output relative to.
@@ -94,8 +98,8 @@ export function runCycloneDxNpm(
     "cyclonedx-npm",
     [
       "--package-lock-only",
-      // `production` inventories only what a user installs (`--omit dev`): for a package with no
-      // runtime dependencies that is the package itself and nothing else, which is the true answer
+      // `production` inventories only what a user installs (`--omit dev`). For a package with no
+      // runtime dependencies that is the package itself and nothing else. That is the true answer
       // to "what does installing this bring in".
       ...(options.production === true ? ["--omit", "dev"] : []),
       "--ignore-npm-errors",
@@ -112,7 +116,7 @@ export function runCycloneDxNpm(
       cwd: root,
       encoding: "utf8",
       // The build inventory must include development dependencies whatever the caller's
-      // environment says: with `NODE_ENV=production` cyclonedx-npm omits them by default, which
+      // environment says. With `NODE_ENV=production`, cyclonedx-npm omits them by default. That
       // would silently turn the build document into a production one.
       env: options.production === true ? process.env : withoutNodeEnv(process.env),
       // Confirmed directly against this repository's own ~1200-component tree: well under 2
@@ -120,12 +124,12 @@ export function runCycloneDxNpm(
       // scripts/security-socket/scan.ts's own reasoning for its identical deadline.
       timeout: 5 * 60 * 1000,
       // A wedged cyclonedx-npm process that ignores or slowly handles the default SIGTERM would
-      // otherwise keep spawnSync blocked past the deadline anyway -- same reasoning as
+      // otherwise keep spawnSync blocked past the deadline anyway. This is the same reasoning as
       // scripts/security-socket/scan.ts's identical choice.
       killSignal: "SIGKILL",
-      // stdout/stderr here are only ever cyclonedx-npm's own diagnostic/error text -- the real BOM
-      // goes straight to `--output-file`, never through this process's own stdout/stderr. 4 MiB is
-      // generous headroom above anything that text could realistically reach.
+      // The stdout/stderr here only ever carry cyclonedx-npm's own diagnostic/error text. The real
+      // BOM goes straight to `--output-file`, never through this process's own stdout/stderr.
+      // 4 MiB is generous headroom above anything that text could realistically reach.
       maxBuffer: 4 * 1024 * 1024,
     },
   )

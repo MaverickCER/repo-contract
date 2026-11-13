@@ -9,7 +9,7 @@
 
 import type { SecurityExceptionFields } from "../shared/exception-record.js"
 
-/** What kind of prohibited (or unverifiable) capability a finding represents. (Preset `run:` command review moved to its own `preset-commands` check -- ADR 0007's amendment.) */
+/** What kind of prohibited (or unverifiable) capability a finding represents. (Preset `run:` command review moved to its own `preset-commands` check: ADR 0007's amendment.) */
 export type NetworkCapabilityKind =
   | "restricted-module-import"
   | "restricted-named-import"
@@ -17,14 +17,14 @@ export type NetworkCapabilityKind =
   | "dynamic-import-non-literal-specifier"
 
 /**
- * One prohibited (or unverifiable) capability found in a single source file -- a raw *finding*,
- * emitted whether or not an exception record backs it. `id` is this finding's check-namespaced
+ * One prohibited (or unverifiable) capability found in a single source file. This raw _finding_
+ * is emitted whether or not an exception record backs it. `id` is this finding's check-namespaced
  * semantic identity (`security-network:<capability>:<file>:<line>:<column>`) and the exact key an
  * exception record must carry to waive it. It is per-syntax-position, so it is injective over a
  * run's findings; it does churn when the offending line moves (see ADR 0013's line-in-id note).
  */
 export interface NetworkCapabilityFinding {
-  /** `security-network:<capability>:<file>:<line>:<column>` -- see `deriveNetworkExceptionId`. */
+  /** `security-network:<capability>:<file>:<line>:<column>`: see `deriveNetworkExceptionId`. */
   readonly id: string
   /** Path to the offending file, relative to the repository root. */
   readonly file: string
@@ -37,9 +37,9 @@ export interface NetworkCapabilityFinding {
   readonly detail: string
 }
 
-/** One row of security-network.json -- the on-disk exception record shape. */
+/** One row of security-network.json: the on-disk exception record shape. */
 export interface NetworkExceptionRecord extends SecurityExceptionFields {
-  /** `security-network:<capability>:<file>:<line>:<column>` -- must equal `deriveNetworkExceptionId(record)`. */
+  /** `security-network:<capability>:<file>:<line>:<column>`: must equal `deriveNetworkExceptionId(record)`. */
   readonly id: string
   readonly version: 1
   /** Why this network capability in `src/**` is deliberately permitted for an approved architectural reason, and confirmation the finding is real (not a scan misread). */
@@ -54,12 +54,13 @@ export interface NetworkExceptionRecord extends SecurityExceptionFields {
  * The scan's full evidence.
  *
  * `filesScanned` / `findings` are every file looked at and every raw finding (nothing filtered).
- * `activeExceptions` is the reconciled live record for each finding, keyed by finding id --
+ * `activeExceptions` is the reconciled live record for each finding, keyed by finding id:
  * `set(findings.map(id))` equals `set(keys(activeExceptions))` exactly. `staleExceptions` is every
  * prior record whose id matched no finding this run (surfaced for the policy to fail on, never
  * removed here). `scaffoldedIds` is the subset of `activeExceptions` keys freshly stubbed this
- * run. `registryError` is set (and reconciliation skipped) when the on-disk registry failed to
- * load or validate, or a `deriveId` collision / write failure occurred -- the policy fails on it.
+ * run. `registryError` is set, and reconciliation skipped, on a registry or write problem. That
+ * covers an on-disk registry that failed to load or validate, a `deriveId` collision, or a write
+ * failure. The policy fails on it.
  */
 export interface NetworkScanEvidence {
   readonly registryPath: string

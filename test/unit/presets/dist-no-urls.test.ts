@@ -13,7 +13,7 @@ function reportEvidence(report: unknown): CheckEvidence {
 
 const finding = (file: string, line: number, url: string) => ({ file, line, url })
 
-describe("distNoUrls preset -- policy", () => {
+describe("distNoUrls preset: policy", () => {
   it("scans `dist` with node by default and a custom dir when given", () => {
     const [command, flag, source, dir] = distNoUrls().run as readonly string[]
     expect([command, flag, typeof source, dir]).toEqual(["node", "-e", "string", "dist"])
@@ -135,7 +135,7 @@ describe("distNoUrls preset -- policy", () => {
     )
     expect(result).toEqual({
       outcome: "fail",
-      rationale: 'Build output directory "out" does not exist -- build before running this check.',
+      rationale: 'Build output directory "out" does not exist. Build before running this check.',
     })
   })
 
@@ -174,7 +174,7 @@ describe("distNoUrls preset -- policy", () => {
   })
 })
 
-describe("distNoUrls preset -- the real scanner", () => {
+describe("distNoUrls preset: the real scanner", () => {
   const root = mkdtempSync(path.join(tmpdir(), "dist-no-urls-"))
   afterAll(() => {
     rmSync(root, { recursive: true, force: true })

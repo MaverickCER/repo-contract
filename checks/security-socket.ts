@@ -27,16 +27,17 @@ function socketFieldValue(record: SocketExceptionRecord, requirement: string): s
 }
 
 /**
- * Evaluates one alert against `socketPolicy`, classified on its `severity` and, when it's also
- * `shipped`, independently on its `category` too -- `evaluateExceptionRecord` resolves the
- * strictest verdict across every classification, so a `supplyChainRisk` alert on a genuinely
- * shipped dependency is `forbidden` outright regardless of severity (see `policy-config.ts`'s
- * `"socket-category"` group). `shipped: false` (a strictly `devDependencies`-only package -- see
- * `NormalizedSocketAlert.shipped`'s own doc comment) never contributes this second classification:
- * such an alert is still evaluated (and still real evidence), just purely on severity like every
- * other non-supply-chain-risk alert. A real `peerDependencies` package IS `shipped` -- declaring a
- * peer range is itself a supply-chain choice this package makes for the consumer, removing their
- * own choice of alternative, the opposite of a devDependency which never surfaces to them at all.
+ * Evaluates one alert against `socketPolicy`, classified on its `severity`. When the alert is also
+ * `shipped`, it is classified independently on its `category` too. `evaluateExceptionRecord`
+ * resolves the strictest verdict across every classification. A `supplyChainRisk` alert on a
+ * genuinely shipped dependency is therefore `forbidden` outright regardless of severity (see
+ * `policy-config.ts`'s `"socket-category"` group). `shipped: false` means a strictly
+ * `devDependencies`-only package (see `NormalizedSocketAlert.shipped`'s own doc comment). It never
+ * contributes this second classification. Such an alert is still evaluated (and still real
+ * evidence), but purely on severity like every other non-supply-chain-risk alert. A real
+ * `peerDependencies` package IS `shipped`. Declaring a peer range is itself a supply-chain choice
+ * this package makes for the consumer, removing their own choice of alternative. A devDependency
+ * is the opposite: it never surfaces to them at all.
  * @param alert - The alert.
  * @param record - The reconciled live record for it, or `undefined` if the bijection broke.
  * @returns The verdict and any still-missing required fields.
@@ -64,10 +65,10 @@ function evaluateAlert(
 }
 
 /**
- * Evaluates the `security-socket` check's own emitted evidence -- a pure evidence->verdict
+ * Evaluates the `security-socket` check's own emitted evidence: a pure evidence->verdict
  * function; the scan script owns loading, reconciling, and writing
  * `.repo-contract/exceptions/socket.json`. `unavailable` (CLI not installed / not authenticated /
- * unreachable) is a `warn`, never a `fail` -- this check cannot distinguish "genuinely clean" from
+ * unreachable) is a `warn`, never a `fail`: this check cannot distinguish "genuinely clean" from
  * "never ran". `error` (a malformed report) fails closed. A malformed/unreconcilable registry
  * (`registryError`) fails regardless of status. A `passed`/`failed` scan: any `forbidden` /
  * `insufficient` / `unmatched` verdict or stale record fails, listed individually.
@@ -107,7 +108,7 @@ export function evaluateSecuritySocketPolicy(input: {
         : ""
     return {
       outcome: "warn",
-      rationale: `security-socket did not run (${evidence.reason}) -- alerts were not evaluated. Install and authenticate @socketsecurity/cli to enable real enforcement.${note}`,
+      rationale: `security-socket did not run (${evidence.reason}), so alerts were not evaluated. Install and authenticate @socketsecurity/cli to enable real enforcement.${note}`,
     }
   }
 
@@ -155,7 +156,7 @@ export function evaluateSecuritySocketPolicy(input: {
 
   const staleLines = evidence.staleExceptions.map(
     (record) =>
-      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)} -- Socket no longer raises this alert; delete this entry.`,
+      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)}. Socket no longer raises this alert; delete this entry.`,
   )
 
   const determinants = evidence.alerts.map((alert) => ({
@@ -193,11 +194,10 @@ export function evaluateSecuritySocketPolicy(input: {
   }
 }
 
-// Rejects any alert above a medium ("middle") rating outright, rejects any supplyChainRisk alert
-// on a genuinely SHIPPED dependency outright regardless of severity (a peerDependency counts as
-// shipped -- only a strictly devDependencies-only package doesn't; see
-// NormalizedSocketAlert.shipped's own doc comment), and requires a complete finding-specific
-// exception for everything else -- see specs/decisions/0013-reusable-exception-policy-helper.md.
+// Rejects any alert rated above medium ("middle"). Rejects any supplyChainRisk alert on a SHIPPED
+// dependency at any severity; a peerDependency counts as shipped, and only a devDependencies-only
+// package does not (see NormalizedSocketAlert.shipped). Everything else needs a complete
+// finding-specific exception. See specs/decisions/0013-reusable-exception-policy-helper.md.
 export const securitySocket: CheckDefinitionConfig = {
   run: ["tsx", "scripts/security-socket/scan.ts"],
   output: { format: "json" },

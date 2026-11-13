@@ -37,10 +37,11 @@ function fenceFor(text: string): string {
 
 /**
  * Renders a run's verdict (and, if given, its evidence) as GitHub-flavored Markdown suitable for
- * `$GITHUB_STEP_SUMMARY`, a pull-request comment or a README badge page: totals first, then every
- * failing check with its complete rationale (so nothing needs re-running to see why), every warning
- * and passing check with the first line of its rationale, and -- when the evidence is supplied -- the
- * slowest checks, which is the contract's own cost. Pure: it reads nothing and writes nothing.
+ * `$GITHUB_STEP_SUMMARY`, a pull-request comment or a README badge page. Totals come first. Then
+ * every failing check with its complete rationale, so nothing needs re-running to see why. Then
+ * every warning and passing check with the first line of its rationale. When the evidence is
+ * supplied, the slowest checks follow: the contract's own cost. Pure: it reads nothing and writes
+ * nothing.
  * @param verdict - The aggregated verdict of the run.
  * @param evidence - The run's evidence; optional, adds per-check timing.
  * @param options - Heading and list-length options.
@@ -77,7 +78,7 @@ export function renderMarkdownSummary<TChecks extends CheckSchema>(
         const fence = fenceFor(result.rationale)
         lines.push(`#### ${id}`, "", `${fence}text`, result.rationale, fence, "")
       } else {
-        lines.push(`- **${id}** -- ${firstLine(result.rationale)}`)
+        lines.push(`- **${id}**: ${firstLine(result.rationale)}`)
       }
     }
     if (outcome !== "fail") lines.push("")
@@ -99,7 +100,7 @@ export function renderMarkdownSummary<TChecks extends CheckSchema>(
 }
 
 /**
- * Serializes a run for storage -- stable, indented JSON with a trailing newline, one document per
+ * Serializes a run for storage: stable, indented JSON with a trailing newline, one document per
  * file, matching the published `Evidence` and `Verdict` JSON Schemas (`repo-contract/schema`). The
  * caller decides where to write them; this package never touches the filesystem.
  * A `bigint` anywhere in the run (for example in a check's transformed output) cannot be written as

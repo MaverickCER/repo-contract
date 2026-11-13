@@ -70,7 +70,7 @@ describe("evaluateLintPolicy", () => {
     expect(result.rationale).toContain("ESLint reported 1 error(s)")
   })
 
-  it("does not count an ESLint warning-severity (1) message as a failure -- regression guard for the exact severity boundary the gate depends on", () => {
+  it("does not count an ESLint warning-severity (1) message as a failure: regression guard for the exact severity boundary the gate depends on", () => {
     const result = evaluateLintPolicy({
       evidence: evidence({
         eslint: {

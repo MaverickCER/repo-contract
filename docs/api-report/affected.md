@@ -1,15 +1,16 @@
 # affected
 
-Affected-scope analysis: given a diff, which tests (and mutation targets) can the change
-affect? Symbol-level -- changed files are diffed against their base to find the exports whose
-behavior may differ, and those are followed through the import graph -- with every case the
-analysis cannot reason about widening the answer toward a full run, never narrowing it on a
-guess. Pure: file contents, the diff and the TypeScript compiler API come in as data and
-capabilities, so this barrel reads no file and runs no process (see
+Affected scope: given a diff, list the tests and mutation targets the change can reach. Changed
+files are compared with their base to find the exports whose behavior may differ, and those
+exports are followed through the import graph. A case the analysis cannot reason about widens
+the answer toward a full run; it never narrows on a guess.
+
+Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities,
+so this barrel reads no file and runs no process (see
 specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
 
-A third independent public barrel, published under its own `./affected` subpath, like
-`src/presets/index.ts` and `src/helpers/index.ts`; never re-exported from the package root.
+Experimental, and published under its own `./affected` subpath; never re-exported from the
+package root.
 
 ## Interfaces
 
@@ -1401,7 +1402,7 @@ A shard selector such as `2/5`, or why the text is not one.
 type TypeScriptApi = typeof TypeScript;
 ```
 
-The TypeScript compiler API, supplied by the caller -- this package never imports `typescript` at runtime.
+The TypeScript compiler API, supplied by the caller: this package never imports `typescript` at runtime.
 
 ***
 
@@ -1525,10 +1526,10 @@ function computeAffected(input): AffectedResult;
 Computes which tests (and which mutation targets) a change can affect.
 
 The analysis is symbol-level: each changed module is diffed against its base to find the exported
-names whose behavior may differ, and those names are followed through the import graph --
-including re-exports and `export *` -- to every module that uses them. Anything it cannot reason
-about does not narrow the result: a changed file the graph cannot place, a global trigger such as
-a lockfile, or a file that does not parse makes the whole result `"full"`, and a module that loads
+names whose behavior may differ. Those names are followed through the import graph (including
+re-exports and `export *`) to every module that uses them. Anything it cannot reason about does
+not narrow the result. A changed file the graph cannot place, a global trigger such as a
+lockfile, or a file that does not parse makes the whole result `"full"`. A module that loads
 code dynamically is treated as affected by everything. Narrowing is only ever an optimization of
 a sound answer, never a guess.
 
@@ -1647,7 +1648,7 @@ function findEscapes(input): CanaryResult;
 ```
 
 Proves the affected scope sound against evidence: after a full run on the same change, any test
-that failed there but was not in the affected set is an escape -- a regression the narrow run
+that failed there but was not in the affected set is an escape; a regression the narrow run
 would have shipped. Run it on merges to the main branch, where both answers exist.
 
 #### Parameters
@@ -1955,7 +1956,7 @@ function resolveCacheMode(input): {
 ```
 
 Decides the cache mode of a run. A full run is always cold (the cache is neither read nor
-written), so a release can never be satisfied by an earlier result; otherwise the command line
+written), so a release can never be satisfied by an earlier result. Otherwise the command line
 wins over `REPO_CONTRACT_CACHE` (`off`, `ro` or `rw`), which wins over the default of read-write.
 
 #### Parameters
@@ -2029,9 +2030,9 @@ function resolveScope(input): ScopeDecision;
 ```
 
 Decides whether a run validates the affected part of the tree or all of it. A release is always
-full, and `CI_FULL` forces full over anything else; otherwise an explicit request wins, then
-`REPO_CONTRACT_SCOPE`, then the CI event (a pull request compares with its base, every other
-event, and a CI system with no pull request, validates everything), and a local run compares
+full, and `CI_FULL` forces full over anything else. Otherwise an explicit request wins, then
+`REPO_CONTRACT_SCOPE`, then the CI event. In CI, a pull request compares with its base; every
+other event, and a CI system with no pull request, validates everything. A local run compares
 with its base branch.
 
 #### Parameters

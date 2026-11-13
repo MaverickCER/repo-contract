@@ -8,7 +8,7 @@ import { killTree, shouldSpawnDetached } from "./process-tree.js"
 /**
  * The trusted execution capabilities a run supplies once (see
  * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
- * and every spawned check draws from -- `spawn`/`env` verbatim from
+ * and every spawned check draws from: `spawn`/`env` verbatim from
  * `RepoContractConfig`, `shell` already resolved to its effective global
  * default (`config.shell ?? false`). Internal only: not exported from
  * `src/types.ts` or `src/index.ts`. Grouped into one object, rather than
@@ -26,52 +26,52 @@ export interface ExecutionCapability {
 
 // A configured check's command is repository-controlled, not attacker-input
 // in the usual sense, but its OUTPUT is whatever that command chooses to
-// print -- a misbehaving or compromised tool can still write without bound.
+// print: a misbehaving or compromised tool can still write without bound.
 // Every check's stdout/stderr is retained in full for the life of the
-// process (concatenated into a JS string) and then persisted verbatim into
-// evidence/history.json forever, so leaving this uncapped is an unbounded
+// process (concatenated into a JS string). It is then persisted verbatim into
+// evidence/history.json forever. Leaving this uncapped is an unbounded
 // memory and disk sink, not just a cosmetic concern. None of this
 // repository's own checks rely on more than a few hundred KB of stdout
-// content (the ones that produce large structured output write it to a
-// `reports/*.json` file via `--output` instead -- see securitySecrets and
-// arethetypeswrong's own run arrays -- precisely so stdout stays small); 10
+// content. The ones that produce large structured output write it to a
+// `reports/*.json` file via `--output` instead, precisely so stdout stays
+// small (see securitySecrets and arethetypeswrong's own run arrays). 10
 // MiB per stream is generous headroom above that while still bounding a
 // pathological or malicious command.
 const MAX_CAPTURED_OUTPUT_BYTES = 10 * 1024 * 1024
 
 // SIGTERM asks a process tree to exit cooperatively; nothing obliges it to.
 // A check that traps or ignores SIGTERM (or a detached descendant that
-// never receives it at all) would otherwise hang this promise -- and with
-// it, the whole run -- forever, silently defeating both `timeoutMs` and a
+// never receives it at all) would otherwise hang this promise (and with
+// it, the whole run) forever, silently defeating both `timeoutMs` and a
 // host SIGINT/SIGTERM. 2 seconds is generous for the short-lived CLI tools
 // (linters, test runners, formatters) this library spawns to flush output
 // and exit; it is not meant to accommodate a long-running service's graceful
 // shutdown. Exported so run-checks.ts's own host-signal handler can wait out
-// this same window before letting the host process itself exit -- otherwise
+// this same window before letting the host process itself exit: otherwise
 // the escalation this constant times would never get a chance to fire.
 export const SIGKILL_GRACE_PERIOD_MS = 2000
 
 /**
  * Accumulates a child process's stdout or stderr up to
  * `MAX_CAPTURED_OUTPUT_BYTES`, appending a truncation marker and discarding
- * further chunks once the cap is hit -- the process itself keeps running to
+ * further chunks once the cap is hit: the process itself keeps running to
  * its real exit, only the retained text is bounded.
  *
- * Decodes with a stateful `StringDecoder` rather than `chunk.toString("utf8")` per chunk: Node
+ * Decodes with a stateful `StringDecoder` rather than `chunk.toString("utf8")` per chunk. Node
  * delivers `"data"` events at arbitrary byte boundaries that don't respect UTF-8 character
- * boundaries, so a multi-byte character split across two chunks would otherwise decode to a
- * replacement character on both sides of the split -- `StringDecoder` buffers a trailing partial
+ * boundaries. A multi-byte character split across two chunks would otherwise decode to a
+ * replacement character on both sides of the split. `StringDecoder` buffers a trailing partial
  * sequence internally and completes it once the rest arrives. The cap itself is tracked in real
- * bytes fed in (`chunk.byteLength`), not `value.length` (UTF-16 code units) -- for 3-byte-per-
- * character UTF-8 text, code-unit length undercounts actual bytes 3:1, which would otherwise let
- * up to ~3x the documented byte cap accumulate before truncation fires.
+ * bytes fed in (`chunk.byteLength`), not `value.length` (UTF-16 code units). For 3-byte-per-
+ * character UTF-8 text, code-unit length undercounts actual bytes 3:1. That would let up to ~3x
+ * the documented byte cap accumulate before truncation fires.
  * @returns an `append`/`value` pair: feed it chunks as they arrive, read the (possibly truncated) accumulated text once the process ends
  */
 function createBoundedCollector(): { append(chunk: Buffer): void; value(): string } {
-  // Node's own encoding normalization treats a falsy/unrecognized encoding argument as "utf8"
-  // (confirmed empirically: `new StringDecoder("").encoding === "utf8"`, and it decodes identically
+  // Node's own encoding normalization treats a falsy/unrecognized encoding argument as "utf8".
+  // Confirmed empirically: `new StringDecoder("").encoding === "utf8"`, and it decodes identically
   // to an explicit `new StringDecoder("utf8")`, including for a multi-byte character split across
-  // writes) -- this is the only encoding this collector is ever used with, so no other string value
+  // writes. This is the only encoding this collector is ever used with, so no other string value
   // is reachable here to distinguish "utf8" from any other literal.
   const decoder = new StringDecoder("utf8")
   let value = ""
@@ -80,18 +80,17 @@ function createBoundedCollector(): { append(chunk: Buffer): void; value(): strin
   return {
     append(chunk) {
       // Once truncated, `value`'s retained prefix (positions 0..CAP-1) can
-      // never change again no matter what further chunks arrive -- slicing
-      // to the same CAP from a longer string always yields the same prefix
-      // it already had. So skipping further chunks here is unobservable
-      // from the *content* `value()` ever returns; what it actually saves
-      // is the repeated O(cap) slice+concat this function would otherwise
-      // redo on every single subsequent chunk for a process that keeps
-      // writing past the cap -- real, unbounded-with-chunk-count CPU work a
-      // pathological or malicious command could otherwise force. No
-      // deterministic, non-flaky test can observe that difference (only
-      // timing can, which this project's own mutation policy already
-      // refuses to treat as a real kill -- see checks/mutation.ts's
-      // "Timed out" handling).
+      // never change again, whatever further chunks arrive. Slicing to the
+      // same CAP from a longer string always yields the same prefix it
+      // already had. So skipping further chunks here is unobservable
+      // from the *content* `value()` ever returns. What it saves is the
+      // repeated O(cap) slice+concat this function would otherwise redo on
+      // every subsequent chunk for a process that keeps writing past the cap.
+      // That is real CPU work, unbounded with chunk count, that a pathological
+      // or malicious command could otherwise force. No deterministic,
+      // non-flaky test can observe that difference. Only timing can, and this
+      // project's own mutation policy refuses to treat timing as a real kill
+      // (see checks/mutation.ts's "Timed out" handling).
       if (truncated) return
       byteCount += chunk.byteLength
       value += decoder.write(chunk)
@@ -107,7 +106,7 @@ function createBoundedCollector(): { append(chunk: Buffer): void; value(): strin
   }
 }
 
-/** Handle a caller can use to forcibly terminate one in-flight check's process tree, independent of that check's own timeout/abort wiring -- used by run-checks.ts to clean up every active check when the host process itself receives SIGINT/SIGTERM. */
+/** Handle a caller can use to forcibly terminate one in-flight check's process tree, independent of that check's own timeout/abort wiring: used by run-checks.ts to clean up every active check when the host process itself receives SIGINT/SIGTERM. */
 export interface ActiveCheckHandle {
   kill(signal: NodeJS.Signals): void
 }
@@ -125,16 +124,16 @@ function resolveCommand(
   effectiveShell: boolean,
 ): { command: string; args: readonly string[] } {
   const run = check.run
-  // `typeof run === "string"` narrows this two-member union reliably;
+  // `typeof run === "string"` narrows this two-member union reliably.
   // `Array.isArray` does not narrow a `readonly T[]` union member the same
   // way it narrows a mutable `T[]` one.
   if (typeof run !== "string") {
     const [command, ...args] = run
-    // validate-config.ts already rejects an empty run array before this
-    // function is ever reached in the normal runRepoContract pipeline; this
+    // `validateRepoContractConfig` already rejects an empty run array before this
+    // function is ever reached in the normal runRepoContract pipeline. This
     // check re-asserts that same invariant defensively at this function's
-    // own boundary, since resolveCommand has no compile-time guarantee of
-    // it if called some other way (e.g. directly from a test).
+    // own boundary. resolveCommand has no compile-time guarantee of it if
+    // called some other way (e.g. directly from a test).
     if (command === undefined) {
       throw new InvalidCheckConfigError(checkId, "run array must not be empty.")
     }
@@ -149,11 +148,11 @@ function resolveCommand(
   }
   const [command, ...args] = tokenizeRunString(run, checkId)
   // tokenizeRunString already rejects an empty/whitespace-only string, so
-  // this is unreachable in practice -- kept for the same reason as above.
-  // Unlike the array-form check above, this one has no way to be exercised
-  // directly (tokenizeRunString's own contract guarantees a non-empty
-  // result or a throw, with no way to bypass it short of calling this
-  // private function directly, which isn't exported).
+  // this is unreachable in practice. It is kept for the same reason as above.
+  // Unlike the array-form check above, this one cannot be exercised
+  // directly. tokenizeRunString's own contract guarantees a non-empty
+  // result or a throw. The only bypass is calling this private function
+  // directly, and it isn't exported.
   if (command === undefined) {
     throw new InvalidCheckConfigError(checkId, "run string is empty or contains only whitespace.")
   }
@@ -163,7 +162,7 @@ function resolveCommand(
 /**
  *
  * @param check - the check definition; unless `inheritEnv` is explicitly `false`, `ambientEnv` is inherited and then overlaid with `check.env`
- * @param ambientEnv - the run's supplied `execution.env` (typically the consumer's own `process.env`, passed through by reference -- see `ExecutionCapability`'s doc comment for why this must not be a copy) -- repo-contract never reads `process.env` itself (see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
+ * @param ambientEnv - the run's supplied `execution.env` (typically the consumer's own `process.env`, passed through by reference (see `ExecutionCapability`'s doc comment for why this must not be a copy)) repo-contract never reads `process.env` itself (see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
  * @returns the environment variables to pass to the spawned process
  */
 function buildEnv(check: CheckDefinition, ambientEnv: NodeJS.ProcessEnv): Record<string, string> {
@@ -171,15 +170,15 @@ function buildEnv(check: CheckDefinition, ambientEnv: NodeJS.ProcessEnv): Record
   if (check.inheritEnv !== false) {
     for (const [key, value] of Object.entries(ambientEnv)) {
       // `NodeJS.ProcessEnv`'s index signature is typed `string | undefined`. For the real
-      // `process.env`, a value is never actually `undefined` for an own enumerable key --
+      // `process.env`, a value is never actually `undefined` for an own enumerable key:
       // assigning `undefined` to an env var coerces it to the literal string `"undefined"`. But
       // `ambientEnv` here is `execution.env`, a consumer-supplied `RepoContractConfig.env` value,
-      // not necessarily `process.env` itself -- a consumer can (and validate-config.ts's own
-      // per-value check explicitly allows) pass a plain object literal with a real `undefined`
-      // value, e.g. `env: { KEY: undefined }`, which has none of `process.env`'s coercion
-      // behavior. This guard is live, observable behavior for that case, not dead code kept only
-      // to satisfy the type -- see spawn-check.test.ts's "omits an env entry whose value is
-      // undefined" test.
+      // not necessarily `process.env` itself. A consumer can pass a plain object literal with a
+      // real `undefined` value, e.g. `env: { KEY: undefined }`; validate-config.ts's own
+      // per-value check explicitly allows it. Such an object has none of `process.env`'s
+      // coercion behavior. This guard is live, observable behavior for that case, not dead code
+      // kept only to satisfy the type. See spawn-check.test.ts's "omits an env entry whose value
+      // is undefined" test.
       if (value !== undefined) base[key] = value
     }
   }
@@ -232,24 +231,24 @@ function terminalEvidence(
 /**
  * Runs one configured check end to end: resolves its command, spawns it,
  * enforces its timeout (if any), reacts to the run-level `AbortSignal` (if
- * any), captures stdout/stderr, and resolves to a fully-formed
- * `CheckEvidence` no matter how the process ended -- this function never
+ * any), and captures stdout/stderr. It resolves to a fully-formed
+ * `CheckEvidence` no matter how the process ended; this function never
  * rejects. `activeHandles` is a shared registry the caller (run-checks.ts)
- * uses to kill every in-flight check on a host-process SIGINT/SIGTERM; this
+ * uses to kill every in-flight check on a host-process SIGINT/SIGTERM. This
  * function adds its own handle once the process has a pid and removes it
  * once the process has settled.
  *
  * A check whose `runSignal` is already aborted before this function is even
  * invoked (queued behind the concurrency limit when the run was cancelled)
- * never spawns at all, but still resolves to a well-formed `status:
- * "aborted"` evidence entry -- every configured check gets evidence and a
+ * never spawns at all. It still resolves to a well-formed `status:
+ * "aborted"` evidence entry. Every configured check gets evidence and a
  * policy invocation regardless of whether it ever ran (see
  * specs/architecture.md).
  * @param checkId - the check's id, used for logging and passed through to `resolveCommand`
  * @param check - the check definition to run (command, timeout, env, cwd, shell, etc.)
  * @param runSignal - the whole run's abort signal, if any; already-aborted before this is called means the check never spawns
  * @param activeHandles - the shared registry this check's kill handle is added to while running, so a host-process SIGINT/SIGTERM can terminate it
- * @param execution - the run's trusted execution capabilities (`spawn`, `env`, resolved global `shell` default) -- see `ExecutionCapability`
+ * @param execution - the run's trusted execution capabilities (`spawn`, `env`, resolved global `shell` default): see `ExecutionCapability`
  * @param skip - when true the check is not spawned at all and resolves to `status: "aborted"` evidence marked `skipReason: "fail-fast"`
  * @returns a fully-formed `CheckEvidence` reflecting however the process ended; this function itself never rejects
  */
@@ -284,7 +283,7 @@ export async function spawnCheck(
   if (check.timeoutMs !== undefined) {
     // `setTimeout` truncates any delay above the 32-bit signed limit to 1ms
     // (with a `TimeoutOverflowWarning`), so a caller asking for a genuinely
-    // long timeout -- e.g. `timeoutMs: 2_592_000_000` (30 days) -- would
+    // long timeout: e.g. `timeoutMs: 2_592_000_000` (30 days): would
     // otherwise fire the abort almost immediately and record `status:
     // "timed_out"` milliseconds after spawn. Clamp to the maximum delay
     // `setTimeout` can actually represent; anything at or above it is, in
@@ -306,9 +305,9 @@ export async function spawnCheck(
       env,
       shell: effectiveShell,
       detached: shouldSpawnDetached(),
-      // Windows-only cosmetic behavior (suppresses a console window flash)
-      // with no effect on stdout/stderr/exitCode/signal on any platform, and
-      // no Node API exposes it back for a test to observe either way.
+      // Windows-only cosmetic behavior: it suppresses a console window flash.
+      // It has no effect on stdout/stderr/exitCode/signal on any platform.
+      // No Node API exposes it back for a test to observe either way.
       windowsHide: true,
     })
 
@@ -322,16 +321,16 @@ export async function spawnCheck(
      * Best-effort: swallows whatever `killTree` throws rather than letting it
      * escape. `killTree` deliberately rethrows a genuinely unexpected errno
      * (see process-tree.test.ts) so a real bug there isn't silently hidden
-     * from a caller equipped to handle it -- but `killWithEscalation` is
-     * invoked from inside an `AbortSignal` "abort" listener and, via
-     * `ActiveCheckHandle.kill`, a `process.once(signal, ...)` handler in
-     * run-checks.ts, and an exception escaping either of those crashes the
-     * whole host process instead of merely failing this one check's cleanup.
+     * from a caller equipped to handle it. But `killWithEscalation` is
+     * invoked from inside an `AbortSignal` "abort" listener, and also from a
+     * `process.once(signal, ...)` handler in run-checks.ts (via
+     * `ActiveCheckHandle.kill`). An exception escaping either of those crashes
+     * the whole host process instead of merely failing this one check's cleanup.
      *
      * On Windows without `execution.killProcessTree` supplied, `killTree`
-     * above is a documented no-op (see its own doc comment) -- falls back to
-     * killing just this check's own tracked `child` handle directly (a plain
-     * method call, no spawn required), so the check itself is still
+     * above is a documented no-op (see its own doc comment). This then falls
+     * back to killing just this check's own tracked `child` handle directly (a
+     * plain method call, no spawn required). The check itself is still
      * terminated even though any descendants it spawned internally may
      * survive. Harmless to attempt unconditionally on every other path too
      * (POSIX, or Windows with the capability supplied): `child.kill()` on an
@@ -343,18 +342,18 @@ export async function spawnCheck(
       try {
         killTree(pid, signal, execution.killProcessTree)
       } catch {
-        // best-effort; see doc comment above
+        // Best-effort; see the doc comment above.
       }
       try {
         child.kill(signal)
       } catch {
-        // best-effort; see doc comment above
+        // Best-effort; see the doc comment above.
       }
     }
 
     /**
      * Kills the tree with `signal`, then schedules a SIGKILL follow-up
-     * unless `signal` already was SIGKILL -- see `SIGKILL_GRACE_PERIOD_MS`.
+     * unless `signal` already was SIGKILL: see `SIGKILL_GRACE_PERIOD_MS`.
      * A prior pending escalation is replaced, not stacked, since only the
      * most recent kill's grace period should apply.
      * @param pid - the root pid of the process tree to kill, forwarded to `killTree`
@@ -374,11 +373,11 @@ export async function spawnCheck(
       handle = {
         kill: (signal) => {
           // `ActiveCheckHandle.kill` is invoked only by run-checks.ts's host-process
-          // SIGINT/SIGTERM cleanup (see that interface's own doc comment) -- repo-contract itself
-          // is requesting this signal, just not via `options.signal`/`timeoutMs`, so the eventual
-          // "close" status must not fall through to `"signaled"` (reserved for a signal
-          // repo-contract did *not* request) the way it would if `terminationReason` were left
-          // unset here too.
+          // SIGINT/SIGTERM cleanup (see that interface's own doc comment). So repo-contract itself
+          // is requesting this signal, just not via `options.signal`/`timeoutMs`. So the eventual
+          // "close" status must not fall through to `"signaled"`, which is reserved for a signal
+          // repo-contract did *not* request. It would, if this flag and `terminationReason` were
+          // both left unset here.
           hostTerminated = true
           killWithEscalation(pid, signal)
         },
@@ -388,9 +387,9 @@ export async function spawnCheck(
 
     // `child.stdout`/`child.stderr` are typed `Readable | null` (Node is
     // only ever `null` when `stdio` overrides that stream to something
-    // other than "pipe"), but this call site never passes a `stdio` option,
-    // so both are always real streams in practice -- confirmed empirically,
-    // including for a spawn that fails outright (ENOENT). Kept only to
+    // other than "pipe"). This call site never passes a `stdio` option,
+    // so both are always real streams in practice. That was confirmed
+    // empirically, including for a spawn that fails outright (ENOENT). Kept only to
     // satisfy the type, not because it changes observed behavior.
     child.stdout?.on("data", (chunk: Buffer) => {
       stdoutCollector.append(chunk)
@@ -405,14 +404,14 @@ export async function spawnCheck(
 
     const onEffectiveAbort = (): void => {
       terminationReason = runSignal?.aborted === true ? "aborted" : "timed_out"
-      // Deliberately NOT simplified to an unconditional `killTree` call: if
-      // `child.pid` were ever genuinely undefined here (spawn failed but
-      // "error" hasn't been reported yet), calling `killTree(undefined,
-      // ...)` would throw synchronously inside this AbortSignal listener,
-      // which Node reschedules onto `process.nextTick` as an *uncaught*
-      // exception -- verified directly, not assumed -- which would crash
-      // the whole test process rather than fail one assertion, making this
-      // guard's absence unsafe to exercise via a real test.
+      // Deliberately NOT simplified to an unconditional `killTree` call.
+      // `child.pid` could be genuinely undefined here (spawn failed but
+      // "error" hasn't been reported yet). Then `killTree(undefined, ...)`
+      // would throw synchronously inside this AbortSignal listener. Node
+      // reschedules that onto `process.nextTick` as an *uncaught* exception
+      // (verified directly, not assumed), which would crash the whole test
+      // process rather than fail one assertion. So this guard's absence is
+      // unsafe to exercise via a real test.
       // The ConditionalExpression guard is covered by the rationale just
       // above. The "SIGTERM" string literal is separately unkillable:
       // confirmed empirically that Node's own process.kill() normalizes a
@@ -420,47 +419,47 @@ export async function spawnCheck(
       // signal is identical either way.
       if (child.pid !== undefined) killWithEscalation(child.pid, "SIGTERM")
     }
-    // `effectiveSignal` fires "abort" at most once in its lifetime (an
-    // AbortSignal cannot transition from aborted back to unaborted, so it
-    // can never fire "abort" a second time) and is discarded once this
-    // function resolves, so `{ once: true }` is provably redundant --
-    // omitted rather than kept only to be marked equivalent.
+    // `effectiveSignal` fires "abort" at most once in its lifetime: an
+    // AbortSignal cannot transition from aborted back to unaborted. It is
+    // also discarded once this function resolves. So `{ once: true }` is
+    // provably redundant, and is omitted rather than kept only to be
+    // marked equivalent.
     effectiveSignal.addEventListener("abort", onEffectiveAbort)
 
     const cleanup = (): void => {
       // `clearTimeout` silently no-ops for `undefined` (confirmed
-      // empirically), so the `timeoutHandle !== undefined` guard that used
-      // to wrap this call was provably redundant -- omitted rather than
-      // kept only to be marked equivalent. Same reasoning covers
-      // `escalationHandle`: a check that exited before any kill was ever
-      // issued leaves it `undefined`, and a check that died from the
-      // initial signal (the common case) never lets its escalation fire.
+      // empirically). So the `timeoutHandle !== undefined` guard that used
+      // to wrap this call was provably redundant. It was omitted rather than
+      // kept only to be marked equivalent. The same reasoning covers
+      // `escalationHandle`. A check that exited before any kill was ever
+      // issued leaves it `undefined`. A check that died from the initial
+      // signal (the common case) never lets its escalation fire.
       clearTimeout(timeoutHandle)
       clearTimeout(escalationHandle)
       // Removing the wrong event name here has no test-observable effect
-      // within a short-lived test (the real listener is attached to an
+      // within a short-lived test. The real listener is attached to an
       // AbortController that's garbage-collected with the test, and
       // `effectiveSignal` only ever fires "abort" once in its lifetime
-      // regardless) -- it matters for a long-running consumer process
+      // regardless. It matters for a long-running consumer process
       // avoiding a listener leak, not for anything this suite can directly
       // assert on.
       effectiveSignal.removeEventListener("abort", onEffectiveAbort)
       // Releases the manual fallback's own listeners on `runSignal`/
       // `timeoutController.signal` (a no-op on the native AbortSignal.any
-      // path) -- without this, every check spawned during a run would leave
+      // path). Without this, every check spawned during a run would leave
       // one permanent listener on the run's own long-lived shared signal.
       // See abort-signals.ts's composeSignals doc comment.
       disposeEffectiveSignal()
       // `handle` is `ActiveCheckHandle | undefined` (undefined exactly when
-      // spawning itself failed and no pid was ever obtained, see below) --
-      // this guard exists to satisfy Set#delete's parameter type, not
-      // because calling delete(undefined) would behave differently at
-      // runtime (Set#delete on a non-member value is already a silent
-      // no-op), so no test can observe a difference either way.
+      // spawning itself failed and no pid was ever obtained, see below).
+      // This guard exists to satisfy Set#delete's parameter type. Calling
+      // delete(undefined) behaves the same at runtime, since Set#delete on a
+      // non-member value is already a silent no-op. So no test can observe
+      // a difference either way.
       if (handle !== undefined) activeHandles.delete(handle)
     }
 
-    // A spawn failure (e.g. the executable does not exist) emits "error" --
+    // A spawn failure (e.g. the executable does not exist) emits "error":
     // Node does not throw synchronously from spawn() for this case.
     child.once("error", (error: NodeJS.ErrnoException) => {
       cleanup()
@@ -482,22 +481,23 @@ export async function spawnCheck(
 
     // "close", not "exit": Node's own docs warn that "exit" can fire before
     // the child's stdio streams have finished delivering their final
-    // buffered data -- resolving on "exit" risks silently truncating
+    // buffered data. Resolving on "exit" risks silently truncating
     // stdout/stderr for a process that writes a lot of output right before
-    // exiting (confirmed for real during implementation against secretlint's
-    // own output, not a hypothetical). "close" fires only after every stdio
+    // exiting. That was confirmed for real during implementation against
+    // secretlint's own output, not a hypothetical. "close" fires only after every stdio
     // stream has ended, and still carries the same (code, signal) pair.
     child.once("close", (code, signal) => {
       cleanup()
       const status: CheckStatus =
         // A kill via ActiveCheckHandle.kill (host SIGINT/SIGTERM cleanup, see that interface's own
-        // doc comment) is classified first -- ahead of terminationReason. run-checks.ts's handler
-        // aborts `hostAbortController` (composed into `runSignal`) *before* calling handle.kill(),
-        // which it must, so the scheduler stops launching queued checks synchronously; that abort
+        // doc comment) is classified first: ahead of terminationReason. run-checks.ts's handler
+        // aborts `hostAbortController` (composed into `runSignal`) *before* calling handle.kill().
+        // It must, so the scheduler stops launching queued checks synchronously. That abort
         // fires this check's own effectiveSignal listener, which sets terminationReason to
         // "aborted" (runSignal is aborted by then). Checking terminationReason first would
-        // therefore misreport every host-Ctrl+C-killed check as "aborted" -- indistinguishable
-        // from an options.signal cancellation -- and leave "host_terminated" unreachable.
+        // therefore misreport every host-Ctrl+C-killed check as "aborted". That is
+        // indistinguishable from an options.signal cancellation, and leaves "host_terminated"
+        // unreachable.
         hostTerminated
           ? "host_terminated"
           : terminationReason === "aborted"
@@ -505,12 +505,12 @@ export async function spawnCheck(
             : terminationReason === "timed_out"
               ? "timed_out"
               : // Node's own child_process contract guarantees exactly one of
-                // code/signal is non-null on a normal "exit" event, making
+                // code/signal is non-null on a normal "exit" event. That makes
                 // `signal !== null` here effectively redundant given
-                // `code === null` already -- kept as a belt-and-suspenders
-                // check against that contract rather than assumed absolute,
-                // since it is difficult to construct a real counterexample to
-                // test against (both null, or both non-null, simultaneously).
+                // `code === null` already. It is kept as a belt-and-suspenders
+                // check against that contract rather than assumed absolute.
+                // A real counterexample (both null, or both non-null,
+                // simultaneously) is difficult to construct to test against.
                 code === null && signal !== null
                 ? "signaled"
                 : "completed"

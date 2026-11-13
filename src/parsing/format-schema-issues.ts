@@ -2,7 +2,7 @@ import type { StandardSchemaV1 } from "../standard-schema/types.js"
 
 /**
  * Renders a failed `output.schema` validation's issues as a single, human-readable string for
- * `ParsedOutputFailure.error` -- e.g. `Schema validation failed: foo.bar: Expected string;
+ * `ParsedOutputFailure.error`: e.g. `Schema validation failed: foo.bar: Expected string;
  * items[2].name: Required`. Kept as its own small module, independent of `parseOutput`, so its
  * path-rendering logic (the only non-trivial part) can be unit-tested directly.
  * @param issues - the failed `StandardSchemaV1.Result`'s `issues`.
@@ -24,7 +24,7 @@ function formatIssue(issue: StandardSchemaV1.Issue): string {
 
 /**
  * Renders an issue's `path` as a dotted/bracketed accessor string, e.g. `foo.bar` or
- * `items[2].name`. Each segment is either a bare `PropertyKey` (`string | number | symbol` -- a
+ * `items[2].name`. Each segment is either a bare `PropertyKey` (`string | number | symbol`: a
  * `symbol` must never be interpolated directly into a template literal, which throws `TypeError:
  * Cannot convert a Symbol value to a string`; always going through `String(key)` avoids that for
  * every segment type uniformly) or a `{ key: PropertyKey }` object per the spec.
@@ -38,7 +38,7 @@ function formatPath(
 
   return path
     .map((segment) =>
-      // eslint-disable-next-line secure-coding/no-improper-type-validation -- `segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === "object"` can only match the `PathSegment` object form here; the null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type, so satisfying both rules at once is impossible -- the type itself is the guarantee this check would otherwise add at runtime.
+      // eslint-disable-next-line secure-coding/no-improper-type-validation -- `segment` is declared `PropertyKey | StandardSchemaV1.PathSegment` (never `null` or an array), so `typeof segment === "object"` can only match the `PathSegment` object form here. The null/array-safe rewrite this rule suggests is flagged as an unreachable condition by @typescript-eslint/no-unnecessary-condition given that exact type. So satisfying both rules at once is impossible: the type itself is the guarantee this check would otherwise add at runtime.
       typeof segment === "object" ? segment.key : segment,
     )
     .map((key, index) => {

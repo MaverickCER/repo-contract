@@ -1,16 +1,18 @@
-// The thin script `npm run contract` invokes -- imports the built package's
+// The thin script `npm run contract` invokes. It imports the built package's
 // own public API (not a special internal shortcut) and runs it against this
-// repository's own repo-contract.config.ts, so this really is repo-contract
-// validating itself using itself, not a fixture standing in for it. Prints
-// a human-readable summary (readable without color, per SECURITY.md/README's
-// accessibility notes) and sets process.exitCode -- never calls
-// process.exit() directly (see src/run-repo-contract.ts's own doc comment
-// for why the library itself never does either).
+// repository's own repo-contract.config.ts. This really is repo-contract
+// validating itself using itself, not a fixture standing in for it.
 //
-// Run via `npm run contract`, which invokes this through `tsx` -- plain
+// Prints a human-readable summary, readable without color per
+// SECURITY.md/README's accessibility notes. Sets process.exitCode and never
+// calls process.exit() directly. See src/run-repo-contract.ts's own doc
+// comment for why the library itself never does either.
+//
+// Run via `npm run contract`, which invokes this through `tsx`. Plain
 // `node` has no built-in loader for repo-contract.config.ts's TypeScript on
-// this package's Node >=22.0.0 floor, and tsx is already a devDependency
-// (also used by test/unit/execution/run-checks.test.ts's SIGINT fixture).
+// this package's Node >=22.0.0 floor. The tsx tool is already a
+// devDependency (also used by test/unit/execution/run-checks.test.ts's
+// SIGINT fixture).
 
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises"
 import { scopedEnv } from "./contract-env.mjs"
@@ -23,24 +25,25 @@ import { buildEvidenceManifest, createRunRecord, serializeRunRecord } from "../d
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const historyPath = path.join(root, "history.json")
-// Each run's evidence includes every check's full stdout/stderr (now capped
-// per-check at 10 MiB by src/execution/spawn-check.ts, but still real
-// content, not a summary) -- keeping every run ever executed would grow this
-// file without bound, exactly what was observed in practice (tens of MB
-// after only a handful of local runs). This is a local developer scratch
-// log, not the check's actual pass/fail record (that's `npm run contract`'s
-// own exit code and printed summary each time), so bounding it to the most
-// recent runs loses nothing load-bearing.
+// Each run's evidence includes every check's full stdout/stderr. It is now
+// capped per-check at 10 MiB by src/execution/spawn-check.ts, but it is
+// still real content, not a summary. Keeping every run ever executed would
+// grow this file without bound. That is exactly what was observed in
+// practice: tens of MB after only a handful of local runs.
+// This is a local developer scratch log, not the check's actual pass/fail
+// record. That record is `npm run contract`'s own exit code and printed
+// summary each time. Bounding the log to the most recent runs therefore
+// loses nothing load-bearing.
 const MAX_HISTORY_ENTRIES = 20
-// pathToFileURL, not a bare path: on Windows `import()` treats an absolute
+// Uses pathToFileURL, not a bare path. On Windows `import()` treats an absolute
 // path like `D:\...` as a URL with scheme `d:` and rejects it
-// (ERR_UNSUPPORTED_ESM_URL_SCHEME) -- it requires a real file:// URL.
+// (ERR_UNSUPPORTED_ESM_URL_SCHEME). It requires a real file:// URL.
 const { default: config } = await import(
   pathToFileURL(path.join(root, "repo-contract.config.ts")).href
 )
 
-// The docs link to the benchmark page, which is generated and never committed; build it first, the way every
-// package that runs internal-package-contract's own contract does.
+// The docs link to the benchmark page, which is generated and never committed. Build it first, the
+// way every package that runs internal-package-contract's own contract does.
 const { prepare } = await import(
   pathToFileURL(
     path.join(root, "node_modules", "internal-package-contract", "scripts", "contract-prepare.mjs"),
@@ -62,7 +65,7 @@ const EXPENSIVE = new Set([
   "mutation",
 ])
 // Every check runs with an explicit, minimal environment (scripts/contract-env.mjs), never the
-// whole of this process's: the release job inherits secrets, and a check never needs them.
+// whole of this process's. The release job inherits secrets, and a check never needs them.
 const env = scopedEnv(process.env)
 const runConfig = {
   ...config,
@@ -134,14 +137,15 @@ async function recordRun(evidence, verdict, startedAt, complete) {
   }
 }
 
-// Writes the evidence manifest this repository's own README describes: a digest-sealed statement that a
-// full, cache-free run of every check passed, with each check's verdict, the hash of its evidence,
-// the tool versions, and the commit it looked at. Only a passing run of every check gets one (a
-// subset or a failure proves nothing about the release), and only when the commit can be read. The
-// file lives under reports/, which is not committed; the release workflow is where it would be attested.
+// Writes the evidence manifest this repository's own README describes. It is a digest-sealed
+// statement that a full, cache-free run of every check passed. It records each check's verdict,
+// the hash of its evidence, the tool versions, and the commit it looked at.
+// Only a passing run of every check gets one, and only when the commit can be read. A subset or a
+// failure proves nothing about the release. The file lives under reports/, which is not
+// committed. The release workflow is where it would be attested.
 async function writeManifest(evidence, verdict, complete) {
   if (!complete) return
-  // The manifest names a commit, so it is written only when the tree IS that commit: a dirty
+  // The manifest names a commit, so it is written only when the tree IS that commit. A dirty
   // working tree would make it say that HEAD passed when HEAD plus local edits did.
   if (execFileSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }).trim() !== "")
     return
@@ -206,7 +210,7 @@ async function loadHistory() {
     }
 
     // A corrupt or non-array history.json is a disposable local scratch log
-    // (see MAX_HISTORY_ENTRIES's note) -- reset it and carry on rather than
+    // (see MAX_HISTORY_ENTRIES's note). Reset it and carry on rather than
     // crashing the run before its summary and exit code are emitted.
     console.warn(
       `[run-contract] ${path.relative(root, historyPath)} was unreadable ` +

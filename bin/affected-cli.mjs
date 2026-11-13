@@ -1,4 +1,4 @@
-// `repo-contract affected` -- which tests and mutation targets can the current changes affect?
+// `repo-contract affected`: which tests and mutation targets can the current changes affect?
 // All input and output is injected (argv, stdout/stderr, git and file access, the TypeScript
 // compiler, the analysis engine) so the command is unit-testable without a process or a
 // repository; bin/repo-contract.mjs wires the real ones. Conventions: data goes to stdout and
@@ -200,7 +200,7 @@ function messageOf(error) {
  * @returns {string} `reason: file`, with the detail when there is one.
  */
 function reasonText({ reason, file, detail }) {
-  return `${reason}: ${file}${detail === undefined ? "" : ` -- ${detail}`}`
+  return `${reason}: ${file}${detail === undefined ? "" : `, ${detail}`}`
 }
 
 /**

@@ -3,19 +3,17 @@ import { duplication } from "../../../src/presets/duplication.js"
 import { enoentEvidence, fakeContext, fakeCheckEvidence } from "./fixtures.js"
 
 // `duplication`'s policy reads reports/jscpd/jscpd-report.json from a
-// hardcoded relative path (no injectable cwd). Two reasons this can't use
-// real files the way most of this package's tests do (per CONTRIBUTING.md's
-// real-behavior-over-mocking house style): `process.chdir()` throws under
-// Stryker's worker-thread vitest test runner ("process.chdir() is not
-// supported in workers", confirmed directly), and -- more importantly --
-// this repository's own `duplication` check reads/writes that exact same
-// real path as part of `npm run contract`, which runs concurrently with
-// this test suite (via the `test-unit` check); real file I/O here raced
-// against the genuine check and corrupted its evidence, observed directly.
-// Mocking `node:fs/promises` is the correct choice here, not just a
-// convenience -- it's the only way to avoid a real collision on shared
-// process-wide state (the filesystem) between this test suite and the
-// contract that runs it.
+// hardcoded relative path (no injectable cwd). Most of this package's tests
+// use real files (per CONTRIBUTING.md's real-behavior-over-mocking house
+// style). This one can't, for two reasons. First, `process.chdir()` throws
+// under Stryker's worker-thread vitest runner ("process.chdir() is not
+// supported in workers", confirmed directly). Second, and more important,
+// this repository's `duplication` check reads and writes that same path
+// during `npm run contract`. That runs concurrently with this test suite
+// (via the `test-unit` check). File I/O here raced the check and corrupted
+// its evidence, observed directly. Mocking `node:fs/promises` is the only
+// way to avoid a collision on the filesystem, which this suite shares with
+// the contract that runs it.
 const { readFile } = vi.hoisted(() => ({ readFile: vi.fn() }))
 vi.mock("node:fs/promises", () => ({ readFile }))
 
@@ -162,8 +160,8 @@ describe("duplication preset", () => {
     expect(result.rationale).toBe(
       [
         "jscpd found 2 duplicated block(s) (10.00% of 100 lines across 2 file(s)):",
-        "- src/a.ts:1 duplicates src/b.ts:20 -- 10 lines / 50 tokens",
-        "- src/c.ts:2 duplicates src/d.ts:40 -- 5 lines / 25 tokens",
+        "- src/a.ts:1 duplicates src/b.ts:20 (10 lines / 50 tokens)",
+        "- src/c.ts:2 duplicates src/d.ts:40 (5 lines / 25 tokens)",
       ].join("\n"),
     )
   })

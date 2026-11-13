@@ -1,24 +1,23 @@
 // A narrowly scoped textual patch for one property: `scripts.contract`. Deliberately not a
 // `JSON.parse` -> mutate -> `JSON.stringify` round-trip, which would normalize indentation, key
-// order, and newline style across the whole file -- the minimal-mutation invariant this module
-// exists to satisfy is that `init` may change only the `scripts.contract` property's value text
-// and, when it doesn't exist yet, the minimum surrounding punctuation needed to add it. Every
-// other byte of the file is untouched.
+// order, and newline style across the whole file. The invariant this module exists for: `init`
+// may change only the `scripts.contract` property's value text. When that property doesn't exist
+// yet, it may also add the minimum surrounding punctuation. Every other byte of the file is
+// untouched.
 //
-// Implemented as a small span-locating scanner, not a full JSON parser: `findValueEnd` walks
+// Implemented as a small span-locating scanner, not a full JSON parser. `findValueEnd` walks
 // exactly one JSON value (string, object, array, or primitive) from a known start offset and
-// returns where it ends; `listTopLevelProperties` and `findProperty` use it to walk an object's
-// own properties one at a time without needing to understand anything nested inside a value it
-// isn't looking for. This is enough to locate a specific top-level property's value span inside a
-// specific object -- exactly what's needed here -- without pulling in a JSON library that would
-// also reformat on write.
+// returns where it ends. `listTopLevelProperties` and `findProperty` use it to walk an object's
+// own properties one at a time, never needing to understand a value they aren't looking for.
+// That is enough to locate one top-level property's value span inside one object, without a
+// JSON library that would also reformat on write.
 
 /**
- * Finds the end offset (exclusive) of the single JSON value starting at `start` -- a string,
+ * Finds the end offset (exclusive) of the single JSON value starting at `start`: a string,
  * object, array, or bare primitive (number/true/false/null). Strings are scanned respecting
- * backslash escapes so an escaped quote never ends the string early; objects/arrays are scanned
- * with their own depth counter so nested containers (including nested strings, which could
- * otherwise contain a stray `{`/`}`/`[`/`]`) never confuse the outer count.
+ * backslash escapes, so an escaped quote never ends the string early. Objects and arrays are
+ * scanned with their own depth counter, so nested containers never confuse the outer count. That
+ * includes nested strings, which could otherwise contain a stray `{`/`}`/`[`/`]`.
  * @param text - Full source text.
  * @param start - Offset of the value's first character.
  * @returns Offset one past the value's last character.
@@ -78,7 +77,7 @@ function listTopLevelProperties(text, objectStart) {
     const key = JSON.parse(text.slice(keyStart, keyEnd))
     i = keyEnd
     while (i < text.length && /\s/.test(text[i])) i++
-    i++ // consume ':'
+    i++ // Skips the ':'.
     while (i < text.length && /\s/.test(text[i])) i++
     const valueStart = i
     const valueEnd = findValueEnd(text, valueStart)
@@ -102,7 +101,7 @@ function findProperty(text, objectStart, key) {
 
 /**
  * Detects the file's newline style and the indentation unit used by an object's own properties
- * (the whitespace between the start of a property's line and its opening quote), falling back to
+ * (the whitespace between the start of a property's line and its opening quote). It falls back to
  * `"\n"` / two spaces when there's nothing to detect from (an empty object with no siblings to
  * copy).
  * @param text - Full source text.
@@ -115,9 +114,9 @@ function detectStyle(text, sampleKeyStart) {
   if (sampleKeyStart === undefined) return { newline, indent: "  " }
   const lineStart = text.lastIndexOf("\n", sampleKeyStart) + 1
   const candidate = text.slice(lineStart, sampleKeyStart)
-  // A single-line (minified) file has no newline before `sampleKeyStart` at all, so `lineStart`
-  // falls back to 0 and `candidate` becomes everything from the start of the file up to the key
-  // -- real JSON content, not whitespace. Using that verbatim as "indentation" would splice
+  // A single-line (minified) file has no newline before `sampleKeyStart` at all. So `lineStart`
+  // falls back to 0, and `candidate` becomes everything from the start of the file up to the key.
+  // That is real JSON content, not whitespace. Using that verbatim as "indentation" would splice
   // arbitrary file content into the insertion and corrupt the output. Only ever treat `candidate`
   // as a real indent when it actually is one (spaces/tabs only); anything else falls back to the
   // same two-space default as "no sample to measure from".
@@ -133,7 +132,7 @@ function detectStyle(text, sampleKeyStart) {
  * @param scriptValue - The desired value of `scripts.contract` (e.g. `"tsx scripts/contract.mjs"`).
  * @returns The (possibly unchanged) text and what happened: `"created"` (the property didn't
  * exist and was added), `"unchanged"` (it already had exactly this value), or `"conflict"` (it
- * existed with a different value and was deliberately left alone -- the caller must report this,
+ * existed with a different value and was deliberately left alone; the caller must report this,
  * never overwrite it).
  */
 export function patchContractScript(text, scriptValue) {
@@ -146,9 +145,9 @@ export function patchContractScript(text, scriptValue) {
 
   if (scripts !== undefined) {
     if (text[scripts.valueStart] !== "{") {
-      // findProperty below assumes an object at this offset -- anything else (a string, null,
-      // an array, ...) must be rejected here with a clear message, not left to fail deeper with
-      // a confusing "not valid JSON" error from treating non-object syntax as one.
+      // findProperty below assumes an object at this offset. Anything else (a string, null,
+      // an array, ...) must be rejected here with a clear message. Otherwise it fails deeper,
+      // with a confusing "not valid JSON" error from treating non-object syntax as an object.
       const value = JSON.parse(text.slice(scripts.valueStart, scripts.valueEnd))
       throw new Error(
         `package.json's "scripts" field must be an object, not ${JSON.stringify(value)}.`,
@@ -164,7 +163,7 @@ export function patchContractScript(text, scriptValue) {
       return { text, status: "conflict" }
     }
 
-    // scripts exists but has no contract property -- insert it as the new last property.
+    // `scripts` exists but has no `contract` property: insert it as the new last property.
     const siblings = listTopLevelProperties(text, scripts.valueStart)
     const lastSibling = siblings.at(-1)
     const { newline, indent: outerIndent } = detectStyle(
@@ -178,7 +177,7 @@ export function patchContractScript(text, scriptValue) {
     const insertion = `"contract": ${JSON.stringify(scriptValue)}`
 
     if (lastSibling === undefined) {
-      // scripts is `{}` (or contains only whitespace) -- insert as its sole property.
+      // `scripts` is `{}` (or contains only whitespace): insert as its sole property.
       const closeBraceOffset = findValueEnd(text, scripts.valueStart) - 1
       const patched =
         text.slice(0, scripts.valueStart + 1) +
@@ -194,7 +193,7 @@ export function patchContractScript(text, scriptValue) {
     return { text: patched, status: "created" }
   }
 
-  // No "scripts" property at all -- insert one as the new last top-level property.
+  // No "scripts" property at all: insert one as the new last top-level property.
   const topLevel = listTopLevelProperties(text, rootStart)
   const lastTop = topLevel.at(-1)
   const { newline, indent: rootIndent } = detectStyle(text, lastTop?.keyStart)

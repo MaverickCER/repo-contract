@@ -5,11 +5,11 @@ import { killTree } from "../../../src/execution/process-tree.js"
 /**
  * Windows has no POSIX process groups, so `killTree` shells out to
  * `taskkill /pid <pid> /t /f` there instead of `process.kill(-pid, signal)`
- * (see process-tree.ts). That branch is genuinely OS-exclusive and cannot
- * be exercised on a macOS/Linux CI runner no matter how the test is
- * written -- this file only runs its assertions on `win32`, and is exercised
- * for real by the CI Windows runner (see .github/workflows/ci.yml). See
- * vitest.config.ts's coverage thresholds for the accompanying rationale.
+ * (see process-tree.ts). That branch is OS-exclusive. No test can exercise
+ * it on a macOS/Linux CI runner. This file only runs its assertions on
+ * `win32`, and the CI Windows runner exercises it (see
+ * .github/workflows/ci.yml). See vitest.config.ts's coverage thresholds for
+ * the accompanying rationale.
  */
 describe.skipIf(process.platform !== "win32")("killTree on Windows", () => {
   it("kills a real process tree via taskkill /t", async () => {
@@ -59,7 +59,7 @@ describe.skipIf(process.platform !== "win32")("killTree on Windows", () => {
 
   it("is a no-op (no taskkill attempted) when no killProcessTree capability is supplied", () => {
     // See RepoContractConfig.killProcessTree's own doc comment: omitting it is a documented,
-    // valid choice, not a bug -- spawn-check.ts's own caller falls back to killing just the
+    // valid choice, not a bug; spawn-check.ts's own caller falls back to killing just the
     // tracked child process handle directly in that case.
     expect(() => {
       killTree(999_999_999, "SIGTERM")

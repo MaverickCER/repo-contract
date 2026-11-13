@@ -1,21 +1,23 @@
 // Entry point for repo-contract's `github-actions` check (see repo-contract.config.ts).
 //
-// Runs `actionlint` (rhysd/actionlint) over a repository's workflow files via the
-// `github-actionlint` npm wrapper -- a devDependency that resolves the official actionlint binary
-// on first use and caches it, so the whole thing stays `npm install`-only with no `go`/`brew`/`pip`
-// step (ADR 0008's "package install only" bar). actionlint's specialized workflow analysis is not
-// reimplemented here; this wrapper only shells out to it and normalizes its JSON, so the tool's
-// evidence can participate in the contract verdict -- the general pattern ADR 0010
-// (specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md) describes.
+// It runs `actionlint` (rhysd/actionlint) over a repository's workflow files via the
+// `github-actionlint` npm wrapper. The wrapper is a devDependency that resolves the official
+// actionlint binary on first use and caches it. The whole thing therefore stays
+// `npm install`-only, with no `go`/`brew`/`pip` step (ADR 0008's "package install only" bar).
+// This script does not reimplement actionlint's specialized workflow analysis. It only shells out
+// to actionlint and normalizes its JSON, so the tool's evidence can participate in the contract
+// verdict. ADR 0010 describes this general pattern
+// (specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md).
 //
-// Enumerates the workflow files itself and passes them to actionlint explicitly (rather than
-// relying on actionlint's own directory auto-discovery) so `filesScanned` in the evidence is an
-// authoritative count the policy can use to reject a vacuous "nothing to lint" pass.
+// The script enumerates the workflow files itself and passes them to actionlint explicitly.
+// It does not rely on actionlint's own directory auto-discovery. `filesScanned` in the evidence
+// is therefore an authoritative count. The policy can use it to reject a vacuous "nothing to lint"
+// pass.
 //
-// Report-only: actionlint findings never fail this script's own process -- that judgment belongs
-// to the `github-actions` check's policy, which reads this same JSON evidence. Only a genuine
-// tool-infrastructure failure (the binary not resolving, actionlint crashing, or producing
-// unparseable output) is reported as `{ ok: false, error }`.
+// Report-only: actionlint findings never fail this script's own process. The `github-actions`
+// check's policy, which reads this same JSON evidence, makes that judgment. Only a genuine
+// tool-infrastructure failure is reported as `{ ok: false, error }`. Such a failure is the binary
+// not resolving, actionlint crashing, or actionlint producing unparseable output.
 
 import { readdirSync } from "node:fs"
 import { createRequire } from "node:module"
@@ -27,10 +29,10 @@ const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 
 const require = createRequire(import.meta.url)
 
-// Resolve the `github-actionlint` wrapper's own entry file and run it through `node` directly,
-// rather than spawning the `github-actionlint` bin by name off PATH -- `node_modules/.bin` is only
-// on PATH under `npm run`/`npx`, not for a bare `node scripts/...` invocation or a test that
-// imports this module.
+// Resolve the `github-actionlint` wrapper's own entry file and run it through `node` directly.
+// Spawning the `github-actionlint` bin by name off PATH would not work everywhere.
+// `node_modules/.bin` is only on PATH under `npm run`/`npx`. It is not on PATH for a bare
+// `node scripts/...` invocation or a test that imports this module.
 const ACTIONLINT_ENTRY = require.resolve("github-actionlint/dist/bin/actionlint.js")
 
 /**
@@ -90,7 +92,7 @@ export function lintWorkflows(root = DEFAULT_ROOT) {
     }
   }
 
-  // actionlint exits 0 when clean and 1 when it has findings -- both are a successful analysis.
+  // Exit 0 (clean) and exit 1 (findings) from actionlint are both a successful analysis.
   // Any other exit code (or a null status) is a genuine tool failure.
   if (result.status !== 0 && result.status !== 1) {
     return {
@@ -110,7 +112,8 @@ export function lintWorkflows(root = DEFAULT_ROOT) {
 
   const findings = rawFindings.map((finding) => ({
     message: typeof finding?.message === "string" ? finding.message : "(no message)",
-    // actionlint echoes back the exact path we passed; keep it repo-relative and POSIX-slashed.
+    // The path actionlint echoes back is the exact one we passed. Keep it repo-relative and
+    // POSIX-slashed.
     file:
       typeof finding?.filepath === "string"
         ? finding.filepath.split(path.sep).join("/")

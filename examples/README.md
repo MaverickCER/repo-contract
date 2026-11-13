@@ -5,8 +5,8 @@ organizational standard and a project boilerplate.
 
 The point it demonstrates: **a repository should not reinvent its engineering
 standards.** An organization, team, or individual developer defines a standard once
-per project type, and every project of that type inherits it — while still being
-free to add its own requirements.
+per project type. Every project of that type inherits it, and is still free to add
+its own requirements.
 
 ## The organizational model
 
@@ -30,7 +30,7 @@ baseline is inherited, never copied.
 ## The layers
 
 `internal-boilerplate-contract` here is the **contract that defines the standard the
-boilerplate implements** — not "the boilerplate's contract."
+boilerplate implements**, not "the boilerplate's contract."
 
 | Layer                                                            | Owns                                           | Answers                                                  |
 | ---------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------- |
@@ -40,8 +40,8 @@ boilerplate implements** — not "the boilerplate's contract."
 | a real project                                                   | project-specific checks and implementation     | _What_ else does this one repository require?            |
 
 Boilerplate and shared contracts are complementary. Boilerplate establishes
-conventions at creation time; the shared contract enforces durable requirements as
-the project evolves — including on projects created from an older boilerplate
+conventions at creation time. The shared contract enforces durable requirements as
+the project evolves, including on projects created from an older boilerplate
 version. See
 [ADR 0010](../specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md).
 
@@ -60,17 +60,17 @@ repo-contract
 ```
 
 - **[`internal-boilerplate-contract/`](internal-boilerplate-contract)**
-  - `contract.ts` — three read-only checks: `Format`, `Types`, `Lint`.
-  - `bin/contract.mjs` — a runnable entry point, so the consumer's `package.json`
+  - `contract.ts`: three read-only checks: `Format`, `Types`, `Lint`.
+  - `bin/contract.mjs`: a runnable entry point, so the consumer's `package.json`
     only needs `"scripts": { "contract": "internal-boilerplate-contract" }`.
-  - `eslint.config.ts`, `prettier.config.ts`, `tsconfig.json` — baselines exported
+  - `eslint.config.ts`, `prettier.config.ts`, `tsconfig.json`: baselines exported
     via the `./eslint`, `./prettier`, `./tsconfig` subpaths.
-  - `.github/workflows/contract.yml` — a reusable workflow (`on: workflow_call`).
+  - `.github/workflows/contract.yml`: a reusable workflow (`on: workflow_call`).
 - **[`boilerplate/`](boilerplate)**
-  - `src/index.ts` — one `console.log`. The example is about wiring, not code.
-  - `eslint.config.ts`, `prettier.config.ts`, `tsconfig.json` — each extends the
+  - `src/index.ts`: one `console.log`. The example is about wiring, not code.
+  - `eslint.config.ts`, `prettier.config.ts`, `tsconfig.json`: each extends the
     exported baseline in one line, then adds only project-specific pieces.
-  - `.github/workflows/contract.yml` — a thin caller that references the reusable
+  - `.github/workflows/contract.yml`: a thin caller that references the reusable
     workflow.
 
 ## Two deeper walkthroughs
@@ -79,23 +79,28 @@ repo-contract
 packages each pick up one thing an organization does _after_ the wiring is in
 place. Each has its own `README.md` and a runnable `npm run walkthrough`.
 
-- **[`day-one-walkthrough/`](day-one-walkthrough)** — rolling out a **new** shared
-  requirement across every repository at once, as a dated `warn` → `fail` instead
-  of an immediate red build. The `exampleAdoptionPolicy` wrapper it defines is
+- **[`day-one-walkthrough/`](day-one-walkthrough)**: rolling out a **new** shared
+  requirement across every repository at once. It arrives as a dated `warn` → `fail`
+  instead of an immediate red build. The `exampleAdoptionPolicy` wrapper it defines is
   ordinary policy code you could keep in your own shared contract, not a
   `repo-contract` feature.
-- **[`exceptions-walkthrough/`](exceptions-walkthrough)** — _Advanced._
-  A governed, justified waiver for one specific finding, built on
-  `repo-contract/helpers` (`loadExceptionRegistry`, `reconcileExceptions`,
-  `evaluateExceptionRecord`, `resolveExceptionPolicy`, `hashRequirementFields`),
-  without weakening the check for everything else.
+- **[`exceptions-walkthrough/`](exceptions-walkthrough)**: _Advanced._
+  A governed, justified waiver for one specific finding, without weakening the check
+  for everything else. It is built on `repo-contract/helpers` (`loadExceptionRegistry`,
+  `reconcileExceptions`, `evaluateExceptionRecord`, `resolveExceptionPolicy`,
+  `hashRequirementFields`).
 
-- **[`affected-scope/`](affected-scope)** — run only what a pull request can affect.
-  A real git repository is built, a function is changed, and the `repo-contract affected`
-  commands show which tests it reaches (and why), which files mutation testing must
-  cover, how that work splits across CI jobs, when repo-contract widens to everything,
-  and what `doctor` flags. `npm run walkthrough` fails if the affected set, the shard split,
-  the widening or the `doctor` verdict differs from its README.
+- **[`affected-scope/`](affected-scope)**: run only what a pull request can affect.
+  A real git repository is built and a function is changed. The `repo-contract affected`
+  commands then show:
+  - which tests it reaches (and why);
+  - which files mutation testing must cover;
+  - how that work splits across CI jobs;
+  - when repo-contract widens to everything;
+  - what `doctor` flags.
+
+  `npm run walkthrough` fails if the affected set, the shard split, the widening or the
+  `doctor` verdict differs from its README.
 
 ## How execution context works
 
@@ -120,7 +125,7 @@ them vendoring the checks.
 
 ## Running it
 
-Requires Node >= 24 — the exported configs are TypeScript, and Prettier loads a
+Requires Node >= 24. The exported configs are TypeScript, and Prettier loads a
 `.ts` config only on a Node with native type stripping.
 
 ```sh
@@ -137,14 +142,17 @@ npm run contract -w boilerplate
 
 All three checks (`Format`, `Types`, `Lint`) run against `boilerplate/` and pass.
 
-This is a self-contained example workspace — it is **not** part of the
+This is a self-contained example workspace. It is **not** part of the
 `repo-contract` package or its own `npm run contract`, and nothing here is published.
-CI's `examples` job installs it and runs every command these READMEs show
-(`scripts/run-examples.mjs`), checking each exit code and the output line shown. The `file:` dependencies point back at this repository so the dependency
+CI's `examples` job installs it and runs each example's main command
+(`scripts/run-examples.mjs`), checking the exit code and the output lines shown.
+Follow-up steps a README describes, such as fixing a file and rerunning, are not run.
+
+The `file:` dependencies point back at this repository so the dependency
 relationships are visible in source. In a real organization, `internal-boilerplate-contract`
-is published to an internal registry (or linked as a workspace); a new project then
+is published to an internal registry (or linked as a workspace). A new project then
 depends on that one package and receives `repo-contract` plus every executor
-transitively — which is why the executors are regular `dependencies` of the
+transitively. That is why the executors are regular `dependencies` of the
 contract package.
 
 ## Design principle
@@ -165,15 +173,15 @@ Organizational boilerplate
 
 `repo-contract` remains the generic contract execution and evidence layer. It does
 not define or own an organization's standards. `internal-boilerplate-contract` is
-the opinionated layer, and it lives here as an example — not in `repo-contract`
+the opinionated layer, and it lives here as an example, not in `repo-contract`
 itself.
 
 ## See also
 
-- [ADR 0010 — Review-driven contract evolution and consumer-owned shared contracts](../specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md)
+- [ADR 0010: Review-driven contract evolution and consumer-owned shared contracts](../specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md)
 - [The `repo-contract` README](../README.md)
-- [`demo/`](demo) — a smaller, unrelated example: the tiny, real contract behind the main README's
-  opening demo (three published presets, one deliberately imperfect file, real pass/fail/warn
-  output).
-- [`release-gate/`](release-gate) — one policy that reads the evidence of several checks to decide
+- [`demo/`](demo): a smaller, unrelated example. It is the tiny, real contract behind the main
+  README's opening demo (three published presets, one deliberately imperfect file, real
+  pass/fail/warn output).
+- [`release-gate/`](release-gate): one policy that reads the evidence of several checks to decide
   whether a release is permitted, and names the check that blocks it.

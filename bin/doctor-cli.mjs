@@ -1,4 +1,4 @@
-// `repo-contract doctor` -- find settings that make the affected-scope feature slower or wrong,
+// `repo-contract doctor`: find settings that make the affected-scope feature slower or wrong,
 // and repair the ones that are safe to repair. All input and output is injected (argv, stdout and
 // stderr, git and file access, the engine) so the command is unit-testable without a process or a
 // repository; bin/repo-contract.mjs wires the real ones. Conventions: data goes to stdout and
@@ -9,9 +9,9 @@ import path from "node:path"
 
 export const DOCTOR_USAGE = `Usage: repo-contract doctor [options]
 
-Look for settings that make affected-scope runs slower or wrong -- a cache directory that is not
-ignored, a shallow CI checkout, a coverage config without the json reporter -- and say how to fix
-each. Nothing is changed unless you pass --fix, which applies only the safe, mechanical repairs
+Look for settings that make affected-scope runs slower or wrong, and say how to fix each. Examples
+are a cache directory that is not ignored, a shallow CI checkout, and a coverage config without the
+json reporter. Nothing is changed unless you pass --fix, which applies only the safe, mechanical repairs
 and shows each change first.
 
 Options:

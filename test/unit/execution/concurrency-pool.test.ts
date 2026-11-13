@@ -23,7 +23,7 @@ describe("runWithConcurrency", () => {
         }, delayMs)
       })
     })
-    // index 0 (30ms) finishes last, index 1 (10ms) finishes first -- output
+    // index 0 (30ms) finishes last, index 1 (10ms) finishes first: output
     // order must still be [0, 1, 2], matching input order, not completion order.
     expect(results).toEqual([0, 1, 2])
   })
@@ -77,12 +77,12 @@ describe("runWithConcurrency", () => {
     expect(order).toEqual([1, 2, 3])
   })
 
-  it("still processes every item when concurrency is 0 or negative -- clamps up to at least 1 worker", async () => {
+  it("still processes every item when concurrency is 0 or negative: clamps up to at least 1 worker", async () => {
     const results = await runWithConcurrency([1, 2, 3], 0, (item) => Promise.resolve(item * 2))
     expect(results).toEqual([2, 4, 6])
   })
 
-  it("propagates a worker rejection -- the exact rejection value, unwrapped", async () => {
+  it("propagates a worker rejection: the exact rejection value, unwrapped", async () => {
     const boom = new Error("boom")
     await expect(
       runWithConcurrency([1, 2, 3], 2, (item) => {
@@ -117,7 +117,7 @@ describe("runWithConcurrency", () => {
     process.on("unhandledRejection", onUnhandled)
     try {
       // Concurrency 8 so every item is genuinely in flight at once: item 2
-      // rejects immediately, and item 7's worker -- already running -- rejects
+      // rejects immediately, and item 7's worker (already running) rejects
       // only after a tick, i.e. after Promise.all would already have rejected.
       // With concurrency 2 the pool would stop pulling work after item 2 and
       // item 7 would never start, making this vacuous. With the old code that

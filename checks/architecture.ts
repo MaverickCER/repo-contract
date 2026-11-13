@@ -185,11 +185,11 @@ export function evaluateArchitecturePolicy({
   return { outcome: "pass", rationale: sections.join("\n") }
 }
 
-// Static, no execution, no coverage contribution: does the production src/
-// dependency graph obey this repository's architectural constraints
-// (.dependency-cruiser.cjs), does every verification category's own
-// Vitest config stay inside its own directory
-// (scripts/check-test-boundaries.mjs), and does specs/decisions/ stay
+// Static, no execution, no coverage contribution. It asks three questions.
+// Does the production src/ dependency graph obey this repository's
+// architectural constraints (.dependency-cruiser.cjs)? Does every
+// verification category's own Vitest config stay inside its own directory
+// (scripts/check-test-boundaries.mjs)? Does specs/decisions/ stay
 // structurally well-formed (scripts/check-adr-structure.mjs)? See
 // scripts/architecture/evidence-types.ts for the three-section evidence
 // shape this policy interprets.

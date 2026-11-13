@@ -73,7 +73,7 @@ describe("evaluateDocsPolicy", () => {
     expect(result.rationale).toContain("README.md:1")
   })
 
-  it("joins two rule names with '/', not blank -- regression guard for the exact separator ruleNames.join depends on", () => {
+  it("joins two rule names with '/', not blank: regression guard for the exact separator ruleNames.join depends on", () => {
     const result = evaluateDocsPolicy({
       evidence: evidence({
         markdownlint: {
@@ -119,7 +119,7 @@ describe("evaluateDocsPolicy", () => {
     expect(result.outcome).toBe("fail")
     expect(result.rationale.split("\n")).toEqual([
       "linkinator found 1 broken link(s):",
-      "- https://example.com -- HTTP 404 -- no exception record -- add one to " +
+      "- https://example.com returned HTTP 404: no exception record; add one to " +
         ".repo-contract/exceptions/docs-links.json if this link is known-good",
     ])
   })
@@ -137,12 +137,12 @@ describe("evaluateDocsPolicy", () => {
     expect(result.outcome).toBe("fail")
     expect(result.rationale.split("\n")).toEqual([
       "linkinator found 1 broken link(s):",
-      "- /missing.md -- HTTP 404 -- no exception record -- add one to " +
+      "- /missing.md returned HTTP 404: no exception record; add one to " +
         ".repo-contract/exceptions/docs-links.json if this link is known-good",
     ])
   })
 
-  it("passes a BROKEN local link with a matching, justified exception record -- local links are waivable exactly like external ones, e.g. a link to another check's own generated doc that this check's own execution-phase crawl runs before that check's policy-phase write happens", () => {
+  it("passes a BROKEN local link with a matching, justified exception record: local links are waivable like external ones, such as a link to a generated doc that another check writes after this check's crawl", () => {
     const result = evaluateDocsPolicy({
       evidence: evidence({
         linkinator: {
@@ -213,7 +213,7 @@ describe("evaluateDocsPolicy", () => {
     expect(result.rationale).toContain("exception incomplete (missing: justification)")
   })
 
-  it("fails on a stale docs-link exception -- a waiver whose url is no longer linked at all", () => {
+  it("fails on a stale docs-link exception: a waiver whose url is no longer linked at all", () => {
     const result = evaluateDocsPolicy({
       evidence: evidence(),
       linkExceptions: {
@@ -228,7 +228,7 @@ describe("evaluateDocsPolicy", () => {
     expect(result.rationale).toContain("docs-links:https://example.com")
   })
 
-  it("does not count an OK link as broken -- regression guard for the exact state string the filter depends on", () => {
+  it("does not count an OK link as broken: regression guard for the exact state string the filter depends on", () => {
     const result = evaluateDocsPolicy({
       evidence: evidence({ linkinator: { ok: true, value: { links: [link({ state: "OK" })] } } }),
       linkExceptions: noExceptions(),
