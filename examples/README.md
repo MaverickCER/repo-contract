@@ -84,11 +84,18 @@ place. Each has its own `README.md` and a runnable `npm run walkthrough`.
   of an immediate red build. The `exampleAdoptionPolicy` wrapper it defines is
   ordinary policy code you could keep in your own shared contract, not a
   `repo-contract` feature.
-- **[`exceptions-walkthrough/`](exceptions-walkthrough)** — _Advanced /
-  Experimental._ A governed, justified waiver for one specific finding, built on
+- **[`exceptions-walkthrough/`](exceptions-walkthrough)** — _Advanced._
+  A governed, justified waiver for one specific finding, built on
   `repo-contract/helpers` (`loadExceptionRegistry`, `reconcileExceptions`,
   `evaluateExceptionRecord`, `resolveExceptionPolicy`, `hashRequirementFields`),
   without weakening the check for everything else.
+
+- **[`affected-scope/`](affected-scope)** — run only what a pull request can affect.
+  A real git repository is built, a function is changed, and the `repo-contract affected`
+  commands show which tests it reaches (and why), which files mutation testing must
+  cover, how that work splits across CI jobs, when repo-contract widens to everything,
+  and what `doctor` flags. `npm run walkthrough` fails if the affected set, the shard split,
+  the widening or the `doctor` verdict differs from its README.
 
 ## How execution context works
 
@@ -131,8 +138,9 @@ npm run contract -w boilerplate
 All three checks (`Format`, `Types`, `Lint`) run against `boilerplate/` and pass.
 
 This is a self-contained example workspace — it is **not** part of the
-`repo-contract` package, its CI, or its own `npm run contract`, and nothing here is
-published. The `file:` dependencies point back at this repository so the dependency
+`repo-contract` package or its own `npm run contract`, and nothing here is published.
+CI's `examples` job installs it and runs every command these READMEs show
+(`scripts/run-examples.mjs`), checking each exit code and the output line shown. The `file:` dependencies point back at this repository so the dependency
 relationships are visible in source. In a real organization, `internal-boilerplate-contract`
 is published to an internal registry (or linked as a workspace); a new project then
 depends on that one package and receives `repo-contract` plus every executor

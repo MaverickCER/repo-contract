@@ -39,9 +39,9 @@ jobs:
   # that shared, other-repositories-depend-on-it-too reusable workflow, this job calls
   # internal-package-contract's own generic script layer directly
   # (`scripts/benchmark/render-summary.mjs`/`append-history.mjs`) -- the exact same scripts the
-  # reusable workflow itself calls, looped over repo-contract's three categories inline. No `npm
+  # reusable workflow itself calls, looped over repo-contract's four categories inline. No `npm
   # run build` step: unlike env-cap's/data-cap's categories (which benchmark generated *consumer*
-  # code against the published package's own `dist/`), all three of repo-contract's categories
+  # code against the published package's own `dist/`), all four of repo-contract's categories
   # import repo-contract's (or internal-package-contract's) own source directly via `tsx` -- see
   # benchmarks/README.md.
   #
@@ -81,12 +81,42 @@ jobs:
 
       - run: npm ci
 
-      - name: Snapshot main's committed results as "previous"
+      # Two committed references: main's results (the previous run) and the last release's (a fixed
+      # point, so a series of small regressions cannot ratchet "previous" upward unnoticed). Their
+      # overhead ratios are judged only when they were measured on this CPU model. The same two the
+      # reusable benchmark-pr workflow uses for env-cap and data-cap.
+      - name: Snapshot main's and the last release's committed results
         run: |
-          mkdir -p /tmp/benchmark-previous
+          mkdir -p /tmp/benchmark-previous /tmp/benchmark-release
+          TAG=$(git describe --tags --abbrev=0 --match 'v[0-9]*' origin/main 2>/dev/null || true)
           for dir in performance-checks performance-policy-evidence performance-api-contract performance-exceptions; do
-            git show "origin/main:benchmarks/${dir}/results.json" > "/tmp/benchmark-previous/${dir}.json" || echo '{}' > "/tmp/benchmark-previous/${dir}.json"
+            git show "origin/main:benchmarks/${dir}/results.json" > "/tmp/benchmark-previous/${dir}.json" 2>/dev/null || echo '{}' > "/tmp/benchmark-previous/${dir}.json"
+            if [ -n "$TAG" ]; then
+              git show "${TAG}:benchmarks/${dir}/results.json" > "/tmp/benchmark-release/${dir}.json" 2>/dev/null || echo '{}' > "/tmp/benchmark-release/${dir}.json"
+            else
+              echo '{}' > "/tmp/benchmark-release/${dir}.json"
+            fi
           done
+
+      # The overhead ratio is machine-bound for fast work (how much of a bare baseline is process
+      # start-up differs by CPU), so the reference that is judged is main measured here, on this runner,
+      # minutes apart from the pull request: main's suite files at its commit, run by this checkout's
+      # runner at the suite's typical size only. Mirrors the reusable benchmark-pr workflow's step.
+      - name: Measure main's end-to-end pair on this runner
+        run: |
+          mkdir -p /tmp/benchmark-main
+          git worktree add --detach /tmp/main-checkout origin/main
+          (cd /tmp/main-checkout && npm ci --ignore-scripts && npm run build)
+          for dir in performance-checks performance-policy-evidence performance-api-contract performance-exceptions; do
+            if [ -f "/tmp/main-checkout/benchmarks/${dir}/suite.mjs" ]; then
+              npx tsx node_modules/internal-package-contract/scripts/benchmark/run-suite.mjs \
+                "/tmp/main-checkout/benchmarks/${dir}/suite.mjs" --only end-to-end --typical-only \
+                --out "/tmp/benchmark-main/${dir}"
+            else
+              mkdir -p "/tmp/benchmark-main/${dir}" && echo '{}' > "/tmp/benchmark-main/${dir}/results.json"
+            fi
+          done
+          git worktree remove --force /tmp/main-checkout
 
       - run: npm run benchmark
 
@@ -108,14 +138,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # --gate: a measured growth class worse than the documented one, or an overhead ratio past the
+          # budget in benchmarks/budgets.mjs, fails this job (and so `required`); the comment is always posted.
           node node_modules/internal-package-contract/scripts/benchmark/render-summary.mjs \
             --budgets benchmarks/budgets.mjs \
             --marker "<!-- repo-contract-benchmark-summary -->" \
-            --example "Checks (\`benchmarks/performance-checks\`)|/tmp/benchmark-previous/performance-checks.json|benchmarks/performance-checks/results.json|benchmarks/history/checks.json" \
-            --example "Policy & evidence (\`benchmarks/performance-policy-evidence\`)|/tmp/benchmark-previous/performance-policy-evidence.json|benchmarks/performance-policy-evidence/results.json|benchmarks/history/policy-evidence.json" \
-            --example "API contract (\`benchmarks/performance-api-contract\`)|/tmp/benchmark-previous/performance-api-contract.json|benchmarks/performance-api-contract/results.json|benchmarks/history/api-contract.json" \
-            --example "Exception helpers (\`benchmarks/performance-exceptions\`)|/tmp/benchmark-previous/performance-exceptions.json|benchmarks/performance-exceptions/results.json|benchmarks/history/exceptions.json" \
-            > /tmp/summary.md
+            --gate \
+            --example "Checks (\`benchmarks/performance-checks\`)|/tmp/benchmark-previous/performance-checks.json|benchmarks/performance-checks/results.json|benchmarks/history/checks.json|/tmp/benchmark-release/performance-checks.json|/tmp/benchmark-main/performance-checks/results.json" \
+            --example "Policy & evidence (\`benchmarks/performance-policy-evidence\`)|/tmp/benchmark-previous/performance-policy-evidence.json|benchmarks/performance-policy-evidence/results.json|benchmarks/history/policy-evidence.json|/tmp/benchmark-release/performance-policy-evidence.json|/tmp/benchmark-main/performance-policy-evidence/results.json" \
+            --example "API contract (\`benchmarks/performance-api-contract\`)|/tmp/benchmark-previous/performance-api-contract.json|benchmarks/performance-api-contract/results.json|benchmarks/history/api-contract.json|/tmp/benchmark-release/performance-api-contract.json|/tmp/benchmark-main/performance-api-contract/results.json" \
+            --example "Exception helpers (\`benchmarks/performance-exceptions\`)|/tmp/benchmark-previous/performance-exceptions.json|benchmarks/performance-exceptions/results.json|benchmarks/history/exceptions.json|/tmp/benchmark-release/performance-exceptions.json|/tmp/benchmark-main/performance-exceptions/results.json" \
+            > /tmp/summary.md || GATE_FAILED=1
           PR="${{ github.event.pull_request.number }}"
           MARKER="<!-- repo-contract-benchmark-summary -->"
           # --paginate: a long-lived PR can carry more comments than the API's single-page
@@ -129,6 +162,11 @@ jobs:
             gh api "repos/${{ github.repository }}/issues/comments/${EXISTING}" -X PATCH -F body=@/tmp/summary.md
           else
             gh api "repos/${{ github.repository }}/issues/${PR}/comments" -X POST -F body=@/tmp/summary.md
+          fi
+          # Posted first so the reason is on the pull request, then failed: a gate that only wrote a comment was ignored.
+          if [ "${GATE_FAILED:-0}" = "1" ]; then
+            echo "::error::a benchmark gate failed; see the summary comment on the pull request"
+            exit 1
           fi
 
       - name: Commit refreshed results + history into this PR, only when it touches benchmarked code
@@ -240,6 +278,26 @@ jobs:
       # install + import (both ESM and CommonJS), proving the built artifact
       # (not just the source tree) actually works from a clean install.
       - run: npx node scripts/run-test-category.mjs e2e
+      # The path-sensitive work runs on every OS here, where `contract` (Ubuntu only, 17 minutes)
+      # cannot: the packed tarball is installed into a scratch project and every entry point and
+      # the CLI are imported and run, the way `published-floor` does on the Node floor, and the
+      # build and tests must leave the tree exactly as it was checked out -- a generated file that
+      # differs on Windows or macOS would otherwise be found only by a consumer.
+      - name: Pack the tarball and smoke it as a consumer
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          npm pack --ignore-scripts --pack-destination artifacts
+          node scripts/smoke-consumer.mjs artifacts
+      - name: Working tree is clean after the build, tests and smoke
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain -- . ':!artifacts')" ]; then
+            echo "::error::The build, tests or tarball smoke left the working tree dirty on ${{ matrix.os }}:"
+            git status --porcelain -- . ':!artifacts'
+            git diff -- . ':!artifacts' | head -200
+            exit 1
+          fi
 
   # The platform-independent checks `verify` used to repeat per-OS above,
   # now run exactly once: typecheck, lint, format, the architecture smoke
@@ -461,7 +519,46 @@ jobs:
 
       - run: node scripts/smoke-consumer.mjs artifacts
 
-  # The development toolchain stays on TypeScript 5 (typescript-eslint, typedoc and API Extractor
+  # The examples are real projects wired to this repository through `file:` links (examples/package.json
+  # is an npm workspace). Each README shows a command and its outcome; scripts/run-examples.mjs runs
+  # every one and fails when the exit code or the shown output line no longer matches, so "runnable
+  # proof" in the README is proven here, not assumed.
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+      - run: npm ci
+      - run: npm run build
+      - run: npm ci --no-audit --no-fund
+        working-directory: examples
+      - run: node scripts/run-examples.mjs
+
+  # Installs the packed tarball with npm, pnpm, Yarn 1 and Yarn Berry (node-modules linker) and imports
+  # every entry point from it, as ESM and as CommonJS (scripts/package-managers-smoke.mjs). What is
+  # proven is exactly that: the tarball installs and resolves under those managers; nothing else about
+  # them is claimed. Yarn Plug'n'Play and pnpm without hoisting are documented as unsupported.
+  package-managers:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+      - run: corepack enable
+      - run: npm ci
+      - run: npm run build
+      - run: npm run package-managers
+
+  # The development toolchain is on TypeScript 6 (typescript-eslint, typedoc and API Extractor
   # cannot load the TypeScript 7 compiler API), so the native TypeScript 7 compiler gets its own job:
   # this repository's source must still type-check under it. `npx -p` supplies the 7 binary; the
   # repository's own `typescript` stays what the code's type imports resolve against.
@@ -534,9 +631,20 @@ jobs:
     # so a skipped `benchmark-pr` (every push-to-main run, every fork PR) would silently skip
     # `contract` too even when `verify`/`lint` themselves genuinely ran and passed. Same
     # transitive-skip reasoning as every other job below `benchmark-pr` in this file.
-    if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped') && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
+    # `verify` and `lint` are deliberately NOT in this condition: a skipped required check counts as
+    # passing on GitHub, so when they fail this job must run and FAIL (first step below), never skip.
+    if: always() && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
+      - name: verify and lint passed
+        if: needs.verify.result != 'success' || needs.lint.result != 'success'
+        env:
+          VERIFY: ${{ needs.verify.result }}
+          LINT: ${{ needs.lint.result }}
+        run: |
+          echo "::error::contract needs verify and lint to pass (verify=$VERIFY, lint=$LINT)"
+          exit 1
+
       # fetch-depth: 0 (full history, all branches -- see release.yml's own
       # identical setting) is required here, not optional: adr-governance and
       # commitlint both read `origin/main..HEAD` (scripts/git-commits.ts /
@@ -580,9 +688,9 @@ jobs:
       - run: npm run benchmark:check
       - run: npm run contract
         env:
-          # SecuritySocket scores the package on Socket.dev and FAILS without a token. Create a
-          # token at socket.dev (Settings > API Tokens, `packages:list`) and add it as the
-          # repository or organization secret SOCKET_SECURITY_API_KEY.
+          # security-socket scores the package on Socket.dev. Without a token the check warns that
+          # the scan did not run; a refused token, network error or rate limit fails. Token: socket.dev
+          # (Settings > API Tokens, `packages:list`), repository secret SOCKET_SECURITY_API_KEY.
           SOCKET_SECURITY_API_KEY: ${{ secrets.SOCKET_SECURITY_API_KEY }}
 
       # A contract run is not a pure read: `format`/`lint` auto-fix, and
@@ -739,10 +847,44 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@1edf1bef02f3ba49e2d19d140ded398a148a0fb1 # v0.13.3
+    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@e5b8d9eeac7d951a5ea0c7c02c2f761087f8148b # v0.18.0
     with:
       docs-script: docs:api
       content-artifact-name: pages-content
+
+  # The one status check the ruleset requires for every job above that is not `contract` or `lint`.
+  # GitHub cannot name a matrix job (`verify (ubuntu-latest)`, `published-floor (22.x)`) as a required
+  # context and counts a skipped or cancelled job as passing, so this job runs `if: always()` and
+  # fails unless each job it needs finished `success`. `benchmark-pr` may skip: it runs only on
+  # same-repo pull requests by design. Add every new job to `needs`; test/unit/ci/ci-jobs.test.ts
+  # fails when one is missing.
+  required:
+    needs:
+      - benchmark-pr
+      - verify
+      - lint
+      - runtime-compat
+      - package-build
+      - published-floor
+      - typescript-7
+      - typescript-compat
+      - examples
+      - contract
+      - package-managers
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every gate job succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: >-
+          node -e "const needs = JSON.parse(process.env.NEEDS);
+          const maySkip = new Set(['benchmark-pr']);
+          const bad = Object.entries(needs).filter(([id, n]) => !(n.result === 'success' || (maySkip.has(id) && n.result === 'skipped')));
+          if (bad.length > 0) {
+            console.error('::error::not green: ' + bad.map(([id, n]) => id + '=' + n.result).join(', '));
+            process.exit(1);
+          }"
 
   # Belt-and-suspenders for the squash-merge case (see
   # specs/decisions/0009-conventional-commits-versioning-and-local-gates.md): the merge-commit /

@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { runGit } from "../scripts/diff-files.js"
 import { packageVersion } from "../scripts/openssf-scorecard/gh-api.js"
+import { fetchOfficialResult } from "../scripts/openssf-scorecard/official.js"
 import { renderScorecardMarkdown } from "../scripts/openssf-scorecard/render-markdown.js"
 import type {
   ScorecardCheckResult,
@@ -22,10 +23,11 @@ interface RunOutput {
 
 /**
  * Dogfoods repo-contract's own contract/evidence mechanism to produce
- * `docs/OpenSSF-Scorecard.md` -- an informational document, informed by
- * OpenSSF Scorecard's published methodology, never a certification (see
- * that file's own generated disclaimer and
- * scripts/openssf-scorecard/README.md).
+ * `docs/OpenSSF-Scorecard.md` -- an informational document that leads with
+ * the official, published OpenSSF Scorecard result and sets this
+ * repository's own evaluation (informed by Scorecard's published
+ * methodology, never a certification) beside it, with every check where the
+ * two differ.
  *
  * `run` computes every sub-check EXCEPT Vulnerabilities, which needs the
  * `security-deps` check's own raw evidence (this run's real `npm audit`
@@ -116,6 +118,12 @@ export const openssfScorecard: CheckDefinitionConfig = {
       weightedAverage = computeWeightedAverage(evaluated, weights)
     }
 
+    // The published result leads the document whenever it can be read, so this repository's own
+    // evaluation is never mistaken for the official score. Like the weight fetch, a failure here
+    // degrades the document (it says the official result could not be fetched, and why) and never
+    // fails the check.
+    const official = await fetchOfficialResult(parsed.value.repo)
+
     const markdown = renderScorecardMarkdown({
       repo: parsed.value.repo,
       generatedAt,
@@ -124,6 +132,8 @@ export const openssfScorecard: CheckDefinitionConfig = {
       weights,
       weightsUnavailableReason,
       provenance,
+      official: official.ok ? official.value : undefined,
+      officialUnavailableReason: official.ok ? undefined : official.message,
     })
     const outputPath = path.join(root, "docs/OpenSSF-Scorecard.md")
     await mkdir(path.dirname(outputPath), { recursive: true })

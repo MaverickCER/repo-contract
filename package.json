@@ -137,6 +137,7 @@
     "license": "npm run contract -- license",
     "lint": "npm run contract -- lint",
     "mutation": "npm run contract -- mutation",
+    "package-managers": "node scripts/package-managers-smoke.mjs",
     "precommit": "npm run contract -- format lint typecheck schema dead-code architecture adr-governance suppression-governance security-network duplication ambient-capabilities",
     "prepublishOnly": "npm run docs:api && npm run docs:benchmarks && npm run contract 1>&2",
     "prepush": "npm run contract",
@@ -174,6 +175,7 @@
     "esbuild": "^0.28.1",
     "handlebars": "^4.7.10",
     "katex": "^0.18.2",
+    "markdownlint": "0.42.1",
     "pa11y": {
       "puppeteer": "npm:puppeteer-core@^25.9.0"
     },
@@ -217,7 +219,7 @@
     "fast-check": "^4.9.0",
     "github-actionlint": "^1.7.12",
     "globals": "^17.9.0",
-    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.13.3",
+    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.18.0",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-reports": "^3.2.0",
@@ -257,6 +259,7 @@
   "internal-package-contract": {
     "copies": [
       "benchmark-budgets",
+      "ci-jobs",
       "reading-benchmarks",
       "typedoc-markdown",
       "writing-benchmarks"

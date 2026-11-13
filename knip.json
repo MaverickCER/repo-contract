@@ -18,6 +18,9 @@
     "test/**/*.ts",
     "!test/unit/architecture/fixtures/**",
     "!test/unit/security-network/fixtures/**",
+    // Managed copies of the standard (see package.json "internal-package-contract.copies"): their
+    // exports belong to the standard, not to this repository's dependency graph.
+    "!test/_ipc/**",
     "bin/**/*.mjs",
     "scripts/**/*.{mjs,ts}",
     "checks/**/*.ts"

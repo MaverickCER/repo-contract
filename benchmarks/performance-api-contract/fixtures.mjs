@@ -88,6 +88,9 @@ const TSCONFIG = {
     moduleResolution: "NodeNext",
     declaration: true,
     emitDeclarationOnly: true,
+    // TypeScript 6 requires an explicit rootDir once outDir is set (TS5011); without it every tier
+    // of this suite failed at `tsc` and the benchmark recorded nothing from 2026-10-19 to 2026-11-09.
+    rootDir: "src",
     outDir: "dist",
     strict: true,
     skipLibCheck: true,
@@ -122,10 +125,12 @@ async function buildVariant(tierDir, variant, source, repoRoot) {
   await writeFile(path.join(variantDir, "tsconfig.json"), JSON.stringify(TSCONFIG, null, 2))
   await writeFile(path.join(variantDir, "src", "index.ts"), source)
 
+  // Errors are surfaced, not swallowed: a silent `tsc` failure here once left every tier "failed"
+  // with no measurement and nothing in the log to say why.
   execFileSync(
     process.execPath,
     [path.join(repoRoot, "node_modules", ".bin", "tsc"), "-p", "tsconfig.json"],
-    { cwd: variantDir, stdio: ["ignore", "ignore", "ignore"] },
+    { cwd: variantDir, stdio: ["ignore", "pipe", "pipe"] },
   )
 
   const outDir = path.join(variantDir, "out")

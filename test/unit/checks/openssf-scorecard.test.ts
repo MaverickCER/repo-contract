@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { CheckEvidence, PolicyContext } from "../../../src/types.js"
 import type * as RenderMarkdownModule from "../../../scripts/openssf-scorecard/render-markdown.js"
 import type { ScorecardCheckResult } from "../../../scripts/openssf-scorecard/types.js"
+import type * as OfficialModule from "../../../scripts/openssf-scorecard/official.js"
 import type * as WeightsModule from "../../../scripts/openssf-scorecard/weights.js"
 
 const { mkdir, writeFile } = vi.hoisted(() => ({
@@ -53,6 +54,23 @@ vi.mock("../../../scripts/openssf-scorecard/weights.js", async (importOriginal) 
   const actual = await importOriginal<typeof WeightsModule>()
   return { ...actual, fetchScorecardWeights }
 })
+
+// The published Scorecard result is a real network call; it is mocked like the weight fetch.
+const { fetchOfficialResult } = vi.hoisted(() => ({
+  fetchOfficialResult: vi.fn<typeof OfficialModule.fetchOfficialResult>(),
+}))
+vi.mock("../../../scripts/openssf-scorecard/official.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof OfficialModule>()
+  return { ...actual, fetchOfficialResult }
+})
+
+const OFFICIAL = {
+  date: "2026-11-03T09:59:04Z",
+  score: 7,
+  scorecardVersion: "v5.6.0",
+  commit: "8d5e308aba3a264ff061f2a61062977eb9d71ff9",
+  checks: [{ name: "License", score: 10, reason: "license file detected" }],
+}
 
 const { openssfScorecard } = await import("../../../checks/openssf-scorecard.js")
 
@@ -114,6 +132,7 @@ function results(
 describe("openssfScorecard.policy", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    fetchOfficialResult.mockResolvedValue({ ok: true, value: OFFICIAL })
     runGit.mockResolvedValue("abc123abc123abc123abc123abc123abc123abc1\n")
     packageVersion.mockReturnValue("0.7.3")
     evaluateVulnerabilities.mockReturnValue({
@@ -413,5 +432,47 @@ describe("openssfScorecard.policy", () => {
       expect.stringContaining("OpenSSF-Scorecard.md"),
       "# fake markdown",
     )
+  })
+
+  it("hands the published Scorecard result to the document, so it leads with the official score", async () => {
+    mockWeightsAvailable()
+    await openssfScorecard.policy(
+      ctx({
+        result: evidence({
+          output: {
+            format: "json",
+            success: true,
+            value: {
+              repo: "MaverickCER/repo-contract",
+              results: results({ name: "License", score: 10 }),
+            },
+          },
+        }),
+      }),
+    )
+    expect(fetchOfficialResult).toHaveBeenCalledWith("MaverickCER/repo-contract")
+    expect(renderScorecardMarkdown).toHaveBeenCalledWith(
+      expect.objectContaining({ official: OFFICIAL, officialUnavailableReason: undefined }),
+    )
+  })
+
+  it("still writes the document, saying why, when the published result cannot be fetched", async () => {
+    mockWeightsAvailable()
+    fetchOfficialResult.mockResolvedValue({ ok: false, reason: "unavailable", message: "offline" })
+    const outcome = await openssfScorecard.policy(
+      ctx({
+        result: evidence({
+          output: {
+            format: "json",
+            success: true,
+            value: { repo: "o/r", results: results({ name: "License", score: 10 }) },
+          },
+        }),
+      }),
+    )
+    expect(renderScorecardMarkdown).toHaveBeenCalledWith(
+      expect.objectContaining({ official: undefined, officialUnavailableReason: "offline" }),
+    )
+    expect(outcome).toMatchObject({ outcome: "pass" })
   })
 })

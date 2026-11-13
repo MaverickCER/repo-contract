@@ -143,4 +143,30 @@ describe.skipIf(!distIsBuilt || !bunAvailable)("consumer install (packed tarball
     expect(result.stdout).toContain("BUN_CONSUMER_PRESETS_OK")
     expect(result.status).toBe(0)
   }, 20_000)
+
+  it("resolves the ./helpers, ./affected and ./metrics exports and runs their pure entry points", () => {
+    const script = `
+      import { hashRequirementFields } from "repo-contract/helpers";
+      import { parseScopeArgs, resolveScope } from "repo-contract/affected";
+      import { createRunRecord, serializeRunRecord } from "repo-contract/metrics";
+
+      const digest = hashRequirementFields({ justification: "x" }, ["justification"], (r, f) => String(r[f]));
+      if (typeof digest !== "string" || digest.length === 0) throw new Error("hashRequirementFields returned no digest");
+      const parsed = parseScopeArgs(["--scope", "affected"]);
+      if (!parsed.ok || parsed.scope !== "affected") throw new Error("parseScopeArgs did not parse --scope affected");
+      const decision = resolveScope({ requested: "full", env: {} });
+      if (decision.scope !== "full") throw new Error("resolveScope ignored an explicit full request");
+      const line = serializeRunRecord(createRunRecord({ startedAt: new Date(0).toISOString(), durationMs: 1, scope: "full", checks: [] }));
+      if (!line.endsWith("\\n") || !JSON.parse(line).schemaVersion) throw new Error("createRunRecord/serializeRunRecord did not round-trip");
+
+      console.log("BUN_CONSUMER_BARRELS_OK");
+    `
+    writeFileSync(path.join(consumerDir, "run-barrels.mjs"), script)
+
+    const result = spawnSync("bun", ["run-barrels.mjs"], { cwd: consumerDir, encoding: "utf8" })
+
+    expect(result.stderr).toBe("")
+    expect(result.stdout).toContain("BUN_CONSUMER_BARRELS_OK")
+    expect(result.status).toBe(0)
+  }, 20_000)
 })

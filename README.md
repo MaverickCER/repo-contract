@@ -93,9 +93,9 @@ checks: {
 
 ### Evidence it works
 
-- **Self-hosted:** this repository is checked by its own contract on every change, with the coverage and mutation badges above generated from it. Mutation is held at 100% on `src/**`, with every exception a reviewable record ([CODE_REVIEW.md](CODE_REVIEW.md#3-automated-checks-versus-residual-review)).
+- **Self-hosted:** this repository is checked by its own contract on every change, with the coverage and mutation badges above generated from it. Mutation testing is held at zero survivors across `src/`, except that four execution and scheduling files, the affected worklist, `src/types.ts` and the whole `src/presets/` directory are excluded for the reasons recorded in `stryker.config.mjs`; static mutants are not counted, and every other exception is a reviewable record ([CODE_REVIEW.md](CODE_REVIEW.md#3-automated-checks-versus-residual-review)).
 - **Tested as shipped:** the published package shape is installed and exercised in CI on Node.js, Bun, and Deno, and on Linux, macOS, and Windows ([runtime support](GUIDE.md#runtime-support)).
-- **Runnable proof:** the [examples](examples/README.md) are real projects, not snippets: the demo above, a [ratchet rollout](examples/day-one-walkthrough/README.md), a [governed exception](examples/exceptions-walkthrough/README.md), and a [cross-check release gate](examples/release-gate/README.md).
+- **Runnable proof:** the [examples](examples/README.md) are real projects, not snippets, and CI runs every command their READMEs show and checks the outcome: the demo above, a [ratchet rollout](examples/day-one-walkthrough/README.md), a [governed exception](examples/exceptions-walkthrough/README.md), and a [cross-check release gate](examples/release-gate/README.md).
 - **Verifiable release:** published with npm OIDC provenance, so a consumer can check that an artifact was built by this repository's CI ([ADOPTION.md](ADOPTION.md#security--threat-model)).
 
 ## Install and verify
@@ -134,7 +134,7 @@ npx repo-contract affected --tests | xargs vitest run    # pipe the test files t
 npx repo-contract affected --json                        # machine-readable, versioned (schemaVersion 1)
 ```
 
-It compares your working tree (staged, unstaged and untracked files included) with the merge base of `--base` (default: the upstream branch, then `origin/main`, then `origin/master`), works out which exports changed, and follows them through your imports to the tests that use them. It needs the project's own `typescript` (version 6 or earlier; TypeScript 7 has no compiler API). Output goes to stdout and diagnostics to stderr. The exit status is `0` on success, `1` if it could not run and `2` for a usage error.
+It compares your working tree (staged, unstaged and untracked files included) with the merge base of `--base` (default: the upstream branch, then `origin/main`, then `origin/master`), works out which exports changed, and follows them through your imports to the tests that use them. It needs the project's own `typescript` (version 5 or 6; TypeScript 7 ships no compiler API, which `affected`'s types need as much as its runtime, so `repo-contract/affected` does not type-check under 7 either). Only `affected` needs it: every other entry point has no TypeScript dependency and type-checks under 5, 6 and 7, which is why `typescript` is an optional peer. Output goes to stdout and diagnostics to stderr. The exit status is `0` on success, `1` if it could not run and `2` for a usage error.
 
 It narrows only when it can be sure. A lockfile, a tool config or CI file, a file it cannot place, a module that does not parse, a dynamic `import()` or `require()` it cannot read, or git failing makes it report **everything** (still exit `0`, with the reason on stderr). A coupling it cannot see, such as a test that reads a fixture without importing it, is declared in `package.json` and is otherwise treated as unplaced (so: everything):
 
@@ -176,11 +176,11 @@ const cache = createCache({ store: createFileCacheStore(".repo-contract/cache"),
 - **Cache.** A result is stored under a digest of the check, every input's name and content digest, the tool versions and the cache format, so it is only ever replayed for exactly the same inputs. An unreadable or inconsistent entry is a miss, never a replay. A **full run is always cold**: the cache is neither read nor written, so a release cannot be satisfied by an earlier result. `REPO_CONTRACT_CACHE=off|ro|rw` and a flag change the mode for other runs. `cache.why(check, inputs)` says which inputs differ from the check's latest entry.
 - **Housekeeping.** `repo-contract cache stats`, `clear` and `prune --max-age 7d --max-entries 200` work on `.repo-contract/cache` (`--cache-dir`, `-C`, `--json`). Keep the directory out of git.
 
-What the cache is keyed on is up to the caller: anything that can change a result and is left out of the inputs can make a stale result replay. That is why the shared checks hash their declared inputs and tool versions and why releases bypass the cache. The reasoning is in [ADR 0022](specs/decisions/0022-a-full-run-is-cold-and-a-cache-replays-only-identical-inputs.md).
+What the cache is keyed on is up to the caller: anything that can change a result and is left out of the inputs can make a stale result replay. That is why a check that uses the cache should hash its declared inputs and tool versions, and why releases bypass the cache. This repository's own contract runs every check cold on every run (its checks declare no cache inputs yet) and uses the cache only in tests. The reasoning is in [ADR 0022](specs/decisions/0022-a-full-run-is-cold-and-a-cache-replays-only-identical-inputs.md).
 
 ### Getting the most out of repo-contract
 
-Everything below is exercised by `test/integration/affected/workflow.test.ts`, so these commands and their output are tested, not illustrative. Each feature is opt-in; with none of them, a run reports every problem and runs everything.
+The commands below are exercised end to end by `test/integration/affected/workflow.test.ts`, so their output is tested, not illustrative. The library functions they mention (`resolveFailFast`, `findEscapes`, `maturityLevel`, `buildEvidenceManifest`) are covered by their own unit tests instead. Each feature is opt-in; with none of them, a run reports every problem and runs everything.
 
 **Run less on a pull request.** `repo-contract affected --tests` lists only the tests a change can reach; `--explain` says why (`src/math.ts#double changed -> ...`). Give a CI checkout `fetch-depth: 0` or it cannot see the base commit and runs everything.
 
@@ -200,7 +200,7 @@ npx repo-contract affected --mutate --shard 2/3 --timings timings.json     # thi
 
 **Prove the narrow scope is sound.** After a merge, run everything once and call `findEscapes({ affectedTests, allTests, failedInFullRun })` (`repo-contract/affected`): any test that failed in the full run but was left out of the affected set is an escape, and `clean: false` means the analysis needs a wider rule.
 
-**Measure it.** Append `serializeRunRecord(createRunRecord({...}))` from `repo-contract/metrics` to `.repo-contract/metrics/runs.jsonl` after each run; `repo-contract metrics` (or `--json`) shows pass rate, cache hit ratio, how much of the suite affected runs needed, estimated minutes saved, first-pass rate and the mutation trend. `maturityLevel` turns the facts into a level from 0 to 4 and says what the next one needs; `buildEvidenceManifest` records that a release passed a full, cache-free run. Nothing leaves your machine. Why these are opt-in and how skips stay visible: [ADR 0023](specs/decisions/0023-speed-features-are-opt-in-and-every-skip-is-visible.md).
+**Measure it.** Append `serializeRunRecord(createRunRecord({...}))` from `repo-contract/metrics` to `.repo-contract/metrics/runs.jsonl` after each run; `repo-contract metrics` (or `--json`) shows pass rate, cache hit ratio, how much of the suite affected runs needed, estimated minutes saved, first-pass rate and the mutation trend. `maturityLevel` turns the facts into a level from 0 to 4 and says what the next one needs; `buildEvidenceManifest` records a release's full, cache-free run of a named commit with a SHA-256 of each check's evidence; this repository writes its own to `reports/evidence-manifest.json` after every passing full run of `npm run contract`. The caller states the scope and cache mode, and it refuses anything else. The digest catches an accidental edit but is not a signature: to make tampering detectable, attest the manifest, for example with GitHub's `actions/attest`. Nothing leaves your machine. Why these are opt-in and how skips stay visible: [ADR 0023](specs/decisions/0023-speed-features-are-opt-in-and-every-skip-is-visible.md).
 
 ## Fit and capabilities
 
@@ -212,18 +212,18 @@ npx repo-contract affected --mutate --shard 2/3 --timings timings.json     # thi
 - Policies that read other checks' evidence, with `dependsOn` ordering and `isolated` barriers.
 - Presets for common tools, spread and overridden as needed ([catalog](GUIDE.md#presets)).
 - Structured, schema-versioned evidence and verdict documents, plus a Markdown summary renderer ([Persisting a run](GUIDE.md#persisting-a-run-and-publishing-a-summary)).
-- Ratchets and [governed exceptions](GUIDE.md#advanced-governed-exceptions) (Experimental) for a justified waiver of one finding without weakening the check.
+- Ratchets and [governed exceptions](GUIDE.md#advanced-governed-exceptions) for a justified waiver of one finding without weakening the check.
 
 **Integration:** it is a library, so your repository owns the entry point. Your tools, CI provider, and scripts keep running as they do; process spawning and environment access are capabilities you supply, never ambient ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)). It adopts one check at a time: `--checks a,b,c` runs a named subset.
 
-**Runtimes:** Node.js `>=22` on macOS, Linux, and Windows; Bun and Deno (Deno needs `--allow-read --allow-run --allow-env`); not browsers ([details](GUIDE.md#runtime-support)).
+**Runtimes:** Node.js `>=22` on macOS, Linux, and Windows; Bun and Deno (Deno needs `--allow-read --allow-run --allow-env`); not browsers ([details](GUIDE.md#runtime-support)). **Package managers:** npm is supported; pnpm, Yarn 1 and Yarn Berry (node-modules linker) are tested for install and import of every entry point only ([details](GUIDE.md#package-managers)).
 
 **Configuration and extension:** a typed `defineRepoContract` object. Spread a preset to override its command or timeout, or write your own check and policy ([Guide](GUIDE.md#defining-checks)). Organizations wrap it in a shared package that other repositories extend ([examples](examples/README.md)).
 
 ## Limits and when not to use it
 
 - **Skip it when** `npm test` plus a linter is the whole story, each CI check is independent and that is fine, or you need no policy logic beyond exit codes.
-- **Trade-offs:** it is a layer you maintain (a config and a runner), checks run as local processes so tools must be installed in every environment, and `init`'s detection table and the presets are Experimental and may change shape before 1.0.
+- **Trade-offs:** it is a layer you maintain (a config and a runner), checks run as local processes so tools must be installed in every environment, and `init`'s detection table, the presets, `./affected` and `./metrics` are Experimental and may change shape before 1.0.
 - **Not a replacement** for your CI provider, test runner, or scanners. It does not install tools, host results, or authorize anything; it is not a dashboard.
 - **Automation:** agents and bots can consume the same structured verdicts, but rationale does not guarantee a fix converges. The loop that retries, stops, and validates changes is the automation's job.
 
@@ -231,7 +231,7 @@ npx repo-contract affected --mutate --shard 2/3 --timings timings.json     # thi
 
 - **Guarantees:** no shell by default (a `run` array is argv; a string is tokenized), no ambient spawn or environment access in the library (the one exception is the `affected` command in the `bin`, which runs `git` — [ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md#amendment-2026-11-01-the-command-line-tool-is-a-consumer-of-its-own-library)), no network calls or telemetry, and the no-network property is enforced by a check in this repository's own contract ([SECURITY.md](SECURITY.md#runtime-security-model)).
 - **Trust boundaries:** it executes the commands your config names with the environment you pass, so the config and any policy you write are trusted code; what its guarantees do not cover is in [Application responsibilities](SECURITY.md#application-responsibilities).
-- **Dependencies and licence:** zero runtime dependencies, MIT licensed. Two CycloneDX SBOMs are committed, one for what installing the package adds and one for this repository's build tooling ([what each covers](SECURITY.md#sboms)).
+- **Dependencies and licence:** zero runtime dependencies (the list, generated from `package.json`, is in the [Adoption guide](ADOPTION.md#security--threat-model)), MIT licensed. Two CycloneDX SBOMs are committed, one for what installing the package adds and one for this repository's build tooling ([what each covers](SECURITY.md#sboms)).
 - **Reporting:** [private security advisory](https://github.com/MaverickCER/repo-contract/security/advisories/new); supported versions are in [SECURITY.md](SECURITY.md#supported-versions).
 
 ## Maturity, versioning and support

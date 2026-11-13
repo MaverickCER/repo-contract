@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  coverageRecognizer,
   eslintRecognizer,
   prettierRecognizer,
   recognizeSuppression,
@@ -140,7 +141,93 @@ describe("prettierRecognizer", () => {
   })
 })
 
+describe("coverageRecognizer", () => {
+  it("recognizes v8, c8 and istanbul ignore directives as the coverage domain", () => {
+    expect(coverageRecognizer("v8 ignore start")).toEqual({
+      domain: "coverage",
+      rule: ["v8-ignore-start"],
+      reason: "",
+    })
+    expect(coverageRecognizer("c8 ignore next")).toEqual({
+      domain: "coverage",
+      rule: ["c8-ignore-next"],
+      reason: "",
+    })
+    expect(coverageRecognizer("istanbul ignore if")).toEqual({
+      domain: "coverage",
+      rule: ["istanbul-ignore-if"],
+      reason: "",
+    })
+  })
+
+  it("keeps the author's reason after the directive", () => {
+    expect(
+      coverageRecognizer("v8 ignore start -- Windows-only; exercised on the CI Windows runner"),
+    ).toEqual({
+      domain: "coverage",
+      rule: ["v8-ignore-start"],
+      reason: "Windows-only; exercised on the CI Windows runner",
+    })
+  })
+
+  it("keeps a reason written without the separator, and has none for a bare separator", () => {
+    expect(coverageRecognizer("c8 ignore next because the branch is Windows-only")?.reason).toBe(
+      "because the branch is Windows-only",
+    )
+    expect(coverageRecognizer("istanbul ignore else --")?.reason).toBe("")
+    expect(coverageRecognizer("v8 ignore next")?.reason).toBe("")
+  })
+
+  it("does not treat the stop marker, or unrelated text, as a suppression", () => {
+    expect(coverageRecognizer("v8 ignore stop")).toBeUndefined()
+    expect(coverageRecognizer("v8 ignores nothing")).toBeUndefined()
+    expect(coverageRecognizer("ignore start")).toBeUndefined()
+  })
+
+  it("is reached through recognizeSuppression", () => {
+    expect(recognizeSuppression("v8 ignore file")?.rule).toEqual(["v8-ignore-file"])
+  })
+})
+
+describe("coverageRecognizer line counts", () => {
+  it("treats the line count of `ignore next N` as part of the directive, not the reason", () => {
+    expect(coverageRecognizer("c8 ignore next 3 -- three lines of platform fallback")).toEqual({
+      domain: "coverage",
+      rule: ["c8-ignore-next"],
+      reason: "three lines of platform fallback",
+    })
+    expect(coverageRecognizer("v8 ignore next 2")).toEqual({
+      domain: "coverage",
+      rule: ["v8-ignore-next"],
+      reason: "",
+    })
+  })
+})
+
 describe("strykerRecognizer", () => {
+  it("ends the mutator list at Stryker's own colon, keeping everything after it as the reason", () => {
+    expect(
+      strykerRecognizer(
+        "Stryker disable next-line Regex: equivalent -- the anchors are only precision",
+      ),
+    ).toEqual({
+      domain: "stryker",
+      rule: ["Regex"],
+      reason: "equivalent -- the anchors are only precision",
+    })
+    expect(strykerRecognizer("Stryker disable StringLiteral,ObjectLiteral: a reason")).toEqual({
+      domain: "stryker",
+      rule: ["StringLiteral", "ObjectLiteral"],
+      reason: "a reason",
+    })
+    // A colon inside the reason of a `--` directive does not cut the list.
+    expect(strykerRecognizer("Stryker disable next-line all -- see: the note")).toEqual({
+      domain: "stryker",
+      rule: ["all"],
+      reason: "see: the note",
+    })
+  })
+
   it("recognizes a specific-mutator next-line disable with a reason", () => {
     expect(
       strykerRecognizer("Stryker disable next-line ConditionalExpression -- unreachable branch"),

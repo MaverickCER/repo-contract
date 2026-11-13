@@ -42,6 +42,15 @@ export const SIZE_BUDGETS: readonly SizeBudget[] = [
   // without its own budget a regression here was undetectable by this check.
   { label: "presets (esm)", file: "dist/presets.js", maxGzipBytes: 10 * 1024 },
   { label: "presets (cjs)", file: "dist/presets.cjs", maxGzipBytes: 10 * 1024 },
+  // The three barrels added since: measured at about 7, 18 and 4 KiB gzip (CJS, the larger format)
+  // when these budgets were set, with a quarter of headroom each so a stray dependency or a
+  // duplicated module shows up as a failure, not a trend.
+  { label: "helpers (esm)", file: "dist/helpers.js", maxGzipBytes: 9 * 1024 },
+  { label: "helpers (cjs)", file: "dist/helpers.cjs", maxGzipBytes: 9 * 1024 },
+  { label: "affected (esm)", file: "dist/affected.js", maxGzipBytes: 23 * 1024 },
+  { label: "affected (cjs)", file: "dist/affected.cjs", maxGzipBytes: 23 * 1024 },
+  { label: "metrics (esm)", file: "dist/metrics.js", maxGzipBytes: 5 * 1024 },
+  { label: "metrics (cjs)", file: "dist/metrics.cjs", maxGzipBytes: 5 * 1024 },
 ]
 
 export interface SizeReportEntry {

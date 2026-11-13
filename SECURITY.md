@@ -6,8 +6,9 @@
 - Process spawning and environment access are capabilities **the consumer supplies**, not
   owned by the package.
 - The `init` CLI only scaffolds local config/hook files; neither it nor the library engine
-  makes network calls or collects telemetry — and the no-network property is enforced by a
-  check, not merely documented.
+  makes network calls or collects telemetry. An AST scan of `src/` fails the contract on any
+  network import or global, and a scan of the packed tarball rejects `child_process` and
+  `process.env` outside `bin/`.
 
 The rest of this document defines the security boundaries and threat model for
 `repo-contract`: what protections the package intentionally provides, what responsibilities
@@ -110,12 +111,14 @@ the most security-sensitive part of the package.
   This is enforced by CI (`no-eval`/`no-implied-eval`/`no-new-func` are lint errors, not just
   documentation), not just asserted here.
 - **No network calls anywhere in the package's shipped surface (`src/**` — the programmatic API
-  and every published preset).** Mechanically enforced in two independent layers: an ESLint rule
-  (`no-restricted-imports`/`no-restricted-globals`) rejects network-capable imports and globals at
-  development time, and an independent, ESLint-free repository check
-  (`scripts/security-network/scan.ts`) statically scans the same surface — including every
-  preset's spawned command against a reviewed allowlist — so a silently weakened lint rule or a
-  suppressed violation still fails the build. This governs repo-contract's own code; it does not,
+  and every published preset — and `bin/**`, the CLI).** Mechanically enforced in two independent
+  layers: an ESLint rule (`no-restricted-imports`/`no-restricted-globals`) rejects network-capable
+  imports and globals at development time, and an independent, ESLint-free repository check
+  (`scripts/security-network/scan.ts`) statically scans both `src/` and the shipped `bin/` —
+  including every preset's spawned command against a reviewed allowlist — so a silently weakened
+  lint rule or a suppressed violation still fails the build. The one reviewed exception is the
+  CLI's `createRequire(...)("typescript")`, which loads the project's own compiler for `affected`
+  (`.repo-contract/exceptions/security-network.json`). This governs repo-contract's own code; it does not,
   and cannot, prevent a command _you_ configure from making network calls, or a preset's spawned
   external tool (e.g. `brokenLinks`'s `linkinator`) from doing so on your explicit behalf — see
   [ADR 0007](specs/decisions/0007-no-network-surface.md) for the full threat model, exactly what's
@@ -129,26 +132,22 @@ particular:
 - **You own what commands you configure.** repo-contract does not attempt to detect or block a
   dangerous `run` command — if you configure `rm -rf /` with `shell: true`, it will run it.
 - **You own persistence.** repo-contract never writes evidence, reports, or baseline files to
-  disk on its own initiative. If you persist evidence (for baseline comparison, audit trails,
+  disk on its own initiative; the opt-in result cache writes only to the path you pass, and run records are appended by the caller. If you persist evidence (for baseline comparison, audit trails,
   etc.), you are responsible for where it goes and who can read it — including whatever secrets
   a check's captured output might contain.
 - **You own secret hygiene in check output.** If a configured command might print sensitive
   values, keep that in mind before persisting or transmitting the resulting evidence.
 - **You own environment scoping.** `inheritEnv`/`env` are the tools; deciding what a given check
   actually needs is a per-repository judgment call repo-contract does not make for you.
-  Concretely, for this repository's own release pipeline: `.github/workflows/release.yml` calls
-  into the shared, centrally-maintained `release-npm-changesets.yml` reusable workflow hosted in
-  `internal-package-contract` (matching data-cap/env-cap) — a single job that grants
-  `id-token: write` for npm OIDC trusted publishing and runs `npm run release`
-  (`changeset publish`), which **does** run `prepublishOnly` (`npm run docs:api`,
-  `npm run docs:benchmarks` and `npm run contract`, which includes the AmbientCapabilities check)
-  in that same credentialed job, unlike this repository's own
-  former release-please-based pipeline's separate credential-free `verify` job. This is a known,
-  accepted trade-off of standardizing on the shared workflow every consumer uses, not an
-  oversight — but per this section's own guidance immediately below, a repository in this
-  position should set `inheritEnv: false` plus an explicit, minimal `env` on every check
-  reachable from that job, which `repo-contract.config.ts` does not yet do here. Track that as a
-  follow-up, not a promise already kept by this migration.
+  Concretely, for this repository's own pipeline: every check of `npm run contract` runs with
+  `inheritEnv: false` and the explicit allowlist in `scripts/contract-env.mjs` (the shell's
+  furniture, Node's settings, CI metadata and the two tokens checks are written to use), so a
+  check never sees the rest of the environment of the process that started it. The release path
+  is the shared `release-npm-changesets.yml` workflow from `internal-package-contract` (v0.17.0):
+  its check job runs `npm run verify` with no publishing credential and requires a passing
+  `contract` run on the exact commit being released, and its publish job, the only one holding
+  the npm OIDC token, runs no repository code (`--ignore-scripts`). `prepublishOnly` is not part
+  of that path.
 
 ## SBOMs
 

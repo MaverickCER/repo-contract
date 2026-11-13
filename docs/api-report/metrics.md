@@ -65,7 +65,9 @@ readonly verdict: Verdict;
 
 ### EvidenceManifest
 
-A signed-by-digest statement that a package version passed the full contract.
+A digest-sealed statement, made by the caller, that a package version passed the full contract.
+The `sha256` detects an accidental edit. It is not a signature: anyone who edits the content can
+recompute it, so sign or attest the manifest to make tampering detectable.
 
 #### Extends
 
@@ -168,7 +170,36 @@ Always `"full"`: a manifest vouches only for a run that checked everything.
 readonly sha256: string;
 ```
 
-A digest of every other field, so an edit to any of them is detectable.
+A digest of every other field, so an edit that does not also recompute it is detectable.
+
+##### subject?
+
+```ts
+readonly subject?: {
+  commit: string;
+  ref?: string;
+};
+```
+
+What the run looked at: the commit it ran on and, when known, the ref. Without a subject a
+manifest says "a full run passed" but not of what; with one, a reader can pair it with the
+repository state it vouches for. Optional for compatibility with manifests built before it existed.
+
+###### commit
+
+```ts
+readonly commit: string;
+```
+
+###### ref?
+
+```ts
+readonly ref?: string;
+```
+
+###### Inherited from
+
+`ManifestFacts.subject`
 
 ##### tools
 
@@ -276,6 +307,35 @@ Always `"full"`: a manifest vouches only for a run that checked everything.
 ###### Inherited from
 
 `ManifestFacts.scope`
+
+##### subject?
+
+```ts
+readonly subject?: {
+  commit: string;
+  ref?: string;
+};
+```
+
+What the run looked at: the commit it ran on and, when known, the ref. Without a subject a
+manifest says "a full run passed" but not of what; with one, a reader can pair it with the
+repository state it vouches for. Optional for compatibility with manifests built before it existed.
+
+###### commit
+
+```ts
+readonly commit: string;
+```
+
+###### ref?
+
+```ts
+readonly ref?: string;
+```
+
+###### Inherited from
+
+`ManifestFacts.subject`
 
 ##### tools
 

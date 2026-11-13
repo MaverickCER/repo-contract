@@ -8,9 +8,9 @@ interface ComposedSignal {
  * Combines multiple signals into one that aborts as soon as any input does.
  * Prefers the native `AbortSignal.any()` where available; falls back to a
  * manual composition for engines without it. `AbortSignal.any` landed in
- * Node 20.3.0 -- genuinely newer than this package's `engines.node >=20.0.0`
- * floor, so the fallback is live code for a real gap (a 20.0-20.2 patch
- * release), not dead code kept out of caution.
+ * Node 20.3.0, inside this package's `engines.node >=22.0.0` floor, so on every
+ * supported Node the native path runs. The manual fallback is kept as defence
+ * in depth for a host that removes or shims the global, and stays unit-tested.
  *
  * The native path's `dispose` is a no-op -- `AbortSignal.any` manages its own
  * source-signal listeners internally and doesn't leak them. The manual

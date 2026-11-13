@@ -9,7 +9,7 @@ import { listChangedFiles } from "../diff-files.js"
 import { readBranchCommits } from "../git-commits.js"
 import type { AdrGovernanceEvidence } from "./evidence-types.js"
 
-const GOVERNED_PATH_PREFIXES = ["src/execution/", "src/policy/"]
+const GOVERNED_PATH_PREFIXES = ["src/execution/", "src/policy/", "src/affected/", "src/metrics/"]
 const ADR_DIR = "specs/decisions"
 const ADR_REFERENCE_PATTERN = /\bADR[- ]?(\d{4})\b/gi
 

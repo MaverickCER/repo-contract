@@ -15,6 +15,15 @@ interface ManifestFacts {
   readonly inputHash: string
   /** Each tool's version. */
   readonly tools: Readonly<Record<string, string>>
+  /**
+   * What the run looked at: the commit it ran on and, when known, the ref. Without a subject a
+   * manifest says "a full run passed" but not of what; with one, a reader can pair it with the
+   * repository state it vouches for. Optional for compatibility with manifests built before it existed.
+   */
+  readonly subject?: {
+    readonly commit: string
+    readonly ref?: string
+  }
 }
 
 /** What a release's full run is built from. */
@@ -27,7 +36,11 @@ export interface ManifestInput extends ManifestFacts {
   }[]
 }
 
-/** A signed-by-digest statement that a package version passed the full contract. */
+/**
+ * A digest-sealed statement, made by the caller, that a package version passed the full contract.
+ * The `sha256` detects an accidental edit. It is not a signature: anyone who edits the content can
+ * recompute it, so sign or attest the manifest to make tampering detectable.
+ */
 export interface EvidenceManifest extends ManifestFacts {
   readonly schemaVersion: 1
   readonly checks: readonly {
@@ -35,7 +48,7 @@ export interface EvidenceManifest extends ManifestFacts {
     readonly verdict: Verdict
     readonly evidenceSha256: string
   }[]
-  /** A digest of every other field, so an edit to any of them is detectable. */
+  /** A digest of every other field, so an edit that does not also recompute it is detectable. */
   readonly sha256: string
 }
 
@@ -100,6 +113,18 @@ export function buildEvidenceManifest(input: ManifestInput): EvidenceManifest {
     if (byId.has(check.id)) throw new Error(`Check ${check.id} appears more than once.`)
     byId.set(check.id, check)
   }
+  if (input.subject !== undefined && !/^[0-9a-f]{7,64}$/i.test(input.subject.commit)) {
+    throw new Error("A manifest's subject commit is a hexadecimal object id.")
+  }
+  const subject =
+    input.subject === undefined
+      ? {}
+      : {
+          subject: {
+            commit: input.subject.commit,
+            ...(input.subject.ref === undefined ? {} : { ref: input.subject.ref }),
+          },
+        }
   const body = {
     schemaVersion: 1 as const,
     package: { name: input.package.name, version: input.package.version },
@@ -107,6 +132,7 @@ export function buildEvidenceManifest(input: ManifestInput): EvidenceManifest {
     scope: input.scope,
     cache: input.cache,
     inputHash: input.inputHash,
+    ...subject,
     tools: Object.fromEntries(
       [...tools.keys()].sort().map((name) => [name, required(tools, name)]),
     ),

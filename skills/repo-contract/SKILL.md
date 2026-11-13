@@ -1,13 +1,13 @@
 ---
 name: repo-contract
-description: Load when a task creates or edits a repo-contract config (defineRepoContract, checks, policies), adds a preset, reads Evidence or a Verdict, or wires the contract into a script, hook or CI. Skip it for repositories that do not use repo-contract.
+description: Load when a task creates or edits a repo-contract config (defineRepoContract, checks, policies), adds a preset, reads Evidence or a Verdict, or wires the contract into a script, hook or CI. Skip it elsewhere.
 ---
 
 # repo-contract
 
-repo-contract runs a repository's own checks, captures each result as structured evidence, and lets a policy the repository owns turn that evidence into a verdict with a reason.
+repo-contract runs a repository's own checks, records each result as evidence, and lets a policy the repository owns turn that evidence into a verdict with a reason.
 
-Not for: replacing your linters, test runners or CI provider. It runs the tools you already have; it does not decide what good code is.
+Not for: replacing your linters, test runners or CI provider. It runs the tools you have; it does not decide what good code is.
 
 ## Use it
 
@@ -39,26 +39,28 @@ From `examples/demo/repo-contract.config.ts`.
 
 | Import | For |
 | --- | --- |
-| `repo-contract` | `defineRepoContract`, `runRepoContract`, `serializeRun`, `renderMarkdownSummary`, the types |
+| `repo-contract` | `defineRepoContract`, `runRepoContract`, `serializeRun`, `renderMarkdownSummary`, types |
+| `repo-contract/affected` | Scope a run: `computeAffectedFromGit`, `resolveScope`, `createCache` |
 | `repo-contract/helpers` | Governed exceptions: `loadExceptionRegistry`, `reconcileExceptions`, `repoContractLogs` |
+| `repo-contract/metrics` | Run records: `createRunRecord`, `summarizeRuns`, `buildEvidenceManifest` |
 | `repo-contract/presets` | Ready-made checks: `typecheck`, `lint`, `format`, `test`, `securityDeps`, `license` |
 | `repo-contract/schema` | The JSON Schemas for the documents `serializeRun` writes |
 
 ## Rules
 
-- Supply `spawn` and `env` yourself. The package never imports a spawner or reads `process.env`; on Windows pass `cross-spawn`.
-- A policy returns `{ outcome, rationale }` and the rationale is required, even for `pass`. Put file, line, rule and counts in it.
+- Supply `spawn` and `env` yourself: the package never imports a spawner or reads `process.env`. On Windows pass `cross-spawn`.
+- A policy returns `{ outcome, rationale }`; the rationale is required even for `pass`. Put file, line, rule and counts in it.
 - `warn` is visible and never blocks. Only `fail` fails the run.
-- Name a check in `dependsOn` only after it is declared. `dependsOn` orders execution; the policy still decides what a failed dependency means.
-- Ask for parsed output with `output: { format: "json" }`; without it a policy sees only raw `stdout` and `stderr`.
+- Name a check in `dependsOn` only after it is declared. `dependsOn` orders execution; the policy decides what a failed dependency means.
+- Ask for parsed output with `output: { format: "json" }`; otherwise a policy sees only raw `stdout` and `stderr`.
 - Prefer a `run` array. A string runs without a shell and rejects shell operators; `shell: true` opts into one.
 
 ## Rely on
 
 - Checks run in parallel unless one names another in `dependsOn` or is marked `isolated`.
 - A command that cannot be started is recorded as evidence with `status: "spawn_error"`, not thrown.
-- Evidence and Verdict are separate documents: evidence says what happened, the verdict says whether the standard held.
-- Presets are Experimental: a new preset or changed default may arrive in a minor release.
+- Evidence says what happened; the Verdict says whether the standard held. They are separate documents.
+- Presets, `./affected` and `./metrics` are Experimental: they may change in a minor release.
 
 ## Common mistakes
 
@@ -66,11 +68,11 @@ From `examples/demo/repo-contract.config.ts`.
 | --- | --- |
 | Reading `process.env` or importing `child_process` inside a check | Take both from the config, so it runs the same everywhere. |
 | Using the `format` preset as a gate | It runs `prettier --write`, which never fails on unformatted files. Use `{ ...format, run: ["prettier", "--check", "."] }`. |
-| A policy with no rationale, or one that only says it failed | Say what to fix, where, and why it matters. |
+| A policy with no rationale, or one that only says it failed | Say what to fix, where, and why. |
 
 ## Verify
 
-1. Run the project's contract script (`npm run contract`) and read every FAIL and WARN rationale.
+1. Run `npm run contract` and read every FAIL and WARN rationale.
 2. Confirm every import is a package.json export.
 
 Report any check you could not run, and any assumption you made.

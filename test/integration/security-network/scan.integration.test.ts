@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises"
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -22,14 +22,25 @@ const runningInsideMutationSandbox = REPO_ROOT.split(path.sep).includes(".stryke
 
 describe("security-network scan -- full real path", () => {
   it.runIf(!runningInsideMutationSandbox)(
-    "this repository's own src/ is network-free and its registry reconciles clean (read-only composition, no write)",
+    "this repository's own src/ is network-free, bin/ has only the recorded finding, and the registry reconciles clean (read-only composition, no write)",
     async () => {
       const { filesScanned, findings } = await scanForNetworkCapability(REPO_ROOT)
       expect(filesScanned).toBeGreaterThan(0)
-      expect(findings).toEqual([])
+      // src/ is network-free. The scan also covers the shipped bin/, where the CLI's one
+      // restricted import (`createRequire`, to load the project's TypeScript for `affected`) is
+      // the finding the registry records.
+      expect(findings.map((finding) => finding.id)).toEqual([
+        "security-network:restricted-named-import:bin/repo-contract.mjs:16:10",
+      ])
 
+      const registry = JSON.parse(
+        await readFile(
+          path.join(REPO_ROOT, ".repo-contract/exceptions/security-network.json"),
+          "utf8",
+        ),
+      ) as { exceptions: NetworkExceptionRecord[] }
       const reconciled = reconcileExceptions<NetworkCapabilityFinding, NetworkExceptionRecord>({
-        existing: [],
+        existing: registry.exceptions,
         findings: [...findings],
         deriveId: (finding) => finding.id,
         createStub: createNetworkStub,

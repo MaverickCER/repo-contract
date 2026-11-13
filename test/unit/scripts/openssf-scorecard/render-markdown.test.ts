@@ -198,4 +198,126 @@ describe("renderScorecardMarkdown", () => {
     })
     expect(markdown).toMatch(/not.*the upstream `scorecard` binary's/)
   })
+
+  describe("the official OpenSSF Scorecard result", () => {
+    const official = {
+      date: "2026-11-03T09:59:04Z",
+      score: 7,
+      scorecardVersion: "v5.6.0",
+      commit: "8d5e308aba3a264ff061f2a61062977eb9d71ff9",
+      checks: [
+        {
+          name: "Code-Review",
+          score: 0,
+          reason: "Found 0/5 approved changesets -- score normalized to 0",
+        },
+        { name: "Packaging", score: -1, reason: "packaging workflow not detected" },
+        { name: "License", score: 10, reason: "license file detected" },
+      ],
+    }
+    const render = (extra: Record<string, unknown>): string =>
+      renderScorecardMarkdown({
+        repo: "MaverickCER/repo-contract",
+        generatedAt: "2026-11-04T00:00:00.000Z",
+        results: [
+          { name: "Code-Review", score: 10, reason: "local says reviewed", details: [] },
+          { name: "License", score: 10, reason: "MIT", details: [] },
+        ],
+        weightedAverage: 10,
+        weights: { "Code-Review": 7.5, License: 2.5 },
+        weightsUnavailableReason: undefined,
+        provenance: provenance(),
+        ...extra,
+      })
+
+    it("comes before this repository's own evaluation, with the version, commit and date it was produced from", () => {
+      const markdown = render({ official })
+      const officialAt = markdown.indexOf("## Official OpenSSF Scorecard result")
+      expect(officialAt).toBeGreaterThan(-1)
+      expect(officialAt).toBeLessThan(markdown.indexOf("## Checks\n"))
+      expect(markdown).toContain("- **Official score:** 7.0/10")
+      expect(markdown).toContain("- **Scorecard version:** `v5.6.0`")
+      expect(markdown).toContain(
+        "- **Commit evaluated:** `8d5e308aba3a264ff061f2a61062977eb9d71ff9`",
+      )
+      expect(markdown).toContain("- **Evaluated on:** 2026-11-03T09:59:04Z")
+      expect(markdown).toContain(
+        "[scorecard.dev viewer](https://scorecard.dev/viewer/?uri=github.com/MaverickCER/repo-contract)",
+      )
+    })
+
+    it("lists every official check beside this evaluation's score for it", () => {
+      const markdown = render({ official })
+      expect(markdown).toContain("| Check | Official | This evaluation | Official reason |")
+      expect(markdown).toContain(
+        "| Code-Review | 0/10 | 10/10 | Found 0/5 approved changesets -- score normalized to 0 |",
+      )
+      expect(markdown).toContain(
+        "| Packaging | N/A | not evaluated | packaging workflow not detected |",
+      )
+      expect(markdown).toContain("| License | 10/10 | 10/10 | license file detected |")
+    })
+
+    it("explains every check where the two disagree, with both reasons", () => {
+      const markdown = render({ official })
+      expect(markdown).toContain("## Where the two differ")
+      expect(markdown).toContain(
+        "- **Code-Review:** official 0/10, this evaluation 10/10. Official: Found 0/5 approved changesets -- score normalized to 0. This evaluation: local says reviewed.",
+      )
+      expect(markdown).not.toContain("- **License:** official")
+    })
+
+    it("says when the two agree on every check both scored", () => {
+      const markdown = render({
+        official: {
+          ...official,
+          checks: [{ name: "License", score: 10, reason: "license file detected" }],
+        },
+      })
+      expect(markdown).toContain("The two agree on every check both of them scored.")
+    })
+
+    it("says the official result could not be fetched, and why, instead of leaving it out silently", () => {
+      const markdown = render({ officialUnavailableReason: "HTTP 404" })
+      expect(markdown).toContain("## Official OpenSSF Scorecard result")
+      expect(markdown).toContain("The official result could not be fetched for this run: HTTP 404.")
+      expect(markdown).not.toContain("## Where the two differ")
+    })
+
+    it("tells the reader to trust the official score over this evaluation", () => {
+      const markdown = render({ official })
+      expect(markdown).toContain("When the two disagree, the official result is the one to cite.")
+    })
+  })
+
+  describe("checks not evaluated", () => {
+    const render = (names: readonly string[]): string =>
+      renderScorecardMarkdown({
+        repo: "owner/repo",
+        generatedAt: "2026-01-01T00:00:00.000Z",
+        results: names.map((name) => ({ name, score: 10, reason: "r", details: [] })),
+        weightedAverage: 10,
+        weights: undefined,
+        weightsUnavailableReason: undefined,
+        provenance: provenance(),
+      })
+
+    it("is computed from the upstream check list, so a check is never silently missing from both lists", () => {
+      const markdown = render(["License"])
+      const section = markdown.slice(markdown.indexOf("## Checks not evaluated"))
+      expect(section).toContain("- **Binary-Artifacts**")
+      expect(section).toContain("- **Dependency-Update-Tool**")
+      expect(section).not.toContain("- **License**")
+    })
+
+    it("no longer claims that no SBOM is generated: this repository commits two", () => {
+      const markdown = render([])
+      expect(markdown).not.toContain("no Software Bill of Materials is currently generated")
+      expect(markdown).toContain("docs/sbom.production.cdx.json")
+    })
+
+    it("no longer links a README that does not exist", () => {
+      expect(render([])).not.toContain("scripts/openssf-scorecard/README.md")
+    })
+  })
 })

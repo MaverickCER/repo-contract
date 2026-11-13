@@ -54,7 +54,9 @@ const config = {
     // makes spreading through an import cycle stop, so a mutant that loosens it turns every
     // cyclic import into an endless loop, which a test runner can only report as a timeout --
     // the same reason dependency-scheduler.ts is left out. The file is a dozen lines, and
-    // test/unit/affected/worklist.test.ts exercises the rule directly, cycles included.
+    // test/unit/affected/worklist.test.ts exercises the rule directly, cycles included. Tried on
+    // 2026-11-10: of 16 mutants, 9 are killed, the 6 that loosen the rule time out in the
+    // compute-affected suites, and 1 is equivalent -- no test can turn a hang into a failure.
     "!src/affected/worklist.ts",
     // The preset catalog (`repo-contract/presets`, a separate opt-in entry
     // point -- see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)
