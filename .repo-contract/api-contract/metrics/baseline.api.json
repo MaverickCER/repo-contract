@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.59.4",
+    "toolVersion": "7.60.1",
     "schemaVersion": 1011,
     "oldestForwardsCompatibleVersion": 1001,
     "tsdocConfig": {
@@ -494,7 +494,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!EvidenceManifest:interface",
-          "docComment": "/**\n * A signed-by-digest statement that a package version passed the full contract.\n */\n",
+          "docComment": "/**\n * A digest-sealed statement, made by the caller, that a package version passed the full contract.\n * The `sha256` detects an accidental edit. It is not a signature: anyone who edits the content can\n * recompute it, so sign or attest the manifest to make tampering detectable.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -581,7 +581,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!EvidenceManifest#sha256:member",
-              "docComment": "/**\n * A digest of every other field, so an edit to any of them is detectable.\n */\n",
+              "docComment": "/**\n * A digest of every other field, so an edit that does not also recompute it is detectable.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
