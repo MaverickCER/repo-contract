@@ -24,9 +24,11 @@ import path from "node:path"
 // specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
 // at module load. The `published-floor` job runs this against a bare checkout with no
 // `node_modules` at all, so that import throws ERR_MODULE_NOT_FOUND before `main()` ever runs. This
-// job is Linux-only, so the Windows `npm.cmd` hazard that motivates npm-pack.mjs's `cross-spawn` use
-// does not apply -- a plain `spawnSync("npm", ...)` is fine here.
+// job also runs on Windows, where `npm` is `npm.cmd` and Node refuses to spawn a `.cmd` file without a
+// shell, so `run` below turns the shell on for Windows only (and quotes arguments that hold a space)
+// instead of importing `cross-spawn`.
 const NPM_COMMAND = "npm"
+const WINDOWS = process.platform === "win32"
 
 /** The consumer contract, asserted from OUTSIDE the package -- literal names, no repo introspection. */
 const SHARED_PROBE_BODY = `
@@ -179,7 +181,14 @@ function findSingleTarball(dir) {
 }
 
 function run(command, args, cwd) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", stdio: "inherit" })
+  // A shell joins its arguments with spaces and no quoting, so quote the ones that need it.
+  const argv = WINDOWS ? args.map((arg) => (/\s/.test(arg) ? `"${arg}"` : arg)) : args
+  const result = spawnSync(command, argv, {
+    cwd,
+    encoding: "utf8",
+    stdio: "inherit",
+    shell: WINDOWS,
+  })
   if (result.status !== 0) {
     fail(`\`${command} ${args.join(" ")}\` exited ${String(result.status ?? result.signal)}`)
   }

@@ -381,7 +381,7 @@
       "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
-      "id": "suppression:stryker:Regex:test/_ipc/ci-jobs.ts:71",
+      "id": "suppression:stryker:Regex:test/_ipc/ci-jobs.ts:73",
       "version": 2,
       "justification": "A managed copy of internal-package-contract's runtime/ci-jobs.ts, byte-identical to the canonical source (`ManagedFiles` fails on drift). The directive marks the regex anchors as equivalent mutants there: a job id holds no quote, so the anchors are precision, not behaviour. This repository's Stryker `mutate` covers `src/**` only, so the directive is inert here.",
       "attempted": "Editing the copy: forbidden, `ManagedFiles` would fail; the comment is governed at its canonical source.",
@@ -390,7 +390,7 @@
       "domain": "stryker",
       "expires": "",
       "file": "test/_ipc/ci-jobs.ts",
-      "line": 71,
+      "line": 73,
       "residualRisk": "None here: no mutant is generated for `test/` in this repository, so nothing is hidden from its mutation gate.",
       "revisitWhen": "The managed copy changes (sync --apply --update), or `mutate` in stryker.config.mjs widens to `test/`.",
       "rule": [
@@ -401,7 +401,7 @@
       "whyPreferable": "A record that names the copy as inert is preferable to excluding managed copies from suppression governance, which would also hide a real directive added upstream."
     },
     {
-      "id": "suppression:stryker:Regex:test/_ipc/ci-jobs.ts:76",
+      "id": "suppression:stryker:Regex:test/_ipc/ci-jobs.ts:78",
       "version": 2,
       "justification": "A managed copy of internal-package-contract's runtime/ci-jobs.ts, byte-identical to the canonical source (`ManagedFiles` fails on drift). The directive marks the regex anchors as equivalent mutants there: a job id holds no bracket, so the anchors are precision, not behaviour. This repository's Stryker `mutate` covers `src/**` only, so the directive is inert here.",
       "attempted": "Editing the copy: forbidden, `ManagedFiles` would fail; the comment is governed at its canonical source.",
@@ -410,7 +410,7 @@
       "domain": "stryker",
       "expires": "",
       "file": "test/_ipc/ci-jobs.ts",
-      "line": 76,
+      "line": 78,
       "residualRisk": "None here: no mutant is generated for `test/` in this repository, so nothing is hidden from its mutation gate.",
       "revisitWhen": "The managed copy changes (sync --apply --update), or `mutate` in stryker.config.mjs widens to `test/`.",
       "rule": [
