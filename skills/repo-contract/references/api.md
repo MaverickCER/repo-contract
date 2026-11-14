@@ -1,6 +1,6 @@
 # repo-contract public API
 
-Every export a consumer can import, by entry point, for version 0.13.0. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
+Every export a consumer can import, by entry point, for version 0.14.0. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
 
 ## `repo-contract`
 
@@ -180,6 +180,10 @@ Every export a consumer can import, by entry point, for version 0.13.0. Generate
 
 ## `repo-contract/presets`
 
+- `aiReview` (function, beta): `function aiReview(options: AiReviewOptions): CheckDefinitionConfig`
+- `AiReviewFinding` (interface, beta): `interface AiReviewFinding`
+- `AiReviewOptions` (interface, beta): `interface AiReviewOptions`
+- `AiReviewReply` (interface, beta): `interface AiReviewReply`
 - `arethetypeswrong` (variable, beta): `arethetypeswrong: CheckDefinitionConfig`
 - `brokenLinks` (function, beta): `function brokenLinks(options?: BrokenLinksOptions): CheckDefinitionConfig`
 - `commitlint` (function, beta): `function commitlint(options?: CommitlintOptions): CheckDefinitionConfig`
