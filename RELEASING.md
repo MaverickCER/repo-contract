@@ -36,10 +36,11 @@ records the change.
    merges it; nothing merges it automatically.
 3. That merge triggers the shared workflow again. This time there are no pending
    changesets, so it publishes in two jobs:
-   - `build` has no publishing credentials. It runs `npm run verify` (`docs:api`,
-     `docs:benchmarks` and the full `npm run contract` gate). It also requires a workflow run
+   - `build` has no publishing credentials. It runs `npm run build`, because this repository
+     defines no `verify` script. It does not run the contract again: it requires a workflow run
      on the same tree whose `contract` job, and `required` job where the run has one, succeeded.
-     Then it packs the tarball.
+     That job reads the repository's code-scanning alerts, which `build` has no permission to
+     read. Then it packs the tarball.
    - `publish` checks out and installs nothing. It runs `npm publish <tarball> --ignore-scripts`
      on that tarball over OIDC with provenance, so `prepublishOnly` and `npm run release` do not
      run there.

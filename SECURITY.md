@@ -161,8 +161,8 @@ particular:
     rest of the environment of the process that started it.
   - The release path is the shared `release-npm-changesets.yml` workflow from
     `internal-package-contract`, at the version `package.json` pins.
-  - Its check job runs `npm run verify` with no publishing credential. It requires a passing
-    `contract` run on the exact commit being released.
+  - Its check job runs `npm run build` with no publishing credential. It requires a passing
+    `contract` run on the exact tree being released.
   - Its publish job is the only one holding the npm OIDC token, and it runs no repository code
     (`--ignore-scripts`).
   - `prepublishOnly` is not part of that path.

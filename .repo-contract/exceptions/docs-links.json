@@ -3,7 +3,7 @@
     {
       "id": "docs-links:docs/api/",
       "version": 2,
-      "justification": "docs/api/ is the TypeDoc HTML site that `npm run docs:api` generates. It is gitignored, so it exists only after that script runs. CI's `contract` job, `npm run verify` and `prepublishOnly` all run `docs:api` before the contract, so there the link resolves. A local `npm run contract` without that step reports the link broken although nothing is wrong.",
+      "justification": "docs/api/ is the TypeDoc HTML site that `npm run docs:api` generates. It is gitignored, so it exists only after that script runs. CI's `contract` job and `prepublishOnly` both run `docs:api` before the contract, so there the link resolves. A local `npm run contract` without that step reports the link broken although nothing is wrong.",
       "attempted": "Checked how the link resolves: it works after `npm run docs:api` (docs/api/index.html exists) and fails without it.",
       "constraint": "docs/api/ is generated and gitignored, so it exists only after `npm run docs:api`.",
       "expires": "",
