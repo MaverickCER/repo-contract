@@ -18,7 +18,7 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 
 /**
  * These tests exercise `dist/`, not `../../src`: required to have been built already (this
- * repo's `npm run verify`/CI always run `npm run build` before `npm run test:coverage`).
+ * repo's `npm run contract` and CI always run `npm run build` before `npm run test:coverage`).
  * Callers `describe.skipIf(!distIsBuilt)` rather than failing confusingly, since `npm test` run in
  * isolation without a prior build is a real, reasonable thing a developer might do.
  */

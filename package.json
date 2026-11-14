@@ -164,7 +164,6 @@
     "test:unit": "node scripts/run-test-category.mjs unit",
     "test:watch": "vitest --watch",
     "typecheck": "npm run contract -- typecheck",
-    "verify": "npm run docs:api && npm run docs:benchmarks && npm run contract",
     "version": "changeset version && npm run build && internal-package-contract update-baseline && npm run sbom && internal-package-contract skill && internal-package-contract site"
   },
   "allowScripts": {

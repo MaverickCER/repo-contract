@@ -910,5 +910,4 @@ npm run test                # test:unit + test:integration + test:property + tes
 npm run test:coverage       # the three coverage-producing categories, aggregated, threshold-gated
 npm run contract            # repo-contract validating this repository using itself -- the complete
                              # local pre-flight gate, and what CI's `contract` job runs
-npm run verify               # bare alias for `npm run contract` (package.json's "verify" script)
 ```
