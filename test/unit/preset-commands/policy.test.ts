@@ -64,7 +64,9 @@ describe("evaluatePresetCommandsPolicy", () => {
       evidence: evidence([{ command: "linkinator", justification: "" }]),
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("linkinator")
+    expect(result.rationale).toContain(
+      '- linkinator (src/presets/linkinator.ts:8): fill in "justification".',
+    )
     expect(result.rationale).toContain("--recurse")
   })
 
@@ -77,6 +79,7 @@ describe("evaluatePresetCommandsPolicy", () => {
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("Stale record")
     expect(result.rationale).toContain("preset-command:curl")
+    expect(result.rationale).toContain('. No preset spawns "curl" any more; delete this entry.')
   })
 
   it("fails on a non-literal run property", () => {
@@ -86,7 +89,7 @@ describe("evaluatePresetCommandsPolicy", () => {
       }),
     })
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("src/presets/x.ts:3")
+    expect(result.rationale).toContain("- src/presets/x.ts:3: not a literal")
   })
 
   it("fails on a registryError", () => {

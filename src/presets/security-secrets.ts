@@ -35,7 +35,7 @@ export const securitySecrets: CheckDefinitionConfig = {
     if (terminated) return terminated
 
     const parsed = await readJsonReport<readonly SecretlintResult[]>(
-      // Provably equivalent, not a coverage gap -- see the identical
+      // Provably equivalent, not a coverage gap: see the identical
       // comment in src/presets/duplication.ts for why.
       () => readFile("reports/secretlint.json", "utf8"),
       "Secretlint did not produce its expected JSON report.",
@@ -54,8 +54,8 @@ export const securitySecrets: CheckDefinitionConfig = {
 
     const findings = results.flatMap((file: unknown) => {
       // A single malformed array element (not an object, or missing its
-      // `messages` array) must not throw `.map` out of the policy -- skip it,
-      // exactly as the top-level non-array guard fails cleanly.
+      // `messages` array) must not throw `.map` out of the policy. Skip it,
+      // as cleanly as the top-level non-array guard fails.
       if (
         typeof file !== "object" ||
         file === null ||

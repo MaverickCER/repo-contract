@@ -3,7 +3,7 @@ import { InvalidCheckConfigError } from "../errors.js"
 /**
  * Consumes a `\`-escape sequence starting at `run[i]`, if one applies here. A backslash escapes the
  * next character (and is itself dropped) when unquoted or inside a double-quoted span; inside
- * single quotes it is a literal character, exactly as in every POSIX shell -- so a Windows path in
+ * single quotes it is a literal character, exactly as in every POSIX shell: so a Windows path in
  * single quotes survives intact. A trailing backslash with nothing left to escape is not an escape
  * and is kept literally by the caller.
  * @param run - the full command string being tokenized.
@@ -20,7 +20,7 @@ function consumeEscape(
   // No explicit `i + 1 < run.length` pre-check: a trailing backslash at
   // end-of-string reads `run[i + 1]` as `undefined` (which `noUncheckedIndexedAccess`
   // already types), and the `escaped === undefined` guard below returns
-  // `undefined` for exactly that case -- so the caller keeps the backslash
+  // `undefined` for exactly that case; so the caller keeps the backslash
   // literal. One guard, one behavior, nothing to mutation-suppress.
   const escaped: string | undefined = run[i + 1]
   if (escaped === undefined) return undefined
@@ -29,7 +29,7 @@ function consumeEscape(
 
 // Single-character shell/multi-command operators rejected outright when they
 // appear unquoted. A literal newline (`\n`/`\r`) and the two-character `$(`
-// are handled separately in `rejectUnquotedOperator` -- every entry here is
+// are handled separately in `rejectUnquotedOperator`: every entry here is
 // exactly one character, matched by a single Set lookup rather than a chain
 // of per-character `if`s.
 const UNQUOTED_SHELL_OPERATORS: ReadonlySet<string> = new Set([";", "&", "|", "`", "<", ">"])
@@ -37,7 +37,7 @@ const UNQUOTED_SHELL_OPERATORS: ReadonlySet<string> = new Set([";", "&", "|", "`
 /**
  * Throws `InvalidCheckConfigError` when the unquoted character `char` at `run[i]` is a
  * shell/multi-command operator repo-contract never interprets (`;`, `&`, `|`, a backtick, `<`, `>`,
- * `$(`, or a literal newline). Returns normally when `char` is legitimate literal argv content --
+ * `$(`, or a literal newline). Returns normally when `char` is legitimate literal argv content:
  * glob characters and a bare `$` deliberately included (see `tokenizeRunString`'s doc comment).
  * @param char - the character under the cursor, already known defined by the caller.
  * @param run - the full command string, needed only to look one character ahead for `$(`.
@@ -48,7 +48,7 @@ function rejectUnquotedOperator(char: string, run: string, i: number, checkId: s
   const reject = (operator: string): never => {
     throw new InvalidCheckConfigError(
       checkId,
-      `run string contains an unquoted "${operator}" -- repo-contract never invokes a shell for ` +
+      `run string contains an unquoted "${operator}". repo-contract never invokes a shell for ` +
         `string-form "run", so shell operators are not interpreted. Use "run: [...]" (array ` +
         `form) to pass "${operator}" as a literal argument, or set "shell: true" to opt into ` +
         `real shell execution.`,
@@ -62,7 +62,7 @@ function rejectUnquotedOperator(char: string, run: string, i: number, checkId: s
 
 /**
  * Splits a `run` string into argv (executable + arguments) without invoking
- * a shell -- no shell operator is ever executed, no glob is ever expanded by
+ * a shell: no shell operator is ever executed, no glob is ever expanded by
  * this package, no environment variable is ever substituted. The result is
  * deterministic: the same input string always produces the same argv array.
  *
@@ -70,21 +70,21 @@ function rejectUnquotedOperator(char: string, run: string, i: number, checkId: s
  * are themselves stripped from the resulting token. `\` escapes the next
  * character (and is itself stripped) when unquoted or inside a double-quoted
  * span; inside single quotes it is a literal character, exactly as in every
- * POSIX shell -- so a Windows path in single quotes survives intact.
+ * POSIX shell: so a Windows path in single quotes survives intact.
  * Unquoted whitespace (space, tab) separates tokens.
  *
  * Rejected outright (throws `InvalidCheckConfigError`, checkId identifies
  * which check's `run` was invalid): any *unquoted* occurrence of a true
- * shell/multi-command operator -- `;`, `&`, `|`, a backtick, `$(`, `<`, `>`,
+ * shell/multi-command operator; `;`, `&`, `|`, a backtick, `$(`, `<`, `>`,
  * or a literal newline. A string containing one of these almost always
  * reflects a mistaken assumption that shell interpretation is happening;
  * the fix is either `run: [...]` (array form, bypasses tokenization
  * entirely) or explicit `shell: true`.
  *
  * Deliberately NOT rejected: glob characters (`*`, `?`, `~`, `[`, `]`, `{`,
- * `}`) and a bare `$`. These are common, legitimate literal argv content --
+ * `}`) and a bare `$`. These are common, legitimate literal argv content:
  * many CLI tools (eslint, prettier, tsc) accept and internally expand glob
- * patterns themselves, e.g. `eslint "src/**\/*.ts"` -- and since no shell is
+ * patterns themselves, e.g. `eslint "src/**\/*.ts"`: and since no shell is
  * ever invoked here, they carry zero shell-injection risk regardless of
  * where they appear in the string.
  * @param run - the command string to tokenize.
@@ -126,16 +126,16 @@ export function tokenizeRunString(run: string, checkId: string): readonly string
     }
 
     // An unquoted backslash before a newline is a shell line-continuation.
-    // repo-contract never interprets one -- and it must be rejected *here*,
-    // before `consumeEscape` below, because `consumeEscape` would otherwise
-    // treat `\<newline>` as an ordinary escape: splice a literal newline into
-    // the token and advance the cursor past the newline, so the bare-newline
-    // rejection further down never runs.
+    // repo-contract never interprets one. It must be rejected *here*, before
+    // `consumeEscape` below, which would otherwise treat `\<newline>` as an
+    // ordinary escape. That splices a literal newline into the token and
+    // advances the cursor past the newline, so the bare-newline rejection
+    // further down never runs.
     const nextChar = run[i + 1]
     if (char === "\\" && (nextChar === "\n" || nextChar === "\r")) {
       throw new InvalidCheckConfigError(
         checkId,
-        `run string contains an unquoted line continuation (a backslash before a newline) -- ` +
+        `run string contains an unquoted line continuation (a backslash before a newline). ` +
           `repo-contract never invokes a shell for string-form "run". Use "run: [...]" (array ` +
           `form), or set "shell: true" to opt into real shell execution.`,
       )

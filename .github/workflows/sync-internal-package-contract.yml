@@ -1,5 +1,9 @@
 # Keeps this repo's internal-package-contract pin current. PULLS: a daily check (or a manual run)
-# re-resolves the pin with this repo's own GITHUB_TOKEN, so no cross-repository token exists to expire.
+# re-resolves the pin from this repository. Reading the newest release needs no token.
+# Every bump also re-pins the workflow SHAs in release.yml, ci.yml and this file.
+# GitHub does not let GITHUB_TOKEN push a change to .github/workflows/*, so that push needs the
+# PIN_SYNC_TOKEN secret below. It is this repository's own fine-grained token, with Contents,
+# Pull requests, Workflows and Actions write (RELEASING.md, "One-time setup"). It expires like any token.
 name: Sync internal-package-contract version
 
 on:
@@ -7,13 +11,16 @@ on:
     - cron: "43 6 * * *"
   workflow_dispatch:
 
+# Each job grants only what it needs; nothing is granted workflow-wide.
+permissions: {}
+
 jobs:
   sync:
     permissions:
       contents: write
       pull-requests: write
       actions: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/dependency-pin-sync.yml@e5b8d9eeac7d951a5ea0c7c02c2f761087f8148b # v0.18.0
+    uses: MaverickCER/internal-package-contract/.github/workflows/dependency-pin-sync.yml@de11cec0f2cd93bbac00512ba706db3f4bbf5e09 # v0.19.0
     with:
       dependency-name: internal-package-contract
     secrets:

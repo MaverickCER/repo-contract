@@ -9,7 +9,7 @@ import type { CheckDefinitionConfig } from "../../../src/types.js"
  * `files: string[]`; knip 6 folds unused files into `issues[].files`.)
  */
 
-/** The args a real spawn would carry for this check -- `run[0]` is the command, the rest is `args`. */
+/** The args a real spawn would carry for this check: `run[0]` is the command, the rest is `args`. */
 function argsFor(check: CheckDefinitionConfig): readonly string[] {
   const run = check.run
   if (typeof run === "string") throw new Error("expected array-form run")
@@ -143,20 +143,20 @@ describe("deadCode preset", () => {
 
     expect(result.outcome).toBe("fail")
     const lines = [
-      "src/a.ts:1:1 — unused dependency: left-pad",
-      "src/a.ts — unused optional peer dependency: opt-peer",
-      "src/a.ts — unlisted dependency: unlisted-pkg",
-      "src/a.ts — unresolved import: ./missing",
-      "src/a.ts:5:1 — unused export: unused",
-      "src/a.ts — unused export (namespace): ns.unused",
-      "src/a.ts — unused type: UnusedType",
-      "src/a.ts — unused type (namespace): ns.UnusedType",
-      "src/a.ts — unused namespace member: ns.member",
-      "src/a.ts — unused enum member: Enum.MEMBER",
-      "src/a.ts — unlisted binary: some-bin",
-      "src/a.ts — duplicate export: DupA, DupB",
-      "src/a.ts — circular dependency: a.ts, b.ts",
-      "src/a.ts — unused file: src/a.ts",
+      "src/a.ts:1:1: unused dependency: left-pad",
+      "src/a.ts: unused optional peer dependency: opt-peer",
+      "src/a.ts: unlisted dependency: unlisted-pkg",
+      "src/a.ts: unresolved import: ./missing",
+      "src/a.ts:5:1: unused export: unused",
+      "src/a.ts: unused export (namespace): ns.unused",
+      "src/a.ts: unused type: UnusedType",
+      "src/a.ts: unused type (namespace): ns.UnusedType",
+      "src/a.ts: unused namespace member: ns.member",
+      "src/a.ts: unused enum member: Enum.MEMBER",
+      "src/a.ts: unlisted binary: some-bin",
+      "src/a.ts: duplicate export: DupA, DupB",
+      "src/a.ts: circular dependency: a.ts, b.ts",
+      "src/a.ts: unused file: src/a.ts",
     ]
     expect(result.rationale).toBe(
       [`Knip reported ${String(lines.length)} issue(s):`, ...lines.map((line) => `- ${line}`)].join(
@@ -178,10 +178,10 @@ describe("deadCode preset", () => {
         }),
       ),
     )
-    expect(result.rationale).toContain("src/a.ts:7:1 — unused dependency: left-pad")
+    expect(result.rationale).toContain("src/a.ts:7:1: unused dependency: left-pad")
   })
 
-  it("ships with no built-in exemptions by default -- a devDependency issue is reported unless the caller explicitly exempts it", async () => {
+  it("ships with no built-in exemptions by default: a devDependency issue is reported unless the caller explicitly exempts it", async () => {
     const check = deadCode()
     const report = {
       issues: [{ file: "package.json", devDependencies: [{ name: "oxlint" }] }],

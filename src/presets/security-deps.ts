@@ -37,9 +37,9 @@ interface NpmAuditReport {
 // policy rather than an opinion imposed by repo-contract.
 //
 // No missing-dependency check here (see shared/missing-dependency.ts's own
-// doc comment): this preset shells out to `npm` itself, which cannot be
+// doc comment). This preset shells out to `npm` itself, which cannot be
 // "missing" in any environment capable of running `npm run <script>` at
-// all -- the exception is intentional, not an oversight.
+// all. The exception is intentional, not an oversight.
 /**
  * Dependency vulnerability scanning via `npm audit`.
  * @beta
@@ -55,7 +55,7 @@ export const securityDeps: CheckDefinitionConfig = {
       return { outcome: "fail", rationale: "npm audit output could not be parsed as JSON." }
     }
 
-    // `output.success` only means `JSON.parse` didn't throw -- valid JSON of an
+    // `output.success` only means `JSON.parse` didn't throw: valid JSON of an
     // unexpected shape (`null`, a primitive) must fail cleanly, not throw
     // `.metadata` out of the policy.
     const value: unknown = result.output.value
@@ -74,9 +74,9 @@ export const securityDeps: CheckDefinitionConfig = {
     }
 
     // Every count is cast from untrusted parsed JSON. A proxy registry, a
-    // future npm format, or a truncated report can omit a severity field --
+    // future npm format, or a truncated report can omit a severity field.
     // `undefined + n` is `NaN`, and both `NaN > 0` and `undefined > 0` are
-    // false, which would silently turn real reported vulnerabilities into a
+    // false. That would silently turn real reported vulnerabilities into a
     // "0 of everything" pass. Require every severity count to be a finite
     // number before trusting the summary at all.
     const severities = ["info", "low", "moderate", "high", "critical"] as const
@@ -85,7 +85,7 @@ export const securityDeps: CheckDefinitionConfig = {
     if (missingCount !== undefined) {
       return {
         outcome: "fail",
-        rationale: `npm audit's vulnerability summary is missing a numeric "${missingCount}" count -- the report could not be evaluated.`,
+        rationale: `npm audit's vulnerability summary is missing a numeric "${missingCount}" count, so the report could not be evaluated.`,
       }
     }
 
@@ -125,9 +125,9 @@ export const securityDeps: CheckDefinitionConfig = {
     }
 
     // `info`-severity findings are excluded from the blocking count above
-    // (they were never part of this policy's pass/fail contract), but a pass
-    // built on top of some unresolved info-level findings is still worth
-    // surfacing explicitly rather than silently folding into an unqualified
+    // (they were never part of this policy's pass/fail contract). But a pass
+    // built on top of unresolved info-level findings is still worth
+    // surfacing explicitly, rather than silently folding into an unqualified
     // pass.
     if (vulnerabilities.info > 0) {
       return {

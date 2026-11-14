@@ -5,13 +5,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { runSuppressionGovernanceCheck } from "../../../scripts/suppression-governance/check.js"
 import type { SuppressionExceptionRecord } from "../../../scripts/suppression-governance/evidence-types.js"
 
-// Repo-root-relative registry location -- kept in lockstep with
+// Repo-root-relative registry location: kept in lockstep with
 // scripts/suppression-governance/check.ts's own REGISTRY_RELATIVE_PATH.
 const REGISTRY_RELATIVE_PATH = path.join(".repo-contract", "exceptions", "disable-comments.json")
 
 /**
  * The complete real path: a real scratch directory, real files on disk, real registry reads/
- * writes -- no subprocess spawned for the check itself, per the project's
+ * writes; no subprocess spawned for the check itself, per the project's
  * real-behavior-over-mocking house style.
  */
 
@@ -37,7 +37,7 @@ async function readRegistry(): Promise<{ exceptions: SuppressionExceptionRecord[
   }
 }
 
-describe("runSuppressionGovernanceCheck -- full real path", () => {
+describe("runSuppressionGovernanceCheck: full real path", () => {
   it("scaffolds a missing registry into existence on the first run", async () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
 
@@ -161,7 +161,7 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
     expect(run2Bytes).toBe(run1Bytes)
   })
 
-  it("surfaces -- never removes -- a registry record whose directive was deleted from source", async () => {
+  it("surfaces, never removes, a registry record whose directive was deleted from source", async () => {
     await write("src/example.ts", "// eslint-disable-next-line no-console\nconsole.log(1)\n")
     await runSuppressionGovernanceCheck(root)
 
@@ -177,7 +177,7 @@ describe("runSuppressionGovernanceCheck -- full real path", () => {
       ])
     }
 
-    // The stale record is kept on disk -- retiring it is an explicit human edit.
+    // The stale record is kept on disk: retiring it is an explicit human edit.
     const { exceptions } = await readRegistry()
     expect(exceptions).toHaveLength(1)
   })

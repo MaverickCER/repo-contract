@@ -94,7 +94,7 @@
       "version": "0.13.0",
       "bom-ref": "repo-contract@0.13.0",
       "author": "MaverickCER",
-      "description": "Enforce your repository's own quality bar before CI even spins up. Configure arbitrary checks, capture what happened as evidence, and let repository-owned policies determine what passes. repo-contract provides the execution and evidence layer without becoming another CI system or imposing its own definition of code quality.",
+      "description": "Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason.",
       "licenses": [
         {
           "license": {
@@ -30361,8 +30361,8 @@
     {
       "type": "library",
       "name": "internal-package-contract",
-      "version": "0.18.0",
-      "bom-ref": "repo-contract@0.13.0|internal-package-contract@0.18.0",
+      "version": "0.19.0",
+      "bom-ref": "repo-contract@0.13.0|internal-package-contract@0.19.0",
       "licenses": [
         {
           "license": {
@@ -30371,10 +30371,10 @@
           }
         }
       ],
-      "purl": "pkg:npm/internal-package-contract@0.18.0?vcs_url=git%2Bssh%3A%2F%2Fgit%40github.com%2FMaverickCER%2Finternal-package-contract.git%23e5b8d9eeac7d951a5ea0c7c02c2f761087f8148b",
+      "purl": "pkg:npm/internal-package-contract@0.19.0?vcs_url=git%2Bssh%3A%2F%2Fgit%40github.com%2FMaverickCER%2Finternal-package-contract.git%23de11cec0f2cd93bbac00512ba706db3f4bbf5e09",
       "externalReferences": [
         {
-          "url": "git+ssh://git@github.com/MaverickCER/internal-package-contract.git#e5b8d9eeac7d951a5ea0c7c02c2f761087f8148b",
+          "url": "git+ssh://git@github.com/MaverickCER/internal-package-contract.git#de11cec0f2cd93bbac00512ba706db3f4bbf5e09",
           "type": "distribution",
           "comment": "as detected from npm-ls property \"resolved\""
         }
@@ -30395,7 +30395,7 @@
           "name": "node",
           "group": "@types",
           "version": "24.19.2",
-          "bom-ref": "repo-contract@0.13.0|internal-package-contract@0.18.0|@types/node@24.19.2",
+          "bom-ref": "repo-contract@0.13.0|internal-package-contract@0.19.0|@types/node@24.19.2",
           "licenses": [
             {
               "license": {
@@ -30433,7 +30433,7 @@
           "type": "library",
           "name": "undici-types",
           "version": "7.24.6",
-          "bom-ref": "repo-contract@0.13.0|internal-package-contract@0.18.0|undici-types@7.24.6",
+          "bom-ref": "repo-contract@0.13.0|internal-package-contract@0.19.0|undici-types@7.24.6",
           "licenses": [
             {
               "license": {
@@ -52883,7 +52883,7 @@
         "repo-contract@0.13.0|fast-check@4.10.2",
         "repo-contract@0.13.0|github-actionlint@1.7.12",
         "repo-contract@0.13.0|globals@17.14.0",
-        "repo-contract@0.13.0|internal-package-contract@0.18.0",
+        "repo-contract@0.13.0|internal-package-contract@0.19.0",
         "repo-contract@0.13.0|istanbul-lib-coverage@3.2.2",
         "repo-contract@0.13.0|istanbul-lib-report@3.0.1",
         "repo-contract@0.13.0|istanbul-reports@3.2.0",
@@ -57481,7 +57481,7 @@
       "ref": "repo-contract@0.13.0|ini@6.0.0"
     },
     {
-      "ref": "repo-contract@0.13.0|internal-package-contract@0.18.0",
+      "ref": "repo-contract@0.13.0|internal-package-contract@0.19.0",
       "dependsOn": [
         "repo-contract@0.13.0|@arethetypeswrong/cli@0.18.5",
         "repo-contract@0.13.0|@commitlint/cli@21.2.4",
@@ -57508,7 +57508,7 @@
         "repo-contract@0.13.0|github-actionlint@1.7.12",
         "repo-contract@0.13.0|github-slugger@2.0.0",
         "repo-contract@0.13.0|globals@17.14.0",
-        "repo-contract@0.13.0|internal-package-contract@0.18.0|@types/node@24.19.2",
+        "repo-contract@0.13.0|internal-package-contract@0.19.0|@types/node@24.19.2",
         "repo-contract@0.13.0|jiti@2.7.0",
         "repo-contract@0.13.0|jscpd@5.4.2",
         "repo-contract@0.13.0|knip@6.44.1",
@@ -57528,13 +57528,13 @@
       ]
     },
     {
-      "ref": "repo-contract@0.13.0|internal-package-contract@0.18.0|@types/node@24.19.2",
+      "ref": "repo-contract@0.13.0|internal-package-contract@0.19.0|@types/node@24.19.2",
       "dependsOn": [
-        "repo-contract@0.13.0|internal-package-contract@0.18.0|undici-types@7.24.6"
+        "repo-contract@0.13.0|internal-package-contract@0.19.0|undici-types@7.24.6"
       ]
     },
     {
-      "ref": "repo-contract@0.13.0|internal-package-contract@0.18.0|undici-types@7.24.6"
+      "ref": "repo-contract@0.13.0|internal-package-contract@0.19.0|undici-types@7.24.6"
     },
     {
       "ref": "repo-contract@0.13.0|internal-slot@1.1.0",

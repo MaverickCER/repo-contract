@@ -4,11 +4,11 @@ import { parseJson } from "../../src/parsing/parse-json.js"
 import { parseText } from "../../src/parsing/parse-text.js"
 
 /**
- * Round-trip properties for parseJson/parseText -- repo-contract's only two output parsers
+ * Round-trip properties for parseJson/parseText: repo-contract's only two output parsers
  * (format conversion beyond JSON/plain text is deliberately not a core concern of this package;
  * see `OutputFormat`'s own doc comment in src/types.ts).
  */
-// `-0` stringifies to the JSON literal `0` and parses back as `+0` -- JSON
+// `-0` stringifies to the JSON literal `0` and parses back as `+0`: JSON
 // itself has no notation for negative zero, so a value containing `-0`
 // cannot round-trip through JSON.stringify/JSON.parse by identity, through
 // no fault of parseJson. Vitest's `toEqual` distinguishes `-0` from `0`
@@ -23,7 +23,7 @@ function containsNegativeZero(value: unknown): boolean {
   return false
 }
 
-describe("parseJson -- property-based", () => {
+describe("parseJson: property-based", () => {
   it("round-trips: JSON.stringify(value) always parses back to a deep-equal value", () => {
     fc.assert(
       fc.property(
@@ -50,7 +50,7 @@ describe("parseJson -- property-based", () => {
     )
   })
 
-  it("never throws -- malformed input always reports as a ParsedOutputFailure, never an exception", () => {
+  it("never throws: malformed input always reports as a ParsedOutputFailure, never an exception", () => {
     fc.assert(
       fc.property(fc.string({ maxLength: 40 }), (raw) => {
         expect(() => parseJson(raw)).not.toThrow()
@@ -60,7 +60,7 @@ describe("parseJson -- property-based", () => {
   })
 })
 
-describe("parseText -- property-based", () => {
+describe("parseText: property-based", () => {
   it("always succeeds with the trimmed input, for any string", () => {
     fc.assert(
       fc.property(fc.string({ maxLength: 40 }), (raw) => {

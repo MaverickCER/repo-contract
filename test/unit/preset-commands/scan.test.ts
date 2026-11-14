@@ -58,6 +58,17 @@ describe("scanPresetModule", () => {
     expect(nonLiteral).toHaveLength(1)
   })
 
+  it("records a run array that starts with a spread as the consumer-supplied command of its file", () => {
+    const { commands, nonLiteral } = scanPresetModule(
+      "src/presets/ai-review.ts",
+      "declare const argv: string[]\nexport const x = {\n  run: [...argv],\n}",
+    )
+    expect(commands).toEqual([
+      { command: "consumer-supplied/ai-review", file: "src/presets/ai-review.ts", line: 3 },
+    ])
+    expect(nonLiteral).toEqual([])
+  })
+
   it('handles a quoted "run" key the same as an unquoted one', () => {
     const { commands } = scanPresetModule(
       "src/presets/x.ts",

@@ -8,16 +8,17 @@
 
 _Produced by `generateDocumentation()` from `@maverickcer/env-cap/build`._
 
-_Generated 2026-10-13T19:21:09.965Z_
+_Generated 2026-11-13T22:22:34.172Z_
 
 ## Changes since last report
 
-- **Added:** `CHROME_PATH`, `CODE_SCANNING_MAX_PAGES`, `IPC_LOGS`, `IPC_RELEASE`, `PUPPETEER_EXECUTABLE_PATH`, `SOCKET_SCORE_RETRY_WAIT_MS`
+No changes.
 
 ## Table of contents
 
 - [Catalog](#catalog)
   - [ci-secrets](#contract-ci-secrets)
+  - [run-settings](#contract-run-settings)
   - [tool-settings](#contract-tool-settings)
 - [Lifecycle report](#lifecycle-report)
 - [Security review](#security-review)
@@ -45,19 +46,68 @@ Optional. Lets the pin-sync workflow change workflow files and start CI on its p
 - Processor: no
 - Validator: yes
 - Sensitivity: secret
-- Refresh instructions: Create a fine-grained personal access token for this repository with Contents, Pull requests and Workflows write access, then replace the repository secret PIN_SYNC_TOKEN (Settings > Secrets and variables > Actions). Then give it an `expiresAt` here (the token's expiry), so a weekly check can warn before it lapses.
+- Refresh instructions: Create a fine-grained personal access token for this repository with Contents, Pull requests, Workflows and Actions write access, then replace the repository secret PIN_SYNC_TOKEN (Settings > Secrets and variables > Actions). Then set its `expiresAt` in `ci/env.schema.ts` to the token's expiry, so a weekly check can warn before it lapses.
 
 <a id="ci-secrets-socket_security_api_key"></a>
 
 ### `SOCKET_SECURITY_API_KEY`
 
-Optional. Read by the `socket` CLI while the contract runs, for the SecuritySocket check; without it that check reports a warning and the rest of the contract runs.
+Optional. Read by the `socket` CLI while the contract runs, for the SecuritySocket check. Without it that check warns; under CI the warning fails unless `.repo-contract/exceptions/environment.json` records `environment:SecuritySocket:no-key`.
 
 - Default: yes
 - Processor: no
 - Validator: yes
 - Sensitivity: secret
 - Refresh instructions: Create an API token at socket.dev (Settings > API Tokens) with the `packages:list` permission, then replace the repository secret SOCKET_SECURITY_API_KEY.
+
+<a id="contract-run-settings"></a>
+
+## run-settings
+
+Source: `ci/env.schema.ts`
+
+- Active: yes
+- Category: Run settings
+
+<a id="run-settings-ci_full"></a>
+
+### `CI_FULL`
+
+Set to 1, true or yes to force a full run. `resolveScope` then returns full over any request, and `resolveFailFast` returns false.
+
+- Default: yes
+- Processor: no
+- Validator: yes
+
+<a id="run-settings-repo_contract_cache"></a>
+
+### `REPO_CONTRACT_CACHE`
+
+off, ro or rw. `resolveCacheMode` reads it from the environment its caller passes, after the command line. The default is read-write, and a full run is always cold. Any other value throws.
+
+- Default: yes
+- Processor: no
+- Validator: yes
+
+<a id="run-settings-repo_contract_fail_fast"></a>
+
+### `REPO_CONTRACT_FAIL_FAST`
+
+Set to 1, true, yes or on to make `npm run contract` skip the expensive checks once a cheap one has failed (`resolveFailFast`, called by scripts/run-contract.mjs). `--fail-fast` and `--no-fail-fast` win. A release or CI_FULL turns it off.
+
+- Default: yes
+- Processor: no
+- Validator: yes
+
+<a id="run-settings-repo_contract_scope"></a>
+
+### `REPO_CONTRACT_SCOPE`
+
+auto, affected or full. `resolveScope` reads it from the environment its caller passes, after an explicit request and before the CI event. Any other value throws.
+
+- Default: yes
+- Processor: no
+- Validator: yes
 
 <a id="contract-tool-settings"></a>
 
@@ -137,11 +187,15 @@ One row per unique variable name; more than one location means more than one fea
 | Variable                     | Declared in                                                                                                            |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `CHROME_PATH`                | [tool-settings (`node_modules/internal-package-contract/ci/env.schema.ts`)](#tool-settings-chrome_path)                |
+| `CI_FULL`                    | [run-settings (`ci/env.schema.ts`)](#run-settings-ci_full)                                                             |
 | `CODE_SCANNING_MAX_PAGES`    | [tool-settings (`node_modules/internal-package-contract/ci/env.schema.ts`)](#tool-settings-code_scanning_max_pages)    |
 | `IPC_LOGS`                   | [tool-settings (`node_modules/internal-package-contract/ci/env.schema.ts`)](#tool-settings-ipc_logs)                   |
 | `IPC_RELEASE`                | [tool-settings (`node_modules/internal-package-contract/ci/env.schema.ts`)](#tool-settings-ipc_release)                |
 | `PIN_SYNC_TOKEN`             | [ci-secrets (`node_modules/internal-package-contract/ci/env.schema.ts`)](#ci-secrets-pin_sync_token)                   |
 | `PUPPETEER_EXECUTABLE_PATH`  | [tool-settings (`node_modules/internal-package-contract/ci/env.schema.ts`)](#tool-settings-puppeteer_executable_path)  |
+| `REPO_CONTRACT_CACHE`        | [run-settings (`ci/env.schema.ts`)](#run-settings-repo_contract_cache)                                                 |
+| `REPO_CONTRACT_FAIL_FAST`    | [run-settings (`ci/env.schema.ts`)](#run-settings-repo_contract_fail_fast)                                             |
+| `REPO_CONTRACT_SCOPE`        | [run-settings (`ci/env.schema.ts`)](#run-settings-repo_contract_scope)                                                 |
 | `SOCKET_SCORE_RETRY_WAIT_MS` | [tool-settings (`node_modules/internal-package-contract/ci/env.schema.ts`)](#tool-settings-socket_score_retry_wait_ms) |
 | `SOCKET_SECURITY_API_KEY`    | [ci-secrets (`node_modules/internal-package-contract/ci/env.schema.ts`)](#ci-secrets-socket_security_api_key)          |
 
@@ -149,24 +203,24 @@ One row per unique variable name; more than one location means more than one fea
 
 <a id="lifecycle-report"></a>
 
-| Variable                                                         | Owner | Expires | Refresh instructions                                                                                                                                                                                                                                                                                                         |
-| ---------------------------------------------------------------- | ----- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`PIN_SYNC_TOKEN`](#ci-secrets-pin_sync_token)                   | --    | --      | Create a fine-grained personal access token for this repository with Contents, Pull requests and Workflows write access, then replace the repository secret PIN_SYNC_TOKEN (Settings > Secrets and variables > Actions). Then give it an `expiresAt` here (the token's expiry), so a weekly check can warn before it lapses. |
-| [`SOCKET_SECURITY_API_KEY`](#ci-secrets-socket_security_api_key) | --    | --      | Create an API token at socket.dev (Settings > API Tokens) with the `packages:list` permission, then replace the repository secret SOCKET_SECURITY_API_KEY.                                                                                                                                                                   |
+| Variable                                                         | Owner | Expires | Refresh instructions                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------------------------------------------------- | ----- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`PIN_SYNC_TOKEN`](#ci-secrets-pin_sync_token)                   | --    | --      | Create a fine-grained personal access token for this repository with Contents, Pull requests, Workflows and Actions write access, then replace the repository secret PIN_SYNC_TOKEN (Settings > Secrets and variables > Actions). Then set its `expiresAt` in `ci/env.schema.ts` to the token's expiry, so a weekly check can warn before it lapses. |
+| [`SOCKET_SECURITY_API_KEY`](#ci-secrets-socket_security_api_key) | --    | --      | Create an API token at socket.dev (Settings > API Tokens) with the `packages:list` permission, then replace the repository secret SOCKET_SECURITY_API_KEY.                                                                                                                                                                                           |
 
 ## Security review
 
 <a id="security-review"></a>
 
-- Total contracts: 2
-- Total variable declarations: 8 (8 from active contracts)
-- Unique variable names: 8
+- Total contracts: 3
+- Total variable declarations: 12 (12 from active contracts)
+- Unique variable names: 12
 - Variables with `expiresAt` set: 0
   - Already expired: 0
   - Expiring within 30 days: 0
 - Variables marked `required: true`: 0
 - Variables with refresh instructions: 2
-- Variables with no assigned owner: 8
+- Variables with no assigned owner: 12
 - Variable names declared by more than one contract: 0
 - Undocumented contracts: 0
 - Undocumented variables: 0

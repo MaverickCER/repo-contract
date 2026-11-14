@@ -1,27 +1,27 @@
 /**
  * Runtime dependency vulnerability scanning via `npm audit` (the `securityDeps` preset's own
  * `run`), gated through the same reviewable, file-based exception-registry model
- * `security-socket.ts` already uses -- never a hardcoded in-source allowlist. `npm audit`'s own
+ * `security-socket.ts` already uses: never a hardcoded in-source allowlist. `npm audit`'s own
  * raw evidence is read and reported verbatim; an accepted finding is never stripped from it.
  * Acceptance is decided entirely at the policy layer: a finding with no matching, complete
  * exception record fails, regardless of how well-known or long-standing it is.
  *
- * Split the same way `security-socket.ts` is: this file owns only the pure
+ * Split the same way `security-socket.ts` is. This file owns only the pure
  * evidence -> `PolicyResult` evaluation (`evaluateSecurityDepsPolicy`, unit-tested directly, no
- * filesystem); loading/reconciling/writing `.repo-contract/exceptions/security-deps.json` and
- * running `npm audit` itself live in `securityDeps()`'s own `policy`, the one place this check
- * touches the filesystem.
+ * filesystem). Running `npm audit` and loading/reconciling/writing
+ * `.repo-contract/exceptions/security-deps.json` live in `securityDeps()`'s own `policy`. That
+ * is the one place this check touches the filesystem.
  *
  * `--omit=dev` scopes the scan to the dependency graph actually shipped to a consumer's own
- * installers; a finding can still surface here for a package that is transitively required by
- * this repository's own dev tooling when npm's own `--omit` filtering doesn't cleanly separate a
- * hoisted/deduplicated package from every path that reaches it.
+ * installers. A finding can still surface here for a package that this repository's own dev
+ * tooling requires transitively. That happens when npm's own `--omit` filtering doesn't cleanly
+ * separate a hoisted/deduplicated package from every path that reaches it.
  *
- * Every severity requires the full field set (no severity-tiered "forbidden above medium" the
- * way `security-socket.ts` has): a dependency vulnerability, unlike a Socket
- * supply-chain-behavior alert about a package generally free to swap, is very often deep in a
- * required* tooling chain with no real alternative -- the exception system exists precisely to
- * make that judgment call reviewable, not to forbid it outright regardless of severity.
+ * Every severity requires the full field set. There is no severity-tiered "forbidden above
+ * medium" the way `security-socket.ts` has. A Socket supply-chain-behavior alert is usually about
+ * a package that is free to swap. A dependency vulnerability, by contrast, is very often deep in
+ * a *required* tooling chain with no real alternative. The exception system exists to make that
+ * judgment call reviewable, not to forbid it outright regardless of severity.
  */
 import { mkdir } from "node:fs/promises"
 import path from "node:path"
@@ -65,11 +65,11 @@ interface NpmAuditVulnerability {
 }
 interface NpmAuditReport {
   readonly vulnerabilities?: Record<string, NpmAuditVulnerability>
-  /** Present instead of `vulnerabilities` when `npm audit` itself failed to run the scan (e.g. a registry/network error) -- npm's own documented shape for that case, `{ error: { code, summary, ... } }`, carries no `vulnerabilities` key at all. */
+  /** Present instead of `vulnerabilities` when `npm audit` itself failed to run the scan (e.g. a registry/network error): npm's own documented shape for that case, `{ error: { code, summary, ... } }`, carries no `vulnerabilities` key at all. */
   readonly error?: { readonly code?: string; readonly summary?: string }
 }
 
-/** One normalized `npm audit` finding -- one per vulnerable top-level package name, exactly as npm audit's own report already groups them (a single entry can cover several distinct advisories at once). */
+/** One normalized `npm audit` finding: one per vulnerable top-level package name, exactly as npm audit's own report already groups them (a single entry can cover several distinct advisories at once). */
 export interface NormalizedDepFinding {
   readonly id: string
   readonly package: string
@@ -92,7 +92,7 @@ export interface SecurityDepsExceptionRecord {
 }
 
 /**
- * `security-deps:<package>@<range>` -- stable while the same vulnerable range is reported; a version bump or a new/different advisory changes `range` and the id with it, so a stale record is never silently reused for an unrelated finding.
+ * `security-deps:<package>@<range>`: stable while the same vulnerable range is reported. A version bump or a new/different advisory changes `range` and the id with it. A stale record is therefore never silently reused for an unrelated finding.
  * @param finding - The finding's (or record's) identity fields.
  * @param finding.package - The npm package name.
  * @param finding.range - `npm audit`'s own reported vulnerable version range for this package.
@@ -130,7 +130,7 @@ export function createSecurityDepsStub(
 }
 
 /**
- * `value` is a non-empty string -- pushes a `"<at> must be a non-empty string."` message onto `errors` otherwise.
+ * `value` is a non-empty string: pushes a `"<at> must be a non-empty string."` message onto `errors` otherwise.
  * @param value - The candidate value.
  * @param at - The field's own dotted path, for the error message.
  * @param errors - Accumulates every validation problem found.
@@ -183,7 +183,7 @@ export const SECURITY_DEPS_EXCEPTION_SCHEMA: ExceptionRegistrySchema<SecurityDep
     },
   }
 
-/** Every severity requires the full field set -- see this module's own doc comment for why there is no severity-tiered "forbidden" the way `security-socket.ts` has. */
+/** Every severity requires the full field set: see this module's own doc comment for why there is no severity-tiered "forbidden" the way `security-socket.ts` has. */
 const REQUIREMENTS = ["justification", "alternatives", "remediation", "method", "exceptionType"]
 const SECURITY_DEPS_POLICY: ExceptionPolicyConfig = {
   "security-deps": { default: { mode: "exception", requirements: [...REQUIREMENTS] } },
@@ -238,7 +238,7 @@ function evaluateFinding(
   return { verdict: determinant.verdict, missing: determinant.missing }
 }
 
-/** Everything `evaluateSecurityDepsPolicy` needs -- already reconciled/persisted by `securityDeps()`'s own `policy`, its one filesystem-touching step. */
+/** Everything `evaluateSecurityDepsPolicy` needs: already reconciled/persisted by `securityDeps()`'s own `policy`, its one filesystem-touching step. */
 export interface SecurityDepsEvidence {
   readonly findings: readonly NormalizedDepFinding[]
   readonly activeExceptions: Readonly<Record<string, SecurityDepsExceptionRecord>>
@@ -247,7 +247,7 @@ export interface SecurityDepsEvidence {
 }
 
 /**
- * The pure evidence -> `PolicyResult` evaluator -- no filesystem, no `npm audit` invocation,
+ * The pure evidence -> `PolicyResult` evaluator: no filesystem, no `npm audit` invocation,
  * exhaustively unit-testable directly. Mirrors `evaluateSecuritySocketPolicy`'s own split for the
  * identical reason.
  * @param input - Wraps the evidence to evaluate.
@@ -275,7 +275,7 @@ export function evaluateSecurityDepsPolicy(input: {
 
   const staleLines = evidence.staleExceptions.map(
     (record) =>
-      `- Stale exception in ${REGISTRY_RELATIVE_PATH}: ${JSON.stringify(record.id)} -- npm audit no longer reports this vulnerability; delete this entry.`,
+      `- Stale exception in ${REGISTRY_RELATIVE_PATH}: ${JSON.stringify(record.id)}. The npm audit report no longer lists this vulnerability; delete this entry.`,
   )
   const determinants = evidence.findings.map((finding) => ({
     finding,
@@ -326,13 +326,13 @@ const registrySchema: StandardSchemaV1<unknown, readonly SecurityDepsExceptionRe
 }
 
 /**
- * Confirms `parsed` is a genuinely completed `npm audit --json` report -- a present,
- * object-valued, non-array `vulnerabilities` field -- rather than accepting anything
+ * Confirms `parsed` is a genuinely completed `npm audit --json` report (a present,
+ * object-valued, non-array `vulnerabilities` field) rather than accepting anything
  * object-shaped and silently defaulting an absent/malformed field to "0 findings". `npm audit`
  * itself reports a scan it could not run (a registry/network error, most commonly) as `{ "error":
- * { "code": ..., "summary": ... } }`, with no `vulnerabilities` key at all: treating that as an
- * empty map would report a failed scan as a clean one, exactly the false-negative a security gate
- * must never produce.
+ * { "code": ..., "summary": ... } }`, with no `vulnerabilities` key at all. Treating that as an
+ * empty map would report a failed scan as a clean one. A security gate must never produce that
+ * false negative.
  * @param parsed - `result.output.value`, already confirmed to be a non-null object.
  * @returns The validated report, or a rejection reason for the caller's rationale.
  */
@@ -362,7 +362,7 @@ export function validateAuditReport(
     return {
       ok: false,
       reason:
-        'npm audit\'s report has no valid "vulnerabilities" object -- the scan may not have completed.',
+        'npm audit\'s report has no valid "vulnerabilities" object; the scan may not have completed.',
     }
   }
   return { ok: true, report: record }

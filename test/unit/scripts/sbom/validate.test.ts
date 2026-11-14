@@ -238,7 +238,7 @@ describe("validateSbomDocument", () => {
   })
 })
 
-describe("validateSbomDocument -- the root component's repository reference", () => {
+describe("validateSbomDocument: the root component's repository reference", () => {
   const withRoot = (component: unknown) => validDocument({ metadata: { component } })
   const reason =
     "docs/sbom.cdx.json's root component has no repository (vcs) reference although package.json declares one: cyclonedx-npm could not read package.json at the path npm reported and fell back to the lockfile's bare entry. npm masks UUID-shaped text in its output, so a checkout under a UUID-named directory hits this; generate the SBOM from a path without one."

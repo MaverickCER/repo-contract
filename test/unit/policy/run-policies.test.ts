@@ -70,7 +70,7 @@ describe("runPolicies", () => {
     })
   })
 
-  it("does not fail the run when a policy returns outcome: warn -- warn is non-blocking", async () => {
+  it("does not fail the run when a policy returns outcome: warn: warn is non-blocking", async () => {
     const evidence = makeEvidence({ "security-deps": rawEvidence() })
     const check: CheckDefinition = {
       run: "npm audit",
@@ -141,7 +141,7 @@ describe("runPolicies", () => {
     }
   })
 
-  it("a PolicyResult survives a JSON.stringify/JSON.parse round-trip unchanged -- it is fully serializable", async () => {
+  it("a PolicyResult survives a JSON.stringify/JSON.parse round-trip unchanged: it is fully serializable", async () => {
     const evidence = makeEvidence({ lint: rawEvidence() })
     const check: CheckDefinition = {
       run: "eslint .",
@@ -194,7 +194,7 @@ describe("runPolicies", () => {
     expect(verdict.checks.b).toEqual({ outcome: "fail", rationale: "b failed" })
   })
 
-  it("one failing check does not collapse into or affect another check's own result -- each check's PolicyResult is independent", async () => {
+  it("one failing check does not collapse into or affect another check's own result: each check's PolicyResult is independent", async () => {
     const evidence = makeEvidence({ a: rawEvidence(), b: rawEvidence(), c: rawEvidence() })
     const entries: readonly ParsedCheckEntry[] = [
       [
@@ -259,7 +259,7 @@ describe("runPolicies", () => {
     expect(sawSiblingEvidence).toBe(true)
   })
 
-  it("evidence stays available on ctx.result independent of the PolicyResult the policy returns -- evidence and policy interpretation are separate concerns", async () => {
+  it("evidence stays available on ctx.result independent of the PolicyResult the policy returns: evidence and policy interpretation are separate concerns", async () => {
     const raw = rawEvidence({ exitCode: 1, stdout: "raw output" })
     const evidence = makeEvidence({ tests: raw })
     let observedEvidence: CheckEvidence | undefined
@@ -370,7 +370,7 @@ describe("runPolicies", () => {
     expect(observedStatus).toBe("aborted")
   })
 
-  it("handles zero checks -- passed is vacuously true", async () => {
+  it("handles zero checks: passed is vacuously true", async () => {
     const evidence = makeEvidence({})
     const verdict = await runPolicies([], evidence)
     expect(verdict.passed).toBe(true)
@@ -553,7 +553,7 @@ describe("runPolicies", () => {
       const evidence = makeEvidence({ lint: raw })
       const check: CheckDefinition = {
         run: "eslint .",
-        // Deliberately omits the `?.` guard this test exists to catch -- the cast mimics a
+        // Deliberately omits the `?.` guard this test exists to catch: the cast mimics a
         // consumer who (wrongly) assumed `result.output` is always present.
         policy: (ctx) =>
           (ctx.result.output as unknown as { success: boolean }).success
@@ -620,7 +620,7 @@ describe("runPolicies", () => {
       }
     })
 
-    it("does not misfire for a TypeError message with extra text before the recognized shape -- the match must anchor to the start", async () => {
+    it("does not misfire for a TypeError message with extra text before the recognized shape: the match must anchor to the start", async () => {
       const raw = rawEvidence()
       const evidence = makeEvidence({ tests: raw })
       const check: CheckDefinition = {
@@ -639,7 +639,7 @@ describe("runPolicies", () => {
       }
     })
 
-    it("does not misfire for a TypeError message with extra text after the recognized shape -- the match must anchor to the end", async () => {
+    it("does not misfire for a TypeError message with extra text after the recognized shape: the match must anchor to the end", async () => {
       const raw = rawEvidence()
       const evidence = makeEvidence({ tests: raw })
       const check: CheckDefinition = {
@@ -658,7 +658,7 @@ describe("runPolicies", () => {
       }
     })
 
-    it("does not misfire when the check's own evidence.output is actually defined -- some unrelated undefined value stays a plain PolicyThrewError", async () => {
+    it("does not misfire when the check's own evidence.output is actually defined: some unrelated undefined value stays a plain PolicyThrewError", async () => {
       const raw = rawEvidence({ output: { format: "json", success: true, value: { score: 90 } } })
       const evidence = makeEvidence({ mutation: raw })
       const check: CheckDefinition = {
@@ -793,12 +793,12 @@ describe("runPolicies", () => {
         expect(typed.message).toContain(
           'Policy for check "mutation" read `result.output.value.score`',
         )
-        expect(typed.message).toContain("check `result.output.success`")
+        expect(typed.message).toContain("Check `result.output.success`")
         expect(typed.message).not.toContain("Unexpected token")
       }
     })
 
-    it("does not require the read property to be one of ParsedOutput's own fields -- any property read off the missing .value counts", async () => {
+    it("does not require the read property to be one of ParsedOutput's own fields: any property read off the missing .value counts", async () => {
       const raw = rawEvidence({ output: { format: "json", success: false, error: "bad json" } })
       const evidence = makeEvidence({ lint: raw })
       const check: CheckDefinition = {
@@ -822,7 +822,7 @@ describe("runPolicies", () => {
       }
     })
 
-    it("does not misfire when the check's parse actually succeeded -- some unrelated undefined value stays a plain PolicyThrewError", async () => {
+    it("does not misfire when the check's parse actually succeeded: some unrelated undefined value stays a plain PolicyThrewError", async () => {
       const raw = rawEvidence({ output: { format: "json", success: true, value: { score: 90 } } })
       const evidence = makeEvidence({ mutation: raw })
       const check: CheckDefinition = {
@@ -844,7 +844,7 @@ describe("runPolicies", () => {
       }
     })
 
-    it("does not misfire for a check with no output config at all -- that stays PolicyReadUnrequestedOutputError, not PolicyReadFailedParseValueError", async () => {
+    it("does not misfire for a check with no output config at all: that stays PolicyReadUnrequestedOutputError, not PolicyReadFailedParseValueError", async () => {
       const raw = rawEvidence()
       const evidence = makeEvidence({ mutation: raw })
       const check: CheckDefinition = {

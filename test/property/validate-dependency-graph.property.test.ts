@@ -4,19 +4,19 @@ import { validateDependencyGraph } from "../../src/config/validate-config.js"
 import { DependencyDeclaredLaterError } from "../../src/errors.js"
 
 /**
- * Property-based tests for validateDependencyGraph's backward-reference check, complementing
- * dependency-scheduler.property.test.ts's own graph-generation approach: a graph where every
- * dependency points strictly earlier (acyclic by construction, and the only shape declaration order
- * now permits) must never throw, while a graph built as a single ring (every id depends on the
- * next, wrapping around) always contains at least one edge pointing at an equal-or-later-declared
- * id -- a true cycle can never be linearized into a single declaration order without one -- so it
- * must always throw DependencyDeclaredLaterError.
+ * Property-based tests for validateDependencyGraph's backward-reference check. They complement
+ * dependency-scheduler.property.test.ts's graph-generation approach. A graph where every dependency
+ * points strictly earlier must never throw. Such a graph is acyclic by construction, and it is the
+ * only shape declaration order now permits. A single-ring graph (every id depends on the next,
+ * wrapping around) must always throw DependencyDeclaredLaterError. A cycle can never be linearized
+ * into one declaration order, so the ring always has an edge pointing at an equal-or-later-declared
+ * id.
  */
 
 const ITEM_COUNT = 6
 const CHECK_IDS = Array.from({ length: ITEM_COUNT }, (_, i) => `check${String(i)}`)
 
-/** Item i's dependency bitmask only ever uses bits 0..i-1, so it can only reference strictly earlier items -- trivially acyclic. */
+/** Item i's dependency bitmask only ever uses bits 0..i-1, so it can only reference strictly earlier items: trivially acyclic. */
 function bitmaskToDeps(mask: number, index: number): string[] {
   const deps: string[] = []
   for (let bit = 0; bit < index; bit += 1) {
@@ -45,7 +45,7 @@ const idPoolArbitrary = fc.uniqueArray(fc.constantFrom(..."abcdefgh".split("")),
   maxLength: 8,
 })
 
-describe("validateDependencyGraph -- property-based", () => {
+describe("validateDependencyGraph: property-based", () => {
   it("never throws for a graph where every dependency points strictly earlier (acyclic by construction)", () => {
     fc.assert(
       fc.property(acyclicGraphArbitrary, (checks) => {
@@ -75,7 +75,7 @@ describe("validateDependencyGraph -- property-based", () => {
         expect(caught).toBeDefined()
 
         // A real edge from the ring, and the named dependency is genuinely not declared earlier
-        // than the check declaring it -- the exact condition validateDependencyGraph rejects.
+        // than the check declaring it: the exact condition validateDependencyGraph rejects.
         expect(checks[caught!.checkId]?.dependsOn).toContain(caught!.dependencyId)
         expect(ids.indexOf(caught!.dependencyId)).toBeGreaterThanOrEqual(
           ids.indexOf(caught!.checkId),

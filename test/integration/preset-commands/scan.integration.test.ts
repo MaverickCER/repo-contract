@@ -14,7 +14,7 @@ import type {
 const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url))
 const runningInsideMutationSandbox = REPO_ROOT.split(path.sep).includes(".stryker-tmp")
 
-describe("preset-commands scan -- full real path", () => {
+describe("preset-commands scan: full real path", () => {
   it.runIf(!runningInsideMutationSandbox)(
     "discovers this repository's own preset commands and its registry reconciles clean (read-only)",
     async () => {

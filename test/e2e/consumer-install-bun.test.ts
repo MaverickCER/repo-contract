@@ -10,15 +10,15 @@ import {
 } from "../helpers/pack-consumer.js"
 
 /**
- * Bun counterpart to consumer-install.test.ts -- see
- * specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md. Proves the real packed tarball resolves
- * and runs under Bun with no non-default permissions, covering both entry points (`import` and
- * `require`) and the `./presets` subpath export -- the compatibility surface most likely to differ
- * across runtimes, since it depends on each runtime's own module resolution and CJS interop rather
- * than on anything this package controls. Skips (not fails) when `bun` isn't on `PATH`, same
- * reasoning as `distIsBuilt` below: most CI jobs and most local machines don't have Bun installed,
- * and that's a legitimate, common state, not a broken one. CI's dedicated `runtime-compat` job (see
- * .github/workflows/ci.yml) is what actually exercises this suite for real.
+ * Bun counterpart to consumer-install.test.ts: see
+ * specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md. Proves the packed
+ * tarball resolves and runs under Bun with no non-default permissions. It covers both entry points
+ * (`import` and `require`) and the `./presets` subpath export. This is the surface most likely to
+ * differ across runtimes, because it depends on each runtime's module resolution and CJS interop
+ * rather than on this package. Skips (not fails) when `bun` isn't on `PATH`, same reasoning as
+ * `distIsBuilt` below: most CI jobs and most local machines don't have Bun installed, and that's a
+ * legitimate, common state, not a broken one. CI's dedicated `runtime-compat` job (see
+ * .github/workflows/ci.yml) is what exercises this suite.
  */
 const bunAvailable = isRuntimeAvailable("bun")
 

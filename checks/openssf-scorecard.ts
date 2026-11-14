@@ -23,48 +23,48 @@ interface RunOutput {
 
 /**
  * Dogfoods repo-contract's own contract/evidence mechanism to produce
- * `docs/OpenSSF-Scorecard.md` -- an informational document that leads with
- * the official, published OpenSSF Scorecard result and sets this
+ * `docs/OpenSSF-Scorecard.md`. That informational document leads with the
+ * official, published OpenSSF Scorecard result. Beside it sits this
  * repository's own evaluation (informed by Scorecard's published
- * methodology, never a certification) beside it, with every check where the
- * two differ.
+ * methodology, never a certification), with every check where the two
+ * differ.
  *
- * `run` computes every sub-check EXCEPT Vulnerabilities, which needs the
+ * `run` computes every sub-check EXCEPT Vulnerabilities. That one needs the
  * `security-deps` check's own raw evidence (this run's real `npm audit`
- * result) -- only available here, in-process, via `dependencies` (this is
- * the first check in this repository to read a dependency's evidence rather
- * than only using `dependsOn` for ordering; see PolicyContext's own doc
- * comment in src/types.ts for why that capability exists). Rendering and
- * writing docs/OpenSSF-Scorecard.md happens here, in `policy`, rather than
- * in the spawned script, for that reason alone -- every other side effect
- * this repository's contract run produces (format/lint autofix,
+ * result), which is only available here, in-process, via `dependencies`.
+ * This is the first check in this repository to read a dependency's
+ * evidence rather than only using `dependsOn` for ordering. PolicyContext's
+ * own doc comment in src/types.ts says why that capability exists. For that
+ * reason alone, rendering and writing docs/OpenSSF-Scorecard.md happens
+ * here in `policy`, not in the spawned script. Every other side effect this
+ * repository's contract run produces (format/lint autofix,
  * suppression-governance stub scaffolding) still happens in a `run` script,
- * not a policy function; this is a deliberate, documented exception, not a
+ * not a policy function. This is a deliberate, documented exception, not a
  * new general pattern.
  *
  * This check's own PASS/FAIL is about whether the evidence was
- * successfully gathered and the document successfully regenerated -- never
+ * successfully gathered and the document successfully regenerated: never
  * about whether the repository scored well. A low OpenSSF score is
  * information for a human reader, not a reason to fail this repository's
- * own contract; conflating "the report generation succeeded" with "the
- * repository achieved a high compliance score" is exactly the aspirational-
- * vs-verified confusion this whole initiative exists to avoid.
+ * own contract. Conflating "the report generation succeeded" with "the
+ * repository achieved a high compliance score" would be the
+ * aspirational-vs-verified confusion this whole initiative exists to avoid.
  *
- * The aggregate score is a weighted aggregate --
- * `Σ(score_i × weight_i) / Σ(weight_i)` over every evaluated sub-check --
- * not a simple average, mirroring upstream's own `Result.GetAggregateScore`
- * (see `scripts/openssf-scorecard/weights.ts`'s own module doc comment for
- * where the per-check weights come from: fetched live from ossf/scorecard's
- * own published methodology at execution time, never hardcoded). Every
- * render also carries provenance metadata (run date, evaluated repo +
- * commit, and this evaluator's own version -- explicitly never the upstream
- * `scorecard` binary's) so a reader can tell exactly what produced a given
+ * The aggregate score is a weighted aggregate, not a simple average:
+ * `Σ(score_i × weight_i) / Σ(weight_i)` over every evaluated sub-check.
+ * This mirrors upstream's own `Result.GetAggregateScore`. The per-check
+ * weights are fetched live from ossf/scorecard's own published methodology
+ * at execution time, never hardcoded (see
+ * `scripts/openssf-scorecard/weights.ts`'s own module doc comment). Every
+ * render also carries provenance metadata: run date, evaluated repo +
+ * commit, and this evaluator's own version (never the upstream `scorecard`
+ * binary's). A reader can therefore tell exactly what produced a given
  * score without re-running it.
  */
-// repo-contract.config.ts's `dependsOn: ["security-deps"]` (not declared
-// here -- see that file's own doc comment on why `coverage`/`crap`/`mutation`
-// attach `dependsOn` at assembly instead of in their own check file) is a
-// genuine evidence dependency: `policy` below actually reads
+// repo-contract.config.ts's `dependsOn: ["security-deps"]` is a genuine
+// evidence dependency. It is not declared here; that file's own doc comment
+// says why `coverage`/`crap`/`mutation` attach `dependsOn` at assembly
+// instead of in their own check file. `policy` below reads
 // `dependencies["security-deps"]`, the same pattern `checks/mutation.ts`
 // uses for `suppression-governance`.
 export const openssfScorecard: CheckDefinitionConfig = {
@@ -88,8 +88,8 @@ export const openssfScorecard: CheckDefinitionConfig = {
     const root = process.cwd()
     const generatedAt = new Date().toISOString()
     // repo-contract evaluates its own repository, so `repo.commit` and
-    // `scorecard.commit` are always the same value here -- one `runGit` call
-    // sources both fields; see ScorecardProvenance's own doc comment for why
+    // `scorecard.commit` are always the same value here. One `runGit` call
+    // sources both fields. ScorecardProvenance's own doc comment says why
     // they're kept as two distinct fields despite that.
     const commit = (await runGit(["rev-parse", "HEAD"], root))?.trim() ?? "unknown"
     const provenance: ScorecardProvenance = {
@@ -98,16 +98,16 @@ export const openssfScorecard: CheckDefinitionConfig = {
       scorecard: { version: packageVersion(root), commit },
     }
 
-    // Fetched live, never hardcoded -- see weights.ts's own module doc
-    // comment. Only attempted when there's actually something to weight:
-    // every sub-check being "not-applicable" already short-circuits to
-    // `warn` below without the aggregate ever being used, so a live
-    // gh-CLI/network round-trip in that path would be pure waste. A failed
-    // fetch degrades this run's fidelity (equal weighting instead of
-    // ossf/scorecard's own real per-check weights) but never fails this
-    // check: evidence-gathering and document regeneration already succeeded
-    // by this point, and this check's own PASS/FAIL is about exactly that,
-    // never about the score (see this file's own module doc comment).
+    // Fetched live, never hardcoded: see weights.ts's own module doc
+    // comment. Only attempted when there's something to weight. When every
+    // sub-check is "not-applicable", the check short-circuits to `warn`
+    // below without using the aggregate. A live gh-CLI/network round-trip
+    // in that path would be pure waste. A failed fetch degrades this run's
+    // fidelity (equal weighting instead of ossf/scorecard's own real
+    // per-check weights) but never fails this check. Evidence-gathering and
+    // document regeneration already succeeded by this point. This check's
+    // own PASS/FAIL is about exactly that, never about the score (see this
+    // file's own module doc comment).
     let weights: Readonly<Record<string, number>> | undefined
     let weightsUnavailableReason: string | undefined
     let weightedAverage: number | undefined
@@ -141,15 +141,15 @@ export const openssfScorecard: CheckDefinitionConfig = {
 
     // `weightedAverage` is `undefined` exactly when `evaluated.length === 0`
     // (it's only ever assigned inside the `if (evaluated.length > 0)` block
-    // above) -- checking it directly here, rather than `evaluated.length`
-    // again, both reads as the more meaningful guard for this branch ("was
-    // anything actually scored?") and lets TypeScript narrow
-    // `weightedAverage` to a real `number` below on its own, without a
-    // second, redundant `computeWeightedAverage` call or a manual assertion.
+    // above). Checking it here, rather than `evaluated.length` again, reads
+    // as the more meaningful guard for this branch ("was anything actually
+    // scored?"). It also lets TypeScript narrow `weightedAverage` to a real
+    // `number` below, without a second `computeWeightedAverage` call or a
+    // manual assertion.
     if (weightedAverage === undefined) {
       return {
         outcome: "warn",
-        rationale: `Every sub-check was "not-applicable" (nothing could be evaluated -- gh CLI may be unavailable). Wrote docs/OpenSSF-Scorecard.md with ${String(notApplicable.length)} not-applicable result(s).`,
+        rationale: `Every sub-check was "not-applicable" (nothing could be evaluated; gh CLI may be unavailable). Wrote docs/OpenSSF-Scorecard.md with ${String(notApplicable.length)} not-applicable result(s).`,
       }
     }
 
@@ -157,8 +157,8 @@ export const openssfScorecard: CheckDefinitionConfig = {
     return {
       outcome: "pass",
       rationale:
-        `Wrote docs/OpenSSF-Scorecard.md: ${String(evaluated.length)} check(s) evaluated (weighted average score ${weightedAverage.toFixed(1)}/10${weightsUnavailableReason === undefined ? "" : ", equal weighting -- live weight fetch failed"}), ${String(notApplicable.length)} not-applicable. ` +
-        `This check passes on successful evidence-gathering and document regeneration, not on the score itself -- a low score is information for a human reader, never a reason to fail this repository's own contract (see this file's own module doc comment for why).\n\n` +
+        `Wrote docs/OpenSSF-Scorecard.md: ${String(evaluated.length)} check(s) evaluated (weighted average score ${weightedAverage.toFixed(1)}/10${weightsUnavailableReason === undefined ? "" : ", equal weighting because the live weight fetch failed"}), ${String(notApplicable.length)} not-applicable. ` +
+        `This check passes on successful evidence-gathering and document regeneration, not on the score itself. A low score is information for a human reader, never a reason to fail this repository's own contract (see this file's own module doc comment for why).\n\n` +
         breakdown,
     }
   },
@@ -166,11 +166,11 @@ export const openssfScorecard: CheckDefinitionConfig = {
 
 /**
  * Every evaluated (non-`"not-applicable"`) sub-check that isn't a perfect
- * 10, worst first, each with its own `name`/`score`/`reason` inlined --
- * so a reader learns exactly which OpenSSF Scorecard categories need
- * attention, and why, directly from this check's own rationale, without
- * opening `docs/OpenSSF-Scorecard.md` first. A perfect run says so plainly
- * instead of an empty section.
+ * 10, worst first, each with its own `name`/`score`/`reason` inlined. A
+ * reader learns which OpenSSF Scorecard categories need attention, and why,
+ * from this check's own rationale without opening
+ * `docs/OpenSSF-Scorecard.md` first. A perfect run says so plainly instead
+ * of an empty section.
  * @param evaluated - Every sub-check result already narrowed to a real numeric score.
  * @returns The rationale's "needs attention" section, ready to append.
  */
@@ -179,8 +179,8 @@ function formatNeedsAttention(
 ): string {
   const needsAttention = evaluated.filter((r) => r.score < 10).sort((a, b) => a.score - b.score)
   if (needsAttention.length === 0) {
-    return "Every evaluated check already scores a perfect 10/10 -- nothing further to act on this run."
+    return "Every evaluated check already scores a perfect 10/10. Nothing further to act on this run."
   }
-  const lines = needsAttention.map((r) => `- ${r.name} ${String(r.score)}/10 -- ${r.reason}`)
+  const lines = needsAttention.map((r) => `- ${r.name} ${String(r.score)}/10: ${r.reason}`)
   return `Needs attention, worst first:\n${lines.join("\n")}`
 }

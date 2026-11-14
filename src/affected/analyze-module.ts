@@ -22,8 +22,8 @@ export interface EffectUnit {
 
 /**
  * Everything the affected analysis needs to know about one module, extracted syntactically. A name
- * here is a top-level binding; `declText` is the whitespace- and comment-insensitive text of
- * everything that declares it, and `refs` is the set of identifiers mentioned there -- the
+ * here is a top-level binding. `declText` is the whitespace- and comment-insensitive text of
+ * everything that declares it. `refs` is the set of identifiers mentioned there: the
  * module-internal dependency graph used to decide which exports a changed helper reaches.
  */
 export interface ModuleInfo {
@@ -132,7 +132,7 @@ class Extractor {
 
   /**
    * The node's tokens joined by single spaces: insensitive to whitespace, line breaks and comments
-   * (the compiler's printer is not -- it preserves block layout and keeps comments), sensitive to
+   * (the compiler's printer is not; it preserves block layout and keeps comments), sensitive to
    * everything that can change behavior, including quote style, which is merely conservative.
    * @param node - The node to flatten into tokens.
    * @returns The normalized token text.

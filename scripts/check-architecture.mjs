@@ -2,19 +2,19 @@
 // `architecture` check. Three independent, purely-static analyses, combined
 // into one evidence object:
 //   - dependencyGraph: dependency-cruiser's rules against src/**, checks/**,
-//     and scripts/** (see .dependency-cruiser.cjs) -- does the production
+//     and scripts/** (see .dependency-cruiser.cjs); does the production
 //     module graph obey this repository's architectural constraints? All
-//     three are passed as cruise roots (not just src/) so a rule whose
-//     `from` targets checks/ or scripts/ (e.g.
-//     checks-and-scripts-must-not-import-src-internals) can actually see
-//     their own outbound edges -- dependency-cruiser only inspects a
-//     directory's own import statements when it's reachable from a cruise
-//     root, and nothing under src/ ever imports checks/ or scripts/ (that's
-//     the one-directional invariant src-must-not-import-scripts enforces),
-//     so neither would otherwise ever be visited at all.
-//   - testCategoryBoundaries: scripts/check-test-boundaries.mjs -- does every
+//     three are passed as cruise roots, not only src/. A rule whose `from`
+//     targets checks/ or scripts/ can then see their own outbound edges
+//     (e.g. checks-and-scripts-must-not-import-src-internals).
+//     Dependency-cruiser only inspects a directory's own import statements
+//     when it's reachable from a cruise root. Nothing under src/ ever
+//     imports checks/ or scripts/, which is the one-directional invariant
+//     src-must-not-import-scripts enforces. Without the extra roots neither
+//     would ever be visited at all.
+//   - testCategoryBoundaries: scripts/check-test-boundaries.mjs; does every
 //     verification category's Vitest config stay inside its own directory?
-//   - adrStructure: scripts/check-adr-structure.mjs -- does specs/decisions/
+//   - adrStructure: scripts/check-adr-structure.mjs; does specs/decisions/
 //     stay structurally well-formed (filename shape, no duplicate numbers,
 //     required headings)?
 //
@@ -22,11 +22,11 @@
 // combined JSON evidence to stdout for repo-contract's `output: { format:
 // "json" }` to parse; everything else goes to stderr.
 //
-// Report-only: violations found by either analysis never fail this script's
-// own process -- that judgment belongs entirely to repo-contract's
+// Report-only: violations found by any of the three analyses never fail this
+// script's own process. That judgment belongs entirely to repo-contract's
 // `architecture` check policy, which reads this same JSON evidence. Only a
-// genuine tool-infrastructure failure (dependency-cruiser crashing or
-// producing unparseable output) fails it.
+// genuine tool-infrastructure failure in any analysis fails it, for example
+// dependency-cruiser crashing or producing unparseable output.
 
 import spawn from "cross-spawn"
 import path from "node:path"
@@ -51,9 +51,9 @@ function runDependencyCruiser() {
 
     child.once("error", reject)
     child.once("close", () => {
-      // dependency-cruiser exits non-zero when it finds error-severity
-      // violations -- that's still a successful analysis with real JSON
-      // output, not a tool-infrastructure failure, so the exit code is
+      // Dependency-cruiser exits non-zero when it finds error-severity
+      // violations. That's still a successful analysis with real JSON
+      // output, not a tool-infrastructure failure. The exit code is
       // intentionally not treated as this promise's success/failure signal.
       try {
         resolve(JSON.parse(stdout))
@@ -83,7 +83,7 @@ try {
   }
 } catch (error) {
   // Tool-infrastructure failure (dependency-cruiser crashed / produced
-  // unparseable output) -- distinct from "the rules found violations",
+  // unparseable output), distinct from "the rules found violations". It is
   // preserved through to the policy the same way ParsedOutput.success does
   // for every other check.
   dependencyGraph = { ok: false, error: error.message }
@@ -94,10 +94,10 @@ const adrStructure = checkAdrStructure()
 
 process.stdout.write(JSON.stringify({ dependencyGraph, testCategoryBoundaries, adrStructure }))
 
-// All three analyses must have completed as genuine tool-infrastructure
-// successes (violations found is still `ok: true` -- see each analysis's own
-// doc comment above) for this script's own exit code to report success --
-// previously this only reflected dependencyGraph.ok, so a standalone
+// The exit code reports success only when all three analyses completed
+// without an infrastructure error. Found violations still count as
+// `ok: true` (see each analysis's doc comment above). Previously this
+// reflected only dependencyGraph.ok, so a standalone
 // `npm run test:architecture` invocation could exit 0 even while
 // testCategoryBoundaries or adrStructure had thrown an infrastructure error.
 process.exitCode = dependencyGraph.ok && testCategoryBoundaries.ok && adrStructure.ok ? 0 : 1

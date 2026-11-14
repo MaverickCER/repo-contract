@@ -9,7 +9,7 @@ import { removeTempDir } from "../../helpers/remove-temp-dir.js"
 /**
  * The complete real path: a real scratch `.github/workflows/` directory, a real `actionlint` run
  * (its binary resolved and cached by the `github-actionlint` devDependency on first use), through
- * to a real policy verdict -- no mocking, per the project's real-behavior-over-mocking house style.
+ * to a real policy verdict; no mocking, per the project's real-behavior-over-mocking house style.
  * The `github-actions` check itself owns none of the analysis; this proves the wrapper +
  * normalization + policy actually agree with what actionlint reports.
  */
@@ -33,7 +33,7 @@ jobs:
       - run: echo hello
 `
 
-// `runs-on: ubunt-latest` -- a stable actionlint catch ("label \"ubunt-latest\" is unknown").
+// `runs-on: ubunt-latest`: a stable actionlint catch ("label \"ubunt-latest\" is unknown").
 const WORKFLOW_WITH_ERROR = `name: Broken
 on:
   push:
@@ -56,7 +56,7 @@ afterEach(async () => {
   await removeTempDir(root)
 })
 
-describe("github-actions check -- full real path", () => {
+describe("github-actions check: full real path", () => {
   it("passes on a clean workflow tree", async () => {
     await writeWorkflow("ci.yml", CLEAN_WORKFLOW)
 

@@ -16,10 +16,10 @@ function evidence(overrides: Partial<AdrGovernanceEvidence> = {}): AdrGovernance
 }
 
 describe("evaluateAdrGovernancePolicy", () => {
-  it("passes with 'nothing governed by this check' when no governed files changed", () => {
+  it("passes with 'Nothing is governed by this check.' when no governed files changed", () => {
     const result = evaluateAdrGovernancePolicy({ evidence: evidence() })
     expect(result.outcome).toBe("pass")
-    expect(result.rationale).toContain("nothing governed by this check")
+    expect(result.rationale).toContain("Nothing is governed by this check.")
     expect(result.rationale).toContain("origin/main")
   })
 

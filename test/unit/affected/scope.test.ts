@@ -64,7 +64,7 @@ describe("parseScopeArgs", () => {
     })
   })
 
-  it("stops at -- so what follows is never read as a flag", () => {
+  it("stops at `--` so what follows is never read as a flag", () => {
     expect(parseScopeArgs(["--", "--scope", "full"])).toEqual({
       ok: true,
       rest: ["--", "--scope", "full"],

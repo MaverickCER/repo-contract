@@ -1,6 +1,6 @@
 // A `// Stryker disable ...` comment tells the mutation-testing check
 // (checks/mutation.ts) to exempt the line(s) it guards from the
-// repository's 100%-mutation-kill policy, with zero further verification --
+// repository's 100%-mutation-kill policy, with zero further verification:
 // that policy is otherwise the strongest signal this repository has that a
 // test actually asserts something (see specs/verification-taxonomy.md's
 // "Mutation" section). An unexplained exemption from it is exactly the kind
@@ -12,14 +12,14 @@
 // "Real" is judged, not merely "a comment exists": every disable/restore
 // directive and every bare `v8 ignore start|stop|next` marker is stripped
 // out of the candidate text first (both appear routinely paired with
-// Stryker directives in this codebase -- see spawn-check.ts), and what
+// Stryker directives in this codebase: see spawn-check.ts), and what
 // remains must still clear a minimum length. This is a deliberately loose
-// heuristic, not a prose-quality check -- it only needs to distinguish "an
+// heuristic, not a prose-quality check: it only needs to distinguish "an
 // explanation was attempted" from "nothing was written at all."
 
 const DISABLE_PATTERN = /^\s*Stryker\s+disable\b/i
 
-// A single unnested `.*` (rather than a repeated `(\s+\S+)*` token group) --
+// A single unnested `.*` (rather than a repeated `(\s+\S+)*` token group):
 // `.` never matches a newline, so this still stops at the end of the
 // directive's own comment line without needing a second, nested quantifier.
 const DIRECTIVE_ONLY_PATTERN = /Stryker\s+(?:disable|restore).*|v8\s+ignore\s+(?:start|stop|next)/gi

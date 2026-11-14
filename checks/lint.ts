@@ -45,7 +45,7 @@ export interface EslintResult {
   }[]
 }
 
-/** oxlint's own `--format json` contract -- not published as a TypeScript type by the tool. */
+/** oxlint's own `--format json` contract: not published as a TypeScript type by the tool. */
 export interface OxlintDiagnostic {
   readonly message: string
   readonly code: string
@@ -83,10 +83,10 @@ function formatOxlintDiagnostic(diagnostic: OxlintDiagnostic): string {
 }
 
 /**
- * The lint check's full interpretation logic, factored out so test/unit/lint/policy.test.ts can
- * exercise ESLint's/oxlint's error-severity filtering directly against already-parsed evidence,
- * without spawning scripts/check-lint.mjs -- matching every other check's own
- * `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
+ * The lint check's full interpretation logic, factored out for direct unit testing.
+ * test/unit/lint/policy.test.ts exercises ESLint's/oxlint's error-severity filtering against
+ * already-parsed evidence, without spawning scripts/check-lint.mjs. This matches every other
+ * check's own `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
  * @param root0 - the policy input.
  * @param root0.evidence - scripts/check-lint.mjs's own combined ESLint/oxlint evidence.
  * @returns the pass/fail verdict.

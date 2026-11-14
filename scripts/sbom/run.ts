@@ -1,6 +1,6 @@
 // Entry point for the "sbom" check, invoked via `run: ["tsx", "scripts/sbom/run.ts"]` in
 // repo-contract.config.ts. Prints ONLY the JSON evidence to stdout (for `output: { format: "json" }`
-// to parse) -- mirrors scripts/dead-code/check.ts's / scripts/security-socket/scan.ts's own stdout
+// to parse): mirrors scripts/dead-code/check.ts's / scripts/security-socket/scan.ts's own stdout
 // contract. The real deliverable, docs/sbom.cdx.json, is written as a side effect of
 // `generateSbom` itself (see generate.ts's own doc comment), not printed here.
 

@@ -17,9 +17,9 @@ import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 
 /**
- * Every field name a `SuppressionPolicy`'s `"exception"` mode may require -- passed to
- * `validateExceptionPolicyConfig` as its `validRequirements` set so a policy naming anything
- * outside this closed set is a configuration error, not a silently-ignored no-op. Kept in sync
+ * Every field name a `SuppressionPolicy`'s `"exception"` mode may require. It is passed to
+ * `validateExceptionPolicyConfig` as its `validRequirements` set. A policy naming anything
+ * outside this closed set is then a configuration error, not a silently-ignored no-op. Kept in sync
  * with `SuppressionRequirement` (`scripts/suppression-governance/policy-config.ts`) by the same
  * derivation-safety convention `evidence-types.ts`'s enums use.
  */
@@ -36,17 +36,17 @@ interface EvaluateSuppressionGovernancePolicyInput {
 }
 
 /**
- * Evaluates the check's own emitted evidence against `suppressionPolicy` -- a pure
- * evidence->verdict function that never re-parses or re-scans source (ADR 0001). Finding-centric:
- * every raw finding gets exactly one decision; a stale exception record (its finding gone) fails;
- * a scaffolded stub (blank `justification`) fails whenever its rule resolves to `"exception"` mode
- * (an `"allowed"`-mode rule permits a blank stub, and
- * `"forbidden"` fails a stub regardless of what is in it).
+ * Evaluates the check's own emitted evidence against `suppressionPolicy`: a pure
+ * evidence->verdict function that never re-parses or re-scans source (ADR 0001). It is
+ * finding-centric: every raw finding gets exactly one decision. A stale exception record (its
+ * finding gone) fails. A scaffolded stub (blank `justification`) fails whenever its rule resolves
+ * to `"exception"` mode. An `"allowed"`-mode rule permits a blank stub, and `"forbidden"` fails a
+ * stub regardless of what is in it.
  *
- * The reconciled records are re-validated here (`validateExceptionRegistry`) as defense in depth
- * even though the check already validated them once -- this policy must never trust a registry
- * blindly just because it arrived as evidence -- and the `findings <-> activeExceptions` bijection
- * the check promises is asserted, not assumed.
+ * The reconciled records are re-validated here (`validateExceptionRegistry`) as defense in depth,
+ * even though the check already validated them once. This policy must never trust a registry
+ * blindly because it arrived as evidence. The `findings <-> activeExceptions` bijection the check
+ * promises is likewise asserted, not assumed.
  * @param input - The evidence to evaluate, and (for tests) the policy config to evaluate it against.
  * @returns The check's `PolicyResult`.
  */
@@ -122,7 +122,7 @@ export function evaluateSuppressionGovernancePolicy(
 
   const staleLines = evidence.staleExceptions.map(
     (record) =>
-      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)} -- its directive is gone; delete this entry (carry its justification to the new location first if the directive merely moved).`,
+      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)}. Its directive is gone; delete this entry (carry its justification to the new location first if the directive merely moved).`,
   )
 
   const summary =
@@ -137,7 +137,7 @@ export function evaluateSuppressionGovernancePolicy(
   const scaffoldNote =
     evidence.scaffoldedIds.length > 0
       ? [
-          `Scaffolded ${String(evidence.scaffoldedIds.length)} stub(s) in ${evidence.registryPath} -- fill in "justification" (and "category"/"verificationMethod").`,
+          `Scaffolded ${String(evidence.scaffoldedIds.length)} stub(s) in ${evidence.registryPath}: fill in "justification" (and "category"/"verificationMethod").`,
         ]
       : []
 
@@ -152,9 +152,9 @@ export function evaluateSuppressionGovernancePolicy(
   }
 }
 
-// See specs/decisions/0006-suppression-governance.md for why suppression discovery (finding
-// eslint-disable/@ts-ignore/etc. comments and their source ranges) plus registry reconciliation
-// is owned entirely by scripts/suppression-governance/check.ts -- this policy only ever reads that
+// scripts/suppression-governance/check.ts owns suppression discovery (finding
+// eslint-disable/@ts-ignore/etc. comments and their source ranges) and registry reconciliation.
+// specs/decisions/0006-suppression-governance.md says why. This policy only ever reads that
 // script's already-reconciled evidence and applies suppressionPolicy to it.
 export const suppressionGovernance: CheckDefinitionConfig = {
   run: ["tsx", "scripts/suppression-governance/check.ts"],

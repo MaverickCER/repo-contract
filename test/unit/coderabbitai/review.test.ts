@@ -4,7 +4,7 @@ import { parseAgentStream } from "../../../scripts/coderabbitai/review.js"
 /**
  * Fixtures are the real `coderabbit review --agent` event stream shapes, captured directly from a
  * live, authenticated CLI during implementation (see
- * `specs/decisions/0014-coderabbit-as-a-surfaced-check.md`) -- a clean 0-findings run, and a run
+ * `specs/decisions/0014-coderabbit-as-a-surfaced-check.md`): a clean 0-findings run, and a run
  * with real `finding` events (severity/fileName/codegenInstructions, no line, no category, no
  * native id).
  */
@@ -135,7 +135,7 @@ describe("parseAgentStream", () => {
     expect(result.findings[0]?.id).not.toBe(result.findings[1]?.id)
   })
 
-  it("accepts a 'review_skipped' terminal status (nothing in scope to review -- an empty diff)", () => {
+  it("accepts a 'review_skipped' terminal status (nothing in scope to review: an empty diff)", () => {
     const result = parseAgentStream(
       [REVIEW_CONTEXT, complete({ status: "review_skipped" })].join("\n"),
     )

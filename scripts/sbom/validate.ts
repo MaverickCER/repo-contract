@@ -5,10 +5,10 @@ const TOOL_GROUP = "@cyclonedx"
 const TOOL_NAME = "cyclonedx-npm"
 
 /**
- * Whether `value` is a non-null, non-array object -- the same defensive shape guard
+ * Whether `value` is a non-null, non-array object. This is the same defensive shape guard
  * `scripts/security-socket/scan.ts`'s own `isPlainObject` uses, duplicated here rather than
- * imported: this script is self-hosting tooling outside `src/`, and importing an internal helper
- * from a sibling check's own script would be exactly the kind of cross-check-script coupling
+ * imported. This script is self-hosting tooling outside `src/`. Importing an internal helper from
+ * a sibling check's own script would be the kind of cross-check-script coupling
  * `specs/architecture.md`'s module boundaries avoid.
  * @param value - The candidate value to check.
  * @returns `true` if `value` is a plain object.
@@ -18,13 +18,13 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * The real `@cyclonedx/cyclonedx-npm` version that produced this document, read straight back off
- * the document's own self-reported `metadata.tools.components` entry (cyclonedx-npm always records
- * itself there, confirmed directly against a real run -- see spawn.ts's own doc comment) -- never a
- * second, independent lookup (e.g. re-reading `node_modules/@cyclonedx/cyclonedx-npm/package.json`)
- * that could in principle drift from what actually ran. Falls back to `"unknown"` if that entry is
- * ever missing or reshaped by a future tool version -- a cosmetic provenance detail, never a reason
- * to fail a document that otherwise validated.
+ * The real `@cyclonedx/cyclonedx-npm` version that produced this document. It is read straight
+ * back off the document's own self-reported `metadata.tools.components` entry. cyclonedx-npm
+ * always records itself there; a real run confirmed it (see spawn.ts's own doc comment). It is
+ * never a second, independent lookup (e.g. re-reading
+ * `node_modules/@cyclonedx/cyclonedx-npm/package.json`) that could drift from what actually ran.
+ * Falls back to `"unknown"` if a future tool version ever drops or reshapes that entry. This is a
+ * cosmetic provenance detail, never a reason to fail a document that otherwise validated.
  * @param metadata - The parsed document's own top-level `"metadata"` field.
  * @returns The tool's version, or `"unknown"`.
  */
@@ -48,7 +48,7 @@ function extractToolVersion(metadata: unknown): string {
 }
 
 /**
- * Whether the document's root component (`metadata.component`) carries a `vcs` reference --
+ * Whether the document's root component (`metadata.component`) carries a `vcs` reference:
  * cyclonedx-npm adds one only when it built that component from package.json itself.
  * @param metadata - The parsed document's own top-level `"metadata"` field.
  * @returns `true` if a `vcs` reference is present.
@@ -63,14 +63,14 @@ function hasVcsReference(metadata: unknown): boolean {
 }
 
 /**
- * Confirms `parsed` is a genuinely well-formed CycloneDX document -- carrying the exact
- * `bomFormat`/a real `specVersion`/a real `components` array -- and pulls out the small summary
- * this check's own policy needs. Never re-validates full spec conformance itself (that's
- * `--validate`'s own ajv-backed pass inside cyclonedx-npm, plus this repository's own independent,
- * out-of-band validation against the real published CycloneDX schema -- see README.md's SBOM
- * section); this is only the minimum shape guard every self-hosting check in this repository
- * applies before trusting its own tool's JSON output (mirrors `checks/security-deps.ts`'s
- * `validateAuditReport`).
+ * Confirms `parsed` is a genuinely well-formed CycloneDX document (carrying the exact
+ * `bomFormat`/a real `specVersion`/a real `components` array) and pulls out the small summary
+ * this check's own policy needs. Never re-validates full spec conformance itself. That is the job
+ * of `--validate`'s own ajv-backed pass inside cyclonedx-npm. This repository also ran its own
+ * independent, out-of-band validation against the real published CycloneDX schema (see README.md's
+ * SBOM section). This function is only the minimum shape guard every self-hosting check in this
+ * repository applies before trusting its own tool's JSON output. It mirrors
+ * `checks/security-deps.ts`'s `validateAuditReport`.
  * @param parsed - The parsed contents of docs/sbom.cdx.json.
  * @param options - What the document must reflect from the package itself.
  * @param options.rootHasRepository - Whether package.json declares a `repository`, which the root

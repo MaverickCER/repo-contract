@@ -18,7 +18,7 @@ afterEach(async () => {
   await rm(dir, { recursive: true, force: true })
 })
 
-describe("writeExceptionRegistry -- real filesystem", () => {
+describe("writeExceptionRegistry: real filesystem", () => {
   it("writes a missing file in canonical form", async () => {
     const target = path.join(dir, "reg.json")
     const result = await writeExceptionRegistry({ path: target, records })
@@ -70,7 +70,7 @@ describe("writeExceptionRegistry -- real filesystem", () => {
 
   // A regular file where a directory component is expected: POSIX `lstat` reports ENOTDIR, which
   // `defaultIsSymlink` must rethrow rather than swallow. Windows `lstat` reports ENOENT for the
-  // same path, so the "not a symlink" branch legitimately applies there -- skip.
+  // same path, so the "not a symlink" branch legitimately applies there: skip.
   it.skipIf(process.platform === "win32")(
     "rethrows a non-ENOENT default-isSymlink failure instead of treating the path as a safe non-symlink",
     async () => {
@@ -83,7 +83,7 @@ describe("writeExceptionRegistry -- real filesystem", () => {
   )
 })
 
-describe("writeExceptionRegistry -- capability failures (injected)", () => {
+describe("writeExceptionRegistry: capability failures (injected)", () => {
   const base = {
     path: "/virtual/reg.json",
     records,
@@ -120,7 +120,7 @@ describe("writeExceptionRegistry -- capability failures (injected)", () => {
     expect(written[0]?.[0]).toMatch(/^\/virtual\/reg\.json\.[0-9a-f-]+\.tmp$/)
   })
 
-  // Rejects with a value that is deliberately NOT an Error/object -- exercises isEnoent's `null`
+  // Rejects with a value that is deliberately NOT an Error/object: exercises isEnoent's `null`
   // and `typeof` guards and the `String(error)` fallback, none of which may throw on it.
   const rejectWith = (reason: unknown): Promise<never> =>
     // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- see comment above

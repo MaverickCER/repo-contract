@@ -4,20 +4,14 @@ const config = {
   packageManager: "npm",
   testRunner: "vitest",
   reporters: ["json", "progress", "clear-text"],
-  // "perTest": each mutant runs only the tests that actually cover it, read
-  // from Stryker's own per-test coverage hooks. "all" (re-run the whole
-  // suite per mutant) was tried first and is simply not viable here -- the
-  // suite's process-spawning and signal-delivering tests take ~16s per full
-  // run, and 2000+ mutants makes that hours, not the "well under a second"
-  // an earlier revision of this comment assumed. "perTest" keeps the run in
-  // CI-viable territory; the coverage-attribution edge cases it can hit
-  // (a mutant credited to fewer tests than really exercise it) surface as a
-  // Survived mutant, which checks/mutation.ts already fails on -- so a real
-  // misattribution is caught here, not silently trusted.
+  // "perTest": each mutant runs only the tests that cover it, read from Stryker's per-test
+  // coverage hooks. "all" (the whole suite per mutant) was tried first and is not viable: a full
+  // run takes about 16s, and 2000+ mutants makes that hours. If "perTest" credits a mutant to too
+  // few tests, the mutant shows as Survived, and checks/mutation.ts fails on that.
   coverageAnalysis: "perTest",
   // Static mutants (evaluated once at module load, not per test) cannot be
   // attributed to a covering test under "perTest", so Stryker would fall
-  // back to running the entire suite for each one -- the single largest
+  // back to running the entire suite for each one: the single largest
   // contributor to this run's wall time by far (Stryker's own planner warns
   // ~145 of them account for ~63% of the estimated total). Ignoring them
   // trades that cost for not mutation-testing load-time-constant
@@ -29,7 +23,7 @@ const config = {
   ignoreStatic: true,
   mutate: [
     "src/**/*.ts",
-    // Type-only, no runtime behavior to mutate meaningfully -- see
+    // Type-only, no runtime behavior to mutate meaningfully: see
     // vitest.config.ts's coverage.exclude for the same rationale.
     "!src/types.ts",
     // The process/signal/scheduling core is deliberately not mutation-tested
@@ -43,7 +37,7 @@ const config = {
     // dependency-scheduler.ts mutants defeat its stall guard and hang the
     // worker to the test timeout. These paths are verified against real
     // processes by the `integration` and `e2e` categories instead (see
-    // specs/verification-taxonomy.md -- mutation is one signal among
+    // specs/verification-taxonomy.md: mutation is one signal among
     // several, not the only evidence for this code).
     "!src/execution/process-tree.ts",
     "!src/execution/run-checks.ts",
@@ -52,14 +46,14 @@ const config = {
     // The affected analysis spreads a change through the import graph with a queue that refuses a
     // fact it already holds at an equal or smaller distance. That rule is the only thing that
     // makes spreading through an import cycle stop, so a mutant that loosens it turns every
-    // cyclic import into an endless loop, which a test runner can only report as a timeout --
+    // cyclic import into an endless loop, which a test runner can only report as a timeout:
     // the same reason dependency-scheduler.ts is left out. The file is a dozen lines, and
     // test/unit/affected/worklist.test.ts exercises the rule directly, cycles included. Tried on
     // 2026-11-10: of 16 mutants, 9 are killed, the 6 that loosen the rule time out in the
-    // compute-affected suites, and 1 is equivalent -- no test can turn a hang into a failure.
+    // compute-affected suites, and 1 is equivalent; no test can turn a hang into a failure.
     "!src/affected/worklist.ts",
     // The preset catalog (`repo-contract/presets`, a separate opt-in entry
-    // point -- see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)
+    // point: see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)
     // is thin adapter glue: a `run` command plus a policy that dispatches to
     // the shared helpers in src/presets/shared/. Those helpers carry their
     // own dedicated unit tests, every preset's policy branches are unit-
@@ -70,10 +64,13 @@ const config = {
     // repeated ~20 times, with no defect-finding value proportional to the
     // suppression bookkeeping it would require.
     "!src/presets/**",
+    // aiReview is the exception: its parser and policy are real logic (three parse steps, shape
+    // checks, a confidence threshold, credential redaction), not a command plus a shared helper.
+    "src/presets/ai-review.ts",
   ],
   // Lets a manually-invoked `npx stryker run` skip re-testing mutants it
   // believes are unaffected by a source change, reusing their previous
-  // status from `incrementalFile` -- useful for a developer iterating
+  // status from `incrementalFile`: useful for a developer iterating
   // locally. repo-contract's own `mutation` check never benefits from this:
   // scripts/run-mutation.mjs deletes `incrementalFile` before every run it
   // triggers, so the check's own evidence always reflects a full, fresh
@@ -89,7 +86,7 @@ const config = {
   timeoutMS: 20_000,
   // The initial (un-mutated) test run normally finishes in well under a
   // minute, but it re-runs the whole suite once with per-test coverage
-  // hooks -- on a heavily loaded machine (a developer running this
+  // hooks: on a heavily loaded machine (a developer running this
   // alongside everything else, or a contended CI runner) that one pass can
   // stretch far past Stryker's 5-minute default and abort the entire run
   // before a single mutant is tested. 10 minutes is slack against that

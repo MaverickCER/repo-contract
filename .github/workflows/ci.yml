@@ -6,49 +6,36 @@ on:
   pull_request:
     branches: [main]
 
-# Supersede an in-progress PR run when the PR is pushed again -- the older run's
-# result is worthless once the branch has moved. Keyed by PR number for
-# pull_request events and by ref otherwise, so distinct branches and every
-# push-to-main run stay isolated and are never cancelled.
+# Supersede an in-progress PR run when the PR is pushed again. The older run's result is worthless
+# once the branch has moved. The group is keyed by PR number for pull_request events and by ref
+# otherwise. So distinct branches and every push-to-main run stay isolated and are never cancelled.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# Explicit least-privilege default so every job's GITHUB_TOKEN scope is a
-# property of this file, not an assumption about the repo/org's ambient
-# default -- mirrors env-cap/data-cap's own ci.yml.
+# Explicit least-privilege default, as in env-cap's and data-cap's ci.yml. Every job's GITHUB_TOKEN
+# scope is then a property of this file. It is not an assumption about the repo's or org's ambient
+# default.
 permissions:
   contents: read
 
 jobs:
-  # Runs first, on every PR, and -- when the PR's own diff touches benchmarked code -- commits
-  # refreshed results straight onto the PR branch. Every job below that (transitively) needs
-  # `verify`/`lint` checks out the PR branch's own live head rather than the originally-triggered
-  # SHA, so whatever this job just committed is exactly what `contract`/etc. actually validate --
-  # one real commit, one real CI pass, not two. Mirrors env-cap's/data-cap's own identically-named
-  # `benchmark-pr` job (see either repo's ci.yml for the full incident history this design avoids:
-  # a GITHUB_TOKEN-authored push re-triggering its own `pull_request: synchronize` and looping
-  # indefinitely on real benchmark-timing noise), with one real difference: env-cap/data-cap
-  # forward to internal-package-contract's reusable `.github/workflows/benchmark-pr.yml` via
-  # `uses:`; that reusable workflow is currently hardcoded to exactly two categories
-  # (`performance-runtime`/`performance-buildtime` -- both directory name and PR-comment label are
-  # literal, not parameterized), a shape that fits env-cap's/data-cap's two categories but not
-  # repo-contract's four (`performance-checks`/`performance-policy-evidence`/
-  # `performance-api-contract`/`performance-exceptions` -- see benchmarks/README.md for why repo-contract's own
-  # performance-sensitive surface splits into four categories instead of two). Rather than modify
-  # that shared, other-repositories-depend-on-it-too reusable workflow, this job calls
-  # internal-package-contract's own generic script layer directly
-  # (`scripts/benchmark/render-summary.mjs`/`append-history.mjs`) -- the exact same scripts the
-  # reusable workflow itself calls, looped over repo-contract's four categories inline. No `npm
-  # run build` step: unlike env-cap's/data-cap's categories (which benchmark generated *consumer*
-  # code against the published package's own `dist/`), all four of repo-contract's categories
-  # import repo-contract's (or internal-package-contract's) own source directly via `tsx` -- see
-  # benchmarks/README.md.
+  # Runs first on every PR. When the PR's diff touches benchmarked code, it commits refreshed results
+  # onto the PR branch. Every job that needs `verify` or `lint` checks out the branch's live head. So
+  # `contract` validates this job's commit: one commit, one CI pass.
   #
-  # The anti-recursion-loop guard (`github.actor != 'github-actions[bot]'`) and same-repo-PR-only
-  # guard below are identical to internal-package-contract's own reusable workflow's guard (see
-  # that file's own header comment in internal-package-contract for the incident this specific
-  # shape avoids), and the per-PR concurrency group matches it too.
+  # It mirrors env-cap's and data-cap's `benchmark-pr` job with one difference. Those repositories
+  # call internal-package-contract's reusable `benchmark-pr.yml`. That workflow hardcodes two
+  # categories, `performance-runtime` and `performance-buildtime`, as directory names and labels.
+  # repo-contract has four categories (benchmarks/README.md says why). So this job runs the scripts
+  # the reusable workflow calls in a loop over the four categories. Those are
+  # `scripts/benchmark/render-summary.mjs` and `append-history.mjs`. The PR checkout needs no
+  # `npm run build` step. All four categories import source directly through `tsx`.
+  #
+  # The guards below and the per-PR concurrency group match the reusable workflow's. The guards are
+  # `github.actor != 'github-actions[bot]'` and same-repository PRs only. They stop a GITHUB_TOKEN
+  # push from re-triggering `pull_request: synchronize`. Without them, the job would loop on
+  # benchmark-timing noise.
   benchmark-pr:
     if: >-
       github.event_name == 'pull_request' &&
@@ -62,11 +49,10 @@ jobs:
       contents: write
       pull-requests: write
       statuses: write
-    # Exposes the exact commit this job ended up validating (after its own possible push) as a
-    # job output, so every downstream job checks out that same precise SHA instead of
-    # independently re-resolving `refs/pull/{N}/head` at whatever moment it happens to run --
-    # closing a real (if narrow) skew window a long-running workflow could otherwise hit if that
-    # ref moved again between this job finishing and a downstream job's own checkout.
+    # Exposes the exact commit this job validated (after its own possible push) as a job output. Every
+    # downstream job checks out that same SHA. It does not re-resolve `refs/pull/{N}/head` at whatever
+    # moment it happens to run. That closes a narrow but real skew window for a long-running workflow.
+    # The ref could move before a downstream job's checkout.
     outputs:
       sha: ${{ steps.resolve-sha.outputs.sha }}
     steps:
@@ -81,10 +67,10 @@ jobs:
 
       - run: npm ci
 
-      # Two committed references: main's results (the previous run) and the last release's (a fixed
-      # point, so a series of small regressions cannot ratchet "previous" upward unnoticed). Their
-      # overhead ratios are judged only when they were measured on this CPU model. The same two the
-      # reusable benchmark-pr workflow uses for env-cap and data-cap.
+      # Two committed references: main's results (the previous run) and the last release's. The
+      # release is a fixed point, so a series of small regressions cannot ratchet "previous" upward
+      # unnoticed. Their overhead ratios are judged only when they were measured on this CPU model.
+      # The reusable benchmark-pr workflow uses the same two for env-cap and data-cap.
       - name: Snapshot main's and the last release's committed results
         run: |
           mkdir -p /tmp/benchmark-previous /tmp/benchmark-release
@@ -98,10 +84,10 @@ jobs:
             fi
           done
 
-      # The overhead ratio is machine-bound for fast work (how much of a bare baseline is process
-      # start-up differs by CPU), so the reference that is judged is main measured here, on this runner,
-      # minutes apart from the pull request: main's suite files at its commit, run by this checkout's
-      # runner at the suite's typical size only. Mirrors the reusable benchmark-pr workflow's step.
+      # For fast work the overhead ratio depends on the machine, since process start-up differs by
+      # CPU. So the judged reference is main measured on this runner, minutes before the pull request.
+      # That is main's suite files at its commit, at the typical size only. The reusable workflow does
+      # the same.
       - name: Measure main's end-to-end pair on this runner
         run: |
           mkdir -p /tmp/benchmark-main
@@ -138,8 +124,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # --gate: a measured growth class worse than the documented one, or an overhead ratio past the
-          # budget in benchmarks/budgets.mjs, fails this job (and so `required`); the comment is always posted.
+          # `--gate` fails this job, and so `required`, on a growth class worse than documented. It
+          # also fails on an overhead ratio past the budget in benchmarks/budgets.mjs. The comment is
+          # posted either way.
           node node_modules/internal-package-contract/scripts/benchmark/render-summary.mjs \
             --budgets benchmarks/budgets.mjs \
             --marker "<!-- repo-contract-benchmark-summary -->" \
@@ -151,19 +138,19 @@ jobs:
             > /tmp/summary.md || GATE_FAILED=1
           PR="${{ github.event.pull_request.number }}"
           MARKER="<!-- repo-contract-benchmark-summary -->"
-          # --paginate: a long-lived PR can carry more comments than the API's single-page
-          # default, which would otherwise hide an existing marker comment on page 2+ and post a
-          # duplicate instead of updating it.
+          # `--paginate`: a long-lived PR can carry more comments than the API's single-page default.
+          # Without it, an existing marker comment on page 2 or later stays hidden. A duplicate would
+          # then be posted instead of an update.
           EXISTING=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR}/comments" --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -n1)
-          # -F (--field), not -f (--raw-field): only -F's "@<path>" reads the value from a file --
-          # -f treats "@/tmp/summary.md" as the literal string body, posting that text verbatim
-          # instead of the file's real contents.
+          # `-F` (`--field`), not `-f` (`--raw-field`): only `-F`'s "@<path>" reads the value from a
+          # file. `-f` treats "@/tmp/summary.md" as the literal string body. It would post that text
+          # verbatim instead of the file's real contents.
           if [ -n "$EXISTING" ]; then
             gh api "repos/${{ github.repository }}/issues/comments/${EXISTING}" -X PATCH -F body=@/tmp/summary.md
           else
             gh api "repos/${{ github.repository }}/issues/${PR}/comments" -X POST -F body=@/tmp/summary.md
           fi
-          # Posted first so the reason is on the pull request, then failed: a gate that only wrote a comment was ignored.
+          # Fail after posting, so the reason is on the pull request. A gate that only commented was ignored.
           if [ "${GATE_FAILED:-0}" = "1" ]; then
             echo "::error::a benchmark gate failed; see the summary comment on the pull request"
             exit 1
@@ -172,15 +159,14 @@ jobs:
       - name: Commit refreshed results + history into this PR, only when it touches benchmarked code
         env:
           GH_TOKEN: ${{ github.token }}
-          # Passed through the environment rather than interpolated straight into `run` -- a
-          # branch ref is attacker-influenced input and must never be spliced into the shell
-          # command text.
+          # Passed through the environment, not interpolated into `run`. An attacker can influence a
+          # branch name, so it must never be spliced into shell text.
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           CHANGED=$(git diff --name-only origin/main...HEAD)
-          # package.json/package-lock.json count as relevant too -- a dependency bump can shift
-          # benchmark timing just as much as a src/ change can, and skipping the refresh here
-          # would silently leave stale results committed against a since-changed dependency tree.
+          # A change to package.json or package-lock.json counts too. A dependency bump can shift
+          # timings as much as a src/ change. Skipping the refresh would leave results measured on an
+          # older dependency tree.
           RELEVANT=$(echo "$CHANGED" | grep -E "^(src/|benchmarks/|package\.json$|package-lock\.json$)" | grep -vE "^benchmarks/(performance-[^/]+/(results\.json|BENCHMARKS\.md)$|history/)" || true)
           if [ -z "$RELEVANT" ]; then
             echo "This PR doesn't touch benchmarked code paths -- comment posted above, nothing to commit."
@@ -211,37 +197,26 @@ jobs:
           git commit -m "chore(benchmarks): refresh results.json"
           git push origin HEAD:"$HEAD_REF"
 
-      # Default `if:` (implicit success()), not `always()` -- this step must only run once the
-      # step above has genuinely succeeded, whether that means it actually committed+pushed or
-      # took its no-op `exit 0` early-return path. If that step instead fails outright (e.g. the
-      # push is rejected because the PR branch moved during this run), this step must NOT run: an
-      # `always()` here would still capture and export the local, committed-but-never-pushed
-      # commit's SHA, which no downstream checkout could ever actually resolve.
+      # Default `if:` (success()), not `always()`. If the step above fails (say the push is rejected
+      # because the branch moved), this must not run. `always()` would export the unpushed local SHA,
+      # which no downstream checkout can resolve.
       - name: Resolve this job's own final commit SHA
         id: resolve-sha
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-  # The OS axis, trimmed to only what genuinely differs by platform: build,
-  # the unit tests that actually assert OS-specific behaviour (Windows
-  # taskkill, process-tree, spawn-check's cmd.exe routing -- see
-  # test/unit/cross-platform/ and the grep for `process.platform`/`win32`
-  # across test/), and the e2e consumer-install suite (`npm pack` + install,
-  # which itself is OS-sensitive -- see scripts/npm-pack.mjs's Windows
-  # `npm.cmd` handling, and is exactly what would have caught a tarball
-  # missing its `dist/*.d.ts` files). Everything else this job used to repeat
-  # three times (typecheck, lint, format, architecture, schema, the full
-  # integration/property test suite, size) is platform-independent -- same
-  # result on every OS -- so it now runs exactly once, in `lint` below,
-  # instead of being paid for on windows-latest and macos-latest too. The
-  # real, authoritative gate for all of it either way is `npm run contract`
-  # in the `contract` job.
+  # The OS axis runs only what differs by platform. That is the build, the e2e consumer-install suite,
+  # and the unit tests that assert OS-specific behaviour. Those cover Windows taskkill, process trees
+  # and spawn-check's cmd.exe routing (see test/unit/cross-platform/). `npm pack` and install are
+  # OS-sensitive (scripts/npm-pack.mjs handles Windows `npm.cmd`). The e2e suite catches a tarball
+  # missing its `dist/*.d.ts` files. Typecheck, lint, format, architecture, schema, the integration
+  # and property suites, and size give the same result on every OS. They run once, in `lint` below.
+  # `npm run contract` in the `contract` job is the gate for all of it.
   verify:
     needs: [benchmark-pr]
-    # A skipped dependency isn't a passing one by GitHub's own default job condition -- without
-    # this, `verify` (and `lint` below) would themselves always skip whenever `benchmark-pr` does
-    # (every push-to-main run, every fork PR), taking every job that needs them, including
-    # `contract`, down with them. `always()` opts back into running on a skip; the explicit result
-    # check still blocks on a genuine `benchmark-pr` failure.
+    # A skipped benchmark-pr (every push to main, every fork PR) must not skip this job. So `always()`
+    # opts back in on a skip. A failed benchmark-pr skips it, and `contract` then fails on that
+    # failure in its first step. That is needed because GitHub counts a skipped required check as
+    # passing.
     if: always() && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ${{ matrix.os }}
     strategy:
@@ -251,16 +226,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # `benchmark-pr`'s own resolved SHA output when it ran (the exact commit it validated,
-          # after its own possible push -- see that job's own `resolve-sha` step), so this job
-          # checks out precisely that commit rather than independently re-resolving
-          # `refs/pull/{N}/head` itself at a possibly-later moment. Falls back to the same
-          # ref-resolution formula used everywhere else in this file (refs/pull/<N>/head resolves
-          # for a fork PR too, whose branch lives in the fork, not this repo) when `benchmark-pr`
-          # didn't run at all (push-to-main, a fork PR, or the bot's own retriggered run).
+          # `benchmark-pr`'s resolved SHA is the commit it validated. It is taken after any push of
+          # its own (its `resolve-sha` step). Re-resolving `refs/pull/{N}/head` later could pick up a
+          # newer commit. When `benchmark-pr` did not run (a push to main, a fork PR, the bot's own
+          # run), fall back to the ref formula. That formula is used everywhere in this file.
+          # `refs/pull/<N>/head` resolves for a fork PR too.
           ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
-          # No job here pushes; nothing needs the checkout's stored token, so
-          # don't leave it in `.git/config` for later steps to reach.
+          # No job here pushes, so nothing needs the checkout's stored token.
+          # Do not leave it in `.git/config` for later steps.
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -270,19 +243,16 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx node scripts/run-test-category.mjs unit
-      # No wrapper npm script for this anymore -- repo-contract's own
-      # `test-e2e` check invokes run-test-category.mjs the same way (see
-      # repo-contract.config.ts). Run through `npx` for the same PATH reason
-      # as above: this script spawns `vitest` by bare name.
-      # test/e2e/consumer-install.test.ts -- a real `npm pack` + tarball
-      # install + import (both ESM and CommonJS), proving the built artifact
-      # (not just the source tree) actually works from a clean install.
+      # The `test-e2e` check runs run-test-category.mjs the same way (repo-contract.config.ts). `npx`
+      # puts `vitest` on PATH, as above. The suite test/e2e/consumer-install.test.ts packs the
+      # package, installs the tarball and imports it as ESM and CommonJS. That proves the built
+      # artifact works from a clean install, not only the source tree.
       - run: npx node scripts/run-test-category.mjs e2e
-      # The path-sensitive work runs on every OS here, where `contract` (Ubuntu only, 17 minutes)
-      # cannot: the packed tarball is installed into a scratch project and every entry point and
-      # the CLI are imported and run, the way `published-floor` does on the Node floor, and the
-      # build and tests must leave the tree exactly as it was checked out -- a generated file that
-      # differs on Windows or macOS would otherwise be found only by a consumer.
+      # The path-sensitive work runs on every OS here. `contract` runs on Ubuntu only. The packed
+      # tarball is installed into a scratch project, and every entry point and the CLI are imported
+      # and run. `published-floor` does the same on the Node floor. The build and tests must leave the
+      # tree as checked out. Otherwise a generated file that differs on Windows or macOS would reach a
+      # consumer first.
       - name: Pack the tarball and smoke it as a consumer
         shell: bash
         run: |
@@ -299,15 +269,11 @@ jobs:
             exit 1
           fi
 
-  # The platform-independent checks `verify` used to repeat per-OS above,
-  # now run exactly once: typecheck, lint, format, the architecture smoke
-  # check, schema generation, the full test:coverage aggregate (unit +
-  # integration + property), and size. Same result regardless of OS, so
-  # paying for it three times bought nothing but slower PRs. Report-only,
-  # same as before -- the real, authoritative gate for all of these is `npm
-  # run contract` in the `contract` job below; this job exists purely so a
-  # broken build/lint/test fails fast, once, before that much slower job
-  # (dominated by mutation testing) spends its budget.
+  # The platform-independent checks run once here instead of on every OS. They are typecheck, lint,
+  # format, the architecture smoke check, schema generation, the test:coverage aggregate (unit,
+  # integration, property), and size. Each step fails the job on an error. So a broken build, lint or
+  # test fails fast, before the slower `contract` job spends its mutation budget. `contract` judges
+  # the same tools again as policies.
   lint:
     needs: [benchmark-pr]
     # Same reasoning as `verify`'s own identical condition above.
@@ -316,11 +282,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Same "prefer benchmark-pr's own resolved SHA output, fall back to re-resolving the
-          # ref formula" reasoning as `verify`'s own identical checkout above.
+          # Same SHA choice as `verify`'s checkout above. Prefer benchmark-pr's resolved SHA output,
+          # else re-resolve the ref formula.
           ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
-          # No job here pushes; nothing needs the checkout's stored token, so
-          # don't leave it in `.git/config` for later steps to reach.
+          # No job here pushes, so nothing needs the checkout's stored token.
+          # Do not leave it in `.git/config` for later steps.
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -330,61 +296,44 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      # A bare, read-only `prettier --check .` -- not `npm run format`,
-      # which runs the auto-fixing (`--write`) preset dogfooded by `npm run
-      # contract` and always exits 0 once it finishes rewriting files, so it
-      # can never actually fail this gate on unformatted code.
+      # A read-only `prettier --check .`, not `npm run format`. That script runs `--write` and exits 0
+      # after rewriting. So it could never fail on unformatted code.
       - run: npm run format:check
-      # No wrapper npm script for this anymore -- package.json only carries
-      # generic package scripts, and repo-contract's own `architecture`
-      # check already invokes this same script directly (see
-      # repo-contract.config.ts). Static, no build required -- production
-      # src/ dependency graph plus every verification category's own Vitest
-      # config staying inside its own directory (see
-      # specs/verification-taxonomy.md). Report-only (see the script's own
-      # doc comment) -- this step is a "doesn't crash" smoke check now, not
-      # a policy gate; `npm run contract` in the `contract` job is the real
-      # gate. Run through `npx` (not bare `node`) so the script's own
-      # `depcruise` sub-spawn resolves via node_modules/.bin on PATH -- only
-      # npm run/npx provide that for a `run:` step, unlike repo-contract's
-      # own invocation of this script, which inherits it transitively from
-      # the outer `npm run contract`.
+      # The `architecture` check runs this script too (repo-contract.config.ts). It is static and
+      # needs no build. It checks the src/ dependency graph and that each test category's Vitest
+      # config stays in its own directory (specs/verification-taxonomy.md). Here it is a "does not
+      # crash" smoke check. The `architecture` policy in `contract` is the gate. `npx`, not bare
+      # `node`, puts the script's `depcruise` sub-spawn on PATH through node_modules/.bin.
       - run: npx node scripts/check-architecture.mjs
       - run: npm run build
       - run: npm run schema
-      # Unit + integration + property, each independently, aggregated and
-      # reported against this repository's coverage thresholds -- see
-      # scripts/run-coverage.mjs. Report-only, same as above: real gating
-      # happens in repo-contract's own `coverage` check via `npm run
-      # contract`, not here.
+      # Unit, integration and property run independently, then are aggregated. The total is judged
+      # against this repository's coverage thresholds (scripts/run-coverage.mjs exits 1 below them).
+      # The `coverage` check in `contract` judges the same numbers.
       - run: npm run test:coverage
-      # Report-only (see scripts/check-size.mjs) -- a smoke check, not a
-      # policy gate; repo-contract's `size` check owns the actual required
-      # size and is what `npm run contract` enforces.
+      # Exits 1 over a budget (scripts/check-size.mjs); the `size` check in
+      # `contract` enforces the same budgets.
       - run: npm run size
 
-  # Bun and Deno actually consuming the real, packed tarball -- see
-  # specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md. One OS, one Node
-  # version: Bun/Deno compatibility doesn't depend on which Node version or
-  # OS also happens to be on the runner (neither runtime invokes Node's own
-  # binary), so it isn't re-run across `verify`'s full matrix above. The
-  # test/e2e/consumer-install-{bun,deno}.test.ts suites self-skip when their
-  # runtime isn't on PATH -- installing both here via their official setup
-  # actions is what makes this job actually exercise them instead of skip.
+  # Bun and Deno consume the packed tarball (see
+  # specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md). One OS and one Node
+  # version are enough: neither runtime invokes Node. The test/e2e/consumer-install-{bun,deno}.test.ts
+  # suites skip when their runtime is not on PATH. Installing both here through their official setup
+  # actions makes this job run them.
   runtime-compat:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # No job here pushes; nothing needs the checkout's stored token, so
-          # don't leave it in `.git/config` for later steps to reach.
+          # No job here pushes, so nothing needs the checkout's stored token.
+          # Do not leave it in `.git/config` for later steps.
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          # Same modern line as `verify`/`contract` -- this job runs the repo's
-          # own test harness (vitest), so it belongs on the verification-toolchain
-          # Node version, not the published floor.
+          # Same Node line as `verify` and `contract`. This job runs the repo's own test harness
+          # (vitest). So it belongs on the verification-toolchain Node version, not the published
+          # floor.
           node-version: 24.x
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -401,22 +350,16 @@ jobs:
 
   verify-current:
     runs-on: ubuntu-latest
-    # Deliberate canary, not a required gate: this job tracks the newest Node
-    # line ahead of the verification toolchain's own line (24.x above, the
-    # .nvmrc line), specifically so a real incompatibility
-    # is visible before that version is adopted -- but a brand-new Node
-    # line failing here is frequently an upstream toolchain gap (a
-    # devDependency not yet supporting it) rather than a defect in this
-    # package, and this repository has no control over when its own
-    # dependencies catch up. continue-on-error keeps that upstream lag from
-    # blocking every PR while this job still surfaces the result for a human
-    # to actually look at, rather than silently skipping the check entirely.
+    # A canary, not a required gate. It runs the newest Node line, ahead of the .nvmrc line (24.x
+    # above). So an incompatibility shows before that version is adopted. A new Node line often fails
+    # here because a devDependency does not support it yet. This package cannot control that.
+    # `continue-on-error` keeps that lag from blocking every PR, and the result stays visible.
     continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # No job here pushes; nothing needs the checkout's stored token, so
-          # don't leave it in `.git/config` for later steps to reach.
+          # No job here pushes, so nothing needs the checkout's stored token.
+          # Do not leave it in `.git/config` for later steps.
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -429,33 +372,27 @@ jobs:
       - run: npm test
       - run: npm run size
 
-  # Builds the package once, on the verification-toolchain Node line, and
-  # hands the resulting tarball to `published-floor` below. Nothing downstream
-  # rebuilds it -- the whole point is that the artifact tested on the old Node
-  # floor is bit-for-bit the one a modern toolchain produced.
+  # Builds the package once, on the .nvmrc Node line. `published-floor` gets the tarball. Nothing
+  # downstream rebuilds it. So the artifact tested on the Node floor is the one the modern toolchain
+  # produced.
   package-build:
-    # benchmark-pr listed directly (not just transitively via verify) so this job can address its
-    # `outputs.sha` below -- a job's `needs` context only exposes outputs from its own direct
-    # dependencies, not transitive ones.
+    # `benchmark-pr` is listed directly, not only transitively via `verify`. So this job can address
+    # its `outputs.sha` below. A job's `needs` context only exposes outputs from its own direct
+    # dependencies.
     needs: [verify, benchmark-pr]
-    # Same transitive-skip reasoning as `contract`'s own identical-shaped condition below --
-    # GitHub's default `success()` considers the *entire* transitive dependency graph, not just
-    # this job's direct `needs`, so a skipped `benchmark-pr` deep in `verify`'s own ancestry still
-    # propagates through as "not success" here even when `verify` genuinely ran and passed.
+    # GitHub's default `success()` walks the whole transitive `needs` graph. A skipped `benchmark-pr`
+    # in `verify`'s ancestry would skip this job even when `verify` passed. Same fix as `contract`.
     if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped') && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # `benchmark-pr`'s own resolved SHA output when it ran -- the exact commit it validated,
-          # after its own possible push -- so this job checks out precisely that commit rather
-          # than independently re-resolving `refs/pull/{N}/head` at a possibly-later moment. The
-          # published tarball this job packs must be built from the exact tree `contract`
-          # validated, not a stale pre-refresh snapshot. Falls back to the same ref-resolution
-          # formula used everywhere else in this file when `benchmark-pr` didn't run at all.
+          # `benchmark-pr`'s resolved SHA. The tarball is then built from the tree `contract`
+          # validated, not a snapshot from before the benchmark refresh. It falls back to the usual
+          # ref formula when `benchmark-pr` did not run.
           ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
-          # No job here pushes; nothing needs the checkout's stored token, so
-          # don't leave it in `.git/config` for later steps to reach.
+          # No job here pushes, so nothing needs the checkout's stored token.
+          # Do not leave it in `.git/config` for later steps.
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -475,16 +412,13 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # The published package's real Node floor, proven the only way that means
-  # anything: install the packed tarball into a throwaway project as an
-  # external consumer would, on each Node version `engines.node` promises,
-  # and exercise both entry points. This job NEVER runs `npm ci` / `npm run
-  # build` / the test harness -- it never installs the verification toolchain
-  # at all, so a Node-22-only devDependency cannot affect it. See
-  # scripts/smoke-consumer.mjs.
+  # Proves the Node floor as a consumer meets it. It installs the packed tarball into a scratch
+  # project on each Node version `engines.node` promises, and exercises every entry point. It never
+  # runs `npm ci`, the build or the test harness. So a devDependency that needs a newer Node cannot
+  # affect it. See scripts/smoke-consumer.mjs.
   published-floor:
-    # benchmark-pr listed directly so this job can address its `outputs.sha` below -- see
-    # `package-build`'s own identical note.
+    # `benchmark-pr` is listed directly so this job can address its `outputs.sha` below. See
+    # `package-build`'s identical note.
     needs: [package-build, benchmark-pr]
     # Same transitive-skip reasoning as `package-build`'s own identical-shaped condition above.
     if: always() && (needs.package-build.result == 'success' || needs.package-build.result == 'skipped') && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
@@ -496,20 +430,18 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # `benchmark-pr`'s own resolved SHA output when it ran, not an independently re-resolved
-          # `refs/pull/{N}/head` -- this job's own `scripts/smoke-consumer.mjs` must be the same
-          # version `contract` validated, not a stale pre-benchmark-pr-refresh snapshot. Falls back
-          # to the same ref-resolution formula used everywhere else in this file when
-          # `benchmark-pr` didn't run at all. Same reasoning as `package-build`'s identical
-          # checkout override.
+          # `benchmark-pr`'s resolved SHA, so scripts/smoke-consumer.mjs is the version `contract`
+          # validated. It falls back to the usual ref formula when `benchmark-pr` did not run (see
+          # `package-build`).
           ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
-          # No job here pushes; nothing needs the checkout's stored token, so
-          # don't leave it in `.git/config` for later steps to reach.
+          # No job here pushes, so nothing needs the checkout's stored token.
+          # Do not leave it in `.git/config` for later steps.
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          # No npm cache in any job (a cache written by a run of pull-request code can be poisoned) -- and this one never runs `npm ci` anyway.
+          # No npm cache in any job. A cache written by pull-request code can be poisoned. This job never
+          # runs `npm ci` anyway.
           node-version: ${{ matrix.node-version }}
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -519,10 +451,9 @@ jobs:
 
       - run: node scripts/smoke-consumer.mjs artifacts
 
-  # The examples are real projects wired to this repository through `file:` links (examples/package.json
-  # is an npm workspace). Each README shows a command and its outcome; scripts/run-examples.mjs runs
-  # every one and fails when the exit code or the shown output line no longer matches, so "runnable
-  # proof" in the README is proven here, not assumed.
+  # The examples are real projects linked to this repository through `file:` (examples/package.json is
+  # an npm workspace). The script scripts/run-examples.mjs runs each example's main command. It
+  # compares the exit code and the output lines its README shows. It fails when one no longer matches.
   examples:
     runs-on: ubuntu-latest
     steps:
@@ -538,10 +469,9 @@ jobs:
         working-directory: examples
       - run: node scripts/run-examples.mjs
 
-  # Installs the packed tarball with npm, pnpm, Yarn 1 and Yarn Berry (node-modules linker) and imports
-  # every entry point from it, as ESM and as CommonJS (scripts/package-managers-smoke.mjs). What is
-  # proven is exactly that: the tarball installs and resolves under those managers; nothing else about
-  # them is claimed. Yarn Plug'n'Play and pnpm without hoisting are documented as unsupported.
+  # Installs the packed tarball with npm, pnpm, Yarn 1 and Yarn Berry (node-modules linker). It imports
+  # every entry point as ESM and as CommonJS (scripts/package-managers-smoke.mjs). That is all it
+  # proves. Yarn Plug'n'Play and pnpm without hoisting are documented as unsupported.
   package-managers:
     runs-on: ubuntu-latest
     permissions:
@@ -558,10 +488,10 @@ jobs:
       - run: npm run build
       - run: npm run package-managers
 
-  # The development toolchain is on TypeScript 6 (typescript-eslint, typedoc and API Extractor
-  # cannot load the TypeScript 7 compiler API), so the native TypeScript 7 compiler gets its own job:
-  # this repository's source must still type-check under it. `npx -p` supplies the 7 binary; the
-  # repository's own `typescript` stays what the code's type imports resolve against.
+  # The development toolchain stays on TypeScript 6. The reason: typescript-eslint, typedoc and API
+  # Extractor cannot load the TypeScript 7 compiler API. So TypeScript 7 gets its own job, and the
+  # source must type-check under it. `npx -p` supplies the 7 binary. Type imports still resolve
+  # against the repository's own `typescript`.
   typescript-7:
     runs-on: ubuntu-latest
     steps:
@@ -576,15 +506,13 @@ jobs:
       - run: npm ci
       - run: npx --yes -p typescript@7 tsc --noEmit -p tsconfig.json
 
-  # Proves the shipped .d.ts files actually compile under a real consumer's
-  # own toolchain, under the newest release of each TypeScript major a consumer
-  # may have installed -- 5, 6 and 7 (this repo's own tsconfig uses
-  # moduleResolution: "Bundler" and a pinned typescript devDependency --
-  # neither exercises nodenext resolution or a newer major). See
-  # scripts/typescript-compat.mjs.
+  # Proves the shipped .d.ts files compile in a consumer's toolchain. It uses the newest release
+  # of TypeScript 5, 6 and 7; older 5.x releases are not tested. This repository's own tsconfig
+  # uses moduleResolution "Bundler" and one pinned typescript. So it tests neither nodenext
+  # resolution nor another major. See scripts/typescript-compat.mjs.
   typescript-compat:
-    # benchmark-pr listed directly so this job can address its `outputs.sha` below -- see
-    # `package-build`'s own identical note.
+    # `benchmark-pr` is listed directly so this job can address its `outputs.sha` below. See
+    # `package-build`'s identical note.
     needs: [package-build, benchmark-pr]
     # Same transitive-skip reasoning as `package-build`'s own identical-shaped condition above.
     if: always() && (needs.package-build.result == 'success' || needs.package-build.result == 'skipped') && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
@@ -592,8 +520,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Same checkout-override reasoning as `published-floor`'s identical `ref:` -- this job's
-          # own `scripts/typescript-compat.mjs` must be the same version `contract` validated.
+          # Same checkout-override reasoning as `published-floor`'s identical `ref:`. This job's own
+          # `scripts/typescript-compat.mjs` must be the same version `contract` validated.
           ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
           persist-credentials: false
 
@@ -608,65 +536,51 @@ jobs:
 
       - run: node scripts/typescript-compat.mjs artifacts
 
-  # The slow, self-hosting proof: runs this repository's own
-  # repo-contract.config.ts through the real, just-built public API -- see
-  # that file's own `checks` record for the current, authoritative list of
-  # every category it runs, and specs/verification-taxonomy.md for what each
-  # one establishes. Doesn't need the full OS matrix (mutation testing
-  # dominates runtime, and every check it runs is platform-independent and
-  # already covered once by `lint` above) -- one Node version on the
-  # verification-toolchain line (the .nvmrc line, >= the >=22.0.0 that
-  # @stryker-mutator/core itself requires), a local-development-and-CI
-  # requirement distinct from the published package's own engines.node
-  # >=22.0.0 floor (proven by `published-floor`). Waits on both `verify` and
-  # `lint` so a broken build/lint/OS-specific test fails fast, once, before
-  # this much slower job spends its mutation-testing budget.
+  # The slow self-hosting proof: runs repo-contract.config.ts through the freshly built public API. That
+  # file's `checks` record is the list of what runs. The taxonomy in specs/verification-taxonomy.md
+  # says what each check establishes. Every check is platform-independent and mutation testing
+  # dominates the runtime, so one Node version is enough. It is the .nvmrc line, which meets the
+  # >=22.0.0 that @stryker-mutator/core requires. That is a development requirement, separate from the
+  # published engines.node floor that `published-floor` proves. It waits on `verify` and `lint`. So a
+  # broken build or OS-specific test fails once, fast, before the mutation budget is spent.
   contract:
-    # benchmark-pr listed directly (not just transitively via verify/lint) so this job can address
-    # its `outputs.sha` below -- a job's `needs` context only exposes outputs from its own direct
-    # dependencies, not transitive ones.
+    # `benchmark-pr` is listed directly, not only transitively via `verify` and `lint`. So this job
+    # can address its `outputs.sha` below. A job's `needs` context only exposes outputs from its own
+    # direct dependencies.
     needs: [verify, lint, benchmark-pr]
-    # Without this, `contract` would inherit GitHub's default `success()` condition, which
-    # considers the *entire* transitive dependency graph, not just this job's direct `needs` --
-    # so a skipped `benchmark-pr` (every push-to-main run, every fork PR) would silently skip
-    # `contract` too even when `verify`/`lint` themselves genuinely ran and passed. Same
-    # transitive-skip reasoning as every other job below `benchmark-pr` in this file.
-    # `verify` and `lint` are deliberately NOT in this condition: a skipped required check counts as
-    # passing on GitHub, so when they fail this job must run and FAIL (first step below), never skip.
-    if: always() && (needs.benchmark-pr.result == 'success' || needs.benchmark-pr.result == 'skipped')
+    # Always runs, so it can never be skipped: GitHub counts a skipped required check as passing. The
+    # first step fails it when benchmark-pr failed or verify or lint did not pass. So a benchmark
+    # failure blocks the merge through `contract` as well as through `required`.
+    if: always()
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The code-scanning check reads the repository's open alerts.
+      security-events: read
     steps:
-      - name: verify and lint passed
-        if: needs.verify.result != 'success' || needs.lint.result != 'success'
+      - name: benchmark-pr, verify and lint passed
+        if: needs.verify.result != 'success' || needs.lint.result != 'success' || (needs.benchmark-pr.result != 'success' && needs.benchmark-pr.result != 'skipped')
         env:
+          BENCHMARK: ${{ needs.benchmark-pr.result }}
           VERIFY: ${{ needs.verify.result }}
           LINT: ${{ needs.lint.result }}
         run: |
-          echo "::error::contract needs verify and lint to pass (verify=$VERIFY, lint=$LINT)"
+          echo "::error::contract needs benchmark-pr to pass or be skipped, and verify and lint to pass (benchmark-pr=$BENCHMARK, verify=$VERIFY, lint=$LINT)"
           exit 1
 
-      # fetch-depth: 0 (full history, all branches -- see release.yml's own
-      # identical setting) is required here, not optional: adr-governance and
-      # commitlint both read `origin/main..HEAD` (scripts/git-commits.ts /
-      # scripts/diff-files.ts), which the default single-commit shallow
-      # checkout leaves unresolvable on a pull_request build and
-      # identical-to-HEAD on a push-to-main build -- either way landing the
-      # checks on a vacuous "nothing changed" pass path instead of actually
-      # evaluating this run's commits. `api-contract` (internal-package-contract-sourced)
-      # no longer needs this itself -- it now derives the declared release level from
-      # `.changeset/*.md` files on disk, not commit history, since repo-contract's own
-      # migration off release-please onto Changesets (see repo-contract.config.ts's own
-      # module doc comment) -- but the checkout depth stays for the two checks that still do.
+      # `fetch-depth: 0` (full history, as in release.yml) is required. The adr-governance and
+      # commitlint checks read `origin/main..HEAD` (scripts/git-commits.ts, scripts/diff-files.ts). A
+      # shallow checkout leaves that range unresolvable on a pull_request build and empty on a push to
+      # main. Either way the checks would pass on "nothing changed". `api-contract` reads
+      # `.changeset/*.md` instead of commit history, so it no longer needs the depth.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # `benchmark-pr`'s own resolved SHA output when it ran, not an independently
-          # re-resolved `refs/pull/{N}/head` -- the exact commit it validated, after its own
-          # possible push. Falls back to the same ref-resolution formula used everywhere else in
-          # this file when `benchmark-pr` didn't run at all.
+          # `benchmark-pr`'s resolved SHA is the commit it validated. It is taken after any push of
+          # its own. It falls back to the usual ref formula when `benchmark-pr` did not run.
           ref: ${{ needs.benchmark-pr.outputs.sha || (github.event_name == 'pull_request' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref) }}
           fetch-depth: 0
-          # This job only reads `origin/main..HEAD`; it never pushes, so the
-          # checkout's token does not need to persist into `.git/config`.
+          # This job only reads `origin/main..HEAD` and never pushes. So the checkout's token need not
+          # persist into `.git/config`.
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -675,44 +589,33 @@ jobs:
 
       - run: npm ci
       - run: npm run build
-      # Generates docs/api/ into the working tree (gitignored, never committed --
-      # see .gitignore) purely so the `docs` check below has real content to
-      # validate docs/index.html's link to it against. Without this, a fresh
-      # checkout has no docs/api/ at all (it's only ever committed nowhere now --
-      # the GitHub Pages deploy job regenerates it separately, on push to main),
-      # and linkinator fails every PR with a spurious 404 on a link that is, in
-      # fact, live on the real site.
+      # Generates docs/api/ (gitignored) so the `docs` check can follow docs/index.html's link to it.
+      # Without it, linkinator would report a 404 on every PR for a link that is live on the site. The
+      # Pages deploy regenerates docs/api/ separately on push to main.
       - run: npm run docs:api
       # The contract builds docs/benchmarks (`npm run docs:benchmarks`) before its checks, so the docs check
       # finds the page the docs link to.
       - run: npm run benchmark:check
       - run: npm run contract
         env:
-          # security-socket scores the package on Socket.dev. Without a token the check warns that
-          # the scan did not run; a refused token, network error or rate limit fails. Token: socket.dev
-          # (Settings > API Tokens, `packages:list`), repository secret SOCKET_SECURITY_API_KEY.
+          # The security-socket check scores the package on Socket.dev. Without a token the check
+          # warns that the scan did not run. A refused token, network error or rate limit fails it.
+          # Token: socket.dev (Settings > API Tokens, `packages:list`), repository secret
+          # SOCKET_SECURITY_API_KEY.
           SOCKET_SECURITY_API_KEY: ${{ secrets.SOCKET_SECURITY_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
 
-      # A contract run is not a pure read: `format`/`lint` auto-fix, and
-      # `suppression-governance` reconciles `.repo-contract/exceptions/*.json`
-      # (scaffolding a blank stub for any new disable directive, surfacing a
-      # stale record whose directive moved). On a fully-governed tree the run
-      # writes nothing; CI starts from a clean checkout, so ANY post-run
-      # working-tree change means an ungoverned finding, an unformatted file, or
-      # an un-added exception stub slipped through. Fail loudly rather than let
-      # it ride along with a green run -- see
-      # specs/decisions/0013-reusable-exception-policy-helper.md's "review
-      # surface" amendment (invariant 8).
+      # A contract run can write. `format` and `lint` auto-fix, and `suppression-governance`
+      # reconciles `.repo-contract/exceptions/*.json`. It adds a blank stub for a new disable
+      # directive and flags a record whose directive moved. On a governed tree the run writes nothing.
+      # CI starts from a clean checkout. So any change after the run means an ungoverned finding, an
+      # unformatted file or an uncommitted stub. That fails the job
+      # (specs/decisions/0013-reusable-exception-policy-helper.md, "review surface" amendment,
+      # invariant 8).
       #
-      # docs/OpenSSF-Scorecard.md is excluded on purpose, not an oversight:
-      # that check stamps a fresh `_Generated <timestamp>_` line into the doc
-      # on every single run by design (see that generator's own
-      # render-markdown.ts), so its content NEVER reproduces byte-identical
-      # against whatever's already committed -- unlike every other file this
-      # guard watches, no local `npm run contract` + commit could ever make
-      # this diff disappear. Its regenerate-and-commit lifecycle is the
-      # `docs-evidence` job below, mirroring `badges`' identical
-      # push-to-main-only pattern.
+      # docs/OpenSSF-Scorecard.md is excluded on purpose. Its generator (render-markdown.ts) stamps a
+      # fresh `_Generated <timestamp>_` line on every run. So no local run and commit can make it
+      # match. The `pages-content` job publishes it on push to main.
       - name: Working tree is clean after the contract run
         run: |
           if [ -n "$(git status --porcelain -- . ':!docs/OpenSSF-Scorecard.md')" ]; then
@@ -722,12 +625,9 @@ jobs:
             exit 1
           fi
 
-      # Handed to `badges` below so it can regenerate docs/*-badge.json
-      # without re-running mutation testing -- the single most expensive
-      # thing this job does (see the job-level comment above). Uploaded
-      # unconditionally (cheap) even though only the push-to-main run ever
-      # consumes it, since a job condition can't see whether a later job
-      # will need it.
+      # Handed to `pages-content` below, so it can regenerate docs/*-badge.json without rerunning
+      # mutation testing. That is this job's most expensive step. Uploaded on every run because it is
+      # cheap. A job condition cannot see whether a later job will need it.
       - name: Upload coverage and mutation reports for badge generation
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -738,13 +638,8 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-      # Handed to `docs-evidence` below. The `npm run contract` step above
-      # already wrote this file fresh (as a side effect of the
-      # `openssf-scorecard` check actually running) -- uploading the
-      # already-generated file, rather than having `docs-evidence` regenerate
-      # it itself, avoids paying for a whole second `npm run contract`
-      # invocation (including the mutation suite) just to reproduce a doc
-      # this job already has.
+      # Handed to `pages-content` below. The `openssf-scorecard` check already wrote this file during
+      # `npm run contract`. Uploading it avoids a second contract run, mutation suite included.
       - name: Upload generated evidence docs
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -754,34 +649,19 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # Regenerates docs/coverage-badge.json, docs/mutation-badge.json (and the coverage.json and
-  # mutation.json beside them), and the evidence doc from the same coverage/mutation reports and generated-doc
-  # copies `contract` just produced (reused via upload/download-artifact above
-  # rather than re-run -- re-running through `npm run contract` a second time
-  # here would double-pay the mutation suite, the single most expensive thing
-  # that job does). GitHub Pages here is now the same artifact-based
-  # actions/deploy-pages flow env-cap/data-cap already use, not the legacy
-  # branch-deploy this repo used before this migration -- so this content is
-  # handed to `deploy` below as a build artifact, never committed to main.
-  # Push-to-main only: a PR's badge numbers are exactly `contract`'s
-  # report-only concern.
-  #
-  # No longer opens a bot PR (superseding this job's prior use of
-  # scripts/carry-forward-required-checks.sh -- that mechanism has nothing
-  # left to carry forward here, since nothing merges to main from this job
-  # anymore). Folds the former `docs-evidence` job into this one: both are the
-  # same "already-generated content, needs to reach Pages" concern.
+  # Regenerates the coverage and mutation badges and the evidence doc. The badges are
+  # docs/coverage-badge.json and docs/mutation-badge.json, with coverage.json and mutation.json beside
+  # them. It reuses the reports and generated docs `contract` uploaded. A second `npm run contract`
+  # would pay for mutation testing twice. The content goes to `deploy` below as a build artifact
+  # through actions/deploy-pages, as in env-cap and data-cap. It is never committed to main. It runs
+  # on push to main only. On a PR, the numbers are `contract`'s concern.
   pages-content:
     needs: contract
-    # `always()` + an explicit check of `contract`'s own result, not the bare push-to-main
-    # condition alone -- without it, this job inherits GitHub's default `success()`, which walks
-    # `contract`'s entire transitive ancestry (verify, lint, benchmark-pr), and benchmark-pr is
-    # always skipped on a push-to-main event (it only ever runs for pull_request), silently
-    # skipping this job (and `deploy` below) even when `contract` itself genuinely ran and
-    # passed. `contract` never itself concludes "skipped" on a push-to-main event (its own `if:`
-    # already tolerates every job in that ancestry), so no skip-tolerance is needed here, only the
-    # `always()` escape from the default walk -- same pattern as env-cap's/data-cap's own
-    # `badges`/`deploy` jobs.
+    # `always()` plus an explicit check of `contract`'s result. The default `success()` walks
+    # `contract`'s whole ancestry, and benchmark-pr always skips on a push to main. That would skip
+    # this job and `deploy` even when `contract` passed. `contract` itself never skips on a push to
+    # main, so no other skip tolerance is needed. The env-cap and data-cap workflows use the same
+    # pattern.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && always() && needs.contract.result == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -796,16 +676,17 @@ jobs:
           node-version: 24.x
       - run: npm ci
 
-      # The coverage and mutation badges, each with a details file beside it that says which number it is (the lowest of
-      # four coverage measures, the share of mutants detected) and gives every value it summarises. The same tool every
-      # other package uses, reading this repository's own aggregated coverage summary.
+      # The coverage and mutation badges. A details file beside each says which number it shows and
+      # lists every value it summarises. The number is the lowest of four coverage measures, or the
+      # share of mutants detected. Every package uses this tool, here on this repository's aggregated
+      # coverage summary.
       - run: npx --no-install internal-package-contract tool badges --coverage coverage/aggregate/coverage-summary.json --no-size
       - run: node node_modules/internal-package-contract/scripts/run-mutation-badge.mjs
 
-      # Same treatment as docs/api/ (generated fresh on every deploy, never committed) --
-      # internal-package-contract's shared benchmark engine builds this history chart page from
-      # the committed benchmarks/history/*.json files (see `benchmark-pr`'s own header comment
-      # above for where those come from). Lands at maverickcer.github.io/repo-contract/benchmarks/.
+      # Generated on every deploy and never committed, like docs/api/. The benchmark engine of
+      # internal-package-contract builds this chart page from the committed benchmarks/history/*.json
+      # files. `benchmark-pr` writes them. The page lands at
+      # maverickcer.github.io/repo-contract/benchmarks/.
       - run: npm run docs:benchmarks
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -826,19 +707,12 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # Deploys docs/ (the GitHub Pages site) via the shared, centrally-maintained
-  # reusable workflow hosted in internal-package-contract -- the same
-  # actions/deploy-pages mechanism env-cap/data-cap already use. `badges-script`
-  # is left empty deliberately: this repo's badge JSON depends on the mutation
-  # report `contract` already paid for, so `pages-content` above generates it,
-  # not this job -- `content-artifact-name` hands that pre-built content over
-  # instead. `docs/api/` is generated fresh on every run by `docs:api`
-  # (TypeDoc, via internal-package-contract's shared config -- the same
-  # mechanism env-cap/data-cap already use `docs-script` for; this repo used
-  # to pass its own bespoke `api-docs:html` here before this migration) inside
-  # the shared workflow; no longer release-cadence-only -- see
-  # RELEASING.md's "GitHub Pages" section and
-  # specs/decisions/0008-self-hosting-tool-and-dependency-choices.md's amendment.
+  # Deploys docs/ to GitHub Pages through internal-package-contract's reusable workflow. That is the
+  # actions/deploy-pages flow env-cap and data-cap use. `badges-script` stays empty: the badges need
+  # the mutation report `contract` produced. So `pages-content` builds them, and
+  # `content-artifact-name` hands that content over. The shared workflow runs `docs:api` (TypeDoc) to
+  # generate docs/api/ on every deploy. See RELEASING.md's "GitHub Pages" section and the amendment to
+  # specs/decisions/0008-self-hosting-tool-and-dependency-choices.md.
   deploy:
     needs: pages-content
     # Same transitive-skip reasoning as `pages-content`'s own identical-shaped condition above.
@@ -847,17 +721,17 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@e5b8d9eeac7d951a5ea0c7c02c2f761087f8148b # v0.18.0
+    uses: MaverickCER/internal-package-contract/.github/workflows/deploy-pages-typedoc.yml@de11cec0f2cd93bbac00512ba706db3f4bbf5e09 # v0.19.0
     with:
       docs-script: docs:api
       content-artifact-name: pages-content
 
-  # The one status check the ruleset requires for every job above that is not `contract` or `lint`.
+  # The ruleset requires this one status check for every job above except `contract` and `lint`.
   # GitHub cannot name a matrix job (`verify (ubuntu-latest)`, `published-floor (22.x)`) as a required
-  # context and counts a skipped or cancelled job as passing, so this job runs `if: always()` and
+  # context. It also counts a skipped or cancelled job as passing. So this job runs `if: always()` and
   # fails unless each job it needs finished `success`. `benchmark-pr` may skip: it runs only on
-  # same-repo pull requests by design. Add every new job to `needs`; test/unit/ci/ci-jobs.test.ts
-  # fails when one is missing.
+  # same-repo pull requests by design. Add every new job to `needs`. The test
+  # test/unit/ci/ci-jobs.test.ts fails when one is missing.
   required:
     needs:
       - benchmark-pr
@@ -886,10 +760,9 @@ jobs:
             process.exit(1);
           }"
 
-  # Belt-and-suspenders for the squash-merge case (see
-  # specs/decisions/0009-conventional-commits-versioning-and-local-gates.md): the merge-commit /
-  # rebase policy keeps every commit conforming, but if a squash ever slips
-  # through, the PR title was still a valid Conventional Commit.
+  # A backstop for squash merges (specs/decisions/0009-conventional-commits-versioning-and-local-gates.md).
+  # The merge-commit and rebase policy keeps every commit conforming. If a squash slips through, the PR
+  # title is still a valid Conventional Commit.
   pr-title:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest

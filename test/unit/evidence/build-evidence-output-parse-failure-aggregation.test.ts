@@ -4,7 +4,7 @@ import type { CheckDefinition, CheckEvidence, PolicyResult } from "../../../src/
 
 // File-scoped: mocks parseOutput itself (rather than a real
 // StandardSchemaValidateThrewError from a throwing schema) so this test can
-// deterministically make every requested entry fail concurrently --
+// deterministically make every requested entry fail concurrently;
 // isolating buildEvidence's own aggregation logic from exactly which
 // failure mode triggered it.
 vi.mock("../../../src/parsing/parse-output.js", () => ({
@@ -30,7 +30,7 @@ function rawEvidence(): CheckEvidence {
   }
 }
 
-describe("buildEvidence -- output parse failure aggregation", () => {
+describe("buildEvidence: output parse failure aggregation", () => {
   it("aggregates every affected check's failure into one AggregateError, instead of only the first", async () => {
     const { buildEvidence } = await import("../../../src/evidence/build-evidence.js")
     const check: CheckDefinition = { run: "echo", output: { format: "json" }, policy: okPolicy }

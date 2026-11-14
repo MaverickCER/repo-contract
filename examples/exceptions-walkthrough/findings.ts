@@ -37,7 +37,7 @@ export const advisories: readonly DependencyAdvisory[] = [
 ]
 
 /**
- * The canonical identity of one advisory -- how a finding is matched to a waiver record, and back.
+ * The canonical identity of one advisory: how a finding is matched to a waiver record, and back.
  * `repo-contract/helpers` deliberately has no opinion about what this looks like; it is entirely
  * yours. Here, package name plus GHSA id is stable across audit runs and unique per advisory.
  * @param finding - The advisory to identify.

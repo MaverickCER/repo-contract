@@ -10,25 +10,24 @@ import {
 } from "../helpers/pack-consumer.js"
 
 /**
- * Deno counterpart to consumer-install.test.ts -- see
+ * Deno counterpart to consumer-install.test.ts: see
  * specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md and
  * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md.
- * Proves the real packed tarball resolves (via Deno's "bring your own node_modules" support -- no
- * import map or npm: specifier needed, since the consumer fixture has a real package.json +
- * node_modules from a real `npm install`) and runs under Deno's permission model, covering both
- * entry points and the `./presets` subpath export. `--allow-read --allow-run --allow-env` was the
- * minimum verified working set when the package supplied its own `cross-spawn` internally
- * (`--allow-env` specifically for `cross-spawn`'s own `which`-based PATH resolution); each script
- * below now supplies `node:child_process.spawn` itself instead (see ADR 0011 -- `spawn` is a
- * required, consumer-supplied field on RepoContractConfig, not something repo-contract imports on
- * its own), so this same permission set is carried forward as a safe superset rather than assumed
- * unchanged -- `--allow-run` still spawns the check's process either way, and `--allow-env` may
- * still be needed by Deno's own node:child_process compat shim's PATH resolution even without
- * cross-spawn in the picture. Re-verify against a real `deno run` failure (a permission error names
- * the exact missing flag) if this ever needs tightening. Skips (not fails) when `deno` isn't on
- * `PATH`, same reasoning as `distIsBuilt` below: most CI jobs and most local machines don't have
- * Deno installed. CI's dedicated `runtime-compat` job (see .github/workflows/ci.yml) is what
- * actually exercises this suite for real.
+ * Proves the packed tarball resolves and runs under Deno's permission model. It covers both entry
+ * points and the `./presets` subpath export. Resolution uses Deno's "bring your own node_modules"
+ * support. No import map or npm: specifier is needed, because the consumer fixture has a
+ * package.json and node_modules from an `npm install`.
+ *
+ * `--allow-read --allow-run --allow-env` was the minimum verified set when the package bundled
+ * `cross-spawn` (`--allow-env` served its `which`-based PATH resolution). Each script below now
+ * supplies `node:child_process.spawn` itself, per ADR 0011 (`spawn` is a required,
+ * consumer-supplied field on RepoContractConfig). The same permission set is kept as a safe
+ * superset rather than assumed unchanged. `--allow-run` still spawns the check's process.
+ * `--allow-env` may still be needed by Deno's node:child_process compat shim for PATH resolution.
+ * Re-verify against a real `deno run` failure (a permission error names the exact missing flag) if
+ * this ever needs tightening. Skips (not fails) when `deno` isn't on `PATH`, same reasoning as
+ * `distIsBuilt` below: most CI jobs and most local machines don't have Deno installed. CI's
+ * dedicated `runtime-compat` job (see .github/workflows/ci.yml) is what exercises this suite.
  */
 const denoAvailable = isRuntimeAvailable("deno")
 const DENO_PERMISSIONS = ["--allow-read", "--allow-run", "--allow-env"]

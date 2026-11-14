@@ -5,12 +5,13 @@ import type { ExceptionPolicy, ExceptionPolicyConfig } from "../../src/helpers/i
  * neutral exception policy (see specs/decisions/0013-reusable-exception-policy-helper.md), a
  * single `"security-network"` group classified on the finding's own `capability` kind.
  *
- * ADR 0007's default posture is unchanged and absolute: `src/**` must never perform network I/O,
- * and the `default` below is `forbidden` -- a capability kind this policy does not name has no
- * waiver path at all. The six recognized `NetworkCapabilityKind`s resolve to `exception`, permitted
- * only once every field in `VALID_SECURITY_NETWORK_REQUIREMENTS` is non-empty on the reconciled
- * record: `justification`, `alternatives`, `remediation`, `method` (an `EXCEPTION_METHODS`
- * member -- how the waiver's claim was substantiated), and `exceptionType`. The waiver never
+ * ADR 0007's default posture is unchanged and absolute: `src/**` must never perform network I/O.
+ * The `default` below is `forbidden`, so a capability kind this policy does not name has no
+ * waiver path at all. The six recognized `NetworkCapabilityKind`s resolve to `exception`. Each is
+ * permitted only once every field in `VALID_SECURITY_NETWORK_REQUIREMENTS` is non-empty on the
+ * reconciled record. Those fields are `justification`, `alternatives`, `remediation`, `method`
+ * and `exceptionType`. `method` is an `EXCEPTION_METHODS` member saying how the waiver's claim
+ * was substantiated. The waiver never
  * changes the default posture; it is an additive, reviewed, per-finding exception to it.
  */
 export const VALID_SECURITY_NETWORK_REQUIREMENTS = [
@@ -45,8 +46,8 @@ export const securityNetworkPolicy: ExceptionPolicyConfig = {
 }
 
 /**
- * The global default, used only for a classification whose `group` isn't `"security-network"` --
- * never reached today, kept `forbidden` so a future miswiring fails closed rather than silently
- * permitting.
+ * The global default, used only for a classification whose `group` isn't `"security-network"`.
+ * It is never reached today. It stays `forbidden` so a future miswiring fails closed rather than
+ * silently permitting.
  */
 export const SECURITY_NETWORK_GLOBAL_DEFAULT_POLICY: ExceptionPolicy = { mode: "forbidden" }

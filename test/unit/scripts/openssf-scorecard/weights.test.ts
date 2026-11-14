@@ -50,7 +50,7 @@ describe("fetchScorecardWeights", () => {
       "Dangerous-Workflow": 10,
       Packaging: 5,
       // "Unmapped-Check" carries a risk tier ("Nonexistent-Tier") absent from
-      // the aggregation source's own weight table -- excluded from the
+      // the aggregation source's own weight table. It is excluded from the
       // result entirely rather than defaulting to 0 or crashing.
     })
     expect(result.value.source.checksYamlUrl).toContain("ossf/scorecard")
@@ -119,9 +119,9 @@ describe("fetchScorecardWeights", () => {
 
 describe("computeWeightedAverage", () => {
   it("weights each score by its own check's weight, not uniformly", () => {
-    // (0 * 10 + 10 * 2.5) / (10 + 2.5) = 25 / 12.5 = 2 -- deliberately far
-    // from the simple average (5), so a mutant collapsing this back to an
-    // unweighted average is caught.
+    // Weighted: (0 * 10 + 10 * 2.5) / (10 + 2.5) = 25 / 12.5 = 2. This is
+    // deliberately far from the simple average (5). A mutant collapsing
+    // this back to an unweighted average is caught.
     const evaluated = [scored("Dangerous-Workflow", 0), scored("License", 10)]
     const weights = { "Dangerous-Workflow": 10, License: 2.5 }
 
@@ -131,7 +131,7 @@ describe("computeWeightedAverage", () => {
   it("combines three checks with three distinct weights via the real formula", () => {
     // Σ(score*weight): 8*7.5 + 4*5 + 10*2.5 = 60 + 20 + 25 = 105
     // Σ(weight): 7.5 + 5 + 2.5 = 15
-    // 105 / 15 = 7
+    // 105 / 15 = 7.
     const evaluated = [
       scored("Branch-Protection", 8),
       scored("Packaging", 4),

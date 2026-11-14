@@ -35,7 +35,7 @@ export const exportKey = (file: string, name: string): string => `export:${file}
 export const allKey = (file: string): string => `all:${file}`
 
 /**
- * Key for "any export of `file` changed" -- what namespace and bare imports of it care about.
+ * Key for "any export of `file` changed": what namespace and bare imports of it care about.
  * @param file - Repo-relative path.
  * @returns The key.
  */

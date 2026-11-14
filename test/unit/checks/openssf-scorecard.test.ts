@@ -42,11 +42,11 @@ const { packageVersion } = vi.hoisted(() => ({
 }))
 vi.mock("../../../scripts/openssf-scorecard/gh-api.js", () => ({ packageVersion }))
 
-// `computeWeightedAverage` is left as the real implementation (via
-// `importOriginal`) throughout this file -- only `fetchScorecardWeights` (a
-// real gh-CLI/network call) is mocked -- so every rationale/markdown-input
-// assertion below exercises the actual weighting arithmetic end to end,
-// rather than a second, hand-duplicated copy of the formula.
+// `computeWeightedAverage` stays the real implementation (via `importOriginal`)
+// throughout this file. Only `fetchScorecardWeights`, a gh-CLI/network call, is
+// mocked. Every rationale and markdown-input assertion below therefore
+// exercises the weighting arithmetic end to end. A hand-duplicated copy of the
+// formula would prove nothing.
 const { fetchScorecardWeights } = vi.hoisted(() => ({
   fetchScorecardWeights: vi.fn<typeof WeightsModule.fetchScorecardWeights>(),
 }))
@@ -179,7 +179,7 @@ describe("openssfScorecard.policy", () => {
     expect(result.outcome).toBe("warn")
     expect(result.rationale).toContain("gh CLI may be unavailable")
     expect(result.rationale).toContain("2 not-applicable")
-    // Nothing was evaluated, so the aggregate is never used -- the live
+    // Nothing was evaluated, so the aggregate is never used: the live
     // weight-table fetch (a real gh-CLI/network round-trip) must not even
     // be attempted in this path.
     expect(fetchScorecardWeights).not.toHaveBeenCalled()
@@ -209,7 +209,7 @@ describe("openssfScorecard.policy", () => {
     expect(result.rationale).not.toContain("Needs attention")
   })
 
-  it("passes, but inlines every non-perfect sub-check worst-first with its own name/score/reason -- never deferring detail to the generated doc alone", async () => {
+  it("passes, but inlines every non-perfect sub-check worst-first with its own name/score/reason: never deferring detail to the generated doc alone", async () => {
     const result = await openssfScorecard.policy(
       ctx({
         result: evidence({
@@ -242,10 +242,10 @@ describe("openssfScorecard.policy", () => {
     expect(dangerousIndex).toBeLessThan(branchIndex)
     expect(branchIndex).toBeLessThan(pinnedIndex)
     expect(result.rationale).toContain(
-      "Dangerous-Workflow 0/10 -- pull_request_target used unsafely.",
+      "Dangerous-Workflow 0/10: pull_request_target used unsafely.",
     )
-    expect(result.rationale).toContain("Branch-Protection 2/10 -- No required reviews configured.")
-    expect(result.rationale).toContain("Pinned-Dependencies 8/10 -- 2 of 14 actions unpinned.")
+    expect(result.rationale).toContain("Branch-Protection 2/10: No required reviews configured.")
+    expect(result.rationale).toContain("Pinned-Dependencies 8/10: 2 of 14 actions unpinned.")
     // A perfect Vulnerabilities score (mocked default) never appears in the "needs attention" list.
     expect(result.rationale).not.toContain("Vulnerabilities 10")
   })
@@ -276,7 +276,7 @@ describe("openssfScorecard.policy", () => {
     expect(result.rationale).toContain("weighted average score 4.3/10")
   })
 
-  it("weighted average differs from a simple average when per-check weights differ -- proving the arithmetic is actually weighted", async () => {
+  it("weighted average differs from a simple average when per-check weights differ: proving the arithmetic is actually weighted", async () => {
     // Branch-Protection(10, w7.5) + License(0, w2.5), Vulnerabilities excluded via evaluateVulnerabilities override below.
     // Weighted: (10*7.5 + 0*2.5) / (7.5+2.5) = 75/10 = 7.5. Simple average would be 5.
     evaluateVulnerabilities.mockReturnValueOnce({
@@ -337,7 +337,7 @@ describe("openssfScorecard.policy", () => {
     expect(result.outcome).toBe("pass")
     // Equal weighting (weight 1 each): (4+8)/2 = 6.
     expect(result.rationale).toContain("weighted average score 6.0/10")
-    expect(result.rationale).toContain("equal weighting -- live weight fetch failed")
+    expect(result.rationale).toContain("equal weighting because the live weight fetch failed")
     const markdownInput = renderScorecardMarkdown.mock.calls.at(-1)?.[0]
     expect(markdownInput?.weightsUnavailableReason).toBe("gh CLI is not installed.")
     expect(markdownInput?.weights).toBeUndefined()

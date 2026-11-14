@@ -48,12 +48,12 @@ interface KnipReport {
 interface DeadCodeOptions {
   /**
    * devDependency names to exclude from the "unused devDependency" issue
-   * category -- e.g. CLI tools knip has no way to see are used, because
+   * category: e.g. CLI tools knip has no way to see are used, because
    * nothing `import`s them. Round-tripped through knip's own
    * `--reporter-options` flag (see `readReporterOptions`) rather than kept in
    * a closure, so the exempt list this check actually ran with is visible on
    * the recorded command line and in persisted evidence, not just in this
-   * file's source. Defaults to an empty list -- repo-contract ships no
+   * file's source. Defaults to an empty list: repo-contract ships no
    * built-in exemptions; add your own repository's here.
    */
   readonly exemptUnusedDevDependencies?: readonly string[]
@@ -62,7 +62,7 @@ interface DeadCodeOptions {
 /**
  * Recovers the JSON payload knip's own `--reporter-options` flag was invoked
  * with, if any. This is how `deadCode`'s exempt list gets from `run` back
- * into the policy purely via `result.args` -- see {@link DeadCodeOptions}.
+ * into the policy purely via `result.args`: see {@link DeadCodeOptions}.
  * @param args - the exact argv the check's command was spawned with (`CheckEvidence.args`).
  * @returns the parsed `--reporter-options` payload, or `undefined` if the flag is absent or its value isn't valid JSON.
  */
@@ -70,10 +70,10 @@ function readReporterOptions(args: readonly string[]): DeadCodeOptions | undefin
   const flagIndex = args.indexOf("--reporter-options")
   const raw = flagIndex === -1 ? undefined : args[flagIndex + 1]
 
-  // Provably equivalent, not a coverage gap: `JSON.parse(undefined)` (what
+  // Provably equivalent, not a coverage gap. `JSON.parse(undefined)` (what
   // happens if this guard is removed or forced false) always throws
-  // ("undefined" is not valid JSON, confirmed empirically), which the catch
-  // block below already converts back to `undefined` -- the exact same
+  // ("undefined" is not valid JSON, confirmed empirically). The catch block
+  // below already converts that back to `undefined`: the exact same
   // observable result this early return produces. Kept for clarity (avoids
   // relying on that throw-and-catch as the mechanism), not for behavior no
   // test can otherwise reach.
@@ -81,9 +81,9 @@ function readReporterOptions(args: readonly string[]): DeadCodeOptions | undefin
     return undefined
   }
 
-  // Provably equivalent, not a coverage gap: the catch block below is the
-  // last statement in the function, so an empty block there falls off the
-  // end and implicitly returns `undefined` anyway -- identical to its
+  // Provably equivalent, not a coverage gap. The catch block below is the
+  // last statement in the function. An empty block there falls off the
+  // end and implicitly returns `undefined` anyway, identical to its
   // explicit `return undefined`. Kept for clarity, not for behavior no
   // test can otherwise reach.
   try {
@@ -144,7 +144,7 @@ export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
         return { outcome: "fail", rationale: "Knip output could not be parsed as JSON." }
       }
 
-      // `output.success` only means `JSON.parse` didn't throw -- `value` is `unknown` at
+      // `output.success` only means `JSON.parse` didn't throw: `value` is `unknown` at
       // runtime. Guard that it is a real object (not `null` / a primitive / an array) before
       // trusting the `KnipReport` cast, so a policy TypeError never escapes into the run.
       const value: unknown = result.output.value
@@ -159,9 +159,9 @@ export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
         return { outcome: "fail", rationale: "Knip produced invalid JSON report data." }
       }
 
-      // Re-annotated rather than used directly: `Array.isArray` narrows its
+      // Re-annotated rather than used directly. `Array.isArray` narrows its
       // argument to `any[]` regardless of the checked value's declared type (a
-      // long-standing TypeScript limitation), so `report.issues` would
+      // long-standing TypeScript limitation). So `report.issues` would
       // otherwise silently lose its element type below.
       const issues: readonly KnipIssue[] = report.issues
 
@@ -184,7 +184,7 @@ export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
               continue
             }
 
-            details.push(`${issue.file}${location} — ${label}: ${name}`)
+            details.push(`${issue.file}${location}: ${label}: ${name}`)
           }
         }
 

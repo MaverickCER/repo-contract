@@ -27,7 +27,7 @@ describe("parseFailFastArgs", () => {
     })
   })
 
-  it("stops at the -- terminator and leaves what follows untouched", () => {
+  it("stops at the `--` terminator and leaves what follows untouched", () => {
     expect(parseFailFastArgs(["--", "--fail-fast"])).toEqual({ rest: ["--", "--fail-fast"] })
     expect(parseFailFastArgs(["--fail-fast", "--", "--no-fail-fast"])).toEqual({
       failFast: true,

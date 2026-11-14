@@ -49,8 +49,8 @@ describe("renderMarkdownSummary()", () => {
   it("shows a failing check's whole rationale, and a warning's or pass's first line only", () => {
     const md = renderMarkdownSummary(verdict())
     expect(md).toContain("#### tests\n\n```text\n2 failing\nfoo.test.ts\nbar.test.ts\n```")
-    expect(md).toContain("- **docs** -- 1 external link unreachable")
-    expect(md).toContain("- **lint** -- 0 errors.")
+    expect(md).toContain("- **docs**: 1 external link unreachable")
+    expect(md).toContain("- **lint**: 0 errors.")
     expect(md).not.toContain("second line")
   })
 

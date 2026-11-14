@@ -14,10 +14,10 @@ export interface CoverageSummary {
 }
 
 /**
- * The coverage check's full interpretation logic, factored out so
- * test/unit/coverage/policy.test.ts can exercise every threshold comparison directly against
- * already-parsed evidence, without spawning scripts/check-coverage.mjs -- matching every other
- * check's own `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
+ * The coverage check's full interpretation logic, factored out for direct unit testing.
+ * test/unit/coverage/policy.test.ts exercises every threshold comparison against already-parsed
+ * evidence, without spawning scripts/check-coverage.mjs. This matches every other check's own
+ * `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
  * @param root0 - the policy input.
  * @param root0.evidence - the coverage check's own parsed output: aggregate percentages, per metric.
  * @returns the pass/fail verdict.
@@ -72,7 +72,7 @@ export function evaluateCoveragePolicy({
   }
 }
 
-// Aggregation and reporting only -- never executes tests, never discovers
+// Aggregation and reporting only: never executes tests, never discovers
 // test files. repo-contract.config.ts's `dependsOn` on this check guarantees
 // the three coverage-producing categories have already run (and therefore
 // already written coverage/{unit,integration,property}/coverage-final.json)

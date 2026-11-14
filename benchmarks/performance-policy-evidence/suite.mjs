@@ -1,5 +1,5 @@
 // repo-contract benchmark suite 2 of 3: turning check results into evidence and verdicts
-// (`buildEvidence`, `runPolicies`) -- pure, in-memory work with no process spawned, so it is isolated
+// (`buildEvidence`, `runPolicies`); pure, in-memory work with no process spawned, so it is isolated
 // from the spawn noise of suite 1. How to read and write one: ../READING-BENCHMARKS.md and
 // ../WRITING-BENCHMARKS.md. Benchmarks the package's own source (`src/`) through tsx.
 

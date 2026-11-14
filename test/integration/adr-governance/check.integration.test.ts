@@ -7,10 +7,10 @@ import { runAdrGovernanceCheck } from "../../../scripts/adr-governance/check.js"
 import { isolatedGitEnv } from "../../helpers/isolated-git-env.js"
 
 /**
- * The complete real path: a real scratch git repository, a real `git diff` against a real base
- * branch, real commit messages scanned for `ADR NNNN` references, a real `specs/decisions/`
- * directory to resolve them against, through to evidence -- no subprocess spawned for the check
- * itself, per the project's real-behavior-over-mocking house style.
+ * The complete path through to evidence. It uses a scratch git repository and a `git diff` against
+ * a base branch. Commit messages are scanned for `ADR NNNN` references, which resolve against a
+ * `specs/decisions/` directory. No subprocess is spawned for the check itself, per the project's
+ * real-behavior-over-mocking house style.
  */
 
 let root: string
@@ -42,12 +42,12 @@ beforeEach(async () => {
     "utf8",
   )
   commitAll("initial commit on main")
-  // `-B` (create-or-reset, then switch) rather than assuming `git init`'s own
-  // default branch name is "main" -- it isn't, on a host with a different
-  // `init.defaultBranch`, which would otherwise leave every `runAdrGovernanceCheck(root, "main")`
-  // call below diffing against an unresolvable ref (scripts/diff-files.ts swallows that failure
-  // and returns an empty file list), making every assertion in this file pass vacuously instead
-  // of exercising the real diff. See test/unit/diff-files.test.ts's own host-independent pattern.
+  // `-B` (create-or-reset, then switch) rather than assuming `git init`'s default branch name is
+  // "main". On a host with a different `init.defaultBranch` it isn't. Every
+  // `runAdrGovernanceCheck(root, "main")` call below would then diff against an unresolvable ref.
+  // scripts/diff-files.ts swallows that failure and returns an empty file list. Every assertion in
+  // this file would then pass vacuously. See test/unit/diff-files.test.ts's host-independent
+  // pattern.
   git("checkout", "-q", "-B", "main")
 })
 
@@ -55,7 +55,7 @@ afterEach(async () => {
   await rm(root, { recursive: true, force: true })
 })
 
-describe("runAdrGovernanceCheck -- full real path", () => {
+describe("runAdrGovernanceCheck: full real path", () => {
   it("is unsatisfied when a governed file changes with no ADR touched and no commit-message reference", async () => {
     git("checkout", "-q", "-b", "feature")
     await writeFile(path.join(root, "src/execution/spawn-check.ts"), "// change\n", "utf8")
@@ -68,7 +68,7 @@ describe("runAdrGovernanceCheck -- full real path", () => {
     expect(evidence.satisfied).toBe(false)
   }, 30_000)
 
-  it("still governs a file renamed OUT of src/execution/ -- reports the governed side, unsatisfied with no ADR", async () => {
+  it("still governs a file renamed OUT of src/execution/: reports the governed side, unsatisfied with no ADR", async () => {
     await writeFile(path.join(root, "src/execution/legacy.ts"), "export const x = 1\n", "utf8")
     commitAll("add src/execution/legacy.ts") // on main
     git("checkout", "-q", "-b", "feature")
@@ -128,7 +128,7 @@ describe("runAdrGovernanceCheck -- full real path", () => {
     expect(evidence.satisfied).toBe(false)
   }, 30_000)
 
-  it("is unsatisfied when a commit references a number with no corresponding ADR file -- proving cross-validation, not just regex-shape", async () => {
+  it("is unsatisfied when a commit references a number with no corresponding ADR file: proving cross-validation, not just regex-shape", async () => {
     git("checkout", "-q", "-b", "feature")
     await writeFile(path.join(root, "src/execution/spawn-check.ts"), "// change\n", "utf8")
     commitAll("refactor(execution): touch spawn-check\n\nSee ADR 9999 for the reasoning.")

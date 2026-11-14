@@ -90,7 +90,7 @@ describe("reconcileExceptions", () => {
     expect(reconciliation.activeRecords.map((r) => r.id)).toEqual([
       "suppression:eslint:no-console:a.ts",
     ])
-    // the check persists activeRecords ∪ staleRecords -- the stale one is kept on disk
+    // The check persists activeRecords ∪ staleRecords: the stale one is kept on disk.
     const persisted = [...reconciliation.activeRecords, ...reconciliation.staleRecords]
     expect(persisted).toContain(stale)
   })
@@ -106,7 +106,7 @@ describe("reconcileExceptions", () => {
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.error).toBe(
-        'deriveId is not injective: findings at index 0 and 1 both map to id "suppression:eslint:no-console:a.ts" -- every independently-governable finding must have a distinct id; make the two directives distinguishable.',
+        'deriveId is not injective: findings at index 0 and 1 both map to id "suppression:eslint:no-console:a.ts". Every independently-governable finding must have a distinct id. Make the two directives distinguishable.',
       )
     }
   })
@@ -156,7 +156,7 @@ describe("serializeExceptionRegistry", () => {
     const out = serializeExceptionRegistry(records)
     const parsed = JSON.parse(out) as { exceptions: { id: string }[] }
     expect(parsed.exceptions.map((r) => r.id)).toEqual(["a:1", "b:2"])
-    // first three keys of a record are the fixed core order, then alphabetical
+    // The first three keys of a record are the fixed core order, then alphabetical.
     expect(Object.keys(parsed.exceptions[1] as object)).toEqual([
       "id",
       "version",

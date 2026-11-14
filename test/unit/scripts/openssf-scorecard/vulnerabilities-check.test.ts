@@ -55,7 +55,7 @@ describe("evaluateVulnerabilities", () => {
 
   it("is not-applicable, not a crash, when npm audit's own value has no metadata at all", () => {
     // npm audit's own documented failure shape when it can't complete the scan (a registry/network
-    // error) is `{ "error": {...} }` -- no "metadata" key. Regression guard: this exact shape
+    // error) is `{ "error": {...} }`: no "metadata" key. Regression guard: this exact shape
     // previously crashed with an unhandled TypeError ("Cannot read properties of undefined
     // (reading 'vulnerabilities')") instead of falling through to "not-applicable".
     const result = evaluateVulnerabilities(
@@ -122,7 +122,7 @@ describe("evaluateVulnerabilities", () => {
     })
   })
 
-  it("scores 0 when only a single low-severity vulnerability exists -- not silently rounded to 0 total", () => {
+  it("scores 0 when only a single low-severity vulnerability exists: not silently rounded to 0 total", () => {
     const result = evaluateVulnerabilities(
       evidence({
         output: {
@@ -135,7 +135,7 @@ describe("evaluateVulnerabilities", () => {
     expect(result.score).toBe(0)
   })
 
-  it("sums all four severities, not just the first two -- equal critical/high would cancel to a false 0 total if the low term were subtracted", () => {
+  it("sums all four severities, not just the first two: equal critical/high would cancel to a false 0 total if the low term were subtracted", () => {
     const result = evaluateVulnerabilities(
       evidence({
         output: {
@@ -148,7 +148,7 @@ describe("evaluateVulnerabilities", () => {
     expect(result.score).toBe(0)
   })
 
-  it("includes the moderate term in the total -- equal critical+high and moderate would cancel to a false 0 total if moderate were subtracted", () => {
+  it("includes the moderate term in the total: equal critical+high and moderate would cancel to a false 0 total if moderate were subtracted", () => {
     const result = evaluateVulnerabilities(
       evidence({
         output: {
@@ -161,7 +161,7 @@ describe("evaluateVulnerabilities", () => {
     expect(result.score).toBe(0)
   })
 
-  it("includes the high term in the total -- equal critical and high would cancel to a false 0 total if high were subtracted", () => {
+  it("includes the high term in the total: equal critical and high would cancel to a false 0 total if high were subtracted", () => {
     const result = evaluateVulnerabilities(
       evidence({
         output: {

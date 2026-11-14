@@ -41,7 +41,7 @@ describe("evaluateVitestJsonPolicy", () => {
 
   it("fails cleanly (does not throw) on valid JSON that isn't Vitest's reporter shape", () => {
     // `numFailedTests`/`numFailedTestSuites` are `undefined` here, so the
-    // pass branch is not taken and `testResults` would be walked -- it must
+    // pass branch is not taken and `testResults` would be walked: it must
     // be guarded, not throw a TypeError out of the policy.
     const result = evaluateVitestJsonPolicy(output({ someOtherTool: true }))
     expect(result).toEqual({
@@ -78,7 +78,7 @@ describe("evaluateVitestJsonPolicy", () => {
   it.each([
     ["no test matched", 0],
     ["every test was skipped", 4],
-  ])("fails (not passes) when %s -- 0 tests ran", (_label, numTotalTests) => {
+  ])("fails (not passes) when %s: 0 tests ran", (_label, numTotalTests) => {
     const result = evaluateVitestJsonPolicy(
       output(report({ numTotalTests, numPassedTests: 0, numTotalTestSuites: 1 })),
     )
@@ -108,14 +108,14 @@ describe("evaluateVitestJsonPolicy", () => {
     })
   })
 
-  it("fails when numFailedTests is nonzero even though numFailedTestSuites is zero -- proves && not ||", () => {
+  it("fails when numFailedTests is nonzero even though numFailedTestSuites is zero: proves && not ||", () => {
     const result = evaluateVitestJsonPolicy(
       output(report({ numFailedTests: 1, numFailedTestSuites: 0, testResults: [] })),
     )
     expect(result.outcome).toBe("fail")
   })
 
-  it("fails when numFailedTestSuites is nonzero even though numFailedTests is zero -- the other side of &&", () => {
+  it("fails when numFailedTestSuites is nonzero even though numFailedTests is zero: the other side of &&", () => {
     const result = evaluateVitestJsonPolicy(
       output(report({ numFailedTests: 0, numFailedTestSuites: 1, testResults: [] })),
     )
@@ -141,12 +141,12 @@ describe("evaluateVitestJsonPolicy", () => {
       ),
     )
     expect(result.outcome).toBe("fail")
-    // Exact full-string equality, not a substring `toContain` -- pins the "- " bullet prefix, the
-    // " — " separators between suite/name/message, and the "\n"-joined line structure all at
-    // once, rather than three assertions that could each individually pass against a subtly
-    // malformed join (e.g. a dropped separator or an array coerced to a comma-joined string).
+    // Exact full-string equality, not a substring `toContain`. It pins three things at once:
+    // the "- " bullet prefix, the ") " separators between suite/name/message, and the
+    // "\n"-joined line structure. Three separate assertions could each pass against a subtly
+    // malformed join, e.g. a dropped separator or an array coerced to a comma-joined string.
     expect(result.rationale).toBe(
-      "Vitest reported 1 failing test(s) across 1 failing suite(s):\n- suite.test.ts — a failing test — boom",
+      "Vitest reported 1 failing test(s) across 1 failing suite(s):\n- suite.test.ts: a failing test: boom",
     )
   })
 
@@ -192,7 +192,7 @@ describe("evaluateVitestJsonPolicy", () => {
         }),
       ),
     )
-    expect(result.rationale).toContain("suite.test.ts —")
+    expect(result.rationale).toContain("- suite.test.ts: unlocated test: boom")
     expect(result.rationale).not.toContain("undefined")
   })
 
@@ -236,10 +236,10 @@ describe("evaluateVitestJsonPolicy", () => {
       ),
     )
     expect(result.outcome).toBe("fail")
-    // Exact equality, not `toContain`: a failure with no messages must list as `suite — test` with no
-    // trailing separator, which a substring check cannot tell apart from `suite — test — `.
+    // Exact equality, not `toContain`: a failure with no messages must list as `suite: test` with no
+    // trailing separator, which a substring check cannot tell apart from `suite: test: `.
     expect(result.rationale).toBe(
-      "Vitest reported 1 failing test(s) across 1 failing suite(s):\n- suite.test.ts — no messages test",
+      "Vitest reported 1 failing test(s) across 1 failing suite(s):\n- suite.test.ts: no messages test",
     )
   })
 
@@ -293,12 +293,12 @@ describe("evaluateVitestJsonPolicy", () => {
         }),
       ),
     )
-    // Exact full-string equality -- see the single-suite test above for why this is stronger
+    // Exact full-string equality: see the single-suite test above for why this is stronger
     // than per-line `toContain` checks: it also pins the "\n"-joined structure between bullets.
     expect(result.rationale).toBe(
       "Vitest reported 2 failing test(s) across 2 failing suite(s):\n" +
-        "- a.test.ts — test a — fail a\n" +
-        "- b.test.ts — test b — fail b",
+        "- a.test.ts: test a: fail a\n" +
+        "- b.test.ts: test b: fail b",
     )
   })
 })

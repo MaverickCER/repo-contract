@@ -6,7 +6,7 @@ import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
  * ESLint does not expose its JSON formatter result as a public LintResult
- * export -- these types describe the JSON formatter contract rather than
+ * export: these types describe the JSON formatter contract rather than
  * ESLint's internal Linter types.
  */
 interface EslintMessage {
@@ -26,7 +26,7 @@ interface EslintResult {
 
 /** Options accepted by {@link lint}. */
 interface LintOptions {
-  /** Path (or glob) passed straight through to ESLint as its positional target. Defaults to `"."` -- narrow it (e.g. `"src"`) to scope linting to your own source tree. */
+  /** Path (or glob) passed straight through to ESLint as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope linting to your own source tree. */
   readonly path?: string
 }
 
@@ -50,10 +50,10 @@ function renderMessages(results: readonly EslintResult[], severity: 1 | 2): stri
 
 /**
  * Static analysis via ESLint, using whatever `eslint.config.js` the
- * consumer's own repository already has -- this preset makes no assumption
+ * consumer's own repository already has: this preset makes no assumption
  * about rule configuration, only about how to run the tool and interpret
  * its JSON output. Severity `2` (error) blocks; severity `1` (warning) is
- * reported but never blocks -- ESLint's own severities already encode that
+ * reported but never blocks: ESLint's own severities already encode that
  * distinction, so this preset just respects it rather than treating every
  * finding as equally blocking.
  * @param options - configuration for this check; see {@link LintOptions}.
@@ -90,9 +90,9 @@ export function lint(options: LintOptions = {}): CheckDefinitionConfig {
       }
 
       // Valid JSON of an unexpected shape (an ESLint formatter change, a
-      // primitive, an entry without a `messages` array) must fail cleanly, not
-      // throw a TypeError out of `renderMessages` -- matching the other JSON
-      // presets' guards.
+      // primitive, an entry without a `messages` array) must fail cleanly. It
+      // must not throw a TypeError out of `renderMessages`. The other JSON
+      // presets guard the same way.
       const value: unknown = result.output.value
       if (
         !Array.isArray(value) ||

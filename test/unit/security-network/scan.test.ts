@@ -5,7 +5,7 @@ import { scanForNetworkCapability, scanSourceFile } from "../../../scripts/secur
 
 const FIXTURES_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures")
 
-describe("scanSourceFile -- representative capability categories", () => {
+describe("scanSourceFile: representative capability categories", () => {
   it("flags a bare node: core module import", () => {
     const findings = scanSourceFile("f.ts", 'import http from "node:http"')
     expect(findings).toHaveLength(1)
@@ -18,7 +18,7 @@ describe("scanSourceFile -- representative capability categories", () => {
     expect(findings[0]?.capability).toBe("restricted-module-import")
   })
 
-  it("flags an aliased/namespace import -- the binding name does not matter", () => {
+  it("flags an aliased/namespace import: the binding name does not matter", () => {
     const findings = scanSourceFile("f.ts", 'import * as totallyInnocuous from "node:https"')
     expect(findings).toHaveLength(1)
     expect(findings[0]?.capability).toBe("restricted-module-import")
@@ -42,7 +42,7 @@ describe("scanSourceFile -- representative capability categories", () => {
     expect(findings[0]?.capability).toBe("restricted-named-import")
   })
 
-  it("flags a namespace import of node:module -- the whole module object still exposes createRequire", () => {
+  it("flags a namespace import of node:module: the whole module object still exposes createRequire", () => {
     const findings = scanSourceFile("f.ts", 'import * as m from "node:module"')
     expect(findings).toHaveLength(1)
     expect(findings[0]?.capability).toBe("restricted-named-import")
@@ -118,7 +118,7 @@ describe("scanSourceFile -- representative capability categories", () => {
     expect(findings).toHaveLength(0)
   })
 
-  it("flags a dynamic import() whose specifier is computed, not a string literal -- the trivial bypass this check exists to close", () => {
+  it("flags a dynamic import() whose specifier is computed, not a string literal: the trivial bypass this check exists to close", () => {
     const findings = scanSourceFile("f.ts", "async function f(x: string) { return import(x) }")
     expect(findings).toHaveLength(1)
     expect(findings[0]?.capability).toBe("dynamic-import-non-literal-specifier")
@@ -167,7 +167,7 @@ describe("scanSourceFile -- representative capability categories", () => {
     expect(findings[0]?.capability).toBe("restricted-global-usage")
   })
 
-  it("no longer flags any preset run command -- that moved to the preset-commands check", () => {
+  it("no longer flags any preset run command: that moved to the preset-commands check", () => {
     expect(
       scanSourceFile("f.ts", 'const c = { run: ["curl", "https://evil.example.com"] }'),
     ).toEqual([])
@@ -182,7 +182,7 @@ describe("scanSourceFile -- representative capability categories", () => {
   })
 })
 
-describe("scanForNetworkCapability -- real filesystem fixtures", () => {
+describe("scanForNetworkCapability: real filesystem fixtures", () => {
   it("finds zero violations in the clean fixture tree, and confirms it actually scanned it", async () => {
     const evidence = await scanForNetworkCapability(path.join(FIXTURES_ROOT, "clean"))
     expect(evidence.filesScanned).toBeGreaterThan(0)

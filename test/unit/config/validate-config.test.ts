@@ -11,19 +11,18 @@ import { callableSchema, successSchema } from "../standard-schema/fixtures.js"
 const okPolicy = (): PolicyResult => ({ outcome: "pass", rationale: "ok" })
 
 // `spawn`/`env` are required RepoContractConfig fields (see
-// specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
-// validated *before* validateRepoContractConfig ever reaches per-check or
-// dependency-graph validation -- every test below that isn't itself testing
-// spawn/env/concurrency/checks-shape rejection needs a valid stand-in for
-// both so it still reaches the validation logic it actually means to
-// exercise. Neither is ever called by validateRepoContractConfig itself
-// (it only checks their shape), so a throwing stub is fine for `okSpawn`.
+// specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
+// They are validated *before* per-check or dependency-graph validation. Most
+// tests below need a valid stand-in for both to reach the logic they exercise.
+// The exceptions are tests of spawn/env/concurrency/checks-shape rejection.
+// validateRepoContractConfig only checks the shape of these fields and never
+// calls them. So a throwing stub is fine for `okSpawn`.
 const okSpawn: Spawner = () => {
   throw new Error("okSpawn should never actually be invoked by validateRepoContractConfig.")
 }
 const okEnv: NodeJS.ProcessEnv = {}
 
-/** Casts a deliberately-malformed plain object into `RepoContractConfig` for a validation test -- `validateRepoContractConfig` exists precisely to catch shapes the type system alone can't rule out (plain JS callers, widened/cast values). */
+/** Casts a deliberately-malformed plain object into `RepoContractConfig` for a validation test: `validateRepoContractConfig` exists precisely to catch shapes the type system alone can't rule out (plain JS callers, widened/cast values). */
 function malformed(value: unknown): RepoContractConfig {
   return value as RepoContractConfig
 }
@@ -105,7 +104,7 @@ describe("validateRepoContractConfig", () => {
     }).not.toThrow()
   })
 
-  it("accepts a config-level env value that is explicitly undefined -- NodeJS.ProcessEnv's own contract, unlike check.env's string-only Record", () => {
+  it("accepts a config-level env value that is explicitly undefined: NodeJS.ProcessEnv's own contract, unlike check.env's string-only Record", () => {
     expect(() => {
       validateRepoContractConfig(
         malformed({ checks: {}, spawn: okSpawn, env: { PATH: "/usr/bin", UNSET: undefined } }),
@@ -162,7 +161,7 @@ describe("validateRepoContractConfig", () => {
   )
 
   it("a check's own shell: false overrides a config-level shell: true", () => {
-    // Precedence is check.shell ?? config.shell ?? false -- an explicit false at the check level
+    // Precedence is check.shell ?? config.shell ?? false: an explicit false at the check level
     // must win over a true global default, not just widen it. Exercised here via run-string
     // tokenization: shell: true would accept an unquoted shell operator, shell: false must still
     // reject it even with the global default set to true.
@@ -302,7 +301,7 @@ describe("validateRepoContractConfig", () => {
     }).toThrow(/run array must not be empty/)
   })
 
-  it("rejects a string run whose first token (the executable) is empty -- run: \"''\"", () => {
+  it("rejects a string run whose first token (the executable) is empty (run: \"''\")", () => {
     expect(() => {
       validateRepoContractConfig(configWith({ run: "''", policy: okPolicy }))
     }).toThrow(/first token .* is empty or contains only whitespace/)
@@ -347,7 +346,7 @@ describe("validateRepoContractConfig", () => {
     expect(() => {
       validateRepoContractConfig(configWith({ run: ["echo", "a"], shell: true, policy: okPolicy }))
     }).toThrow(
-      "shell: true requires run to be a string -- an array of arguments is individually " +
+      "shell: true requires run to be a string. An array of arguments is individually " +
         "escaped for the shell and cannot express shell operators like pipes or redirects, " +
         "so combining the two forms would silently do nothing useful.",
     )
@@ -516,7 +515,7 @@ describe("validateRepoContractConfig", () => {
     it('rejects a schema whose "~standard" property is explicitly null', () => {
       // Distinct from the "no ~standard property at all" case above: `typeof null === "object"`
       // is JavaScript's own well-known quirk, so `standard === null` must be checked as its own
-      // clause -- `typeof standard !== "object"` alone would not catch a null `~standard`.
+      // clause; `typeof standard !== "object"` alone would not catch a null `~standard`.
       expect(() => {
         validateRepoContractConfig(
           configWith({
@@ -666,10 +665,10 @@ describe("validateRepoContractConfig", () => {
   })
 
   it("rejects a 2-node mutual dependsOn as a forward reference on the first check declared", () => {
-    // A former "cycle" is no longer expressible at all: declaration order is the required
-    // topological order, so whichever of "a"/"b" is declared first already has a forward
-    // reference the moment it names the other -- there's no cycle left to trace once every edge
-    // must point backward (see DependencyDeclaredLaterError, ADR 0002).
+    // A former "cycle" is no longer expressible. Declaration order is the required topological
+    // order. So whichever of "a"/"b" is declared first has a forward reference the moment it names
+    // the other. Once every edge must point backward, no cycle is left to trace (see
+    // DependencyDeclaredLaterError, ADR 0002).
     try {
       validateRepoContractConfig(
         malformed({
@@ -764,11 +763,11 @@ describe("validateRepoContractConfig", () => {
     }).toThrow(/expensive must be a boolean/)
   })
 
-  it("accepts an isolated check with an explicit dependsOn on it from a later-declared check -- no conflict is possible under the positional model", () => {
+  it("accepts an isolated check with an explicit dependsOn on it from a later-declared check: no conflict is possible under the positional model", () => {
     // Under the old, position-independent model, isolated "a"'s implicit dependency on every
     // other check could conflict with "b"'s explicit dependsOn: ["a"] (a real mutual cycle). Under
     // the new positional model, isolated "a" (declared first) only implicitly depends on checks
-    // declared *before* it -- none here -- so there is no implicit edge for "b"'s real, backward
+    // declared *before* it (none here) so there is no implicit edge for "b"'s real, backward
     // dependsOn to conflict with. See ADR 0002.
     expect(() => {
       validateRepoContractConfig(
@@ -800,7 +799,7 @@ describe("validateRepoContractConfig", () => {
     }).not.toThrow()
   })
 
-  it("accepts two isolated checks in the same run -- their implicit 'everyone else' edges must not fold into a false cycle with each other", () => {
+  it("accepts two isolated checks in the same run: their implicit 'everyone else' edges must not fold into a false cycle with each other", () => {
     expect(() => {
       validateRepoContractConfig(
         malformed({
@@ -879,7 +878,7 @@ describe("validateRepoContractConfig", () => {
       const typed = error as InvalidCheckConfigError
       expect(typed.checkId).toBe("my-check")
       expect(typed.message).toBe(
-        'Invalid check config for "my-check" -- run must be a string or an array of strings.',
+        'Invalid check config for "my-check": run must be a string or an array of strings.',
       )
     }
   })
@@ -891,7 +890,7 @@ describe("validateRepoContractConfig", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(InvalidRepoContractConfigError)
       expect((error as Error).message).toBe(
-        "Invalid repo-contract config -- config must be an object.",
+        "Invalid repo-contract config: config must be an object.",
       )
     }
   })

@@ -84,7 +84,7 @@ describe("error hierarchy", () => {
   describe("InvalidRepoContractConfigError", () => {
     it("message is exactly the fixed prefix plus the given reason", () => {
       expect(new InvalidRepoContractConfigError("checks must be an object.").message).toBe(
-        "Invalid repo-contract config -- checks must be an object.",
+        "Invalid repo-contract config: checks must be an object.",
       )
     })
   })
@@ -97,10 +97,10 @@ describe("error hierarchy", () => {
 
     it("message is exactly the fixed prefix (with checkId) plus the given reason", () => {
       const error = new InvalidCheckConfigError("my-check", "run must be a string.")
-      expect(error.message).toBe('Invalid check config for "my-check" -- run must be a string.')
+      expect(error.message).toBe('Invalid check config for "my-check": run must be a string.')
     })
 
-    it("never embeds raw values -- only the checkId and a developer-authored reason", () => {
+    it("never embeds raw values: only the checkId and a developer-authored reason", () => {
       const secretLikeReason = "run must be a string"
       const error = new InvalidCheckConfigError("my-check", secretLikeReason)
       expect(error.message).toContain("my-check")
@@ -165,7 +165,7 @@ describe("error hierarchy", () => {
       expect(error.message).toContain('output: { format: "json" }')
     })
 
-    it("is not the same class as PolicyThrewError -- a consumer can tell the two apart", () => {
+    it("is not the same class as PolicyThrewError: a consumer can tell the two apart", () => {
       const error = new PolicyReadUnrequestedOutputError("id", "value", undefined)
       expect(error).not.toBeInstanceOf(PolicyThrewError)
     })
@@ -185,10 +185,10 @@ describe("error hierarchy", () => {
         'Policy for check "mutation" read `result.output.value.score`',
       )
       expect(error.message).toContain("output failed to parse")
-      expect(error.message).toContain("check `result.output.success`")
+      expect(error.message).toContain("Check `result.output.success`")
     })
 
-    it("never repeats the parse failure's own text -- result.output.error may contain raw stdout content", () => {
+    it("never repeats the parse failure's own text: result.output.error may contain raw stdout content", () => {
       const parseFailureText = "Unexpected token 'x', \"xxx not json\" is not valid JSON"
       const error = new PolicyReadFailedParseValueError(
         "mutation",
@@ -229,8 +229,8 @@ describe("error hierarchy", () => {
     it("message is exact and names both the declaring check and the forward-referenced dependency", () => {
       const error = new DependencyDeclaredLaterError("a", "b")
       expect(error.message).toBe(
-        'Invalid check config for "a" -- dependsOn: ["b"], but "b" is declared later in the ' +
-          "checks object. dependsOn may only reference a check declared earlier -- reorder the " +
+        'Invalid check config for "a": dependsOn names "b", which is declared later in the ' +
+          "checks object. dependsOn may only reference a check declared earlier. Reorder the " +
           'checks object so "b" is declared before "a".',
       )
     })

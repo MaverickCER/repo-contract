@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest"
 import { securitySecrets } from "../../../src/presets/security-secrets.js"
 import { enoentEvidence, fakeContext, fakeCheckEvidence } from "./fixtures.js"
 
-// Same real-fs-collision rationale as duplication.test.ts -- see that
+// Same real-fs-collision rationale as duplication.test.ts: see that
 // file's comment. `securitySecrets`'s policy reads a fixed relative path
 // with no injectable cwd, and this repository's own `security-secrets`
 // check touches that exact same real path concurrently during

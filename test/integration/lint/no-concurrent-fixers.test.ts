@@ -7,13 +7,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 /**
  * Regression guard for scripts/check-lint.mjs: ESLint and oxlint both run with `--fix`, so both
- * own writes to the same working tree. They MUST run sequentially -- run concurrently (the old
+ * own writes to the same working tree. They MUST run sequentially: run concurrently (the old
  * `Promise.all`), one rewrites a file mid-read for the other and ESLint aborts with no JSON,
  * surfacing in CI as "eslint did not produce valid JSON: Unexpected end of JSON input".
  *
  * This test replaces `eslint`/`oxlint` on PATH with stub executables that each record a start and
  * end timestamp, runs check-lint.mjs, and asserts the two run windows do not overlap. It does not
- * re-test what the tools report -- test/unit/lint/policy.test.ts owns that.
+ * re-test what the tools report: test/unit/lint/policy.test.ts owns that.
  */
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..")

@@ -176,7 +176,7 @@ describe("evaluateSecuritySocketPolicy", () => {
     expect(result.rationale).toContain("supply-chain-risk alerts are never waivable")
   })
 
-  it("fails a low-severity supplyChainRisk alert outright on a real peerDependency too -- declaring a peer range is itself a shipped supply-chain choice", () => {
+  it("fails a low-severity supplyChainRisk alert outright on a real peerDependency too: declaring a peer range is itself a shipped supply-chain choice", () => {
     const a = alert({
       severity: "low",
       category: "supplyChainRisk",

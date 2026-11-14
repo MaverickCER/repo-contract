@@ -9,7 +9,7 @@ interface FixtureException {
   readonly id: string
 }
 
-/** A schema that validates `unknown` as an array of `{ id: string }` -- proves only that the loader hands `exceptions` through to a caller's own schema untouched, never a real production registry shape. */
+/** A schema that validates `unknown` as an array of `{ id: string }`: proves only that the loader hands `exceptions` through to a caller's own schema untouched, never a real production registry shape. */
 const fixtureExceptionsSchema: StandardSchemaV1<unknown, readonly FixtureException[]> = {
   "~standard": {
     version: 1,
@@ -37,14 +37,14 @@ const fixtureExceptionsSchema: StandardSchemaV1<unknown, readonly FixtureExcepti
   },
 }
 
-/** A schema whose `validate()` always fails with exactly the given issues -- for tests that need precise control over `StandardSchemaV1.Issue.path` shapes, independent of `fixtureExceptionsSchema`'s own record-validation logic. */
+/** A schema whose `validate()` always fails with exactly the given issues: for tests that need precise control over `StandardSchemaV1.Issue.path` shapes, independent of `fixtureExceptionsSchema`'s own record-validation logic. */
 function rawIssuesSchema(
   issues: readonly StandardSchemaV1.Issue[],
 ): StandardSchemaV1<unknown, readonly FixtureException[]> {
   return { "~standard": { version: 1, vendor: "fixture", validate: () => ({ issues }) } }
 }
 
-describe("loadExceptionRegistry -- fixture readFile overrides", () => {
+describe("loadExceptionRegistry: fixture readFile overrides", () => {
   it("returns ok:true with an empty array when readFile rejects with ENOENT (missing file)", async () => {
     const result = await loadExceptionRegistry({
       path: ".repo-contract/exceptions/fixture.json",
@@ -73,13 +73,13 @@ describe("loadExceptionRegistry -- fixture readFile overrides", () => {
     expect(result.errors[0]).toContain("permission denied")
   })
 
-  it("returns ok:false (never throws) when readFile rejects with null instead of an Error -- e.g. a test double, or an unusual real filesystem implementation", async () => {
+  it("returns ok:false (never throws) when readFile rejects with null instead of an Error: e.g. a test double, or an unusual real filesystem implementation", async () => {
     const result = await loadExceptionRegistry({
       path: ".repo-contract/exceptions/fixture.json",
       schema: fixtureExceptionsSchema,
-      // This test exists specifically to prove loadExceptionRegistry's own catch block never
-      // throws when a caller-supplied readFile rejects with a non-Error value -- see CodeRabbit
-      // finding on PR #42 / src/helpers/load-exception-registry.ts.
+      // Proves loadExceptionRegistry's catch block never throws when a caller-supplied readFile
+      // rejects with a non-Error value (see src/helpers/load-exception-registry.ts). Source:
+      // CodeRabbit finding on PR #42.
       // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- deliberate non-Error rejection, see above
       readFile: () => Promise.reject(null),
     })
@@ -264,7 +264,7 @@ describe("loadExceptionRegistry -- fixture readFile overrides", () => {
   })
 })
 
-describe("loadExceptionRegistry -- default readFile (real node:fs/promises)", () => {
+describe("loadExceptionRegistry: default readFile (real node:fs/promises)", () => {
   let dir: string
 
   beforeEach(async () => {

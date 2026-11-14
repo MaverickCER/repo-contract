@@ -68,7 +68,7 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
 
   it("requires defineRepoContract and runRepoContract via CommonJS (dist/index.cjs), not only ESM import", () => {
     // The consumer package.json declares "type": "module" (see beforeAll
-    // above) -- a .cjs extension is what forces Node to resolve this script,
+    // above); a .cjs extension is what forces Node to resolve this script,
     // and therefore the package's own `require` condition (dist/index.cjs),
     // as CommonJS regardless. Closes the one real compatibility gap the
     // ESM-only test above leaves: the package ships both entry points (see
@@ -191,7 +191,7 @@ describe.skipIf(!distIsBuilt)("consumer install (packed tarball)", () => {
 
   it("resolves the ./schema export to real, valid JSON Schema files", () => {
     // `node -e` defaults to CommonJS regardless of the target package's own
-    // "type": "module" -- simplest, most portable way to resolve and read a
+    // "type": "module"; simplest, most portable way to resolve and read a
     // static JSON export without a loader.
     const resolveResult = spawnSync(
       process.execPath,

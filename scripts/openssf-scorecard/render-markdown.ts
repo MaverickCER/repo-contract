@@ -10,13 +10,12 @@ function scoreCell(score: number | "not-applicable"): string {
 }
 
 /**
- * The `## Provenance` section's own "Weighted score" bullet, in full --
- * three genuinely distinct cases, not two: nothing evaluated at all (no
- * fetch was even attempted, so no weight-source wording applies -- see
- * `checks/openssf-scorecard.ts`'s own "skip the fetch when there's nothing
- * to weight" short-circuit), something evaluated with the live weight table
- * available, and something evaluated but the live fetch failed (equal-
- * weighting fallback). Collapsing the first case into the second would
+ * The `## Provenance` section's "Weighted score" bullet, in full. It has
+ * three distinct cases. Nothing evaluated: no fetch ran, so no weight-source
+ * wording applies (see `checks/openssf-scorecard.ts`'s "skip the fetch when
+ * there's nothing to weight" short-circuit). Something evaluated with the live
+ * weight table. Something evaluated but the live fetch failed (equal-weighting
+ * fallback). Collapsing the first case into the second would
  * claim live-fetched weights were used when no fetch ever ran.
  * @param weightedAverage - `Σ(score × weight) / Σ(weight)`, or `undefined` if nothing was evaluated.
  * @param weightsUnavailableReason - Set only when checks were evaluated but the live weight fetch failed.
@@ -39,12 +38,12 @@ function weightedScoreLine(
 
 /**
  * The per-check weight actually applied when computing the weighted score
- * above -- rendered per-row (not just cited by source URL) so a reader can
- * recompute `Σ(score × weight) / Σ(weight)` for themselves directly from
- * this table, without re-fetching ossf/scorecard's own live, mutable
- * weight table and trusting it hasn't since changed.
+ * above. It is rendered per-row, not only cited by source URL. A reader can
+ * then recompute `Σ(score × weight) / Σ(weight)` directly from this table.
+ * They need not re-fetch ossf/scorecard's own live, mutable weight table
+ * and trust it hasn't since changed.
  * @param result - The sub-check result this row is for.
- * @param weights - The per-check weight table actually used for this run's weighted score (`undefined` if the live fetch failed entirely, or a specific check's own name was missing from it -- both fall back to a weight of `1`; see `computeWeightedAverage`'s own doc comment).
+ * @param weights - The per-check weight table actually used for this run's weighted score (`undefined` if the live fetch failed entirely, or a specific check's own name was missing from it: both fall back to a weight of `1`; see `computeWeightedAverage`'s own doc comment).
  * @returns `"--"` for a `"not-applicable"` result (excluded from the aggregate entirely, so it has no weight to show), else the weight actually used.
  */
 function weightCell(
@@ -167,10 +166,10 @@ function officialSection(
 }
 
 /**
- * Renders `docs/OpenSSF-Scorecard.md`. The disclaimer at the top is load-
- * bearing, not decorative: this document is repo-contract's own evaluation,
- * informed by OpenSSF Scorecard's published methodology, never a run of the
- * upstream `scorecard` binary and never a certification. It leads with the
+ * Renders `docs/OpenSSF-Scorecard.md`. The disclaimer at the top is
+ * load-bearing, not decorative. This document is repo-contract's own
+ * evaluation, informed by OpenSSF Scorecard's published methodology. It is
+ * never a run of the upstream `scorecard` binary and never a certification. It leads with the
  * official, published result when it can be fetched, so the two are never
  * confused.
  * @param input - What to render.
@@ -178,8 +177,8 @@ function officialSection(
  * @param input.generatedAt - ISO 8601 timestamp of this render.
  * @param input.results - Every sub-check's result, in display order.
  * @param input.weightedAverage - `Σ(score_i × weight_i) / Σ(weight_i)` over every evaluated (non-`"not-applicable"`) sub-check, or `undefined` when nothing could be evaluated (see the caller's own "every sub-check not-applicable" warn path).
- * @param input.weights - The per-check weight table actually used to compute `weightedAverage` (`fetchScorecardWeights`'s own `.value.weights`, or `undefined` if that live fetch failed) -- rendered per-row via `weightCell` so the score is reconstructable from this document alone.
- * @param input.weightsUnavailableReason - Set when the live fetch of ossf/scorecard's own weight table failed, so `weightedAverage` fell back to equal weighting across evaluated checks -- `undefined` when the live weights were used.
+ * @param input.weights - The per-check weight table actually used to compute `weightedAverage` (`fetchScorecardWeights`'s own `.value.weights`, or `undefined` if that live fetch failed): rendered per-row via `weightCell` so the score is reconstructable from this document alone.
+ * @param input.weightsUnavailableReason - Set when the live fetch of ossf/scorecard's own weight table failed, so `weightedAverage` fell back to equal weighting across evaluated checks: `undefined` when the live weights were used.
  * @param input.provenance - When, against what commit, and by which version of this evaluator, this document was produced.
  * @param input.official - The published OpenSSF Scorecard result, when it was fetched.
  * @param input.officialUnavailableReason - Why the published result could not be fetched, when it was not.

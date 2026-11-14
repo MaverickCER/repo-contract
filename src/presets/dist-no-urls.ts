@@ -6,7 +6,7 @@ import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 export interface DistNoUrlsAllowEntry {
   /** A URL, or a glob (`*`, `**`, `?`, `[...]`, `{a,b}`; escape literals with `\`) matched against each whole URL found. */
   readonly url: string
-  /** Why this URL must ship in the build output. Required and non-empty -- an allowlist entry without one fails the check. */
+  /** Why this URL must ship in the build output. Required and non-empty: an allowlist entry without one fails the check. */
   readonly reason: string
 }
 
@@ -33,7 +33,7 @@ interface UrlScanReport {
 /**
  * The scanner executed by `node -e`. Self-contained on purpose: the preset needs no external tool,
  * and the scan reads every file under the directory (code, declarations, sourcemaps, JSON) so a URL
- * cannot hide in any shipped file. Prints only the JSON report -- never file contents.
+ * cannot hide in any shipped file. Prints only the JSON report: never file contents.
  */
 const SCANNER_SOURCE = `
 const fs = require("node:fs")
@@ -145,7 +145,7 @@ export function distNoUrls(options: DistNoUrlsOptions = {}): CheckDefinitionConf
       if (!value.dirExists) {
         return {
           outcome: "fail",
-          rationale: `Build output directory "${dir}" does not exist -- build before running this check.`,
+          rationale: `Build output directory "${dir}" does not exist. Build before running this check.`,
         }
       }
 

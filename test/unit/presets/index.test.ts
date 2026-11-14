@@ -7,7 +7,7 @@ import { testSpawn } from "../../helpers/test-spawn.js"
 import { fakeCheckEvidence, fakeContext } from "./fixtures.js"
 
 /**
- * A smoke test of the presets barrel itself -- every other test file in
+ * A smoke test of the presets barrel itself: every other test file in
  * test/unit/presets/ imports directly from an individual preset module for
  * precision, but nothing else exercises src/presets/index.ts's actual
  * re-exports.
@@ -26,6 +26,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
   }
 
   const factoryPresets: Record<string, () => CheckDefinitionConfig> = {
+    aiReview: () => presets.aiReview({ agent: ["agent"] }),
     lint: () => presets.lint(),
     deadCode: () => presets.deadCode(),
     duplication: () => presets.duplication(),
@@ -65,7 +66,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     const config = defineRepoContract({
       checks: {
         // Spread a preset and override `run` (the documented escape hatch)
-        // and `policy` -- exactly the pattern the README documents.
+        // and `policy`: exactly the pattern the README documents.
         ok: {
           ...presets.format,
           run: [process.execPath, "-e", "process.exit(0)"],
@@ -123,7 +124,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
   // --- Robustness: no preset policy may ever throw ---
   //
   // A policy that throws is rethrown by run-policies.ts as `PolicyThrewError`
-  // and rejects the whole `runRepoContract()` promise -- one preset choking on
+  // and rejects the whole `runRepoContract()` promise; one preset choking on
   // an unexpected tool-output shape (or an abnormal process termination) takes
   // the entire contract run down with it. Every preset must instead classify
   // that as a clean `fail` verdict. These tables drive both checks over every
@@ -148,7 +149,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     "spawn_error",
   ]
 
-  describe.each(ALL_PRESETS)("$name preset -- abnormal process termination", ({ config }) => {
+  describe.each(ALL_PRESETS)("$name preset: abnormal process termination", ({ config }) => {
     it.each(ABNORMAL_STATUSES)(
       "reports %s as a termination failure, never a fabricated tool verdict or a throw",
       async (status) => {
@@ -179,7 +180,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
 
   const JSON_OUTPUT_PRESETS = ALL_PRESETS.filter(({ config }) => config.output?.format === "json")
 
-  describe.each(JSON_OUTPUT_PRESETS)("$name preset -- adversarial parsed output", ({ config }) => {
+  describe.each(JSON_OUTPUT_PRESETS)("$name preset: adversarial parsed output", ({ config }) => {
     it.each(ADVERSARIAL_JSON)(
       "returns a well-formed PolicyResult (never throws) when output.value is $label",
       async ({ value }) => {
@@ -215,7 +216,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     })
   })
 
-  it("securityDeps has no missing-dependency check -- it shells out to npm itself, which cannot be missing in this environment", async () => {
+  it("securityDeps has no missing-dependency check: it shells out to npm itself, which cannot be missing in this environment", async () => {
     const config = defineRepoContract({
       checks: {
         missing: {
@@ -231,7 +232,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
 
     expect(verdict.passed).toBe(false)
     // Falls through to the generic "no vulnerability summary" fail, not an
-    // "is required by this preset" message -- there's no package name to
+    // "is required by this preset" message: there's no package name to
     // report installing since `npm` itself is what's assumed present.
     expect(verdict.checks.missing.rationale).not.toContain("is required by this preset")
   })

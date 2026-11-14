@@ -117,8 +117,8 @@ describe("brokenLinks preset", () => {
     expect(result.rationale).toBe(
       [
         "linkinator found 2 broken link(s):",
-        "- https://a.test/gone -- HTTP 404 (linked from README.md)",
-        "- https://a.test/missing -- HTTP 500",
+        "- https://a.test/gone returned HTTP 404 (linked from README.md)",
+        "- https://a.test/missing returned HTTP 500",
       ].join("\n"),
     )
   })

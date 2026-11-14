@@ -23,8 +23,8 @@ function readWorkflows(root: string): ReadonlyMap<string, string> {
  * 10 for an FSF/OSI-approved license detected at the top level, 6 for any
  * LICENSE file present without that detection, 0 for neither. This repo's
  * `gh api repos/:repo` call already carries GitHub's own SPDX detection
- * (`license.spdx_id`), which is the same signal upstream's own License check
- * reads -- reusing it here rather than re-implementing SPDX matching by hand.
+ * (`license.spdx_id`). That is the same signal upstream's own License check
+ * reads, so this reuses it rather than re-implementing SPDX matching by hand.
  * @param root - Repository root.
  * @param spdxId - GitHub's own detected SPDX license id for this repository (`repos/:repo`'s `license.spdx_id`), or `undefined`/`null` if unknown.
  * @returns The License sub-check result.
@@ -64,8 +64,8 @@ export function evaluateLicense(
 /**
  * Upstream scoring: 10 for contact links plus free-form text plus
  * vulnerability-specific language (2+ mentions of "vuln"/"disclos"/a time
- * expectation), 6 for a valid email or https contact link present, 0 for no
- * security policy file at all.
+ * expectation). It gives 6 for a valid email or https contact link present,
+ * and 0 for no security policy file at all.
  * @param root - Repository root.
  * @returns The Security-Policy sub-check result.
  */
@@ -105,7 +105,7 @@ export function evaluateSecurityPolicy(root: string): ScorecardCheckResult {
 /**
  * Upstream scoring: 10 when every build/release dependency (workflow
  * actions, Docker base images, etc.) is pinned by hash; 0 when none are.
- * This evaluation covers GitHub Actions `uses:` references specifically --
+ * This evaluation covers GitHub Actions `uses:` references specifically:
  * repo-contract's own `.github/workflows/` is the only build/release
  * dependency surface it has (no Dockerfile, no shell-script `curl | bash`
  * installer).
@@ -129,10 +129,10 @@ export function evaluatePinnedDependencies(root: string): ScorecardCheckResult {
     for (const line of content.split("\n")) {
       // Optional leading "- " (a YAML sequence item, the common
       // `- uses: owner/action@ref` form) or plain "uses:" (a mapping value
-      // under an already-opened `- ` block) -- confirmed against this
-      // repository's own workflows, which use the sequence-item form
-      // exclusively; both are handled so a differently-formatted workflow
-      // elsewhere doesn't silently under-count.
+      // under an already-opened `- ` block). This repository's own workflows
+      // use the sequence-item form exclusively (confirmed). Both forms are
+      // handled so a differently-formatted workflow elsewhere doesn't
+      // silently under-count.
       const usesMatch = /^[\s-]*uses:\s*([\w./-]+)@(\S+)/.exec(line)
       if (!usesMatch) continue
       const ref = usesMatch[2] ?? ""
@@ -173,10 +173,10 @@ export function evaluatePinnedDependencies(root: string): ScorecardCheckResult {
 
 /**
  * Upstream scoring: 10 for a top-level read-only `permissions:` block with
- * write access granted only at the job level where actually needed; 9 for
- * job-level permissions defined without a top-level default; 0 for
- * unrestricted (write-all, i.e. no `permissions:` block at all, since the
- * GitHub Actions default for a repository is broad write access).
+ * write access granted only at the job level where actually needed. It gives
+ * 9 for job-level permissions defined without a top-level default. It gives
+ * 0 for unrestricted (write-all), i.e. no `permissions:` block at all,
+ * because the GitHub Actions default for a repository is broad write access.
  * @param root - Repository root.
  * @returns The Token-Permissions sub-check result.
  */
@@ -221,13 +221,13 @@ export function evaluateTokenPermissions(root: string): ScorecardCheckResult {
 
 /**
  * A real, but deliberately narrower, proxy for upstream's Dangerous-Workflow
- * check: flags the one pattern with a well-known, unambiguous signature --
- * an unescaped `${{ github.event.*.(body|title) }}` (or similar
- * attacker-controlled text) spliced directly into a `run:` shell block,
- * rather than passed through `env:` first. Upstream's own check additionally
+ * check. It flags the one pattern with a well-known, unambiguous signature.
+ * That pattern is an unescaped `${{ github.event.*.(body|title) }}` (or
+ * similar attacker-controlled text) spliced directly into a `run:` shell
+ * block, rather than passed through `env:` first. Upstream's own check also
  * covers `pull_request_target`-with-untrusted-checkout and self-hosted
- * runner patterns this evaluation does not attempt to detect -- see this
- * check's own README for why those are out of scope for a first version.
+ * runner patterns, which this evaluation does not attempt to detect. This
+ * check's own README explains why those are out of scope for a first version.
  * @param root - Repository root.
  * @returns The Dangerous-Workflow sub-check result.
  */
@@ -247,43 +247,42 @@ export function evaluateDangerousWorkflow(root: string): ScorecardCheckResult {
   for (const [file, content] of workflows) {
     const lines = content.split("\n")
     let inRunBlock = false
-    // The indentation of the `run:` key itself (its column, via `indexOf` --
-    // robust to an optional leading "- " sequence-item marker the same way
-    // `evaluatePinnedDependencies`'s identical `uses:` handling above is).
+    // The indentation of the `run:` key itself (its column, via `indexOf`).
+    // That handles an optional leading "- " sequence-item marker, as
+    // `evaluatePinnedDependencies`'s `uses:` handling above does.
     // A YAML block scalar's content is always indented deeper than its own
-    // key; the block ends at the first later non-blank line indented at or
-    // shallower than that column -- never merely "has fewer than 2 leading
-    // spaces", which every sibling key in a real workflow already satisfies
-    // and so never fires, previously leaving `inRunBlock` stuck `true` for
-    // the rest of the file (verified: this let a later, correctly
-    // `env:`-guarded context expression falsely flag as spliced into a
-    // `run:` block it had already closed).
+    // key. The block ends at the first later non-blank line indented at or
+    // shallower than that column. The old test, "has fewer than 2 leading
+    // spaces", never fired, because every sibling key in a real workflow
+    // has more. It left `inRunBlock` stuck `true` for the rest of the file.
+    // Verified: a later, correctly `env:`-guarded context expression was
+    // then falsely flagged as spliced into a `run:` block already closed.
     let runIndent = 0
     for (const [index, line] of lines.entries()) {
       if (inRunBlock && line.trim() !== "") {
         const contentIndent = line.length - line.trimStart().length
         if (contentIndent > runIndent) {
-          // Still inside the block scalar's own content -- scan it for a real splice, but
-          // never reinterpret this line as a new YAML key: a heredoc or `echo` in this very
-          // script that happens to contain the literal text "run: |" (e.g. this script
-          // printing example workflow YAML) must not reset `runIndent` or be mistaken for
-          // the block actually closing.
+          // Still inside the block scalar's own content. Scan it for a real splice, but
+          // never reinterpret this line as a new YAML key. A heredoc or `echo` in this very
+          // script may contain the literal text "run: |" (e.g. this script printing example
+          // workflow YAML). It must not reset `runIndent` or be mistaken for the block
+          // actually closing.
           const matches = line.match(injectionPattern)
           if (matches) {
             findings.push(
-              `${file}:${String(index + 1)}: attacker-influenced expression spliced directly into a run: block -- ${matches.join(", ")}`,
+              `${file}:${String(index + 1)}: attacker-influenced expression spliced directly into a run: block (${matches.join(", ")})`,
             )
           }
           continue
         }
         inRunBlock = false
       }
-      // Optional leading "- " -- same YAML sequence-item form as
-      // `evaluatePinnedDependencies`'s identical `uses:` handling above; a
-      // `- run: |` step (the multiline block form as the step's first key)
-      // is exactly as common in this repository's own workflows as the
-      // no-dash form (`run: |` as a later sibling key under an already-
-      // opened `- name: ...` step).
+      // Optional leading "- ": same YAML sequence-item form as
+      // `evaluatePinnedDependencies`'s identical `uses:` handling above.
+      // A `- run: |` step puts the multiline block form as the step's first
+      // key. This repository's own workflows use it as often as the no-dash
+      // form (`run: |` as a later sibling key under an already-opened
+      // `- name: ...` step).
       const runKeyMatch = /^[\s-]*run:\s*\|/.exec(line)
       if (runKeyMatch) {
         inRunBlock = true
@@ -295,7 +294,7 @@ export function evaluateDangerousWorkflow(root: string): ScorecardCheckResult {
       const matches = line.match(injectionPattern)
       if (matches) {
         findings.push(
-          `${file}:${String(index + 1)}: attacker-influenced expression spliced directly into a run: block -- ${matches.join(", ")}`,
+          `${file}:${String(index + 1)}: attacker-influenced expression spliced directly into a run: block (${matches.join(", ")})`,
         )
       }
     }
@@ -351,12 +350,12 @@ export function evaluateCiTests(root: string): ScorecardCheckResult {
 }
 
 /**
- * Not an upstream Scorecard check name verbatim (upstream's own "Packaging"
+ * Not an upstream Scorecard check name verbatim. Upstream's own "Packaging"
  * check verifies a project publishes to a package registry via a recognized
- * CI workflow, using its own build-file heuristics per language). This
+ * CI workflow, using its own build-file heuristics per language. This
  * evaluation covers the one fact repo-contract can assert about its own
- * package.json directly: it is not marked private, and its `files`/`main`
- * point at real build output.
+ * package.json directly: whether it is marked private. It does not inspect
+ * `files` or `main`.
  * @param root - Repository root.
  * @returns The Packaging sub-check result.
  */

@@ -20,7 +20,7 @@ export default defineRepoContract({
   checks: {
     // A real check would run `npm audit --json` here with `output: { format: "json" }` and parse
     // the report in the policy. This example hard-codes the advisory list in findings.ts so its
-    // output is deterministic, so the command itself just needs to succeed -- the decision comes
+    // output is deterministic, so the command itself just needs to succeed: the decision comes
     // entirely from findings.ts reconciled against exceptions.json.
     DependencyAdvisories: {
       run: ["node", "--version"],

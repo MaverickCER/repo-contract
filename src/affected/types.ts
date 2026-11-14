@@ -1,6 +1,6 @@
 import type * as TypeScript from "typescript"
 
-/** The TypeScript compiler API, supplied by the caller -- this package never imports `typescript` at runtime. */
+/** The TypeScript compiler API, supplied by the caller: this package never imports `typescript` at runtime. */
 export type TypeScriptApi = typeof TypeScript
 
 /** How one path differs between the base and the working tree. */

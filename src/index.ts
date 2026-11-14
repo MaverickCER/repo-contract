@@ -1,9 +1,11 @@
 /**
- * Public API of repo-contract. Curated barrel -- internal implementation
- * modules (src/execution/, src/parsing/, src/policy/, src/config/'s
- * lower-level pieces) are not re-exported here even though they exist as
- * real files; only the two functions and the types a consumer needs to
- * author a config and interpret its result are part of the public surface.
+ * repo-contract's core: write a repository's quality rules as one typed contract, run it, and read
+ * the result. `defineRepoContract` types the config, `runRepoContract` runs every check and its
+ * policy, and `serializeRun` and `renderMarkdownSummary` turn the result into JSON or Markdown.
+ * The `Evidence`, `Verdict` and `Policy` types and the error classes complete the surface.
+ *
+ * Execution, parsing and policy internals (src/execution/, src/parsing/, src/policy/) stay
+ * unexported, so they can change without a breaking release.
  * @packageDocumentation
  */
 

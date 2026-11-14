@@ -1,24 +1,32 @@
 // Fixed, hand-maintained table from each published preset (src/presets/index.ts) to the npm
-// dependency its underlying CLI needs -- taken from GUIDE.md's own preset table. Deliberately not
-// derived from metadata added to the preset modules themselves -- see
-// specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md's 2026-09-09
-// amendment, "Alternatives considered (amendment)": that would mean changing already-published
-// preset modules for the sake of a scaffolding helper.
+// dependency its underlying CLI needs. It is taken from GUIDE.md's own preset table. It is not
+// derived from metadata added to the preset modules themselves. That would change
+// already-published preset modules for the sake of a scaffolding helper. See the 2026-09-09
+// amendment of specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md,
+// "Alternatives considered (amendment)".
 //
-// test/unit/bin/preset-catalog.test.ts proves these *names* match src/presets/index.ts's exports
-// -- it cannot prove each dependency mapping below is itself correct. That's a known, accepted
-// limit of a hand-maintained table, stated here rather than assumed away.
+// test/unit/bin/preset-catalog.test.ts proves these *names* match src/presets/index.ts's exports.
+// test/unit/docs/guide-presets.test.ts proves each mapping, and FACTORY_PRESETS, match GUIDE.md's
+// table. Neither proves a mapping names the package that really ships the preset's CLI. That is
+// the accepted limit of a hand-maintained table.
 //
-// `distNoUrls` maps to `DIST_OUTPUT`, a pseudo-dependency: it needs no CLI at all, only a package that
-// actually publishes a built `dist/`, so `detectPresets` detects it from package.json's own
+// `distNoUrls` maps to `DIST_OUTPUT`, a pseudo-dependency. It needs no CLI at all, only a package
+// that publishes a built `dist/`. So `detectPresets` detects it from package.json's own
 // `main`/`module`/`types`/`files`/`exports` instead of from `devDependencies`.
 //
-// `securityDeps` maps to `null`, not a real npm package name: it shells out to `npm` itself (see
-// GUIDE.md's preset table), which is always present because this script is already running via
-// `npx`/`npm exec`. It goes through the exact same detection loop as every other preset below,
-// with an always-true answer -- not a separate branch elsewhere.
-/** The pseudo-dependency `distNoUrls` maps to -- see the comment above. */
+// `securityDeps` maps to `null`, not a real npm package name. It shells out to `npm` itself (see
+// GUIDE.md's preset table). `npm` is always present, because this script already runs via
+// `npx`/`npm exec`. It goes through the same detection loop as every other preset below, with an
+// always-true answer, not a separate branch elsewhere.
+//
+// `aiReview` maps to `AGENT_COMMAND`, a pseudo-dependency that is never detected. The preset runs
+// the agent a consumer names in its required `agent` option, so `init` has no command to write for
+// it. It is listed under "Not detected" with a pointer to GUIDE.md instead.
+/** The pseudo-dependency `distNoUrls` maps to: see the comment above. */
 export const DIST_OUTPUT = "dist/"
+
+/** The pseudo-dependency `aiReview` maps to: see the comment above. */
+export const AGENT_COMMAND = "agent command"
 
 export const PRESET_DEPENDENCIES = {
   test: "vitest",
@@ -38,9 +46,10 @@ export const PRESET_DEPENDENCIES = {
   commitlint: "@commitlint/cli",
   publint: "publint",
   arethetypeswrong: "@arethetypeswrong/cli",
+  aiReview: AGENT_COMMAND,
 }
 
-// Presets published as factories (`lint(options?)`, `deadCode(options?)`, ...) -- the generated
+// Presets published as factories (`lint(options?)`, `deadCode(options?)`, ...): the generated
 // config must call these, not spread them bare, to match how GUIDE.md documents each one.
 export const FACTORY_PRESETS = new Set([
   "lint",
@@ -51,6 +60,7 @@ export const FACTORY_PRESETS = new Set([
   "brokenLinks",
   "commitlint",
   "distNoUrls",
+  "aiReview",
 ])
 
 /**
@@ -84,7 +94,7 @@ function publishesDist(packageJson) {
 
 /**
  * Detects which presets' underlying CLIs are already declared in a consumer's package.json.
- * Checks `devDependencies` only -- every published preset's own documentation (GUIDE.md's
+ * Checks `devDependencies` only: every published preset's own documentation (GUIDE.md's
  * presets table) already states its CLI "is already a devDependency of your repository"; a
  * production `dependencies` entry is not the documented, expected place to declare one.
  * @param packageJson - Parsed package.json content.
@@ -100,7 +110,9 @@ export function detectPresets(packageJson) {
   for (const [preset, dependency] of Object.entries(PRESET_DEPENDENCIES)) {
     const present =
       dependency === null ||
-      (dependency === DIST_OUTPUT ? publishesDist(packageJson) : declared.has(dependency))
+      (dependency === DIST_OUTPUT
+        ? publishesDist(packageJson)
+        : dependency !== AGENT_COMMAND && declared.has(dependency))
     if (present) {
       detected.push(preset)
     } else {

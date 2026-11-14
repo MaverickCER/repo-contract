@@ -2,13 +2,13 @@
 //
 //   npm run adr:new "the decision, stated as a sentence"
 //
-// Computes the next number (highest existing + 1 -- a reserved-then-abandoned
-// number is never reused, so gaps are left alone), writes
-// specs/decisions/NNNN-kebab-title.md with the five section headings
+// Computes the next number as the highest existing + 1. A
+// reserved-then-abandoned number is never reused, so gaps are left alone.
+// Writes specs/decisions/NNNN-kebab-title.md with the five section headings
 // scripts/check-adr-structure.mjs requires, and prints the path. Refuses to
 // overwrite an existing file.
 //
-// The template lives here as a string, not as a file under specs/decisions/ --
+// The template lives here as a string, not as a file under specs/decisions/:
 // check-adr-structure.mjs flags any file there that isn't NNNN-kebab-title.md.
 
 import { readdir, writeFile } from "node:fs/promises"

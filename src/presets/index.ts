@@ -1,17 +1,17 @@
 /**
- * Curated, growing catalog of preset checks for tools common across
- * TypeScript/JavaScript repositories -- each preset encodes how to execute
- * and interpret a common tool, never a repository's definition of quality
- * (see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). Import a preset,
- * spread it into your own `checks` record, and override whatever you need
- * -- most often `policy`; a factory preset's options are the preferred way
- * to change what it executes, a direct `run` override is an escape hatch.
- * Never re-exported from the package root (`src/index.ts`) -- presets are
- * an opt-in extra, not part of the core execution/evidence/policy surface
- * those exports describe, and this barrel never re-exports anything from
- * there either; the two stay independent.
+ * Ready-made checks for common TypeScript and JavaScript tools. Spread a preset into your own
+ * `checks` record and override what you need, most often `policy`.
+ *
+ * A preset encodes how to run and read one tool, never what counts as good enough
+ * (specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). To change
+ * what a factory preset runs, pass it options; overriding `run` directly is the escape hatch.
+ *
+ * Experimental, and published under its own `./presets` subpath. It is never re-exported from the
+ * package root, and it re-exports nothing from there.
  * @packageDocumentation
  */
+export { aiReview } from "./ai-review.js"
+export type { AiReviewFinding, AiReviewOptions, AiReviewReply } from "./ai-review.js"
 export { arethetypeswrong } from "./arethetypeswrong.js"
 export { brokenLinks } from "./broken-links.js"
 export { commitlint } from "./commitlint.js"

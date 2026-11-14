@@ -1,6 +1,6 @@
 // Installs the packed tarball with each package manager a consumer may use and imports every entry
-// point from it, both as ESM and as CommonJS. What is proven is exactly that: the tarball installs
-// and resolves under npm, pnpm, Yarn 1 and Yarn Berry (node-modules linker); nothing else about
+// point from it, both as ESM and as CommonJS. What is proven is exactly that. The tarball installs
+// and resolves under npm, pnpm, Yarn 1 and Yarn Berry (node-modules linker). Nothing else about
 // those managers is claimed. Yarn Plug'n'Play and pnpm without hoisting are not covered.
 //
 // Usage: node scripts/package-managers-smoke.mjs [npm|pnpm|yarn1|yarn-berry ...]
@@ -41,8 +41,8 @@ function run(command, args, cwd, env = {}) {
   return result.stdout
 }
 
-// An entry such as an ESLint plugin needs the package's peer dependencies to load, so the consumer
-// installs them too, at the ranges the package declares -- as a real consumer of that entry would.
+// An entry such as an ESLint plugin needs the package's peer dependencies to load. The consumer
+// installs them too, at the ranges the package declares, as a real consumer of that entry would.
 const peers = Object.entries(manifest.peerDependencies ?? {}).map(
   ([peer, range]) => `${peer}@${range}`,
 )

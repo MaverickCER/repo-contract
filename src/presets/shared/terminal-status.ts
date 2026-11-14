@@ -3,18 +3,18 @@ import { combinedOutput } from "./exit-code-fail-rationale.js"
 
 /**
  * The guard every preset needs immediately after `checkDependencyInstalled`
- * and before its own pass/fail logic: a check whose process did not run to a
- * normal exit on its own -- it timed out, was aborted via `options.signal`,
- * was killed by a host `SIGINT`/`SIGTERM`, received an external signal, or
- * failed to spawn for a reason other than a missing executable -- has a
- * `null` `exitCode` and only whatever partial output the tool managed before
- * termination. Interpreting that with an exit-code comparison or a JSON
+ * and before its own pass/fail logic. It catches a process that did not run to
+ * a normal exit on its own. It timed out, was aborted via `options.signal`,
+ * was killed by a host `SIGINT`/`SIGTERM`, or received an external signal. Or
+ * it failed to spawn for a reason other than a missing executable. Such a check
+ * has a `null` `exitCode` and only whatever partial output the tool managed
+ * before termination. Interpreting that with an exit-code comparison or a JSON
  * parse would present an operational failure to the consumer as a fabricated
  * tool-specific verdict ("TypeScript reported type errors (exit code null)",
  * "ESLint output could not be parsed as JSON"). This reports the real
  * terminal cause instead.
  *
- * `"completed"` returns `undefined` -- the process reached its own exit and
+ * `"completed"` returns `undefined`: the process reached its own exit and
  * the preset interprets the (possibly non-zero) exit code itself. The
  * ENOENT `"spawn_error"` case is already handled by `checkDependencyInstalled`;
  * this catches the remaining spawn failures (`EACCES`, `ENOEXEC`) that

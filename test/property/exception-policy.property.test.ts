@@ -19,9 +19,9 @@ import type {
  * (specs/decisions/0006-suppression-governance.md), versus the real, finding-centric
  * `evaluateFinding` (which delegates to `repo-contract/helpers`'s classification-neutral
  * `evaluateExceptionRecord`/`resolveExceptionPolicy`). `verdict` must be identical for every
- * generated input; `missing` must be identical as a SET (its wire ORDER is allowed to differ --
- * the frozen impl canonicalizes via a fixed `REQUIREMENT_ORDER`; the generic core deliberately
- * has no such closed vocabulary; no consumer-facing contract ever promised a `missing` order).
+ * generated input. `missing` must be identical as a SET, but its wire ORDER may differ. The frozen
+ * impl canonicalizes via a fixed `REQUIREMENT_ORDER`. The generic core deliberately has no such
+ * closed vocabulary. No consumer-facing contract ever promised a `missing` order.
  *
  * This proves the precedence rules survive the exception-registry unification
  * (specs/decisions/0013's "The exception registry is the review surface" amendment) intact,
@@ -57,8 +57,8 @@ function frozenStricterOf(a: SuppressionPolicy, b: SuppressionPolicy): Suppressi
 }
 
 /**
- * Independent oracle for the only glob shapes `RULE_PATTERNS` generates -- a literal, `prefix/*`
- * (one more segment) and `prefix/**` (any depth) -- deliberately NOT sharing code with
+ * Independent oracle for the only glob shapes `RULE_PATTERNS` generates (a literal, `prefix/*`
+ * (one more segment) and `prefix/**` (any depth)) deliberately NOT sharing code with
  * `src/helpers/glob-match.ts`, so a bug there cannot hide behind itself.
  */
 function frozenGlobMatch(rule: string, pattern: string): boolean {
@@ -207,7 +207,7 @@ const pairArbitrary: fc.Arbitrary<GeneratedPair> = fc
     }
   })
 
-describe("evaluateFinding -- differential property vs. a frozen precedence re-implementation", () => {
+describe("evaluateFinding: differential property vs. a frozen precedence re-implementation", () => {
   it("agrees on verdict, and on missing as a set, for every generated (policyConfig, finding) pair", () => {
     fc.assert(
       fc.property(policyConfigArbitrary, pairArbitrary, (policyConfig, { finding, record }) => {

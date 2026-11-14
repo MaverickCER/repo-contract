@@ -139,7 +139,7 @@ describe("repo-contract affected (real git, real TypeScript)", () => {
     expect(status).toBe(0)
     expect(stdout).toBe("test/b.test.ts\ntest/other.test.ts\n")
     expect(stderr).toBe(
-      "repo-contract affected: running everything (git-failed: merge-base -- no base to compare against)\n",
+      "repo-contract affected: running everything (git-failed: merge-base, no base to compare against)\n",
     )
   })
 

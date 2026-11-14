@@ -2,7 +2,7 @@
 // orchestration). How to read and write one: ../READING-BENCHMARKS.md and ../WRITING-BENCHMARKS.md.
 //
 // This benchmarks the package's OWN source (`src/`) through tsx, the same way a unit test reaches into
-// its repository -- it is not a model for how an external consumer imports repo-contract.
+// its repository: it is not a model for how an external consumer imports repo-contract.
 
 import { spawn } from "node:child_process"
 import { defineSuite } from "internal-package-contract/benchmark"

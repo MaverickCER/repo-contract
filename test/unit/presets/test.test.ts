@@ -3,11 +3,11 @@ import { test as testPreset } from "../../../src/presets/test.js"
 import { enoentEvidence, fakeContext, fakeCheckEvidence } from "./fixtures.js"
 
 // `test`'s policy reads reports/vitest/vitest-report.json from a hardcoded
-// relative path (no injectable cwd) -- same constraint duplication.test.ts
-// documents for jscpd's report: this repository's own `test` check reads/
-// writes that exact real path as part of `npm run contract`, which runs
-// concurrently with this test suite, so real file I/O here would race the
-// genuine check. Mocking `node:fs/promises` avoids that collision.
+// relative path (no injectable cwd). duplication.test.ts documents the same
+// constraint for jscpd's report. This repository's `test` check reads and
+// writes that path during `npm run contract`, which runs concurrently with
+// this test suite. File I/O here would race the check. Mocking
+// `node:fs/promises` avoids that collision.
 const { readFile } = vi.hoisted(() => ({ readFile: vi.fn() }))
 vi.mock("node:fs/promises", () => ({ readFile }))
 

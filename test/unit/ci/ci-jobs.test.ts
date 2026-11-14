@@ -68,9 +68,10 @@ describe("ci.yml: the `required` aggregator stands for every gate job", () => {
     expect(auditCiJobs(workflowText, ciJobsOptions(manifest))).toEqual([])
   })
 
-  it("keeps `lint` and `contract` as direct required checks too", () => {
+  it("keeps `lint`, `contract` and `required`, the jobs the ruleset names", () => {
     expect(workflow.jobs.lint).toBeDefined()
     expect(workflow.jobs.contract).toBeDefined()
+    expect(workflow.jobs.required).toBeDefined()
   })
 
   it("lets only the informational Node-current job continue on error", () => {
@@ -80,11 +81,15 @@ describe("ci.yml: the `required` aggregator stands for every gate job", () => {
     }
   })
 
-  it("makes `contract` fail, not skip, when verify or lint fails", () => {
+  it("makes `contract` fail, not skip, when benchmark-pr, verify or lint fails", () => {
     const contract = workflow.jobs.contract
-    expect(contract?.if).not.toMatch(/needs\.verify|needs\.lint/)
-    const guard = contract?.steps?.find((step) => step.name === "verify and lint passed")
+    expect(contract?.if).toBe("always()")
+    const guard = contract?.steps?.[0]
+    expect(guard?.name).toBe("benchmark-pr, verify and lint passed")
     expect(guard?.if).toContain("needs.verify.result != 'success'")
     expect(guard?.if).toContain("needs.lint.result != 'success'")
+    expect(guard?.if).toContain(
+      "(needs.benchmark-pr.result != 'success' && needs.benchmark-pr.result != 'skipped')",
+    )
   })
 })

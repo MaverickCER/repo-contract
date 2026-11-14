@@ -1,15 +1,15 @@
 // Reads the already-aggregated coverage-summary.json and reports it against
 // scripts/coverage-thresholds.mjs. Never re-aggregates (see
-// scripts/aggregate-coverage.mjs) and never executes tests -- it assumes
+// scripts/aggregate-coverage.mjs) and never executes tests: it assumes
 // coverage/aggregate/coverage-summary.json already exists.
 //
 // Report-only: prints each metric's actual percentage against the
 // threshold, annotated OK/BELOW THRESHOLD, but never fails the process over
-// it -- that judgment belongs to repo-contract's own `coverage` check
-// (which evaluates the same aggregate through its policy instead -- see
+// it. That judgment belongs to repo-contract's own `coverage` check, which
+// evaluates the same aggregate through its policy instead (see
 // repo-contract.config.ts). The one thing this script does still fail on is
-// a genuine precondition problem: the summary file not existing at all,
-// which means there is nothing to report.
+// a genuine precondition problem. That is the summary file not existing at
+// all, which means there is nothing to report.
 
 import { readFileSync } from "node:fs"
 import path from "node:path"
@@ -34,7 +34,7 @@ export function reportCoverage() {
 
   const summary = JSON.parse(summaryText)
   // A malformed summary with no `total` still gets reported metric-by-metric as
-  // "missing or invalid" below -- this script only ever *fails* on the summary
+  // "missing or invalid" below. This script only ever *fails* on the summary
   // file being absent, never on its contents.
   const total = summary.total ?? {}
 

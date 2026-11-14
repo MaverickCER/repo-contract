@@ -193,7 +193,7 @@ describe("generateSbom", () => {
   })
 })
 
-describe("generateSbom -- the production inventory", () => {
+describe("generateSbom: the production inventory", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mkdir.mockResolvedValue(undefined)
@@ -243,7 +243,7 @@ describe("generateSbom -- the production inventory", () => {
   })
 })
 
-describe("generateSbom -- the root component's own package metadata", () => {
+describe("generateSbom: the root component's own package metadata", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mkdir.mockResolvedValue(undefined)

@@ -11,12 +11,12 @@ import type { CheckDefinitionConfig } from "../src/types.js"
 type StrykerMutantStatus =
   "Killed" | "Survived" | "NoCoverage" | "RuntimeError" | "Timeout" | "CompileError" | "Ignored"
 
-// Checked via Set membership rather than chained `!==` comparisons: the
-// latter narrows StrykerMutantStatus down to a single remaining literal,
+// Checked via Set membership rather than chained `!==` comparisons. Chained
+// comparisons narrow StrykerMutantStatus down to a single remaining literal,
 // which `no-unnecessary-condition` then (rightly, by the type) flags as
-// always false -- but the type only reflects what the JSON schema promises,
-// not what untrusted report JSON actually contains, so the defensive check
-// still needs to run at runtime.
+// always false. The type only reflects what the JSON schema promises, not
+// what untrusted report JSON contains, so the defensive check still needs to
+// run at runtime.
 const KNOWN_MUTANT_STATUSES: ReadonlySet<StrykerMutantStatus> = new Set([
   "Killed",
   "Survived",
@@ -30,11 +30,11 @@ const KNOWN_MUTANT_STATUSES: ReadonlySet<StrykerMutantStatus> = new Set([
 /**
  * Takes `unknown`, not `StrykerReport["files"]`, for the same reason KNOWN_MUTANT_STATUSES is
  * checked via Set membership rather than a chained `!==`/`===` comparison (see that constant's own
- * comment): narrowing a value already typed as `Record<string, StrykerFileResult>` would make
- * `no-unnecessary-condition` (rightly, by the type) flag this as always true -- but that type only
- * reflects what the JSON schema promises, not what untrusted report JSON actually contains, so the
- * runtime check still needs to run. Widening the parameter to `unknown` here is what lets that
- * check exist at all without fighting the linter.
+ * comment). Narrowing a value already typed as `Record<string, StrykerFileResult>` would make
+ * `no-unnecessary-condition` (rightly, by the type) flag this as always true. That type only
+ * reflects what the JSON schema promises, not what untrusted report JSON contains, so the
+ * runtime check still needs to run. Widening the parameter to `unknown` lets that check exist
+ * without fighting the linter.
  * @param value - The value to check.
  * @returns True if `value` is a non-null, non-array plain object.
  */
@@ -44,7 +44,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 /**
  * The original (pre-mutation) source line a mutant's `location.start.line`
- * points at, trimmed of leading/trailing whitespace for display -- or
+ * points at, trimmed of leading/trailing whitespace for display. Returns
  * `undefined` if `source` doesn't have that many lines (a stale/mismatched
  * report entry this pass declines to guess at). 1-indexed, matching every
  * other line number this policy already reports.
@@ -64,14 +64,14 @@ function originalLineAt(source: string, line: number): string | undefined {
 // directive-bookkeeper.ts). A comment-ignored mutant is trusted only because
 // this check independently cross-checks the same directives against
 // suppression-governance's own registry (`disable-comments.json`, read via
-// `dependencies["suppression-governance"]` below) -- not merely because this
-// repository's require-stryker-rationale ESLint rule already requires *some*
-// adjacent reason text at authoring time. That rule still matters (it's what
-// guarantees a `reason` exists at all for
-// scripts/suppression-governance/recognizers.ts to mechanically capture),
-// but the registry cross-check below -- requiring every Stryker-domain
-// record to also carry justification/alternatives/remediation -- is what
-// this policy actually relies on. See
+// `dependencies["suppression-governance"]` below). It is not trusted merely
+// because this repository's require-stryker-rationale ESLint rule requires
+// *some* adjacent reason text at authoring time. That rule still matters:
+// it guarantees a `reason` exists for
+// scripts/suppression-governance/recognizers.ts to mechanically capture.
+// This policy relies on the registry cross-check below, which requires every
+// Stryker-domain record to also carry justification/alternatives/remediation.
+// See
 // specs/decisions/0006-suppression-governance.md. An Ignored
 // mutant with any statusReason other than this one or STATIC_IGNORE_REASON
 // (e.g. a `mutator.excludedMutations` exclusion) bypasses both gates
@@ -82,10 +82,11 @@ const COMMENT_IGNORE_REASON = "Ignored using a comment"
 // stryker.config.mjs sets `ignoreStatic: true` (see
 // @stryker-mutator/core's mutant-test-planner.ts). Unlike a comment-ignored
 // mutant, this one carries no hand-authored justification and does not go
-// through the suppression-governance registry -- it is a single, config-level
-// decision, documented in stryker.config.mjs's own `ignoreStatic` comment,
-// that load-time-constant expressions are out of scope for this run because
-// "perTest" coverage analysis cannot attribute them to a covering test.
+// through the suppression-governance registry. It rests on a single,
+// config-level decision, documented in stryker.config.mjs's own
+// `ignoreStatic` comment. That decision puts load-time-constant expressions
+// out of scope for this run, because "perTest" coverage analysis cannot
+// attribute them to a covering test.
 // Accepted as detected-equivalent (it is not a test gap this run can act on),
 // but tracked separately so it can never be confused with a comment-ignored
 // mutant that skipped the registry gate.
@@ -104,8 +105,8 @@ interface StrykerLocation {
 interface StrykerMutantResult {
   readonly id: number
   // Optional rather than required: every mutant in practice carries a
-  // location, but this describes untrusted tool JSON (see the `as
-  // StrykerReport` cast below), not a value this package itself produced --
+  // location. This type describes untrusted tool JSON (see the `as
+  // StrykerReport` cast below), not a value this package itself produced.
   // formatMutant's fallback stays meaningful only if the type admits the
   // absence it defends against.
   readonly location?: StrykerLocation
@@ -139,32 +140,30 @@ interface StrykerReport {
 }
 
 // Stryker's JSON reporter (configured via stryker.config.mjs's
-// jsonReporter.fileName) writes the report to disk -- it never prints JSON
+// jsonReporter.fileName) writes the report to disk: it never prints JSON
 // to stdout, which instead carries Stryker's own colored progress log. The
 // report is therefore read from disk directly, matching the
 // security-secrets check's own file-based pattern.
 //
 // This check combines two independent, deliberately-separated mechanisms.
-// `isolated: true` below is pure scheduling: Stryker spawns its own
-// concurrent worker processes internally, and running it alongside this
+// `isolated: true` below is pure scheduling. Stryker spawns its own
+// concurrent worker processes internally. Running it alongside this
 // repository's own full concurrent test suite starves timing margins
-// elsewhere under heavy load -- a real, observed flake in
-// run-checks.test.ts's SIGINT-cleanup test, caused by resource contention
-// rather than a logic bug. Letting `mutation` run last, only once every
-// non-isolated check has settled, removes that contention; it says nothing
-// about needing any other check's evidence (see
-// specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md
-// -- a second isolated check, e.g. `build`, is free to run concurrently
-// with this one; only non-isolated checks are guaranteed to have already
-// finished -- against another isolated check, e.g. `build`, the guarantee is actually stronger:
-// an isolated check is a full barrier at its own declared position, waiting on every earlier check
-// including other isolated ones, so two isolated checks in the same run are always sequential
-// relative to each other, never concurrent). Separately,
-// repo-contract.config.ts's `dependsOn: ["suppression-governance"]` *is* a
-// genuine evidence dependency: this policy actually reads that check's
-// evidence (`dependencies["suppression-governance"]` below) to verify every
-// Stryker-domain suppression in the registry before trusting any
-// comment-ignored mutant (see
+// elsewhere under heavy load. That caused a real, observed flake in
+// run-checks.test.ts's SIGINT-cleanup test, from resource contention
+// rather than a logic bug. An isolated check is a full barrier at its own
+// declared position: it waits on every earlier check, including other
+// isolated ones such as `build`, and every later check waits on it. Nothing
+// else therefore runs alongside `mutation`, which removes that contention.
+// Two isolated checks in the same run are always sequential, never
+// concurrent. None of this says the check needs any other check's evidence
+// (see specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md).
+// Separately, repo-contract.config.ts's
+// `dependsOn: ["suppression-governance"]` *is* a genuine evidence dependency.
+// This policy reads that check's evidence
+// (`dependencies["suppression-governance"]` below). It uses that evidence to
+// verify every Stryker-domain suppression in the registry before trusting
+// any comment-ignored mutant (see
 // specs/decisions/0006-suppression-governance.md).
 export const mutation: CheckDefinitionConfig = {
   run: ["node", "scripts/run-mutation.mjs"],
@@ -179,11 +178,11 @@ export const mutation: CheckDefinitionConfig = {
     const report = parsed.value
 
     // `report` is only cast, not validated, from untrusted tool JSON (same caveat as
-    // KNOWN_MUTANT_STATUSES's own comment above) -- `report.files` specifically is checked here,
-    // not just trusted via the type, because `Object.entries` on anything other than a plain
-    // object (missing entirely, `null`, an array, or some other JSON shape from a Stryker reporter
-    // change or a truncated write) throws a raw TypeError instead of the clean fail-rationale this
-    // check already gives the JSON-parse failure above.
+    // KNOWN_MUTANT_STATUSES's own comment above). `report.files` is checked here rather than
+    // trusted via the type. `Object.entries` on anything other than a plain object throws a raw
+    // TypeError. That covers a missing value, `null`, an array, or another JSON shape from a
+    // Stryker reporter change or a truncated write. The check instead returns the same clean
+    // fail-rationale it gives the JSON-parse failure above.
     if (!isPlainObject(report.files)) {
       return {
         outcome: "fail",
@@ -191,10 +190,10 @@ export const mutation: CheckDefinitionConfig = {
       }
     }
 
-    // Each per-file entry is likewise untrusted: a truncated write or a
+    // Each per-file entry is likewise untrusted. A truncated write or a
     // reporter-format change can make one `null` or an object without a
-    // `mutants` array, and `data.mutants.map` would then throw out of the
-    // policy instead of returning the clean fail this check produces for the
+    // `mutants` array. `data.mutants.map` would then throw out of the policy.
+    // This guard returns the same clean fail this check produces for the
     // sibling malformed-`files` case just above.
     const malformedFile = Object.entries(report.files).find(
       ([, data]) => !isPlainObject(data) || !Array.isArray(data.mutants),
@@ -215,11 +214,10 @@ export const mutation: CheckDefinitionConfig = {
     )
 
     // Stryker's own JSON report already carries each mutated file's real,
-    // original (pre-mutation) source text -- reading it back out here to
-    // show a survived mutant's actual "was X, replaced with Y" line, instead
-    // of only the replacement in isolation, needs no second, separate file
-    // read and no re-derivation: it's the same captured evidence this policy
-    // already trusts for everything else.
+    // original (pre-mutation) source text. Reading it here shows a survived
+    // mutant's actual "was X, replaced with Y" line, not only the replacement
+    // in isolation. This needs no second file read and no re-derivation. It
+    // is the same captured evidence this policy trusts for everything else.
     const originalSourceByFile = new Map(
       Object.entries(report.files).map(([file, data]) => [file, data.source]),
     )
@@ -283,15 +281,15 @@ export const mutation: CheckDefinitionConfig = {
     const unknown = mutants.filter(({ mutant }) => !KNOWN_MUTANT_STATUSES.has(mutant.status))
 
     // Only relevant when at least one mutant is trusted purely on the
-    // strength of a `// Stryker disable` comment -- nothing to verify
-    // otherwise. Matching is deliberately a *global* gate over every
-    // Stryker-domain registry record, not a per-mutant lookup: Stryker's own
+    // strength of a `// Stryker disable` comment; otherwise there is nothing
+    // to verify. Matching is deliberately a *global* gate over every
+    // Stryker-domain registry record, not a per-mutant lookup. Stryker's own
     // report exposes no back-reference from a mutant to the specific
-    // disable-comment that ignored it, and a single block-form directive
+    // disable-comment that ignored it. A single block-form directive
     // (`// Stryker disable BlockStatement,CallExpression`) can cover many
-    // subsequent lines/mutants until a matching `Stryker restore`, while
-    // `disable-comments.json` only records the directive's own line -- so
-    // there is no reliable line-based way to attribute one mutant to one
+    // subsequent lines/mutants until a matching `Stryker restore`.
+    // `disable-comments.json` only records the directive's own line. There
+    // is therefore no reliable line-based way to attribute one mutant to one
     // record. See specs/decisions/0006-suppression-governance.md.
     const strykerSuppressionGateFailure:
       { header: string; details: readonly string[] } | undefined =
@@ -357,9 +355,9 @@ export const mutation: CheckDefinitionConfig = {
     // unjustified Ignored mutants each fail the check outright, and so does
     // any status this policy doesn't recognize. A comment-ignored mutant is
     // accepted only once the Stryker suppression gate above finds nothing to
-    // object to; a static mutant skipped by the config-level `ignoreStatic`
-    // option (staticIgnored) is accepted outright and excluded from
-    // `applicableMutants` entirely, the same as a comment-ignored one.
+    // object to. A static mutant skipped by the config-level `ignoreStatic`
+    // option (staticIgnored) is accepted outright. Like a comment-ignored
+    // one, it is excluded from `applicableMutants` entirely.
     const passed =
       survived.length === 0 &&
       noCoverage.length === 0 &&
@@ -388,7 +386,7 @@ export const mutation: CheckDefinitionConfig = {
           ? `${mutant.mutatorName}: \`${original}\` → \`${mutant.replacement}\``
           : `${mutant.mutatorName}: ${mutant.replacement}`
 
-      return `${location} — ${change}`
+      return `${location} (${change})`
     }
 
     const passingBreakdown = [
@@ -415,7 +413,7 @@ export const mutation: CheckDefinitionConfig = {
 
     if (survived.length > 0) {
       sections.push(
-        `Survived (${String(survived.length)}) -- every test still passed against the mutated ` +
+        `Survived (${String(survived.length)}): every test still passed against the mutated ` +
           `code shown ("was" → "became"); add or strengthen a test that exercises this exact ` +
           `line and would fail against the change shown:`,
         ...survived.map(({ file, mutant }) => `- ${formatMutant({ file, mutant })}`),
@@ -424,7 +422,7 @@ export const mutation: CheckDefinitionConfig = {
 
     if (noCoverage.length > 0) {
       sections.push(
-        `No coverage (${String(noCoverage.length)}) -- no test ran this line at all; add a ` +
+        `No coverage (${String(noCoverage.length)}): no test ran this line at all; add a ` +
           `test that executes this code path, then re-run to see whether it also kills the ` +
           `mutation shown:`,
         ...noCoverage.map(({ file, mutant }) => `- ${formatMutant({ file, mutant })}`),
@@ -433,7 +431,7 @@ export const mutation: CheckDefinitionConfig = {
 
     if (timedOut.length > 0) {
       sections.push(
-        `Timed out (${String(timedOut.length)}) -- the mutated version shown ran past the ` +
+        `Timed out (${String(timedOut.length)}): the mutated version shown ran past the ` +
           `configured timeout (often an infinite loop this change introduced); add a test that ` +
           `would fail fast against it, or confirm this specific timeout is itself a legitimate ` +
           `detection (see stryker.config.mjs):`,

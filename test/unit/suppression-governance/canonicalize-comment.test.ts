@@ -35,7 +35,7 @@ describe("canonicalizeComment", () => {
     const compact = "/* eslint-disable no-console */"
     const expanded = ["/* eslint-disable no-console", " *", " */"].join("\n")
 
-    // The trailing "*" line carries no semantic content -- it's decoration only.
+    // The trailing "*" line carries no semantic content: it's decoration only.
     expect(canonicalizeComment(expanded, "multi")).toBe(canonicalizeComment(compact, "multi"))
     expect(canonicalizeComment(compact, "multi")).toBe("eslint-disable no-console")
   })

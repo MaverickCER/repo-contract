@@ -2,29 +2,31 @@ import { readdir } from "node:fs/promises"
 import path from "node:path"
 
 /**
- * Directories this check never walks into, regardless of depth -- build output, tool scratch
+ * Directories this check never walks into, regardless of depth: build output, tool scratch
  * space, VCS internals, and non-source data. This is suppression-governance's own explicit
- * decision, not inherited from eslint.config.js/.gitignore/.jscpd.json -- each of those excludes
- * things for its own, differently-scoped reason, and treating their union as "the" source
- * universe would be an implicit, undocumented dependency on three unrelated tools staying in
- * sync. See specs/decisions/0006-suppression-governance.md.
+ * decision, not inherited from eslint.config.js/.gitignore/.jscpd.json. Each of those excludes
+ * things for its own, differently-scoped reason. Treating their union as "the" source universe
+ * would be an implicit, undocumented dependency on three unrelated tools staying in sync. See
+ * specs/decisions/0006-suppression-governance.md.
  */
 export const EXCLUDED_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
-  "node_modules", // third-party code, never this repository's own source
-  "dist", // build output, not hand-written source
-  "coverage", // generated coverage reports
-  "reports", // generated tool reports (jscpd, secretlint, mutation, ...)
-  // Stryker's own scratch copy of the whole tree -- scanning it would double-count every
+  "node_modules", // Third-party code, never this repository's own source.
+  "dist", // Build output, not hand-written source.
+  "coverage", // Generated coverage reports.
+  "reports", // Generated tool reports (jscpd, secretlint, mutation, ...).
+  // Stryker's own scratch copy of the whole tree: scanning it would double-count every
   // suppression once per active mutation-testing sandbox.
   ".stryker-tmp",
-  ".git", // VCS internals
-  ".repo-contract", // api-contract snapshots + the reviewed-exception registries (incl. this check's own disable-comments.json) -- data, never scanned source
-  ".changeset", // changeset metadata, not source
+  ".git", // VCS internals.
+  // api-contract snapshots and the reviewed-exception registries (incl. this check's own
+  // disable-comments.json). Data, never scanned source.
+  ".repo-contract",
+  ".changeset", // Changeset metadata, not source.
 ])
 
 /**
- * Any directory literally named "fixtures", at any depth, is excluded -- a semantic decision this
- * check makes for itself: every fixtures directory in this repository (test/e2e/*\/fixtures,
+ * Any directory literally named "fixtures", at any depth, is excluded. This is a semantic decision
+ * this check makes for itself. Every fixtures directory in this repository (test/e2e/*\/fixtures,
  * test/unit/architecture/fixtures) holds deliberately-invalid or scratch content fed to *other*
  * tests, never real governed source.
  */
@@ -42,12 +44,12 @@ export const INCLUDED_EXTENSIONS: readonly string[] = [
 ]
 
 /**
- * Whether a directory named `name` is excluded from walking, by either exclusion rule above --
- * case-insensitively, for the same reason `hasIncludedExtension` below lowercases first: a case-
- * preserving filesystem (default macOS/Windows) or a CI step with different casing conventions can
- * produce a differently-cased directory name (`Dist`, `Node_Modules`), and this must still
- * recognize it as excluded or this walker would descend into and scan generated/vendor content it
- * explicitly intends to skip.
+ * Whether a directory named `name` is excluded from walking, by either exclusion rule above. The
+ * match is case-insensitive, for the same reason `hasIncludedExtension` below lowercases first. A
+ * case-preserving filesystem (default macOS/Windows) or a CI step with different casing
+ * conventions can produce a differently-cased directory name (`Dist`, `Node_Modules`). This must
+ * still recognize it as excluded. Otherwise this walker would descend into and scan
+ * generated/vendor content it explicitly intends to skip.
  * @param name - The directory's own basename (not a path).
  * @returns `true` if this directory should never be walked into.
  */
@@ -57,10 +59,10 @@ function isExcludedDirectory(name: string): boolean {
 }
 
 /**
- * Whether a file named `name` has one of INCLUDED_EXTENSIONS, case-insensitively -- a file system
- * (or a file authored on one) can produce an uppercase or mixed-case extension (`Legacy.TSX`), and
- * tsc/ESLint process those identically to a lowercase one, so this must too or a real suppression
- * comment inside that file would go silently ungoverned.
+ * Whether a file named `name` has one of INCLUDED_EXTENSIONS, case-insensitively. A file system
+ * (or a file authored on one) can produce an uppercase or mixed-case extension (`Legacy.TSX`).
+ * tsc/ESLint process those identically to a lowercase one, so this must too. Otherwise a real
+ * suppression comment inside that file would go silently ungoverned.
  * @param name - The file's own basename (not a path).
  * @returns `true` if this file is governed source.
  */
@@ -70,9 +72,9 @@ function hasIncludedExtension(name: string): boolean {
 }
 
 /**
- * Converts any backslash-separated path segment to forward slashes -- using the fixed `win32`/
- * `posix` namespaces (not the ambient, host-bound `path.sep`) so this is a pure string transform,
- * testable identically on every host OS rather than only observable on an actual Windows machine.
+ * Converts any backslash-separated path segment to forward slashes. It uses the fixed
+ * `win32`/`posix` namespaces, not the ambient, host-bound `path.sep`. That makes it a pure string
+ * transform, testable identically on every host OS, not only observable on a real Windows machine.
  * A no-op for a path that's already POSIX-style, since real POSIX filesystems never produce a
  * backslash separator.
  * @param relativePath - A path, possibly using either separator convention.
@@ -102,8 +104,9 @@ async function walk(root: string, dir: string, out: string[]): Promise<void> {
   const entries = await readdir(dir, { withFileTypes: true })
 
   for (const entry of entries) {
-    // Never followed -- the only way a walked path could otherwise escape `root` (see
-    // registry.ts's independent, defense-in-depth rejection of any `..`/absolute registry path).
+    // Never followed: a symlink is the only way a walked path could otherwise escape `root`. See
+    // also evidence-types.ts's `isWellFormedRepoRelativePath`, an independent, defense-in-depth
+    // rejection of any `..`/absolute path in a registry record.
     if (entry.isSymbolicLink()) continue
 
     const absolutePath = path.join(dir, entry.name)

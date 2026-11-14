@@ -16,11 +16,10 @@ import {
  * amendment): proves the scaffolding command works against the real published `bin` entry from a
  * genuine packed install, not just against bin/*.mjs run from repository-local paths.
  *
- * The state-permutation cases below don't need their own npm install -- `init` only reads and
- * writes files in its cwd, it never resolves or imports "repo-contract" itself (that's the whole
- * point: it writes the same import specifiers a consumer would hand-write, it doesn't execute
- * them) -- so they invoke the one real, packed `bin` resolved by the single shared install below,
- * against disposable scratch directories.
+ * The state-permutation cases below don't need their own npm install. `init` only reads and
+ * writes files in its cwd. It writes the import specifiers a consumer would hand-write but never
+ * resolves or executes "repo-contract" itself. So these cases invoke the one packed `bin` from the
+ * single shared install below, against disposable scratch directories.
  */
 describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
   let consumerDir: string
@@ -88,14 +87,12 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     )
   }, 60_000)
 
-  it('actually runs the generated contract end to end, without package.json\'s "type" field set -- the exact scenario that regresses the CJS/ESM default-export interop bug', () => {
-    // A dedicated fixture, not the shared consumerDir above: this test needs to install real
-    // devDependencies (tsc, tsx) for a genuine run, and any further `npm install` in the shared
-    // fixture -- even a targeted, --no-save one -- risks npm treating the shared fixture's
-    // already-installed-but-undeclared repo-contract (itself installed via --no-save, so absent
-    // from package.json, and there's no lockfile to anchor it) as extraneous and pruning it,
-    // breaking every other test that reuses that fixture. A fresh, disposable fixture sidesteps
-    // that entirely.
+  it('actually runs the generated contract end to end, without package.json\'s "type" field set: the exact scenario that regresses the CJS/ESM default-export interop bug', () => {
+    // A dedicated fixture, not the shared consumerDir above: this test installs devDependencies
+    // (tsc, tsx) for a full run. The shared fixture's repo-contract was installed with --no-save,
+    // so package.json does not declare it and no lockfile anchors it. Any further `npm install`
+    // there (even a targeted --no-save one) risks npm pruning it as extraneous. That would break
+    // every other test that reuses the shared fixture. A fresh, disposable fixture avoids this.
     const { consumerDir: dir, tarballPath } = createConsumerFixture(
       "repo-contract-consumer-init-interop-",
     )
@@ -106,7 +103,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
           {
             name: "interop-fixture",
             version: "0.0.0",
-            // Deliberately no "type": "module" -- npm init's default output doesn't set it
+            // Deliberately no "type": "module"; npm init's default output doesn't set it
             // either, and that absence is exactly what regressed the original bug:
             // repo-contract.config.mts (not .ts) exists to survive it regardless. See
             // specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md's
@@ -118,12 +115,11 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
         ),
       )
 
-      // Re-installs repo-contract's own tarball alongside typescript/tsx in one atomic command --
-      // without a lockfile to anchor it, even a `--no-save` install of *specific* packages still
-      // does a full reconciliation pass and prunes anything else in node_modules not reachable
-      // from what's being installed, which would otherwise silently remove
-      // createConsumerFixture's own (already `--no-save`, and so equally unanchored) install of
-      // repo-contract itself.
+      // Re-installs repo-contract's tarball alongside typescript/tsx in one command. Without a
+      // lockfile, even a `--no-save` install of *specific* packages runs a full reconciliation.
+      // That pass prunes anything in node_modules not reachable from what is being installed.
+      // It would otherwise remove createConsumerFixture's unanchored `--no-save` install of
+      // repo-contract.
       const installResult = runNpm(["install", tarballPath, "typescript", "tsx", "--no-save"], {
         cwd: dir,
       })
@@ -134,14 +130,13 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
 
       // Beyond type-level validity: actually RUN the generated contract. The interop bug this
       // regresses against (config.checks silently becoming undefined) only manifests at
-      // runtime -- a typecheck pass alone never catches it, which is exactly how the original
-      // bug shipped undetected in the first place. Not asserting a specific outcome per check or
-      // overall exit code: this scratch fixture has no tsconfig.json and no lockfile, so
-      // `typecheck`/`securityDeps` may legitimately PASS or FAIL depending on the environment --
-      // what matters is that each produces a real, well-formed `[PASS]`/`[FAIL]` line with a real
-      // rationale, categorically different from the crash (an uncaught ERR_MODULE_NOT_FOUND /
-      // InvalidRepoContractConfigError stack trace, asserted against directly below) the bug this
-      // regresses against actually produced.
+      // runtime: a typecheck pass alone never catches it, which is exactly how the original
+      // bug shipped undetected in the first place. This does not assert a specific outcome per
+      // check or an overall exit code. This scratch fixture has no tsconfig.json and no lockfile,
+      // so `typecheck`/`securityDeps` may PASS or FAIL depending on the environment. What matters
+      // is that each produces a well-formed `[PASS]`/`[FAIL]` line with a rationale. The original
+      // bug crashed instead, with an uncaught ERR_MODULE_NOT_FOUND or
+      // InvalidRepoContractConfigError stack trace (asserted against below).
       const runResult = runNpm(["run", "contract"], { cwd: dir })
       expect(runResult.stderr).not.toContain("InvalidRepoContractConfigError")
       expect(runResult.stderr).not.toContain("Cannot find package")
@@ -174,7 +169,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     expect(readFileSync(path.join(consumerDir, "package.json"), "utf8")).toBe(before.packageJson)
   }, 20_000)
 
-  it("produces a valid contract for a repository with none of the 15 tool-specific dependencies -- only securityDeps", () => {
+  it("produces a valid contract for a repository with none of the 16 tool-specific dependencies: only securityDeps", () => {
     const dir = scratchDir("repo-contract-init-empty-")
     writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "empty-repo" }))
 
@@ -220,7 +215,9 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
 
     const result = runInit(dir)
     expect(result.status).toBe(0)
-    expect(result.stdout).toContain("already exists with a different value -- left untouched")
+    expect(result.stdout).toContain(
+      "already exists with a different value, so it was left untouched",
+    )
 
     expect(readScripts(path.join(dir, "package.json")).contract).toBe("node my-own-runner.js")
 
@@ -254,7 +251,9 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
 
     const result = runInit(dir)
     expect(result.status).toBe(0)
-    expect(result.stdout).toContain("already exists with a different value -- left untouched")
+    expect(result.stdout).toContain(
+      "already exists with a different value, so it was left untouched",
+    )
     expect(result.stdout).not.toContain("tsx")
 
     expect(readScripts(path.join(dir, "package.json")).contract).toBe("node my-own-runner.js")
@@ -284,7 +283,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     rmSync(dir, { recursive: true, force: true })
   }, 20_000)
 
-  it("performs init with no process-spawning capability available -- proves the ambient-capability invariant behaviorally, not just by static scan", () => {
+  it("performs init with no process-spawning capability available: proves the ambient-capability invariant behaviorally, not just by static scan", () => {
     const dir = scratchDir("repo-contract-init-no-path-")
     writeFileSync(
       path.join(dir, "package.json"),
@@ -294,7 +293,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     // Invoking node directly with the real installed script (rather than through the `bin` shim,
     // which itself needs PATH to resolve its shebang/interpreter) isolates what's under test:
     // whether repo-contract's OWN code ever launches a subprocess. An empty PATH makes any
-    // PATH-resolved subprocess launch fail immediately -- if `init` ever spawned anything (npm,
+    // PATH-resolved subprocess launch fail immediately: if `init` ever spawned anything (npm,
     // git, the detected tools themselves), that would surface here as a non-zero exit or a spawn
     // ENOENT, not a silent success.
     const scriptPath = path.join(

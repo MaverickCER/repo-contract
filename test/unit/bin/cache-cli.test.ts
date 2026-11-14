@@ -146,7 +146,7 @@ describe("parseCacheArgs", () => {
     expect(parseCacheArgs(["stats", "--version"])).toEqual({ kind: "version" })
   })
 
-  it("does not read a flag after -- as help", () => {
+  it("does not read a flag after `--` as help", () => {
     expect(parseCacheArgs(["stats", "--", "--help"])).toEqual({
       kind: "error",
       message: "unexpected argument '--help'",

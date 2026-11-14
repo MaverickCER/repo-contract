@@ -57,10 +57,10 @@ function getAdrGovernanceDeterminant(evidence: AdrGovernanceEvidence): AdrGovern
 }
 
 /**
- * Fails whenever a PR changes `src/execution/**`/`src/policy/**` without either touching
- * `specs/decisions/**` itself or referencing a real, existing ADR from one of the branch's
- * commit messages -- the one thing this check exists to guarantee. Passes trivially when nothing
- * governed changed.
+ * Fails whenever a PR changes `src/execution/**`/`src/policy/**` without engaging the ADR set.
+ * Engaging means touching `specs/decisions/**` itself or referencing a real, existing ADR from
+ * one of the branch's commit messages. That is the one thing this check exists to guarantee.
+ * Passes trivially when nothing governed changed.
  * @param root0 - the policy input.
  * @param root0.evidence - the adr-governance check's evidence to evaluate.
  * @returns the pass/fail outcome and its rationale.
@@ -73,7 +73,7 @@ export function evaluateAdrGovernancePolicy({
   if (determinant.kind === "nothing-governed-changed") {
     return {
       outcome: "pass",
-      rationale: `No files under src/execution/ or src/policy/ changed relative to ${determinant.baseRef} -- nothing governed by this check.`,
+      rationale: `No files under src/execution/ or src/policy/ changed relative to ${determinant.baseRef}. Nothing is governed by this check.`,
     }
   }
 
@@ -107,8 +107,8 @@ export function evaluateAdrGovernancePolicy({
   }
 }
 
-// Architectural-change traceability: a PR touching the execution or policy engine must either
-// engage the ADR set directly or reference an existing ADR from one of its commit messages; a
+// Architectural-change traceability. A PR touching the execution or policy engine must either
+// engage the ADR set directly or reference an existing ADR from one of its commit messages. A
 // typo'd or nonexistent ADR number never satisfies this. See
 // specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
 export const adrGovernance: CheckDefinitionConfig = {

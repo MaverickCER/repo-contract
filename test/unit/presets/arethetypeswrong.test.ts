@@ -102,7 +102,7 @@ describe("arethetypeswrong preset", () => {
     )
   })
 
-  it("renders a problem with no context fields as exactly its kind -- no trailing colon or empty context", async () => {
+  it("renders a problem with no context fields as exactly its kind: no trailing colon or empty context", async () => {
     const result = await arethetypeswrong.policy(
       fakeContext(
         fakeCheckEvidence({

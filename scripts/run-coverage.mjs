@@ -1,19 +1,20 @@
-// Canonical standalone coverage workflow -- `npm run test:coverage` is
-// exactly `node scripts/run-coverage.mjs`, nothing else. Runs the
-// coverage-producing categories (unit, integration, property -- see
-// scripts/aggregate-coverage.mjs's COVERAGE_SOURCES) each with --coverage
-// via the same scripts/run-test-category.mjs every other caller uses, then
-// aggregates, then reports thresholds. This is the ONLY place
-// coverage-producing tests are executed by name -- repo-contract's own
-// test-unit/test-integration/test-property checks separately invoke
-// run-test-category.mjs with --coverage themselves (their evidence-producing
-// run *is* what creates that category's coverage artifact), and
-// repo-contract's `coverage` check only aggregates+reports what those checks
-// already produced (scripts/check-coverage.mjs) -- it never runs this file.
+// Canonical standalone coverage workflow: `npm run test:coverage` is
+// exactly `node scripts/run-coverage.mjs`, nothing else. Runs each
+// coverage-producing category with --coverage (unit, integration, property:
+// see scripts/aggregate-coverage.mjs's COVERAGE_SOURCES). It goes through the
+// same scripts/run-test-category.mjs every other caller uses, then
+// aggregates, then reports thresholds.
 //
-// Report-only for coverage thresholds (see scripts/report-coverage.mjs) --
-// this script still fails on a real test failure (anyTestFailure), never on
-// a coverage percentage below threshold; that judgment belongs to
+// This is the ONLY place coverage-producing tests are executed by name.
+// The repo-contract run never runs this file. Its own test-unit/
+// test-integration/test-property checks invoke run-test-category.mjs with
+// --coverage themselves. Their evidence-producing run *is* what creates that category's
+// coverage artifact. The `coverage` check only aggregates+reports what those
+// checks already produced (scripts/check-coverage.mjs).
+//
+// Report-only for coverage thresholds (see scripts/report-coverage.mjs).
+// This script still fails on a real test failure (anyTestFailure), never on
+// a coverage percentage below threshold. That judgment belongs to
 // repo-contract's own `coverage` check.
 
 import spawn from "cross-spawn"

@@ -14,7 +14,7 @@ function summary(overrides: Partial<CoverageSummary> = {}): CoverageSummary {
 }
 
 describe("evaluateCoveragePolicy", () => {
-  it("passes when every metric is exactly at its threshold -- the boundary is inclusive", () => {
+  it("passes when every metric is exactly at its threshold: the boundary is inclusive", () => {
     const result = evaluateCoveragePolicy({ evidence: summary() })
     expect(result.outcome).toBe("pass")
   })
@@ -54,7 +54,7 @@ describe("evaluateCoveragePolicy", () => {
     const result = evaluateCoveragePolicy({ evidence: summary() })
     for (const [metric, threshold] of Object.entries(COVERAGE_THRESHOLDS)) {
       // `summary()` sets each metric's pct to its own threshold, so that exact
-      // `metric: N%` pair must appear -- not just the bare metric name.
+      // `metric: N%` pair must appear: not just the bare metric name.
       expect(result.rationale).toContain(`${metric}: ${String(threshold)}%`)
     }
   })

@@ -62,10 +62,11 @@ function gaps(input: MaturityInput): readonly (readonly string[])[] {
 }
 
 /**
- * Computes a maturity level deterministically from recorded facts: 1 once there are runs and
- * correctness is covered; 2 with the security and maintainability pillars and a passing full run;
- * 3 with every pillar, exceptions within budget and zero-tolerance policies; 4 with a clean
- * soundness canary and an evidence manifest.
+ * Computes a maturity level deterministically from recorded facts:
+ * - 1 once there are runs and correctness is covered.
+ * - 2 with the security and maintainability pillars and a passing full run.
+ * - 3 with every pillar, exceptions within budget and zero-tolerance policies.
+ * - 4 with a clean soundness canary and an evidence manifest.
  * @param input - The facts to judge.
  * @returns The level, and what the next one needs.
  */

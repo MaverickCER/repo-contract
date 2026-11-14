@@ -10,7 +10,7 @@ import { parseNameStatusLine, parseNumstatCounts } from "../../scripts/diff-file
 
 const segmentArbitrary = fc.stringMatching(/^[a-zA-Z0-9_./-]{1,15}$/)
 
-describe("parseNameStatusLine -- property-based", () => {
+describe("parseNameStatusLine: property-based", () => {
   it("a bare 'A' or 'D' status line always maps to added/deleted with the given path", () => {
     fc.assert(
       fc.property(fc.constantFrom("A", "D"), segmentArbitrary, (status, path) => {
@@ -50,7 +50,7 @@ describe("parseNameStatusLine -- property-based", () => {
   })
 })
 
-describe("parseNumstatCounts -- property-based", () => {
+describe("parseNumstatCounts: property-based", () => {
   const columnArbitrary = fc.oneof(
     fc.nat({ max: 100_000 }).map((n) => String(n)),
     fc.constant("-"),
@@ -69,7 +69,7 @@ describe("parseNumstatCounts -- property-based", () => {
     )
   })
 
-  it("never yields NaN -- a malformed / non-numeric column falls back to 0", () => {
+  it("never yields NaN: a malformed / non-numeric column falls back to 0", () => {
     fc.assert(
       fc.property(fc.string(), fc.string(), (a, b) => {
         const { linesAdded, linesRemoved } = parseNumstatCounts(`${a}\t${b}`)

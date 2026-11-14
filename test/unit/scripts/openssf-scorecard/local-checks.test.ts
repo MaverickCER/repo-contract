@@ -64,7 +64,7 @@ describe("evaluateDangerousWorkflow", () => {
     const result = evaluateDangerousWorkflow(root)
     expect(result.score).toBe(0)
     expect(result.details).toEqual([
-      "ci.yml:6: attacker-influenced expression spliced directly into a run: block -- ${{ github.event.pull_request.title }}",
+      "ci.yml:6: attacker-influenced expression spliced directly into a run: block (${{ github.event.pull_request.title }})",
     ])
   })
 
@@ -82,11 +82,11 @@ describe("evaluateDangerousWorkflow", () => {
   })
 
   it("does not flag a context expression passed safely through env:, even when it appears after an earlier run: block in the same file", () => {
-    // Regression test: an earlier version of this check's own run:-block
+    // Regression test. An earlier version of this check's run:-block
     // tracker only reset `inRunBlock` on a line with fewer than 2 leading
-    // spaces, which virtually no line in a real workflow ever has -- so once
-    // any run: block was entered, every subsequent line (including a later
-    // step's own env: block) stayed misclassified as still being inside it.
+    // spaces. Almost no line in a workflow has that. So once any run: block
+    // was entered, every later line stayed misclassified as inside it,
+    // including a later step's env: block.
     writeWorkflow(
       [
         "jobs:",
@@ -132,11 +132,10 @@ describe("evaluateDangerousWorkflow", () => {
   })
 
   it("does not let a heredoc's own literal 'run: |' text reset block tracking, and still scans the real unsafe line after it", () => {
-    // Regression test: an earlier version of this check always re-evaluated every line for a
-    // new `run: |` key, even while already inside a block scalar's own content -- so a script
-    // that writes out literal YAML (e.g. a heredoc containing the text "run: |", indented
-    // deeper than the real key) got misread as a second block opening, corrupting `runIndent`
-    // for everything that followed.
+    // Regression test. An earlier version of this check re-evaluated every line for a new `run: |`
+    // key, even inside a block scalar's content. A script that writes out literal YAML could then
+    // trip it, e.g. a heredoc containing the text "run: |", indented deeper than the real key. That
+    // line was misread as a second block opening, corrupting `runIndent` for everything after it.
     writeWorkflow(
       [
         "jobs:",
@@ -156,7 +155,7 @@ describe("evaluateDangerousWorkflow", () => {
     const result = evaluateDangerousWorkflow(root)
     expect(result.score).toBe(0)
     expect(result.details).toEqual([
-      "ci.yml:12: attacker-influenced expression spliced directly into a run: block -- ${{ github.event.pull_request.title }}",
+      "ci.yml:12: attacker-influenced expression spliced directly into a run: block (${{ github.event.pull_request.title }})",
     ])
   })
 

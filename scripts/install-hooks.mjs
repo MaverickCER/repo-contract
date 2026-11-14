@@ -4,15 +4,15 @@
 //     shown in the editor on every `git commit`)
 //
 // Run from the `setup` npm script (`npm run setup`, one command after
-// `npm install` in a fresh clone -- see
+// `npm install` in a fresh clone; see
 // specs/decisions/0009-conventional-commits-versioning-and-local-gates.md). It is
-// deliberately NOT an npm lifecycle hook (`prepare` etc.): the published package
+// deliberately NOT an npm lifecycle hook (`prepare` etc.). The published package
 // ships with no install scripts at all, so consumers' `npm install` never runs
 // this.
 //
 // Idempotent and deliberately unobtrusive, for BOTH settings:
-//   - no-op when CI is set: the release workflow's own bots (changesets/action,
-//     api-baseline) commit and push and must not be intercepted or reconfigured.
+//   - no-op when CI is set: the release workflow's bot (changesets/action) commits and
+//     pushes and must not be intercepted or reconfigured.
 //   - no-op outside a git checkout (run from an unpacked tarball, etc.).
 //   - never overrides a value a contributor set themselves.
 //
@@ -29,7 +29,7 @@ function gitConfigGet(key) {
   try {
     return execFileSync("git", ["config", "--local", "--get", key], { encoding: "utf8" }).trim()
   } catch {
-    // exit code 1 == key not set
+    // Exit code 1 means the key is not set.
     return ""
   }
 }
@@ -39,7 +39,7 @@ function gitConfigSet(key, value) {
     execFileSync("git", ["config", "--local", key, value])
     return true
   } catch (error) {
-    // `npm run setup` must never hard-fail -- if git is somehow unavailable
+    // `npm run setup` must never hard-fail: if git is somehow unavailable
     // here despite `.git` existing, warn and move on.
     console.warn(
       `[install-hooks] could not set ${key} (${error instanceof Error ? error.message : String(error)}); skipping.`,
@@ -69,15 +69,15 @@ if (process.env.CI) {
   process.exit(0)
 }
 
-// `.git` is a directory in a normal clone, a file in a worktree/submodule, and
-// absent when the package is unpacked from a tarball -- `existsSync` covers the
-// first two and rejects the third.
+// `.git` is a directory in a normal clone and a file in a worktree/submodule.
+// It is absent when the package is unpacked from a tarball. `existsSync`
+// covers the first two and rejects the third.
 if (!existsSync(".git")) {
   process.exit(0)
 }
 
 // `commit.template` is resolved by git relative to the cwd of `git commit`, not
-// the repo root -- so a relative value breaks when committing from a
+// the repo root, so a relative value breaks when committing from a
 // subdirectory. Store an absolute path. It lands only in per-clone .git/config,
 // which is never committed, so machine-specificity is fine. `npm run setup` runs
 // this script from the repo root; resolve against that.

@@ -9,12 +9,12 @@ import { testSpawn } from "../../helpers/test-spawn.js"
 // File-scoped: spies on killTree while preserving its real behavior
 // (`vi.fn(actual.killTree)` forwards every call through), isolated here away
 // from spawn-check.test.ts's otherwise fully-real-process, unmocked style.
-// Needed because this file's two guards -- "a prior pending escalation is
-// replaced, not stacked" and "no redundant SIGKILL follow-up when the signal
-// sent was already SIGKILL" -- have no externally observable difference
-// through `spawnCheck`'s returned evidence alone (a stray extra `killTree`
-// call against an already-dead pid is a silent, harmless no-op); counting
-// real calls is the only way to prove either guard actually does something.
+// Needed because this file's two guards have no externally observable
+// difference through `spawnCheck`'s returned evidence alone. The guards are
+// "a prior pending escalation is replaced, not stacked" and "no redundant
+// SIGKILL follow-up when the signal sent was already SIGKILL". A stray extra
+// `killTree` call against an already-dead pid is a silent, harmless no-op.
+// Counting calls is the only way to prove either guard does something.
 vi.mock("../../../src/execution/process-tree.js", async (importOriginal) => {
   const actual = await importOriginal<typeof ProcessTreeModule>()
   return { ...actual, killTree: vi.fn(actual.killTree) }
@@ -35,7 +35,7 @@ async function waitUntil(predicate: () => boolean, deadlineMs = 5000): Promise<v
 const GRACE_PERIOD_MS = SIGKILL_GRACE_PERIOD_MS
 const execution: ExecutionCapability = { spawn: testSpawn, env: testEnv, shell: false }
 
-describe.skipIf(process.platform === "win32")("spawnCheck -- SIGKILL escalation guards", () => {
+describe.skipIf(process.platform === "win32")("spawnCheck: SIGKILL escalation guards", () => {
   afterEach(() => {
     vi.useRealTimers()
     vi.clearAllMocks()
@@ -56,7 +56,7 @@ describe.skipIf(process.platform === "win32")("spawnCheck -- SIGKILL escalation 
     vi.useFakeTimers()
     // Two SIGTERMs back to back, each of which would schedule its own
     // SIGKILL follow-up at "now + GRACE_PERIOD_MS" if the prior one weren't
-    // cancelled first -- if both survive, advancing time once fires both.
+    // cancelled first: if both survive, advancing time once fires both.
     handle?.kill("SIGTERM")
     handle?.kill("SIGTERM")
     await vi.advanceTimersByTimeAsync(GRACE_PERIOD_MS + 100)

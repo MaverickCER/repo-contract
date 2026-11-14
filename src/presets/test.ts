@@ -6,13 +6,13 @@ import { evaluateVitestJsonPolicy } from "./shared/vitest-json-policy.js"
 
 // Fixed relative path `--outputFile` writes to and this preset reads back.
 // As of Vitest 5 (confirmed against vitest@5.0.1; vitest@4 did not do this),
-// `--reporter=json` alone no longer prints JSON to stdout -- without an
+// `--reporter=json` alone no longer prints JSON to stdout. Without an
 // explicit `--outputFile`, Vitest silently writes the report to its own
-// default location instead and prints only a "JSON report written to <path>"
-// line to stdout, which `JSON.parse` rejects. Pinning `--outputFile` here
-// makes the report's location this preset's own contract rather than an
-// internal Vitest default that can move between versions, exactly as the
-// `duplication` preset already does for jscpd's report.
+// default location. It prints only a "JSON report written to <path>" line to
+// stdout, which `JSON.parse` rejects. Pinning `--outputFile` here makes the
+// report's location this preset's own contract, rather than an internal
+// Vitest default that can move between versions. The `duplication` preset
+// already does the same for jscpd's report.
 const REPORT_PATH = "reports/vitest/vitest-report.json"
 
 /**
@@ -34,9 +34,9 @@ export const test: CheckDefinitionConfig = {
       output = { format: "json", success: true, value: JSON.parse(raw) as unknown }
     } catch (error) {
       // Same rationale evaluateVitestJsonPolicy already produces for a failed
-      // stdout parse -- a missing report file and an unparseable one are both
-      // "Vitest didn't hand back a usable JSON report," and a consumer's fix
-      // is the same either way: check Vitest's own output above this line.
+      // stdout parse. A missing report file and an unparseable one both mean
+      // "Vitest didn't hand back a usable JSON report". A consumer's fix is
+      // the same either way: check Vitest's own output above this line.
       output = {
         format: "json",
         success: false,

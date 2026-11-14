@@ -1,14 +1,15 @@
 // Entry point for the "preset-commands" self-hosting check, invoked via
-// `run: ["tsx", "scripts/preset-commands/scan.ts"]` in repo-contract.config.ts. Prints ONLY the
-// JSON evidence to stdout; a scaffolding notice goes to stderr.
+// `run: ["tsx", "scripts/preset-commands/scan.ts"]` in repo-contract.config.ts. It prints ONLY the
+// JSON evidence to stdout. A scaffolding notice goes to stderr.
 //
 // Report-only for policy purposes (checks/preset-commands.ts's policy judges the evidence). A
 // genuine tool-infrastructure or registry-integrity failure sets a non-zero exit code here.
 //
-// This is a repository-internal review mechanism, not shipped code: it discovers every external
-// command a published preset (src/presets/*.ts) spawns and holds each to a reviewed record in
-// .repo-contract/exceptions/preset-commands.json -- the reconciled successor to the former
-// ALLOWED_PRESET_COMMANDS allowlist. See specs/decisions/0007-no-network-surface.md.
+// This is a repository-internal review mechanism, not shipped code. It discovers every external
+// command that a published preset (a .ts module under src/presets/) spawns. It holds each one to a
+// reviewed record in .repo-contract/exceptions/preset-commands.json. This is the reconciled
+// successor to the former ALLOWED_PRESET_COMMANDS allowlist. See
+// specs/decisions/0007-no-network-surface.md.
 
 import { mkdir, readFile } from "node:fs/promises"
 import path from "node:path"
@@ -48,7 +49,7 @@ const registrySchema: StandardSchemaV1<unknown, readonly PresetCommandExceptionR
 }
 
 /**
- * Only `src/presets/**\/*.ts` -- the published preset modules whose `run:` properties become the
+ * Only `src/presets/**\/*.ts`: the published preset modules whose `run:` properties become the
  * commands repo-contract spawns on a consumer's behalf.
  * @param repoRelativePath - A repo-relative, POSIX-separated file path.
  * @returns `true` if this file is a published preset module.
@@ -58,7 +59,7 @@ function isPresetModule(repoRelativePath: string): boolean {
 }
 
 /**
- * Peels off `as const`, `satisfies <Type>`, and parenthesization -- none change a `run:`
+ * Peels off `as const`, `satisfies <Type>`, and parenthesization: none change a `run:`
  * initializer's runtime value.
  * @param expr - The expression to unwrap.
  * @returns The innermost expression once every such wrapper is removed.
@@ -111,14 +112,26 @@ export function scanPresetModule(relativePath: string, text: string): ScanResult
     let first: ts.Expression | undefined
     if (ts.isArrayLiteralExpression(value)) {
       const [element] = value.elements
+      if (element !== undefined && ts.isSpreadElement(element)) {
+        // `run: [...argv]` runs a command the consumer passes the preset (`aiReview`'s `agent`).
+        // repo-contract chooses no command there, so the record is keyed by the preset file:
+        // `consumer-supplied/<file>`. Its review covers how that file builds the command line.
+        // See specs/decisions/0024-the-aireview-preset-gates-on-scored-json-from-a-consumer-chosen-agent.md.
+        commands.push({
+          command: `consumer-supplied/${path.posix.basename(relativePath, ".ts")}`,
+          file: relativePath,
+          line: lineOf(element),
+        })
+        return
+      }
       first = element === undefined ? undefined : unwrapTypeWrapper(element)
     } else if (ts.isStringLiteralLike(value)) {
       first = value
     }
 
     if (first === undefined) {
-      // An empty `run: []` array literal is a real config, just not one that spawns anything --
-      // nothing to review.
+      // An empty `run: []` array literal is a real config that spawns nothing. There is nothing
+      // to review.
       if (ts.isArrayLiteralExpression(value) && value.elements.length === 0) return
       nonLiteral.push({
         file: relativePath,

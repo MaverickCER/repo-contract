@@ -9,7 +9,7 @@ import { testEnv } from "../../helpers/test-env.js"
 import { testSpawn } from "../../helpers/test-spawn.js"
 
 /**
- * Runs the real `license` preset -- its `node -e` launcher included -- against a temporary
+ * Runs the real `license` preset (its `node -e` launcher included) against a temporary
  * project whose `node_modules/licensee` is a stand-in CLI that records the arguments it was
  * given. Only the stand-in replaces licensee itself; the launcher's own resolution, `.licensee.json`
  * detection and in-process loading all run for real.

@@ -9,23 +9,25 @@ import { testSpawn } from "../../helpers/test-spawn.js"
 /**
  * Golden/snapshot contracts, extended: schemas/evidence.schema.json and
  * schemas/verdict.schema.json are the published, generated (never
- * hand-authored -- see scripts/generate-json-schema.mjs) contract a real
+ * hand-authored; see scripts/generate-json-schema.mjs) contract a real
  * consumer validates against via the package's `./schema` export. This is a
- * genuinely distinct question from API compatibility ("did the public
- * TypeScript surface change?", scripts/api-contract/): here it's "does a
- * real runtime Evidence/Verdict object actually conform to the schema this
- * package publishes for it?" -- API Extractor analyzes *types* statically;
- * this validates real *values*. Not a new top-level verification category
- * (see specs/verification-taxonomy.md's Contract-testing rejection entry) --
- * a small strengthening of the existing Golden/snapshot contracts category.
+ * different question from API compatibility. API compatibility asks "did the
+ * public TypeScript surface change?" (scripts/api-contract/). This test asks
+ * "does a runtime Evidence/Verdict object conform to the schema this package
+ * publishes for it?" API Extractor analyzes *types* statically; this validates
+ * *values*. It is not a new top-level verification category (see
+ * specs/verification-taxonomy.md's Contract-testing rejection entry). It is a
+ * small strengthening of the existing Golden/snapshot contracts category.
  *
- * disable-comments.json deliberately has no generated schema: its runtime
- * validator (scripts/shared/exception-record.ts's validateExceptionRegistry +
- * scripts/suppression-governance/evidence-types.ts's SUPPRESSION_EXCEPTION_SCHEMA)
- * is authoritative and editor schema support for that internal registry is not
- * part of the contract -- see specs/decisions/0013-reusable-exception-policy-helper.md's
- * "The exception registry is the review surface" section. Its conformance tests
- * live in test/unit/suppression-governance/exception-schema.test.ts.
+ * disable-comments.json deliberately has no generated schema. Its runtime
+ * validator is authoritative: scripts/shared/exception-record.ts's
+ * validateExceptionRegistry plus
+ * scripts/suppression-governance/evidence-types.ts's
+ * SUPPRESSION_EXCEPTION_SCHEMA. Editor schema support for that internal
+ * registry is not part of the contract. See
+ * specs/decisions/0013-reusable-exception-policy-helper.md's "The exception
+ * registry is the review surface" section. Its conformance tests live in
+ * test/unit/suppression-governance/exception-schema.test.ts.
  */
 
 // A fresh Ajv per compilation: Ajv refuses to compile two schemas that share a
@@ -101,11 +103,11 @@ describe("Evidence/Verdict runtime conformance to the published JSON Schema", ()
     })
 
     // Simulates a consumer, pinned to today's schema, validating evidence produced by a future
-    // repo-contract version that has grown a field this schema doesn't know about yet -- exactly
+    // repo-contract version that has grown a field this schema doesn't know about yet: exactly
     // the scenario VERSIONING.md's "Additive fields... are a compatible change" promise covers.
     const evidenceWithNewField = { ...evidence, aFutureField: "added in a later minor version" }
 
-    // `compileSchema` builds a fresh Ajv -- another test in this file already
+    // `compileSchema` builds a fresh Ajv: another test in this file already
     // compiled evidence.schema.json, and Ajv rejects the same $id twice per instance.
     const validate = compileSchema(loadSchema("evidence.schema.json"))
     const valid = validate(evidenceWithNewField)

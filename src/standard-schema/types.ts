@@ -1,23 +1,23 @@
 /**
  * Hand-vendored from `@standard-schema/spec@1.1.0` (standardschema.dev), pinned
- * 2026-09-04 -- see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
+ * 2026-09-04: see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
  * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type
- * declarations, zero runtime code -- assigning any real Zod/Valibot/ArkType (etc.) schema to this
- * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here -- the
+ * declarations, zero runtime code: assigning any real Zod/Valibot/ArkType (etc.) schema to this
+ * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here: the
  * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension
  * (standardschema.dev/json-schema) is out of scope; see the ADR.
  *
  * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base
- * (`version`/`vendor`/`types`); this vendored copy inlines those fields directly into one flat
- * interface, since repo-contract has no use for the shared base on its own -- structurally
+ * (`version`/`vendor`/`types`). This vendored copy inlines those fields directly into one flat
+ * interface, since repo-contract has no use for the shared base on its own. It is structurally
  * identical for any real schema object assigned to it. Re-diff against
  * `@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.
  *
- * Tagged `@public`, not tied to either re-exporting barrel's own stability tier (this type is
+ * Tagged `@public`, not tied to either re-exporting barrel's own stability tier. This type is
  * re-exported from both the Stable root barrel, for `output.schema`, and the Experimental
- * `repo-contract/helpers` barrel): this vendored copy's own shape only ever changes via a
- * deliberate re-diff against the pinned upstream spec version above, never as a side effect of
- * either barrel's own stability classification.
+ * `repo-contract/helpers` barrel. This vendored copy's own shape only ever changes via a
+ * deliberate re-diff against the pinned upstream spec version above. It never changes as a side
+ * effect of either barrel's own stability classification.
  * @public
  */
 export interface StandardSchemaV1<Input = unknown, Output = Input> {
@@ -30,7 +30,7 @@ export interface StandardSchemaV1<Input = unknown, Output = Input> {
  * `Issue`, `PathSegment`, `Types`, `InferInput`, `InferOutput`.
  * @public
  */
-// eslint-disable-next-line @typescript-eslint/no-namespace -- the interface+namespace declaration-merging pattern is required here to mirror @standard-schema/spec's own published shape (StandardSchemaV1.Props/.Result/.Issue/... nested under the interface's own name) -- an ES2015 module can't merge with an interface of the same name the way a namespace does, and diverging from upstream's exact shape would defeat this file's whole purpose of being a faithful, re-diffable vendor copy (see this file's own top comment).
+// eslint-disable-next-line @typescript-eslint/no-namespace -- the interface+namespace declaration-merging pattern is required here to mirror @standard-schema/spec's own published shape (StandardSchemaV1.Props/.Result/.Issue/... nested under the interface's own name). An ES2015 module can't merge with an interface of the same name the way a namespace does. Diverging from upstream's exact shape would defeat this file's purpose: a faithful, re-diffable vendor copy (see this file's own top comment).
 export declare namespace StandardSchemaV1 {
   /** The Standard Schema properties interface. */
   export interface Props<Input = unknown, Output = Input> {

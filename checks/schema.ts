@@ -1,14 +1,14 @@
 import type { CheckDefinitionConfig } from "../src/types.js"
 import { TARGETS } from "../scripts/generate-json-schema.mjs"
 
-// Regenerates every schema target from its source type (see
-// scripts/generate-json-schema.mjs's TARGETS -- schemas/*.schema.json plus
-// one internal, non-published schema) -- it always overwrites its output,
-// so a clean exit code alone doesn't prove anything was actually produced.
-// This policy re-reads every target's `outputFile` back off disk afterward
-// and confirms it's valid JSON carrying the same `$id`/`title` that
-// generator's own TARGETS declares -- imported directly, never duplicated
-// here, so this check can't silently drift from what the generator itself
+// Regenerates every schema target from its source type. The targets are
+// scripts/generate-json-schema.mjs's TARGETS: schemas/*.schema.json plus
+// one internal, non-published schema. The generator always overwrites its
+// output, so a clean exit code alone doesn't prove anything was produced.
+// This policy re-reads every target's `outputFile` back off disk afterward.
+// It confirms each is valid JSON carrying the same `$id`/`title` that the
+// generator's own TARGETS declares. TARGETS is imported directly, never
+// duplicated here. This check therefore can't drift from what the generator
 // considers "every schema" if a target is ever added, renamed, or removed.
 export const schema: CheckDefinitionConfig = {
   run: ["node", "scripts/generate-json-schema.mjs"],
@@ -37,7 +37,7 @@ export const schema: CheckDefinitionConfig = {
       try {
         raw = await readFile(target.outputFile, "utf8")
       } catch {
-        problems.push(`${target.outputFile} -- was not written`)
+        problems.push(`${target.outputFile}: was not written`)
         continue
       }
 
@@ -46,30 +46,30 @@ export const schema: CheckDefinitionConfig = {
       try {
         parsed = JSON.parse(raw)
       } catch {
-        problems.push(`${target.outputFile} -- is not valid JSON`)
+        problems.push(`${target.outputFile}: is not valid JSON`)
         continue
       }
 
       if (typeof parsed !== "object" || parsed === null) {
-        problems.push(`${target.outputFile} -- did not produce a JSON object`)
+        problems.push(`${target.outputFile}: did not produce a JSON object`)
         continue
       }
 
       const schemaObject = parsed as Record<string, unknown>
 
       if (typeof schemaObject.$schema !== "string" || schemaObject.$schema.length === 0) {
-        problems.push(`${target.outputFile} -- missing a $schema draft identifier`)
+        problems.push(`${target.outputFile}: missing a $schema draft identifier`)
       }
 
       if (schemaObject.$id !== target.id) {
         problems.push(
-          `${target.outputFile} -- $id is ${JSON.stringify(schemaObject.$id)}, expected ${JSON.stringify(target.id)}`,
+          `${target.outputFile}: $id is ${JSON.stringify(schemaObject.$id)}, expected ${JSON.stringify(target.id)}`,
         )
       }
 
       if (schemaObject.title !== target.title) {
         problems.push(
-          `${target.outputFile} -- title is ${JSON.stringify(schemaObject.title)}, expected ${JSON.stringify(target.title)}`,
+          `${target.outputFile}: title is ${JSON.stringify(schemaObject.title)}, expected ${JSON.stringify(target.title)}`,
         )
       }
     }

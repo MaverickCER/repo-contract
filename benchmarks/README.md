@@ -1,10 +1,13 @@
 # Benchmarks
 
-This folder is the performance and cost record of the package: what adopting it costs in time and
-money, how each function scales, and where the cost comes from. It is built entirely by
-[`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract): the package
-supplies **what to run** (an input), the contract **stresses it through ten sizes, measures it, checks
-the big-O and prices it**, and writes a **report** and a machine-readable **result** (the output).
+This folder is the performance and cost record of the package. It shows what adopting it costs in
+time and money, how each function scales, and where the cost comes from. It is built entirely by
+[`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract):
+
+- The package supplies **what to run** (an input).
+- The contract **stresses it through ten sizes, measures it, checks the big-O and prices it**.
+- The contract writes a **report** and a machine-readable **result** (the output).
+
 Nothing in this folder implements timing, statistics or reporting.
 
 ## Read first
@@ -22,7 +25,7 @@ The history page on the project website and the pull-request summaries link back
 ## Four suites, four hot paths
 
 repo-contract is a check-execution engine, so its performance-sensitive surface is internal. Each suite
-benchmarks its own source (`src/`, run through `tsx`) -- reaching into the repository the way a unit test
+benchmarks its own source (`src/`, run through `tsx`). It reaches into the repository the way a unit test
 does, not the way an external consumer imports it:
 
 | Suite                                                                    | What it measures                                                                                                                 | Unit of `n`       |
@@ -32,9 +35,11 @@ does, not the way an external consumer imports it:
 | [performance-api-contract](performance-api-contract/BENCHMARKS.md)       | The API-contract engine (load, normalize, classify with type-assignability) that gates every release.                            | exported symbols  |
 | [performance-exceptions](performance-exceptions/BENCHMARKS.md)           | The exception-registry and exception-policy helpers: load, write, reconcile, resolve, evaluate, validate and hash.               | entries           |
 
-Two ladders stop short of 10,240 and say why in their report: the checks suite stops at 2,560 (each
-check spawns a real process) and the API-contract suite at 1,280 (each size compiles a real TypeScript
-package and runs API Extractor).
+Two ladders stop short of 10,240 and say why in their report:
+
+- The checks suite stops at 2,560 (each check spawns a real process).
+- The API-contract suite stops at 1,280 (each size compiles a real TypeScript package and runs API
+  Extractor).
 
 ## Commands
 
@@ -103,8 +108,8 @@ export default defineSuite({
 | `inEndToEnd`                                                            | no       | How often one end-to-end operation calls the function, for the attribution section.           |
 
 `expectedComplexity` is one of `constant`, `logarithmic`, `linear`, `linearithmic`, `quadratic`,
-`exponential-or-worse`. Return a value that depends on the work (the contract keeps it alive so
-nothing is optimized away); return `timed(ms)` only when an operation is timed elsewhere, such as a
+`exponential-or-worse`. Return a value that depends on the work; the contract keeps it alive so
+nothing is optimized away. Return `timed(ms)` only when an operation is timed elsewhere, such as a
 child process.
 
 ## The output: `results.json`
@@ -128,6 +133,6 @@ analysis   complexity      measured class, exponent and notation per group, with
            cost            the typical and largest sizes used for the headline numbers
 ```
 
-Because results are not comparable between machines or runs, history and pull-request summaries look at
+Results are not comparable between machines or runs. So history and pull-request summaries look at
 **change over time on comparable hardware** and at **changes in growth class**, never at one absolute
 number. See [READING-BENCHMARKS.md](READING-BENCHMARKS.md).

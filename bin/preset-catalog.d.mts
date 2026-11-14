@@ -16,8 +16,11 @@ export type PresetName =
   | "commitlint"
   | "publint"
   | "arethetypeswrong"
+  | "aiReview"
 
 export declare const DIST_OUTPUT: "dist/"
+
+export declare const AGENT_COMMAND: "agent command"
 
 export declare const PRESET_DEPENDENCIES: Readonly<Record<PresetName, string | null>>
 
@@ -34,7 +37,7 @@ export interface DetectPresetsResult {
 }
 
 export declare function detectPresets(packageJson: {
-  // A real package.json naturally has both fields -- this type accepts `dependencies` for
+  // A real package.json naturally has both fields: this type accepts `dependencies` for
   // shape-compatibility with that, even though detectPresets's implementation only ever reads
   // `devDependencies` (see preset-catalog.mjs's own doc comment for why).
   readonly dependencies?: Readonly<Record<string, string>>

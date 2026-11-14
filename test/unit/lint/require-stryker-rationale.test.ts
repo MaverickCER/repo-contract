@@ -2,15 +2,15 @@ import { RuleTester } from "eslint"
 import { describe, it } from "vitest"
 import requireStrykerRationale from "../../../eslint-rules/require-stryker-rationale.mjs"
 
-// eslint's RuleTester supports any test framework that exposes describe/it
-// via these static hooks -- wiring vitest's directly avoids adding a
-// mocha-shaped dependency just for this one file.
+// ESLint's RuleTester supports any test framework that exposes describe/it
+// via these static hooks. Wiring vitest's directly avoids adding a
+// mocha-shaped dependency for this one file.
 RuleTester.describe = describe
 RuleTester.it = it
 
 /**
  * Proves this rule discriminates a genuine adjacent rationale from an
- * absent one -- not just that it runs -- the same "rule quality, not rule
+ * absent one (not just that it runs) the same "rule quality, not rule
  * existence" standard test/unit/architecture/rules.test.ts applies to the
  * dependency-cruiser layering rule.
  */
@@ -26,7 +26,7 @@ ruleTester.run("require-stryker-rationale", requireStrykerRationale, {
       if (x) y()
     `,
     // Rationale separated from the directive by an intervening, directive-only
-    // v8-ignore marker -- the common spawn-check.ts/run-checks.ts shape.
+    // v8-ignore marker: the common spawn-check.ts/run-checks.ts shape.
     `
       // Real explanation of why this branch is safe to exempt from mutation testing.
       /* v8 ignore start */
@@ -41,7 +41,7 @@ ruleTester.run("require-stryker-rationale", requireStrykerRationale, {
       // Stryker disable all
       if (x) y()
     `,
-    // No Stryker directive present -- the rule has nothing to flag.
+    // No Stryker directive present: the rule has nothing to flag.
     `if (x) y()`,
   ],
   invalid: [
@@ -66,7 +66,7 @@ ruleTester.run("require-stryker-rationale", requireStrykerRationale, {
     },
     {
       // A blank line between the rationale and the directive breaks
-      // adjacency -- the rule requires the explanation to sit with the
+      // adjacency: the rule requires the explanation to sit with the
       // directive it justifies, not merely exist somewhere above it.
       code: `
         // Real explanation.

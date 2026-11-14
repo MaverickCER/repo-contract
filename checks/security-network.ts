@@ -64,8 +64,8 @@ function renderFinding(finding: NetworkCapabilityFinding): string {
 
 /**
  * Fails whenever scripts/security-network/scan.ts found any prohibited (or unverifiable) network
- * capability in `src/**\/*.ts` not backed by a complete exception record, or a stale record whose
- * finding is gone. A pure evidence->verdict function -- the scan script owns loading, reconciling,
+ * capability in `src/**\/*.ts` that no complete exception record backs. Also fails on a stale
+ * record whose finding is gone. A pure evidence->verdict function: the scan script owns loading, reconciling,
  * and writing `.repo-contract/exceptions/security-network.json`. A zero-file scan still fails.
  * @param input - Wraps the scan evidence.
  * @param input.evidence - The `NetworkScanEvidence` emitted by scan.ts.
@@ -119,7 +119,7 @@ export function evaluateSecurityNetworkPolicy(input: {
     return {
       outcome: "fail",
       rationale:
-        "security-network scan reported zero files scanned under src/ -- a clean result from an " +
+        "security-network scan reported zero files scanned under src/. A clean result from an " +
         "empty scan is not evidence of a network-free surface. Check the scan's file discovery.",
     }
   }
@@ -151,7 +151,7 @@ export function evaluateSecurityNetworkPolicy(input: {
 
   const staleLines = evidence.staleExceptions.map(
     (record) =>
-      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)} -- its finding is gone; delete this entry.`,
+      `- Stale exception in ${evidence.registryPath}: ${JSON.stringify(record.id)}. Its finding is gone; delete this entry.`,
   )
 
   if (evidence.findings.length === 0) {
@@ -190,7 +190,7 @@ export function evaluateSecurityNetworkPolicy(input: {
         : d.verdict === "unmatched"
           ? "no reconciled exception record (registry integrity failure)"
           : `exception incomplete (missing: ${d.missing.join(", ")})`
-    return `- ${renderFinding(d.finding)} -- ${detail}`
+    return `- ${renderFinding(d.finding)}: ${detail}`
   })
 
   return {
@@ -199,12 +199,12 @@ export function evaluateSecurityNetworkPolicy(input: {
       `${String(offenders.length + evidence.staleExceptions.length)} prohibited/unverifiable network capability finding(s) or stale record(s) across ${String(evidence.filesScanned)} file(s) scanned under src/:`,
       ...offenderLines,
       ...staleLines,
-      `src/ must never perform network I/O directly -- see SECURITY.md's network-free surface guarantee. A reviewed exception requires a complete record in ${evidence.registryPath} (justification, alternatives, remediation, method, exceptionType).`,
+      `src/ must never perform network I/O directly (see SECURITY.md's network-free surface guarantee). A reviewed exception requires a complete record in ${evidence.registryPath} (justification, alternatives, remediation, method, exceptionType).`,
     ].join("\n"),
   }
 }
 
-// Second, independent layer of the "no network calls" invariant -- see eslint.config.js's own doc
+// Second, independent layer of the "no network calls" invariant: see eslint.config.js's own doc
 // comment on the first (ESLint) layer, and specs/decisions/0007-no-network-surface.md. This
 // check's own script (scripts/security-network/scan.ts) never invokes ESLint, so a silently
 // weakened/removed ESLint rule or a suppressed violation still fails here.

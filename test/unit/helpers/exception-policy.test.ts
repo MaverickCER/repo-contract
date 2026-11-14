@@ -77,7 +77,7 @@ describe("resolveExceptionPolicy", () => {
     expect(result).toEqual(FORBIDDEN)
   })
 
-  it("only glob-matching rules contribute to the strictest result -- an unrelated, non-matching rule is never consulted", () => {
+  it("only glob-matching rules contribute to the strictest result: an unrelated, non-matching rule is never consulted", () => {
     const config: ExceptionPolicyConfig = {
       g: {
         rules: {
@@ -148,11 +148,11 @@ describe("resolveExceptionPolicy", () => {
     expect(result).toEqual(exception("z"))
   })
 
-  it('a blanket "*" category is never treated as a literal glob target -- it does not silently match a "security/*"-style pattern via glob semantics', () => {
-    // If "*" were run through ordinary glob matching (as if it were any other category
-    // string), globMatch("security/*", "*") is false (a literal one-segment "*" does not match a
-    // multi-segment target) -- but this rule's forbidden status must still be picked up, because
-    // the blanket case reduces over every rule directly, never via the glob matcher at all.
+  it('a blanket "*" category is never treated as a literal glob target: it does not silently match a "security/*"-style pattern via glob semantics', () => {
+    // Ordinary glob matching would miss this rule: `globMatch("security/*", "*")` is false. A
+    // literal one-segment "*" does not match a multi-segment target. The forbidden status must
+    // still be picked up. The blanket case reduces over every rule directly, never via the glob
+    // matcher.
     const config: ExceptionPolicyConfig = { g: { rules: { "security/*": FORBIDDEN } } }
     const result = resolveExceptionPolicy({ group: "g", category: "*" }, config, ALLOWED)
     expect(result).toEqual(FORBIDDEN)
@@ -207,7 +207,7 @@ describe("validateExceptionPolicyConfig", () => {
     const config: ExceptionPolicyConfig = { g: { rules: { "*": FORBIDDEN } } }
     const errors = validateExceptionPolicyConfig(config)
     expect(errors).toContain(
-      'config.g.rules must not use the literal "*" as a key -- it would be consulted ' +
+      'config.g.rules must not use the literal "*" as a key. It would be consulted ' +
         'only as an ordinary glob (matching the literal one-character category "*", ' +
         "never every category in the group) rather than as the blanket policy " +
         "`resolveExceptionPolicy` already applies whenever the classification's own `category` " +

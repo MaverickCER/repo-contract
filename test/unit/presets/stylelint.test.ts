@@ -163,7 +163,7 @@ describe("stylelint preset", () => {
                     text: "empty",
                   },
                   { line: 6, column: 1, rule: "other", severity: "warning", text: "other issue" },
-                  // A severity value that is neither "error" nor "warning" --
+                  // A severity value that is neither "error" nor "warning":
                   // proves the warning branch's own filter runs, not just
                   // that everything present happens to already be a warning.
                   { line: 7, column: 1, rule: "deprecated", severity: "deprecation", text: "old" },

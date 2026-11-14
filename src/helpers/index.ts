@@ -1,26 +1,20 @@
 /**
- * A reusable, generic exception-policy primitive -- the mechanism
- * `scripts/suppression-governance/` already built for `disable-comments.json`
- * (ADR 0006), extracted so any check can gate a finding on a named,
- * non-empty-prose exception instead of hand-rolling the same
- * exact/glob/default precedence and field-completeness logic again. Deciding
- * nothing and matching nothing: this barrel resolves a `{ group,
- * category }` classification to a policy and checks a record's own field
- * values against it -- it never decides what a "finding" is, never matches a
- * record to one, and never owns a canonical-identity concept. Those stay
- * entirely check-owned (see `checks/shared/`, unpublished) -- see
- * specs/decisions/0013-reusable-exception-policy-helper.md for the full
- * rationale and the boundary this barrel deliberately does not cross.
+ * Governed exceptions: let a check waive one finding when a named record justifies it, without
+ * weakening the check. A record names its `{ group, category }`, and this barrel resolves that to
+ * a policy (exact, then glob, then default) and checks the record's fields against it.
+ *
+ * The check stays in charge of everything else. It decides what a finding is, matches records to
+ * findings and owns the identity of each finding (see `checks/shared/`, unpublished). This is the
+ * mechanism `scripts/suppression-governance/` built for `disable-comments.json` (ADR 0006),
+ * extracted for any check; specs/decisions/0013-reusable-exception-policy-helper.md has the
+ * boundary.
  *
  * Published **Stable** (see `VERSIONING.md` and
- * specs/decisions/0019-helpers-promoted-presets-stay-experimental.md): a new export is a minor release
- * from `1.0` on (while the package is `0.x` the release tooling deflates it to a patch), a changed
- * signature or behavior is a breaking change.
+ * specs/decisions/0019-helpers-promoted-presets-stay-experimental.md). From `1.0` a new export is
+ * a minor release and a changed signature or behavior is a major one. While the package is `0.x`,
+ * the release tooling deflates a new export to a patch.
  *
- * Never re-exported from the package root (`src/index.ts`) -- this is a
- * second, independent public barrel, published under its own `./helpers`
- * subpath, exactly like `src/presets/index.ts`; the two stay independent of
- * each other and of the root barrel.
+ * Published under its own `./helpers` subpath, independent of the root and `./presets` barrels.
  * @packageDocumentation
  */
 export type {
@@ -34,12 +28,13 @@ export type {
 } from "./exception-policy.js"
 export type { ExceptionReconciliation, ExceptionRecordCore } from "./reconcile-exceptions.js"
 // Re-exported because `loadExceptionRegistry` below takes a `schema: StandardSchemaV1<...>`
-// parameter -- a consumer implementing one (or passing a real Zod/Valibot/ArkType schema, whose
-// own type already satisfies this hand-vendored interface structurally) needs this type in scope
-// without reaching past this independent `./helpers` barrel into the root `repo-contract` export
-// or `src/standard-schema/types.js` directly. Same vendored contract `src/index.ts` re-exports
-// for the root barrel's own `output.schema` option (ADR 0012) -- kept in sync by hand since the
-// two barrels are deliberately independent (see this file's own module doc comment above).
+// parameter. A consumer implementing one, or passing a real Zod/Valibot/ArkType schema, needs
+// this type in scope without reaching past this independent `./helpers` barrel into the root
+// `repo-contract` export or `src/standard-schema/types.js` directly. A real schema's own type
+// already satisfies this hand-vendored interface structurally. Same vendored contract
+// `src/index.ts` re-exports for the root barrel's own `output.schema` option (ADR 0012). It is
+// kept in sync by hand since the two barrels are deliberately independent (see this file's own
+// module doc comment above).
 export type { StandardSchemaV1 } from "../standard-schema/types.js"
 export {
   evaluateExceptionRecord,

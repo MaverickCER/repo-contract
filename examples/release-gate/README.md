@@ -2,8 +2,8 @@
 
 One policy that reads the evidence of several checks to decide whether a release is permitted.
 
-It uses the same three real, published `repo-contract/presets` entries as [`demo`](../demo) --
-`typecheck`, `format` and `lint` -- against the same deliberately imperfect `src/greet.ts`. The new part
+It uses the same three real, published `repo-contract/presets` entries as [`demo`](../demo)
+(`typecheck`, `format` and `lint`) against the same deliberately imperfect `src/greet.ts`. The new part
 is the fourth check, `release`. It runs no command of its own. Its policy receives the evidence of every
 other check (`ctx.evidence.checks`) and decides what the combination means:
 

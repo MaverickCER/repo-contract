@@ -7,7 +7,7 @@
  * lands it is an actionable warning rather than a broken build.
  *
  * The baseline check here (`Types`) is a real preset, exactly as `internal-boilerplate-contract`
- * uses it. The two rollout checks use {@link exampleAdoptionPolicy} -- see ./adoption-policy.ts for
+ * uses it. The two rollout checks use {@link exampleAdoptionPolicy}: see ./adoption-policy.ts for
  * why that is ordinary policy code, not a repo-contract feature.
  */
 import { spawn } from "node:child_process"
@@ -48,7 +48,7 @@ export default defineRepoContract({
     },
 
     // A requirement the organization is rolling out right now. Its date is in the near future, so a
-    // repository that does not satisfy it yet gets a `warn` with a countdown -- not a `fail`.
+    // repository that does not satisfy it yet gets a `warn` with a countdown: not a `fail`.
     MutationFloor: {
       run: ["node", "--version"],
       policy: exampleAdoptionPolicy(

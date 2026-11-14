@@ -4,7 +4,7 @@ import { errorWarningPassPolicy } from "./shared/error-warning-pass-policy.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
-/** Stylelint's own `--formatter json` contract -- not published as a TypeScript type by the tool. */
+/** Stylelint's own `--formatter json` contract: not published as a TypeScript type by the tool. */
 interface StylelintWarning {
   readonly line: number
   readonly column: number
@@ -21,7 +21,7 @@ interface StylelintResult {
 
 /** Options accepted by {@link stylelint}. */
 interface StylelintOptions {
-  /** Glob passed straight through to stylelint as its positional target. Defaults to `"**\/*.{css,scss}"` -- adjust it for your own stylesheet file extensions (e.g. `.less`, `.vue`, `.svelte`). */
+  /** Glob passed straight through to stylelint as its positional target. Defaults to `"**\/*.{css,scss}"`: adjust it for your own stylesheet file extensions (e.g. `.less`, `.vue`, `.svelte`). */
   readonly glob?: string
 }
 
@@ -64,8 +64,8 @@ export function stylelint(options: StylelintOptions = {}): CheckDefinitionConfig
       }
 
       // Valid JSON of an unexpected shape (a stylelint formatter change, a
-      // primitive, an entry without a `warnings` array) must fail cleanly, not
-      // throw a TypeError out of the `flatMap` below.
+      // primitive, an entry without a `warnings` array) must fail cleanly. It
+      // must not throw a TypeError out of the `flatMap` below.
       const value: unknown = result.output.value
       if (
         !Array.isArray(value) ||

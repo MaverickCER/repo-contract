@@ -1,13 +1,12 @@
-// CI's `typescript-compat` job runs this with `node scripts/typescript-compat.mjs <artifacts-dir>`
-// against the same packed tarball `published-floor` smoke-tests -- but instead of Node-floor
-// runtime behavior, this proves the shipped `.d.ts` files actually compile under a real consumer's
-// own toolchain, including a TypeScript release newer than anything this repo's own build ever
-// runs against (this repo's own tsconfig uses `moduleResolution: "Bundler"` and a pinned
-// `typescript` devDependency -- neither exercises `nodenext` resolution or a future major, so a
-// declaration-emission regression there would otherwise go unnoticed until a real consumer hit it).
+// CI's `typescript-compat` job runs this with `node scripts/typescript-compat.mjs <artifacts-dir>`, against
+// the same packed tarball `published-floor` smoke-tests. It proves the shipped `.d.ts` files compile under a
+// real consumer's toolchain, including a TypeScript release newer than this repo's own build uses. This
+// repo's tsconfig uses `moduleResolution: "Bundler"` and a pinned `typescript` devDependency. Neither
+// exercises `nodenext` resolution or a future major, so without this job a declaration-emission regression
+// would go unnoticed until a real consumer hit it.
 //
 // Fresh `npm install` inside a scratch project, exactly like `published-floor`'s
-// scripts/smoke-consumer.mjs -- unlike that script, this one CAN install `typescript@<major>`
+// scripts/smoke-consumer.mjs. Unlike that script, this one CAN install `typescript@<major>`
 // (a real devDependency of the scratch project, not of this repository), since this job doesn't
 // share the Node-floor / no-toolchain constraint `published-floor` has.
 //
@@ -15,8 +14,8 @@
 // "nodenext"` and `strict: true`, under the newest release of each TypeScript major a consumer may
 // have installed: 5, 6 and 7. TypeScript 7 is the native compiler and ships no compiler API, which
 // `repo-contract/affected` needs for both its types and its runtime (the command refuses 7 with a
-// message). So under 7 every other barrel must compile, and a consumer that imports `affected` must
-// fail with the compiler-API error -- the documented limit is asserted, not assumed.
+// message). Under 7, every other barrel must compile, and a consumer that imports `affected` must
+// fail with the compiler-API error. The documented limit is asserted, not assumed.
 // Override the list on the command line: `node scripts/typescript-compat.mjs <artifacts-dir>
 // [version ...]`. There is no 5.0 floor here: the optional `typescript >=5.0.0` peer exists for
 // `affected` alone, and the oldest 5.x cannot even parse the newest `@types/node` the scratch

@@ -3,33 +3,33 @@
 // scripts/run-attw-to-file.mjs (the `arethetypeswrong` check). Kept in one
 // place because two independent things were subtly wrong in both copies:
 //
-//   1. `npm pack --json` stdout is NOT guaranteed to be pure JSON. npm 10.x
-//      prepends its own (ANSI-styled) log lines to stdout ahead of the
-//      `--json` payload, so a bare `JSON.parse(stdout)` throws on the leading
-//      escape byte (observed across CI's Node 22 jobs; npm 11 bundled with
-//      Node 24 happens to emit clean output, which is the only reason those
-//      jobs passed). `--loglevel=silent` suppresses the noise, and
-//      `parseNpmPackFilename` below isolates the JSON block and asserts its
-//      shape regardless, so a future npm behaviour change can't reintroduce
-//      the failure silently.
-//   2. On Windows `npm` is `npm.cmd`, and since the CVE-2024-27980 mitigation
-//      (Node 18.20.2 / 20.12.2 / 22+) `child_process.spawnSync` refuses to run
-//      a `.cmd`/`.bat` file at all unless `shell: true` -- it fails with
-//      `status: null` and no captured stderr, which is exactly the opaque
+//   1. `npm pack --json` stdout is NOT guaranteed to be pure JSON. Version
+//      10.x of npm prepends its own (ANSI-styled) log lines to stdout ahead
+//      of the `--json` payload. A bare `JSON.parse(stdout)` then throws on
+//      the leading escape byte. This was observed across CI's Node 22 jobs.
+//      The npm 11 bundled with Node 24 happens to emit clean output, which
+//      is the only reason those jobs passed. `--loglevel=silent` suppresses
+//      the noise. `parseNpmPackFilename` below isolates the JSON block and
+//      asserts its shape regardless. A future npm behaviour change therefore
+//      can't reintroduce the failure silently.
+//   2. On Windows `npm` is `npm.cmd`. Since the CVE-2024-27980 mitigation
+//      (Node 18.20.2 / 20.12.2 / 22+), `child_process.spawnSync` refuses to
+//      run a `.cmd`/`.bat` file at all unless `shell: true`. It fails with
+//      `status: null` and no captured stderr. That is exactly the opaque
 //      "npm pack failed (exit null)" the E2E suite hit on windows-latest.
-//      `cross-spawn` (already a runtime dependency, used the same way by
-//      scripts/run-test-category.mjs) resolves `npm` -> `npm.cmd` and invokes
-//      it through `cmd.exe` with correct argument quoting, with none of the
-//      `shell: true` quoting hazards, so callers just pass `"npm"`.
+//      `cross-spawn` is already a devDependency, used the same way by
+//      scripts/run-test-category.mjs. It resolves `npm` -> `npm.cmd` and
+//      invokes it through `cmd.exe` with correct argument quoting. None of
+//      the `shell: true` quoting hazards apply, so callers pass `"npm"`.
 //
-// scripts/ is lower-level tooling that checks/ and test/ build on (see
-// eslint.config.js's boundary rules) -- both callers importing from here is
-// the allowed direction; this module never imports from either of them.
+// The scripts/ tree is lower-level tooling that checks/ and test/ build on
+// (see eslint.config.js's boundary rules). Both callers importing from here
+// is the allowed direction. This module never imports from either of them.
 
 import { sync as spawnSync } from "cross-spawn"
 import path from "node:path"
 
-/** npm's command name -- `cross-spawn` resolves this to `npm.cmd` on Windows and runs it safely. */
+/** npm's command name: `cross-spawn` resolves this to `npm.cmd` on Windows and runs it safely. */
 const NPM = "npm"
 
 const JSON_OPEN = new Set(["[", "{", "[]", "{}"])
@@ -38,11 +38,11 @@ const JSON_CLOSE = new Set(["]", "}", "[]", "{}"])
 /**
  * Parses `npm pack --json` stdout into its result array, tolerant of npm prefixing its own log
  * lines (ANSI-coloured or not) ahead of the JSON payload. `--loglevel=silent` should already
- * suppress that prefix, but npm's behaviour here has varied enough across versions that this
- * doesn't rely on it: if the whole string doesn't parse, it isolates npm's pretty-printer's own
- * block -- from the first line that is exactly `[`/`{`/`[]`/`{}` to the last line that is exactly
- * `]`/`}`/`[]`/`{}` -- and parses that. npm's log lines are never exactly one of those tokens,
- * even with colour codes still attached.
+ * suppress that prefix. npm's behaviour here has varied enough across versions that this
+ * doesn't rely on it. If the whole string doesn't parse, it isolates npm's pretty-printer's own
+ * block and parses that. The block runs from the first line that is exactly `[`/`{`/`[]`/`{}`
+ * to the last line that is exactly `]`/`}`/`[]`/`{}`. The log lines npm writes are never
+ * exactly one of those tokens, even with colour codes still attached.
  * @param stdout - Raw stdout from `npm pack --json`.
  * @returns The parsed result array (`[{ filename, ... }, ...]`), or `undefined` if nothing parses.
  */
@@ -74,8 +74,8 @@ function parseNpmPackJson(stdout) {
 }
 
 /**
- * The result entries of a parsed `npm pack --json` payload. npm <= 11 emits an array of results;
- * npm 12 emits an object keyed by package name instead, so both are accepted.
+ * The result entries of a parsed `npm pack --json` payload. Versions <= 11 of npm emit an array
+ * of results. Version 12 emits an object keyed by package name instead, so both are accepted.
  * @param parsed - The parsed JSON payload.
  * @returns The result entries (`[]` for any other shape).
  */
@@ -113,7 +113,7 @@ export function parseNpmPackFilename(stdout, stderr = "") {
 
 /**
  * Runs `npm <args>` synchronously via `cross-spawn`, capturing stdout/stderr as UTF-8 text. The
- * single place this repository spawns `npm` from Node -- see this module's header for why the
+ * single place this repository spawns `npm` from Node: see this module's header for why the
  * plain `child_process` route is a Windows footgun.
  * @param args - Arguments to pass to `npm` (e.g. `["install", tarball, "--no-save"]`).
  * @param options - Optional `cwd` for the invocation.
@@ -125,11 +125,12 @@ export function runNpm(args, options = {}) {
 
 /**
  * Runs a real `npm pack` into `destinationDir` and returns where the tarball landed.
- * `--ignore-scripts` so packing stays side-effect-free and deterministic: it must never run a
- * build (whose stdout would corrupt `--json`, and whose `dist/` delete+rebuild would race every
- * concurrent reader -- see scripts/run-attw-to-file.mjs's own note). `dist/` is expected to be
- * already built by the time this runs (the build barrier in repo-contract.config.ts / an explicit
- * `npm run build`); the published package has no `prepare` or other install lifecycle script.
+ * `--ignore-scripts` keeps packing side-effect-free and deterministic. It must never run a
+ * build. A build's stdout would corrupt `--json`, and its `dist/` delete+rebuild would race every
+ * concurrent reader (see scripts/run-attw-to-file.mjs's own note). `dist/` is expected to be
+ * already built by the time this runs, by the build barrier in repo-contract.config.ts or an
+ * explicit `npm run build`. The published package has no `prepare` or other install lifecycle
+ * script.
  * @param destinationDir - Directory the `.tgz` is written into (must already exist).
  * @param options - Optional `cwd` for the `npm pack` invocation (defaults to the current directory).
  * @returns The tarball's `filename` and its full `tarballPath` inside `destinationDir`.

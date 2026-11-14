@@ -3,13 +3,13 @@ module.exports = {
   forbidden: [
     {
       name: "no-circular",
-      // Upgraded from dependency-cruiser's own default ("warn") to "error":
+      // Upgraded from dependency-cruiser's own default ("warn") to "error".
       // checks/architecture.ts's policy (evaluateArchitecturePolicy) only
-      // fails the check on "error"-severity violations, so a circular
-      // dependency inside src/ left at "warn" would never actually fail
-      // this repository's own architecture check. No circular dependency
+      // fails the check on "error"-severity violations. A circular
+      // dependency inside src/ left at "warn" would never fail this
+      // repository's own architecture check. No circular dependency
       // currently exists in src/ (confirmed via `npx depcruise --config
-      // .dependency-cruiser.cjs --output-type json src`), so this is a
+      // .dependency-cruiser.cjs --output-type json src`). So this is a
       // zero-regression tightening of a standard architectural invariant.
       severity: "error",
       comment:
@@ -36,6 +36,8 @@ module.exports = {
           "[.]d[.](?:ts|cts|mts)$", // TypeScript declaration files (incl. the .d.mts shims scripts/emit-dts-shims.mjs's siblings use)
           "(^|/)tsconfig[.]json$", // TypeScript config
           "(^|/)(?:babel|webpack)[.]config[.](?:js|cjs|mjs|ts|cts|mts|json)$", // other configs
+          // Data about the contract itself, read only by test/unit/config/standard-coverage.test.ts.
+          "^checks/standard-coverage[.]ts$",
         ],
       },
       to: {},
@@ -95,18 +97,18 @@ module.exports = {
       from: {},
       to: {
         dependencyTypes: ["npm-no-pkg", "npm-unknown"],
-        // `yaml` is deliberately declared in BOTH peerDependencies (the real, optional runtime
-        // dependency -- see specs/decisions/0008-self-hosting-tool-and-dependency-choices.md) and
-        // devDependencies (so this repository's own tests/scripts can use it locally). Confirmed
-        // via `depcruise --output-type json`: dependency-cruiser's own dependencyTypes array for
-        // src/parsing/parse-yaml.ts's `import("yaml")` includes npm-peer AND npm-dev alongside
-        // npm-no-pkg simultaneously for this exact dual-declared, type-resolved-through-.d.ts case
-        // -- a real dependency-cruiser classification quirk with peer+dev dual declaration, not an
-        // actual undeclared dependency. Excluded by resolved path, not by dependencyTypes, so a
-        // genuinely undeclared package resolving anywhere else still fails this rule normally.
-        // `typescript` is the same case: an optional peer dependency (type-only use in
-        // src/affected/, specs/decisions/0021-*) that is also a devDependency for this
-        // repository's own tests and scripts.
+        // `yaml` is deliberately declared in BOTH peerDependencies and devDependencies. The peer is
+        // the real, optional runtime dependency (see
+        // specs/decisions/0008-self-hosting-tool-and-dependency-choices.md). The devDependency lets
+        // this repository's own tests and scripts use it locally. `depcruise --output-type json`
+        // confirms how dependency-cruiser classifies src/parsing/parse-yaml.ts's `import("yaml")`.
+        // Its dependencyTypes array holds npm-peer AND npm-dev alongside npm-no-pkg at once. That
+        // happens for this dual-declared, type-resolved-through-.d.ts case. It is a
+        // dependency-cruiser classification quirk, not an undeclared dependency. The exclusion is
+        // by resolved path, not by dependencyTypes. So a genuinely undeclared package resolving
+        // anywhere else still fails this rule. `typescript` is the same case. It is an optional
+        // peer dependency (type-only use in src/affected/, specs/decisions/0021-*). It is also a
+        // devDependency for this repository's own tests and scripts.
         pathNot: ["node_modules/yaml/", "node_modules/typescript/"],
       },
     },
@@ -131,8 +133,8 @@ module.exports = {
       from: {},
       to: {
         moreThanOneDependencyType: true,
-        // as it's common to use a devDependency for type-only imports: don't
-        // consider type-only dependencyTypes for this rule
+        // It is common to use a devDependency for type-only imports, so type-only
+        // dependencyTypes are not considered for this rule.
         dependencyTypesNot: ["type-only"],
         // Intentional peer + dev declaration (see peer-deps-used below).
         pathNot: ["node_modules/typescript/"],
@@ -181,13 +183,13 @@ module.exports = {
       },
       to: {
         dependencyTypes: ["npm-dev"],
-        // type only dependencies are not a problem as they don't end up in the
-        // production code or are ignored by the runtime.
+        // Type-only dependencies are not a problem: they don't end up in the
+        // production code, or the runtime ignores them.
         dependencyTypesNot: ["type-only"],
-        // node_modules/@types/ -- see the comment immediately above. node_modules/yaml/ -- same
-        // dual peerDependencies+devDependencies declaration exempted in no-non-package-json above;
-        // see that rule's own comment for the full reasoning (identical here, dependency-cruiser
-        // classifies the same edge as npm-dev alongside npm-peer).
+        // For node_modules/@types/, see the comment immediately above. node_modules/yaml/ and
+        // node_modules/typescript/ have the dual peerDependencies+devDependencies declaration
+        // exempted in no-non-package-json above. That rule's comment has the full reasoning. It is
+        // identical here: dependency-cruiser classifies the same edge as npm-dev alongside npm-peer.
         pathNot: ["node_modules/@types/", "node_modules/yaml/", "node_modules/typescript/"],
       },
     },
@@ -216,8 +218,8 @@ module.exports = {
       to: {
         dependencyTypes: ["npm-peer"],
         // Intentional: `typescript` is an optional peer dependency used for types only by
-        // src/affected/ (specs/decisions/0021-*), and a devDependency for this repository's own
-        // tooling -- the same dual declaration `yaml` has.
+        // src/affected/ (specs/decisions/0021-*). It is also a devDependency for this repository's
+        // own tooling, the same dual declaration `yaml` has.
         pathNot: ["node_modules/typescript/"],
       },
     },
@@ -307,15 +309,15 @@ module.exports = {
     },
   ],
   options: {
-    // Deliberately no `includeOnly` -- an earlier `includeOnly: "^src"` here silently excluded
+    // Deliberately no `includeOnly`. An earlier `includeOnly: "^src"` here silently excluded
     // every non-src module (scripts/, test/, checks/, and every node_modules package) from the
-    // cruised graph entirely, which made not-to-test, not-to-dev-dep, and src-must-not-import-
-    // scripts above structurally incapable of ever firing: confirmed empirically (a fixture
-    // reproducing each showed 0 violations with includeOnly set, 2 with it removed, against an
-    // otherwise-identical rule set). The cruise target is still just `src` (see
-    // scripts/check-architecture.mjs's own `depcruise ... src` invocation) -- this only changes
-    // whether an edge src/ actually follows *out* to (scripts/, test/, an npm-dev dependency) is
-    // visible in the resulting graph, not what's cruised as a root. `doNotFollow` below still
+    // cruised graph. That made not-to-test, not-to-dev-dep and src-must-not-import-scripts above
+    // structurally incapable of ever firing. This was confirmed empirically: a fixture
+    // reproducing each showed 0 violations with includeOnly set and 2 with it removed. The rule
+    // set was otherwise identical. The cruise target is still only `src` (see
+    // scripts/check-architecture.mjs's own `depcruise ... src` invocation). This only changes
+    // whether an edge src/ follows *out* (to scripts/, test/, an npm-dev dependency) is visible in
+    // the resulting graph. It does not change what is cruised as a root. `doNotFollow` below still
     // prevents recursing into node_modules' own internal dependency graph.
     // Which modules not to follow further when encountered
     doNotFollow: {

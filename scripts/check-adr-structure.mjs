@@ -1,6 +1,6 @@
 // Static, permanent guardrail that this repository's own ADR set (specs/decisions/) stays
-// structurally well-formed as it grows -- never executes anything, only reads the filesystem and
-// each file's own text.
+// structurally well-formed as it grows. It never executes anything. It only reads the filesystem
+// and each file's own text.
 //
 // Three checks, matching what `npm run adr:new` (scripts/adr-new.mjs) scaffolds and
 // CONTRIBUTING.md's "Architecture Decision Records" section describes:
@@ -9,17 +9,19 @@
 //   3. Every file contains the five required section headings.
 //
 // Scope discipline, deliberately: this validator checks only mechanical shape. It never attempts
-// to detect stale prose, counts, or paths inside an ADR's own body -- that's not mechanically
-// checkable, and is exactly why this repository's own documentation-vs-enforcement audit required
-// a human-driven pass rather than a tool run. It also evaluates the *current* specs/decisions/
-// tree only, never git history -- a numbering gap is accepted by design (scripts/adr-new.mjs
-// takes highest-existing + 1, so a number reserved and then abandoned without a file ever
-// existing for it leaves a permanent gap), never treated as a violation.
+// to detect stale prose, counts, or paths inside an ADR's own body. That's not mechanically
+// checkable. It is exactly why this repository's own documentation-vs-enforcement audit required
+// a human-driven pass rather than a tool run.
+//
+// It also evaluates the *current* specs/decisions/ tree only, never git history. A numbering gap
+// is accepted by design, never treated as a violation. The reason: scripts/adr-new.mjs takes
+// highest-existing + 1, so a number reserved and then abandoned without a file ever existing for
+// it leaves a permanent gap.
 //
 // Invoked by scripts/check-architecture.mjs as a third, clearly separate section of the
-// `architecture` check's evidence -- not because ADR structure is architecture in the
-// production-dependency-graph sense, but because both are cheap, static, no-execution checks
-// about the shape of the repository.
+// `architecture` check's evidence. ADR structure is not architecture in the
+// production-dependency-graph sense. It lives there because both are cheap, static,
+// no-execution checks about the shape of the repository.
 
 import { readFileSync, readdirSync } from "node:fs"
 import path from "node:path"
@@ -27,10 +29,10 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
-// A single flat character class (never a repeated group) -- avoids the nested-quantifier shape
-// that trips security/detect-unsafe-regex, the same fix this repository's own suppression
-// governance ADR documents choosing over a suppression when a real code-level fix is available.
-// The title segment must open with a real letter/digit -- `[a-z0-9-]+` alone
+// A single flat character class (never a repeated group) avoids the nested-quantifier shape
+// that trips security/detect-unsafe-regex. This repository's own suppression governance ADR
+// documents choosing that same fix over a suppression when a real code-level fix is available.
+// The title segment must open with a real letter/digit: `[a-z0-9-]+` alone
 // accepts empty-or-hyphen-only titles like `0001--.md`. A fixed leading atom
 // before the flat class keeps this free of the nested-quantifier shape.
 const FILENAME_PATTERN = /^(\d{4})-[a-z0-9][a-z0-9-]*\.md$/
@@ -69,10 +71,10 @@ export function checkAdrStructure(root = DEFAULT_ROOT) {
 
     for (const file of files) {
       const text = readFileSync(path.join(decisionsDir, file), "utf8")
-      // Only headings that appear as real Markdown structure count -- a required heading that
-      // shows up solely inside a fenced code block (an ADR quoting the `adr:new` template, say)
-      // does not satisfy the requirement. Track fence state line by line and ignore fenced lines.
-      // The line must be an actual level-two ATX heading whose title matches exactly -- a
+      // Only headings that appear as real Markdown structure count. A required heading that
+      // shows up solely inside a fenced code block does not satisfy the requirement (an ADR
+      // quoting the `adr:new` template, say). Track fence state line by line and ignore fenced
+      // lines. The line must be an actual level-two ATX heading whose title matches exactly. A
       // substring test also accepted `### Status`, `## Statuses`, or the phrase mid-sentence.
       const headingsFound = new Set()
       let inFence = false
@@ -82,7 +84,7 @@ export function checkAdrStructure(root = DEFAULT_ROOT) {
           continue
         }
         if (inFence) continue
-        // `[ \t]+` then `\S.*` -- disjoint leading classes and no trailing quantifier, so there is
+        // `[ \t]+` then `\S.*`: disjoint leading classes and no trailing quantifier, so there is
         // no cross-quantifier backtracking (a lazy `.+?` before `\s*$` is the ReDoS-prone shape).
         // The captured title keeps any trailing whitespace; `.trim()` below drops it.
         const headingMatch = /^(#{1,6})[ \t]+(\S.*)$/.exec(line)

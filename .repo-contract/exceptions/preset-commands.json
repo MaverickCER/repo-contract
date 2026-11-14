@@ -27,6 +27,19 @@
       "whyPreferable": "Running the consumer's own installed tool is preferable to bundling a copy that could drift from the version they trust."
     },
     {
+      "id": "preset-command:consumer-supplied/ai-review",
+      "version": 2,
+      "justification": "src/presets/ai-review.ts spawns only the argv in its `agent` option, which the consumer writes in their own config, as with a hand-written check. repo-contract adds no command of its own: it inserts the prompt (text, or a prompt-file path) at `{prompt}` or as the last argument, and adds nothing else. Credential values go to the process through the check's `env`, never through argv, and the policy redacts them from every reason. What the agent does, network requests included, is the consumer's choice and their own capability.",
+      "attempted": "Reviewed how src/presets/ai-review.ts builds its command line; the justification records the result.",
+      "command": "consumer-supplied/ai-review",
+      "constraint": "The preset spawns exactly the consumer's `agent` argv plus the prompt argument; it never chooses or prefixes a command.",
+      "expires": "",
+      "residualRisk": "A change to src/presets/ai-review.ts that prepends its own command would stay covered by this record until a reviewer notices; the file's unit tests pin the exact argv.",
+      "revisitWhen": "src/presets/ai-review.ts changes how it builds `run`, or another preset spreads a consumer-supplied command.",
+      "ruleBroken": "The `aiReview` preset runs a command repo-contract does not choose, which a preset may only do with a recorded reason.",
+      "whyPreferable": "An AI review has no single tool to wrap; letting the consumer name their agent keeps repo-contract free of any vendor's CLI."
+    },
+    {
       "id": "preset-command:eslint",
       "version": 2,
       "justification": "repo-contract never bundles this tool; the consumer installs and trusts it as their own devDependency, and repo-contract's preset spawns it with exactly the flags shown in this preset's run: array. `eslint <path> --format json` makes no network request. Config and plugin resolution (`extends`, shareable configs, plugins) resolves only from `node_modules`, never a URL; every plugin is a consumer-chosen devDependency visible in a package.json diff. A loaded plugin runs as ordinary Node code during the lint pass, the same trust boundary as any installed dependency. `--format json` writes to stdout only.",

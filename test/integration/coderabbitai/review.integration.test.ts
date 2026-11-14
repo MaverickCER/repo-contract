@@ -2,19 +2,18 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { runCoderabbitReview } from "../../../scripts/coderabbitai/review.js"
 
 /**
- * Runs `runCoderabbitReview()` for real -- no mocking of `cross-spawn` or the `coderabbit`/`git`
- * binaries -- matching this repository's own real-behavior-over-mocking house style (see
- * `test/integration/suppression-governance/check.integration.test.ts`). Unlike
- * `test/integration/security-socket/scan.integration.test.ts` (which exercises Socket's real
- * unauthenticated-error path -- fast and free), a real, uncontrolled `coderabbit review --agent`
- * invocation here would start an actual, billable AI review against whatever this environment's
- * real CodeRabbit credentials allow -- never appropriate to trigger unconditionally from a test
- * suite. This test instead exercises the one real, fast, free, and fully deterministic path every
- * environment (this repository's own CI included) actually takes on every single real run: the
- * `env.CI` short-circuit, asserted by setting it explicitly rather than depending on whatever the
- * ambient test-runner environment happens to already have.
+ * Runs `runCoderabbitReview()` for real (no mocking of `cross-spawn` or the `coderabbit`/`git`
+ * binaries) matching this repository's own real-behavior-over-mocking house style (see
+ * `test/integration/suppression-governance/check.integration.test.ts`). It differs from
+ * `test/integration/security-socket/scan.integration.test.ts`, which exercises Socket's
+ * unauthenticated-error path (fast and free). An uncontrolled `coderabbit review --agent` call here
+ * would start a billable AI review with whatever CodeRabbit credentials this environment holds. A
+ * test suite must never trigger that unconditionally. This test instead exercises the fast, free,
+ * deterministic path every environment takes on every run, this repository's CI included: the
+ * `env.CI` short-circuit. It sets `env.CI` explicitly rather than relying on the ambient
+ * test-runner environment.
  */
-describe("runCoderabbitReview -- real short-circuit path", () => {
+describe("runCoderabbitReview: real short-circuit path", () => {
   const originalCi = process.env.CI
 
   beforeEach(() => {

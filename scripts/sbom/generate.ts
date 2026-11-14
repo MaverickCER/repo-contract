@@ -5,15 +5,15 @@ import type { SbomEvidence, SbomSummary } from "./types.js"
 import { validateSbomDocument } from "./validate.js"
 
 /**
- * Orchestrates one full SBOM-generation pass: ensures `docs/` exists, runs `cyclonedx-npm`
- * (writing `docs/sbom.cdx.json` directly -- see spawn.ts's own doc comment), reads that file back,
- * and validates its shape (validate.ts). Everything happens here, in `run` -- the ordinary pattern
- * every other self-hosting check in this repository already uses (see e.g. the former
- * `scripts/iso-12207-alignment/run.ts`'s own identical note, and `scripts/dead-code/check.ts`).
- * Unlike `checks/openssf-scorecard.ts`, this check reads no other check's evidence via
- * `dependencies`, so it has none of that check's own documented reasons to defer writing into
- * `policy` instead (see that file's own module doc comment for the one deliberate exception this
- * repository carries, and why it does not generalize here).
+ * Orchestrates one full SBOM-generation pass. It ensures `docs/` exists and runs `cyclonedx-npm`
+ * once per document, which writes each file directly (see spawn.ts's own doc comment). It then
+ * reads each file back and validates its shape (validate.ts). Everything happens here, in `run`.
+ * That is the ordinary pattern every other self-hosting check in this repository uses (see e.g.
+ * the former `scripts/iso-12207-alignment/run.ts`'s own identical note, and
+ * `scripts/dead-code/check.ts`). Unlike `checks/openssf-scorecard.ts`, this check reads no other
+ * check's evidence via `dependencies`. It therefore has none of that check's documented reasons
+ * to defer writing into `policy`. That file's own module doc comment describes the one deliberate
+ * exception this repository carries, and why it does not generalize here.
  * @param root - Repository root to generate the SBOM for.
  * @returns The check's own evidence: either a validated summary, or a rejection reason.
  */
@@ -111,10 +111,10 @@ async function generateOne(
 
 /**
  * The document without the `npm` entry in `metadata.tools`. cyclonedx-npm records the npm that ran
- * it there, and that is whatever npm the machine happens to have: a CI runner image that moves from
- * 11.19.0 to 11.19.1 (and back) rewrites the committed SBOM and fails the clean-tree gate although
- * nothing about the dependency graph changed. The cyclonedx-npm and cyclonedx-library entries, which
- * are pinned by the lockfile, stay.
+ * it there, which is whatever npm the machine happens to have. A CI runner image that moves from
+ * 11.19.0 to 11.19.1 (and back) would rewrite the committed SBOM. That fails the clean-tree gate
+ * although nothing about the dependency graph changed. The cyclonedx-npm and cyclonedx-library
+ * entries, which are pinned by the lockfile, stay.
  * @param document - the parsed SBOM.
  * @returns the same object when it has no such entry, otherwise a copy without it.
  */

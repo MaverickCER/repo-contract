@@ -1,7 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { composeSignals } from "../../../src/execution/abort-signals.js"
 
-/** Temporarily removes the native `AbortSignal.any` so a test can exercise `composeSignals`'s manual-composition fallback path (a gap that existed under the package's original `engines.node >=20.0.0` floor, before `AbortSignal.any`'s Node 20.3.0 debut; the floor is now `>=22`, so the fallback is kept only as defence in depth), then restores it -- isolated here so the `delete`'s type-unsafety is suppressed in exactly one place. */
+/**
+ * Temporarily removes the native `AbortSignal.any`, then restores it. This lets a test exercise
+ * `composeSignals`'s manual-composition fallback path. The fallback covered a gap under the
+ * original `engines.node >=20.0.0` floor, before `AbortSignal.any` arrived in Node 20.3.0. The
+ * floor is now `>=22`, so the fallback is kept only as defence in depth. This confines the
+ * `delete`'s type-unsafety to one place.
+ */
 function withoutNativeAbortSignalAny(run: () => void): void {
   // eslint-disable-next-line @typescript-eslint/unbound-method -- reads and later restores a reference to a static function (not a `this`-using instance method); never called detached from AbortSignal.
   const original: typeof AbortSignal.any = AbortSignal.any
@@ -85,7 +91,7 @@ describe("composeSignals", () => {
     }).not.toThrow()
   })
 
-  it("falls back to manual composition when AbortSignal.any is unavailable -- exercises the pre-20.3 Node code path", () => {
+  it("falls back to manual composition when AbortSignal.any is unavailable: exercises the pre-20.3 Node code path", () => {
     withoutNativeAbortSignalAny(() => {
       const a = new AbortController()
       const b = new AbortController()
@@ -116,10 +122,10 @@ describe("composeSignals", () => {
       dispose()
       a.abort("after dispose")
 
-      // dispose() removed this composition's own "abort" listener from
-      // `a.signal` before it ever fired, so the composed signal never learns
-      // of the abort -- the input signal itself still aborts normally either
-      // way, dispose only detaches this composition's own listener from it.
+      // `dispose()` removed this composition's "abort" listener from `a.signal`
+      // before it fired. So the composed signal never learns of the abort. The
+      // input signal itself still aborts normally, because dispose only
+      // detaches this composition's listener from it.
       expect(a.signal.aborted).toBe(true)
       expect(signal.aborted).toBe(false)
     })

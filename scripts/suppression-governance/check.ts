@@ -1,21 +1,21 @@
 // Entry point for the "suppression-governance" self-hosting check, invoked via
 // `run: ["tsx", "scripts/suppression-governance/check.ts"]` in repo-contract.config.ts. Prints
-// ONLY the JSON evidence to stdout (for `output: { format: "json" }` to parse) -- mirrors
-// internal-package-contract's own scripts/api-contract/check.ts stdout contract (the pattern this
-// repository's own now-deleted checks/api-contract.ts followed too, before that engine moved
-// there). A human-facing scaffolding notice, when
-// stubs were created this run, goes to stderr.
+// ONLY the JSON evidence to stdout (for `output: { format: "json" }` to parse). This mirrors
+// internal-package-contract's own scripts/api-contract/check.ts stdout contract. This
+// repository's own now-deleted checks/api-contract.ts followed that pattern too, before that
+// engine moved there. When stubs were created this run, a human-facing scaffolding notice goes
+// to stderr.
 //
-// Report-only for policy purposes, like architecture.ts/dead-code.ts: a forbidden or
-// under-justified suppression this run *discovers* never fails this script's own exit code -- that
+// Report-only for policy purposes, like architecture.ts/dead-code.ts. A forbidden or
+// under-justified suppression this run *discovers* never fails this script's own exit code. That
 // judgment belongs to checks/suppression-governance.ts's policy, reading this same evidence. Only
-// a genuine tool-infrastructure or registry-integrity failure (an unreadable source file, a
-// pre-existing registry that fails validation, a `deriveId` collision, a failed write) sets a
-// non-zero exit code here.
+// a genuine tool-infrastructure or registry-integrity failure sets a non-zero exit code here.
+// Examples are an unreadable source file, a pre-existing registry that fails validation, a
+// `deriveId` collision, or a failed write.
 //
-// Unlike a pure read, this check *builds evidence* -- it reconciles the on-disk registry against
-// the discovered directives and writes it back (a fresh blank stub per new directive), exactly the
-// way `format`/`lint` write on run. On a fully-governed clean tree it produces no diff. See
+// Unlike a pure read, this check *builds evidence*. It reconciles the on-disk registry against
+// the discovered directives and writes it back, with a fresh blank stub per new directive. This
+// is the same way `format`/`lint` write on run. On a fully-governed clean tree it produces no diff. See
 // specs/decisions/0013-reusable-exception-policy-helper.md's "The exception registry is the review
 // surface" section.
 
@@ -69,7 +69,7 @@ const registrySchema: StandardSchemaV1<unknown, readonly SuppressionExceptionRec
 }
 
 /**
- * Collapses byte-identical directives -- two directives sharing every field (`file`, `line`,
+ * Collapses byte-identical directives: two directives sharing every field (`file`, `line`,
  * `domain`, `rule`, `content`, `reason`) are indistinguishable and the registry can only represent
  * one. Directives that share an id but differ in `content` are *not* collapsed here: that is a
  * real ambiguity `reconcileExceptions` surfaces as an integrity failure.
@@ -105,9 +105,9 @@ function toFindings(discovered: readonly DiscoveredSuppression[]): SuppressionFi
 }
 
 /**
- * The check's full logic, factored out of the bottom-of-file script invocation so
- * test/integration/suppression-governance can exercise the complete real path (file discovery ->
- * registry load -> reconcile -> write) in-process against a scratch fixture directory.
+ * The check's full logic, factored out of the bottom-of-file script invocation.
+ * test/integration/suppression-governance exercises the complete real path in-process against a
+ * scratch fixture directory: file discovery -> registry load -> reconcile -> write.
  * @param root - Absolute path to the repository being checked.
  * @returns The evidence for `output: { format: "json" }`.
  */
@@ -148,10 +148,10 @@ export async function runSuppressionGovernanceCheck(
   }
   const { activeRecords, staleRecords, newStubIds } = reconciled.reconciliation
 
-  // `writeExceptionRegistry` writes a sibling temp file and renames it over the target -- both need
-  // the parent directory to exist. On a first run against a tree with no `.repo-contract/exceptions/`
-  // yet (a fresh scratch fixture, a brand-new consumer repo) it must be created first; `recursive`
-  // makes this a no-op once it exists. Path containment stays the caller's responsibility, hence
+  // `writeExceptionRegistry` writes a sibling temp file and renames it over the target: both need
+  // the parent directory to exist. A first run may face a tree with no `.repo-contract/exceptions/`
+  // yet (a fresh scratch fixture, a brand-new consumer repo), so it must be created first.
+  // `recursive` makes this a no-op once it exists. Path containment stays the caller's responsibility, hence
   // this lives here and not in the helper.
   try {
     await mkdir(path.dirname(registryPath), { recursive: true })

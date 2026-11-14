@@ -14,14 +14,14 @@ const CAP_BYTES = 10 * 1024 * 1024
 /**
  * Perf / resource smoke test for the audit's finding C9: many checks, each
  * flooding stdout well past the capture cap, run concurrently through the
- * real public API. The deterministic guarantee is the byte assertions -- every
+ * real public API. The deterministic guarantee is the byte assertions: every
  * retained stream is bounded, so total retained output is bounded by
  * `checks x CAP` regardless of how much the commands actually printed. The RSS
  * ceiling is a deliberately loose catastrophe tripwire: it only fires if
  * truncation stops working entirely and the run starts holding whole
  * multi-hundred-MiB streams.
  */
-describe("runRepoContract -- bounded memory under many chatty checks", () => {
+describe("runRepoContract: bounded memory under many chatty checks", () => {
   it("caps retained output per check and keeps peak RSS within a sane ceiling", async () => {
     const CHECK_COUNT = 8
     // Each check prints ~1.4x the cap to stdout so truncation must engage.

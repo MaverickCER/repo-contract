@@ -52,7 +52,7 @@ function commitTemplate(): string {
 
 beforeEach(() => {
   // realpathSync: on macOS os.tmpdir() is a symlink, and the spawned script
-  // reports its cwd as the resolved path -- so compare against that.
+  // reports its cwd as the resolved path; so compare against that.
   dir = realpathSync(mkdtempSync(path.join(os.tmpdir(), "repo-contract-install-hooks-")))
 })
 

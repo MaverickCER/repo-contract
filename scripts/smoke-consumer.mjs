@@ -1,12 +1,12 @@
-// Standalone published-artifact smoke test -- CI's `published-floor` job runs this with a bare
+// Standalone published-artifact smoke test. CI's `published-floor` job runs this with a bare
 // `node scripts/smoke-consumer.mjs <artifacts-dir>` on the Node versions the PUBLISHED package
-// supports (the `engines.node` floor), which are older than this repository's own verification
+// supports (the `engines.node` floor). Those are older than this repository's own verification
 // toolchain requires. It therefore must not touch that toolchain:
 //
 //   - Node built-ins only. No devDependency, no `tsx`, no vitest, no import from src/ or dist/.
 //   - It never runs `npm ci` / `npm run build`. It consumes an already-packed `.tgz` (produced by
 //     the `package-build` job on a modern Node) exactly as an external consumer would.
-//   - Every expectation about the package's shape is a hardcoded literal below -- the black-box
+//   - Every expectation about the package's shape is a hardcoded literal below: the black-box
 //     contract a real consumer relies on. If the published `exports` surface changes, update this
 //     file by hand to match; that deliberate step is the point.
 //
@@ -18,19 +18,19 @@ import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
-// Node built-ins only (see this file's header) -- must NOT import scripts/npm-pack.mjs, which pulls
-// in `cross-spawn` (a devDependency of this repository's own tooling, not a runtime dependency of
-// the published package -- see
-// specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)
-// at module load. The `published-floor` job runs this against a bare checkout with no
-// `node_modules` at all, so that import throws ERR_MODULE_NOT_FOUND before `main()` ever runs. This
-// job also runs on Windows, where `npm` is `npm.cmd` and Node refuses to spawn a `.cmd` file without a
-// shell, so `run` below turns the shell on for Windows only (and quotes arguments that hold a space)
-// instead of importing `cross-spawn`.
+// Node built-ins only (see this file's header). This file must NOT import scripts/npm-pack.mjs,
+// which pulls in `cross-spawn` at module load. That is a devDependency of this repository's own
+// tooling, not a runtime dependency of the published package. See
+// specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md.
+// The `published-floor` job runs this against a bare checkout with no `node_modules` at all.
+// That import would throw ERR_MODULE_NOT_FOUND before `main()` ever runs.
+// This job also runs on Windows, where `npm` is `npm.cmd`. Node refuses to spawn a `.cmd` file
+// without a shell. Instead of importing `cross-spawn`, `run` below turns the shell on for Windows
+// only (and quotes arguments that hold a space).
 const NPM_COMMAND = "npm"
 const WINDOWS = process.platform === "win32"
 
-/** The consumer contract, asserted from OUTSIDE the package -- literal names, no repo introspection. */
+/** The consumer contract, asserted from OUTSIDE the package: literal names, no repo introspection. */
 const SHARED_PROBE_BODY = `
   if (typeof defineRepoContract !== "function") throw new Error("defineRepoContract is not a function");
   if (typeof runRepoContract !== "function") throw new Error("runRepoContract is not a function");
@@ -136,9 +136,9 @@ function main() {
       JSON.stringify({ name: "repo-contract-smoke-consumer", version: "0.0.0", type: "module" }),
     )
 
-    // --ignore-scripts: the published tarball ships a prebuilt `dist/`, so a consumer never needs
-    // lifecycle scripts to run -- and this job deliberately runs on a Node version too old for this
-    // repository's build toolchain, so it must never be coaxed into running it.
+    // No lifecycle scripts (--ignore-scripts): the published tarball ships a prebuilt `dist/`, so a
+    // consumer never needs them to run. This job also deliberately runs on a Node version too old
+    // for this repository's build toolchain, so it must never be coaxed into running it.
     run(
       NPM_COMMAND,
       [

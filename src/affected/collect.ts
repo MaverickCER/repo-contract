@@ -200,7 +200,7 @@ async function readModules(
  * @param git - The git capability.
  * @param base - The commit compared against.
  * @param changed - Every change.
- * @returns The base contents by path (a module whose base cannot be read is simply absent).
+ * @returns The base contents by path (a module whose base cannot be read is absent).
  */
 async function readBases(
   git: GitCapabilities["git"],

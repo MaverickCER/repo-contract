@@ -2,9 +2,9 @@ import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig } from "../src/types.js"
 
 /**
- * One pa11y finding, `--reporter json` shape (not published as a TypeScript type by the tool),
- * plus the `page` scripts/check-accessibility.mjs attaches so a finding names which scanned page
- * it is on.
+ * One pa11y finding, `--reporter json` shape (not published as a TypeScript type by the tool).
+ * It adds the `page` that scripts/check-accessibility.mjs attaches, so a finding names which
+ * scanned page it is on.
  */
 interface Pa11yFinding {
   readonly code: string
@@ -21,20 +21,20 @@ type ToolResult<T> =
 
 /**
  * @param finding One pa11y finding.
- * @returns A single-line `page -- selector [code]: message` summary.
+ * @returns A single-line `page at selector [code]: message` summary.
  */
 function formatFinding(finding: Pa11yFinding): string {
-  return `${finding.page} -- ${finding.selector} [${finding.code}]: ${finding.message}`
+  return `${finding.page} at ${finding.selector} [${finding.code}]: ${finding.message}`
 }
 
 // Runs pa11y (WCAG2AA, its default standard) against a short list of built
-// pages (scripts/check-accessibility.mjs's own PAGES) via a real
-// headless-Chromium accessibility tree, not static markup analysis -- see
-// that script's own doc comment (which pages, and why only those) and
-// specs/decisions/0008-self-hosting-tool-and-dependency-choices.md for why
+// pages (scripts/check-accessibility.mjs's own PAGES). It reads a real
+// headless-Chromium accessibility tree, not static markup. That script's own
+// doc comment says which pages and why only those.
+// specs/decisions/0008-self-hosting-tool-and-dependency-choices.md says why
 // this tool was chosen. "error"-type findings fail; "warning" surfaces as
-// warn (never blocks); "notice" is too noisy relative to its actionability
-// to gate on and is dropped from the rationale entirely.
+// warn (never blocks). "notice" is too noisy relative to its actionability
+// to gate on, so it is dropped from the rationale entirely.
 export const accessibility: CheckDefinitionConfig = {
   run: ["node", "scripts/check-accessibility.mjs"],
   output: { format: "json" },
@@ -49,7 +49,7 @@ export const accessibility: CheckDefinitionConfig = {
 
     if (!evidence.ok) {
       // A missing system Chrome/Chromium is an environment gap, not a defect in this
-      // repository's own pages -- warn rather than fail closed on absence alone, matching
+      // repository's own pages. Warn rather than fail closed on absence alone. This matches
       // internal-package-contract's own generalized copy of this check.
       if (evidence.error.startsWith("no system Chrome/Chromium executable found")) {
         return { outcome: "warn", rationale: `Accessibility: ${evidence.error}` }

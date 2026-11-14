@@ -5,7 +5,7 @@ import { readJsonReport } from "./shared/read-json-report.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
- * markdownlint-cli2 has no stdout JSON mode -- this describes its own JSON
+ * markdownlint-cli2 has no stdout JSON mode. This describes its own JSON
  * output-formatter contract (markdownlint-cli2-formatter-json), read back
  * from disk. Not published as a TypeScript type by either package.
  */
@@ -40,7 +40,7 @@ function formatFinding(finding: MarkdownlintFinding): string {
 /**
  * Markdown structure/style lint via markdownlint-cli2. Unlike this
  * package's other file-based-report presets, the report path is
- * config-driven rather than a CLI flag -- markdownlint-cli2 only writes
+ * config-driven rather than a CLI flag: markdownlint-cli2 only writes
  * JSON when its own config file requests it. This preset assumes the
  * consumer's `.markdownlint-cli2.jsonc` includes:
  * ```jsonc
@@ -65,21 +65,21 @@ export function markdownlint(options: MarkdownlintOptions = {}): CheckDefinition
       if (terminated) return terminated
 
       const parsed = await readJsonReport<readonly MarkdownlintFinding[]>(
-        // Provably equivalent, not a coverage gap -- see the identical
+        // Provably equivalent, not a coverage gap: see the identical
         // comment in src/presets/duplication.ts for why.
         () => readFile(REPORT_PATH, "utf8"),
-        "markdownlint-cli2 did not produce its expected JSON report -- confirm your " +
+        "markdownlint-cli2 did not produce its expected JSON report. Confirm your " +
           ".markdownlint-cli2.jsonc configures outputFormatters to write " +
           `"${REPORT_PATH}" (requires the markdownlint-cli2-formatter-json package).`,
         "markdownlint-cli2 produced invalid JSON evidence.",
       )
       if (!parsed.ok) return parsed.result
 
-      // `readJsonReport<T>` narrows only at the type level -- the parsed
+      // `readJsonReport<T>` narrows only at the type level: the parsed
       // value is `unknown` at runtime. Valid JSON that isn't an array (an
-      // object from a different/older formatter, `null`) must fail cleanly
-      // rather than throw `.length`/`.map` out of the policy and crash the
-      // run, matching duplication.ts's `Array.isArray` guard.
+      // object from a different/older formatter, `null`) must fail cleanly.
+      // It must not throw `.length`/`.map` out of the policy and crash the
+      // run. duplication.ts's `Array.isArray` guard does the same.
       if (!Array.isArray(parsed.value)) {
         return {
           outcome: "fail",

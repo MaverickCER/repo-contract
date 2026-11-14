@@ -10,7 +10,7 @@ npm run setup
 ```
 
 `npm run setup` builds the package and wires the git hooks and commit-message template.
-It is a plain script, not an npm lifecycle hook — the published package ships with no
+It is a plain script, not an npm lifecycle hook. The published package ships with no
 install scripts at all (see [ADR 0009](specs/decisions/0009-conventional-commits-versioning-and-local-gates.md)),
 so this one command after `npm install` is the whole setup. Use Node 24 locally
 (`.nvmrc`); the published package supports Node `>=22` and CI proves that independently.
@@ -18,34 +18,45 @@ so this one command after `npm install` is the whole setup. Use Node 24 locally
 ## Making a change
 
 1. Branch from `main`.
-2. Make the change and its tests. Tests here exercise real behavior over mocking — real
+2. Make the change and its tests. Tests here exercise real behavior over mocking: real
    commands, real files, real throwaway git repos.
-3. Run `npm run check` — the fast offline checks (it auto-fixes formatting and lint), and
-   it tells you what to do next. The `pre-commit` hook runs the same set. A contract run is
-   **not** a pure read: `format`/`lint` auto-fix, and `suppression-governance` reconciles
-   `.repo-contract/exceptions/disable-comments.json` against the disable directives it finds —
-   adding an inline `eslint-disable` / `@ts-expect-error` / `Stryker disable` scaffolds a blank
-   exception stub there. Fill in its `justification` (and `category` / `verificationMethod`),
-   `git add .repo-contract/exceptions/`, and re-run. On a fully-governed clean tree the run
-   changes nothing; CI fails the `contract` job on any leftover working-tree change. Moving a
-   suppressed directive to a new line retires its old record (which then fails as _stale_ — delete
-   it) and scaffolds a fresh one; carry the justification across by hand.
-4. Commit. Your editor opens with a Conventional Commits cheat sheet; `commitlint` (a
-   `commit-msg` hook) rejects a message that doesn't conform; fix the message rather than skipping the hook. Keep
-   work in progress unstaged or stashed until its gates pass.
-5. Push — the `pre-push` hook runs the full `npm run contract`, which includes the
-   `coderabbitai` check: a local `coderabbit review --agent` pass if the
-   [CodeRabbit CLI](https://docs.coderabbit.ai/cli) is installed on a real branch, or a `warn`
-   naming why not otherwise (not installed, or running in CI, where review is delegated to the
-   CodeRabbit GitHub App instead — see
-   [ADR 0014](specs/decisions/0014-coderabbit-as-a-surfaced-check.md)). The `security-socket` check
-   behaves the same way — a real Socket.dev supply-chain scan when `@socketsecurity/cli` is
-   installed and authenticated, otherwise a `warn` naming why not (this repository's CI holds a
-   Socket token as the `SOCKET_SECURITY_API_KEY` secret, so the scan runs there). Neither `warn` blocks a push or CI. Open a pull request; CI re-runs the
-   contract on Ubuntu, and on Linux, macOS and Windows the unit and e2e suites, the packed tarball
-   installed and imported as a consumer, and a clean-tree check after them.
+3. Run `npm run check`: the fast offline checks (it auto-fixes formatting and lint), and
+   it tells you what to do next. The `pre-commit` hook runs the same set.
 
-`npm run setup` wires two local git settings — the hooks and the commit-message template. The
+   A contract run is **not** a pure read:
+   - `format`/`lint` auto-fix.
+   - `suppression-governance` reconciles `.repo-contract/exceptions/disable-comments.json`
+     against the disable directives it finds. Adding an inline `eslint-disable` /
+     `@ts-expect-error` / `Stryker disable` scaffolds a blank exception stub there.
+   - Fill in its `justification` (and `category` / `verificationMethod`),
+     `git add .repo-contract/exceptions/`, and re-run.
+
+   On a fully-governed clean tree the run changes nothing. CI fails the `contract` job on
+   any leftover working-tree change. Moving a suppressed directive to a new line retires its
+   old record (which then fails as _stale_; delete it) and scaffolds a fresh one. Carry the
+   justification across by hand.
+
+4. Commit. Your editor opens with a Conventional Commits cheat sheet. `commitlint` (a
+   `commit-msg` hook) rejects a message that doesn't conform; fix the message rather than
+   skipping the hook. Keep work in progress unstaged or stashed until its gates pass.
+5. Push. The `pre-push` hook runs the full `npm run contract`, which includes the
+   `coderabbitai` check:
+   - If the [CodeRabbit CLI](https://docs.coderabbit.ai/cli) is installed on a real branch,
+     it runs a local `coderabbit review --agent` pass.
+   - Otherwise it returns a `warn` naming why not: not installed, or running in CI.
+     In CI, review is delegated to the CodeRabbit GitHub App instead (see
+     [ADR 0014](specs/decisions/0014-coderabbit-as-a-surfaced-check.md)).
+
+   The `security-socket` check behaves the same way. It runs a real Socket.dev supply-chain
+   scan when `@socketsecurity/cli` is installed and authenticated, and otherwise a `warn`
+   naming why not. This repository's CI holds a Socket token as the `SOCKET_SECURITY_API_KEY`
+   secret, so the scan runs there. Neither `warn` blocks a push or CI.
+
+   Open a pull request. CI re-runs the contract on Ubuntu. On Linux, macOS and Windows it
+   runs the unit and e2e suites. It also installs and imports the packed tarball as a
+   consumer, and runs a clean-tree check after them.
+
+`npm run setup` wires two local git settings: the hooks and the commit-message template. The
 hooks are the local half of the gate CI enforces, so leave them on. Only the commit-message
 template is optional:
 
@@ -59,40 +70,47 @@ See [ADR 0009](specs/decisions/0009-conventional-commits-versioning-and-local-ga
 
 [`VERSIONING.md`](VERSIONING.md) maps each commit type to its release effect. Once your PR
 is on `main`, the shared release workflow writes a changeset for each `feat`, `fix`, `perf`
-or `revert` commit that has none (pre-1.0: a breaking commit → `minor`, the rest → `patch`);
-other commit types release nothing. Add your own `.changeset/*.md` file (`npx changeset`)
-when you want a richer, consumer-facing description than the commit subject alone, or need
-a higher bump than the type implies — a hand-written changeset always takes precedence over
-the generated one.
-If a change touches the public TypeScript API by more than your changesets declare, the
+or `revert` commit that has none. Pre-1.0, a breaking commit → `minor` and the rest → `patch`.
+Other commit types release nothing.
+
+Add your own `.changeset/*.md` file (`npx changeset`) for either of two reasons:
+
+- You want a richer, consumer-facing description than the commit subject alone.
+- You need a higher bump than the type implies.
+
+A hand-written changeset always takes precedence over the generated one.
+
+A change may touch the public TypeScript API by more than your changesets declare. Then the
 `api-contract` check fails the PR and tells you exactly what to add. When you're unsure
 whether a change is breaking, ask in the pull request rather than guess.
 
 [`CHANGELOG.md`](CHANGELOG.md) is generated by `@changesets/cli/changelog` from the
-changesets consumed at release time — never hand-edit it.
+changesets consumed at release time. Never hand-edit it.
 
 ## Architecture Decision Records
 
 `specs/decisions/` records _why_ the project is shaped the way it is. Add one when a change
-introduces a constraint a consumer could rely on, forecloses an alternative a future
-contributor might reintroduce, or changes what the package is responsible for — not for a
-plain fix or refactor.
+does any of these (not for a plain fix or refactor):
+
+- introduces a constraint a consumer could rely on;
+- forecloses an alternative a future contributor might reintroduce;
+- changes what the package is responsible for.
 
 ```bash
 npm run adr:new "the decision, stated as a sentence"
 ```
 
-That scaffolds the next-numbered file with the required sections; fill them in, using the
-neighbouring ADRs as a guide for depth. Touching `src/execution/`, `src/policy/`, `src/affected/` or `src/metrics/`? Either
-add an ADR or reference an existing one (`ADR 0002`) in a commit message — `adr-governance`
-enforces it.
+That scaffolds the next-numbered file with the required sections. Fill them in, using the
+neighbouring ADRs as a guide for depth. Touching `src/execution/`, `src/policy/`, `src/affected/`
+or `src/metrics/`? Either add an ADR or reference an existing one (`ADR 0002`) in a commit
+message; `adr-governance` enforces it.
 
 ## Releasing
 
 Maintainer release and publishing steps are in [`RELEASING.md`](RELEASING.md).
 
 Releases are cut by [Changesets](https://github.com/changesets/changesets) via a shared
-workflow hosted in `internal-package-contract`: merging to `main` maintains a "Version
-Packages" PR that bumps the version and `CHANGELOG.md` from pending changesets, and that
-PR is merged by a maintainer once its own CI is green — publishing to npm over OIDC.
+workflow hosted in `internal-package-contract`. Merging to `main` maintains a "Version
+Packages" PR that bumps the version and `CHANGELOG.md` from pending changesets. A maintainer
+merges that PR once its own CI is green, which publishes to npm over OIDC.
 Nothing here is a manual step for a contributor.

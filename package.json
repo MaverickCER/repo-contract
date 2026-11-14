@@ -1,16 +1,18 @@
 {
   "name": "repo-contract",
   "version": "0.13.0",
-  "description": "Enforce your repository's own quality bar before CI even spins up. Configure arbitrary checks, capture what happened as evidence, and let repository-owned policies determine what passes. repo-contract provides the execution and evidence layer without becoming another CI system or imposing its own definition of code quality.",
+  "description": "Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason.",
   "keywords": [
-    "contract",
-    "ci",
-    "policy",
-    "evidence",
     "quality-gate",
-    "process-execution",
+    "code-quality",
+    "policy-as-code",
+    "ci",
+    "pre-commit",
+    "git-hooks",
+    "engineering-standards",
+    "evidence",
     "typescript",
-    "tool-agnostic"
+    "contract"
   ],
   "homepage": "https://maverickcer.github.io/repo-contract/",
   "bugs": {
@@ -163,7 +165,7 @@
     "test:watch": "vitest --watch",
     "typecheck": "npm run contract -- typecheck",
     "verify": "npm run docs:api && npm run docs:benchmarks && npm run contract",
-    "version": "changeset version && npm run build && npm run sbom && internal-package-contract skill && internal-package-contract site"
+    "version": "changeset version && npm run build && internal-package-contract update-baseline && npm run sbom && internal-package-contract skill && internal-package-contract site"
   },
   "allowScripts": {
     "esbuild@0.28.2": true,
@@ -219,7 +221,7 @@
     "fast-check": "^4.9.0",
     "github-actionlint": "^1.7.12",
     "globals": "^17.9.0",
-    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.18.0",
+    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.19.0",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-reports": "^3.2.0",

@@ -4,9 +4,9 @@ function ignore(): void {
 }
 
 /**
- * Tells a reporting hook (`onEvidence`, `onVerdict`) something, without letting the hook change what a run does: a hook
- * that throws is ignored, and so is an `async` hook whose promise rejects (left alone, it would be an unhandled
- * rejection, which ends a Node process). Its return value is never read, and it is not waited for.
+ * Tells a reporting hook (`onEvidence`, `onVerdict`) something, without letting the hook change what a run does.
+ * A hook that throws is ignored, and so is an `async` hook whose promise rejects (left alone, it would be an
+ * unhandled rejection, which ends a Node process). Its return value is never read, and it is not waited for.
  * @param hook - the hook the caller of `runRepoContract` passed, if any.
  * @param args - what to tell it.
  */

@@ -2,12 +2,12 @@ import { rm } from "node:fs/promises"
 
 /**
  * Recursively removes a scratch directory (typically an `os.tmpdir()` entry from `mkdtemp`),
- * tolerating the transient locks Windows holds on a file a just-returned process wrote -- a
- * Defender scan mid-flight, or the OS releasing the handle lazily. Several integration test
- * suites (pack-consumer.ts's real `npm pack`, github-actions's real `tsc` pass,
- * suppression-governance's discover-suppressions) run real subprocesses against files under such
- * a directory and then remove it in `afterEach`; a bare `rm(dir, { recursive: true, force: true })`
- * there intermittently throws `EBUSY`/`EPERM` on windows-latest CI (never on Linux/macOS).
+ * tolerating the transient locks Windows holds on a file a just-returned process wrote: a
+ * Defender scan mid-flight, or the OS releasing the handle lazily. Several integration suites run
+ * subprocesses against files in such a directory, then remove it in `afterEach`. Examples:
+ * pack-consumer.ts's `npm pack`, github-actions's `tsc` pass, and suppression-governance's
+ * discover-suppressions. A bare `rm(dir, { recursive: true, force: true })` there intermittently
+ * throws `EBUSY`/`EPERM` on windows-latest CI (never on Linux/macOS).
  *
  * `maxRetries`/`retryDelay` is Node's own backoff for exactly that errno set (`EBUSY`, `EMFILE`,
  * `ENFILE`, `ENOTEMPTY`, `EPERM`). A removal that still fails after the retries is swallowed: the
@@ -21,6 +21,6 @@ export async function removeTempDir(dir: string | undefined | null): Promise<voi
   try {
     await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
   } catch {
-    // Best-effort -- see the doc comment.
+    // Best-effort: see the doc comment.
   }
 }
