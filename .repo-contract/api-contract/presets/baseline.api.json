@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "repo-contract!",
-  "docComment": "/**\n * Curated, growing catalog of preset checks for tools common across\n * TypeScript/JavaScript repositories -- each preset encodes how to execute\n * and interpret a common tool, never a repository's definition of quality\n * (see specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). Import a preset,\n * spread it into your own `checks` record, and override whatever you need\n * -- most often `policy`; a factory preset's options are the preferred way\n * to change what it executes, a direct `run` override is an escape hatch.\n * Never re-exported from the package root (`src/index.ts`) -- presets are\n * an opt-in extra, not part of the core execution/evidence/policy surface\n * those exports describe, and this barrel never re-exports anything from\n * there either; the two stay independent.\n *\n * @packageDocumentation\n */\n",
+  "docComment": "/**\n * Ready-made checks for common TypeScript and JavaScript tools. Spread a preset into your own\n * `checks` record and override what you need, most often `policy`.\n *\n * A preset encodes how to run and read one tool, never what counts as good enough\n * (specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). To change\n * what a factory preset runs, pass it options; overriding `run` directly is the escape hatch.\n *\n * Experimental, and published under its own `./presets` subpath. It is never re-exported from the\n * package root, and it re-exports nothing from there.\n *\n * @packageDocumentation\n */\n",
   "name": "repo-contract",
   "preserveMemberOrder": false,
   "members": [
@@ -188,6 +188,590 @@
       "name": "",
       "preserveMemberOrder": false,
       "members": [
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!aiReview:function(1)",
+          "docComment": "/**\n * An AI review as a check. It runs your agent with a prompt that asks for one fixed JSON shape,\n * {@link AiReviewReply}, with a confidence score on every finding, and gates on those scores. A\n * model can answer differently on every run, so the policy reads only that structured reply,\n * never prose.\n *\n * The output is read in three steps. The whole output is parsed as JSON. If that fails, the text\n * from its first `{` to its last `}` is parsed. If that fails too, or the JSON is not the\n * requested shape, `fallback` is judged in its place and the reason lists the problems.\n *\n * The verdict: `fail` when an `error` finding scores at or above `errorThreshold`; `warn` for any\n * other `warn` or `error` finding, which includes the default fallback; `pass` for `info` findings\n * only. Each reason lists every `warn` and `error` finding with its file, line, rule and confidence.\n * A timeout, a missing agent or a process killed by a signal fails. A non-zero exit code alone\n * does not: a well-formed reply still counts, and an unreadable one names the code. The tests prove\n * the parsing and the policy; they do not prove a model's judgement.\n *\n * @param options - The agent to run and how to judge it; see {@link AiReviewOptions}.\n *\n * @returns The configured check.\n *\n * @example\n * ```ts\n * aiReview: aiReview({\n *   agent: [\"claude\", \"-p\", \"{prompt}\"],\n *   credentials: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY },\n *   errorThreshold: 0.8,\n * }),\n * ```\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function aiReview(options: "
+            },
+            {
+              "kind": "Reference",
+              "text": "AiReviewOptions",
+              "canonicalReference": "repo-contract!AiReviewOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/ai-review.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "aiReview"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!AiReviewFinding:interface",
+          "docComment": "/**\n * One finding in an AI reviewer's reply.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface AiReviewFinding "
+            }
+          ],
+          "fileUrlPath": "src/presets/ai-review.ts",
+          "releaseTag": "Beta",
+          "name": "AiReviewFinding",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewFinding#file:member",
+              "docComment": "/**\n * The file the finding is about, relative to the repository root. `\"\"` when it is about no one file.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly file: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "file",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewFinding#line:member",
+              "docComment": "/**\n * The 1-based line in `file`, or `0` when the finding has no single line.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly line: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "line",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewFinding#reason:member",
+              "docComment": "/**\n * What is wrong and why, in the reviewer's words.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly reason: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "reason",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewFinding#rule:member",
+              "docComment": "/**\n * A short name for the concern, such as `no-logging-in-library`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly rule: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "rule",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewFinding#score:member",
+              "docComment": "/**\n * The reviewer's confidence that the finding is real, from 0 to 1.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly score: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "score",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewFinding#severity:member",
+              "docComment": "/**\n * `error` for a defect, `warn` for a concern, `info` for a remark. Only `error` can fail the check.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly severity: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"info\" | \"warn\" | \"error\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "severity",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!AiReviewOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link aiReview}. Only `agent` is required.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface AiReviewOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/ai-review.ts",
+          "releaseTag": "Beta",
+          "name": "AiReviewOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewOptions#agent:member",
+              "docComment": "/**\n * The agent's command line: its executable, then its arguments, for example\n * `[\"claude\", \"-p\", \"{prompt}\"]`. Every `{prompt}` inside an argument becomes the prompt. With no\n * `{prompt}`, the prompt is appended as the last argument. The evidence records this command line.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly agent: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "agent",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewOptions#credentials:member",
+              "docComment": "/**\n * Environment variables the agent authenticates with, by name, for example\n * `{ ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY }`. Each value reaches the agent's process\n * through the check's `env`, so it works when the runner sets `inheritEnv: false`. A value never\n * enters the command line, and every occurrence of it in a reason is replaced with `[redacted]`.\n * The evidence keeps the agent's own stdout and stderr, so a value the agent prints lands there.\n * A name whose value is `undefined` or `\"\"` is left unset and turns a `pass` into a `warn`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly credentials?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Readonly",
+                  "canonicalReference": "!Readonly:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, string | undefined>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "credentials",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewOptions#cwd:member",
+              "docComment": "/**\n * The agent's working directory. Defaults to the runner's.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly cwd?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "cwd",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewOptions#errorThreshold:member",
+              "docComment": "/**\n * An `error` finding at or above this confidence fails the check; below it, the finding warns. From 0 to 1. Defaults to `0.8`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly errorThreshold?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "errorThreshold",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewOptions#fallback:member",
+              "docComment": "/**\n * The review used when the output cannot be parsed into an {@link AiReviewReply}. Defaults to one\n * `warn` finding (rule `unparsed-output`, score 1) whose reason is \"the reviewer's output could\n * not be parsed\", so an unusable reply never passes silently. An `error` finding at score 1 here\n * makes an unusable reply fail the check.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly fallback?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AiReviewReply",
+                  "canonicalReference": "repo-contract!AiReviewReply:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "fallback",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewOptions#files:member",
+              "docComment": "/**\n * Files the review is limited to, listed at the end of a string prompt. Empty by default: the agent reviews the repository's changes.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly files?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "files",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewOptions#label:member",
+              "docComment": "/**\n * How the reasons name the reviewer. Defaults to `\"The AI reviewer\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly label?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "label",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewOptions#prompt:member",
+              "docComment": "/**\n * What the agent is asked. A string is the prompt text. `{ file }` hands the agent that path in\n * place of the text, for an agent that reads its prompt from a file. Defaults to a prompt that\n * asks for {@link AiReviewReply} and shows an example of it; a replacement must ask for the same\n * shape, or every reply goes to `fallback`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly prompt?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | {\n        readonly file: string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "prompt",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewOptions#timeoutMs:member",
+              "docComment": "/**\n * Milliseconds before the agent's process is stopped and the check fails. Defaults to `600_000` (10 minutes).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly timeoutMs?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "timeoutMs",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!AiReviewReply:interface",
+          "docComment": "/**\n * The JSON reply {@link aiReview} asks the reviewer for, and the shape of its `fallback`.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface AiReviewReply "
+            }
+          ],
+          "fileUrlPath": "src/presets/ai-review.ts",
+          "releaseTag": "Beta",
+          "name": "AiReviewReply",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewReply#findings:member",
+              "docComment": "/**\n * Every finding, in any order. Empty when the reviewer found nothing.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly findings: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AiReviewFinding",
+                  "canonicalReference": "repo-contract!AiReviewFinding:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "findings",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!AiReviewReply#summary:member",
+              "docComment": "/**\n * The reviewer's confidence in the change as a whole, from 0 to 1. The policy gates on `findings` only.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly summary: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        readonly score: number;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Beta",
+              "name": "summary",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
         {
           "kind": "Variable",
           "canonicalReference": "repo-contract!arethetypeswrong:var",
@@ -262,7 +846,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!commitlint:function(1)",
-          "docComment": "/**\n * Commit-message governance via commitlint, using whatever commitlint\n * config the consumer's own repository already has (commitlint ships no\n * rules of its own -- e.g. `@commitlint/config-conventional`). Exit-code\n * based rather than `--format json`: commitlint has no broadly-documented,\n * stable JSON CLI output, so this preset reads its plain-text report the\n * same way the `format`/`typecheck` presets already do for their tools,\n * rather than relying on an unconfirmed flag.\n *\n * @param options - configuration for this check; see {@link CommitlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Commit-message governance via commitlint, using whatever commitlint\n * config the consumer's own repository already has (commitlint ships no\n * rules of its own: e.g. `@commitlint/config-conventional`). Exit-code\n * based rather than `--format json`: commitlint has no broadly-documented,\n * stable JSON CLI output, so this preset reads its plain-text report the\n * same way the `format`/`typecheck` presets already do for their tools,\n * rather than relying on an unconfirmed flag.\n *\n * @param options - configuration for this check; see {@link CommitlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -418,7 +1002,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!DistNoUrlsAllowEntry#reason:member",
-              "docComment": "/**\n * Why this URL must ship in the build output. Required and non-empty -- an allowlist entry without one fails the check.\n */\n",
+              "docComment": "/**\n * Why this URL must ship in the build output. Required and non-empty: an allowlist entry without one fails the check.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -675,7 +1259,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!lint:function(1)",
-          "docComment": "/**\n * Static analysis via ESLint, using whatever `eslint.config.js` the\n * consumer's own repository already has -- this preset makes no assumption\n * about rule configuration, only about how to run the tool and interpret\n * its JSON output. Severity `2` (error) blocks; severity `1` (warning) is\n * reported but never blocks -- ESLint's own severities already encode that\n * distinction, so this preset just respects it rather than treating every\n * finding as equally blocking.\n *\n * @param options - configuration for this check; see {@link LintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Static analysis via ESLint, using whatever `eslint.config.js` the\n * consumer's own repository already has: this preset makes no assumption\n * about rule configuration, only about how to run the tool and interpret\n * its JSON output. Severity `2` (error) blocks; severity `1` (warning) is\n * reported but never blocks: ESLint's own severities already encode that\n * distinction, so this preset just respects it rather than treating every\n * finding as equally blocking.\n *\n * @param options - configuration for this check; see {@link LintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -722,7 +1306,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!markdownlint:function(1)",
-          "docComment": "/**\n * Markdown structure/style lint via markdownlint-cli2. Unlike this\n * package's other file-based-report presets, the report path is\n * config-driven rather than a CLI flag -- markdownlint-cli2 only writes\n * JSON when its own config file requests it. This preset assumes the\n * consumer's `.markdownlint-cli2.jsonc` includes:\n * ```jsonc\n * \"outputFormatters\": [[\"markdownlint-cli2-formatter-json\", { \"name\": \"reports/markdownlint.json\" }]]\n * ```\n *\n * which also requires the `markdownlint-cli2-formatter-json` package\n * alongside `markdownlint-cli2` itself.\n *\n * @param options - configuration for this check; see {@link MarkdownlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Markdown structure/style lint via markdownlint-cli2. Unlike this\n * package's other file-based-report presets, the report path is\n * config-driven rather than a CLI flag: markdownlint-cli2 only writes\n * JSON when its own config file requests it. This preset assumes the\n * consumer's `.markdownlint-cli2.jsonc` includes:\n * ```jsonc\n * \"outputFormatters\": [[\"markdownlint-cli2-formatter-json\", { \"name\": \"reports/markdownlint.json\" }]]\n * ```\n *\n * which also requires the `markdownlint-cli2-formatter-json` package\n * alongside `markdownlint-cli2` itself.\n *\n * @param options - configuration for this check; see {@link MarkdownlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -769,7 +1353,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "repo-contract!publint:var",
-          "docComment": "/**\n * publint has no machine-readable output mode -- only a plain-text CLI\n * reporter (see its own `src/cli.js` `formatMessages`). Its process exit\n * code reflects only 'error'-level findings; 'warning'/'suggestion'-level\n * findings never affect it. This preset reads the same three section\n * headers publint's own CLI writes (\"Errors:\", \"Warnings:\", \"Suggestions:\")\n * to distinguish blocking findings from non-blocking ones, without\n * depending on any per-message structure publint doesn't expose. Relevant\n * only to repositories that publish an npm package.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * publint has no machine-readable output mode: only a plain-text CLI\n * reporter (see its own `src/cli.js` `formatMessages`). Its process exit\n * code reflects only 'error'-level findings; 'warning'/'suggestion'-level\n * findings never affect it. This preset reads the same three section\n * headers publint's own CLI writes (\"Errors:\", \"Warnings:\", \"Suggestions:\")\n * to distinguish blocking findings from non-blocking ones, without\n * depending on any per-message structure publint doesn't expose. Relevant\n * only to repositories that publish an npm package.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

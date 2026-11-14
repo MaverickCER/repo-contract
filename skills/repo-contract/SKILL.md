@@ -82,4 +82,4 @@ Report any check you could not run, and any assumption you made.
 
 ## Authority
 
-Target `repo-contract@0.13.0`. The installed package's exports and type declarations are the API: use only what they declare. Its tests and examples establish its behaviour. When this skill and the code disagree, report the disagreement before acting on either.
+Target `repo-contract@0.14.0`. The installed package's exports and type declarations are the API: use only what they declare. Its tests and examples establish its behaviour. When this skill and the code disagree, report the disagreement before acting on either.

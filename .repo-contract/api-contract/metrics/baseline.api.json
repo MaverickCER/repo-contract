@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "repo-contract!",
-  "docComment": "/**\n * Run records and what they show: a file-based, append-only log of what each run did, summaries of\n * speed and trust over it, which of the six pillars the configured checks cover, and a maturity\n * level computed from those facts. Pure: records come in as data and go out as text, so this\n * barrel reads no file and runs no process (see\n * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).\n *\n * A fourth independent public barrel, published under its own `./metrics` subpath; never\n * re-exported from the package root.\n *\n * @packageDocumentation\n */\n",
+  "docComment": "/**\n * Run records: an append-only log of what each contract run did, and what that log shows. It\n * summarizes speed and trust, maps the configured checks onto the six pillars, and computes a\n * maturity level from those facts.\n *\n * Pure: records come in as data and go out as text, so this barrel reads no file and runs no\n * process (see\n * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).\n *\n * Experimental, and published under its own `./metrics` subpath; never re-exported from the\n * package root.\n *\n * @packageDocumentation\n */\n",
   "name": "repo-contract",
   "preserveMemberOrder": false,
   "members": [
@@ -986,7 +986,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!maturityLevel:function(1)",
-          "docComment": "/**\n * Computes a maturity level deterministically from recorded facts: 1 once there are runs and\n * correctness is covered; 2 with the security and maintainability pillars and a passing full run;\n * 3 with every pillar, exceptions within budget and zero-tolerance policies; 4 with a clean\n * soundness canary and an evidence manifest.\n *\n * @param input - The facts to judge.\n *\n * @returns The level, and what the next one needs.\n */\n",
+          "docComment": "/**\n * Computes a maturity level deterministically from recorded facts:\n * - 1 once there are runs and correctness is covered.\n * - 2 with the security and maintainability pillars and a passing full run.\n * - 3 with every pillar, exceptions within budget and zero-tolerance policies.\n * - 4 with a clean soundness canary and an evidence manifest.\n *\n * @param input - The facts to judge.\n *\n * @returns The level, and what the next one needs.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

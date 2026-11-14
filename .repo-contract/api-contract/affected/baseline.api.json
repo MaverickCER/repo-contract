@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "repo-contract!",
-  "docComment": "/**\n * Affected-scope analysis: given a diff, which tests (and mutation targets) can the change\n * affect? Symbol-level -- changed files are diffed against their base to find the exports whose\n * behavior may differ, and those are followed through the import graph -- with every case the\n * analysis cannot reason about widening the answer toward a full run, never narrowing it on a\n * guess. Pure: file contents, the diff and the TypeScript compiler API come in as data and\n * capabilities, so this barrel reads no file and runs no process (see\n * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).\n *\n * A third independent public barrel, published under its own `./affected` subpath, like\n * `src/presets/index.ts` and `src/helpers/index.ts`; never re-exported from the package root.\n *\n * @packageDocumentation\n */\n",
+  "docComment": "/**\n * Affected scope: given a diff, list the tests and mutation targets the change can reach. Changed\n * files are compared with their base to find the exports whose behavior may differ, and those\n * exports are followed through the import graph. A case the analysis cannot reason about widens\n * the answer toward a full run; it never narrows on a guess.\n *\n * Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities,\n * so this barrel reads no file and runs no process (see\n * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).\n *\n * Experimental, and published under its own `./affected` subpath; never re-exported from the\n * package root.\n *\n * @packageDocumentation\n */\n",
   "name": "repo-contract",
   "preserveMemberOrder": false,
   "members": [
@@ -2439,7 +2439,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!computeAffected:function(1)",
-          "docComment": "/**\n * Computes which tests (and which mutation targets) a change can affect.\n *\n * The analysis is symbol-level: each changed module is diffed against its base to find the exported\n * names whose behavior may differ, and those names are followed through the import graph --\n * including re-exports and `export *` -- to every module that uses them. Anything it cannot reason\n * about does not narrow the result: a changed file the graph cannot place, a global trigger such as\n * a lockfile, or a file that does not parse makes the whole result `\"full\"`, and a module that loads\n * code dynamically is treated as affected by everything. Narrowing is only ever an optimization of\n * a sound answer, never a guess.\n *\n * @param input - Module contents, the diff, and the TypeScript compiler API.\n *\n * @returns The affected sets, with provenance for every test (see `explainAffected`).\n */\n",
+          "docComment": "/**\n * Computes which tests (and which mutation targets) a change can affect.\n *\n * The analysis is symbol-level: each changed module is diffed against its base to find the exported\n * names whose behavior may differ. Those names are followed through the import graph (including\n * re-exports and `export *`) to every module that uses them. Anything it cannot reason about does\n * not narrow the result. A changed file the graph cannot place, a global trigger such as a\n * lockfile, or a file that does not parse makes the whole result `\"full\"`. A module that loads\n * code dynamically is treated as affected by everything. Narrowing is only ever an optimization of\n * a sound answer, never a guess.\n *\n * @param input - Module contents, the diff, and the TypeScript compiler API.\n *\n * @returns The affected sets, with provenance for every test (see `explainAffected`).\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3679,7 +3679,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!findEscapes:function(1)",
-          "docComment": "/**\n * Proves the affected scope sound against evidence: after a full run on the same change, any test\n * that failed there but was not in the affected set is an escape -- a regression the narrow run\n * would have shipped. Run it on merges to the main branch, where both answers exist.\n *\n * @param input - The affected tests, all tests and the full run's failures.\n *\n * @returns Whether the narrow scope was sound, and which tests escaped it.\n */\n",
+          "docComment": "/**\n * Proves the affected scope sound against evidence: after a full run on the same change, any test\n * that failed there but was not in the affected set is an escape; a regression the narrow run\n * would have shipped. Run it on merges to the main branch, where both answers exist.\n *\n * @param input - The affected tests, all tests and the full run's failures.\n *\n * @returns Whether the narrow scope was sound, and which tests escaped it.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5092,7 +5092,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!resolveCacheMode:function(1)",
-          "docComment": "/**\n * Decides the cache mode of a run. A full run is always cold (the cache is neither read nor\n * written), so a release can never be satisfied by an earlier result; otherwise the command line\n * wins over `REPO_CONTRACT_CACHE` (`off`, `ro` or `rw`), which wins over the default of read-write.\n *\n * @param input - The run's scope, the environment as data, and any mode given on the command line.\n *\n * @param  - input.scope - The run's scope.\n *\n * @param  - input.env - The environment, as data.\n *\n * @param  - input.flag - A mode given on the command line.\n *\n * @returns The mode and why.\n *\n * @throws\n *\n * {Error} If `REPO_CONTRACT_CACHE` is not one of off, ro, rw.\n */\n",
+          "docComment": "/**\n * Decides the cache mode of a run. A full run is always cold (the cache is neither read nor\n * written), so a release can never be satisfied by an earlier result. Otherwise the command line\n * wins over `REPO_CONTRACT_CACHE` (`off`, `ro` or `rw`), which wins over the default of read-write.\n *\n * @param input - The run's scope, the environment as data, and any mode given on the command line.\n *\n * @param  - input.scope - The run's scope.\n *\n * @param  - input.env - The environment, as data.\n *\n * @param  - input.flag - A mode given on the command line.\n *\n * @returns The mode and why.\n *\n * @throws\n *\n * {Error} If `REPO_CONTRACT_CACHE` is not one of off, ro, rw.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5245,7 +5245,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!resolveScope:function(1)",
-          "docComment": "/**\n * Decides whether a run validates the affected part of the tree or all of it. A release is always\n * full, and `CI_FULL` forces full over anything else; otherwise an explicit request wins, then\n * `REPO_CONTRACT_SCOPE`, then the CI event (a pull request compares with its base, every other\n * event, and a CI system with no pull request, validates everything), and a local run compares\n * with its base branch.\n *\n * @param input - The request and the environment, as data.\n *\n * @returns The scope and why.\n *\n * @throws\n *\n * {Error} If `REPO_CONTRACT_SCOPE` is not one of the three choices.\n */\n",
+          "docComment": "/**\n * Decides whether a run validates the affected part of the tree or all of it. A release is always\n * full, and `CI_FULL` forces full over anything else. Otherwise an explicit request wins, then\n * `REPO_CONTRACT_SCOPE`, then the CI event. In CI, a pull request compares with its base; every\n * other event, and a CI system with no pull request, validates everything. A local run compares\n * with its base branch.\n *\n * @param input - The request and the environment, as data.\n *\n * @returns The scope and why.\n *\n * @throws\n *\n * {Error} If `REPO_CONTRACT_SCOPE` is not one of the three choices.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5987,7 +5987,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!TypeScriptApi:type",
-          "docComment": "/**\n * The TypeScript compiler API, supplied by the caller -- this package never imports `typescript` at runtime.\n */\n",
+          "docComment": "/**\n * The TypeScript compiler API, supplied by the caller: this package never imports `typescript` at runtime.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
