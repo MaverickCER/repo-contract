@@ -111,7 +111,7 @@ const byName = (record: Readonly<Record<string, string>>): [string, string][] =>
 }
 
 /**
- * Builds the key a result is stored under: a digest of the check, every input's name and content
+ * Builds the key a result is stored under. It digests the check, every input's name and content
  * digest, the tool versions, and the cache format. Anything that can change the result belongs in
  * `inputs` or `tools`; the key says nothing about what is left out.
  * @param input - The check id, its inputs (name to content digest) and the tools' versions.
@@ -165,7 +165,7 @@ export function resolveCacheMode(input: {
 
 /**
  * @param check - A check id from the caller.
- * @returns The id, if it is a plain name that cannot address anything outside its own directory.
+ * @returns The id, if it is a plain name that cannot address anything outside its directory.
  * @throws {TypeError} Otherwise.
  */
 function validCheck(check: string): string {
@@ -193,8 +193,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
 
 /**
- * Whether a stored entry is well formed is decided here; whether it is the entry a path names is
- * decided by the caller, which compares the entry's `check` and `key` with that path.
+ * Decides whether a stored entry is well formed. The caller decides whether it is the entry a path
+ * names, by comparing the entry's `check` and `key` with that path.
  * @param text - A stored file's content.
  * @returns The entry it holds, or `undefined` if it is not a well-formed entry of this format.
  */

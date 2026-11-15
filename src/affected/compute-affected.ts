@@ -108,8 +108,8 @@ const matches = (path: string, patterns: readonly string[]): boolean =>
  * The analysis is symbol-level: each changed module is diffed against its base to find the exported
  * names whose behavior may differ. Those names are followed through the import graph (including
  * re-exports and `export *`) to every module that uses them. Anything it cannot reason about does
- * not narrow the result. A changed file the graph cannot place, a global trigger such as a
- * lockfile, or a file that does not parse makes the whole result `"full"`. A module that loads
+ * not narrow the result. Three cases make the whole result `"full"`: an unplaceable changed file,
+ * a global trigger such as a lockfile, and an unparseable file. A module that loads
  * code dynamically is treated as affected by everything. Narrowing is only ever an optimization of
  * a sound answer, never a guess.
  * @param input - Module contents, the diff, and the TypeScript compiler API.
@@ -227,8 +227,8 @@ class Computation {
   }
 
   /**
-   * A module that loads code by a non-literal specifier can depend on anything: a test of that
-   * kind always runs, and a source of that kind is treated as changed in every export.
+   * A module that loads code by a non-literal specifier can depend on anything. Such a test always
+   * runs. Such a source is treated as changed in every export.
    * @returns The tests that must always run.
    */
   private widenForDynamicLoads(): string[] {

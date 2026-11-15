@@ -6,8 +6,8 @@ import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
  * ESLint does not expose its JSON formatter result as a public LintResult
- * export: these types describe the JSON formatter contract rather than
- * ESLint's internal Linter types.
+ * export. These types describe the JSON formatter contract, not ESLint's
+ * internal Linter types.
  */
 interface EslintMessage {
   readonly ruleId: string | null
@@ -26,7 +26,7 @@ interface EslintResult {
 
 /** Options accepted by {@link lint}. */
 interface LintOptions {
-  /** Path (or glob) passed straight through to ESLint as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope linting to your own source tree. */
+  /** Path (or glob) passed straight through to ESLint as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope linting to your source tree. */
   readonly path?: string
 }
 
@@ -50,12 +50,11 @@ function renderMessages(results: readonly EslintResult[], severity: 1 | 2): stri
 
 /**
  * Static analysis via ESLint, using whatever `eslint.config.js` the
- * consumer's own repository already has: this preset makes no assumption
- * about rule configuration, only about how to run the tool and interpret
- * its JSON output. Severity `2` (error) blocks; severity `1` (warning) is
- * reported but never blocks: ESLint's own severities already encode that
- * distinction, so this preset just respects it rather than treating every
- * finding as equally blocking.
+ * consumer's repository already has. This preset assumes nothing about
+ * rule configuration, only how to run the tool and read its JSON output.
+ * Severity `2` (error) blocks. Severity `1` (warning) is reported but
+ * never blocks. ESLint's severities already encode that distinction, and
+ * this preset keeps it instead of treating every finding as blocking.
  * @param options - configuration for this check; see {@link LintOptions}.
  * @returns the configured check.
  * @beta
@@ -76,8 +75,8 @@ export function lint(options: LintOptions = {}): CheckDefinitionConfig {
       if (!result.output?.success) {
         // ESLint exits non-zero with no JSON on stdout both for a flat-config
         // load error and for a glob that matched no lintable files. Surface
-        // whatever it printed so the consumer sees the real cause instead of
-        // only "could not be parsed as JSON".
+        // whatever it printed so the consumer sees the cause instead of only
+        // "could not be parsed as JSON".
         const printed = combinedOutput(result)
 
         return {

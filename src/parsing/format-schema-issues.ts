@@ -3,7 +3,7 @@ import type { StandardSchemaV1 } from "../standard-schema/types.js"
 /**
  * Renders a failed `output.schema` validation's issues as a single, human-readable string for
  * `ParsedOutputFailure.error`: e.g. `Schema validation failed: foo.bar: Expected string;
- * items[2].name: Required`. Kept as its own small module, independent of `parseOutput`, so its
+ * items[2].name: Required`. Kept as a separate small module, independent of `parseOutput`, so its
  * path-rendering logic (the only non-trivial part) can be unit-tested directly.
  * @param issues - the failed `StandardSchemaV1.Result`'s `issues`.
  * @returns the formatted error string.
@@ -24,10 +24,10 @@ function formatIssue(issue: StandardSchemaV1.Issue): string {
 
 /**
  * Renders an issue's `path` as a dotted/bracketed accessor string, e.g. `foo.bar` or
- * `items[2].name`. Each segment is either a bare `PropertyKey` (`string | number | symbol`: a
- * `symbol` must never be interpolated directly into a template literal, which throws `TypeError:
- * Cannot convert a Symbol value to a string`; always going through `String(key)` avoids that for
- * every segment type uniformly) or a `{ key: PropertyKey }` object per the spec.
+ * `items[2].name`. Each segment is a bare `PropertyKey` (`string | number | symbol`) or a
+ * `{ key: PropertyKey }` object per the spec. Interpolating a `symbol` into a template literal
+ * throws `TypeError: Cannot convert a Symbol value to a string`. Going through `String(key)`
+ * avoids that for every segment type.
  * @param path - the issue's raw `path`, if any.
  * @returns the rendered path, or `""` for a pathless issue.
  */

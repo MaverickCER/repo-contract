@@ -2,10 +2,10 @@
  * A small, dependency-free glob matcher: the replacement for the `minimatch` runtime dependency
  * (see specs/decisions/0017-own-glob-matcher-replaces-minimatch.md). Pure string logic: it reads no
  * environment variable, touches no filesystem, imports nothing, and builds no `RegExp` from its
- * input. A pattern is tokenized and matched by a position-set simulation that is polynomial in
- * the sizes of the pattern and the value, so no pattern can cause catastrophic backtracking.
+ * input. A pattern is tokenized and matched by a position-set simulation. Its cost is polynomial
+ * in the sizes of the pattern and the value, so no pattern can cause catastrophic backtracking.
  *
- * Supported syntax (exactly what exception-policy category keys use, e.g. `"security/*"`):
+ * Supported syntax (what exception-policy category keys use, e.g. `"security/*"`):
  * - `*`   any run of characters except `/`
  * - `**`  any run of characters including `/`; a whole `**` + `/` segment also matches zero segments
  * - `?`   exactly one character except `/`
@@ -37,8 +37,8 @@ const CLASS_RANGE = /[\s\S]-[\s\S]/g
 const TOKEN = /\\(.)|\*\*\/|\*\*|\*|\?|\[([^\]]+)\]|[\s\S]/g
 
 /**
- * Finds the first brace group (scanning closing braces left to right) whose body holds a comma and
- * no braces of its own: the innermost expandable group. `{x}` (no comma) is never expandable.
+ * Finds the innermost expandable brace group: the first one, scanning closing braces left to right,
+ * whose body holds a comma and no braces. `{x}` (no comma) is never expandable.
  * @param pattern - the glob to search.
  * @returns the group's span and its comma-separated alternatives, or `undefined` when none is left.
  */
@@ -184,7 +184,7 @@ function step(
 }
 
 /**
- * Whether `value` matches the glob `pattern` (see this module's own doc comment for the exact
+ * Whether `value` matches the glob `pattern` (see this module's doc comment for the exact
  * syntax). Nothing is cached: compiling a category glob costs microseconds, and a cache would make a
  * pattern's code paths run only for the first caller.
  * @param value - the string to test (an exception category such as `"security/xss"`).

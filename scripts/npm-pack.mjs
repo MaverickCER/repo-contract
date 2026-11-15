@@ -1,21 +1,21 @@
-// Shared `npm pack` mechanics for every place this repository packs its own
+// Shared `npm pack` mechanics for every place this repository packs its
 // tarball: test/helpers/pack-consumer.ts (the consumer-install E2E suites) and
 // scripts/run-attw-to-file.mjs (the `arethetypeswrong` check). Kept in one
 // place because two independent things were subtly wrong in both copies:
 //
 //   1. `npm pack --json` stdout is NOT guaranteed to be pure JSON. Version
-//      10.x of npm prepends its own (ANSI-styled) log lines to stdout ahead
+//      10.x of npm prepends its (ANSI-styled) log lines to stdout ahead
 //      of the `--json` payload. A bare `JSON.parse(stdout)` then throws on
 //      the leading escape byte. This was observed across CI's Node 22 jobs.
 //      The npm 11 bundled with Node 24 happens to emit clean output, which
 //      is the only reason those jobs passed. `--loglevel=silent` suppresses
 //      the noise. `parseNpmPackFilename` below isolates the JSON block and
-//      asserts its shape regardless. A future npm behaviour change therefore
+//      asserts its shape regardless. A future npm behaviour change
 //      can't reintroduce the failure silently.
 //   2. On Windows `npm` is `npm.cmd`. Since the CVE-2024-27980 mitigation
 //      (Node 18.20.2 / 20.12.2 / 22+), `child_process.spawnSync` refuses to
 //      run a `.cmd`/`.bat` file at all unless `shell: true`. It fails with
-//      `status: null` and no captured stderr. That is exactly the opaque
+//      `status: null` and no captured stderr. That is the opaque
 //      "npm pack failed (exit null)" the E2E suite hit on windows-latest.
 //      `cross-spawn` is already a devDependency, used the same way by
 //      scripts/run-test-category.mjs. It resolves `npm` -> `npm.cmd` and
@@ -36,10 +36,10 @@ const JSON_OPEN = new Set(["[", "{", "[]", "{}"])
 const JSON_CLOSE = new Set(["]", "}", "[]", "{}"])
 
 /**
- * Parses `npm pack --json` stdout into its result array, tolerant of npm prefixing its own log
+ * Parses `npm pack --json` stdout into its result array, tolerant of npm prefixing its log
  * lines (ANSI-coloured or not) ahead of the JSON payload. `--loglevel=silent` should already
  * suppress that prefix. npm's behaviour here has varied enough across versions that this
- * doesn't rely on it. If the whole string doesn't parse, it isolates npm's pretty-printer's own
+ * doesn't rely on it. If the whole string doesn't parse, it isolates npm's pretty-printer
  * block and parses that. The block runs from the first line that is exactly `[`/`{`/`[]`/`{}`
  * to the last line that is exactly `]`/`}`/`[]`/`{}`. The log lines npm writes are never
  * exactly one of those tokens, even with colour codes still attached.
@@ -124,10 +124,10 @@ export function runNpm(args, options = {}) {
 }
 
 /**
- * Runs a real `npm pack` into `destinationDir` and returns where the tarball landed.
+ * Runs `npm pack` into `destinationDir` and returns where the tarball landed.
  * `--ignore-scripts` keeps packing side-effect-free and deterministic. It must never run a
  * build. A build's stdout would corrupt `--json`, and its `dist/` delete+rebuild would race every
- * concurrent reader (see scripts/run-attw-to-file.mjs's own note). `dist/` is expected to be
+ * concurrent reader (see scripts/run-attw-to-file.mjs's note). `dist/` is expected to be
  * already built by the time this runs, by the build barrier in repo-contract.config.ts or an
  * explicit `npm run build`. The published package has no `prepare` or other install lifecycle
  * script.

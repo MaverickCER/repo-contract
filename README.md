@@ -17,11 +17,15 @@ An **AI check** asks a model reviewer for a fixed JSON shape with a confidence s
 
 Publish a contract as an npm package and it becomes your organization's **standard**. It is a **baseline**: every repository that extends it runs the same checks and policies, can add its own on top, and gets changes as a dependency update. Shared ESLint configs and reusable workflows share single checks; a standard also shares the policies that judge them.
 
+<!-- quick-start:begin -->
+
 ```sh
 npm install --save-dev repo-contract tsx
 npx repo-contract init   # writes a contract for the tools your package.json lists
 npm run contract         # one [PASS|WARN|FAIL] line per check, with its reason
 ```
+
+<!-- quick-start:end -->
 
 The [`examples/demo/`](examples/demo/README.md) contract runs three published presets against one deliberately imperfect file. `npm run demo` prints:
 
@@ -132,7 +136,7 @@ checks: {
 
 **Prerequisites:** Node.js `>=22` (Bun and Deno are tested too) and a project with a `package.json`. The package has no runtime dependencies and bundles none of the tools it runs. Install the ones you want checked (`typescript`, `eslint`, `vitest`, and so on), and `init` wires up the checks for what it finds.
 
-The three commands at the top of this page are the whole install. `init` writes `repo-contract.config.mts` and `scripts/contract.mjs`, and adds a `contract` script to `package.json`. In a project with only these two packages, `init` wires one check, `securityDeps`, which passes when `npm audit` finds nothing. A tool you add later gets its check by adding its [preset](GUIDE.md#presets) to the generated config (`init` never overwrites existing files). Each tool still needs its own configuration (`tsconfig.json`, an ESLint flat config). `init` does not scaffold those; a missing one surfaces as that tool's own "no config found" error.
+The three commands at the top of this page are the whole install. `init` writes `repo-contract.config.mts` and `scripts/contract.mjs`, and adds a `contract` script to `package.json`. In a project with only these two packages, `init` wires `securityDeps`, which passes when `npm audit` finds nothing. It also wires `bundledDependencies` unless package.json is `private`. A tool you add later gets its check by adding its [preset](GUIDE.md#presets) to the generated config (`init` never overwrites existing files). Each tool still needs its own configuration (`tsconfig.json`, an ESLint flat config). `init` does not scaffold those; a missing one surfaces as that tool's own "no config found" error.
 
 The smallest hand-written contract has the same shape as the file `init` generates:
 
@@ -170,13 +174,9 @@ export default defineRepoContract({ spawn, env: process.env, checks: { typecheck
 - Structured, schema-versioned evidence and verdict documents, plus a Markdown summary renderer ([Persisting a run](GUIDE.md#persisting-a-run-and-publishing-a-summary)).
 - Ratchets and [governed exceptions](GUIDE.md#advanced-governed-exceptions) for a justified waiver of one finding without weakening the check.
 
-**Integration:** it is a library, so your repository owns the entry point. Your tools, CI provider, and scripts keep running as they do; process spawning and environment access are capabilities you supply, never ambient ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)). It adopts one check at a time: `runRepoContract`'s `checks` option runs a named subset of the configured checks.
+**Integration:** it is a library, so your repository owns the entry point. Your tools, CI provider, and scripts keep running as they do; process spawning and environment access are capabilities you supply, never ambient ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)). It adopts one check at a time: `runRepoContract`'s `checks` option runs a named subset of the configured checks. **Configuration and extension:** a typed `defineRepoContract` object. Spread a preset to override its command or timeout, or write your own check and policy ([Guide](GUIDE.md#defining-checks)). An organization publishes its contract as a standard that other repositories extend ([examples](examples/README.md)).
 
-**Runtimes:** Node.js `>=22` on macOS, Linux, and Windows; Bun and Deno (Deno needs `--allow-read --allow-run --allow-env`); not browsers ([details](GUIDE.md#runtime-support)).
-
-**Package managers:** npm is supported. pnpm, Yarn 1 and Yarn Berry (node-modules linker) are tested for install and import of every entry point only ([details](GUIDE.md#package-managers)).
-
-**Configuration and extension:** a typed `defineRepoContract` object. Spread a preset to override its command or timeout, or write your own check and policy ([Guide](GUIDE.md#defining-checks)). An organization publishes its contract as a standard that other repositories extend ([examples](examples/README.md)).
+**Runtimes:** Node.js `>=22` on macOS, Linux, and Windows; Bun and Deno (Deno needs `--allow-read --allow-run --allow-env`); not browsers ([details](GUIDE.md#runtime-support)). **Package managers:** npm is supported. pnpm, Yarn 1 and Yarn Berry (node-modules linker) are tested for install and import of every entry point only ([details](GUIDE.md#package-managers)).
 
 ## Limits and when not to use it
 
@@ -187,7 +187,7 @@ export default defineRepoContract({ spawn, env: process.env, checks: { typecheck
 
 ## Security and supply chain
 
-- **Runtime properties:** no shell by default (a `run` array is argv; a string is tokenized). No ambient spawn or environment access in the library; the `affected` and `doctor` commands in the `bin` run `git` ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md#amendment-2026-11-01-the-command-line-tool-is-a-consumer-of-its-own-library)). No network calls or telemetry, and a check in this repository's own contract enforces the no-network property ([SECURITY.md](SECURITY.md#runtime-security-model)).
+- **Runtime properties:** no shell by default (a `run` array is argv; a string is tokenized). No ambient spawn or environment access in the library; the `affected` and `doctor` commands in the `bin` run `git`, and `quick-start` runs npm and the commands your README marks ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md#amendment-2026-11-01-the-command-line-tool-is-a-consumer-of-its-own-library)). The library makes no network calls and sends no telemetry, and a check in this repository's own contract enforces the no-network property ([SECURITY.md](SECURITY.md#runtime-security-model)).
 - **Trust boundaries:** it executes the commands your config names with the environment you pass, so the config and any policy you write are trusted code. What these properties do not cover is in [Application responsibilities](SECURITY.md#application-responsibilities).
 - **Dependencies and licence:** zero runtime dependencies (the list, generated from `package.json`, is in the [Adoption guide](ADOPTION.md#security--threat-model)), MIT licensed. Two CycloneDX SBOMs are committed, one for what installing the package adds and one for this repository's build tooling ([what each covers](SECURITY.md#sboms)).
 - **Reporting:** [private security advisory](https://github.com/MaverickCER/repo-contract/security/advisories/new); supported versions are in [SECURITY.md](SECURITY.md#supported-versions).

@@ -36,7 +36,7 @@ interface NpmAuditReport {
 // this runtime security contract. The blocking threshold is repository
 // policy rather than an opinion imposed by repo-contract.
 //
-// No missing-dependency check here (see shared/missing-dependency.ts's own
+// No missing-dependency check here (see shared/missing-dependency.ts's
 // doc comment). This preset shells out to `npm` itself, which cannot be
 // "missing" in any environment capable of running `npm run <script>` at
 // all. The exception is intentional, not an oversight.
@@ -76,7 +76,7 @@ export const securityDeps: CheckDefinitionConfig = {
     // Every count is cast from untrusted parsed JSON. A proxy registry, a
     // future npm format, or a truncated report can omit a severity field.
     // `undefined + n` is `NaN`, and both `NaN > 0` and `undefined > 0` are
-    // false. That would silently turn real reported vulnerabilities into a
+    // false. That would silently turn reported vulnerabilities into a
     // "0 of everything" pass. Require every severity count to be a finite
     // number before trusting the summary at all.
     const severities = ["info", "low", "moderate", "high", "critical"] as const

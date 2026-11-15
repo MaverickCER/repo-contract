@@ -1,9 +1,9 @@
 // `repo-contract affected`: which tests and mutation targets can the current changes affect?
-// All input and output is injected (argv, stdout/stderr, git and file access, the TypeScript
-// compiler, the analysis engine) so the command is unit-testable without a process or a
-// repository; bin/repo-contract.mjs wires the real ones. Conventions: data goes to stdout and
-// diagnostics to stderr; exit status is 0 on success (an empty or "run everything" answer is still
-// success), 1 when the command could not run, 2 for a usage error.
+// All input and output is injected: argv, stdout/stderr, git and file access, the TypeScript
+// compiler and the analysis engine. Unit tests then need no process and no repository.
+// bin/repo-contract.mjs wires the production ones.
+// Data goes to stdout and diagnostics to stderr. Exit status: 0 on success (an empty or "run
+// everything" answer is still success), 1 when the command could not run, 2 for a usage error.
 
 import path from "node:path"
 

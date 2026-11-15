@@ -1,9 +1,9 @@
 import type { ExceptionPolicy, ExceptionPolicyConfig } from "../../src/helpers/index.js"
 
 /**
- * The `security-network` check's own instantiation of `repo-contract/helpers`'s classification-
+ * The `security-network` check's instantiation of `repo-contract/helpers`'s classification-
  * neutral exception policy (see specs/decisions/0013-reusable-exception-policy-helper.md), a
- * single `"security-network"` group classified on the finding's own `capability` kind.
+ * single `"security-network"` group classified on the finding's `capability` kind.
  *
  * ADR 0007's default posture is unchanged and absolute: `src/**` must never perform network I/O.
  * The `default` below is `forbidden`, so a capability kind this policy does not name has no

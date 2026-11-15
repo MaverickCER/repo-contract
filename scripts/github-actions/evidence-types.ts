@@ -9,7 +9,7 @@
  * specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md.
  */
 
-/** One actionlint finding, normalized from actionlint's own `-format '{{json .}}'` output. */
+/** One actionlint finding, normalized from actionlint's `-format '{{json .}}'` output. */
 export interface ActionlintFinding {
   /** The human-readable explanation actionlint gives for the problem. */
   readonly message: string

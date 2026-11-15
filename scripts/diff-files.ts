@@ -7,7 +7,7 @@ const execFileAsync = promisify(execFile)
 /**
  * One file changed in the diff, as git reports it. Line counts come from `git diff --numstat`.
  * Status/rename detection comes from `git diff --name-status`. Both run with `-M` (rename
- * detection) against the same `<base>...HEAD` range. Their output lists are therefore in the same
+ * detection) against the same `<base>...HEAD` range. Their output lists are in the same
  * order and can be zipped by index. Git computes one underlying tree diff for a given range/flags
  * and renders it two ways. The per-file ordering is identical between the two invocations.
  */
@@ -27,22 +27,22 @@ interface RawDiffFile {
  * `maxBuffer`, and `git` itself being unavailable (see the comment in the `catch` below).
  *
  * The result is deliberately not narrowed by inspecting `stderr`/the exit code for a more specific
- * "ref genuinely doesn't exist" signal. Git's exact wording and exit code for that case are not a
+ * "ref doesn't exist" signal. Git's exact wording and exit code for that case are not a
  * stable, version/locale-independent contract to string-match against. Matching them would remove
  * a rare, self-correcting case: a transient failure treated as absent. In exchange it would add a
  * locale- or git-version-dependent false rethrow on every caller's *legitimate* "doesn't exist"
  * case. Every current caller already wants this behaviour.
- * - This file's own `--name-status`/`--numstat` reads report an unresolvable diff range the same
+ * - This file's `--name-status`/`--numstat` reads report an unresolvable diff range the same
  *   as "no changes".
  * - git-commits.ts's `readBranchCommits` reports an unresolvable base as "no commits".
  * - checks/openssf-scorecard.ts and checks/sbom.ts record the `rev-parse HEAD` commit as
  *   `"unknown"` when it fails.
  * @param args - Arguments to pass to the `git` executable.
  * @param cwd - Directory to run the command in. It is authoritative regardless of the calling
- * process's own ambient git context. `gitSpawnEnv()` (see git-env.ts) strips any inherited
+ * process's ambient git context. `gitSpawnEnv()` (see git-env.ts) strips any inherited
  * `GIT_DIR`/`GIT_WORK_TREE`, which would otherwise override `cwd`-based repository resolution
- * entirely. This was confirmed directly. Git sets `GIT_DIR` when invoking a hook from a worktree
- * of a bare repository, which is exactly this repository's own pre-push setup.
+ * entirely. Git sets `GIT_DIR` when it invokes a hook from a worktree of a bare repository,
+ * which is this repository's pre-push setup.
  * @returns The command's stdout, or `undefined` if it exits non-zero (e.g. an unresolvable ref).
  */
 export async function runGit(args: readonly string[], cwd: string): Promise<string | undefined> {
@@ -58,7 +58,7 @@ export async function runGit(args: readonly string[], cwd: string): Promise<stri
     // (see this function's doc comment). Two other cases are operational
     // failures: a diff whose output exceeds `maxBuffer`, and `git` itself
     // being unavailable. Neither may be silently reported as "no changes".
-    // Doing so would let the adr-governance check pass vacuously on exactly
+    // Doing so would let the adr-governance check pass vacuously on
     // the large or unusual change it exists to gate.
     const code = (error as NodeJS.ErrnoException | undefined)?.code
     if (code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER" || code === "ENOENT") {
@@ -159,7 +159,7 @@ export async function listChangedFiles(
   if (nameStatusLines.length !== numstatLines.length) {
     throw new Error(
       `git diff --name-status (${String(nameStatusLines.length)} lines) and --numstat ` +
-        `(${String(numstatLines.length)} lines) disagree for range ${range} -- cannot align them by index.`,
+        `(${String(numstatLines.length)} lines) disagree for range ${range}: cannot align them by index.`,
     )
   }
 

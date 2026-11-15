@@ -23,8 +23,8 @@ export function parseFailFastArgs(argv: readonly string[]): {
 }
 
 /**
- * Decides whether a run stops spending time on expensive checks once a cheap one has failed. Off
- * unless asked for, in CI as much as locally, so a run reports every problem by default; and never
+ * Decides whether a run stops spending time on expensive checks once a cheap one has failed. It is
+ * off unless asked for, in CI and locally, so a run reports every problem by default. It is never
  * on for a release, which always runs everything.
  * @param input - The explicit flag and the environment.
  * @param input.flag - `--fail-fast` (true) or `--no-fail-fast` (false), if given.

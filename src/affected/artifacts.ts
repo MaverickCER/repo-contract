@@ -61,8 +61,8 @@ export function packArtifacts(files: readonly ArtifactInput[]): PackedArtifacts 
 }
 
 /**
- * Unpacks a cached set of files, trusting nothing: the shape, every path and every checksum are
- * checked, and any problem means the whole set is refused (a cache miss, never a partial restore).
+ * Unpacks a cached set of files, trusting nothing. The shape, every path and every checksum are
+ * checked. Any problem refuses the whole set: a cache miss, never a partial restore.
  * @param value - What the cache returned.
  * @returns The files with their content, or why the set cannot be used.
  */

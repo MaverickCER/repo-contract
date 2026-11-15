@@ -1,13 +1,13 @@
 // Entry point for the "coderabbitai" self-hosting check, invoked via
 // `run: ["tsx", "scripts/coderabbitai/review.ts"]` in repo-contract.config.ts. It prints ONLY the
 // JSON evidence to stdout, for `output: { format: "json" }` to parse. This mirrors
-// scripts/security-socket/scan.ts's own stdout contract.
+// scripts/security-socket/scan.ts's stdout contract.
 //
 // This is self-hosting tooling, not published `src/`. It *may* read the ambient environment
-// (`process.env.CI`) and spawn a git subprocess for its own pre-flight check. It takes the same
+// (`process.env.CI`) and spawn a git subprocess for its pre-flight check. It takes the same
 // latitude as scripts/install-hooks.mjs; see specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md.
 //
-// Report-only: this script's own exit code is never the pass/fail signal. The signal is
+// Report-only: this script's exit code is never the pass/fail signal. The signal is
 // checks/coderabbitai.ts's policy, which reads this same evidence. The script always exits 0 once
 // it has produced *some* well-formed evidence, including `status: "not-applicable"`/
 // `"unavailable"`/`"error"`.
@@ -66,16 +66,16 @@ const registrySchema: StandardSchemaV1<unknown, readonly CoderabbitExceptionReco
 const SEVERITY_VALUES = new Set(["critical", "major", "minor"])
 
 /**
- * Whether the current git checkout is on a detached `HEAD`. `coderabbit review`'s own
- * base-branch comparison needs a real branch to diff from/to. A detached checkout (a CI runner
- * mid-rebase, a tag checkout, a bisect) is a genuine "can't establish git context" condition.
+ * Whether the current git checkout is on a detached `HEAD`. `coderabbit review`'s
+ * base-branch comparison needs a named branch to diff from/to. A detached checkout (a CI runner
+ * mid-rebase, a tag checkout, a bisect) is a "can't establish git context" condition.
  * This wrapper recognizes it itself, up front. Parsing it back out of a future CLI version's error
  * text for the same underlying problem would be fragile.
  * @returns `true` if `HEAD` is detached (not on a named branch).
  */
 function isDetachedHead(): boolean {
   const result = spawnSync("git", ["symbolic-ref", "-q", "HEAD"], { encoding: "utf8" })
-  // A real spawn failure (git itself missing) is not this function's concern. `coderabbit`
+  // A spawn failure (git itself missing) is not this function's concern. `coderabbit`
   // itself would fail identically and far more informatively. Only a *successful* git invocation
   // that reports "no symbolic ref" (a non-zero exit with no spawn error) means detached HEAD.
   return !result.error && result.status !== 0
@@ -83,8 +83,8 @@ function isDetachedHead(): boolean {
 
 /**
  * Whether `value` is a non-null, non-array object. It duplicates
- * `scripts/security-socket/scan.ts`'s own identical helper rather than importing it. The reason is
- * the one that file's own doc comment gives: self-hosting scripts stay independent of each other.
+ * `scripts/security-socket/scan.ts`'s identical helper rather than importing it. The reason is
+ * the one that file's doc comment gives: self-hosting scripts stay independent of each other.
  * @param value - The candidate value to check.
  * @returns `true` if `value` is a plain object.
  */
@@ -93,8 +93,8 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Normalizes one real `{"type":"finding", ...}` event: confirmed shape (see evidence-types.ts's
- * own doc comment): `severity`, `fileName`, `codegenInstructions`. Rejects an entry missing
+ * Normalizes one `{"type":"finding", ...}` event, in the shape evidence-types.ts's doc comment
+ * records: `severity`, `fileName`, `codegenInstructions`. Rejects an entry missing
  * `fileName`/`codegenInstructions` outright (the caller treats any rejection as `status: "error"`
  * for the whole stream).
  * @param raw - One candidate finding event, already known to have `type === "finding"`.
@@ -124,7 +124,7 @@ function normalizeFinding(raw: Record<string, unknown>): NormalizedFinding | und
  * events already vary run to run). A future CLI version adding a new informational event type
  * must not break this check. Two inputs are NOT silently skipped: a `finding` event that doesn't
  * match the minimum recognized shape, and a line that isn't parseable JSON at all. Either one
- * fails the whole parse closed, exactly like `checks/mutation.ts` does for a malformed Stryker
+ * fails the whole parse closed, as `checks/mutation.ts` does for a malformed Stryker
  * report.
  * @param stdout - The CLI's raw captured stdout.
  * @returns The findings observed and whether a terminal `complete` event was seen, or the error message if parsing failed closed.
@@ -184,25 +184,25 @@ export function parseAgentStream(stdout: string):
     }
 
     if (parsed.type === "complete") {
-      // Direct observation against a real CLI confirmed two terminal statuses.
+      // The CLI emits two terminal statuses.
       // `"review_completed"` means a review ran; the `findings` count is on this same event.
       // `"review_skipped"` means nothing was in scope to review (an empty diff). The CLI emits it
       // when `--uncommitted` finds no tracked edits. Both are clean, findings-complete terminal
       // states. Any *other* status (missing, an unsuccessful value) means the review did not
-      // actually finish. Accepting it would let an incomplete run produce a clean result.
+      // finish. Accepting it would let an incomplete run produce a clean result.
       if (parsed.status !== "review_completed" && parsed.status !== "review_skipped") {
         return {
           ok: false,
           error: `coderabbit review --agent produced a "complete" event with an unexpected status (${JSON.stringify(parsed.status)}); expected "review_completed" or "review_skipped".`,
         }
       }
-      // The terminal event carries its own findings *count* (see evidence-types.ts). Every
-      // individual `finding` event is streamed as its own line before this one. The event's
-      // count and the number of findings actually parsed must therefore agree exactly. A
+      // The terminal event carries a findings *count* (see evidence-types.ts). Every
+      // `finding` event streams on a separate line before this one. The event's
+      // count and the number of findings parsed must agree. A
       // `complete` claiming more findings than were streamed means the stream was truncated.
       // Accepting it would let an incomplete run produce a clean `reviewed` result. A `complete`
       // claiming fewer means this parser recognized an event that the CLI itself didn't count.
-      // Either way the stream is malformed: fail closed, exactly as a bad status does.
+      // Either way the stream is malformed: fail closed, as a bad status does.
       if (
         typeof parsed.findings !== "number" ||
         !Number.isInteger(parsed.findings) ||
@@ -221,7 +221,7 @@ export function parseAgentStream(stdout: string):
       if (parsed.status === "review_skipped" && findings.length > 0) {
         return {
           ok: false,
-          error: `coderabbit review --agent produced a "review_skipped" complete event alongside ${String(findings.length)} finding event(s) -- a skipped review cannot also have findings.`,
+          error: `coderabbit review --agent produced a "review_skipped" complete event alongside ${String(findings.length)} finding event(s): a skipped review cannot also have findings.`,
         }
       }
       completed = true
@@ -229,7 +229,7 @@ export function parseAgentStream(stdout: string):
     }
 
     // "review_context"/"status"/"heartbeat"/anything else this wrapper doesn't need to interpret:
-    // see this function's own doc comment on why these are ignored, not rejected.
+    // see this function's doc comment on why these are ignored, not rejected.
   }
 
   return { ok: true, findings, completed }
@@ -242,9 +242,9 @@ export function parseAgentStream(stdout: string):
  */
 function runCoderabbitCli(): CoderabbitCliResult {
   // This is self-hosting tooling outside src/, not published library code (see package.json's
-  // "files"). Reading CI is this repository's own consumer responsibility here. The justification
+  // "files"). Reading CI is this repository's consumer responsibility here. The justification
   // is identical to scripts/install-hooks.mjs's. The `n/no-process-env` rule is scoped to src/ only
-  // (see eslint.config.js). No suppression is needed here, unlike repo-contract.config.ts's own
+  // (see eslint.config.js). No suppression is needed here, unlike repo-contract.config.ts's
   // top-level self-hosting config.
   if (process.env.CI) {
     return { status: "not-applicable", reason: "ci", expectedProvider: "coderabbit-github-app" }
@@ -256,7 +256,7 @@ function runCoderabbitCli(): CoderabbitCliResult {
 
   const result = spawnSync("coderabbit", ["review", "--agent", "--uncommitted"], {
     encoding: "utf8",
-    // In this repository's observed behaviour, a real review of a small local diff completes in
+    // In this repository's observed behaviour, a review of a small local diff completes in
     // ~1-2 min. A 10 min ceiling is generous yet still bounds a stalled process. It can never
     // hang `runCoderabbitReview`, `npm run contract`, or the pre-push hook indefinitely.
     // `cross-spawn` forwards this straight to `child_process.spawnSync`.
@@ -311,7 +311,7 @@ function runCoderabbitCli(): CoderabbitCliResult {
 }
 
 /**
- * Runs the CodeRabbit CLI, then (only when a review actually ran (`reviewed`)) reconciles
+ * Runs the CodeRabbit CLI, then (only when a review ran (`reviewed`)) reconciles
  * `.repo-contract/exceptions/coderabbit.json` against the findings and writes it back. On
  * `not-applicable` (CI) / `unavailable` / `error` the registry is validated but not reconciled.
  * @param root - Absolute path to the repository being checked.
@@ -340,7 +340,7 @@ export async function runCoderabbitReview(root: string): Promise<CoderabbitEvide
   }
 
   // CodeRabbit occasionally streams a byte-identical finding twice; those collapse to one id.
-  // Deduping here (not in parseAgentStream) keeps the `complete` event's own findings-count check
+  // Deduping here (not in parseAgentStream) keeps the `complete` event's findings-count check
   // honest: it counts raw streamed events.
   const seen = new Set<string>()
   const findings = cli.findings.filter((finding) => {
@@ -395,7 +395,7 @@ export async function runCoderabbitReview(root: string): Promise<CoderabbitEvide
   }
 }
 
-// Mirrors scripts/security-socket/scan.ts's own "only run when invoked directly, not when
+// Mirrors scripts/security-socket/scan.ts's "only run when invoked directly, not when
 // imported by a test" guard.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const evidence = await runCoderabbitReview(process.cwd())

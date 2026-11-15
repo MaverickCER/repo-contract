@@ -1,13 +1,13 @@
 # presets
 
-Ready-made checks for common TypeScript and JavaScript tools. Spread a preset into your own
+Ready-made checks for common TypeScript and JavaScript tools. Spread a preset into your
 `checks` record and override what you need, most often `policy`.
 
 A preset encodes how to run and read one tool, never what counts as good enough
 (specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). To change
 what a factory preset runs, pass it options; overriding `run` directly is the escape hatch.
 
-Experimental, and published under its own `./presets` subpath. It is never re-exported from the
+Experimental, and published under its `./presets` subpath. It is never re-exported from the
 package root, and it re-exports nothing from there.
 
 ## Interfaces
@@ -114,7 +114,7 @@ Environment variables the agent authenticates with, by name, for example
 `{ ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY }`. Each value reaches the agent's process
 through the check's `env`, so it works when the runner sets `inheritEnv: false`. A value never
 enters the command line, and every occurrence of it in a reason is replaced with `[redacted]`.
-The evidence keeps the agent's own stdout and stderr, so a value the agent prints lands there.
+The evidence keeps the agent's stdout and stderr, so a value the agent prints lands there.
 A name whose value is `undefined` or `""` is left unset and turns a `pass` into a `warn`.
 
 ##### cwd?
@@ -183,9 +183,9 @@ readonly prompt?:
 **`Beta`**
 
 What the agent is asked. A string is the prompt text. `{ file }` hands the agent that path in
-place of the text, for an agent that reads its prompt from a file. Defaults to a prompt that
-asks for [AiReviewReply](#aireviewreply) and shows an example of it; a replacement must ask for the same
-shape, or every reply goes to `fallback`.
+place of the text, for an agent that reads its prompt from a file. The default prompt asks for
+[AiReviewReply](#aireviewreply) and shows an example of it. A replacement must ask for the same shape, or
+every reply goes to `fallback`.
 
 ##### timeoutMs?
 
@@ -283,6 +283,30 @@ readonly dir?: string;
 
 Build-output directory to scan, relative to the working directory. Defaults to `"dist"`.
 
+***
+
+### QuickStartOptions
+
+Options accepted by [quickStart](#quickstart).
+
+#### Properties
+
+##### readme?
+
+```ts
+readonly readme?: string;
+```
+
+The Markdown file that holds the marked quick start, relative to the working directory. Defaults to `"README.md"`.
+
+##### timeoutMs?
+
+```ts
+readonly timeoutMs?: number;
+```
+
+Time all of the quick start's commands together may take, in milliseconds. Defaults to `300000` (five minutes).
+
 ## Variables
 
 ### arethetypeswrong
@@ -294,6 +318,22 @@ const arethetypeswrong: CheckDefinitionConfig;
 **`Beta`**
 
 Published-package type-resolution correctness via `@arethetypeswrong/cli`.
+
+***
+
+### bundledDependencies
+
+```ts
+const bundledDependencies: CheckDefinitionConfig;
+```
+
+**`Beta`**
+
+Fails when package.json bundles a package (`bundleDependencies` or `bundledDependencies`) that
+its `dependencies` do not declare. npm writes each such name into the published registry
+manifest as `"*"`, and supply-chain scanners such as Socket report the mismatch as manifest
+confusion. Passes a package that bundles nothing. Reads package.json in the working directory
+with `node -e`; no external tool.
 
 ***
 
@@ -329,7 +369,7 @@ const license: CheckDefinitionConfig;
 
 **`Beta`**
 
-Dependency license compliance via licensee. The repository's own `.licensee.json` is the policy
+Dependency license compliance via licensee. The repository's `.licensee.json` is the policy
 when it exists; otherwise a dependency's license must be OSI-approved (`--osi`).
 
 ***
@@ -343,13 +383,13 @@ const publint: CheckDefinitionConfig;
 **`Beta`**
 
 publint has no machine-readable output mode: only a plain-text CLI
-reporter (see its own `src/cli.js` `formatMessages`). Its process exit
+reporter (see its `src/cli.js` `formatMessages`). Its process exit
 code reflects only 'error'-level findings; 'warning'/'suggestion'-level
-findings never affect it. This preset reads the same three section
-headers publint's own CLI writes ("Errors:", "Warnings:", "Suggestions:")
-to distinguish blocking findings from non-blocking ones, without
-depending on any per-message structure publint doesn't expose. Relevant
-only to repositories that publish an npm package.
+findings never affect it. This preset reads the three section headers
+publint's CLI writes ("Errors:", "Warnings:", "Suggestions:") to tell
+blocking findings from non-blocking ones. It depends on no per-message
+structure, which publint doesn't expose. Relevant only to repositories
+that publish an npm package.
 
 ***
 
@@ -410,7 +450,7 @@ function aiReview(options): CheckDefinitionConfig;
 **`Beta`**
 
 An AI review as a check. It runs your agent with a prompt that asks for one fixed JSON shape,
-[AiReviewReply](#aireviewreply), with a confidence score on every finding, and gates on those scores. A
+[AiReviewReply](#aireviewreply). Every finding carries a confidence score, and the check gates on them. A
 model can answer differently on every run, so the policy reads only that structured reply,
 never prose.
 
@@ -418,9 +458,10 @@ The output is read in three steps. The whole output is parsed as JSON. If that f
 from its first `{` to its last `}` is parsed. If that fails too, or the JSON is not the
 requested shape, `fallback` is judged in its place and the reason lists the problems.
 
-The verdict: `fail` when an `error` finding scores at or above `errorThreshold`; `warn` for any
-other `warn` or `error` finding, which includes the default fallback; `pass` for `info` findings
-only. Each reason lists every `warn` and `error` finding with its file, line, rule and confidence.
+The verdict is `fail` when an `error` finding scores at or above `errorThreshold`. It is `warn`
+for any other `warn` or `error` finding, including the default fallback. It is `pass` for `info`
+findings only. Each reason lists every `warn` and `error` finding with its file, line, rule and
+confidence.
 A timeout, a missing agent or a process killed by a signal fails. A non-zero exit code alone
 does not: a well-formed reply still counts, and an unreadable one names the code. The tests prove
 the parsing and the policy; they do not prove a model's judgement.
@@ -484,12 +525,12 @@ function commitlint(options?): CheckDefinitionConfig;
 **`Beta`**
 
 Commit-message governance via commitlint, using whatever commitlint
-config the consumer's own repository already has (commitlint ships no
-rules of its own: e.g. `@commitlint/config-conventional`). Exit-code
-based rather than `--format json`: commitlint has no broadly-documented,
-stable JSON CLI output, so this preset reads its plain-text report the
-same way the `format`/`typecheck` presets already do for their tools,
-rather than relying on an unconfirmed flag.
+config the consumer's repository already has (commitlint ships no
+rules of its own: e.g. `@commitlint/config-conventional`). It judges the
+exit code, not `--format json`: commitlint has no broadly-documented,
+stable JSON CLI output. This preset reads its plain-text report as the
+`format`/`typecheck` presets do for their tools, instead of relying on an
+unconfirmed flag.
 
 #### Parameters
 
@@ -537,10 +578,11 @@ function distNoUrls(options?): CheckDefinitionConfig;
 
 **`Beta`**
 
-Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the build output directory, so
-supply-chain scanners that flag shipped URLs (Socket.dev's "URL strings" alert, for one) have
-nothing to flag. Scans every file, sourcemaps and declaration files included. Individual URLs can
-be allowed with a mandatory, reviewable `reason`; there is no blanket opt-out.
+Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the
+build output directory. Supply-chain scanners that flag shipped URLs then have nothing to flag
+(Socket.dev's "URL strings" alert, for one). Scans every file, sourcemaps and declaration files
+included. Individual URLs can be allowed with a mandatory, reviewable `reason`; there is no
+blanket opt-out.
 
 #### Parameters
 
@@ -589,12 +631,11 @@ function lint(options?): CheckDefinitionConfig;
 **`Beta`**
 
 Static analysis via ESLint, using whatever `eslint.config.js` the
-consumer's own repository already has: this preset makes no assumption
-about rule configuration, only about how to run the tool and interpret
-its JSON output. Severity `2` (error) blocks; severity `1` (warning) is
-reported but never blocks: ESLint's own severities already encode that
-distinction, so this preset just respects it rather than treating every
-finding as equally blocking.
+consumer's repository already has. This preset assumes nothing about
+rule configuration, only how to run the tool and read its JSON output.
+Severity `2` (error) blocks. Severity `1` (warning) is reported but
+never blocks. ESLint's severities already encode that distinction, and
+this preset keeps it instead of treating every finding as blocking.
 
 #### Parameters
 
@@ -619,9 +660,9 @@ function markdownlint(options?): CheckDefinitionConfig;
 **`Beta`**
 
 Markdown structure/style lint via markdownlint-cli2. Unlike this
-package's other file-based-report presets, the report path is
-config-driven rather than a CLI flag: markdownlint-cli2 only writes
-JSON when its own config file requests it. This preset assumes the
+package's other file-based-report presets, the report path comes from
+config, not a CLI flag. The `markdownlint-cli2` tool writes JSON only
+when its config file requests it. This preset assumes the
 consumer's `.markdownlint-cli2.jsonc` includes:
 ```jsonc
 "outputFormatters": [["markdownlint-cli2-formatter-json", { "name": "reports/markdownlint.json" }]]
@@ -643,6 +684,38 @@ the configured check.
 
 ***
 
+### quickStart()
+
+```ts
+function quickStart(options?): CheckDefinitionConfig;
+```
+
+**`Beta`**
+
+Runs the README's marked quick start, one line at a time, against the tarball npm would publish.
+The commands run in an empty project: a directory holding only a package.json. The command that
+installs this package installs the packed tarball instead. Fails when any command exits non-zero or the time
+budget runs out, and when the README has no marked block. Mark the block by putting
+`<!-- quick-start:begin -->` on the line before its fenced `sh` block and
+`<!-- quick-start:end -->` on the line after it.
+
+Runs `repo-contract quick-start`, so the package must be built first, and the commands reach
+whatever network they reach (an install usually reaches the registry).
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `options?` | [`QuickStartOptions`](#quickstartoptions) | configuration for this check; see [QuickStartOptions](#quickstartoptions). |
+
+#### Returns
+
+[`CheckDefinitionConfig`](index/README.md#checkdefinitionconfig)
+
+the configured check.
+
+***
+
 ### stylelint()
 
 ```ts
@@ -652,9 +725,9 @@ function stylelint(options?): CheckDefinitionConfig;
 **`Beta`**
 
 CSS/SCSS lint via stylelint, using whatever stylelint config the
-consumer's own repository already has. `severity: "error"` blocks;
+consumer's repository already has. `severity: "error"` blocks;
 `severity: "warning"` is reported but never blocks, matching how the
-`lint` preset treats ESLint's own severities.
+`lint` preset treats ESLint's severities.
 
 #### Parameters
 

@@ -21,24 +21,24 @@ import type {
  * spawns. Anything only discoverable by attempting execution (a missing
  * binary, a bad `cwd`) becomes evidence on that check (`status:
  * "spawn_error"`), never a throw. A policy function throwing or rejecting
- * rejects this function's own returned promise (`PolicyThrewError`, or an
+ * rejects this function's returned promise (`PolicyThrewError`, or an
  * `AggregateError` of them if more than one policy failed this way). That
  * differs from a policy that ran and returned a failing `PolicyResult`. See
  * `src/errors.ts` for the full distinction.
  *
- * Execution and policy evaluation are strictly phased: every check finishes
- * running and every check's evidence is fully assembled before any policy
- * is invoked (see specs/architecture.md); a policy can safely read
+ * Execution and policy evaluation are strictly phased. Every check finishes
+ * running, and every check's evidence is fully assembled, before any policy
+ * is invoked (see specs/architecture.md). A policy can safely read
  * `ctx.evidence` for any sibling check's result.
  *
  * Deliberately not declared `async`: validation runs and can throw before this function returns
- * anything at all. So a config problem is a genuine synchronous exception to the caller (as
+ * anything at all. So a config problem is a synchronous exception to the caller (as
  * documented above and on `InvalidRepoContractConfigError`/`InvalidCheckConfigError`/
  * `DependencyDeclaredLaterError`). An `async function`'s body runs to its first `await` still
- * inside the caller's own call stack. But the language converts any throw before that point into a
- * rejected `Promise`, never a synchronous exception. Splitting
- * validation out into this synchronous wrapper, with the rest of the work in the `async` function
- * below, keeps the documented synchronous-throw guarantee actually true rather than aspirational.
+ * inside the caller's call stack. But the language converts any throw before that point into a
+ * rejected `Promise`, never a synchronous exception. This synchronous wrapper validates, and the
+ * `async` function below does the rest. That split keeps the documented synchronous-throw
+ * guarantee true.
  * @param config - the repo-contract configuration to run: its checks, concurrency, and their policies
  * @param options - run options; `options.checks` restricts execution to specific check ids, `options.signal` allows cancelling the run
  * @returns the assembled `evidence` for every check together with the aggregated `verdict`
@@ -53,8 +53,8 @@ export function runRepoContract<const TChecks extends CheckSchema>(
 }
 
 /**
- * The rest of `runRepoContract`'s work, once its config has already been validated: see that
- * function's own doc comment for why validation itself lives in a separate, non-`async` wrapper.
+ * The rest of `runRepoContract`'s work, once its config has been validated. That function's doc
+ * comment says why validation lives in a separate, non-`async` wrapper.
  * @param config - the already-validated repo-contract configuration to run.
  * @param options - run options; see `runRepoContract`.
  * @returns the assembled `evidence` for every check together with the aggregated `verdict`
@@ -68,9 +68,9 @@ async function runRepoContractAfterValidation<const TChecks extends CheckSchema>
   const concurrency = config.concurrency ?? os.availableParallelism()
   const startedAt = new Date()
 
-  // Resolved once, here, and threaded through by reference: see
-  // ExecutionCapability's own doc comment on why `env` specifically must
-  // not be copied (a live `process.env` reference needs to stay live).
+  // Resolved once, here, and threaded through by reference. `env` must not be
+  // copied, because a live `process.env` reference needs to stay live (see
+  // ExecutionCapability's doc comment).
   const execution: ExecutionCapability = {
     spawn: config.spawn,
     killProcessTree: config.killProcessTree,

@@ -9,22 +9,17 @@ import type { CheckSchema, RepoContractConfig, ValidatedCheckSchema } from "../t
  * It does no other validation and no cloning. `runRepoContract` validates whatever config it is
  * given, whether or not it passed through this function.
  *
- * `const TChecks` (TypeScript 5.0's `const` type parameter modifier) keeps
- * each check's own configuration (notably whether `output` is present at
- * all) from being widened during inference. Without it, TypeScript's
- * inference for a `Record` of heterogeneous generic entries does not
- * reliably preserve that per-check shape once a callback property
- * (`policy`) is also present. See `InferParsedValue` in types.ts for the
- * related limitation this does not fully solve.
+ * `const TChecks` (TypeScript 5.0's `const` type parameter modifier) keeps each check's
+ * configuration from being widened during inference, notably whether `output` is present.
+ * Without it, TypeScript's inference for a `Record` of heterogeneous generic entries does not
+ * reliably preserve that per-check shape once a callback property (`policy`) is present. See
+ * `InferParsedValue` in types.ts for the related limitation this does not fully solve.
  *
- * `TChecks` is inferred from the plain, unwrapped `RepoContractConfig<TChecks>`
- * position: the `ValidatedCheckSchema<TChecks>` constraint on `checks` is
- * intersected in afterward, computed from that already-inferred `TChecks`,
- * rather than substituted in its place. Inferring `TChecks` directly from a
- * mapped/conditional type over itself (as `ValidatedCheckSchema` is) loses
- * the contextual typing every check's `policy` callback otherwise gets:
- * another real, confirmed TypeScript inference limitation, distinct from
- * the `output`-to-`policy` one above.
+ * `TChecks` is inferred from the plain `RepoContractConfig<TChecks>` position. The
+ * `ValidatedCheckSchema<TChecks>` constraint on `checks` is intersected in afterward, computed
+ * from the inferred `TChecks`. Inferring `TChecks` from a mapped/conditional type over itself (as
+ * `ValidatedCheckSchema` is) loses the contextual typing each `policy` callback otherwise gets.
+ * That is a second TypeScript inference limitation, separate from the `output`-to-`policy` one.
  * @param config - the config to type-check and return unchanged.
  * @returns the same `config` object, untouched and uncloned.
  * @public

@@ -1,6 +1,6 @@
-// Static, permanent guardrail that this repository's own ADR set (specs/decisions/) stays
+// Static, permanent guardrail that this repository's ADR set (specs/decisions/) stays
 // structurally well-formed as it grows. It never executes anything. It only reads the filesystem
-// and each file's own text.
+// and each file's text.
 //
 // Three checks, matching what `npm run adr:new` (scripts/adr-new.mjs) scaffolds and
 // CONTRIBUTING.md's "Architecture Decision Records" section describes:
@@ -8,10 +8,8 @@
 //   2. No two files share the same NNNN number.
 //   3. Every file contains the five required section headings.
 //
-// Scope discipline, deliberately: this validator checks only mechanical shape. It never attempts
-// to detect stale prose, counts, or paths inside an ADR's own body. That's not mechanically
-// checkable. It is exactly why this repository's own documentation-vs-enforcement audit required
-// a human-driven pass rather than a tool run.
+// This validator checks only mechanical shape. It never tries to detect stale prose, counts, or
+// paths inside an ADR's body, because no tool can check those. A human review covers them.
 //
 // It also evaluates the *current* specs/decisions/ tree only, never git history. A numbering gap
 // is accepted by design, never treated as a violation. The reason: scripts/adr-new.mjs takes
@@ -30,9 +28,9 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
 // A single flat character class (never a repeated group) avoids the nested-quantifier shape
-// that trips security/detect-unsafe-regex. This repository's own suppression governance ADR
-// documents choosing that same fix over a suppression when a real code-level fix is available.
-// The title segment must open with a real letter/digit: `[a-z0-9-]+` alone
+// that trips security/detect-unsafe-regex. This repository's suppression governance ADR
+// documents choosing that same fix over a suppression when a code-level fix is available.
+// The title segment must open with a letter or digit: `[a-z0-9-]+` alone
 // accepts empty-or-hyphen-only titles like `0001--.md`. A fixed leading atom
 // before the flat class keeps this free of the nested-quantifier shape.
 const FILENAME_PATTERN = /^(\d{4})-[a-z0-9][a-z0-9-]*\.md$/
@@ -71,11 +69,11 @@ export function checkAdrStructure(root = DEFAULT_ROOT) {
 
     for (const file of files) {
       const text = readFileSync(path.join(decisionsDir, file), "utf8")
-      // Only headings that appear as real Markdown structure count. A required heading that
+      // Only headings that appear as Markdown structure count. A required heading that
       // shows up solely inside a fenced code block does not satisfy the requirement (an ADR
       // quoting the `adr:new` template, say). Track fence state line by line and ignore fenced
-      // lines. The line must be an actual level-two ATX heading whose title matches exactly. A
-      // substring test also accepted `### Status`, `## Statuses`, or the phrase mid-sentence.
+      // lines. The line must be a level-two ATX heading whose title matches in full. A
+      // substring test would accept `### Status`, `## Statuses`, or the phrase mid-sentence.
       const headingsFound = new Set()
       let inFence = false
       for (const line of text.split(/\r?\n/)) {

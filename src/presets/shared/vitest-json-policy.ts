@@ -1,9 +1,9 @@
 import type { ParsedOutput, PolicyResult } from "../../types.js"
 
-// The parts of Vitest's `--reporter=json` output this evaluator reads, declared here rather than imported
-// from Vitest. The output is untrusted parsed JSON. The types Vitest exports for it moved between major
-// versions (`vitest/reporters` up to 4, `vitest/node` from 5), so importing them would tie this
-// published package to one Vitest major.
+// The parts of Vitest's `--reporter=json` output this evaluator reads, declared here rather than
+// imported from Vitest. The output is untrusted parsed JSON. The types Vitest exports for it moved
+// between major versions: `vitest/reporters` up to 4, `vitest/node` from 5. Importing them would
+// tie this published package to one Vitest major.
 interface VitestJsonAssertion {
   readonly status: string
   readonly fullName: string
@@ -26,19 +26,18 @@ interface VitestJsonReport {
 }
 
 /**
- * Interprets Vitest's own `--reporter=json` output shape: and nothing
- * else. Shared between the `test` preset (a single, un-categorized
- * `vitest run --reporter=json`) and this repository's own
- * `test-unit`/`test-integration`/`test-property`/`test-e2e` checks, whose
- * `run` splits tests into four mutually exclusive categories via
- * scripts/run-test-category.mjs: a repository-specific concern this
- * function knows nothing about. Each of those four checks owns its own
- * category-specific semantics on top of this evaluator; this function must
- * stay narrowly scoped to "parse Vitest's JSON reporter shape," never grow
- * into a general "testing policy" abstraction. A category's own
- * `output.success === false` (vitest crashed / produced unparseable output)
- * is kept distinct from a substantive test failure, exactly as every other
- * preset in this package already does via `ParsedOutput.success`.
+ * Interprets Vitest's `--reporter=json` output shape, and nothing else. The
+ * `test` preset uses it for a single, un-categorized `vitest run
+ * --reporter=json`. This repository's `test-unit`, `test-integration`,
+ * `test-property` and `test-e2e` checks use it too. Their `run` splits tests
+ * into four mutually exclusive categories via scripts/run-test-category.mjs,
+ * a repository-specific concern this function knows nothing about. Each of
+ * those checks owns its category-specific semantics on top of this
+ * evaluator. This function stays scoped to "parse Vitest's JSON reporter
+ * shape" and never grows into a general "testing policy" abstraction.
+ * `output.success === false` (vitest crashed or produced unparseable output)
+ * stays distinct from a substantive test failure, as in every other preset
+ * in this package via `ParsedOutput.success`.
  * @param output - the vitest check's parsed `--reporter=json` output to evaluate.
  * @returns the pass/fail outcome and its rationale.
  */
@@ -48,8 +47,8 @@ export function evaluateVitestJsonPolicy(output: ParsedOutput<unknown> | undefin
   }
 
   // `output.value` is `unknown`. Valid JSON that isn't Vitest's reporter
-  // shape (`null`, a primitive, a wrapper that printed `{}`, a config dump, a
-  // future schema change) must produce a fail verdict. Otherwise a TypeError
+  // shape must produce a fail verdict. Examples are `null`, a primitive, a
+  // wrapper that printed `{}`, a config dump, a future schema change. Otherwise a TypeError
   // escapes the policy, `runPolicies` rethrows it as `PolicyThrewError`, and
   // the whole `runRepoContract()` promise rejects with it. `numFailedTests`/
   // `numFailedTestSuites` being `undefined` (not `0`) already falls through the

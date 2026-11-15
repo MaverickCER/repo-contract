@@ -1,6 +1,6 @@
 // The spawned entrypoint this check's `run: [...]` invokes. Computes every
 // sub-check EXCEPT Vulnerabilities. Vulnerabilities needs the security-deps
-// check's own evidence, which only the in-process `policy` function gets via
+// check's evidence, which only the in-process `policy` function gets via
 // `dependsOn` (see checks/openssf-scorecard.ts). This prints its result as
 // JSON for that policy function to parse, merge with Vulnerabilities, and
 // render into docs/OpenSSF-Scorecard.md.
@@ -51,8 +51,8 @@ function main(): void {
   if (repoMetaResult.ok) {
     const { default_branch: defaultBranch, license, name } = repoMetaResult.value
     // License is re-evaluated here (not in `localResults` above) once the
-    // real GitHub-detected SPDX id is known. When the API call itself is
-    // unavailable, `evaluateLicense`'s own local-file fallback still applies.
+    // GitHub-detected SPDX id is known. When the API call itself is
+    // unavailable, `evaluateLicense`'s local-file fallback still applies.
     localResults[0] = evaluateLicense(root, license?.spdx_id)
     githubResults.push(
       evaluateBranchProtection(slug, defaultBranch),
@@ -80,7 +80,7 @@ function main(): void {
   process.stdout.write(JSON.stringify({ repo: slug, results: [...localResults, ...githubResults] }))
 }
 
-// Mirrors scripts/security-socket/scan.ts's own "only run when invoked directly, not when
+// Mirrors scripts/security-socket/scan.ts's "only run when invoked directly, not when
 // imported by a test" guard.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main()

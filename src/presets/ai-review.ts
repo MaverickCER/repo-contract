@@ -44,9 +44,9 @@ export interface AiReviewOptions {
   readonly agent: readonly string[]
   /**
    * What the agent is asked. A string is the prompt text. `{ file }` hands the agent that path in
-   * place of the text, for an agent that reads its prompt from a file. Defaults to a prompt that
-   * asks for {@link AiReviewReply} and shows an example of it; a replacement must ask for the same
-   * shape, or every reply goes to `fallback`.
+   * place of the text, for an agent that reads its prompt from a file. The default prompt asks for
+   * {@link AiReviewReply} and shows an example of it. A replacement must ask for the same shape, or
+   * every reply goes to `fallback`.
    */
   readonly prompt?: string | { readonly file: string }
   /** Files the review is limited to, listed at the end of a string prompt. Empty by default: the agent reviews the repository's changes. */
@@ -56,7 +56,7 @@ export interface AiReviewOptions {
    * `{ ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY }`. Each value reaches the agent's process
    * through the check's `env`, so it works when the runner sets `inheritEnv: false`. A value never
    * enters the command line, and every occurrence of it in a reason is replaced with `[redacted]`.
-   * The evidence keeps the agent's own stdout and stderr, so a value the agent prints lands there.
+   * The evidence keeps the agent's stdout and stderr, so a value the agent prints lands there.
    * A name whose value is `undefined` or `""` is left unset and turns a `pass` into a `warn`.
    */
   readonly credentials?: Readonly<Record<string, string | undefined>>
@@ -282,7 +282,7 @@ function redact(text: string, secrets: readonly string[]): string {
 
 /**
  * An AI review as a check. It runs your agent with a prompt that asks for one fixed JSON shape,
- * {@link AiReviewReply}, with a confidence score on every finding, and gates on those scores. A
+ * {@link AiReviewReply}. Every finding carries a confidence score, and the check gates on them. A
  * model can answer differently on every run, so the policy reads only that structured reply,
  * never prose.
  *
@@ -290,9 +290,10 @@ function redact(text: string, secrets: readonly string[]): string {
  * from its first `{` to its last `}` is parsed. If that fails too, or the JSON is not the
  * requested shape, `fallback` is judged in its place and the reason lists the problems.
  *
- * The verdict: `fail` when an `error` finding scores at or above `errorThreshold`; `warn` for any
- * other `warn` or `error` finding, which includes the default fallback; `pass` for `info` findings
- * only. Each reason lists every `warn` and `error` finding with its file, line, rule and confidence.
+ * The verdict is `fail` when an `error` finding scores at or above `errorThreshold`. It is `warn`
+ * for any other `warn` or `error` finding, including the default fallback. It is `pass` for `info`
+ * findings only. Each reason lists every `warn` and `error` finding with its file, line, rule and
+ * confidence.
  * A timeout, a missing agent or a process killed by a signal fails. A non-zero exit code alone
  * does not: a well-formed reply still counts, and an unreadable one names the code. The tests prove
  * the parsing and the policy; they do not prove a model's judgement.

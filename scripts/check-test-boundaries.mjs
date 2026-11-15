@@ -1,13 +1,13 @@
 // Static, permanent guardrail that each Vitest verification category's
-// execution boundary is actually mutually exclusive. It never executes the
+// execution boundary is mutually exclusive. It never executes the
 // test suite or spawns Vitest to discover this. It only walks the
-// filesystem and reads each category's own vitest.<name>.config.ts as text.
+// filesystem and reads each category's vitest.<name>.config.ts as text.
 //
 // Two checks:
 //   1. Every *.test.ts file under test/ belongs to exactly one of the four
 //      category directories.
 //   2. Each category's vitest config `include` array only references that
-//      category's own directory.
+//      category's directory.
 //
 // Invoked by scripts/check-architecture.mjs as a second, clearly separate
 // section of the `architecture` check's evidence. Test-category boundaries

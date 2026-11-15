@@ -491,8 +491,9 @@ as this package's one executable surface (`repo-contract init`, see
 published: not compiled by tsup and not routed through `src/index.ts`. `init` imports only
 `node:fs`/`node:path` and writes files. The `affected`, `cache`, `doctor`, `metrics` and
 `merge-mutation` commands added in 0.12.0 import the built `dist/affected.js` and
-`dist/metrics.js` barrels. They also spawn `git` through `node:child_process`. None of them
-executes the pipeline above.
+`dist/metrics.js` barrels. They also spawn `git` through `node:child_process`. `quick-start`
+spawns `npm pack` and a shell for the README's marked commands. None of them executes the
+pipeline above.
 
 ## Self-hosting
 

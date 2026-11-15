@@ -3,23 +3,21 @@ import { ghApiRaw } from "./gh-api.js"
 import type { GhApiResult, ScorecardCheckResult } from "./types.js"
 
 /**
- * Where `fetchScorecardWeights` reads ossf/scorecard's own published
+ * Where `fetchScorecardWeights` reads ossf/scorecard's published
  * methodology from, at execution time. It is never hardcoded as a
- * remembered weight table, because upstream's own weighting can change
- * between releases. This evaluator's whole point is fidelity to the *real*,
- * current methodology. This directory's own module doc comments explain why
+ * remembered weight table, because upstream's weighting can change
+ * between releases. This evaluator exists to follow upstream's *current*
+ * methodology. This directory's module doc comments explain why
  * this evaluation is informed by, but never a run of, the upstream binary.
  *
- * `CHECKS_YAML_PATH` carries each check's own `risk` tier (`Critical` /
+ * `CHECKS_YAML_PATH` carries each check's `risk` tier (`Critical` /
  * `High` / `Medium` / `Low`). It is the source of truth `docs/checks.md`
- * itself is generated from. That file's own header says "Do not edit this
- * file manually! Edit checks.yaml instead" (confirmed directly against
- * upstream).
+ * itself is generated from. That file's header says "Do not edit this
+ * file manually! Edit checks.yaml instead".
  *
- * `AGGREGATION_SOURCE_PATH` carries the numeric weight that upstream's own
- * `GetAggregateScore` assigns to each risk tier. This was confirmed directly
- * against upstream's `Result.GetAggregateScore` in that exact file. This
- * evaluator's own weighted-aggregate formula (`computeWeightedAverage`,
+ * `AGGREGATION_SOURCE_PATH` carries the numeric weight that upstream's
+ * `Result.GetAggregateScore` assigns to each risk tier, in that file. This
+ * evaluator's weighted-aggregate formula (`computeWeightedAverage`,
  * below) deliberately mirrors it: `Σ(score_i × weight_i) / Σ(weight_i)`.
  */
 const CHECKS_YAML_PATH = "repos/ossf/scorecard/contents/docs/checks/internal/checks.yaml"
@@ -37,10 +35,10 @@ export interface ScorecardWeightTable {
 
 /**
  * Takes `unknown`, not a structured type, for the same reason
- * `checks/mutation.ts`'s own identically-named/-shaped helper does. `parsed`
+ * `checks/mutation.ts`'s identically-named/-shaped helper does. `parsed`
  * here is untrusted YAML from another project's repository, cast from
- * whatever `parseYaml` happens to return. Typing it as a real object shape
- * would assert a guarantee this data doesn't actually have. It would also
+ * whatever `parseYaml` happens to return. Typing it as a structured object shape
+ * would assert a guarantee this data doesn't have. It would also
  * make `no-unnecessary-condition` (rightly, by that asserted type) flag the
  * runtime check below as dead code.
  * @param value - The value to check.
@@ -52,7 +50,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 /**
  * @param yamlText - `docs/checks/internal/checks.yaml`'s raw text.
- * @returns Every check name mapped to its own `risk` tier string, or `undefined` if the text doesn't parse into the expected `{checks: {<Name>: {risk: ...}}}` shape at all.
+ * @returns Every check name mapped to its `risk` tier string, or `undefined` if the text doesn't parse into the expected `{checks: {<Name>: {risk: ...}}}` shape at all.
  */
 function parseRiskLevels(yamlText: string): Readonly<Record<string, string>> | undefined {
   let parsed: unknown
@@ -77,7 +75,7 @@ function parseRiskLevels(yamlText: string): Readonly<Record<string, string>> | u
  * Upstream's `Result.GetAggregateScore` (`pkg/scorecard/scorecard_result.go`)
  * declares its risk-tier weight table as a single Go literal:
  * `weights := map[string]float64{"Critical": 10, "High": 7.5, ...}`. This
- * extracts that same table from the file's real source text via a targeted
+ * extracts that same table from the file's source text via a targeted
  * regex rather than a Go parser. A regex is proportionate to reading one
  * literal out of one well-known function. It re-runs every time this
  * evaluator runs, so a future change to those numbers is picked up without
@@ -101,14 +99,14 @@ function parseRiskWeightTable(goSource: string): Readonly<Record<string, number>
 }
 
 /**
- * Fetches ossf/scorecard's own current per-check weight table, live, at
+ * Fetches ossf/scorecard's current per-check weight table, live, at
  * execution time. It combines each check's `risk` tier
- * (`docs/checks/internal/checks.yaml`) with that tier's own numeric weight
+ * (`docs/checks/internal/checks.yaml`) with that tier's numeric weight
  * (`pkg/scorecard/scorecard_result.go`'s `GetAggregateScore`), rather than
  * hardcoding either. Never crashes the calling check. Any failure (`gh`
- * unavailable, a real 404, an unparseable response) is reported as a
+ * unavailable, a 404, an unparseable response) is reported as a
  * classified `GhApiResult` failure, like every other gh-API-backed
- * evaluator in this directory. `GhApiResult`'s own doc comment covers that
+ * evaluator in this directory. `GhApiResult`'s doc comment covers that
  * classification. The
  * caller (`checks/openssf-scorecard.ts`) then falls back on equal weighting
  * for that run. It does not fail the whole check over a degraded, but
@@ -164,17 +162,17 @@ export function fetchScorecardWeights(): GhApiResult<ScorecardWeightTable> {
 
 /**
  * The weighted aggregate `Σ(score_i × weight_i) / Σ(weight_i)`, computed
- * only over `evaluated`: mirroring upstream's own `GetAggregateScore`
- * (see this file's own top-of-file doc comment). A check can be missing
+ * only over `evaluated`: mirroring upstream's `GetAggregateScore`
+ * (see this file's top-of-file doc comment). A check can be missing
  * from `weights` for two reasons. The live fetch may have failed entirely,
  * so `weights` itself is `undefined`. Far less likely, a single check name
- * may have drifted out of sync with upstream's own naming. Either way that
+ * may have drifted out of sync with upstream's naming. Either way that
  * check alone falls back to a weight of `1`. A missing entry then degrades
  * fidelity for that one check only. It neither crashes this computation
  * nor silently zero-weights (and thereby zero-scores) the check out of the
  * aggregate.
- * @param evaluated - Every sub-check result already narrowed to a real numeric score. Must be non-empty: the caller checks `evaluated.length > 0` before calling.
- * @param weights - This run's live-fetched per-check weight table (`fetchScorecardWeights`'s own `.value.weights`), or `undefined` if that fetch failed.
+ * @param evaluated - Every sub-check result already narrowed to a numeric score. Must be non-empty: the caller checks `evaluated.length > 0` before calling.
+ * @param weights - This run's live-fetched per-check weight table (`fetchScorecardWeights`'s `.value.weights`), or `undefined` if that fetch failed.
  * @returns The weighted aggregate, 0-10.
  */
 export function computeWeightedAverage(

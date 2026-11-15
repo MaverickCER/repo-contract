@@ -6,7 +6,7 @@ type CommentKind = "single" | "multi"
  * empty once decoration is stripped is dropped entirely, because it never carried semantic content
  * of its own. Typically that is the line that held only the closing delimiter. The remaining lines
  * are joined with a single space, not `\n`. The one-line and multi-line block forms of the *same*
- * directive therefore canonicalize to the identical string. An example is
+ * directive canonicalize to the identical string. An example is
  * `eslint-disable-next-line` naming its rules on one line vs. one per continuation line. That
  * equivalence stops registry reconciliation from treating a purely cosmetic reformat as a removed
  * suppression plus a new one, which would discard its hand-authored justification.
@@ -29,8 +29,8 @@ function stripBlockDecoration(body: string): string {
  * content. Decorative comment syntax is removed: the single-line prefix, the block comment's
  * opening and closing delimiters, left-aligning `*` characters, and the whitespace around all of
  * those. The directive text itself is never otherwise altered. A multiline block directive
- * collapses back to one line, byte-identical to the same directive written on one line. For
- * example, an `eslint-disable` block naming one rule per continuation line canonicalizes to those
+ * collapses back to one line, byte-identical to the same directive written on one line. Take
+ * an `eslint-disable` block naming one rule per continuation line. It canonicalizes to those
  * rule tokens joined by a single space, with the delimiter-only closing line dropped. Purely
  * decorative reformatting of an unchanged directive produces identical canonical output. That
  * covers re-indenting, adding/removing alignment `*`s, and wrapping the rule list across lines.

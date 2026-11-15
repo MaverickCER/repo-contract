@@ -8,18 +8,18 @@ import { randomUUID } from "node:crypto"
 import { serializeExceptionRegistry } from "./reconcile-exceptions.js"
 
 /**
- * Whether `error` carries `code === "ENOENT"`: a missing file, a normal state the symlink probe
- * and the "already up to date" comparison both treat as "no file yet", never a failure. Reads
- * `.code` defensively: every filesystem capability here is caller-overridable and could reject
- * with something other than a real `Error`.
+ * Whether `error` carries `code === "ENOENT"`: a missing file. The symlink probe and the "already
+ * up to date" comparison both treat it as "no file yet", never a failure. Reads `.code`
+ * defensively: every filesystem capability here is caller-overridable and could reject with
+ * something other than an `Error` instance.
  * @param error - the caught value.
  * @returns `true` for an `ENOENT`.
  */
 function isEnoent(error: unknown): boolean {
   return (
-    // Replacing this `typeof` guard with `true` still yields `false` for every non-object value:
-    // a primitive's `.code` is `undefined` (never the string "ENOENT"), and `null` is caught by
-    // the `!== null` clause. Same accepted equivalent mutant as load-exception-registry.ts's own
+    // Replacing this `typeof` guard with `true` still yields `false` for every non-object value.
+    // A primitive's `.code` is `undefined` (never the string "ENOENT"), and the `!== null` clause
+    // catches `null`. It is the same accepted equivalent mutant as load-exception-registry.ts's
     // ENOENT check.
     typeof error === "object" &&
     error !== null &&
@@ -35,17 +35,17 @@ function isEnoent(error: unknown): boolean {
  *   through one would escape `.repo-contract/exceptions/`.
  * - **No file yet** -> written.
  * - **On-disk bytes already equal the canonical form** -> `{ ok: true, written: false }`, no
- *   write. A reconcile that changed nothing therefore never dirties the working tree.
- * - **Different** -> the canonical bytes are written to a sibling temp file (`<path>.<uuid>.tmp`)
- *   and `rename`d over the target: the target is replaced atomically, and partial serialized
- *   content is never written to the target path. A `rename` failure (e.g. a Windows lock on the
- *   target) returns `{ ok: false }` deterministically; the temp file is left in place (harmless, a
- *   uuid name, and the run has already failed): `.gitignore` covers `.repo-contract/exceptions/*.tmp`.
+ *   write. A reconcile that changed nothing never dirties the working tree.
+ * - **Different** -> the canonical bytes go to a sibling temp file (`<path>.<uuid>.tmp`), which is
+ *   `rename`d over the target. The target is replaced atomically and never holds partial content.
+ *   A `rename` failure (e.g. a Windows lock on the target) returns `{ ok: false }`. The temp file
+ *   stays in place: it has a uuid name and the run has already failed. `.gitignore` covers
+ *   `.repo-contract/exceptions/*.tmp`.
  *
- * Path containment is the caller's responsibility: repo-contract's own checks always pass
+ * Path containment is the caller's responsibility: repo-contract's checks always pass
  * `.repo-contract/exceptions/<name>.json`. `readFile`/`writeFile`/`rename`/`isSymlink` default to
  * `node:fs/promises` and are overridable for tests or a non-`node:fs` environment, mirroring
- * `loadExceptionRegistry`'s own `readFile` parameter.
+ * `loadExceptionRegistry`'s `readFile` parameter.
  * @param input - The target path, the records to persist, and (optional) filesystem-capability overrides.
  * @param input.path - Where to write. Passed verbatim to every capability.
  * @param input.records - The reconciled records; serialized via `serializeExceptionRegistry`.
@@ -69,9 +69,9 @@ export async function writeExceptionRegistry(input: {
   const {
     path,
     records,
-    // No explicit encoding on either call: `readFile` returns a Buffer that `.toString()` decodes
-    // as utf8 by default, and `writeFile` writes a string as utf8 by default; so there is no
-    // encoding literal for a mutant to flip.
+    // No explicit encoding on either call. `readFile` returns a Buffer that `.toString()` decodes
+    // as utf8 by default, and `writeFile` writes a string as utf8 by default. There is no encoding
+    // literal for a mutant to flip.
     readFile = (target: string) => readFileFromFs(target).then((buffer) => buffer.toString()),
     writeFile = (target: string, data: string) => writeFileFromFs(target, data),
     rename = (from: string, to: string) => renameFromFs(from, to),
@@ -118,8 +118,7 @@ export async function writeExceptionRegistry(input: {
 
 /**
  * The default `isSymlink`: `lstat(path).isSymbolicLink()`, with a missing path reported as not a
- * symlink. A non-`ENOENT` `lstat` failure propagates: a genuinely unreadable path is not
- * silently treated as safe.
+ * symlink. A non-`ENOENT` `lstat` failure propagates: an unreadable path is not treated as safe.
  * @param target - the path to probe.
  * @returns whether `target` is a symbolic link.
  */
@@ -127,9 +126,8 @@ async function defaultIsSymlink(target: string): Promise<boolean> {
   try {
     return (await lstatFromFs(target)).isSymbolicLink()
   } catch (error) {
-    // A missing path is "not a symlink"; any other `lstat` failure (a non-directory path
-    // component -> ENOTDIR, a permissions fault -> EACCES) is rethrown, never silently treated as
-    // a safe non-symlink.
+    // A missing path is "not a symlink". Any other `lstat` failure is rethrown, never treated as a
+    // safe non-symlink: a non-directory path component (ENOTDIR) or a permissions fault (EACCES).
     if (isEnoent(error)) return false
     throw error
   }

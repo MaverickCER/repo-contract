@@ -11,21 +11,21 @@ interface NpmAuditReport {
   // Optional, not required: this type describes untrusted JSON cast from `unknown`. When npm
   // audit can't complete the scan (a registry/network error), its documented failure shape is
   // `{ "error": {...} }`, with no "metadata" key at all. A required field here would assert a
-  // guarantee this cast doesn't actually have.
+  // guarantee this cast doesn't have.
   readonly metadata?: { readonly vulnerabilities: NpmAuditVulnerabilityCounts }
 }
 
 /**
- * Upstream scoring: 10 for no unfixed vulnerabilities (upstream's own OSV-
+ * Upstream scoring: 10 for no unfixed vulnerabilities (upstream's OSV-
  * service query), 0 for any open unfixed vulnerability. This repository
- * already runs its own `security-deps` check every contract run (`npm audit`
+ * already runs its `security-deps` check every contract run (`npm audit`
  * against the production dependency tree). Rather than a second,
- * independently-computed OSV query, this evaluation traces directly to that
- * SAME evidence via `dependsOn`. That follows this whole initiative's
+ * independently-computed OSV query, this evaluation reads that SAME
+ * evidence via `dependsOn`. That follows this repository's
  * evidentiary-traceability rule: no claim without a traceable evidence
  * source. It also never adds a duplicate, potentially-divergent source for a
  * fact this repository already establishes elsewhere in the same run.
- * @param securityDepsEvidence - The `security-deps` check's own `CheckEvidence` (via this check's `dependsOn`).
+ * @param securityDepsEvidence - The `security-deps` check's `CheckEvidence` (via this check's `dependsOn`).
  * @returns The Vulnerabilities sub-check result.
  */
 export function evaluateVulnerabilities(
@@ -43,10 +43,9 @@ export function evaluateVulnerabilities(
   const report = securityDepsEvidence.output.value as NpmAuditReport | undefined
   // `report` can be truthy but carry no "metadata" at all. When npm audit can't complete the scan
   // (a registry/network error), its documented failure shape is `{ "error": {...} }`, with
-  // neither "metadata" nor "vulnerabilities". Confirmed live: a real transient npm-registry outage
-  // produced exactly this shape. Before this fix it crashed this function with an unhandled
-  // TypeError. It now falls through to the "not-applicable" branch below, like every other
-  // malformed-report case.
+  // neither "metadata" nor "vulnerabilities". A transient npm-registry outage produces this
+  // shape. It falls through to the "not-applicable" branch below, like every other
+  // malformed-report case, instead of throwing a TypeError.
   const counts = report?.metadata?.vulnerabilities
   if (!counts) {
     return {

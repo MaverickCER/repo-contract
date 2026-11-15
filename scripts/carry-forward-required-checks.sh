@@ -24,7 +24,7 @@ new_sha=$(gh api "repos/$repo/branches/$branch" --jq .commit.sha)
 for name in "$@"; do
   conclusion=$(gh api "repos/$repo/commits/$verified_sha/check-runs" --jq ".check_runs[] | select(.name==\"$name\") | .conclusion" | head -1)
   if [ "$conclusion" != "success" ]; then
-    echo "::warning::$name's own result on $verified_sha was '${conclusion:-unknown}', not success -- not carrying forward a status this commit doesn't actually have."
+    echo "::warning::$name's own result on $verified_sha was '${conclusion:-unknown}', not success. Its status is not carried forward to this commit."
     continue
   fi
   gh api "repos/$repo/statuses/$new_sha" \

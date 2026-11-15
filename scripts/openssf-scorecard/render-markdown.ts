@@ -2,7 +2,7 @@ import { compareWithOfficial, notEvaluatedChecks, type OfficialScorecard } from 
 import type { ScorecardCheckResult, ScorecardProvenance } from "./types.js"
 
 /**
- * @param score - A sub-check's own score.
+ * @param score - A sub-check's score.
  * @returns `"N/A"` for `"not-applicable"`, else `"<score>/10"`.
  */
 function scoreCell(score: number | "not-applicable"): string {
@@ -19,7 +19,7 @@ function scoreCell(score: number | "not-applicable"): string {
  * claim live-fetched weights were used when no fetch ever ran.
  * @param weightedAverage - `Σ(score × weight) / Σ(weight)`, or `undefined` if nothing was evaluated.
  * @param weightsUnavailableReason - Set only when checks were evaluated but the live weight fetch failed.
- * @returns The bullet's full text, without its leading `- **Weighted score:**` prefix's own Markdown bolding (included here).
+ * @returns The bullet's full text, without its leading `- **Weighted score:**` prefix's Markdown bolding (included here).
  */
 function weightedScoreLine(
   weightedAverage: number | undefined,
@@ -31,20 +31,20 @@ function weightedScoreLine(
   const score = `${weightedAverage.toFixed(1)}/10`
   const formula = "`Σ(score × weight) / Σ(weight)` over every evaluated check below"
   if (weightsUnavailableReason === undefined) {
-    return `- **Weighted score:** ${score} -- ${formula}, using ossf/scorecard's own live-fetched per-check weights.`
+    return `- **Weighted score:** ${score}: ${formula}, using ossf/scorecard's live-fetched per-check weights.`
   }
-  return `- **Weighted score:** ${score} -- ${formula} (per-check weight fetch failed -- **fell back to equal weighting**: ${weightsUnavailableReason}).`
+  return `- **Weighted score:** ${score}: ${formula} (per-check weight fetch failed, so it **fell back to equal weighting**: ${weightsUnavailableReason}).`
 }
 
 /**
- * The per-check weight actually applied when computing the weighted score
+ * The per-check weight applied when computing the weighted score
  * above. It is rendered per-row, not only cited by source URL. A reader can
- * then recompute `Σ(score × weight) / Σ(weight)` directly from this table.
- * They need not re-fetch ossf/scorecard's own live, mutable weight table
+ * then recompute `Σ(score × weight) / Σ(weight)` from this table.
+ * They need not re-fetch ossf/scorecard's live, mutable weight table
  * and trust it hasn't since changed.
  * @param result - The sub-check result this row is for.
- * @param weights - The per-check weight table actually used for this run's weighted score (`undefined` if the live fetch failed entirely, or a specific check's own name was missing from it: both fall back to a weight of `1`; see `computeWeightedAverage`'s own doc comment).
- * @returns `"--"` for a `"not-applicable"` result (excluded from the aggregate entirely, so it has no weight to show), else the weight actually used.
+ * @param weights - The per-check weight table used for this run's weighted score (`undefined` if the live fetch failed entirely, or a specific check's name was missing from it: both fall back to a weight of `1`; see `computeWeightedAverage`'s doc comment).
+ * @returns `"--"` for a `"not-applicable"` result (excluded from the aggregate entirely, so it has no weight to show), else the weight used.
  */
 function weightCell(
   result: ScorecardCheckResult,
@@ -167,7 +167,7 @@ function officialSection(
 
 /**
  * Renders `docs/OpenSSF-Scorecard.md`. The disclaimer at the top is
- * load-bearing, not decorative. This document is repo-contract's own
+ * load-bearing, not decorative. This document is repo-contract's
  * evaluation, informed by OpenSSF Scorecard's published methodology. It is
  * never a run of the upstream `scorecard` binary and never a certification. It leads with the
  * official, published result when it can be fetched, so the two are never
@@ -176,9 +176,9 @@ function officialSection(
  * @param input.repo - The `owner/repo` slug this evidence was gathered against.
  * @param input.generatedAt - ISO 8601 timestamp of this render.
  * @param input.results - Every sub-check's result, in display order.
- * @param input.weightedAverage - `Σ(score_i × weight_i) / Σ(weight_i)` over every evaluated (non-`"not-applicable"`) sub-check, or `undefined` when nothing could be evaluated (see the caller's own "every sub-check not-applicable" warn path).
- * @param input.weights - The per-check weight table actually used to compute `weightedAverage` (`fetchScorecardWeights`'s own `.value.weights`, or `undefined` if that live fetch failed): rendered per-row via `weightCell` so the score is reconstructable from this document alone.
- * @param input.weightsUnavailableReason - Set when the live fetch of ossf/scorecard's own weight table failed, so `weightedAverage` fell back to equal weighting across evaluated checks: `undefined` when the live weights were used.
+ * @param input.weightedAverage - `Σ(score_i × weight_i) / Σ(weight_i)` over every evaluated (non-`"not-applicable"`) sub-check, or `undefined` when nothing could be evaluated (see the caller's "every sub-check not-applicable" warn path).
+ * @param input.weights - The per-check weight table used to compute `weightedAverage` (`fetchScorecardWeights`'s `.value.weights`, or `undefined` if that live fetch failed): rendered per-row via `weightCell` so the score is reconstructable from this document alone.
+ * @param input.weightsUnavailableReason - Set when the live fetch of ossf/scorecard's weight table failed, so `weightedAverage` fell back to equal weighting across evaluated checks: `undefined` when the live weights were used.
  * @param input.provenance - When, against what commit, and by which version of this evaluator, this document was produced.
  * @param input.official - The published OpenSSF Scorecard result, when it was fetched.
  * @param input.officialUnavailableReason - Why the published result could not be fetched, when it was not.
@@ -223,7 +223,7 @@ export function renderScorecardMarkdown(input: {
   lines.push(`- **Date:** ${provenance.date}`)
   lines.push(`- **Repository:** \`${provenance.repo.name}\` @ \`${provenance.repo.commit}\``)
   lines.push(
-    `- **Evaluator version:** \`repo-contract@${provenance.scorecard.version}\` @ \`${provenance.scorecard.commit}\` (this is repo-contract's own evaluator version, **not** the upstream \`scorecard\` binary's -- this document was never produced by running that binary).`,
+    `- **Evaluator version:** \`repo-contract@${provenance.scorecard.version}\` @ \`${provenance.scorecard.commit}\` (this is repo-contract's own evaluator version, **not** the upstream \`scorecard\` binary's; this document was never produced by running that binary).`,
   )
   lines.push(weightedScoreLine(weightedAverage, weightsUnavailableReason))
   lines.push("")
@@ -263,7 +263,7 @@ export function renderScorecardMarkdown(input: {
     lines.push("Upstream checks this evaluation did not score:")
     lines.push("")
     for (const name of notEvaluated) {
-      lines.push(`- **${name}** -- ${NOT_EVALUATED_REASONS[name] ?? "not scored by this script."}`)
+      lines.push(`- **${name}**: ${NOT_EVALUATED_REASONS[name] ?? "not scored by this script."}`)
     }
     lines.push("")
   }

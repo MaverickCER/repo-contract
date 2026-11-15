@@ -14,7 +14,7 @@ interface CommitlintOptions {
 /**
  * The git commands a contributor runs to fix commit messages already on their branch. Appended
  * to every failure rationale so the fix is in the error itself, not a doc they have to go find.
- * @param from - the ref the rebase is based on (commitlint's own `--from`).
+ * @param from - the ref the rebase is based on (commitlint's `--from`).
  * @returns the remediation block, leading with a blank line.
  */
 function remediation(from: string): string {
@@ -38,12 +38,12 @@ function remediation(from: string): string {
 
 /**
  * Commit-message governance via commitlint, using whatever commitlint
- * config the consumer's own repository already has (commitlint ships no
- * rules of its own: e.g. `@commitlint/config-conventional`). Exit-code
- * based rather than `--format json`: commitlint has no broadly-documented,
- * stable JSON CLI output, so this preset reads its plain-text report the
- * same way the `format`/`typecheck` presets already do for their tools,
- * rather than relying on an unconfirmed flag.
+ * config the consumer's repository already has (commitlint ships no
+ * rules of its own: e.g. `@commitlint/config-conventional`). It judges the
+ * exit code, not `--format json`: commitlint has no broadly-documented,
+ * stable JSON CLI output. This preset reads its plain-text report as the
+ * `format`/`typecheck` presets do for their tools, instead of relying on an
+ * unconfirmed flag.
  * @param options - configuration for this check; see {@link CommitlintOptions}.
  * @returns the configured check.
  * @beta

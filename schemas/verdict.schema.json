@@ -25,7 +25,7 @@
           "additionalProperties": {
             "$ref": "#/definitions/PolicyResult"
           },
-          "description": "Each configured check's own `PolicyResult`, verbatim, keyed by check id."
+          "description": "Each configured check's `PolicyResult`, verbatim, keyed by check id."
         }
       },
       "required": [
@@ -33,7 +33,7 @@
         "passed",
         "checks"
       ],
-      "description": "Versioned, immutable aggregate result of evaluating every configured check's policy against its evidence: each check's own `PolicyResult`, verbatim, keyed by check id. `passed` is `true` only if every check's `outcome` is `\"pass\"` or `\"warn\"`: `\"fail\"` is the only outcome that fails the run; one failing check never collapses into a single generic message, every check remains individually inspectable under `checks`. Versioned independently of `Evidence` (see `VERSIONING.md`'s schema-versioning policy): `version: 2` reflects `checks[id]` changing shape from `{ passed, reason? }` to a full `PolicyResult` (`{ outcome, rationale }`); see ADR 0001."
+      "description": "Versioned, immutable aggregate result of evaluating every configured check's policy against its evidence: each check's `PolicyResult`, verbatim, keyed by check id. `passed` is `true` only if every check's `outcome` is `\"pass\"` or `\"warn\"`. `\"fail\"` is the only outcome that fails the run. One failing check never collapses into a single generic message; every check remains individually inspectable under `checks`. Versioned independently of `Evidence` (see `VERSIONING.md`'s schema-versioning policy). `version: 2` reflects `checks[id]` changing shape from `{ passed, reason? }` to a full `PolicyResult` (`{ outcome, rationale }`); see ADR 0001."
     },
     "PolicyResult": {
       "type": "object",
@@ -51,7 +51,7 @@
         "outcome",
         "rationale"
       ],
-      "description": "A repository-owned policy's interpretation of one check's captured evidence. It is a plain object of primitives, never an `Error`, class instance, function or tool-specific object. So it can be persisted, transmitted, aggregated across parallel checks, and read by a human or an AI without rerunning anything.\n\n`rationale` is mandatory. It must hold enough actionable detail (specific file/line locations, rule ids, test names, counts) for a consumer to understand *why* the policy reached its outcome from this value alone. A rationale like \"see output above\" or \"check the report for details\" defeats the purpose: it sends the consumer back to raw command output, which this type exists to avoid. `runPolicies` rejects such a rationale at runtime (`src/policy/run-policies.ts`'s `VAGUE_RATIONALE_PATTERNS`, ADR 0016), the same as any other malformed `PolicyResult`. So a check that regresses to a vague deferral fails loudly instead of shipping silently. specs/architecture.md describes the split this type is built around. Evidence answers \"what happened?\". `rationale` answers \"what does the repository's policy conclude about what happened?\". A policy's `outcome` is not the final word: a human or AI consumer still judges using both."
+      "description": "A repository-owned policy's interpretation of one check's captured evidence. It is a plain object of primitives, never an `Error`, class instance, function or tool-specific object. So it can be persisted, transmitted, aggregated across parallel checks, and read by a human or an AI without rerunning anything.\n\n`rationale` is mandatory. It must hold enough actionable detail (specific file/line locations, rule ids, test names, counts) to explain *why* the policy reached its outcome. A consumer should need nothing but this value. A rationale like \"see output above\" or \"check the report for details\" defeats the purpose. It sends the consumer back to raw command output, which this type exists to avoid. `runPolicies` rejects such a rationale at runtime (`src/policy/run-policies.ts`'s `VAGUE_RATIONALE_PATTERNS`, ADR 0016), the same as any other malformed `PolicyResult`. So a check that regresses to a vague deferral fails loudly instead of shipping silently. specs/architecture.md describes the split this type is built around. Evidence answers \"what happened?\". `rationale` answers \"what does the repository's policy conclude about what happened?\". A policy's `outcome` is not the final word: a human or AI consumer still judges using both."
     },
     "PolicyOutcome": {
       "type": "string",

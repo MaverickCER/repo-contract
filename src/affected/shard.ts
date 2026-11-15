@@ -141,9 +141,9 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
 
 /**
- * Combines per-shard Stryker reports into the report an unsharded run would have produced. Never
- * a partial pass: a missing, repeated or out-of-range shard, an unreadable report, a file mutated
- * by two shards, or disagreeing schema versions all fail the merge.
+ * Combines per-shard Stryker reports into the report an unsharded run would have produced. It never
+ * passes partially. These all fail the merge: a missing, repeated or out-of-range shard, an
+ * unreadable report, a file mutated by two shards, or disagreeing schema versions.
  * @param reports - Each shard's number and parsed report.
  * @param total - How many shards the run was split into.
  * @returns The merged report, or why the shards cannot be merged.

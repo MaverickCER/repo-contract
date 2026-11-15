@@ -4,7 +4,7 @@ import { listOf } from "./memo.js"
 import type { TypeScriptApi, Widening } from "./types.js"
 
 const DEFAULT_FILE = "tsconfig.json"
-/** A chain of `extends` longer than this is not a real project; reading it stops here, so a cycle cannot loop. */
+/** No project has a longer chain of `extends`. Reading stops here, so a cycle cannot loop. */
 const MAX_CONFIGS = 64
 
 export interface LoadCompilerOptionsInput {
@@ -45,8 +45,8 @@ const extendsOf = (config: Record<string, unknown>): string[] => {
 /**
  * Reads the compiler options module resolution depends on (`paths`, `baseUrl`, ...), following
  * `extends` through the repository and `node_modules`. An import written through a path alias
- * looks like a package to the graph, so options that could not be read must widen the answer,
- * not be skipped.
+ * looks like a package to the graph. Options that could not be read must widen the answer, not
+ * be skipped.
  * @param input - The TypeScript API, a file reader and optionally the config to use.
  * @returns The options (absent when there is no default `tsconfig.json`), or the reason to go full.
  */
@@ -91,8 +91,8 @@ export async function loadCompilerOptions(
     }
   }
 
-  // Nothing here reads `include` or `files`, so how names are cased only matters to TypeScript's own
-  // bookkeeping; follow the platform it is running on.
+  // Nothing here reads `include` or `files`, so name casing matters only to TypeScript's internal
+  // bookkeeping. Follow the platform it is running on.
   const host: TypeScript.ParseConfigHost = {
     useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
     readDirectory: () => listOf<string>(undefined),

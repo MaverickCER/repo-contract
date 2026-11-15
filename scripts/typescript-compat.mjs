@@ -1,37 +1,42 @@
 // CI's `typescript-compat` job runs this with `node scripts/typescript-compat.mjs <artifacts-dir>`, against
-// the same packed tarball `published-floor` smoke-tests. It proves the shipped `.d.ts` files compile under a
-// real consumer's toolchain, including a TypeScript release newer than this repo's own build uses. This
-// repo's tsconfig uses `moduleResolution: "Bundler"` and a pinned `typescript` devDependency. Neither
-// exercises `nodenext` resolution or a future major, so without this job a declaration-emission regression
-// would go unnoticed until a real consumer hit it.
+// the same packed tarball `published-floor` smoke-tests. It proves the shipped `.d.ts` files
+// compile under a consumer's toolchain, including a TypeScript release newer than this repo's
+// build uses. This repo's tsconfig uses `moduleResolution: "Bundler"` and a pinned `typescript`
+// devDependency. Neither exercises `nodenext` resolution or a future major. Without this job, a
+// declaration-emission regression would go unnoticed until a consumer hit it.
 //
-// Fresh `npm install` inside a scratch project, exactly like `published-floor`'s
-// scripts/smoke-consumer.mjs. Unlike that script, this one CAN install `typescript@<major>`
-// (a real devDependency of the scratch project, not of this repository), since this job doesn't
-// share the Node-floor / no-toolchain constraint `published-floor` has.
+// Fresh `npm install` inside a scratch project, the same as `published-floor`'s
+// scripts/smoke-consumer.mjs. Unlike that script, this one CAN install `typescript@<major>`.
+// It is a devDependency of the scratch project, not of this repository.
+// This job does not share the Node-floor / no-toolchain constraint `published-floor` has.
 //
-// Exits 0 only if the packed tarball's declarations compile cleanly, with `moduleResolution:
-// "nodenext"` and `strict: true`, under the newest release of each TypeScript major a consumer may
-// have installed: 5, 6 and 7. TypeScript 7 is the native compiler and ships no compiler API, which
-// `repo-contract/affected` needs for both its types and its runtime (the command refuses 7 with a
-// message). Under 7, every other barrel must compile, and a consumer that imports `affected` must
-// fail with the compiler-API error. The documented limit is asserted, not assumed.
+// Exits 0 only if the packed tarball's declarations compile cleanly under each release in
+// scripts/typescript-compat-versions.mjs: the floor of the optional `typescript` peer, then the
+// newest 5, 6 and 7. Each run uses `moduleResolution: "nodenext"` and `strict: true`. TypeScript 7
+// is the native compiler and ships no compiler API. `repo-contract/affected` needs that API for
+// both its types and its runtime, and the command refuses 7 with a message. Under 7, every other
+// barrel must compile, and a consumer that imports `affected` must fail with the compiler-API
+// error. The documented limit is asserted, not assumed.
 // Override the list on the command line: `node scripts/typescript-compat.mjs <artifacts-dir>
-// [version ...]`. There is no 5.0 floor here: the optional `typescript >=5.0.0` peer exists for
-// `affected` alone, and the oldest 5.x cannot even parse the newest `@types/node` the scratch
-// project installs.
+// [version ...]`. A `<major>.<minor>` entry installs the Node.js floor's `@types/node`, because
+// the newest one clashes with an older 5.x's DOM library.
 
 import { spawnSync } from "node:child_process"
-import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
+import { nodeTypesFor, TYPESCRIPT_COMPAT_VERSIONS } from "./typescript-compat-versions.mjs"
 
 const artifactsDir = process.argv[2]
 if (!artifactsDir) {
   console.error("Usage: node scripts/typescript-compat.mjs <artifacts-dir> [version ...]")
   process.exit(1)
 }
-const versions = process.argv.slice(3).length > 0 ? process.argv.slice(3) : ["5", "6", "7"]
+const versions =
+  process.argv.slice(3).length > 0 ? process.argv.slice(3) : TYPESCRIPT_COMPAT_VERSIONS
+
+const enginesNode = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+  .engines.node
 
 const tarball = readdirSync(artifactsDir).find((f) => f.endsWith(".tgz"))
 if (!tarball) {
@@ -70,15 +75,15 @@ function checkIn(dir, version) {
       "--no-fund",
       tarballPath,
       `typescript@${version}`,
-      "@types/node@latest",
+      `@types/node@${nodeTypesFor(version, enginesNode)}`,
       "cross-spawn",
       "@types/cross-spawn",
     ],
     dir,
   )
 
-  // `affected` needs the compiler API's types, which TypeScript 7 does not ship: under 7 it is
-  // compiled on its own below and must fail, so the main consumer leaves it out there.
+  // `affected` needs the compiler API's types, which TypeScript 7 does not ship.
+  // Under 7 it is compiled separately below and must fail, so the main consumer leaves it out.
   const affectedImports =
     version === "7"
       ? ""
@@ -144,7 +149,7 @@ export default defineRepoContract({
 
   if (version === "7") {
     // The documented limit, asserted: `affected`'s declarations name compiler-API types that
-    // TypeScript 7's package does not export, so importing the barrel must fail with exactly that.
+    // TypeScript 7's package does not export, so importing the barrel must fail with that error.
     writeFileSync(
       path.join(dir, "affected.ts"),
       `import { parseScopeArgs } from "repo-contract/affected"

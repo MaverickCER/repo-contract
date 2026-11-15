@@ -12,7 +12,7 @@ interface ComposedSignal {
  * supported Node the native path runs. The manual fallback is kept as defence
  * in depth for a host that removes or shims the global, and stays unit-tested.
  *
- * The native path's `dispose` is a no-op: `AbortSignal.any` manages its own
+ * The native path's `dispose` is a no-op: `AbortSignal.any` manages its
  * source-signal listeners internally and doesn't leak them. The manual
  * fallback's `dispose` removes the "abort" listeners it added to each input
  * `signal`. Without it, a long-lived input would keep one listener per
@@ -22,14 +22,14 @@ interface ComposedSignal {
  * once the composed signal is no longer needed, whether or not it ever
  * aborted.
  * @param signals - the signals to combine; the composed signal aborts as soon as any one of them does
- * @returns the composed signal (aborting with that input's abort reason as soon as any signal in `signals` aborts), and a `dispose` to release this composition's own resources
+ * @returns the composed signal (aborting with that input's abort reason as soon as any signal in `signals` aborts), and a `dispose` to release this composition's resources
  */
 export function composeSignals(signals: readonly AbortSignal[]): ComposedSignal {
   if (typeof AbortSignal.any === "function") {
     // Expression-bodied no-op, not `() => {}`: an empty block body trips
     // @typescript-eslint/no-empty-function. The native AbortSignal.any
-    // manages its own source-signal listeners internally and doesn't leak
-    // them. So there's nothing for this composition's own dispose to
+    // manages its source-signal listeners internally and doesn't leak
+    // them. So there's nothing for this composition's dispose to
     // release.
     return { signal: AbortSignal.any(signals as AbortSignal[]), dispose: () => undefined }
   }

@@ -621,32 +621,55 @@ checks: {
 
 **Preset options are the preferred way to change what a preset executes.** A direct `run` override is an escape hatch. Every execution-affecting option is threaded through the actual command line, so evidence records the exact options used in `evidence.checks.<id>.args`. The one exception is `aiReview`'s `credentials`, which reach the agent through `env` and are never recorded.
 
-Every preset's policy fails with an actionable message if its underlying tool is not installed. The one exception is `securityDeps`, which shells out to `npm` itself. Each preset assumes its CLI is already a devDependency of your repository; repo-contract never installs, bundles, or implicitly depends on these tools. `repo-contract init` adds a preset to the config it writes when the package in the last column is a devDependency. It always adds `securityDeps`, adds `distNoUrls` when package.json publishes a built `dist/`, and never adds `aiReview`, which needs your agent's command.
+Every preset's policy fails with an actionable message if its underlying tool is not installed. The one exception is `securityDeps`, which shells out to `npm` itself. Each preset assumes its CLI is already a devDependency of your repository; repo-contract never installs, bundles, or implicitly depends on these tools. `repo-contract init` adds a preset to the config it writes when the package in the last column is a devDependency. It always adds `securityDeps`, adds `distNoUrls` when package.json publishes a built `dist/`, and adds `bundledDependencies` unless package.json is `private`. It never adds `aiReview`, which needs your agent's command, or `quickStart`, which needs a marked README block.
 
-| Category            | Preset                   | Wraps                                                                                 | Package `init` detects    |
-| ------------------- | ------------------------ | ------------------------------------------------------------------------------------- | ------------------------- |
-| Testing             | `test`                   | `vitest run --reporter=json --outputFile=reports/vitest/vitest-report.json`           | `vitest`                  |
-| Testing             | `e2e`                    | `playwright test --reporter=json`                                                     | `@playwright/test`        |
-| Code quality        | `lint(options?)`         | `eslint <path> --format json`                                                         | `eslint`                  |
-| Code quality        | `format`                 | `prettier --write .`                                                                  | `prettier`                |
-| Code quality        | `typecheck`              | `tsc --noEmit -p tsconfig.json`                                                       | `typescript`              |
-| Code quality        | `deadCode(options?)`     | `knip --reporter json --reporter-options <options>`                                   | `knip`                    |
-| Code quality        | `duplication(options?)`  | `jscpd <path> --reporters json --output reports/jscpd --silent`                       | `jscpd`                   |
-| Code quality        | `stylelint(options?)`    | `stylelint <glob> --formatter json`                                                   | `stylelint`               |
-| Docs                | `markdownlint(options?)` | `markdownlint-cli2 <glob>`: requires repository configuration for JSON output         | `markdownlint-cli2`       |
-| Docs                | `brokenLinks(options?)`  | `linkinator <start> --recurse --format json --skip node_modules`                      | `linkinator`              |
-| Security/governance | `securityDeps`           | `npm audit --omit=dev --json`                                                         | none (`npm`)              |
-| Security/governance | `securitySecrets`        | `secretlint --format json --output reports/secretlint.json **/*`                      | `secretlint`              |
-| Publishing          | `distNoUrls(options?)`   | `node -e <scanner> <dir>`: fails on any URL in the build output; no external tool     | none (a built `dist/`)    |
-| Security/governance | `license`                | `licensee --production --errors-only --ndjson`, plus `--osi` without `.licensee.json` | `licensee`                |
-| Security/governance | `commitlint(options?)`   | `commitlint --from <from> --to <to>`                                                  | `@commitlint/cli`         |
-| Publishing          | `publint`                | `publint run`                                                                         | `publint`                 |
-| Publishing          | `arethetypeswrong`       | `attw --pack . --format json`                                                         | `@arethetypeswrong/cli`   |
-| Code review         | `aiReview(options)`      | `<agent> <prompt>`: the agent you name; the prompt goes at `{prompt}` or last         | none (the agent you name) |
+| Category            | Preset                   | Wraps                                                                                                                                   | Package `init` detects                 |
+| ------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Testing             | `test`                   | `vitest run --reporter=json --outputFile=reports/vitest/vitest-report.json`                                                             | `vitest`                               |
+| Testing             | `e2e`                    | `playwright test --reporter=json`                                                                                                       | `@playwright/test`                     |
+| Code quality        | `lint(options?)`         | `eslint <path> --format json`                                                                                                           | `eslint`                               |
+| Code quality        | `format`                 | `prettier --write .`                                                                                                                    | `prettier`                             |
+| Code quality        | `typecheck`              | `tsc --noEmit -p tsconfig.json`                                                                                                         | `typescript`                           |
+| Code quality        | `deadCode(options?)`     | `knip --reporter json --reporter-options <options>`                                                                                     | `knip`                                 |
+| Code quality        | `duplication(options?)`  | `jscpd <path> --reporters json --output reports/jscpd --silent`                                                                         | `jscpd`                                |
+| Code quality        | `stylelint(options?)`    | `stylelint <glob> --formatter json`                                                                                                     | `stylelint`                            |
+| Docs                | `markdownlint(options?)` | `markdownlint-cli2 <glob>`: requires repository configuration for JSON output                                                           | `markdownlint-cli2`                    |
+| Docs                | `brokenLinks(options?)`  | `linkinator <start> --recurse --format json --skip node_modules`                                                                        | `linkinator`                           |
+| Security/governance | `securityDeps`           | `npm audit --omit=dev --json`                                                                                                           | none (`npm`)                           |
+| Security/governance | `securitySecrets`        | `secretlint --format json --output reports/secretlint.json **/*`                                                                        | `secretlint`                           |
+| Publishing          | `distNoUrls(options?)`   | `node -e <scanner> <dir>`: fails on any URL in the build output; no external tool                                                       | none (a built `dist/`)                 |
+| Publishing          | `bundledDependencies`    | `node -e <reader>`: fails on a bundled package missing from `dependencies`; no external tool                                            | none (a package that is not `private`) |
+| Publishing          | `quickStart(options?)`   | `repo-contract quick-start --json --readme README.md --timeout 300000`: runs the README's marked quick start against the packed tarball | none (a marked README block)           |
+| Security/governance | `license`                | `licensee --production --errors-only --ndjson`, plus `--osi` without `.licensee.json`                                                   | `licensee`                             |
+| Security/governance | `commitlint(options?)`   | `commitlint --from <from> --to <to>`                                                                                                    | `@commitlint/cli`                      |
+| Publishing          | `publint`                | `publint run`                                                                                                                           | `publint`                              |
+| Publishing          | `arethetypeswrong`       | `attw --pack . --format json`                                                                                                           | `@arethetypeswrong/cli`                |
+| Code review         | `aiReview(options)`      | `<agent> <prompt>`: the agent you name; the prompt goes at `{prompt}` or last                                                           | none (the agent you name)              |
 
 Not every test runner has a preset. Jest, Cypress, and Mocha have different reporter formats and may need bespoke presets. The pattern is the same: execute the tool, capture evidence, interpret its output, apply your policy.
 
 Unlike its neighbors, `format` auto-fixes (`--write`) and therefore cannot itself fail on unformatted input. For a hard gate on formatting, run `prettier --check .` directly instead of this preset. That is exactly the substitution the [demo](README.md#see-it-run) makes.
+
+### Run the README's quick start
+
+`quickStart` proves that the first commands a new user copies from the README work. It packs the package, installs the tarball into an empty project, and runs each command of a marked block in a shell. The empty project is a directory holding only a `package.json`. A command that installs the package with npm, pnpm, yarn or bun installs the tarball instead. The check fails when a command exits non-zero, when the time budget runs out, or when the README has no marked block.
+
+Mark the block with one HTML comment on each side:
+
+````markdown
+<!-- quick-start:begin -->
+
+```sh
+npm install --save-dev your-package
+npx your-package --help
+```
+
+<!-- quick-start:end -->
+````
+
+Each line is one command; comment lines and blank lines are skipped, and a line ending in `\` continues on the next. The commands inherit the environment, so an install reaches the registry the way it does for a user. The check packs what is on disk with install scripts off, so build the package before it runs.
+
+`repo-contract quick-start` runs the same thing from a terminal. `--readme <file>` reads another Markdown file. `--timeout <ms>` sets the budget for all the commands together, five minutes by default. `--json` prints the report the check reads, and `-C <dir>` runs as if started in `<dir>`. The exit status is `0` when every command passed, `1` when one failed or the run could not start, and `2` for a usage error.
 
 ## Running less: affected scope, cache and speed
 
@@ -663,7 +686,7 @@ npx repo-contract affected --json                        # machine-readable, ver
 
 It compares your working tree (staged, unstaged and untracked files included) with the merge base of `--base`. The default base is the upstream branch, then `origin/main`, then `origin/master`. It works out which exports changed and follows them through your imports to the tests that use them. `--sources` and `--mutate` print the affected source files and the mutation targets instead of the tests.
 
-It needs the project's own `typescript` with a compiler API, which `affected`'s types need as much as its runtime. [Runtime support](#runtime-support) lists the versions that have one. Only `affected` needs it: every other entry point has no TypeScript dependency and type-checks under 5, 6 and 7, which is why `typescript` is an optional peer. Output goes to stdout and diagnostics to stderr. The exit status is `0` on success, `1` if it could not run and `2` for a usage error.
+It needs the project's own `typescript` with a compiler API, which `affected`'s types need as much as its runtime. [Runtime support](#runtime-support) lists the versions that have one. Only `affected` needs it: every other entry point has no TypeScript dependency, which is why `typescript` is an optional peer. Output goes to stdout and diagnostics to stderr. The exit status is `0` on success, `1` if it could not run and `2` for a usage error.
 
 It narrows only when it can be sure. Any of these makes it report **everything** (still exit `0`, with the reason on stderr):
 
@@ -855,14 +878,14 @@ interface Verdict {
 
 ## Runtime support
 
-The version ranges, generated from `package.json`. The optional `typescript` peer serves `repo-contract/affected` only, which needs version 5 or 6 (TypeScript 7 ships no compiler API). CI's `typescript-compat` job checks the newest release of 5, 6 and 7: importing `repo-contract/affected` fails under 7, and every other entry point type-checks under all three. Older 5.x releases, down to the peer's `5.0.0` floor, are not tested.
+The version ranges, generated from `package.json`. The optional `typescript` peer serves `repo-contract/affected` only, which needs version 5 or 6 (TypeScript 7 ships no compiler API). CI's `typescript-compat` job checks the peer's floor and the newest release of 5, 6 and 7. Importing `repo-contract/affected` fails under 7, and every other entry point type-checks under all four. Below the floor, a CommonJS project with `module: "nodenext"` cannot type-check the package's declarations. A unit test fails when the floor and the job's list disagree.
 
 <!-- ipc:begin supported-versions -->
 
 | Requirement  | Range      | Needed   |
 | ------------ | ---------- | -------- |
 | Node.js      | `>=22.0.0` | always   |
-| `typescript` | `>=5.0.0`  | optional |
+| `typescript` | `>=5.8.0`  | optional |
 
 <!-- ipc:end supported-versions -->
 

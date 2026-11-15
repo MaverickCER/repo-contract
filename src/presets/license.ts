@@ -15,33 +15,33 @@ const CONFIG_FILE_MARKER = "repo-contract license preset: using .licensee.json"
 const OSI_MARKER = "repo-contract license preset: no .licensee.json, using --osi"
 /** The launcher's only stderr line when `licensee` cannot be resolved from the working directory. */
 const MISSING_MARKER = "repo-contract license preset: licensee is not installed"
-/** The launcher's exit code alongside `MISSING_MARKER`: the shell's own "command not found". */
+/** The launcher's exit code alongside `MISSING_MARKER`: the shell's "command not found". */
 const MISSING_EXIT_CODE = 127
 
 // licensee reads `.licensee.json` only when no policy flag (`--osi`,
 // `--spdx`, `--blueoak`, `--packages`) is on its command line: any one of
 // them replaces the file entirely. A fixed `run` can't pass `--osi` "only
 // when there is no file", so the preset runs this launcher instead. It looks
-// for `.licensee.json` in the check's own working directory at spawn time
+// for `.licensee.json` in the check's working directory at spawn time
 // (the same directory licensee itself reads it from). It adds `--osi` only
 // when there is none, then runs the consumer's installed licensee CLI
-// in-process with those arguments. The repository's own file is the policy
+// in-process with those arguments. The repository's file is the policy
 // when it exists; OSI approval is the default when it doesn't.
 //
-// `--production` scopes evaluation to the dependency graph actually shipped
+// `--production` scopes evaluation to the dependency graph shipped
 // to consumers. A devDependency never ends up in a consumer's install, so
-// its license carries no obligation onto this package's own license. Same
+// its license carries no obligation onto this package's license. Same
 // runtime-only rationale the securityDeps preset already applies to `npm
 // audit --omit=dev`. `--errors-only` keeps the ndjson evidence limited to
 // the packages that drive the verdict. That matches the deadCode and
 // duplication presets' report-issues-only shape.
 //
-// `licensee` is resolved from the working directory with Node's own module
+// `licensee` is resolved from the working directory with Node's module
 // resolution (a local devDependency, as `missingDependencyResult` tells a
 // consumer to install). It is loaded with `require`: no second spawn, so no
 // PATH lookup and no Windows `.cmd` shim. The first stderr line records
-// which policy applied, so the verdict can say so; stderr keeps its prefix
-// when it is truncated, so that line always survives.
+// which policy applied, so the verdict can say so. Truncation keeps
+// stderr's prefix, so that line always survives.
 const LAUNCHER_SOURCE = `
 const fs = require("node:fs")
 const path = require("node:path")
@@ -65,7 +65,7 @@ require(binPath)
 `
 
 /**
- * Dependency license compliance via licensee. The repository's own `.licensee.json` is the policy
+ * Dependency license compliance via licensee. The repository's `.licensee.json` is the policy
  * when it exists; otherwise a dependency's license must be OSI-approved (`--osi`).
  * @beta
  */
@@ -73,7 +73,7 @@ export const license: CheckDefinitionConfig = {
   run: ["node", "-e", LAUNCHER_SOURCE],
   policy: ({ result }) => {
     // A config that overrides `run` to spawn licensee directly still gets the
-    // ENOENT "not installed" verdict. The launcher's own `node` being missing
+    // ENOENT "not installed" verdict. The launcher's `node` being missing
     // is not a missing licensee, so it falls through to the spawn-error result.
     if (result.command !== "node") {
       const missing = checkDependencyInstalled(result, "licensee")
@@ -104,8 +104,8 @@ export const license: CheckDefinitionConfig = {
     // installed, an unreadable dependency tree, an internal `die()`). The
     // error is on stderr and there is nothing to parse. Treating that as
     // "found 0 offending dependencies" would let the compliance gate pass on
-    // a run that never actually ran. Only an empty stdout from a process that
-    // exited cleanly on its own is a genuine "nothing offending" pass.
+    // a run that never ran. Only an empty stdout from a process that
+    // exited cleanly on its own is a "nothing offending" pass.
     if (trimmed.length === 0) {
       if (result.status === "completed" && result.exitCode === 0) {
         return {
@@ -131,7 +131,7 @@ export const license: CheckDefinitionConfig = {
         // `licensee` emits one JSON object per line. A blank line between
         // records (some versions/locales print one, as can a leading
         // informational line) is not invalid evidence. Skip it rather than
-        // feed "" to JSON.parse and discard the real violation list.
+        // feed "" to JSON.parse and discard the violation list.
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .map((line) => JSON.parse(line) as LicenseeEntry)

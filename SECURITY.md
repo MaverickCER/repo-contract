@@ -133,7 +133,8 @@ the most security-sensitive part of the package.
   project's own compiler for `affected` (`.repo-contract/exceptions/security-network.json`).
   This governs repo-contract's own code. It does not, and cannot, prevent a command _you_
   configure from making network calls. Nor can it stop a preset's spawned external tool (e.g.
-  `brokenLinks`'s `linkinator`) from doing so on your explicit behalf.
+  `brokenLinks`'s `linkinator`) from doing so on your explicit behalf. The same holds for the
+  README commands `quickStart` runs: an install among them reaches your registry.
   [ADR 0007](specs/decisions/0007-no-network-surface.md) has the full threat model, exactly
   what's covered, and what's deliberately excluded.
 

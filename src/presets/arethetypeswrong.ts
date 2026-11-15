@@ -3,7 +3,7 @@ import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
- * attw's own `--format json` contract: not published as a TypeScript type
+ * attw's `--format json` contract: not published as a TypeScript type
  * by the tool. `problems` is a flat record keyed by problem kind (e.g.
  * "FalseCJS", "NoResolution"), each entry carrying whichever context fields
  * that kind of problem produces.
@@ -38,14 +38,13 @@ function formatProblem(problem: AttwProblem): string {
 
 /**
  * Interprets an already-parsed attw JSON report. It is exported (unlike this
- * package's other internal evaluators) because of a real, reproducible
- * upstream bug. A package with enough entrypoints makes attw's own
- * `--format json` output exceed ~64KB. attw then truncates its own stdout
- * when it's a pipe rather than a TTY or regular file (confirmed
- * independently of repo-contract, via plain shell piping). Redirecting
- * attw's output to a file sidesteps that bug. A consumer doing so needs this
- * same interpretation logic without re-deriving it. repo-contract's own
- * `repo-contract.config.ts` does exactly this once it has more than one real
+ * package's other internal evaluators) because of a reproducible upstream
+ * bug. A package with enough entrypoints makes attw's `--format json` output
+ * exceed ~64KB. Then attw truncates its stdout when it is a pipe rather than
+ * a TTY or regular file. Plain shell piping reproduces this without
+ * repo-contract. Redirecting attw's output to a file sidesteps the bug, and
+ * a consumer doing so needs this interpretation logic. This repository's
+ * `repo-contract.config.ts` does that, since the package has more than one
  * entrypoint (see that file's `arethetypeswrong` override).
  * Accepts `unknown` and validates the shape itself. Its inputs are always
  * untrusted parsed JSON (a tool's stdout, a report file). Valid JSON of an
@@ -85,14 +84,13 @@ export function evaluateAttwReport(report: unknown): PolicyResult {
   }
 }
 
-// `--pack` runs `npm pack` against the current directory so this preset
-// evaluates exactly what `files`/`exports` in package.json would ship, not
-// the working tree directly. Relevant only to repositories that publish an
-// npm package. Unlike repo-contract's own internal `arethetypeswrong` check,
-// this preset does not exclude any entrypoint. `--exclude-entrypoints` is
-// specific to whichever of a consumer's own `exports` subpaths are
-// non-code (e.g. a bare JSON schema export). So it's left as a `run`
-// override for the consumer to add, rather than guessed at generically here.
+// `--pack` runs `npm pack` against the current directory, so this preset
+// evaluates what `files`/`exports` in package.json would ship, not the
+// working tree. It is relevant only to repositories that publish an npm
+// package. Unlike repo-contract's internal `arethetypeswrong` check, this
+// preset excludes no entrypoint. `--exclude-entrypoints` depends on which of
+// a consumer's `exports` subpaths are non-code (e.g. a bare JSON schema
+// export). So it is left as a `run` override for the consumer to add.
 /**
  * Published-package type-resolution correctness via `@arethetypeswrong/cli`.
  * @beta

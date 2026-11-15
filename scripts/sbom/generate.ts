@@ -6,23 +6,22 @@ import { validateSbomDocument } from "./validate.js"
 
 /**
  * Orchestrates one full SBOM-generation pass. It ensures `docs/` exists and runs `cyclonedx-npm`
- * once per document, which writes each file directly (see spawn.ts's own doc comment). It then
+ * once per document, which writes each file directly (see spawn.ts's doc comment). It then
  * reads each file back and validates its shape (validate.ts). Everything happens here, in `run`.
  * That is the ordinary pattern every other self-hosting check in this repository uses (see e.g.
- * the former `scripts/iso-12207-alignment/run.ts`'s own identical note, and
  * `scripts/dead-code/check.ts`). Unlike `checks/openssf-scorecard.ts`, this check reads no other
- * check's evidence via `dependencies`. It therefore has none of that check's documented reasons
- * to defer writing into `policy`. That file's own module doc comment describes the one deliberate
+ * check's evidence via `dependencies`. It has none of that check's documented reasons
+ * to defer writing into `policy`. That file's module doc comment describes the one deliberate
  * exception this repository carries, and why it does not generalize here.
  * @param root - Repository root to generate the SBOM for.
- * @returns The check's own evidence: either a validated summary, or a rejection reason.
+ * @returns The check's evidence: either a validated summary, or a rejection reason.
  */
 export async function generateSbom(root: string): Promise<SbomEvidence> {
   await mkdir(path.join(root, "docs"), { recursive: true })
   const rootHasRepository = await declaresRepository(root)
 
   // Two documents, because they answer different questions. The full tree is the BUILD inventory (what
-  // this repository's own tooling depends on); the production tree is the RUNTIME inventory (what a user
+  // this repository's tooling depends on); the production tree is the RUNTIME inventory (what a user
   // installs). Importing only the first into a security tool overstates a zero-dependency package's
   // footprint a thousandfold.
   const full = await generateOne(root, BUILD_SBOM_PATH, false, rootHasRepository)
@@ -40,7 +39,7 @@ export async function generateSbom(root: string): Promise<SbomEvidence> {
 }
 
 /**
- * Whether the package's own package.json declares a `repository`, so its SBOM root must carry one.
+ * Whether the package's package.json declares a `repository`, so its SBOM root must carry one.
  * An unreadable or malformed package.json counts as no: cyclonedx-npm reports that itself.
  * @param root - Repository root.
  * @returns `true` if package.json has a `repository` field.

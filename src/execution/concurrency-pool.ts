@@ -55,7 +55,7 @@ export async function runWithConcurrency<T, R>(
   const workerCount = Math.max(1, Math.min(effectiveConcurrency, items.length))
   await Promise.all(Array.from({ length: workerCount }, () => runNext()))
   if (firstRejection !== undefined) {
-    // Propagated verbatim, exactly as Promise.all would have surfaced it and
+    // Propagated verbatim, as Promise.all would have surfaced it and
     // as dependency-scheduler.ts forwards a worker rejection unwrapped.
     throw firstRejection.error
   }

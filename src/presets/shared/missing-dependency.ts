@@ -1,7 +1,7 @@
 import type { CheckEvidence, PolicyResult } from "../../types.js"
 
 /**
- * Every preset in `src/presets/*.ts` calls this first, before its own
+ * Every preset in `src/presets/*.ts` calls this first, before its
  * pass/fail/warn logic. The exception is `securityDeps`, which shells out to
  * `npm` itself: something that cannot be "missing" in any environment
  * capable of running `npm run <script>` at all. `CheckEvidence.status ===
@@ -9,13 +9,12 @@ import type { CheckEvidence, PolicyResult } from "../../types.js"
  * executable" from "the tool ran and exited non-zero". But not every spawn
  * failure means the package is missing (a permission error or an invalid
  * executable format lands here too). So this checks the structured
- * `spawnErrorCode` for `"ENOENT"` specifically, rather than treating every
- * spawn error as "not installed."
+ * `spawnErrorCode` for `"ENOENT"`, not every spawn error.
  * A non-ENOENT spawn error falls through to the preset's normal handling,
- * unchanged, rather than getting a misleading "not installed" message.
+ * unchanged. It never gets a misleading "not installed" message.
  * @param result - the check's raw execution evidence to inspect.
  * @param packageName - the npm package a consumer would install to fix this (may differ from the binary name, e.g. `tsc` comes from `typescript`).
- * @returns an actionable, package-manager-neutral `PolicyResult` if the tool appears to be missing, or `undefined` if the caller should proceed with its own interpretation.
+ * @returns an actionable, package-manager-neutral `PolicyResult` if the tool appears to be missing, or `undefined` if the caller should proceed with its interpretation.
  */
 export function checkDependencyInstalled(
   result: CheckEvidence,
@@ -29,8 +28,8 @@ export function checkDependencyInstalled(
 }
 
 /**
- * The "not installed" verdict on its own, for a preset that detects a missing tool some other way
- * than ENOENT (the `license` preset runs licensee through `node`, so it is never ENOENT).
+ * The "not installed" verdict alone, for a preset that detects a missing tool without ENOENT.
+ * The `license` preset runs licensee through `node`, so its missing tool is never ENOENT.
  * @param packageName - the npm package a consumer would install to fix this.
  * @returns the actionable, package-manager-neutral fail result.
  */

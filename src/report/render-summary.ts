@@ -25,8 +25,8 @@ function firstLine(text: string): string {
 }
 
 /**
- * A code fence that a rationale cannot close early: at least three backticks, and always longer than
- * any run of backticks inside the text, so a rationale that itself contains a fence stays inside it.
+ * A code fence that a rationale cannot close early. It is at least three backticks, and longer than
+ * any run of backticks inside the text. A rationale that itself contains a fence stays inside it.
  * @param text - The rationale that goes inside the fence.
  * @returns The backtick run to open and close the fence with.
  */
@@ -40,7 +40,7 @@ function fenceFor(text: string): string {
  * `$GITHUB_STEP_SUMMARY`, a pull-request comment or a README badge page. Totals come first. Then
  * every failing check with its complete rationale, so nothing needs re-running to see why. Then
  * every warning and passing check with the first line of its rationale. When the evidence is
- * supplied, the slowest checks follow: the contract's own cost. Pure: it reads nothing and writes
+ * supplied, the slowest checks follow: the contract's cost. Pure: it reads nothing and writes
  * nothing.
  * @param verdict - The aggregated verdict of the run.
  * @param evidence - The run's evidence; optional, adds per-check timing.
@@ -103,8 +103,8 @@ export function renderMarkdownSummary<TChecks extends CheckSchema>(
  * Serializes a run for storage: stable, indented JSON with a trailing newline, one document per
  * file, matching the published `Evidence` and `Verdict` JSON Schemas (`repo-contract/schema`). The
  * caller decides where to write them; this package never touches the filesystem.
- * A `bigint` anywhere in the run (for example in a check's transformed output) cannot be written as
- * JSON, so it is written as its decimal string rather than making serialization throw.
+ * JSON has no `bigint`. A `bigint` anywhere in the run (for example in a check's transformed
+ * output) is written as its decimal string, so serialization never throws.
  * @param run - The result of `runRepoContract`.
  * @param run.evidence - The run's evidence.
  * @param run.verdict - The run's verdict.

@@ -5,13 +5,13 @@ import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
  * publint has no machine-readable output mode: only a plain-text CLI
- * reporter (see its own `src/cli.js` `formatMessages`). Its process exit
+ * reporter (see its `src/cli.js` `formatMessages`). Its process exit
  * code reflects only 'error'-level findings; 'warning'/'suggestion'-level
- * findings never affect it. This preset reads the same three section
- * headers publint's own CLI writes ("Errors:", "Warnings:", "Suggestions:")
- * to distinguish blocking findings from non-blocking ones, without
- * depending on any per-message structure publint doesn't expose. Relevant
- * only to repositories that publish an npm package.
+ * findings never affect it. This preset reads the three section headers
+ * publint's CLI writes ("Errors:", "Warnings:", "Suggestions:") to tell
+ * blocking findings from non-blocking ones. It depends on no per-message
+ * structure, which publint doesn't expose. Relevant only to repositories
+ * that publish an npm package.
  * @beta
  */
 export const publint: CheckDefinitionConfig = {

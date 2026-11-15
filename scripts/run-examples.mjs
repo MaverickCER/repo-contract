@@ -1,8 +1,8 @@
-// Runs each example's main command (and its `typecheck`) and checks the outcome its README shows:
-// the exit code and a few output lines, plus every line the root README quotes from it. Follow-up
-// steps a README describes are not run. The examples depend on this repository through `file:`
-// links (examples/package.json's workspaces), so a package change that breaks a README's main
-// command fails CI's `examples` job.
+// Runs each example's main command (and its `typecheck`) and checks the outcome its README shows.
+// That is the exit code and a few output lines, plus every line the root README quotes from it.
+// Follow-up steps a README describes are not run. The examples depend on this repository
+// through `file:` links (examples/package.json's workspaces). A package change that breaks a
+// README's main command then fails CI's `examples` job.
 //
 // Usage: node scripts/run-examples.mjs   (after `npm run build` at the root and `npm install` in examples/)
 import { spawnSync } from "node:child_process"

@@ -1,21 +1,20 @@
 // Entry point for repo-contract's `mutation` check (see checks/mutation.ts).
-// Deletes Stryker's own incremental-analysis cache before every run.
+// Deletes Stryker's incremental-analysis cache before every run.
 // The `incremental: true` setting in stryker.config.mjs lets Stryker skip
 // re-testing mutants it believes are unaffected by a source change. It
 // reuses their previous run's status from `incrementalFile`. That's a
 // reasonable speed tradeoff for a developer manually iterating with
 // `npx stryker run`.
 //
-// This check's own policy (checks/mutation.ts) requires every applicable
+// This check's policy (checks/mutation.ts) requires every applicable
 // mutant to carry a *current* "Killed" status. A stale reused status would
-// silently misreport what this run of the test suite actually proved. This
-// was observed in practice: a mutant reported "Timed out" from a much
-// earlier run. The status stayed unchanged across two later runs that took
-// 160s and then 9s, even after the exercising test file changed.
+// silently misreport what this run of the test suite proved. The incremental
+// cache can carry a "Timed out" status across later runs, even after the
+// exercising test file changed.
 //
-// Deleting the cache file first guarantees the check's own evidence always
+// Deleting the cache file first guarantees the check's evidence always
 // reflects a full, fresh analysis. A developer who wants incremental speed
-// for local iteration can still invoke `npx stryker run` directly. This
+// for local iteration can still run `npx stryker run` without this script. This
 // script's deletion never touches that until the *next* time this check
 // itself runs.
 
@@ -30,7 +29,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
 rmSync(path.join(root, "reports", "mutation", "stryker-incremental.json"), { force: true })
 
-// Vitest 5 changed how test names are matched; until the Stryker runner ships its own fix every mutant
+// Vitest 5 changed how test names are matched; until the Stryker runner ships its fix every mutant
 // would run zero tests and survive (stryker-js#6210). The shared compatibility step aligns the runner.
 const compat = ensureStrykerVitest5Compat(root)
 if (compat.status === "patched") {

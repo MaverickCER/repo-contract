@@ -3,17 +3,17 @@
 // and combines their evidence into one JSON object:
 //   - eslint: this repository's full, configured rule set (eslint.config.js).
 //   - oxlint: oxc's Rust-based linter, a pinned devDependency (see
-//     package.json) invoked via its own bin. It is a second, independent
+//     package.json) invoked via its bin. It is a second, independent
 //     opinion using a different rule engine, not a replacement for ESLint's
 //     project-specific config.
-// Both auto-fix (`--fix`) before reporting; each tool reports only its own
+// Both auto-fix (`--fix`) before reporting; each tool reports only its
 // unfixed issues. Prints combined JSON evidence to stdout for the `lint`
 // check's `output: { format: "json" }` to parse; everything else goes to
 // stderr.
 //
-// Report-only: lint findings from either tool never fail this script's own
-// process. That judgment belongs entirely to the `lint` check's policy,
-// which reads this same JSON evidence. Only a genuine tool-infrastructure
+// Report-only: lint findings from either tool never fail this script's
+// process. That judgment belongs to the `lint` check's policy,
+// which reads this same JSON evidence. Only a tool-infrastructure
 // failure (a tool crashing or producing unparseable output) fails it.
 
 import spawn from "cross-spawn"
@@ -47,7 +47,7 @@ function runJsonTool(command, args) {
 // Sequential, NOT Promise.all: both tools run with `--fix`, so both hold write ownership of the
 // same working tree. Run concurrently, one rewrites a file while the other is mid-read of it.
 // ESLint then aborts without emitting any JSON, and the check reports "eslint did not produce
-// valid JSON: Unexpected end of JSON input". That was a real, timing-dependent CI failure.
+// valid JSON: Unexpected end of JSON input". The race is timing-dependent: it fails CI at random.
 // Serializing the two fixers removes the race entirely. The extra few seconds is not worth the
 // nondeterminism. The test in test/integration/lint/no-concurrent-fixers.test.ts guards this
 // ordering.
@@ -58,7 +58,7 @@ const oxlint = await runJsonTool("oxlint", [
   "--fix",
   "--ignore-pattern=test/e2e/*/fixtures",
   // The examples/ tree is a self-contained demonstration workspace with its own
-  // toolchain (see examples/README.md and eslint.config.js's own `ignores`).
+  // toolchain (see examples/README.md and eslint.config.js's `ignores`).
   // It is not this package's source, and is never linted here.
   "--ignore-pattern=examples",
   ".",

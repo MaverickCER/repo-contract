@@ -7,6 +7,7 @@ import { CACHE_USAGE, parseCacheArgs } from "../../../bin/cache-cli.mjs"
 import { DOCTOR_USAGE, parseDoctorArgs } from "../../../bin/doctor-cli.mjs"
 import { MERGE_MUTATION_USAGE, parseMergeMutationArgs } from "../../../bin/merge-mutation-cli.mjs"
 import { METRICS_USAGE, parseMetricsArgs } from "../../../bin/metrics-cli.mjs"
+import { parseQuickStartArgs, QUICK_START_USAGE } from "../../../bin/quick-start-cli.mjs"
 import { parseFailFastArgs, parseScopeArgs } from "../../../src/affected/index.js"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..")
@@ -22,6 +23,7 @@ const COMMANDS: Record<string, { readonly usage: string; readonly parse: Parse }
   doctor: { usage: DOCTOR_USAGE, parse: parseDoctorArgs },
   metrics: { usage: METRICS_USAGE, parse: parseMetricsArgs },
   "merge-mutation": { usage: MERGE_MUTATION_USAGE, parse: parseMergeMutationArgs },
+  "quick-start": { usage: QUICK_START_USAGE, parse: parseQuickStartArgs },
 }
 
 /** `--help` and `--version` work the same in every command, so GUIDE.md need not repeat them. */
@@ -54,6 +56,13 @@ function knownAnywhere(flag: string): boolean {
 /** GUIDE.md's "Running less" section, where the commands and their options are documented. */
 function runningLessSection(): string {
   const start = guide.indexOf("\n## Running less")
+  const end = guide.indexOf("\n## ", start + 1)
+  return guide.slice(start, end)
+}
+
+/** GUIDE.md's quick-start section, where `quick-start` and its options are documented. */
+function quickStartSection(): string {
+  const start = guide.indexOf("\n### Run the README's quick start")
   const end = guide.indexOf("\n## ", start + 1)
   return guide.slice(start, end)
 }
@@ -189,7 +198,7 @@ describe("GUIDE.md's CLI commands and flags", () => {
   })
 
   it("documents every option each command's --help lists", () => {
-    const { spans, blockLines } = codeOf(runningLessSection())
+    const { spans, blockLines } = codeOf(`${runningLessSection()}${quickStartSection()}`)
     const shown = new Set(
       [...spans, ...blockLines].flatMap((code) =>
         code

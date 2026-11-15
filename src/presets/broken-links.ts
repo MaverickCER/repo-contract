@@ -2,7 +2,7 @@ import type { CheckDefinitionConfig } from "../types.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
-/** linkinator's own `--format json` contract: not published as a TypeScript type by the tool. */
+/** linkinator's `--format json` contract: not published as a TypeScript type by the tool. */
 interface LinkinatorLink {
   readonly url: string
   readonly status: number
@@ -56,10 +56,10 @@ export function brokenLinks(options: BrokenLinksOptions = {}): CheckDefinitionCo
       }
 
       // Valid JSON of an unexpected shape must produce a clean fail, not a
-      // TypeError that escapes the policy and crashes the whole run. Examples:
-      // a future linkinator reporter change, `null`, a primitive, or any
-      // leading non-JSON line that still parses to something without `.links`.
-      // dead-code.ts and duplication.ts guard their own reports the same way.
+      // TypeError that escapes the policy and crashes the whole run. A future
+      // linkinator reporter change can cause it, as can `null`, a primitive, or a
+      // leading non-JSON line that parses to something without `.links`.
+      // `dead-code.ts` and `duplication.ts` guard their reports the same way.
       const value: unknown = result.output.value
 
       if (typeof value !== "object" || value === null) {

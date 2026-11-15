@@ -8,13 +8,13 @@
  * specs/decisions/0013-reusable-exception-policy-helper.md's "review surface" amendment.
  *
  * This is deliberately a *different* code path from the published `deadCode` preset
- * (`src/presets/dead-code.ts`). This repository no longer uses that preset for its own run, only
- * for dogfooding/exercising the public API elsewhere. A published preset's own config-time
+ * (`src/presets/dead-code.ts`). This repository does not run that preset on itself. It uses the
+ * preset only to exercise the public API elsewhere. A published preset's config-time
  * `exemptUnusedDevDependencies` option would have to know its exempt list before running knip.
  * A *reconciled* registry cannot express that boot-time chicken-and-egg loop. The registry that
  * would suppress a finding can only be built from findings that already ran unsuppressed.
- * Self-hosting knip directly avoids that loop entirely. Knip always runs raw, every finding is
- * real, and the registry decides what is waived only *after* the run.
+ * Running knip from this script avoids that loop. Knip always runs raw, every finding is
+ * reported, and the registry decides what is waived only *after* the run.
  */
 
 /** One knip issue category, normalized to a stable kebab-case kind name. */
@@ -38,9 +38,9 @@ export type DeadCodeKind =
 /**
  * One knip finding: a raw issue, emitted whether or not an exception record backs it. `id` is
  * this finding's check-namespaced semantic identity: `dead-code:<kind>:<name>`. The package/export
- * name is the subject, not its file/line, so the id is perfectly stable across an unrelated
+ * name is the subject, not its file/line, so the id is stable across an unrelated
  * refactor. The same symbol or dependency name reported unused in two different files is a
- * genuinely rare collision. `reconcileExceptions` surfaces it as an integrity failure rather than
+ * rare collision. `reconcileExceptions` surfaces it as an integrity failure rather than
  * silently merging. Make the two distinguishable, e.g. by renaming one.
  */
 export interface DeadCodeFinding {
@@ -55,7 +55,7 @@ export interface DeadCodeFinding {
   readonly location: string
 }
 
-/** One row of dead-code.json. `justification` is the whole review: why this dependency/export is genuinely needed despite knip's static analysis not seeing a use. */
+/** One row of dead-code.json. `justification` is the whole review: why this dependency/export is needed despite knip's static analysis not seeing a use. */
 export interface DeadCodeExceptionRecord {
   /** `dead-code:<kind>:<name>`: must equal `deriveDeadCodeId(record)`. */
   readonly id: string

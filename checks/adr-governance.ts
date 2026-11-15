@@ -58,7 +58,7 @@ function getAdrGovernanceDeterminant(evidence: AdrGovernanceEvidence): AdrGovern
 
 /**
  * Fails whenever a PR changes `src/execution/**`/`src/policy/**` without engaging the ADR set.
- * Engaging means touching `specs/decisions/**` itself or referencing a real, existing ADR from
+ * Engaging means touching `specs/decisions/**` itself or referencing an existing ADR from
  * one of the branch's commit messages. That is the one thing this check exists to guarantee.
  * Passes trivially when nothing governed changed.
  * @param root0 - the policy input.
@@ -107,8 +107,8 @@ export function evaluateAdrGovernancePolicy({
   }
 }
 
-// Architectural-change traceability. A PR touching the execution or policy engine must either
-// engage the ADR set directly or reference an existing ADR from one of its commit messages. A
+// Architectural-change traceability. A PR touching the execution or policy engine must change
+// the ADR set or cite an existing ADR in one of its commit messages. A
 // typo'd or nonexistent ADR number never satisfies this. See
 // specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
 export const adrGovernance: CheckDefinitionConfig = {

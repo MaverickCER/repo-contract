@@ -4,7 +4,7 @@
  * a policy (exact, then glob, then default) and checks the record's fields against it.
  *
  * The check stays in charge of everything else. It decides what a finding is, matches records to
- * findings and owns the identity of each finding (see `checks/shared/`, unpublished). This is the
+ * findings and owns the identity of each finding (see `scripts/shared/`, unpublished). This is the
  * mechanism `scripts/suppression-governance/` built for `disable-comments.json` (ADR 0006),
  * extracted for any check; specs/decisions/0013-reusable-exception-policy-helper.md has the
  * boundary.
@@ -14,7 +14,7 @@
  * a minor release and a changed signature or behavior is a major one. While the package is `0.x`,
  * the release tooling deflates a new export to a patch.
  *
- * Published under its own `./helpers` subpath, independent of the root and `./presets` barrels.
+ * Published under its `./helpers` subpath, independent of the root and `./presets` barrels.
  * @packageDocumentation
  */
 export type {
@@ -28,13 +28,12 @@ export type {
 } from "./exception-policy.js"
 export type { ExceptionReconciliation, ExceptionRecordCore } from "./reconcile-exceptions.js"
 // Re-exported because `loadExceptionRegistry` below takes a `schema: StandardSchemaV1<...>`
-// parameter. A consumer implementing one, or passing a real Zod/Valibot/ArkType schema, needs
-// this type in scope without reaching past this independent `./helpers` barrel into the root
-// `repo-contract` export or `src/standard-schema/types.js` directly. A real schema's own type
-// already satisfies this hand-vendored interface structurally. Same vendored contract
-// `src/index.ts` re-exports for the root barrel's own `output.schema` option (ADR 0012). It is
-// kept in sync by hand since the two barrels are deliberately independent (see this file's own
-// module doc comment above).
+// parameter. A consumer implementing one, or passing a Zod/Valibot/ArkType schema, needs this
+// type in scope. With it, the consumer stays inside this independent `./helpers` barrel. A
+// library schema's type already satisfies this hand-vendored interface structurally.
+// `src/index.ts` re-exports the same vendored contract for the root barrel's `output.schema`
+// option (ADR 0012). Each barrel keeps its re-export by hand, since the two barrels are
+// independent (see this file's module doc comment above).
 export type { StandardSchemaV1 } from "../standard-schema/types.js"
 export {
   evaluateExceptionRecord,

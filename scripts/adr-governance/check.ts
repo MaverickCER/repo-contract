@@ -36,11 +36,11 @@ function findReferencedAdrNumbers(text: string): string[] {
 }
 
 /**
- * Which of the referenced numbers actually correspond to a real, currently-existing file under
- * `specs/decisions/`: cross-validated against the real directory listing, not only by regex shape.
+ * Which of the referenced numbers correspond to an existing file under `specs/decisions/`:
+ * cross-validated against the directory listing, not only by regex shape.
  * @param root - Absolute path to the repository being checked.
  * @param numbers - Candidate 4-digit ADR numbers to resolve.
- * @returns The subset of `numbers` that resolve to a real file.
+ * @returns The subset of `numbers` that resolve to an existing file.
  */
 async function resolveAdrNumbers(root: string, numbers: readonly string[]): Promise<string[]> {
   if (numbers.length === 0) return []
@@ -55,7 +55,7 @@ async function resolveAdrNumbers(root: string, numbers: readonly string[]): Prom
 
 /**
  * The check's full logic, factored out of the bottom-of-file script invocation. This lets
- * `test/integration/adr-governance/check.integration.test.ts` exercise the complete real path
+ * `test/integration/adr-governance/check.integration.test.ts` exercise the complete path
  * (git diff -> commit-message scan -> ADR resolution -> evidence) in-process. It runs against a
  * scratch fixture repository, without spawning a subprocess.
  * @param root - Absolute path to the repository being checked.

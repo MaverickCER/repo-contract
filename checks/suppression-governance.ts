@@ -36,7 +36,7 @@ interface EvaluateSuppressionGovernancePolicyInput {
 }
 
 /**
- * Evaluates the check's own emitted evidence against `suppressionPolicy`: a pure
+ * Evaluates the check's emitted evidence against `suppressionPolicy`: a pure
  * evidence->verdict function that never re-parses or re-scans source (ADR 0001). It is
  * finding-centric: every raw finding gets exactly one decision. A stale exception record (its
  * finding gone) fails. A scaffolded stub (blank `justification`) fails whenever its rule resolves

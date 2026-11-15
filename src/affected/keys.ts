@@ -1,7 +1,7 @@
 /**
- * String keys for the facts the affected analysis derives. They double as provenance: each fact is
- * recorded with the key of the fact that caused it, so a test's presence in the affected set can be
- * walked back to a changed file (see `explainAffected`).
+ * String keys for the facts the affected analysis derives. They double as provenance. Each fact is
+ * recorded with the key of the fact that caused it. A test's presence in the affected set can then
+ * be walked back to a changed file (see `explainAffected`).
  */
 
 /**

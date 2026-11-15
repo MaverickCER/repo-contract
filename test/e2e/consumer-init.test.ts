@@ -74,10 +74,11 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     expect(result.stdout).toContain("Created:")
     expect(result.stdout).toContain("✓ typecheck")
     expect(result.stdout).toContain("✓ securityDeps")
+    expect(result.stdout).toContain("✓ bundledDependencies")
     expect(result.stdout).toContain("npm run contract")
 
     const config = readFileSync(path.join(consumerDir, "repo-contract.config.mts"), "utf8")
-    expect(config).toContain("typecheck, securityDeps")
+    expect(config).toContain("typecheck, bundledDependencies, securityDeps")
 
     const runner = readFileSync(path.join(consumerDir, "scripts", "contract.mjs"), "utf8")
     expect(runner).toContain("runRepoContract")
@@ -142,6 +143,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
       expect(runResult.stderr).not.toContain("Cannot find package")
       expect(runResult.stdout).toMatch(/\[(PASS|FAIL)\] typecheck:/)
       expect(runResult.stdout).toMatch(/\[(PASS|FAIL)\] securityDeps:/)
+      expect(runResult.stdout).toContain("[PASS] bundledDependencies:")
     } finally {
       removeConsumerFixture(dir)
     }
@@ -169,14 +171,20 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
     expect(readFileSync(path.join(consumerDir, "package.json"), "utf8")).toBe(before.packageJson)
   }, 20_000)
 
-  it("produces a valid contract for a repository with none of the 16 tool-specific dependencies: only securityDeps", () => {
+  it("produces a valid contract for a private repository with none of the 16 tool-specific dependencies: only securityDeps", () => {
     const dir = scratchDir("repo-contract-init-empty-")
-    writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "empty-repo" }))
+    writeFileSync(
+      path.join(dir, "package.json"),
+      JSON.stringify({ name: "empty-repo", private: true }),
+    )
 
     const result = runInit(dir)
     expect(result.status).toBe(0)
     expect(result.stdout).toContain("✓ securityDeps")
-    expect(result.stdout).not.toMatch(/✓ (test|lint|typecheck|format)\b/)
+    expect(result.stdout).not.toMatch(/✓ (test|lint|typecheck|format|bundledDependencies)\b/)
+    expect(result.stdout).toContain(
+      "- bundledDependencies (package.json is private, so npm never publishes it)",
+    )
 
     const config = readFileSync(path.join(dir, "repo-contract.config.mts"), "utf8")
     expect(config).toContain("import { securityDeps } from")

@@ -20,7 +20,7 @@ interface SecretlintResult {
 // Secret values are deliberately excluded from the policy output. The
 // location and rule identify the remediation target without turning the
 // contract result itself into another secret-disclosure channel. Requires
-// the consumer's own secretlint config (secretlint has no built-in rules).
+// the consumer's secretlint config (secretlint has no built-in rules).
 /**
  * Secret-leak scanning via secretlint.
  * @beta
@@ -43,9 +43,9 @@ export const securitySecrets: CheckDefinitionConfig = {
     )
     if (!parsed.ok) return parsed.result
 
-    // `readJsonReport<T>` narrows only at the type level; valid JSON that
-    // isn't an array must fail cleanly rather than throw `.flatMap` out of
-    // the policy and crash the run.
+    // `readJsonReport<T>` narrows only at the type level. Valid JSON that
+    // isn't an array must fail cleanly, not throw `.flatMap` out of the
+    // policy and crash the run.
     if (!Array.isArray(parsed.value)) {
       return { outcome: "fail", rationale: "Secretlint produced invalid JSON report data." }
     }

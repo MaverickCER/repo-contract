@@ -6,17 +6,16 @@ type ReadJsonReportResult<T> =
 
 /**
  * Reads and JSON-parses a report a tool wrote to disk rather than printing to stdout. Every preset
- * whose tool has no stdout JSON mode (jscpd, markdownlint-cli2, secretlint) shares this shape: read,
- * fail with one rationale if the read itself fails, fail with a different rationale if the JSON is
- * invalid. Each failure takes its own caller-supplied rationale rather than a generic shared
- * message. A missing report and invalid JSON usually point a consumer at a different fix (a
- * misconfigured reporter/output flag vs. a genuinely broken tool run). Each tool's own advice also
- * differs: markdownlint's own read-failure rationale, for instance, names the specific config
- * field to check.
+ * whose tool has no stdout JSON mode (jscpd, markdownlint-cli2, secretlint) shares this shape. A
+ * failed read fails with one rationale, and invalid JSON fails with another. Each failure takes its
+ * caller-supplied rationale, not a generic shared message. A missing report and invalid JSON
+ * usually need different fixes: a misconfigured reporter or output flag, or a broken tool run.
+ * Each tool's advice also differs. markdownlint's read-failure rationale, for instance, names the
+ * config field to check.
  *
- * Takes the read itself as a thunk (`readRaw`), rather than a `path` this function reads from
- * directly. So every call site's own `readFile(LITERAL_PATH, "utf8")` stays written as a literal
- * argument in the caller's own file. This repo's `security/detect-non-literal-fs-filename` policy
+ * Takes the read itself as a thunk (`readRaw`), not a `path` this function reads from.
+ * So every call site's `readFile(LITERAL_PATH, "utf8")` stays written as a literal
+ * argument in the caller's file. This repo's `security/detect-non-literal-fs-filename` policy
  * requires that: it forbids suppressing that rule outright (see policy-config.ts's
  * `eslint.rules["security/*"]`). The rule would otherwise flag a `path: string` function parameter
  * threaded into `readFile` here as non-literal.

@@ -1,13 +1,13 @@
 // Standalone published-artifact smoke test. CI's `published-floor` job runs this with a bare
 // `node scripts/smoke-consumer.mjs <artifacts-dir>` on the Node versions the PUBLISHED package
-// supports (the `engines.node` floor). Those are older than this repository's own verification
-// toolchain requires. It therefore must not touch that toolchain:
+// supports (the `engines.node` floor). Those are older than this repository's verification
+// toolchain requires. It must not touch that toolchain:
 //
 //   - Node built-ins only. No devDependency, no `tsx`, no vitest, no import from src/ or dist/.
 //   - It never runs `npm ci` / `npm run build`. It consumes an already-packed `.tgz` (produced by
-//     the `package-build` job on a modern Node) exactly as an external consumer would.
+//     the `package-build` job on a modern Node) as an external consumer would.
 //   - Every expectation about the package's shape is a hardcoded literal below: the black-box
-//     contract a real consumer relies on. If the published `exports` surface changes, update this
+//     contract a consumer relies on. If the published `exports` surface changes, update this
 //     file by hand to match; that deliberate step is the point.
 //
 // Exits 0 only if the packed tarball installs cleanly into a fresh project and its documented
@@ -19,7 +19,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 
 // Node built-ins only (see this file's header). This file must NOT import scripts/npm-pack.mjs,
-// which pulls in `cross-spawn` at module load. That is a devDependency of this repository's own
+// which pulls in `cross-spawn` at module load. That is a devDependency of this repository's
 // tooling, not a runtime dependency of the published package. See
 // specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md.
 // The `published-floor` job runs this against a bare checkout with no `node_modules` at all.
@@ -36,14 +36,14 @@ const SHARED_PROBE_BODY = `
   if (typeof runRepoContract !== "function") throw new Error("runRepoContract is not a function");
 
   const config = defineRepoContract({
-    // repo-contract never spawns a process or reads process.env itself -- the consumer supplies
+    // repo-contract never spawns a process or reads process.env itself. The consumer supplies
     // both. Node built-ins only (see this file's header), so plain node:child_process.spawn, not
     // cross-spawn.
     spawn,
     env: process.env,
     checks: {
-      // A guaranteed-clean no-op check: spawns this same node with an empty program, so there is
-      // no external tool, no filesystem write, and nothing that could conflict on any platform.
+      // A guaranteed-clean no-op check. It spawns this same node with an empty program: no
+      // external tool, no filesystem write, and nothing that could conflict on any platform.
       noop: {
         run: [process.execPath, "-e", ""],
         policy: ({ result }) =>
@@ -90,12 +90,11 @@ import { defineRepoContract, runRepoContract } from "repo-contract";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
-// A genuine, statically-resolved native ESM import of the ./helpers subpath -- package.json
-// declares separate "import" and "require" conditions for it, and SHARED_PROBE_BODY below only
-// ever exercises the "require" one (even from this ESM probe, via createRequire). Node resolves
-// this import at module load, before any of SHARED_PROBE_BODY's own assertions run, so a broken
-// "import" condition (e.g. pointing at a stale/missing dist/helpers.js) fails this probe outright
-// rather than silently going unexercised.
+// A statically-resolved native ESM import of the ./helpers subpath. package.json declares
+// separate "import" and "require" conditions for it. SHARED_PROBE_BODY below exercises only the
+// "require" one, even from this ESM probe (via createRequire). Node resolves this import at
+// module load, before SHARED_PROBE_BODY's assertions run. A broken "import" condition (e.g. one
+// pointing at a stale or missing dist/helpers.js) then fails this probe outright.
 import * as helpersEsm from "repo-contract/helpers";
 
 const require = createRequire(import.meta.url);

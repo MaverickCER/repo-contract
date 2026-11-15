@@ -1,8 +1,8 @@
 // `repo-contract doctor`: find settings that make the affected-scope feature slower or wrong,
-// and repair the ones that are safe to repair. All input and output is injected (argv, stdout and
-// stderr, git and file access, the engine) so the command is unit-testable without a process or a
-// repository; bin/repo-contract.mjs wires the real ones. Conventions: data goes to stdout and
-// diagnostics to stderr; exit status is 0 on success (findings are the answer, not a failure), 1
+// and repair the ones that are safe to repair. All input and output is injected: argv, stdout
+// and stderr, git and file access, and the engine. Unit tests then need no process and no
+// repository. bin/repo-contract.mjs wires the production ones. Data goes to stdout and
+// diagnostics to stderr. Exit status: 0 on success (findings are the answer, not a failure), 1
 // when the command could not run, 2 for a usage error. Without --fix nothing is written.
 
 import path from "node:path"

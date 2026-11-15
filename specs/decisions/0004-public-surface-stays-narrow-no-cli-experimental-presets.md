@@ -201,3 +201,22 @@ prompts, colour or network):
 
 `affected` also gains `--shard <i>/<n>`, `--plan-shards`, `--shards`, `--target-minutes`, `--max-shards` and
 `--timings`. The reasoning is in [ADR 0023](0023-speed-features-are-opt-in-and-every-skip-is-visible.md).
+
+## Amendment (2026-11-15): `quick-start`, a command that runs the README
+
+The `quickStart` preset runs a README's marked commands, so it needs a process spawner and a shell.
+A library entry point must not hold either ([ADR 0011](0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)).
+So the preset runs `repo-contract quick-start`, and `bin/repo-contract.mjs` supplies both.
+
+**Decision.** `repo-contract quick-start` packs the package with install scripts off and installs
+the tarball into an empty project. It then runs each command of the README block between
+`<!-- quick-start:begin -->` and `<!-- quick-start:end -->`. It follows the conventions of the
+2026-11-01 amendment, with two differences:
+
+- It runs commands the consumer wrote, and an install among them reaches the registry. The record
+  `preset-command:repo-contract` in `.repo-contract/exceptions/preset-commands.json` holds that review.
+- It exits `1` when a command fails, because a failed quick start is the answer a script acts on.
+
+**Consequences.** The `bin` now starts a shell. The commands it runs are the README's own text,
+which a user runs by hand anyway. The command parsing and reporting live in
+`bin/quick-start-cli.mjs` with the process capabilities injected, so they stay unit-testable.
