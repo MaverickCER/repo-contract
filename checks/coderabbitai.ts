@@ -54,7 +54,7 @@ function evaluateFinding(
 }
 
 /**
- * Evaluates the `coderabbitai` check's own emitted evidence: a pure evidence->verdict function.
+ * Evaluates the `coderabbitai` check's emitted evidence: a pure evidence->verdict function.
  * `not-applicable` (CI, review delegated to the GitHub App) / `unavailable` is a `warn`, always
  * visibly recorded. `error` warns (the run has no suggestions to offer). A malformed/unreconcilable registry
  * (`registryError`) fails regardless of status. A `reviewed` run: any `forbidden` / `insufficient` / `unmatched`
@@ -198,10 +198,9 @@ export function evaluateCoderabbitPolicy(input: {
   }
 }
 
-// Promotes the former local-only `coderabbit review --agent` shell step into a real, always-
-// declared check: see specs/decisions/0014-coderabbit-as-a-surfaced-check.md. Its own
-// non-execution (in CI, or locally when the CLI isn't installed) is recorded and surfaced as a
-// warn on every run.
+// Runs `coderabbit review --agent` as an always-declared check (see
+// specs/decisions/0014-coderabbit-as-a-surfaced-check.md). The review does not run in CI, or
+// locally without the CLI. Each run records and surfaces that as a warn.
 export const coderabbitai: CheckDefinitionConfig = {
   run: ["tsx", "scripts/coderabbitai/review.ts"],
   output: { format: "json" },

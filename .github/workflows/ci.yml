@@ -506,8 +506,9 @@ jobs:
       - run: npm ci
       - run: npx --yes -p typescript@7 tsc --noEmit -p tsconfig.json
 
-  # Proves the shipped .d.ts files compile in a consumer's toolchain. It uses the newest release
-  # of TypeScript 5, 6 and 7; older 5.x releases are not tested. This repository's own tsconfig
+  # Proves the shipped .d.ts files compile in a consumer's toolchain. It uses the floor of the
+  # `typescript` peer and the newest release of TypeScript 5, 6 and 7
+  # (scripts/typescript-compat-versions.mjs). This repository's own tsconfig
   # uses moduleResolution "Bundler" and one pinned typescript. So it tests neither nodenext
   # resolution nor another major. See scripts/typescript-compat.mjs.
   typescript-compat:

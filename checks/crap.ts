@@ -17,12 +17,11 @@ export interface CrapReport {
 }
 
 // The one place the required CRAP threshold lives. It is pinned and passed
-// to crap4ts via --threshold below, the same "this repo owns the number,
-// never the tool's own default" convention as SIZE_BUDGETS in
-// checks/size.ts. Without an explicit --threshold, crap4ts falls back to its
-// own hardcoded default (30 as of @danibram/crap4ts's current release). This
-// repository has no control over that default and would not see it change
-// across a dependency bump.
+// to crap4ts via --threshold below. SIZE_BUDGETS in checks/size.ts follows the
+// same rule: this repo owns the number, never the tool's default. Without
+// --threshold, crap4ts falls back to a hardcoded default (30 in
+// @danibram/crap4ts's current release). This repository does not control that
+// default and would not see it change across a dependency bump.
 export const CRAP_THRESHOLD = 30
 
 // An independent ceiling on each function's raw cyclomatic complexity,
@@ -31,21 +30,19 @@ export const CRAP_THRESHOLD = 30
 // `complexity` as coverage approaches 100%. This repository's coverage floor
 // is already that high (see scripts/coverage-thresholds.mjs), so CRAP alone
 // stops constraining a fully-covered but deeply-branchy function.
-// `tokenizeRunString` sat at cyclomatic 30 / 100% covered / CRAP 30, passing
-// the CRAP gate with zero downward pressure. 20 is ESLint's own default
-// `complexity` limit. crap4ts is not asked to enforce this (it has no
-// raw-complexity fail flag). The policy owns the number, the same "this repo
-// owns the number, never the tool's echo" stance it takes for CRAP_THRESHOLD
-// vs report.threshold.
+// A function at cyclomatic 30, fully covered, scores CRAP 30 and passes the
+// CRAP gate with no downward pressure. ESLint's default `complexity` limit is
+// 20. The crap4ts CLI has no raw-complexity fail flag, so this policy enforces it.
+// The policy owns the number, as it owns CRAP_THRESHOLD over report.threshold.
 export const MAX_COMPLEXITY = 20
 
 /**
- * The CRAP check's full interpretation logic, factored out for direct unit testing.
- * test/unit/crap/policy.test.ts exercises the CRAP-threshold and complexity-ceiling comparisons
- * against an already-parsed report, without spawning crap4ts. This matches every other check's
- * own `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
+ * The CRAP check's full interpretation logic, factored out for unit testing.
+ * test/unit/crap/policy.test.ts exercises the threshold and complexity-ceiling comparisons on a
+ * parsed report, without spawning crap4ts. This matches every other check's
+ * `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
  * @param root0 - the policy input.
- * @param root0.evidence - crap4ts's own parsed JSON report.
+ * @param root0.evidence - crap4ts's parsed JSON report.
  * @returns the pass/fail verdict.
  */
 export function evaluateCrapPolicy({ evidence }: { readonly evidence: CrapReport }): PolicyResult {
@@ -53,18 +50,16 @@ export function evaluateCrapPolicy({ evidence }: { readonly evidence: CrapReport
     return { outcome: "fail", rationale: "CRAP4TS produced invalid JSON report data." }
   }
 
-  // Re-annotated rather than used directly. `Array.isArray` narrows its
-  // argument to `any[]` regardless of the checked value's declared type
-  // (a long-standing TypeScript limitation). `evidence.functions` would
-  // otherwise silently lose its `CrapFunction` element type below.
+  // `Array.isArray` narrows its argument to `any[]` whatever the checked
+  // value's declared type (a long-standing TypeScript limitation). This
+  // annotation keeps the `CrapFunction` element type for the scans below.
   const functions: readonly CrapFunction[] = evidence.functions
 
-  // A function row whose `crap` or `complexity` isn't a finite number
-  // (crap4ts emitted `null`, a string, or omitted the field) must fail the
-  // check, not be silently excluded from the offender scans below. An
-  // unreadable metric is an unevaluated function. This is the same fail-closed
-  // stance checks/coverage.ts takes for a non-numeric metric. Filtering it
-  // out instead would let a genuinely over-threshold function pass unnoticed.
+  // A function row whose `crap` or `complexity` isn't a finite number fails
+  // the check. crap4ts may emit `null` or a string, or omit the field. An
+  // unreadable metric is an unevaluated function, so excluding it from the
+  // offender scans below could let an over-threshold function pass unnoticed.
+  // The coverage check fails closed on a non-numeric metric the same way.
   const unreadable = functions.filter(
     (fn: CrapFunction) => !Number.isFinite(fn.crap) || !Number.isFinite(fn.complexity),
   )
@@ -87,7 +82,7 @@ export function evaluateCrapPolicy({ evidence }: { readonly evidence: CrapReport
   // the same "keep the two tools' findings as separate sections" shape
   // checks/lint.ts uses for ESLint vs oxlint.
   //
-  // Compared against this file's own CRAP_THRESHOLD, never report.threshold.
+  // Compared against this file's CRAP_THRESHOLD, never report.threshold.
   // The report only echoes back whatever threshold crap4ts was told to use.
   // Trusting that echo over the value this repo configured would silently
   // detach the gate from --threshold above the moment the two disagree.
@@ -95,7 +90,7 @@ export function evaluateCrapPolicy({ evidence }: { readonly evidence: CrapReport
     .filter((fn: CrapFunction) => fn.crap > CRAP_THRESHOLD)
     .sort((a, b) => b.crap - a.crap)
 
-  // The independent raw-complexity ceiling: see MAX_COMPLEXITY's own note
+  // The independent raw-complexity ceiling: see MAX_COMPLEXITY's note
   // above for why CRAP alone no longer covers this.
   const complexityOffenders = functions
     .filter((fn: CrapFunction) => fn.complexity > MAX_COMPLEXITY)
@@ -137,12 +132,12 @@ export function evaluateCrapPolicy({ evidence }: { readonly evidence: CrapReport
 // evaluated (scripts/aggregate-coverage.mjs), never a separate coverage map.
 // For that reason repo-contract.config.ts's `dependsOn` for this check names
 // `coverage`, not the three test-* checks it aggregates.
-// The report goes to a file (`--output`), never stdout. crap4ts exits right after writing, and a
-// piped stdout is cut at the OS pipe buffer (64 KiB) when the process exits before the reader has
-// drained it. This repository's JSON report outgrew that, producing a truncated, unparseable
-// document ("... at position 65536"). A file has no such limit. It lives under coverage/aggregate/,
-// which the `coverage` check this one depends on has already created. crap4ts does not create
-// missing parent directories, and a fresh CI checkout has no reports/ directory.
+// The report goes to a file (`--output`), never stdout. crap4ts exits right after writing. A piped
+// stdout is cut at the OS pipe buffer (64 KiB) when the process exits before the reader drains it.
+// This repository's JSON report is larger than that and would arrive truncated ("... at position
+// 65536"). A file has no such limit. It lives under coverage/aggregate/, which the `coverage`
+// check has already created. The crap4ts CLI does not create missing parent directories, and a
+// fresh CI checkout has no reports/ directory.
 const CRAP_REPORT_PATH = "coverage/aggregate/crap4ts-report.json"
 
 export const crap: CheckDefinitionConfig = {

@@ -1,11 +1,11 @@
 // The thin script `npm run contract` invokes. It imports the built package's
-// own public API (not a special internal shortcut) and runs it against this
-// repository's own repo-contract.config.ts. This really is repo-contract
-// validating itself using itself, not a fixture standing in for it.
+// public API (not a special internal shortcut) and runs it against this
+// repository's repo-contract.config.ts. This is repo-contract validating
+// itself with itself, not a fixture standing in for it.
 //
 // Prints a human-readable summary, readable without color per
 // SECURITY.md/README's accessibility notes. Sets process.exitCode and never
-// calls process.exit() directly. See src/run-repo-contract.ts's own doc
+// calls process.exit(). See src/run-repo-contract.ts's doc
 // comment for why the library itself never does either.
 //
 // Run via `npm run contract`, which invokes this through `tsx`. Plain
@@ -25,25 +25,24 @@ import { buildEvidenceManifest, createRunRecord, serializeRunRecord } from "../d
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const historyPath = path.join(root, "history.json")
-// Each run's evidence includes every check's full stdout/stderr. It is now
+// Each run's evidence includes every check's full stdout/stderr. It is
 // capped per-check at 10 MiB by src/execution/spawn-check.ts, but it is
-// still real content, not a summary. Keeping every run ever executed would
-// grow this file without bound. That is exactly what was observed in
-// practice: tens of MB after only a handful of local runs.
-// This is a local developer scratch log, not the check's actual pass/fail
-// record. That record is `npm run contract`'s own exit code and printed
-// summary each time. Bounding the log to the most recent runs therefore
+// still full output, not a summary. Keeping every run ever executed would
+// grow this file without bound: tens of MB after a handful of local runs.
+// This is a local developer scratch log, not the check's pass/fail
+// record. That record is `npm run contract`'s exit code and printed
+// summary each time. Bounding the log to the most recent runs
 // loses nothing load-bearing.
 const MAX_HISTORY_ENTRIES = 20
 // Uses pathToFileURL, not a bare path. On Windows `import()` treats an absolute
 // path like `D:\...` as a URL with scheme `d:` and rejects it
-// (ERR_UNSUPPORTED_ESM_URL_SCHEME). It requires a real file:// URL.
+// (ERR_UNSUPPORTED_ESM_URL_SCHEME). It requires a file:// URL.
 const { default: config } = await import(
   pathToFileURL(path.join(root, "repo-contract.config.ts")).href
 )
 
 // The docs link to the benchmark page, which is generated and never committed. Build it first, the
-// way every package that runs internal-package-contract's own contract does.
+// way every package that runs internal-package-contract's contract does.
 const { prepare } = await import(
   pathToFileURL(
     path.join(root, "node_modules", "internal-package-contract", "scripts", "contract-prepare.mjs"),
@@ -137,7 +136,7 @@ async function recordRun(evidence, verdict, startedAt, complete) {
   }
 }
 
-// Writes the evidence manifest this repository's own README describes. It is a digest-sealed
+// Writes the evidence manifest this repository's README describes. It is a digest-sealed
 // statement that a full, cache-free run of every check passed. It records each check's verdict,
 // the hash of its evidence, the tool versions, and the commit it looked at.
 // Only a passing run of every check gets one, and only when the commit can be read. A subset or a

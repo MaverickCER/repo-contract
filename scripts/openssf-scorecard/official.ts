@@ -1,8 +1,8 @@
 /**
  * The published OpenSSF Scorecard result for this repository, read from the public Scorecard API
- * (https://api.scorecard.dev), and how it compares with repo-contract's own evaluation.
+ * (https://api.scorecard.dev), and how it compares with repo-contract's evaluation.
  *
- * The official result is produced by OpenSSF's own `scorecard` binary, run by
+ * The official result is produced by OpenSSF's `scorecard` binary, run by
  * `.github/workflows/scorecard.yml` (`ossf/scorecard-action`, `publish_results: true`), so it is the
  * number a reviewer should cite. The local evaluation by repo-contract is kept beside it because it
  * runs on every `npm run contract`, before anything is pushed. Showing both, and every check where
@@ -89,7 +89,7 @@ function parseCheck(value: unknown): OfficialCheck | undefined {
 
 /**
  * Reads the API's response body. Anything that is not the documented shape is rejected whole. The
- * document therefore never renders half of a result as if it were all of it.
+ * document never renders half of a result as if it were all of it.
  * @param body - The parsed JSON body of the Scorecard API response.
  * @returns The result, or `undefined` if the body is not a complete result.
  */

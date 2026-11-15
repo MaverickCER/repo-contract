@@ -5,7 +5,7 @@ import type { StandardSchemaV1 } from "../standard-schema/types.js"
  * Renders one failed-validation issue as `path: message`, or just `message` when it has no path.
  * That is the same shape `src/parsing/format-schema-issues.ts` produces for `output.schema`
  * failures. It is kept as an independent, much smaller copy here rather than an import.
- * `src/helpers/**` is a second, independent published barrel (see `src/presets/index.ts`'s own doc
+ * `src/helpers/**` is a second, independent published barrel (see `src/presets/index.ts`'s doc
  * comment on the same point). It deliberately never reaches into `src/parsing/`, an internal layer
  * of the root barrel it has no business depending on.
  * @param issue - one issue from a failed `StandardSchemaV1.Result`.
@@ -29,7 +29,7 @@ function formatIssue(issue: StandardSchemaV1.Issue): string {
 
 /**
  * Whether `value` is a non-`null`, non-array object: the shape an exception registry's on-disk
- * envelope must be before its own `exceptions` field is inspected.
+ * envelope must be before its `exceptions` field is inspected.
  * @param value - the candidate value to check.
  * @returns `true` if `value` is a plain object.
  */
@@ -40,29 +40,29 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 /**
  * Reads and validates one exception registry file from disk: `path -> { "$schema"?: string,
  * "exceptions": T[] }`, in two independently-validated layers. This function owns only the
- * envelope: that the file exists (or is absent, a normal empty-registry state), parses as JSON,
- * and is an object carrying an `"exceptions"` field at all. It never inspects what is inside
- * `exceptions` beyond that. `schema` (a `StandardSchemaV1`, hand-written or from a real library;
- * see `src/standard-schema/types.ts`) owns every field-level concern for the caller's own record
- * shape. That is the same "consumer supplies a trusted capability, this package calls it without
+ * envelope. The file exists or is absent (a normal empty-registry state), parses as JSON, and is
+ * an object carrying an `"exceptions"` field. It never inspects what is inside `exceptions`.
+ * `schema` (a `StandardSchemaV1`, hand-written or from a library; see
+ * `src/standard-schema/types.ts`) owns every field-level concern for the caller's record shape.
+ * That is the same "consumer supplies a trusted capability, this package calls it without
  * owning its internals" relationship `RepoContractConfig.spawn`/`env` already establish (see
  * `specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md`).
  *
- * `readFile` defaults to `node:fs/promises`' own `readFile`. `src/presets/security-secrets.ts`
+ * `readFile` defaults to `node:fs/promises`' `readFile`. `src/presets/security-secrets.ts`
  * already uses it, so this introduces no new filesystem-access surface. A missing file is a normal
  * "no exceptions recorded yet" state, not an error (`{ ok: true, records: [] }`). That matches
- * `scripts/suppression-governance/check.ts`'s own `loadExistingRegistry` precedent for the same
+ * `scripts/suppression-governance/check.ts`'s `loadExistingRegistry` precedent for the same
  * first-run case. Every other failure returns `{ ok: false, errors }` rather than throwing:
  * unreadable for another reason, malformed JSON, a missing/malformed envelope, or a schema
  * validation failure. A bad registry is reported as data for a check's policy to fail on, never an
- * uncaught exception that crashes the run. The one exception is `schema`'s own
- * `validate()` throwing or rejecting (a bug in the *caller-supplied schema*, not malformed
- * registry data) which is deliberately left to propagate as a rejected `Promise`, mirroring
- * `src/parsing/parse-output.ts`'s identical treatment of a throwing `output.schema`.
+ * uncaught exception that crashes the run. The one exception is a throwing or rejecting
+ * `schema.validate()`. That is a bug in the *caller-supplied schema*, not malformed registry data.
+ * It propagates as a rejected `Promise`, as a throwing `output.schema` does in
+ * `src/parsing/parse-output.ts`.
  * @param input - Where to read the registry from, the schema that validates its `exceptions` array, and (for tests, or a non-`node:fs` environment) an override for how to read `path`.
  * @param input.path - The registry file's path, passed to `input.readFile` verbatim.
- * @param input.schema - Validates (and may transform) the envelope's `exceptions` array once this function's own envelope checks pass.
- * @param input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' own `readFile(path, "utf8")`.
+ * @param input.schema - Validates (and may transform) the envelope's `exceptions` array once the envelope checks pass.
+ * @param input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' `readFile(path, "utf8")`.
  * @returns Every valid record (`ok: true`), or every problem found reading/parsing/validating the file (`ok: false`).
  * @public
  */
@@ -81,11 +81,11 @@ export async function loadExceptionRegistry<T>(input: {
   try {
     raw = await readFile(path)
   } catch (error) {
-    // `readFile` is a caller-supplied capability (see this function's own doc comment). A test
-    // override, or an unusual real filesystem implementation, could reject with something other
-    // than a real `Error` (`null`, a plain string, ...). Reading `.code`/`.message` off that
-    // directly would throw out of this catch block instead of returning the clean `{ ok: false }`
-    // this function promises for every other failure. `isPlainObject` narrows first.
+    // `readFile` is a caller-supplied capability (see this function's doc comment). A test
+    // override, or an unusual filesystem implementation, could reject with something other than
+    // an `Error` instance (`null`, a plain string, ...). Reading `.code`/`.message` off that would
+    // throw out of this catch block instead of returning the clean `{ ok: false }` this function
+    // promises for every other failure. `isPlainObject` narrows first.
     const code = isPlainObject(error) ? error.code : undefined
     if (code === "ENOENT") return { ok: true, records: [] }
     const message =

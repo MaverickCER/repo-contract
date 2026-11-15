@@ -2,14 +2,13 @@
 // `run: ["tsx", "scripts/dead-code/check.ts"]` in repo-contract.config.ts. It prints ONLY the JSON
 // evidence to stdout. A scaffolding notice goes to stderr.
 //
-// This repository no longer uses the published `deadCode` preset for its own run.
+// This repository runs knip itself rather than through the published `deadCode` preset.
 // The preset (`src/presets/dead-code.ts`) has an `exemptUnusedDevDependencies` option, which is a
-// config-time exempt list. This repository's own registry-reconciliation model cannot use one.
+// config-time exempt list. This repository's registry-reconciliation model cannot use one.
 // The registry that would suppress a finding can only be built from findings that already ran
-// unsuppressed. A config-time exempt list is therefore a boot-time chicken-and-egg loop. Running
-// knip raw here, every time, with reconciliation happening only *after*, avoids that loop
-// entirely. The published preset itself is untouched, for external consumers who want its
-// simpler, non-reconciled model.
+// unsuppressed. A config-time exempt list is a boot-time chicken-and-egg loop. Running
+// knip raw here, every time, and reconciling only *after*, avoids that loop. The published
+// preset stays as it is, for consumers who want its simpler, non-reconciled model.
 
 import { sync as spawnSync } from "cross-spawn"
 import { mkdir } from "node:fs/promises"
@@ -78,7 +77,7 @@ interface KnipReport {
   readonly issues: readonly KnipIssue[]
 }
 
-/** Maps each knip issue-category key to this check's own normalized `DeadCodeKind`. */
+/** Maps each knip issue-category key to this check's normalized `DeadCodeKind`. */
 const CATEGORY_KIND: Readonly<Record<string, DeadCodeKind>> = {
   dependencies: "unused-dependency",
   devDependencies: "unused-dev-dependency",
@@ -174,7 +173,7 @@ function isValidKnipIssue(value: unknown): value is KnipIssue {
 }
 
 /**
- * Flattens a raw, parsed knip `json`-reporter report into this check's own `DeadCodeFinding[]`,
+ * Flattens a raw, parsed knip `json`-reporter report into this check's `DeadCodeFinding[]`,
  * deduping byte-identical entries (same kind/name/file/location: indistinguishable). Findings
  * that share an id but differ in file/location are left for `reconcileExceptions` to surface as an
  * integrity failure.
@@ -210,7 +209,7 @@ export function buildDeadCodeFindings(report: KnipReport): readonly DeadCodeFind
 /**
  * Runs `knip --reporter json` and parses its result. Never throws: every recognized or
  * unrecognized outcome becomes a well-formed result instead.
- * @param cwd - The directory to run knip in (its own config discovery is cwd-relative).
+ * @param cwd - The directory to run knip in (its config discovery is cwd-relative).
  * @returns The parsed findings, or an error message.
  */
 function runKnip(
@@ -221,7 +220,7 @@ function runKnip(
   const result = spawnSync("knip", ["--reporter", "json"], {
     cwd,
     encoding: "utf8",
-    // In practice, a full knip run across this repository's own source completes in well under a
+    // In practice, a full knip run across this repository's source completes in well under a
     // minute. A 5 min ceiling is generous yet still bounds a stalled invocation. It can never
     // hang this check or `npm run contract` indefinitely.
     timeout: 5 * 60 * 1000,

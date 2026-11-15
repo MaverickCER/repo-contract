@@ -1,21 +1,21 @@
 // Canonical standalone coverage workflow: `npm run test:coverage` is
-// exactly `node scripts/run-coverage.mjs`, nothing else. Runs each
+// `node scripts/run-coverage.mjs` and nothing else. Runs each
 // coverage-producing category with --coverage (unit, integration, property:
 // see scripts/aggregate-coverage.mjs's COVERAGE_SOURCES). It goes through the
 // same scripts/run-test-category.mjs every other caller uses, then
 // aggregates, then reports thresholds.
 //
 // This is the ONLY place coverage-producing tests are executed by name.
-// The repo-contract run never runs this file. Its own test-unit/
+// The repo-contract run never runs this file. Its test-unit/
 // test-integration/test-property checks invoke run-test-category.mjs with
 // --coverage themselves. Their evidence-producing run *is* what creates that category's
 // coverage artifact. The `coverage` check only aggregates+reports what those
 // checks already produced (scripts/check-coverage.mjs).
 //
 // Report-only for coverage thresholds (see scripts/report-coverage.mjs).
-// This script still fails on a real test failure (anyTestFailure), never on
+// This script still fails on a test failure (anyTestFailure), never on
 // a coverage percentage below threshold. That judgment belongs to
-// repo-contract's own `coverage` check.
+// repo-contract's `coverage` check.
 
 import spawn from "cross-spawn"
 import { readFileSync } from "node:fs"

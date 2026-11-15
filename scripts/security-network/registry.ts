@@ -22,7 +22,7 @@ const CAPABILITY_KIND_SET: Readonly<Record<NetworkCapabilityKind, true>> = {
 }
 const CAPABILITY_KINDS = Object.keys(CAPABILITY_KIND_SET) as readonly NetworkCapabilityKind[]
 
-/** Every `EXCEPTION_TYPES` member is a valid reason to waive a real, reviewed network-capability finding. */
+/** Every `EXCEPTION_TYPES` member is a valid reason to waive a reviewed network-capability finding. */
 const ALLOWED_EXCEPTION_TYPES: readonly ExceptionType[] = EXCEPTION_TYPES
 
 /**

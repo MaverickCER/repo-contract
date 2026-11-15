@@ -31,9 +31,9 @@ interface UrlScanReport {
 }
 
 /**
- * The scanner executed by `node -e`. Self-contained on purpose: the preset needs no external tool,
- * and the scan reads every file under the directory (code, declarations, sourcemaps, JSON) so a URL
- * cannot hide in any shipped file. Prints only the JSON report: never file contents.
+ * The scanner executed by `node -e`. It is self-contained so the preset needs no external tool. The
+ * scan reads every file under the directory (code, declarations, sourcemaps, JSON), so a URL cannot
+ * hide in any shipped file. It prints only the JSON report, never file contents.
  */
 const SCANNER_SOURCE = `
 const fs = require("node:fs")
@@ -67,7 +67,7 @@ process.stdout.write(JSON.stringify({ dirExists, filesScanned, findings }))
 const MAX_LISTED = 20
 
 /**
- * Validates the allowlist's own shape.
+ * Validates the allowlist's shape.
  * @param allow - the configured allowlist entries.
  * @returns one message per malformed entry; empty when every entry has a url and a reason.
  */
@@ -103,10 +103,11 @@ function isReport(value: unknown): value is UrlScanReport {
 }
 
 /**
- * Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the build output directory, so
- * supply-chain scanners that flag shipped URLs (Socket.dev's "URL strings" alert, for one) have
- * nothing to flag. Scans every file, sourcemaps and declaration files included. Individual URLs can
- * be allowed with a mandatory, reviewable `reason`; there is no blanket opt-out.
+ * Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the
+ * build output directory. Supply-chain scanners that flag shipped URLs then have nothing to flag
+ * (Socket.dev's "URL strings" alert, for one). Scans every file, sourcemaps and declaration files
+ * included. Individual URLs can be allowed with a mandatory, reviewable `reason`; there is no
+ * blanket opt-out.
  * @param options - configuration for this check; see {@link DistNoUrlsOptions}.
  * @returns the configured check.
  * @beta

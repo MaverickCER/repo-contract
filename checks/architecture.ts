@@ -28,7 +28,7 @@ interface ArchitectureDeterminant {
 }
 
 /**
- * Reduces the raw architecture evidence (dependency graph + test-category boundaries) down to the fields the policy below actually branches on.
+ * Reduces the raw architecture evidence (dependency graph + test-category boundaries) down to the fields the policy below branches on.
  * @param evidence - the architecture check's evidence to summarize.
  * @returns the determinant fields (ok/error flags, violations, and counts) the policy evaluates.
  */
@@ -188,7 +188,7 @@ export function evaluateArchitecturePolicy({
 // Static, no execution, no coverage contribution. It asks three questions.
 // Does the production src/ dependency graph obey this repository's
 // architectural constraints (.dependency-cruiser.cjs)? Does every
-// verification category's own Vitest config stay inside its own directory
+// verification category's Vitest config stay inside its directory
 // (scripts/check-test-boundaries.mjs)? Does specs/decisions/ stay
 // structurally well-formed (scripts/check-adr-structure.mjs)? See
 // scripts/architecture/evidence-types.ts for the three-section evidence

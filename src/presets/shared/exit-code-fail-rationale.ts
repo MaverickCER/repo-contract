@@ -1,10 +1,10 @@
 import type { CheckEvidence } from "../../types.js"
 
 /**
- * A check's captured stdout and stderr, trimmed and joined into one block: either stream may be
- * empty and is dropped rather than contributing a blank line. Shared by `exitCodeFailRationale`
- * below and by `publint` (which needs the combined text itself, not just a rendered failure
- * message, to detect its own "Warnings:"/"Suggestions:" section headers).
+ * A check's captured stdout and stderr, trimmed and joined into one block. An empty stream is
+ * dropped instead of adding a blank line. Shared by `exitCodeFailRationale` below and by
+ * `publint`, which needs the combined text, not a rendered failure message, to detect its
+ * "Warnings:"/"Suggestions:" section headers.
  * @param result - the check's execution evidence (only `stdout`/`stderr` are read).
  * @returns the combined, trimmed stdout+stderr text, or `""` if the tool produced neither.
  */
@@ -15,11 +15,11 @@ export function combinedOutput(result: CheckEvidence): string {
 }
 
 /**
- * Shared by every preset whose policy is a plain "exitCode 0 = pass, else
- * render captured stdout/stderr (or fall back to an exit-code-only message
- * if the tool produced neither)": `format`, `typecheck`, `commitlint`.
- * Each preset still owns its own pass rationale and its own description of
- * what failed; this only renders the shared "here's what the tool printed"
+ * Shared by every preset whose policy is a plain "exitCode 0 = pass":
+ * `format`, `typecheck`, `commitlint`. A failure renders the captured
+ * stdout/stderr, or an exit-code-only message if the tool printed neither.
+ * Each preset still owns its pass rationale and its description of what
+ * failed; this renders only the shared "here's what the tool printed"
  * half.
  * @param result - the check's execution evidence (only `stdout`/`stderr`/`exitCode` are read).
  * @param description - a present-tense description of the failure, e.g. "Prettier reported formatting failures".

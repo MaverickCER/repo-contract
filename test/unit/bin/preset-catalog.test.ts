@@ -6,6 +6,8 @@ import {
   FACTORY_PRESETS,
   DIST_OUTPUT,
   PRESET_DEPENDENCIES,
+  PUBLISHED_PACKAGE,
+  QUICK_START_BLOCK,
 } from "../../../bin/preset-catalog.mjs"
 
 describe("PRESET_DEPENDENCIES", () => {
@@ -47,7 +49,7 @@ describe("detectPresets", () => {
     const { detected } = detectPresets({
       devDependencies: { typescript: "^5.0.0", vitest: "^2.0.0" },
     })
-    expect(detected).toEqual(["test", "typecheck", "securityDeps"])
+    expect(detected).toEqual(["test", "typecheck", "bundledDependencies", "securityDeps"])
   })
 
   it("reports the missing dependency name for every skipped preset", () => {
@@ -91,12 +93,36 @@ describe("detectPresets", () => {
     )
   })
 
-  it("produces a valid config for a repository with none of the 16 tool-specific dependencies: only securityDeps", () => {
+  it("detects bundledDependencies for every package npm can publish, and skips a private one", () => {
+    const detects = (packageJson: Parameters<typeof detectPresets>[0]): boolean =>
+      detectPresets(packageJson).detected.includes("bundledDependencies")
+    expect(PRESET_DEPENDENCIES.bundledDependencies).toBe(PUBLISHED_PACKAGE)
+    expect(detects({})).toBe(true)
+    expect(detects({ private: false })).toBe(true)
+    expect(detects({ private: "true" })).toBe(true)
+    expect(detects({ private: true })).toBe(false)
+    expect(
+      detectPresets({ private: true }).skipped.find((s) => s.preset === "bundledDependencies"),
+    ).toEqual({ preset: "bundledDependencies", dependency: PUBLISHED_PACKAGE })
+  })
+
+  it("never detects quickStart, which runs the README block a consumer marks", () => {
+    expect(PRESET_DEPENDENCIES.quickStart).toBe(QUICK_START_BLOCK)
     const { detected, skipped } = detectPresets({
+      devDependencies: { [QUICK_START_BLOCK]: "1.0.0" },
+    })
+    expect(detected).not.toContain("quickStart")
+    expect(skipped).toContainEqual({ preset: "quickStart", dependency: QUICK_START_BLOCK })
+  })
+
+  it("produces a valid config for a private repository with none of the 16 tool-specific dependencies: only securityDeps", () => {
+    const { detected, skipped } = detectPresets({
+      private: true,
       devDependencies: { "some-unrelated-tool": "1.0.0" },
     })
     expect(detected).toEqual(["securityDeps"])
-    // The 16 tools, plus aiReview, which is never detected.
-    expect(skipped).toHaveLength(17)
+    // The 16 tools, plus bundledDependencies (private), and aiReview and quickStart, which are
+    // never detected.
+    expect(skipped).toHaveLength(19)
   })
 })

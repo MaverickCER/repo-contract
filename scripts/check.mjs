@@ -16,7 +16,7 @@ Fast checks passed.
 
 Next:
   1. Commit with a Conventional Commit message (the editor shows the cheat sheet).
-  2. Push -- the pre-push hook runs the full 'npm run contract'.
+  2. Push: the pre-push hook runs the full 'npm run contract'.
   3. Open a PR. CI re-runs everything across the OS and Node matrix.
 `)
 }

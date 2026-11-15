@@ -14,8 +14,8 @@ import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
  *
  * The only field a record needs is a non-empty `justification`, which carries the whole review.
  * It says what capability the command has under the flags the preset passes. It also says why
- * repo-contract spawning it on a consumer's behalf is acceptable. No policy config, no per-command allowlist: every command is
- * held to the same one bar.
+ * repo-contract spawning it on a consumer's behalf is acceptable. There is no policy config and
+ * no per-command allowlist: every command is held to the same bar.
  * @param input - Wraps the scan evidence.
  * @param input.evidence - The `PresetCommandsEvidence` emitted by scan.ts.
  * @returns the pass/fail outcome and its rationale.
@@ -114,8 +114,8 @@ export function evaluatePresetCommandsPolicy(input: {
   }
 }
 
-// The reconciled successor to scripts/security-network/network-surface.mjs's former
-// ALLOWED_PRESET_COMMANDS allowlist: see specs/decisions/0007-no-network-surface.md's amendment.
+// Reviews every command a published preset spawns through a reconciled registry, not an
+// in-source allowlist (see specs/decisions/0007-no-network-surface.md's amendment).
 export const presetCommands: CheckDefinitionConfig = {
   run: ["tsx", "scripts/preset-commands/scan.ts"],
   output: { format: "json" },

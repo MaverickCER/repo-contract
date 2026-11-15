@@ -1,19 +1,19 @@
 import { FACTORY_PRESETS } from "./preset-catalog.mjs"
 
-// A real repo-contract.config.mts genuinely imports node's child-process module and reads the
-// ambient environment (that's the CONSUMER's own file: exactly what
+// A generated repo-contract.config.mts imports node's child-process module and reads the ambient
+// environment. That file belongs to the CONSUMER, which is what
 // specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-
-// capabilities-not-package-owned.md expects it to do). But scripts/verify-no-ambient-
-// capabilities.mjs scans this package's OWN published source as raw text. So it can't tell "a
+// capabilities-not-package-owned.md expects. But scripts/verify-no-ambient-
+// capabilities.mjs scans this package's published source as raw text. So it can't tell "a
 // string this file writes into someone else's project" apart from "an import this file performs
 // itself". The two forbidden substrings below are built from fragments, so neither appears
-// contiguously in this file's own source text. The value produced at runtime is unaffected.
+// contiguously in this file's source text. The value produced at runtime is unaffected.
 const CHILD_PROCESS_SPECIFIER = ["node:child_", "process"].join("")
 const AMBIENT_ENV_ACCESS = ["process", "env"].join(".")
 
-// The single source of truth for the generated `scripts/contract.mjs`; it does not depend on what is
-// detected. test/unit/bin/templates.test.ts asserts that GUIDE.md's runner code block equals it byte
-// for byte. Edit both in the same change.
+// The single source of truth for the generated `scripts/contract.mjs`. It does not depend on what
+// is detected. test/unit/bin/templates.test.ts asserts that GUIDE.md's runner code block equals it
+// byte for byte. Edit both in the same change.
 export const CONTRACT_RUNNER_TEMPLATE = `// scripts/contract.mjs: the entry point, and the whole of it
 import { runRepoContract } from "repo-contract"
 import config from "../repo-contract.config.mjs"

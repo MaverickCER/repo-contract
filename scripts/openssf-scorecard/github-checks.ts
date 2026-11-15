@@ -31,7 +31,7 @@ interface BranchProtection {
  * underlying `branches/:branch/protection` fields upstream reads. It scores
  * them on a simpler four-point scale (required reviews, dismiss-stale-reviews,
  * admin enforcement, required status checks) rather than reproducing
- * upstream's exact tier weighting. This check's own README explains that
+ * upstream's exact tier weighting. This check's README explains that
  * scoping choice.
  * @param slug - The `owner/repo` slug.
  * @param defaultBranch - The branch to check protection on.
@@ -96,7 +96,7 @@ export interface MergedPullRequest {
  * Upstream scores Code-Review from what happened to recent changes: the share of them that were
  * approved by someone other than their author. A branch-protection rule that requires a review is
  * not that evidence, because a rule can be bypassed. An administrator merging without approval is the
- * common case. This therefore scores the merged pull requests themselves, rounded down as upstream's
+ * common case. This scores the merged pull requests themselves, rounded down as upstream's
  * proportional score is.
  * @param pullRequests - Recently merged pull requests into the default branch.
  * @param requiredReviews - The approving-review count branch protection requires, for the reason text.
@@ -199,16 +199,16 @@ const SIGNATURE_EXTENSIONS = [".sig", ".asc", ".minisig", ".intoto.jsonl"]
 
 /**
  * Upstream scoring checks the last 5 releases' GitHub release assets for
- * SLSA provenance or signature files. This repository's own release process
+ * SLSA provenance or signature files. This repository's release process
  * (`.github/workflows/release.yml`) does not attach GitHub release assets at
  * all. It publishes to npm with `npm publish --provenance`, which records a
- * real SLSA provenance attestation on the npm registry itself. Verified
- * directly: `npm view repo-contract@latest dist.attestations` returns a
+ * SLSA provenance attestation on the npm registry itself.
+ * `npm view repo-contract@latest dist.attestations` returns a
  * `predicateType: "https://slsa.dev/provenance/v1"` entry. This evaluation
- * checks GitHub release assets first, because they are upstream's own
+ * checks GitHub release assets first, because they are upstream's
  * signal. When not every recent release carries a signature asset, it
  * separately reports the npm-registry provenance fact. Scoring 0 would
- * ignore a real attestation that upstream's own check isn't shaped to look
+ * ignore an attestation that upstream's check isn't shaped to look
  * for.
  * @param slug - The `owner/repo` slug.
  * @param npmPackageName - The published npm package name to check for provenance.
@@ -304,8 +304,8 @@ interface Contributor {
  * with >=5 commits in the last 30 commits. Upstream derives that signal from
  * commit-email-domain heuristics, which this evaluation does not attempt to
  * reproduce. A hand-rolled copy of that non-trivial heuristic would be prone
- * to false results. This evaluation instead reports the fact GitHub's own
- * `contributors` endpoint gives directly: how many distinct human accounts
+ * to false results. This evaluation instead reports the fact GitHub's
+ * `contributors` endpoint gives: how many distinct human accounts
  * (excluding bots) have contributed at all. It does not claim to determine
  * their employer. It scores that count proportionally toward upstream's bar
  * of three (upstream normalizes one organization to 3, two to 6).

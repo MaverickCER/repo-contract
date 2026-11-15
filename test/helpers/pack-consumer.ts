@@ -6,12 +6,12 @@ import { fileURLToPath } from "node:url"
 import { packTarball, runNpm } from "../../scripts/npm-pack.mjs"
 
 /**
- * Shared by every "install the real packed tarball into a fresh consumer project" E2E test:
- * originally `test/e2e/consumer-install.test.ts` alone, now also
- * `consumer-install-bun.test.ts`/`consumer-install-deno.test.ts` (see
- * specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md). Each of those files only differs in which
- * runtime binary it hands the installed fixture's scripts to; the pack/install/cleanup mechanics
- * that get a real `npm install`-able tarball on disk are identical and worth keeping in one place.
+ * Shared by every E2E test that installs the packed tarball into a fresh consumer project:
+ * `test/e2e/consumer-install.test.ts`, `consumer-install-bun.test.ts` and
+ * `consumer-install-deno.test.ts` (see
+ * specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md). Those files
+ * differ only in the runtime binary they hand the installed fixture's scripts to. The mechanics
+ * that pack, install and clean up the tarball are identical, so they live here once.
  */
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..")
@@ -19,8 +19,8 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 /**
  * These tests exercise `dist/`, not `../../src`: required to have been built already (this
  * repo's `npm run contract` and CI always run `npm run build` before `npm run test:coverage`).
- * Callers `describe.skipIf(!distIsBuilt)` rather than failing confusingly, since `npm test` run in
- * isolation without a prior build is a real, reasonable thing a developer might do.
+ * Callers `describe.skipIf(!distIsBuilt)` rather than failing confusingly. A developer may
+ * reasonably run `npm test` alone, without a prior build.
  */
 export const distIsBuilt = existsSync(path.join(packageRoot, "dist", "index.js"))
 
@@ -63,9 +63,9 @@ export function createConsumerFixture(tmpDirPrefix: string): ConsumerFixture {
 }
 
 export function removeConsumerFixture(consumerDir: string | undefined): void {
-  // Tolerate `undefined`: when `createConsumerFixture` throws in a suite's `beforeAll`, that
-  // suite's `afterAll` still runs with `consumerDir` never assigned; cleanup shouldn't then
-  // throw a second, less informative error on top of the real failure.
+  // Tolerate `undefined`. When `createConsumerFixture` throws in a suite's `beforeAll`, that
+  // suite's `afterAll` still runs with `consumerDir` never assigned. Cleanup must not then throw
+  // a second, less informative error on top of the first failure.
   if (consumerDir === undefined) return
   try {
     // Same Windows EBUSY/EPERM tolerance as remove-temp-dir.ts: see its doc
@@ -77,14 +77,14 @@ export function removeConsumerFixture(consumerDir: string | undefined): void {
 }
 
 /**
- * Whether a runtime's binary is resolvable on `PATH` (distinct from `distIsBuilt`). It lets the
- * Bun/Deno E2E suites skip cleanly on a machine, or most CI jobs, that never installed those
- * runtimes, instead of failing with a confusing spawn error (see
+ * Whether a runtime's binary is resolvable on `PATH` (distinct from `distIsBuilt`). The Bun/Deno
+ * E2E suites use it to skip cleanly where those runtimes were never installed, as on most CI jobs.
+ * Without it they fail with a confusing spawn error (see
  * specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md). It runs at
- * module load (the describe.skipIf condition), outside any test body. A `spawnSync` can throw
- * instead of returning `{ error }` under heavy process contention, as seen when `npm run contract`
- * runs about 30 checks and Stryker's workers at once. That must not crash the whole suite file. Treat that the same as "runtime
- * unavailable": skip, don't fail.
+ * module load (the describe.skipIf condition), outside any test body. Under heavy process
+ * contention, `spawnSync` can throw instead of returning `{ error }`. That happens when
+ * `npm run contract` runs about 30 checks and Stryker's workers at once. A throw must not crash
+ * the whole suite file, so it counts as "runtime unavailable": skip, don't fail.
  * @param command - The runtime's executable name, e.g. `"bun"` or `"deno"`.
  * @returns Whether invoking `<command> --version` succeeded.
  */

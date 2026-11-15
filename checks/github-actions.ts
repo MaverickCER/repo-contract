@@ -8,7 +8,7 @@ interface EvaluateGitHubActionsPolicyInput {
 
 /**
  * Fails on any actionlint tool-infrastructure failure, or any actionlint finding in this
- * repository's own `.github/workflows/*`. Actionlint (rhysd/actionlint) owns workflow correctness
+ * repository's `.github/workflows/*`. Actionlint (rhysd/actionlint) owns workflow correctness
  * and security-oriented static analysis. This policy only decides whether that analysis satisfies
  * the contract. See
  * specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md.

@@ -5,11 +5,11 @@ files are compared with their base to find the exports whose behavior may differ
 exports are followed through the import graph. A case the analysis cannot reason about widens
 the answer toward a full run; it never narrows on a guess.
 
-Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities,
-so this barrel reads no file and runs no process (see
+Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities.
+This barrel reads no file and runs no process (see
 specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
 
-Experimental, and published under its own `./affected` subpath; never re-exported from the
+Experimental, and published under its `./affected` subpath; never re-exported from the
 package root.
 
 ## Interfaces
@@ -1046,7 +1046,7 @@ What the caller asked for; `"auto"` or absent leaves it to the environment.
 
 ### ScopeDecision
 
-The scope a run uses and the reason, for the run's own output.
+The scope a run uses and the reason, for the run's output.
 
 #### Properties
 
@@ -1496,7 +1496,7 @@ Files whose change can alter how every test behaves, so nothing narrower than a 
 function cacheKey(input): string;
 ```
 
-Builds the key a result is stored under: a digest of the check, every input's name and content
+Builds the key a result is stored under. It digests the check, every input's name and content
 digest, the tool versions, and the cache format. Anything that can change the result belongs in
 `inputs` or `tools`; the key says nothing about what is left out.
 
@@ -1528,8 +1528,8 @@ Computes which tests (and which mutation targets) a change can affect.
 The analysis is symbol-level: each changed module is diffed against its base to find the exported
 names whose behavior may differ. Those names are followed through the import graph (including
 re-exports and `export *`) to every module that uses them. Anything it cannot reason about does
-not narrow the result. A changed file the graph cannot place, a global trigger such as a
-lockfile, or a file that does not parse makes the whole result `"full"`. A module that loads
+not narrow the result. Three cases make the whole result `"full"`: an unplaceable changed file,
+a global trigger such as a lockfile, and an unparseable file. A module that loads
 code dynamically is treated as affected by everything. Narrowing is only ever an optimization of
 a sound answer, never a guess.
 
@@ -1647,8 +1647,8 @@ One line per affected test (or a single line saying why everything is affected),
 function findEscapes(input): CanaryResult;
 ```
 
-Proves the affected scope sound against evidence: after a full run on the same change, any test
-that failed there but was not in the affected set is an escape; a regression the narrow run
+Proves the affected scope sound against evidence from a full run on the same change. A test
+that failed there but was not in the affected set is an escape: a regression the narrow run
 would have shipped. Run it on merges to the main branch, where both answers exist.
 
 #### Parameters
@@ -1679,8 +1679,8 @@ function loadCompilerOptions(input): Promise<
 
 Reads the compiler options module resolution depends on (`paths`, `baseUrl`, ...), following
 `extends` through the repository and `node_modules`. An import written through a path alias
-looks like a package to the graph, so options that could not be read must widen the answer,
-not be skipped.
+looks like a package to the graph. Options that could not be read must widen the answer, not
+be skipped.
 
 #### Parameters
 
@@ -1708,9 +1708,9 @@ The options (absent when there is no default `tsconfig.json`), or the reason to 
 function mergeMutationReports(reports, total): MergeResult;
 ```
 
-Combines per-shard Stryker reports into the report an unsharded run would have produced. Never
-a partial pass: a missing, repeated or out-of-range shard, an unreadable report, a file mutated
-by two shards, or disagreeing schema versions all fail the merge.
+Combines per-shard Stryker reports into the report an unsharded run would have produced. It never
+passes partially. These all fail the merge: a missing, repeated or out-of-range shard, an
+unreadable report, a file mutated by two shards, or disagreeing schema versions.
 
 #### Parameters
 
@@ -2003,8 +2003,8 @@ If `REPO_CONTRACT_CACHE` is not one of off, ro, rw.
 function resolveFailFast(input): boolean;
 ```
 
-Decides whether a run stops spending time on expensive checks once a cheap one has failed. Off
-unless asked for, in CI as much as locally, so a run reports every problem by default; and never
+Decides whether a run stops spending time on expensive checks once a cheap one has failed. It is
+off unless asked for, in CI and locally, so a run reports every problem by default. It is never
 on for a release, which always runs everything.
 
 #### Parameters
@@ -2079,8 +2079,8 @@ A matrix for `strategy.matrix: ${{ fromJSON(...) }}`.
 function unpackArtifacts(value): UnpackResult;
 ```
 
-Unpacks a cached set of files, trusting nothing: the shape, every path and every checksum are
-checked, and any problem means the whole set is refused (a cache miss, never a partial restore).
+Unpacks a cached set of files, trusting nothing. The shape, every path and every checksum are
+checked. Any problem refuses the whole set: a cache miss, never a partial restore.
 
 #### Parameters
 

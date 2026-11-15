@@ -6,10 +6,10 @@ import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
  * Knip does not expose the serialized JSON reporter result as a public
  * TypeScript type, so the local evidence type below intentionally models
  * that JSON contract. This targets knip's `json` reporter as of knip 6:
- * `{ issues: KnipIssue[] }`, one entry per file, each carrying an array per
- * issue category (`knip 5` additionally had a top-level `files: string[]` for
- * unused files; knip 6 folds those into `issues[].files`). The policy reports
- * the actual issue category and name instead of only returning a count.
+ * `{ issues: KnipIssue[] }`, one entry per file. Each entry carries an array
+ * per issue category, and knip 6 reports unused files in `issues[].files`.
+ * The policy reports each issue's category and name instead of only a
+ * count.
  */
 interface KnipIssueEntry {
   readonly name: string
@@ -49,18 +49,18 @@ interface DeadCodeOptions {
   /**
    * devDependency names to exclude from the "unused devDependency" issue
    * category: e.g. CLI tools knip has no way to see are used, because
-   * nothing `import`s them. Round-tripped through knip's own
-   * `--reporter-options` flag (see `readReporterOptions`) rather than kept in
-   * a closure, so the exempt list this check actually ran with is visible on
-   * the recorded command line and in persisted evidence, not just in this
-   * file's source. Defaults to an empty list: repo-contract ships no
-   * built-in exemptions; add your own repository's here.
+   * nothing `import`s them. The list travels through knip's
+   * `--reporter-options` flag (see `readReporterOptions`), not a closure. So
+   * the exempt list this check ran with is visible on the recorded command
+   * line and in persisted evidence, not only in this file's source. Defaults
+   * to an empty list: repo-contract ships no built-in exemptions; add your
+   * repository's here.
    */
   readonly exemptUnusedDevDependencies?: readonly string[]
 }
 
 /**
- * Recovers the JSON payload knip's own `--reporter-options` flag was invoked
+ * Recovers the JSON payload knip's `--reporter-options` flag was invoked
  * with, if any. This is how `deadCode`'s exempt list gets from `run` back
  * into the policy purely via `result.args`: see {@link DeadCodeOptions}.
  * @param args - the exact argv the check's command was spawned with (`CheckEvidence.args`).
@@ -145,8 +145,8 @@ export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
       }
 
       // `output.success` only means `JSON.parse` didn't throw: `value` is `unknown` at
-      // runtime. Guard that it is a real object (not `null` / a primitive / an array) before
-      // trusting the `KnipReport` cast, so a policy TypeError never escapes into the run.
+      // runtime. Guard that it is an object (not `null` or a primitive) before trusting the
+      // `KnipReport` cast. A policy TypeError then never escapes into the run.
       const value: unknown = result.output.value
 
       if (typeof value !== "object" || value === null) {

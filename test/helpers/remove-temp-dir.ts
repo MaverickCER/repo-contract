@@ -1,18 +1,18 @@
 import { rm } from "node:fs/promises"
 
 /**
- * Recursively removes a scratch directory (typically an `os.tmpdir()` entry from `mkdtemp`),
- * tolerating the transient locks Windows holds on a file a just-returned process wrote: a
- * Defender scan mid-flight, or the OS releasing the handle lazily. Several integration suites run
+ * Recursively removes a scratch directory (typically an `os.tmpdir()` entry from `mkdtemp`). It
+ * tolerates the transient locks Windows holds on a file a just-returned process wrote. A
+ * Defender scan may be mid-flight, or the OS may release the handle lazily. Several integration suites run
  * subprocesses against files in such a directory, then remove it in `afterEach`. Examples:
  * pack-consumer.ts's `npm pack`, github-actions's `tsc` pass, and suppression-governance's
  * discover-suppressions. A bare `rm(dir, { recursive: true, force: true })` there intermittently
  * throws `EBUSY`/`EPERM` on windows-latest CI (never on Linux/macOS).
  *
- * `maxRetries`/`retryDelay` is Node's own backoff for exactly that errno set (`EBUSY`, `EMFILE`,
- * `ENFILE`, `ENOTEMPTY`, `EPERM`). A removal that still fails after the retries is swallowed: the
- * directory is a throwaway under `os.tmpdir()`, which the OS reaps regardless, and a suite's own
- * cleanup should never be what fails the run.
+ * `maxRetries`/`retryDelay` is Node's backoff for that errno set (`EBUSY`, `EMFILE`, `ENFILE`,
+ * `ENOTEMPTY`, `EPERM`). A removal that still fails after the retries is swallowed. The directory
+ * is a throwaway under `os.tmpdir()`, which the OS reaps regardless. Cleanup must never be what
+ * fails the run.
  * @param dir - Absolute path of the directory to remove; a nullish value is a no-op, so an
  * `afterEach` that runs before its `beforeEach` ever assigned the path stays harmless.
  */

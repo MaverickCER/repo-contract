@@ -6,10 +6,8 @@
  * specs/decisions/0007-no-network-surface.md and
  * specs/decisions/0013-reusable-exception-policy-helper.md's "review surface" amendment.
  *
- * Replaces the former `ALLOWED_PRESET_COMMANDS` allowlist in
- * `scripts/security-network/network-surface.mjs`. The allowlist meant "a command not on the list
- * fails". Now *every* preset command needs its own reviewed record. The record's `id` is keyed by
- * the command name alone (`preset-command:<command>`). One review therefore covers a command
+ * This is not an allowlist: *every* preset command needs a reviewed record. The record's `id` is
+ * keyed by the command name alone (`preset-command:<command>`). One review covers a command
  * however many presets spawn it, and editing a preset file never churns the registry.
  */
 

@@ -67,6 +67,10 @@ const config = {
     // aiReview is the exception: its parser and policy are real logic (three parse steps, shape
     // checks, a confidence threshold, credential redaction), not a command plus a shared helper.
     "src/presets/ai-review.ts",
+    // bundledDependencies and quickStart are exceptions for the same reason. Each policy reads a
+    // report and decides pass or fail on several branches of its own.
+    "src/presets/bundled-dependencies.ts",
+    "src/presets/quick-start.ts",
   ],
   // Lets a manually-invoked `npx stryker run` skip re-testing mutants it
   // believes are unaffected by a source change, reusing their previous

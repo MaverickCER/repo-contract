@@ -11,9 +11,9 @@ import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
  * reconciling, and writing the registry.
  *
  * The only field a record needs is a non-empty `justification`. It says why this
- * dependency/export is genuinely needed although knip's static analysis sees no use. Examples are
+ * dependency/export is needed although knip's static analysis sees no use. Examples are
  * a dynamic `require`, a spawned-by-name CLI, or a GitHub Actions workflow reference.
- * @param input - Wraps the check's own emitted evidence.
+ * @param input - Wraps the check's emitted evidence.
  * @param input.evidence - The `DeadCodeEvidence` emitted by check.ts.
  * @returns the pass/fail outcome and its rationale.
  */
@@ -107,7 +107,7 @@ export function evaluateDeadCodePolicy(input: {
   }
 }
 
-// Self-hosted instead of the published `deadCode` preset (src/presets/dead-code.ts): a
+// Self-hosted instead of the published `deadCode` preset (src/presets/dead-code.ts). A
 // config-time exempt list cannot express a reconciled registry. scripts/dead-code/check.ts's doc
 // comment and the amendment to specs/decisions/0008-self-hosting-tool-and-dependency-choices.md
 // explain why.

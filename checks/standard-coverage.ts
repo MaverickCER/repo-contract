@@ -1,7 +1,7 @@
 /**
  * How this repository's contract covers each check of the internal-package-contract standard
  * (`standardChecks()` in `internal-package-contract/checks/standard`). This repository hosts the
- * engine that standard runs on, so it composes its own `repo-contract.config.ts` instead of calling
+ * engine that standard runs on, so it composes its `repo-contract.config.ts` instead of calling
  * `standardChecks()`. Each entry names the check id here that covers the standard check, or says
  * why none does. The test in test/unit/config/standard-coverage.test.ts fails in two cases: a
  * standard check is missing from this map, or a named id is not in the config.

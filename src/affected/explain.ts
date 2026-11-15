@@ -16,8 +16,8 @@ export function explainAffected(result: AffectedResult): string[] {
     ]
   }
   return result.affectedTests.map((test) => {
-    // The test's own key plus at most one step per recorded cause: finite by construction, and a
-    // hand-built result with a cycle stops advancing at its first repeat.
+    // The test's key plus at most one step per recorded cause, so the walk is finite by
+    // construction. A hand-built result with a cycle stops advancing at its first repeat.
     const { keys } = Array.from({ length: result.causes.size + 1 }).reduce<{
       keys: string[]
       key: string | undefined

@@ -7,12 +7,12 @@ export interface WorkItem<Value> {
 
 /**
  * The queue the affected analysis spreads a change through. A fact is queued only if its key is
- * not already known at an equal or smaller distance from the change; that single rule is what
- * makes spreading through an import cycle stop, and what keeps the nearest explanation.
+ * not already known at an equal or smaller distance from the change. That one rule stops the
+ * spread through an import cycle and keeps the nearest explanation.
  *
- * Kept in a file of its own, and left out of mutation testing (see `stryker.config.mjs`): a
- * mutant that loosens the rule turns every cyclic import into an endless loop, which a test
- * runner can only report as a timeout. `worklist.test.ts` covers the rule directly, cycles included.
+ * It lives in a separate file, left out of mutation testing (see `stryker.config.mjs`). A mutant
+ * that loosens the rule turns every cyclic import into an endless loop. A test runner can report
+ * that only as a timeout. `worklist.test.ts` covers the rule, cycles included.
  */
 export class Worklist<Value> {
   private readonly nearest = new Map<string, number>()

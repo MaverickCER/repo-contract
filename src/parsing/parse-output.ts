@@ -10,13 +10,13 @@ import { parseText } from "./parse-text.js"
  * is supplied) runs `schema["~standard"].validate()` against the parsed value
  * (standardschema.dev). `parse-json.ts`/`parse-text.ts` stay entirely unaware of `schema`;
  * this is the sole orchestration point. `validate()` may return its `Result` synchronously or as a
- * `Promise`: `await`ing either uniformly is a no-op for the synchronous case, but this function
- * still needs to be `async` for that awaited call. A successful `Result` (`issues === undefined`)
- * replaces `value` with the schema's own (possibly transformed) output; a failing `Result`
- * becomes a `ParsedOutputFailure` whose `error` is built by `formatSchemaIssues`. `schema.validate()`
- * itself throwing or rejecting is a bug in the consumer-supplied schema, not malformed output: it
- * throws `StandardSchemaValidateThrewError` rather than becoming a `ParsedOutputFailure`. Never
- * throws for a malformed-output parse failure: see each parser's own documentation.
+ * `Promise`. Awaiting a synchronous `Result` is a no-op, so this function is `async` for the
+ * promised case. A successful `Result` (`issues === undefined`) replaces `value` with the schema's
+ * (possibly transformed) output. A failing `Result` becomes a `ParsedOutputFailure` whose `error`
+ * is built by `formatSchemaIssues`. A throwing or rejecting `schema.validate()` is a bug in the
+ * consumer-supplied schema, not malformed output. It throws `StandardSchemaValidateThrewError`
+ * instead of becoming a `ParsedOutputFailure`. A malformed-output parse failure never throws: see
+ * each parser's documentation.
  * @param format - which parser to dispatch to.
  * @param stdout - the check's raw stdout to parse.
  * @param checkId - identifies which check's output is being parsed, used in a thrown `StandardSchemaValidateThrewError`.

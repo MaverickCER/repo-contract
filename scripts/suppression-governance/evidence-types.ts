@@ -1,13 +1,13 @@
 /**
- * Shapes shared across the suppression-governance execution layer
- * (scripts/suppression-governance/*.ts, which discovers suppression comments and reconciles
- * .repo-contract/exceptions/disable-comments.json) and its policy layer
- * (checks/suppression-governance.ts, which evaluates the reconciled registry against
- * suppressionPolicy). See specs/decisions/0006-suppression-governance.md and
+ * Shapes shared by the suppression-governance execution layer and its policy layer.
+ * The execution layer (scripts/suppression-governance/*.ts) discovers suppression comments and
+ * reconciles .repo-contract/exceptions/disable-comments.json. The policy layer
+ * (checks/suppression-governance.ts) evaluates the reconciled registry against
+ * suppressionPolicy. See specs/decisions/0006-suppression-governance.md and
  * specs/decisions/0013-reusable-exception-policy-helper.md's "The exception registry is the review
  * surface" section for the full rationale.
  *
- * The model, since ADR 0013's amendment, works in steps. The check discovers **100% of
+ * The model works in steps. The check discovers **100% of
  * suppression directives** with zero knowledge of any exception. It derives one semantic id per
  * directive. It reconciles those ids against the on-disk registry via `repo-contract/helpers`'
  * `reconcileExceptions`. That adds a fresh blank stub per unmatched directive and surfaces stale
@@ -28,7 +28,7 @@ export { validateExceptionRegistry }
 /**
  * Every allowed `category` value on a suppression exception record. It is the single source of
  * truth `SuppressionCategory` (below) is derived from, not a separate union this array is merely
- * checked against. A member added here without updating the type (or vice versa) is therefore
+ * checked against. A member added here without updating the type (or vice versa) is
  * structurally impossible, not only something a test happens to catch.
  */
 export const SUPPRESSION_CATEGORIES = [
@@ -43,22 +43,22 @@ export const SUPPRESSION_CATEGORIES = [
 
 /**
  * What kind of suppression an exception record is. `""` is a deliberate member, not an omission:
- * it is the "not yet classified" sentinel a freshly-scaffolded stub starts with, exactly like
- * `justification`. This field is hand-authored; nothing ever infers it from the comment's own text
+ * it is the "not yet classified" sentinel a freshly-scaffolded stub starts with, the same as
+ * `justification`. This field is hand-authored; nothing ever infers it from the comment's text
  * (ADR 0006's rejection of a mechanically-satisfiable model applies identically here).
  *
  * Boundary tests, since several of these are often conflated:
  *
  * - `"equivalent-mutant"` vs. `"tooling-limit"`: `equivalent-mutant` asserts no observable
  *   behavioral difference exists at all. `tooling-limit` asserts a difference *does* exist but
- *   this specific tool can't observe it. A record's own prose may admit a real production
+ *   this specific tool can't observe it. A record's prose may admit a production
  *   consequence (a resource leak, unbounded growth) that this test suite cannot see. Such a
  *   record is never `equivalent-mutant`: it's `tooling-limit`.
- * - `"tooling-limit"` vs. `"platform-limitation"`: both describe a real behavior mutation-testing
+ * - `"tooling-limit"` vs. `"platform-limitation"`: both describe a behavior mutation-testing
  *   can't verify, but for different reasons. `platform-limitation` means the mutation run
  *   substantiating this record does not exercise the mutated behavior at all. An example is a
  *   Windows-only branch when the mutation run happened on Linux. `tooling-limit` means the
- *   behavior is exercised, but the mutation tool's own mechanics can't meaningfully observe the
+ *   behavior is exercised, but the mutation tool's mechanics can't meaningfully observe the
  *   mutation's effect. Running mutation testing on the missing platform could in principle close a
  *   `platform-limitation`. A `tooling-limit` is an inherent limit of comment-based mutation testing
  *   that no CI change fixes.
@@ -72,9 +72,9 @@ export const SUPPRESSION_CATEGORIES = [
 export type SuppressionCategory = (typeof SUPPRESSION_CATEGORIES)[number]
 
 /**
- * Every allowed `verificationMethod` value on a suppression exception record: the single source
- * of truth `VerificationMethod` (below) is derived from, for the identical structural-drift-safety
- * reason `SUPPRESSION_CATEGORIES` is above.
+ * Every allowed `verificationMethod` value on a suppression exception record. It is the single
+ * source of truth `VerificationMethod` (below) is derived from. The reason is the same
+ * structural-drift safety as `SUPPRESSION_CATEGORIES` above.
  */
 export const VERIFICATION_METHODS = [
   "",
@@ -90,9 +90,9 @@ export const VERIFICATION_METHODS = [
  * sentinel `SuppressionCategory` uses, hand-authored the same way, never inferred from comment
  * text.
  *
- * This field means "the strongest evidence actually obtained for the specific claim this record
+ * This field means "the strongest evidence obtained for the specific claim this record
  * makes". It does not mean "the only verification that was ever performed on this code". A record
- * may legitimately have more than one kind of evidence. Then record the strongest one actually
+ * may legitimately have more than one kind of evidence. Then record the strongest one
  * obtained, using this precedence: `"mutation-run" > "existing-test-suite" >
  * "differential-testing" > "static-reasoning" > "untestable"`.
  *
@@ -101,16 +101,16 @@ export const VERIFICATION_METHODS = [
  * same file, test suite, or CI run never counts.
  *
  * - `"mutation-run"`: verified by literally un-exempting the mutant and running Stryker scoped
- *   to the file, observing the survivor (or `NoCoverage`) result directly.
+ *   to the file, observing the survivor (or `NoCoverage`) result.
  * - `"existing-test-suite"`: an already-existing, already-passing test elsewhere independently
  *   proves the claim.
- * - `"differential-testing"`: verified by actually *executing* multiple real input shapes and
+ * - `"differential-testing"`: verified by *executing* multiple input shapes and
  *   comparing outputs. Hand-tracing without execution does not count: that's `"static-reasoning"`.
  * - `"static-reasoning"`: a logical/structural argument alone (type-level guarantees, call-graph
  *   analysis, a documented language/API contract), nothing run empirically.
  * - `"untestable"`: deliberately not verified empirically because doing so would be
- *   unsafe/impossible. **Not** an escape hatch: it must never mean "verification would have been
- *   inconvenient," "verification wasn't attempted," or "the author was unsure."
+ *   unsafe/impossible. It is **not** an escape hatch. It never means "verification would have
+ *   been inconvenient," "verification wasn't attempted," or "the author was unsure."
  */
 export type VerificationMethod = (typeof VERIFICATION_METHODS)[number]
 
@@ -148,12 +148,12 @@ export interface SuppressionFinding {
  * metadata. `id` must equal `deriveSuppressionId({ domain, rule, file, line })`: a hand-edited
  * record cannot lie about which finding it waives.
  *
- * `justification` is the one human-authored prose field. It absorbed the older model's separate
- * `alternatives`/`remediation` fields. It says why this guardrail is deliberately bypassed for an
- * approved architectural reason and what alternatives were considered. It also says what was
- * checked to confirm the finding is real. `category`/`verificationMethod` are hand-authored closed
- * enumerations (see `SUPPRESSION_CATEGORIES`/`VERIFICATION_METHODS`). A freshly-scaffolded stub
- * starts with all three at their empty value. Whether an empty value satisfies policy is
+ * `justification` is the one human-authored prose field. It says why this guardrail is
+ * deliberately bypassed for an approved architectural reason and what alternatives were
+ * considered. It also says what was checked to confirm the finding is real.
+ * `category`/`verificationMethod` are hand-authored closed enumerations (see
+ * `SUPPRESSION_CATEGORIES`/`VERIFICATION_METHODS`). A freshly-scaffolded stub starts with all
+ * three at their empty value. Whether an empty value satisfies policy is
  * checks/suppression-governance.ts's concern, not the validator's.
  */
 export interface SuppressionExceptionRecord {
@@ -171,9 +171,9 @@ export interface SuppressionExceptionRecord {
 /**
  * Widens typed suppression records to the flat `Record<string, unknown> & { id }` shape the
  * generic `serializeExceptionRegistry`/`writeExceptionRegistry` accept. A
- * `SuppressionExceptionRecord` is structurally exactly that (flat, string `id`). TypeScript will
+ * `SuppressionExceptionRecord` already has that shape (flat, string `id`). TypeScript will
  * not infer the implicit index signature through an interface. This narrow, single-purpose
- * assertion therefore lives here rather than being repeated at each call site.
+ * assertion lives here rather than being repeated at each call site.
  * @param records - The typed records to widen.
  * @returns The same records, typed as flat string-keyed records.
  */
@@ -237,8 +237,8 @@ function isWellFormedRepoRelativePath(file: string): boolean {
 /**
  * The check-namespaced semantic identity of one suppression directive:
  * `suppression:<domain>:<rule.join(",")>:<file>:<line>`. Injective over a run's findings unless
- * two byte-distinct directives share a domain, rule set, file, and line. That is a real condition
- * the check surfaces as an integrity failure; the human must make the two directives
+ * two byte-distinct directives share a domain, rule set, file, and line. That condition can occur.
+ * The check surfaces as an integrity failure; the human must make the two directives
  * distinguishable.
  * @param finding - The directive's structured identity fields.
  * @param finding.domain - The suppression's governed domain (`"eslint"`, `"typescript"`, `"stryker"`).
@@ -257,8 +257,8 @@ export function deriveSuppressionId(finding: {
 }
 
 /**
- * Builds a fresh, blank exception record for a directive that has no matching record yet: every
- * hand-authored field at its empty value, the structured identity fields copied straight from the
+ * Builds a fresh, blank exception record for a directive that has no matching record yet.
+ * Every hand-authored field starts empty. The structured identity fields are copied from the
  * finding. `reconcileExceptions` hands this the canonical id and asserts the result carries it.
  * @param finding - The unmatched directive.
  * @param id - The canonical id `reconcileExceptions` computed (equals `finding.id`).
@@ -283,8 +283,8 @@ export function createSuppressionStub(
 
 /**
  * The per-registry schema for disable-comments.json, plugged into the generic
- * `validateExceptionRegistry`. Owns the six typed metadata fields on top of the shared core, and
- * the self-consistency check that a record's stored `id` matches the id derived from its own
+ * `validateExceptionRegistry`. It owns the six typed metadata fields on top of the shared core.
+ * It also checks that a record's stored `id` matches the id derived from its
  * `domain`/`rule`/`file`/`line`.
  */
 export const SUPPRESSION_EXCEPTION_SCHEMA: ExceptionRegistrySchema<SuppressionExceptionRecord> = {
@@ -349,7 +349,7 @@ export const SUPPRESSION_EXCEPTION_SCHEMA: ExceptionRegistrySchema<SuppressionEx
     const derived = deriveSuppressionId({ domain, rule: rule as string[], file, line })
     if (derived !== core.id) {
       errors.push(
-        `${at}.id ${JSON.stringify(core.id)} does not match the id derived from its own domain/rule/file/line (${JSON.stringify(derived)}) -- this record's addressing key is inconsistent with its own identity fields.`,
+        `${at}.id ${JSON.stringify(core.id)} does not match the id derived from its own domain/rule/file/line (${JSON.stringify(derived)}): this record's addressing key is inconsistent with its identity fields.`,
       )
       return undefined
     }

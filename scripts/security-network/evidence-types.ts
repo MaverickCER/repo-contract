@@ -1,7 +1,8 @@
 /**
- * Shapes shared between scripts/security-network/scan.ts (discovers prohibited network capability
- * in src/**\/*.ts, then reconciles .repo-contract/exceptions/security-network.json against what it
- * found) and its policy layer (checks/security-network.ts). See
+ * Shapes shared between scripts/security-network/scan.ts and its policy layer
+ * (checks/security-network.ts). The scan discovers prohibited network capability in
+ * src/**\/*.ts. It then reconciles .repo-contract/exceptions/security-network.json against what it
+ * found. See
  * specs/decisions/0007-no-network-surface.md and
  * specs/decisions/0013-reusable-exception-policy-helper.md's "The exception registry is the review
  * surface" amendment for the full rationale.
@@ -9,7 +10,7 @@
 
 import type { SecurityExceptionFields } from "../shared/exception-record.js"
 
-/** What kind of prohibited (or unverifiable) capability a finding represents. (Preset `run:` command review moved to its own `preset-commands` check: ADR 0007's amendment.) */
+/** What kind of prohibited (or unverifiable) capability a finding represents. Preset `run:` commands are reviewed by the separate `preset-commands` check (ADR 0007's amendment). */
 export type NetworkCapabilityKind =
   | "restricted-module-import"
   | "restricted-named-import"

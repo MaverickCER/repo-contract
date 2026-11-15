@@ -3,22 +3,22 @@ import path from "node:path"
 
 /**
  * Directories this check never walks into, regardless of depth: build output, tool scratch
- * space, VCS internals, and non-source data. This is suppression-governance's own explicit
+ * space, VCS internals, and non-source data. This is suppression-governance's explicit
  * decision, not inherited from eslint.config.js/.gitignore/.jscpd.json. Each of those excludes
- * things for its own, differently-scoped reason. Treating their union as "the" source universe
+ * things for a different, separately-scoped reason. Treating their union as "the" source universe
  * would be an implicit, undocumented dependency on three unrelated tools staying in sync. See
  * specs/decisions/0006-suppression-governance.md.
  */
 export const EXCLUDED_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
-  "node_modules", // Third-party code, never this repository's own source.
+  "node_modules", // Third-party code, never this repository's source.
   "dist", // Build output, not hand-written source.
   "coverage", // Generated coverage reports.
   "reports", // Generated tool reports (jscpd, secretlint, mutation, ...).
-  // Stryker's own scratch copy of the whole tree: scanning it would double-count every
+  // Stryker's scratch copy of the whole tree: scanning it would double-count every
   // suppression once per active mutation-testing sandbox.
   ".stryker-tmp",
   ".git", // VCS internals.
-  // api-contract snapshots and the reviewed-exception registries (incl. this check's own
+  // api-contract snapshots and the reviewed-exception registries (incl. this check's
   // disable-comments.json). Data, never scanned source.
   ".repo-contract",
   ".changeset", // Changeset metadata, not source.
@@ -28,7 +28,7 @@ export const EXCLUDED_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
  * Any directory literally named "fixtures", at any depth, is excluded. This is a semantic decision
  * this check makes for itself. Every fixtures directory in this repository (test/e2e/*\/fixtures,
  * test/unit/architecture/fixtures) holds deliberately-invalid or scratch content fed to *other*
- * tests, never real governed source.
+ * tests, never governed source.
  */
 export const EXCLUDED_DIRECTORY_LEAF_NAMES: ReadonlySet<string> = new Set(["fixtures"])
 
@@ -50,7 +50,7 @@ export const INCLUDED_EXTENSIONS: readonly string[] = [
  * conventions can produce a differently-cased directory name (`Dist`, `Node_Modules`). This must
  * still recognize it as excluded. Otherwise this walker would descend into and scan
  * generated/vendor content it explicitly intends to skip.
- * @param name - The directory's own basename (not a path).
+ * @param name - The directory's basename (not a path).
  * @returns `true` if this directory should never be walked into.
  */
 function isExcludedDirectory(name: string): boolean {
@@ -59,11 +59,11 @@ function isExcludedDirectory(name: string): boolean {
 }
 
 /**
- * Whether a file named `name` has one of INCLUDED_EXTENSIONS, case-insensitively. A file system
- * (or a file authored on one) can produce an uppercase or mixed-case extension (`Legacy.TSX`).
- * tsc/ESLint process those identically to a lowercase one, so this must too. Otherwise a real
- * suppression comment inside that file would go silently ungoverned.
- * @param name - The file's own basename (not a path).
+ * Whether a file named `name` has one of INCLUDED_EXTENSIONS, case-insensitively.
+ * A file system can produce an uppercase or mixed-case extension (`Legacy.TSX`).
+ * tsc/ESLint process those the same as a lowercase one, and this must too.
+ * Otherwise a suppression comment inside that file would go silently ungoverned.
+ * @param name - The file's basename (not a path).
  * @returns `true` if this file is governed source.
  */
 function hasIncludedExtension(name: string): boolean {
@@ -74,8 +74,8 @@ function hasIncludedExtension(name: string): boolean {
 /**
  * Converts any backslash-separated path segment to forward slashes. It uses the fixed
  * `win32`/`posix` namespaces, not the ambient, host-bound `path.sep`. That makes it a pure string
- * transform, testable identically on every host OS, not only observable on a real Windows machine.
- * A no-op for a path that's already POSIX-style, since real POSIX filesystems never produce a
+ * transform, testable identically on every host OS, not only on a Windows machine.
+ * A no-op for a path that's already POSIX-style, since POSIX filesystems never produce a
  * backslash separator.
  * @param relativePath - A path, possibly using either separator convention.
  * @returns The same path with every separator normalized to `/`.
@@ -126,7 +126,7 @@ async function walk(root: string, dir: string, out: string[]): Promise<void> {
 /**
  * Every source file under `root` this check considers governed, as repo-relative POSIX paths,
  * sorted. See EXCLUDED_DIRECTORY_NAMES/EXCLUDED_DIRECTORY_LEAF_NAMES/INCLUDED_EXTENSIONS above for
- * exactly what "governed" means here.
+ * what "governed" means here.
  * @param root - Absolute path to the repository root to walk.
  * @returns Repo-relative POSIX file paths, sorted.
  */

@@ -14,7 +14,7 @@ const SEVERITY_VALUES = new Set(["critical", "major", "minor", "unknown"])
 /**
  * `"validated-false-positive"` is excluded from a CodeRabbit exception's allowed set. Unlike with
  * a deterministic scanner, there is no more-authoritative tool to mechanically re-run. Nothing can
- * confirm that an AI-generated finding "doesn't actually apply". A CodeRabbit finding judged
+ * confirm that an AI-generated finding "doesn't apply". A CodeRabbit finding judged
  * incorrect is still only ever dismissed via `"accepted-risk"` / `"tooling-limitation"` / etc.,
  * backed by `method: "independent-human-review"`.
  */
@@ -88,7 +88,7 @@ export const CODERABBIT_EXCEPTION_SCHEMA: ExceptionRegistrySchema<CoderabbitExce
     const security = validateSecurityExceptionFields(raw, index, CODERABBIT_EXCEPTION_TYPES, errors)
     if (security?.method === "mechanical-reverification") {
       errors.push(
-        `${at}.method must be "independent-human-review" for a CodeRabbit waiver -- there is no tool this check can mechanically re-run to substantiate dismissing an AI-generated finding (ADR 0014).`,
+        `${at}.method must be "independent-human-review" for a CodeRabbit waiver. No tool this check can re-run substantiates dismissing an AI-generated finding (ADR 0014).`,
       )
       return undefined
     }

@@ -10,8 +10,8 @@
 // throw here). An inability to write --json's output file fails it too.
 //
 // The required size itself is owned by checks/size.ts. It passes the size in
-// via --budget purely to annotate this script's own console/JSON output.
-// The `size` check's policy in repo-contract makes the actual pass/fail
+// via --budget purely to annotate this script's console/JSON output.
+// The `size` check's policy in repo-contract makes the pass/fail
 // decision from its own copy of that number. It never uses anything this
 // script decides or echoes back.
 
@@ -27,7 +27,7 @@ const root = path.resolve(here, "..")
 // budget, it's fine for this script to know it by default, so bare
 // `npm run size` still works with zero arguments.
 const ENTRIES = [
-  // This reports only this package's own compiled source: there are no runtime dependencies, so
+  // This reports only this package's compiled source: there are no runtime dependencies, so
   // nothing is inlined from node_modules (see tsup.config.ts).
   { label: "index (esm)", file: "dist/index.js" },
   { label: "index (cjs)", file: "dist/index.cjs" },
@@ -99,7 +99,7 @@ const entries = ENTRIES.map(({ label, file }) => ({
 for (const { label, file, gzipBytes, maxGzipBytes } of entries) {
   if (gzipBytes === null) {
     console.log(
-      `[size] ${label.padEnd(14)} ${file.padEnd(20)} missing -- run \`npm run build\` first.`,
+      `[size] ${label.padEnd(14)} ${file.padEnd(20)} missing: run \`npm run build\` first.`,
     )
     continue
   }

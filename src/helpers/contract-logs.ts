@@ -1,14 +1,16 @@
 /**
- * One log file per check, written as a run goes: the check's raw output the moment its evidence exists
- * ({@link onEvidenceSaveToRepoContractLogs}), then the verdict prepended to the top of the same file the moment
- * its policy returns it ({@link onVerdictPrependRepoContractLogs}). The console only has room for a verdict's reason;
- * the log keeps everything the tool printed, with the part worth reading first at the top. Pass the two hooks to
- * `runRepoContract` as its `onEvidence` and `onVerdict` options.
+ * One log file per check, written as a run goes. The check's raw output is written the moment its
+ * evidence exists ({@link onEvidenceSaveToRepoContractLogs}). The verdict is prepended to the same
+ * file the moment its policy returns it ({@link onVerdictPrependRepoContractLogs}). The console
+ * only has room for a verdict's reason. The log keeps everything the tool printed, with the part
+ * worth reading first at the top. Pass the two hooks to `runRepoContract` as its `onEvidence` and
+ * `onVerdict` options.
  *
- * A log is overwritten if it exists, and creating the evidence hook removes the logs of an earlier run, so the
- * folder only ever describes the run that just happened. Neither hook ever throws or changes what a run does:
- * a disk problem is reported once through `onProblem` and the run carries on. Writes happen in the order they
- * were asked for, in the background; `await` the store's `flush()` before reading the logs or ending the process.
+ * A log is overwritten if it exists. Creating the evidence hook removes the logs of an earlier
+ * run, so the folder only describes the run that just happened. Neither hook ever throws or
+ * changes what a run does: a disk problem is reported once through `onProblem` and the run
+ * carries on. Writes happen in request order, in the background. `await` the store's `flush()`
+ * before reading the logs or ending the process.
  * @packageDocumentation
  */
 import {
@@ -28,7 +30,8 @@ import type { CheckEvidence, PolicyResult } from "../types.js"
 export type RepoContractLogMode = "all" | "failing" | "off"
 
 /**
- * The file operations the logs use; every one defaults to `node:fs/promises`' own. For tests, or a non-`node:fs` environment.
+ * The file operations the logs use; each defaults to its `node:fs/promises` counterpart. For
+ * tests, or a non-`node:fs` environment.
  * @beta
  */
 export interface RepoContractLogsFileSystem {
@@ -184,7 +187,7 @@ export function repoContractLogs(options: RepoContractLogsOptions = {}): RepoCon
 
   const written = new Set<string>()
   let reported = false
-  // Writes run one after another in the order they were asked for, so a verdict always lands on the log it
+  // Writes run one after another in request order. A verdict then always lands on the log it
   // belongs to, whichever hook asked first.
   let queue: Promise<void> = Promise.resolve()
   const enqueue = (action: () => Promise<void>): void => {
@@ -196,8 +199,8 @@ export function repoContractLogs(options: RepoContractLogsOptions = {}): RepoCon
       )
     })
   }
-  // A check id is a key in the caller's config, so it is encoded into one file name: a separator or `..` in it
-  // can never reach outside the folder or create a nested path.
+  // A check id is a key in the caller's config, so it is encoded into one file name. A separator
+  // or `..` in it can never reach outside the folder or create a nested path.
   const file = (checkId: string): string => path.join(folder, `${encodeURIComponent(checkId)}.log`)
 
   const store: RepoContractLogs = {

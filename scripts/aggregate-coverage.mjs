@@ -26,7 +26,7 @@ import { AGGREGATE_COVERAGE_DIR } from "./aggregate-coverage-paths.mjs"
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
 // One entry per coverage-producing verification category. Each must already
-// have written coverage/<name>/coverage-final.json (via that category's own
+// have written coverage/<name>/coverage-final.json (via that category's
 // `vitest run --config vitest.<name>.config.ts --coverage`, e.g. through
 // scripts/run-test-category.mjs) before this runs.
 const COVERAGE_SOURCES = ["unit", "integration", "property"]
@@ -62,9 +62,9 @@ export function aggregateCoverage(root = DEFAULT_ROOT) {
   const context = libReport.createContext({ dir: outDir, coverageMap: map })
   // "text" is given an explicit `file` so it writes coverage-summary.txt
   // instead of its default (stdout). Callers of aggregateCoverage() need
-  // their own stdout to stay clean JSON, the `coverage` check's
+  // their stdout to stay clean JSON, the `coverage` check's
   // scripts/check-coverage.mjs in particular. A human wanting the console
-  // table gets it via `npm run test:coverage`'s own separate reporting.
+  // table gets it via `npm run test:coverage`'s separate reporting.
   reports.create("text", { file: "coverage-summary.txt" }).execute(context)
   for (const reporterName of ["html", "lcov", "json", "json-summary"]) {
     reports.create(reporterName).execute(context)

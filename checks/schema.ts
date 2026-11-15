@@ -7,9 +7,9 @@ import { TARGETS } from "../scripts/generate-json-schema.mjs"
 // output, so a clean exit code alone doesn't prove anything was produced.
 // This policy re-reads every target's `outputFile` back off disk afterward.
 // It confirms each is valid JSON carrying the same `$id`/`title` that the
-// generator's own TARGETS declares. TARGETS is imported directly, never
-// duplicated here. This check therefore can't drift from what the generator
-// considers "every schema" if a target is ever added, renamed, or removed.
+// generator's TARGETS declares. TARGETS is imported, never duplicated here,
+// so this check keeps matching the generator's "every schema" when a target
+// is added, renamed, or removed.
 export const schema: CheckDefinitionConfig = {
   run: ["node", "scripts/generate-json-schema.mjs"],
   policy: async ({ result }) => {

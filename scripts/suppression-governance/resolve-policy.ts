@@ -5,7 +5,7 @@ import type { SuppressionPolicyConfig, SuppressionRequirement } from "./policy-c
 import { GLOBAL_DEFAULT_POLICY } from "./policy-config.js"
 
 /**
- * Suppression-governance's own thin instantiation of `repo-contract/helpers`'s classification-
+ * Suppression-governance's thin instantiation of `repo-contract/helpers`'s classification-
  * neutral exception-policy resolver: see specs/decisions/0013-reusable-exception-policy-helper.md.
  * The generic logic all lives in `resolveExceptionPolicy`/`stricterOf`/`evaluateExceptionRecord`
  * (`src/helpers/exception-policy.ts`). That covers the exact/glob/domain-default/global-default
@@ -26,7 +26,7 @@ export interface SuppressionFindingDeterminant {
 }
 
 /**
- * The subject `evaluateExceptionRecord`'s `fieldValue` reads from: the reconciled record's own
+ * The subject `evaluateExceptionRecord`'s `fieldValue` reads from: the reconciled record's
  * fields, plus the finding's mechanically-derived `reason`. The reason is never stored on a
  * record; it is recomputed from source every run. A policy that read it off the record would be
  * trusting stale text.
@@ -46,7 +46,7 @@ function fieldValue(subject: EvaluationSubject, requirement: string): string {
 
 /**
  * Evaluates one finding against `policyConfig`, taking the strictest (`stricterOf`) of the
- * per-rule resolved policies: a finding naming both a forbidden rule and an otherwise-fine rule
+ * per-rule resolved policies. A finding naming both a forbidden rule and an otherwise-fine rule
  * is forbidden overall. A required field only counts as satisfied once it is a non-empty
  * (post-trim) string.
  * @param finding - The raw suppression finding.
@@ -63,7 +63,7 @@ export function evaluateFinding(
     return { finding, verdict: "unmatched", missing: [] }
   }
 
-  // `finding.rule` is a non-empty array by the registry validator's own invariant and by every
+  // `finding.rule` is a non-empty array by the registry validator's invariant and by every
   // recognizer (recognizers.ts). `evaluateExceptionRecord` reduces `classifications` with no
   // seed, so an empty array would throw rather than return a verdict. Guard it anyway. An empty
   // rule list is a malformed finding, treated the same as a missing record. That is an integrity
@@ -112,10 +112,10 @@ export function formatOffender(determinant: SuppressionFindingDeterminant): stri
   const { finding, verdict, missing } = determinant
 
   if (verdict === "forbidden") {
-    return `${describeFinding(finding)} -- forbidden by policy.`
+    return `${describeFinding(finding)}: forbidden by policy.`
   }
   if (verdict === "unmatched") {
-    return `${describeFinding(finding)} -- no reconciled exception record (registry integrity failure).`
+    return `${describeFinding(finding)}: no reconciled exception record (registry integrity failure).`
   }
-  return `${describeFinding(finding)} -- insufficient justification (missing: ${missing.join(", ")}).`
+  return `${describeFinding(finding)}: insufficient justification (missing: ${missing.join(", ")}).`
 }

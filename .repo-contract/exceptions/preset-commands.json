@@ -107,10 +107,10 @@
     {
       "id": "preset-command:node",
       "version": 2,
-      "justification": "Two presets spawn the consumer's own `node` binary (always present wherever repo-contract itself runs) with a fixed script string, never built from external input. `distNoUrls` runs `node -e <scanner> <dir>` (src/presets/dist-no-urls.ts): it uses only `node:fs`/`node:path` to read files under the one directory argument and prints a JSON report of URL strings found (file, line, URL -- never file contents) to stdout. It makes no network request, spawns nothing, reads no environment variable and writes no file. `license` runs `node -e <launcher>` (src/presets/license.ts): it resolves the consumer's installed `licensee` package from the working directory, checks whether `.licensee.json` exists there, writes one line to stderr saying which policy applies, and loads the licensee CLI in-process as `licensee --production [--osi] --errors-only --ndjson` -- `--osi` only when there is no `.licensee.json`, because any policy flag makes licensee ignore that file. licensee resolves each installed package's license from that package's own local metadata under `node_modules` and makes no network request -- no remote license database is queried. `--ndjson` writes to stdout only.",
+      "justification": "Three presets spawn the consumer's own `node` binary (always present wherever repo-contract itself runs) with a fixed script string, never built from external input. `distNoUrls` runs `node -e <scanner> <dir>` (src/presets/dist-no-urls.ts): it uses only `node:fs`/`node:path` to read files under the one directory argument and prints a JSON report of URL strings found (file, line, URL -- never file contents) to stdout. It makes no network request, spawns nothing, reads no environment variable and writes no file. `bundledDependencies` runs `node -e <reader>` (src/presets/bundled-dependencies.ts): it reads package.json in the working directory with `node:fs` and prints the two bundling fields as written and the names under `dependencies` as JSON on stdout. It makes no network request, spawns nothing, reads no environment variable and writes no file. `license` runs `node -e <launcher>` (src/presets/license.ts): it resolves the consumer's installed `licensee` package from the working directory, checks whether `.licensee.json` exists there, writes one line to stderr saying which policy applies, and loads the licensee CLI in-process as `licensee --production [--osi] --errors-only --ndjson` -- `--osi` only when there is no `.licensee.json`, because any policy flag makes licensee ignore that file. licensee resolves each installed package's license from that package's own local metadata under `node_modules` and makes no network request -- no remote license database is queried. `--ndjson` writes to stdout only.",
       "attempted": "Reviewed what the command does with the flags the preset passes; the justification records the result.",
       "command": "node",
-      "constraint": "The `distNoUrls` and `license` presets spawn the consumer's own `node` binary (always present wherever repo-contract itself runs) as `node -e <fixed script>`.",
+      "constraint": "The `distNoUrls`, `bundledDependencies` and `license` presets spawn the consumer's own `node` binary (always present wherever repo-contract itself runs) as `node -e <fixed script>`.",
       "expires": "",
       "residualRisk": "The command can do whatever the tool does with the consumer's repository, which is a capability they already hold.",
       "revisitWhen": "The preset's flags change, or the tool's behavior with them does.",
@@ -168,6 +168,19 @@
       "revisitWhen": "The preset's flags change, or the tool's behavior with them does.",
       "ruleBroken": "The `publint` preset runs a command repo-contract does not bundle, which a preset may only do with a recorded reason.",
       "whyPreferable": "Running the consumer's own installed tool is preferable to bundling a copy that could drift from the version they trust."
+    },
+    {
+      "id": "preset-command:repo-contract",
+      "version": 2,
+      "justification": "The `quickStart` preset (src/presets/quick-start.ts) runs this package's own bin as `repo-contract quick-start --json --readme <file> --timeout <ms>`. It reads that Markdown file and package.json, then runs `npm pack --ignore-scripts` into a temporary directory. It writes a package.json into an empty project beside the tarball and runs each command of the README's marked block there in a shell. The commands are the consumer's own README text. An install among them reaches the configured registry, as it does for any user who copies them. Nothing is sent anywhere by repo-contract itself; the report goes to stdout and the temporary directory is removed.",
+      "attempted": "Reviewed what bin/quick-start-cli.mjs and the quick-start capabilities in bin/repo-contract.mjs do with the flags the preset passes; the justification records the result.",
+      "command": "repo-contract",
+      "constraint": "The preset spawns only this package's own `repo-contract quick-start` command, which runs `npm pack` and the commands the consumer marked in their own README.",
+      "expires": "",
+      "residualRisk": "The marked commands can do whatever a shell can, network included. They are the consumer's own text, which they already run by hand.",
+      "revisitWhen": "The quick-start command gains a flag, or starts running anything besides `npm pack` and the marked commands.",
+      "ruleBroken": "The `quickStart` preset runs a command repo-contract does not bundle, which a preset may only do with a recorded reason.",
+      "whyPreferable": "Running the README's commands as a user would is the only way to prove they work; a simulation would test something else."
     },
     {
       "id": "preset-command:secretlint",

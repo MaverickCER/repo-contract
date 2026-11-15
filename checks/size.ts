@@ -19,29 +19,20 @@ interface SizeBudget {
 // Bump a budget deliberately when a capability grows the bundle; `npm run
 // size` prints the current figure against it.
 //
-// Budget history: 10->13 KB and 7->9 KB when tsup.config.ts stopped
-// minifying, then presets 9->10 KB when the `distNoUrls` scanner and the glob
-// matcher landed, then presets 10->16 KB when the `aiReview` preset landed
-// (12.1 KiB gzip CJS).
-//
 // CJS runs a few hundred bytes larger than ESM for the same source, because
 // of esbuild's interop wrappers (`__toCommonJS` and a getter per named
 // export). Both formats share one budget sized for CJS.
 export const SIZE_BUDGETS: readonly SizeBudget[] = [
-  // Budgets only this package's own compiled source: there are no runtime
+  // Budgets only this package's compiled source: there are no runtime
   // `dependencies` at all (glob matching is src/helpers/glob-match.ts).
-  // Both `.` entrypoint formats: ESM and CJS share one budget sized for the
-  // larger (CJS; see the comment above). Without the ESM entry a regression
-  // in `dist/index.js` alone was undetectable by this check.
+  // Every published `exports` entrypoint is budgeted in both formats, so a
+  // regression in either file alone fails this check.
   { label: "index (esm)", file: "dist/index.js", maxGzipBytes: 13 * 1024 },
   { label: "index (cjs)", file: "dist/index.cjs", maxGzipBytes: 13 * 1024 },
-  // `./presets` is an equally published `exports` entrypoint (package.json):
-  // without its own budget a regression here was undetectable by this check.
   { label: "presets (esm)", file: "dist/presets.js", maxGzipBytes: 16 * 1024 },
   { label: "presets (cjs)", file: "dist/presets.cjs", maxGzipBytes: 16 * 1024 },
-  // The three barrels added since. When these budgets were set they measured about 7, 18 and
-  // 4 KiB gzip (CJS, the larger format). Each budget adds a quarter of headroom, so a stray
-  // dependency or a duplicated module shows up as a failure, not a trend.
+  // These three budgets also add about a quarter of headroom over their CJS size. A stray
+  // dependency or a duplicated module then shows up as a failure, not a trend.
   { label: "helpers (esm)", file: "dist/helpers.js", maxGzipBytes: 9 * 1024 },
   { label: "helpers (cjs)", file: "dist/helpers.cjs", maxGzipBytes: 9 * 1024 },
   { label: "affected (esm)", file: "dist/affected.js", maxGzipBytes: 23 * 1024 },
@@ -55,7 +46,7 @@ export interface SizeReportEntry {
   readonly file: string
   /** `null` when the entry point didn't exist at check time (e.g. `npm run build` wasn't run first). */
   readonly gzipBytes: number | null
-  /** Echoed back from this check's own `--budget` args, purely for a self-describing report: the policy below never reads this field, only `SIZE_BUDGETS`. */
+  /** Echoed back from this check's `--budget` args, purely for a self-describing report: the policy below never reads this field, only `SIZE_BUDGETS`. */
   readonly maxGzipBytes: number | null
 }
 
@@ -67,10 +58,10 @@ export interface SizeReport {
 /**
  * The size check's full interpretation logic, factored out for direct unit testing.
  * test/unit/size/policy.test.ts exercises every budget comparison against an already-parsed
- * report, without spawning scripts/check-size.mjs. This matches every other check's own
+ * report, without spawning scripts/check-size.mjs. This matches every other check's
  * `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
  * @param root0 - the policy input.
- * @param root0.evidence - the size check's own parsed report: one entry per budgeted file.
+ * @param root0.evidence - the size check's parsed report: one entry per budgeted file.
  * @returns the pass/fail verdict.
  */
 export function evaluateSizePolicy({ evidence }: { readonly evidence: SizeReport }): PolicyResult {
@@ -124,9 +115,9 @@ export function evaluateSizePolicy({ evidence }: { readonly evidence: SizeReport
 
 // The check-size.mjs script is a pure reporter (see that file). This check
 // owns the required size and enforces it itself. It never trusts the
-// script's own exit code or its echoed `maxGzipBytes`. `--json` writes the
+// script's exit code or its echoed `maxGzipBytes`. `--json` writes the
 // machine-readable report to disk rather than stdout, matching the
-// mutation/security-secrets checks' own file-based pattern.
+// mutation/security-secrets checks' file-based pattern.
 export const size: CheckDefinitionConfig = {
   run: [
     "node",
@@ -151,10 +142,10 @@ export const size: CheckDefinitionConfig = {
       return { outcome: "fail", rationale: "check-size produced invalid JSON report data." }
     }
 
-    // Re-annotated rather than used directly. `Array.isArray` narrows its
-    // argument to `any[]` regardless of the checked value's declared type
-    // (a long-standing TypeScript limitation). `report.entries` would
-    // otherwise silently lose its `SizeReportEntry` element type below.
+    // `Array.isArray` narrows its argument to `any[]` whatever the checked
+    // value's declared type (a long-standing TypeScript limitation). This
+    // annotation keeps the `SizeReportEntry` element type for the policy
+    // call below.
     const entries: readonly SizeReportEntry[] = report.entries
 
     return evaluateSizePolicy({ evidence: { ...report, entries } })

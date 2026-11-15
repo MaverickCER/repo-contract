@@ -4,7 +4,7 @@ import { errorWarningPassPolicy } from "./shared/error-warning-pass-policy.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
-/** Stylelint's own `--formatter json` contract: not published as a TypeScript type by the tool. */
+/** Stylelint's `--formatter json` contract: not published as a TypeScript type by the tool. */
 interface StylelintWarning {
   readonly line: number
   readonly column: number
@@ -21,15 +21,15 @@ interface StylelintResult {
 
 /** Options accepted by {@link stylelint}. */
 interface StylelintOptions {
-  /** Glob passed straight through to stylelint as its positional target. Defaults to `"**\/*.{css,scss}"`: adjust it for your own stylesheet file extensions (e.g. `.less`, `.vue`, `.svelte`). */
+  /** Glob passed straight through to stylelint as its positional target. Defaults to `"**\/*.{css,scss}"`: adjust it for your stylesheet file extensions (e.g. `.less`, `.vue`, `.svelte`). */
   readonly glob?: string
 }
 
 /**
  * CSS/SCSS lint via stylelint, using whatever stylelint config the
- * consumer's own repository already has. `severity: "error"` blocks;
+ * consumer's repository already has. `severity: "error"` blocks;
  * `severity: "warning"` is reported but never blocks, matching how the
- * `lint` preset treats ESLint's own severities.
+ * `lint` preset treats ESLint's severities.
  * @param options - configuration for this check; see {@link StylelintOptions}.
  * @returns the configured check.
  * @beta
@@ -50,8 +50,8 @@ export function stylelint(options: StylelintOptions = {}): CheckDefinitionConfig
       if (!result.output?.success) {
         // stylelint exits non-zero with no JSON on stdout when its glob
         // matched no stylesheets or its config failed to load. Surface what
-        // it printed so a repo that legitimately has no CSS sees the real
-        // cause rather than an opaque parse failure.
+        // it printed so a repo that legitimately has no CSS sees the cause
+        // rather than an opaque parse failure.
         const printed = combinedOutput(result)
 
         return {

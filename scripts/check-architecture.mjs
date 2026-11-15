@@ -5,15 +5,15 @@
 //     and scripts/** (see .dependency-cruiser.cjs); does the production
 //     module graph obey this repository's architectural constraints? All
 //     three are passed as cruise roots, not only src/. A rule whose `from`
-//     targets checks/ or scripts/ can then see their own outbound edges
+//     targets checks/ or scripts/ can then see their outbound edges
 //     (e.g. checks-and-scripts-must-not-import-src-internals).
-//     Dependency-cruiser only inspects a directory's own import statements
+//     Dependency-cruiser only inspects a directory's import statements
 //     when it's reachable from a cruise root. Nothing under src/ ever
 //     imports checks/ or scripts/, which is the one-directional invariant
 //     src-must-not-import-scripts enforces. Without the extra roots neither
 //     would ever be visited at all.
 //   - testCategoryBoundaries: scripts/check-test-boundaries.mjs; does every
-//     verification category's Vitest config stay inside its own directory?
+//     verification category's Vitest config stay inside its directory?
 //   - adrStructure: scripts/check-adr-structure.mjs; does specs/decisions/
 //     stay structurally well-formed (filename shape, no duplicate numbers,
 //     required headings)?
@@ -23,9 +23,9 @@
 // "json" }` to parse; everything else goes to stderr.
 //
 // Report-only: violations found by any of the three analyses never fail this
-// script's own process. That judgment belongs entirely to repo-contract's
+// script's process. That judgment belongs entirely to repo-contract's
 // `architecture` check policy, which reads this same JSON evidence. Only a
-// genuine tool-infrastructure failure in any analysis fails it, for example
+// tool-infrastructure failure in any analysis fails it, for example
 // dependency-cruiser crashing or producing unparseable output.
 
 import spawn from "cross-spawn"
@@ -52,7 +52,7 @@ function runDependencyCruiser() {
     child.once("error", reject)
     child.once("close", () => {
       // Dependency-cruiser exits non-zero when it finds error-severity
-      // violations. That's still a successful analysis with real JSON
+      // violations. That's still a successful analysis with JSON
       // output, not a tool-infrastructure failure. The exit code is
       // intentionally not treated as this promise's success/failure signal.
       try {

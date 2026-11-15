@@ -1,8 +1,8 @@
 /**
- * The registry-lifecycle half of `repo-contract/helpers`: `reconcileExceptions` diffs a check's
- * raw findings against its already-loaded exception registry, and `serializeExceptionRegistry`
+ * The registry-lifecycle half of `repo-contract/helpers`. `reconcileExceptions` diffs a check's
+ * raw findings against its already-loaded exception registry. `serializeExceptionRegistry`
  * renders the reconciled records back to their canonical on-disk form. Both are pure; the only
- * I/O is `writeExceptionRegistry` in its own module. See
+ * I/O is `writeExceptionRegistry`, in a separate module. See
  * specs/decisions/0013-reusable-exception-policy-helper.md's "The exception registry is the review
  * surface" section for the model these serve. A check emits 100% of its findings. Reconciliation
  * maintains one record per finding (a fresh stub for a new one). Stale records are surfaced,
@@ -11,7 +11,7 @@
 
 /**
  * The three fields every exception record in `.repo-contract/exceptions/*.json` carries, whatever
- * the owning check. A registry adds its own typed fields on top; this is the shared core the
+ * the owning check. A registry adds its typed fields on top; this is the shared core the
  * generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,
  * `validateExceptionRegistry` in the check-owned layer) relies on.
  * @public
@@ -34,7 +34,7 @@ export interface ExceptionReconciliation<TFinding, TRecord> {
   readonly matchedPairs: readonly { readonly finding: TFinding; readonly record: TRecord }[]
   /** Every record to persist as live: matched records verbatim, plus one fresh `createStub` per unmatched finding. Never contains a stale record. */
   readonly activeRecords: readonly TRecord[]
-  /** Existing records whose id matched no finding this run: surfaced for the policy to fail on, **never removed** by this function (retiring one is an explicit human edit). */
+  /** Existing records whose id matched no finding this run. They are surfaced for the policy to fail on and **never removed** here: retiring one is an explicit human edit. */
   readonly staleRecords: readonly TRecord[]
   /** The ids of the stubs created this run: a subset of `activeRecords`' ids. */
   readonly newStubIds: readonly string[]
@@ -47,13 +47,13 @@ export interface ExceptionReconciliation<TFinding, TRecord> {
  *
  * `deriveId` must be **injective** over `findings`: every independently-governable finding needs
  * a distinct id, or the mechanism cannot tell which finding a record's `justification` belongs to.
- * A collision is returned as `{ ok: false }` (a real condition a check must surface: the source
- * genuinely holds two identical directives), naming both finding indices so the check can point a
- * developer at them.
+ * A collision is returned as `{ ok: false }`, naming both finding indices so the check can point a
+ * developer at them. It is a condition a check must surface: the source holds two identical
+ * directives.
  *
- * `createStub(finding, id)` is handed the canonical id and its result's `id` is asserted equal to
- * it: a `createStub` that derives its own identity differently is a `{ ok: false }` bug report,
- * never a silently-mismatched record.
+ * `createStub(finding, id)` is handed the canonical id, and its result's `id` is asserted equal to
+ * it. A `createStub` that derives its identity differently gets a `{ ok: false }` bug report, never
+ * a silently-mismatched record.
  *
  * Precondition: `existing` has already passed the check's registry validator (unique ids, correct
  * namespace). This function does not re-validate it.
@@ -126,11 +126,10 @@ export function reconcileExceptions<TFinding, TRecord extends { readonly id: str
 
 /**
  * Rebuilds one record with a canonical key order: `id`, `version`, `justification`, then every
- * other own key in code-unit order. Records are flat (scalars and scalar arrays); if a registry
- * ever adds a nested metadata object, its inner keys keep their insertion order until this
- * function is extended. Keys are copied with `Object.defineProperty` so an own `"__proto__"` key
- * is carried through as a plain data property rather than silently dropped by the setter (and the
- * prototype is never mutated).
+ * other own key in code-unit order. Records are flat (scalars and scalar arrays). A nested
+ * metadata object would keep its inner keys in insertion order until this function is extended.
+ * Keys are copied with `Object.defineProperty`, so an own `"__proto__"` key survives as a plain
+ * data property. The setter would drop it, and the prototype is never mutated.
  * @param record - The record to reorder.
  * @returns A new object with the same entries in canonical key order.
  */
@@ -150,11 +149,11 @@ function canonicalRecord(
 }
 
 /**
- * The canonical on-disk form of one exception registry: `{ "exceptions": [ ... ] }`, records
- * sorted ascending by `id` (code-unit order, locale-independent), each record's keys in
- * `canonicalRecord` order, 2-space indent, `\n` line endings, a trailing newline. Fully
- * deterministic: the same records always serialize byte-for-byte identically, so a reconcile that
- * changes nothing produces no diff and `writeExceptionRegistry` writes nothing.
+ * The canonical on-disk form of one exception registry: `{ "exceptions": [ ... ] }`. Records are
+ * sorted ascending by `id` (code-unit order, locale-independent), with each record's keys in
+ * `canonicalRecord` order. It uses a 2-space indent, `\n` line endings and a trailing newline. The
+ * same records always serialize to identical bytes. A reconcile that changes nothing produces no
+ * diff, and `writeExceptionRegistry` writes nothing.
  *
  * Assumes `records` have unique ids (the caller reconciled them and validated its registry).
  * @param records - The reconciled records (`activeRecords` plus any `staleRecords`, in any order).
@@ -164,8 +163,8 @@ function canonicalRecord(
 export function serializeExceptionRegistry(
   records: readonly (Record<string, unknown> & { readonly id: string })[],
 ): string {
-  // `records` have unique ids by precondition, so ordering the ids themselves (by UTF-16 code
-  // units, the default string order) orders the records without a hand-written comparator.
+  // `records` have unique ids by precondition. Ordering the ids (by UTF-16 code units, the
+  // default string order) orders the records without a hand-written comparator.
   const byId = new Map(records.map((record) => [record.id, record]))
   const sorted = [...byId.keys()].sort().map((id) => byId.get(id)) as (typeof records)[number][]
   const canonical = sorted.map((record) => canonicalRecord(record))

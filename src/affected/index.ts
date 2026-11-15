@@ -4,11 +4,11 @@
  * exports are followed through the import graph. A case the analysis cannot reason about widens
  * the answer toward a full run; it never narrows on a guess.
  *
- * Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities,
- * so this barrel reads no file and runs no process (see
+ * Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities.
+ * This barrel reads no file and runs no process (see
  * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
  *
- * Experimental, and published under its own `./affected` subpath; never re-exported from the
+ * Experimental, and published under its `./affected` subpath; never re-exported from the
  * package root.
  * @packageDocumentation
  */

@@ -10,7 +10,7 @@ export type { SocketExceptionRecord } from "./evidence-types.js"
 
 const SEVERITY_VALUES = new Set(["critical", "high", "middle", "low", "unknown"])
 
-/** Every `EXCEPTION_TYPES` member is a valid reason to tolerate a real Socket alert. */
+/** Every `EXCEPTION_TYPES` member is a valid reason to tolerate a Socket alert. */
 const ALLOWED_EXCEPTION_TYPES: readonly ExceptionType[] = EXCEPTION_TYPES
 
 /**
@@ -20,7 +20,7 @@ const ALLOWED_EXCEPTION_TYPES: readonly ExceptionType[] = EXCEPTION_TYPES
  * @param alert - The alert's (or record's) identity fields.
  * @param alert.package - The npm package name.
  * @param alert.packageVersion - The exact installed version the alert is against.
- * @param alert.type - Socket's own alert type (e.g. `"envVars"`).
+ * @param alert.type - Socket's alert type (e.g. `"envVars"`).
  * @returns The semantic id.
  */
 export function deriveSocketExceptionId(alert: {

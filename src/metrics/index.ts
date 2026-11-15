@@ -7,7 +7,7 @@
  * process (see
  * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
  *
- * Experimental, and published under its own `./metrics` subpath; never re-exported from the
+ * Experimental, and published under its `./metrics` subpath; never re-exported from the
  * package root.
  * @packageDocumentation
  */

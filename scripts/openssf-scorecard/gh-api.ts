@@ -4,7 +4,7 @@ import path from "node:path"
 import type { GhApiResult } from "./types.js"
 
 /**
- * The `owner/repo` slug, parsed from this repository's own `package.json`
+ * The `owner/repo` slug, parsed from this repository's `package.json`
  * `repository.url`: never hardcoded, so a fork or rename doesn't leave a
  * silently-wrong slug behind.
  * @param root - Repository root to read `package.json` from.
@@ -23,15 +23,16 @@ export function repoSlug(root: string): string {
 }
 
 /**
- * This repository's own `package.json` version: repo-contract's own
- * evaluator version. It is NEVER the upstream `scorecard` binary's version,
- * because this evaluation never runs that binary at all. This directory's
- * module doc comments and README carry that disclaimer. Read the same way `repoSlug` reads `package.json` above, with one
- * difference. `repoSlug` throws, because a `run` that cannot resolve its repo slug
- * is a real operational problem. This value is provenance metadata only, read in
- * `checks/openssf-scorecard.ts`'s `policy` after evidence gathering succeeded. So
- * a missing or malformed `package.json` degrades this one field to `"unknown"`
- * and never aborts the check (see that file's module doc comment).
+ * This repository's `package.json` version: the version of repo-contract's
+ * evaluator. It is NEVER the upstream `scorecard` binary's version, because
+ * this evaluation never runs that binary. This directory's module doc
+ * comments and README carry that disclaimer. It reads `package.json` as
+ * `repoSlug` does above, with one difference. `repoSlug` throws, because a
+ * `run` that cannot resolve its repo slug has an operational problem. This
+ * value is provenance metadata only, read in `checks/openssf-scorecard.ts`'s
+ * `policy` after evidence gathering succeeded. A missing or malformed
+ * `package.json` degrades this one field to `"unknown"` and never aborts the
+ * check (see that file's module doc comment).
  * @param root - Repository root to read `package.json` from.
  * @returns The version string, or `"unknown"` if `package.json` is missing, unparseable, or carries no `version` field.
  */
@@ -51,7 +52,7 @@ export function packageVersion(root: string): string {
  * same way for every caller. Shared by `ghApiJson` (parses the stdout as
  * JSON) and `ghApiRaw` (returns stdout verbatim, e.g. for a raw-content
  * fetch via the `Accept: application/vnd.github.raw` header). The
- * classification logic and its test coverage therefore live in exactly one
+ * classification logic and its test coverage live in one
  * place rather than being duplicated per shape.
  * @param args - Arguments to pass to `gh api` (the REST path, plus any extra flags like `-H`).
  * @returns `gh api`'s raw stdout, or a classified failure.
@@ -75,8 +76,8 @@ function spawnGhApi(args: readonly string[]): GhApiResult<string> {
     return { ok: false, reason: "error", message: result.error.message }
   }
   if (result.status !== 0) {
-    // `gh api` on a non-2xx response still writes the API's own JSON error
-    // body to stdout. Confirmed directly: a 404 prints
+    // `gh api` on a non-2xx response still writes the API's JSON error
+    // body to stdout. For example, a 404 prints
     // `{"message":"...","status":"404"}` to stdout and `gh: ... (HTTP 404)`
     // to stderr. This reads the structured `status` field rather than
     // parsing stderr's human-readable text.
@@ -111,7 +112,7 @@ function spawnGhApi(args: readonly string[]): GhApiResult<string> {
  * Calls `gh api <path>` and parses its JSON stdout. Every gh-API-backed
  * check in this directory routes through this one function, so "gh isn't
  * installed/authenticated" is handled identically everywhere.
- * `GhApiResult`'s own doc comment explains why that's `"unavailable"`, never
+ * `GhApiResult`'s doc comment explains why that's `"unavailable"`, never
  * a failure.
  * @param apiPath - The REST path to pass to `gh api`, e.g. `"repos/x/y"`.
  * @returns The parsed JSON body, or a classified failure.
@@ -133,12 +134,12 @@ export function ghApiJson<T>(apiPath: string): GhApiResult<T> {
 
 /**
  * Calls `gh api <path>` requesting the GitHub Contents API's raw media type
- * (`Accept: application/vnd.github.raw`). It returns the file's real text
- * content directly rather than the default base64-in-JSON envelope. Used
+ * (`Accept: application/vnd.github.raw`). It returns the file's text
+ * content rather than the default base64-in-JSON envelope. Used
  * to fetch a file straight out of another repository without a
- * base64-decode step (e.g. `weights.ts` fetching `ossf/scorecard`'s own
+ * base64-decode step (e.g. `weights.ts` fetching `ossf/scorecard`'s
  * `checks.yaml` / `scorecard_result.go` at execution time).
- * Shares `ghApiJson`'s exact same "gh unavailable/unauthenticated/not-found"
+ * Shares `ghApiJson`'s "gh unavailable/unauthenticated/not-found"
  * classification via `spawnGhApi`, so a caller handles this failure
  * identically to every other gh-API-backed check in this directory.
  * @param apiPath - The REST path to pass to `gh api`, e.g. `"repos/x/y/contents/path/to/file"`.

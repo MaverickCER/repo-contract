@@ -3,12 +3,11 @@
 // JSON evidence to stdout. A scaffolding notice goes to stderr.
 //
 // Report-only for policy purposes (checks/preset-commands.ts's policy judges the evidence). A
-// genuine tool-infrastructure or registry-integrity failure sets a non-zero exit code here.
+// tool-infrastructure or registry-integrity failure sets a non-zero exit code here.
 //
 // This is a repository-internal review mechanism, not shipped code. It discovers every external
 // command that a published preset (a .ts module under src/presets/) spawns. It holds each one to a
-// reviewed record in .repo-contract/exceptions/preset-commands.json. This is the reconciled
-// successor to the former ALLOWED_PRESET_COMMANDS allowlist. See
+// reviewed record in .repo-contract/exceptions/preset-commands.json. See
 // specs/decisions/0007-no-network-surface.md.
 
 import { mkdir, readFile } from "node:fs/promises"
@@ -114,7 +113,7 @@ export function scanPresetModule(relativePath: string, text: string): ScanResult
       const [element] = value.elements
       if (element !== undefined && ts.isSpreadElement(element)) {
         // `run: [...argv]` runs a command the consumer passes the preset (`aiReview`'s `agent`).
-        // repo-contract chooses no command there, so the record is keyed by the preset file:
+        // The preset chooses no command there. The record is keyed by the preset file instead:
         // `consumer-supplied/<file>`. Its review covers how that file builds the command line.
         // See specs/decisions/0024-the-aireview-preset-gates-on-scored-json-from-a-consumer-chosen-agent.md.
         commands.push({
@@ -130,7 +129,7 @@ export function scanPresetModule(relativePath: string, text: string): ScanResult
     }
 
     if (first === undefined) {
-      // An empty `run: []` array literal is a real config that spawns nothing. There is nothing
+      // An empty `run: []` array literal is a valid config that spawns nothing. There is nothing
       // to review.
       if (ts.isArrayLiteralExpression(value) && value.elements.length === 0) return
       nonLiteral.push({

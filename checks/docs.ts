@@ -22,7 +22,7 @@ import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 
 /**
- * markdownlint-cli2 has no stdout JSON mode. This describes its own JSON
+ * markdownlint-cli2 has no stdout JSON mode. This describes its JSON
  * output-formatter contract (markdownlint-cli2-formatter-json), read back
  * from reports/markdownlint.json by scripts/check-docs.mjs. Not published as
  * a TypeScript type by either package.
@@ -36,7 +36,7 @@ export interface MarkdownlintFinding {
   readonly severity: "error" | "warning"
 }
 
-/** linkinator's own `--format json` contract: not published as a TypeScript type by the tool. */
+/** linkinator's `--format json` contract: not published as a TypeScript type by the tool. */
 export interface LinkinatorLink {
   readonly url: string
   readonly status: number
@@ -57,10 +57,10 @@ export interface CombinedDocsEvidence {
   readonly linkinator: ToolResult<LinkinatorReport>
 }
 
-/** Where a known-good link's waiver registry lives: see `DOCS_LINK_EXCEPTION_SCHEMA`'s own comment for what "known-good" covers. */
+/** Where a known-good link's waiver registry lives: see `DOCS_LINK_EXCEPTION_SCHEMA`'s comment for what "known-good" covers. */
 const DOCS_LINK_REGISTRY_RELATIVE_PATH = ".repo-contract/exceptions/docs-links.json"
 
-/** One `.repo-contract/exceptions/docs-links.json` record: the shared core plus this registry's own identity field. */
+/** One `.repo-contract/exceptions/docs-links.json` record: the shared core plus this registry's identity field. */
 export interface DocsLinkExceptionRecord {
   readonly id: string
   readonly version: 1
@@ -71,7 +71,7 @@ export interface DocsLinkExceptionRecord {
 
 /**
  * `docs-links:<url>`: stable while the same url is linked from this repo's docs. A changed url
- * is a different finding with a different id. A stale waiver is therefore never silently reused
+ * is a different finding with a different id. A stale waiver is never silently reused
  * for an unrelated link.
  * @param finding - The finding's (or record's) identity field.
  * @param finding.url - The linked url (local or external).
@@ -99,7 +99,7 @@ export function createDocsLinkStub(
  * Reads one required field's current string value straight off a reconciled record.
  *
  * `DOCS_LINKS_POLICY`'s only requirement is `"justification"`, always a string on a validated
- * record. The `: ""` fallback is therefore never reached through this check's own call path.
+ * record. The `: ""` fallback is never reached through this check's call path.
  * It is exported for direct unit coverage of that fallback. This matches the identical
  * `fieldValue` convention in `internal-package-contract`'s `checks/mutation.ts`.
  * @param record - The record to read a field from.
@@ -112,16 +112,15 @@ export function docsLinkFieldValue(record: DocsLinkExceptionRecord, requirement:
 }
 
 /**
- * A broken link (local, such as a relative path or an anchor, or external `http(s)://`) blocks
- * by default, like any other check finding, unless a matching, justified record exists here.
- * There is no separate "local links can never be waived" carve-out. This registry governs a
- * known-good-but-flaky external link with a real, reviewed justification checked into version
- * control. The same governance applies to a local link that is structurally correct but that this
- * check's own crawl cannot verify. One example is a link to a file that another check in the same
- * `npm run contract` run generates as a side effect of its own POLICY evaluation. Policies run
- * only after every check's EXECUTION (including this one's crawl) has completed. No scheduling
- * order can therefore make this check observe that file. A reviewer reads the record's own
- * justification. A bogus one is as visible on a diff as a bogus external-link justification.
+ * A broken link blocks by default, like any other check finding. That covers local links (a
+ * relative path or an anchor) and external `http(s)://` ones. A matching, justified record here
+ * waives it. There is no separate "local links can never be waived" carve-out. This registry
+ * governs a known-good-but-flaky external link with a reviewed justification in version control.
+ * It also governs a local link that is structurally correct but that this check's crawl cannot
+ * verify. One example is a file that another check in the same `npm run contract` run writes
+ * from its POLICY. Policies run only after every check's EXECUTION has completed, this crawl
+ * included. No scheduling order can make this check observe that file. A reviewer reads the
+ * record's justification, and a bogus one is as visible on a diff as any other.
  */
 export const DOCS_LINK_EXCEPTION_SCHEMA: ExceptionRegistrySchema<DocsLinkExceptionRecord> = {
   namespace: "docs-links:",
@@ -161,7 +160,7 @@ const DOCS_LINKS_CLASSIFICATION: readonly [ExceptionClassification, ...Exception
 
 /**
  * Every currently reconciled `.repo-contract/exceptions/docs-links.json` record, plus the ones
- * that no longer match any currently-linked URL. Assembled by `docs()`'s own `policy`, the one
+ * that no longer match any currently-linked URL. Assembled by `docs()`'s `policy`, the one
  * place this check touches the filesystem.
  */
 export interface DocsLinkExceptionEvidence {
@@ -194,8 +193,8 @@ function evaluateLinkWaiver(record: DocsLinkExceptionRecord | undefined): {
   // DOCS_LINKS_POLICY/DOCS_LINKS_GLOBAL_DEFAULT above are always `{ mode: "exception", ... }`.
   // evaluateExceptionRecord can structurally never return a "forbidden" verdict from this call
   // site. That verdict exists for a policy with a "forbidden" tier, e.g. security-socket.ts's
-  // above-medium-severity exclusion, which this file's own policy never configures. This is
-  // defensive dead code for a case this file's own config makes unreachable, not a real coverage
+  // above-medium-severity exclusion, which this file's policy never configures. This is
+  // defensive dead code for a case this file's config makes unreachable, not a coverage
   // gap. The same reasoning applies to internal-package-contract's checks/mutation.ts's identical
   // guard.
   if (determinant.verdict === "forbidden") return { verdict: "unmatched", missing: [] }
@@ -232,13 +231,13 @@ function formatBrokenLink(link: LinkinatorLink): string {
  * The docs check's full interpretation logic, factored out for direct unit testing.
  * test/unit/docs/policy.test.ts exercises markdownlint's/linkinator's finding filtering against
  * already-parsed evidence, without spawning scripts/check-docs.mjs. This matches every other
- * check's own `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
+ * check's `evaluate<Name>Policy` convention (see e.g. checks/adr-governance.ts).
  *
  * A broken link, local or external, blocks unless a justified waiver in
  * `.repo-contract/exceptions/docs-links.json` matches it (`DOCS_LINK_EXCEPTION_SCHEMA`'s doc
  * comment says what belongs there). It is never downgraded to a blanket warning.
  * @param root0 - the policy input.
- * @param root0.evidence - scripts/check-docs.mjs's own combined markdownlint/linkinator evidence.
+ * @param root0.evidence - scripts/check-docs.mjs's combined markdownlint/linkinator evidence.
  * @param root0.linkExceptions - The reconciled `docs-links.json` waiver registry for this run.
  * @returns the pass/fail verdict.
  */
@@ -265,11 +264,11 @@ export function evaluateDocsPolicy({
     }
   }
 
-  // Each markdownlint finding carries its own severity, as ESLint's and
+  // Each markdownlint finding carries a severity, as ESLint's and
   // pa11y's do. A `"warning"`-severity finding is surfaced but must not
   // block, matching how `lint` and `accessibility` treat their tools'
   // warnings. A broken link (local or external) is blocking only when
-  // unwaived: see DOCS_LINK_EXCEPTION_SCHEMA's own doc comment.
+  // unwaived: see DOCS_LINK_EXCEPTION_SCHEMA's doc comment.
   const lintErrors = markdownlint.value.filter((finding) => finding.severity !== "warning")
   const lintWarnings = markdownlint.value.filter((finding) => finding.severity === "warning")
   const brokenLinks = linkinator.value.links.filter((link) => link.state === "BROKEN")
@@ -279,10 +278,9 @@ export function evaluateDocsPolicy({
     ...evaluateLinkWaiver(linkExceptions.activeExceptions[deriveDocsLinkExceptionId(link)]),
   }))
   const offenders = determinants.filter((d) => d.verdict !== "permitted")
-  // Only ever read below inside the `offenders.length === 0` branch of the guard just below: at
-  // that point `offenders.length` is always 0, so `- offenders.length` and `+ offenders.length`
-  // are byte-identical to `brokenLinks.length` either way. Hand-verified: swapping the operator
-  // leaves every test in policy.test.ts passing unchanged.
+  // Read only inside the `offenders.length === 0` branch of the guard below. There
+  // `offenders.length` is 0, so `- offenders.length` and `+ offenders.length` both equal
+  // `brokenLinks.length`. Swapping the operator leaves every test in policy.test.ts passing.
   const waivedCount = brokenLinks.length - offenders.length
 
   const staleLines = linkExceptions.staleExceptions.map(
@@ -320,7 +318,7 @@ export function evaluateDocsPolicy({
       d.verdict === "unmatched"
         ? `no exception record; add one to ${DOCS_LINK_REGISTRY_RELATIVE_PATH} if this link is known-good`
         : // `DOCS_LINKS_POLICY`'s only requirement is `"justification"`: `d.missing` can
-          // therefore never hold more than one entry, making the `", "` separator unobservable
+          // never hold more than one entry, making the `", "` separator unobservable
           // (`.join` never has a second element to separate). Hand-verified: forcing this to
           // `.join("")` leaves every test in policy.test.ts passing unchanged.
           `exception incomplete (missing: ${d.missing.join(", ")})`
@@ -382,9 +380,9 @@ export const docs: CheckDefinitionConfig = {
     const rawLinks = parsed.value.linkinator.ok ? parsed.value.linkinator.value.links : []
 
     // Every link (local or external) linkinator crawled this run, in any state, not only BROKEN.
-    // Feeding the full set (not only offenders) into reconcileExceptions makes a waiver's own
-    // liveness track "is this URL still linked at all," never "was it broken on this exact run".
-    // A known-good link's waiver therefore never flaps stale/active from one run to the next.
+    // reconcileExceptions gets the full set, not only offenders. A waiver's liveness then tracks
+    // "is this URL still linked at all", never "was it broken on this run". A known-good link's
+    // waiver never flaps stale/active from one run to the next.
     // Deduplicated by url: the same url can appear once per referencing page, and
     // reconcileExceptions requires an injective id per finding.
     const allLinks = [...new Map(rawLinks.map((link) => [link.url, link])).values()]
@@ -419,17 +417,16 @@ export const docs: CheckDefinitionConfig = {
     const { activeRecords, staleRecords, newStubIds } = reconciled.reconciliation
 
     // The reconcileExceptions helper has no notion of "broken". It is fed every link above, not
-    // only broken ones (see allLinks' own comment for why). The side effect:
-    // it would also scaffold and persist a brand-new blank stub for every currently-*fine* link
-    // (in practice, every local link this repo's docs contain). Those links never needed a
-    // waiver. Only a newly-scaffolded stub for a link that is BROKEN right now is worth writing;
-    // drop the rest before persisting. A pre-existing matched record is always kept, whatever its
+    // only broken ones (see allLinks' comment for why). As a side effect it would also scaffold a
+    // blank stub for every currently-*fine* link, which is every local link in this repo's docs.
+    // Those links never needed a waiver. Only a new stub for a link that is BROKEN right now is
+    // worth writing; drop the rest before persisting. A pre-existing matched record is always kept, whatever its
     // link's current state, for the same staleness reasoning above.
     //
     // Built from `rawLinks`, not the deduplicated `allLinks`. The same URL can be BROKEN from
-    // one referencing page and OK from another, and `allLinks`' own dedup keeps only whichever
-    // occurrence came first. Checking the raw list means a URL that is broken via *any*
-    // reference is never missed here, even when its deduplicated representative is the OK one.
+    // one referencing page and OK from another, and the `allLinks` dedup keeps only the first
+    // occurrence. The raw list catches a URL that is broken via *any* reference, even when its
+    // deduplicated representative is the OK one.
     const brokenUrls = new Set(
       rawLinks.filter((link) => link.state === "BROKEN").map((link) => link.url),
     )

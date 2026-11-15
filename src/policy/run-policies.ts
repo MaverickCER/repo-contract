@@ -17,25 +17,21 @@ import type {
 const POLICY_OUTCOMES: readonly PolicyOutcome[] = ["pass", "fail", "warn"]
 
 /**
- * Exact phrases `PolicyResult.rationale`'s own doc comment names as
- * defeating the whole point of a structured rationale: deferring a reader
- * back to raw, unstructured output instead of stating what happened. A
- * fixed, deliberately narrow blocklist, not a general vagueness detector:
- * catching every genuinely non-specific rationale is undecidable. These
- * exact phrases (and the close variants a check author reaches for first)
- * are common enough, and specific enough, to catch soundly. There are zero
- * false positives on a legitimate rationale that happens to mention "the
- * report" or "the log" as part of a real, specific sentence. Each pattern
- * requires "see"/"check" immediately before it, not mere co-occurrence
- * anywhere in the string.
+ * Phrases that `PolicyResult.rationale`'s doc comment says defeat a structured rationale. Each
+ * defers a reader back to raw, unstructured output instead of stating what happened. This is a
+ * fixed, deliberately narrow blocklist, not a general vagueness detector. Catching every
+ * non-specific rationale is undecidable. These phrases (and the close variants a check author
+ * reaches for first) are common enough, and specific enough, to catch soundly. A legitimate
+ * rationale that mentions "the report" or "the log" in a specific sentence never matches. Each
+ * pattern requires "see"/"check" immediately before it, not mere co-occurrence anywhere in the
+ * string.
  */
 // Flat, fully-enumerated phrase alternatives: no nested or back-to-back
-// optional-quantified groups (e.g. `(?:the\s+)?` followed by another `\s+`),
-// which trip this project's own `security/detect-unsafe-regex` ReDoS
-// guard even when not genuinely exponential. Enumerating the handful of
-// real phrase variants directly keeps every pattern provably linear,
-// matching the same "no nested quantifiers" discipline this repository's
-// own dependency-cruiser config already applies to `no-orphans`.
+// optional-quantified groups (e.g. `(?:the\s+)?` followed by another `\s+`).
+// Those trip this project's `security/detect-unsafe-regex` ReDoS guard even
+// when not exponential. Enumerating the handful of phrase variants keeps
+// every pattern provably linear. This repository's dependency-cruiser config
+// applies the same "no nested quantifiers" discipline to `no-orphans`.
 const VAGUE_RATIONALE_PATTERNS: readonly { readonly label: string; readonly pattern: RegExp }[] = [
   {
     label: `"see output above" (or "check the log(s) above")`,
@@ -51,7 +47,7 @@ const VAGUE_RATIONALE_PATTERNS: readonly { readonly label: string; readonly patt
 
 /**
  * Whether `rationale` matches one of `VAGUE_RATIONALE_PATTERNS`: see that
- * constant's own doc comment for what this deliberately does and doesn't
+ * constant's doc comment for what this deliberately does and doesn't
  * catch.
  * @param rationale - a candidate `PolicyResult.rationale` string, already known to be a string
  * @returns the first matching pattern's human-readable label, for a specific, quotable error message, or `undefined` if none match
@@ -60,7 +56,10 @@ function matchedVagueRationalePattern(rationale: string): string | undefined {
   return VAGUE_RATIONALE_PATTERNS.find(({ pattern }) => pattern.test(rationale))?.label
 }
 
-/** `ParsedOutput`'s own field names: the only properties reading `result.output` when it's `undefined` can throw on, so only these can trigger `PolicyReadUnrequestedOutputError` below. */
+/**
+ * `ParsedOutput`'s field names. Reading `result.output` while it is `undefined` can throw only on
+ * these, so only these can trigger `PolicyReadUnrequestedOutputError` below.
+ */
 const OUTPUT_PROPERTIES: ReadonlySet<string | undefined> = new Set([
   "success",
   "value",
@@ -86,18 +85,17 @@ function readPropertyOfUndefined(error: unknown): string | undefined {
 /**
  * Narrows `readPropertyOfUndefined` to the specific shape
  * `PolicyReadUnrequestedOutputError` covers: the read property must also be
- * one of `ParsedOutput`'s own fields. This meaningfully narrows false
- * positives (an unrelated `TypeError` reading some other property name
- * never matches). But it is not proof the read actually came from
- * `result.output` itself. V8's own error message carries only the property
- * name, never the object expression it was read from. So a policy's own
- * unrelated bug can still be misclassified as this specific mistake, when
- * it reads `.success`/`.value`/`.error`/`.format` off some other
- * `undefined` value (a `Result`-shaped helper's own return value, for
- * instance). The residual risk from that is a misleading message, never a
- * lost error. `cause` always preserves the original `TypeError` verbatim
- * regardless of which class wraps it, so a consumer that inspects it can
- * still recover the true cause.
+ * one of `ParsedOutput`'s fields. This narrows false positives: an
+ * unrelated `TypeError` reading some other property name never matches.
+ * But it is not proof the read came from `result.output` itself. V8's error
+ * message carries only the property name, never the object expression it
+ * was read from. An unrelated bug in a policy can still be misclassified as
+ * this mistake. That happens when it reads `.success`/`.value`/`.error`/
+ * `.format` off some other `undefined` value (a `Result`-shaped helper's
+ * return value, for instance). The residual risk is a misleading message,
+ * never a lost error. `cause` always preserves the original `TypeError`
+ * verbatim, whichever class wraps it. A consumer that inspects it can still
+ * recover the true cause.
  * @param error - the value caught from invoking (or awaiting) a check's `policy`
  * @returns the read property name, or `undefined` if `error` doesn't match this exact shape
  */
@@ -107,25 +105,21 @@ function unrequestedOutputProperty(error: unknown): string | undefined {
 }
 
 /**
- * Chooses which error wraps one check's caught policy failure. Defaults to a
- * plain `PolicyThrewError`, upgrading to a more specific, more actionable
- * class for two known mistakes, each recognized by cross-checking the
- * failure's own `TypeError` message shape against this check's own `output`
- * evidence:
- *  - `output === undefined` (this check never requested a format) and the
- *    read property is one of `ParsedOutput`'s own fields;
- *    `PolicyReadUnrequestedOutputError`.
- *  - `output.success === false` (this check requested a format, but that
- *    parse failed, so `result.output` has no `value` field) and *any*
- *    property was read off the resulting `undefined`: `PolicyReadFailedParseValueError`.
- * A `TypeError` that doesn't match either shape, or a check whose `output`
- * matches neither state, always falls back to the plain `PolicyThrewError`
- * every other policy failure already gets. Both upgrades are best-effort
- * inference from the failure's own message text, not a verified trace back
- * to `result.output`: see `unrequestedOutputProperty`'s own doc comment
- * for the specific, known false-positive channel this leaves open.
+ * Chooses which error wraps one check's caught policy failure. The default is a plain
+ * `PolicyThrewError`. Two known mistakes get a more specific, more actionable class. Each is
+ * recognized by cross-checking the failure's `TypeError` message shape against this check's
+ * `output` evidence:
+ *  - `PolicyReadUnrequestedOutputError`: `output === undefined` (this check never requested a
+ *    format), and the read property is one of `ParsedOutput`'s fields.
+ *  - `PolicyReadFailedParseValueError`: `output.success === false`, and *any* property was read
+ *    off the resulting `undefined`. This check requested a format, but that parse failed, so
+ *    `result.output` has no `value` field.
+ * Any other `TypeError`, or a check whose `output` matches neither state, falls back to the plain
+ * `PolicyThrewError` every other policy failure gets. Both upgrades are best-effort inference from
+ * the failure's message text, not a verified trace back to `result.output`. See
+ * `unrequestedOutputProperty`'s doc comment for the known false-positive channel this leaves open.
  * @param checkId - the failing check's id
- * @param output - that check's own `CheckEvidence.output`, tested against the two shapes above
+ * @param output - that check's `CheckEvidence.output`, tested against the two shapes above
  * @param error - the value caught from invoking (or awaiting) the check's `policy`
  * @returns the error to record for this check
  */
@@ -151,7 +145,7 @@ function wrapPolicyFailure(
 /**
  * Describes why `value` is not a valid `PolicyResult`, or `undefined` if it
  * is one. A TypeScript-authored policy can never fail the shape checks below
- * (the type checker already guarantees `outcome`/`rationale`'s own types).
+ * (the type checker already guarantees `outcome`/`rationale`'s types).
  * But nothing stops a JavaScript consumer, or a typo'd literal (`"failed"`
  * instead of `"fail"`), from returning something else at runtime. `passed`
  * below is computed by comparing `outcome` against `"fail"`, so an
@@ -159,10 +153,9 @@ function wrapPolicyFailure(
  * non-failing. The one check TypeScript cannot enforce is `rationale` being
  * specific rather than a vague deferral to raw output. That IS caught here
  * too, against `VAGUE_RATIONALE_PATTERNS` (ADR 0016). It is a structural
- * backstop for the "never 'see output above'" rule `PolicyResult`'s own doc
- * comment states. That rule was previously asserted only in prose and
- * CODE_REVIEW.md, so a JavaScript consumer or a future check could regress
- * against it without CI catching it.
+ * backstop for the "never 'see output above'" rule `PolicyResult`'s doc
+ * comment states. Without it, a JavaScript consumer or a future check could
+ * break that rule and CI would not notice.
  * @param value - the raw, `await`-ed return value of a check's `policy` call
  * @returns a human-readable reason `value` is invalid, or `undefined` if it is a valid `PolicyResult`
  */
@@ -194,8 +187,8 @@ function invalidPolicyResultReason(value: unknown): string | undefined {
 /**
  * Invokes every check's `policy` against the complete, already-assembled
  * `evidence` and aggregates the results into a `Verdict`. Each check's
- * `PolicyResult` is stored verbatim under `checks[checkId]`; `passed` is
- * `true` only if every check's `outcome` is `"pass"` or `"warn"`: no
+ * `PolicyResult` is stored verbatim under `checks[checkId]`. `passed` is
+ * `true` only if every check's `outcome` is `"pass"` or `"warn"`. No
  * check's failure is ever collapsed into another's or into one generic
  * message.
  *
@@ -203,16 +196,16 @@ function invalidPolicyResultReason(value: unknown): string | undefined {
  * (a policy doesn't have to be `async` to misbehave). Its returned value is
  * `await`-ed inside that same `try`, so a promise that rejects later is
  * caught identically to a synchronous throw. The resolved value is then
- * validated against the `PolicyResult` contract itself before it is
- * trusted: `outcome` is exactly `"pass"`, `"fail"`, or `"warn"`, and
- * `rationale` is a string. A malformed result is treated exactly like a
- * throw rather than silently coerced into a pass. Every one of these failure
- * modes is wrapped in `PolicyThrewError`, with the original thrown value
- * (or a descriptive validation error, for a malformed result) preserved via
- * `cause`: never stringified or discarded.
+ * validated against the `PolicyResult` contract before it is trusted.
+ * `outcome` must be `"pass"`, `"fail"`, or `"warn"`, and `rationale` a
+ * string. A malformed result is treated like a throw, never silently
+ * coerced into a pass. Each of these failure modes is wrapped in
+ * `PolicyThrewError`. `cause` preserves the original thrown value (or a
+ * descriptive validation error, for a malformed result), never stringified
+ * or discarded.
  *
  * Two specific, common mistakes get a more actionable error instead, chosen
- * by `wrapPolicyFailure` (see its own doc comment):
+ * by `wrapPolicyFailure` (see its doc comment):
  * - reading a `result.output` property on a check that never requested a
  *   format (`PolicyReadUnrequestedOutputError`);
  * - reading `result.output.value` on a check whose requested parse failed
@@ -224,7 +217,7 @@ function invalidPolicyResultReason(value: unknown): string | undefined {
  * in the same run, this function throws a native `AggregateError`. Its
  * `errors` holds one such error per failing check, rather than surfacing
  * only the first one found. If exactly one policy fails, it throws that
- * single error directly.
+ * single error unwrapped.
  * @param entries - each check's id, definition, and final (possibly parsed-output) evidence to invoke its policy against
  * @param evidence - the complete, already-assembled evidence for the whole run, passed to every policy call
  * @param onVerdict - told of each check's `PolicyResult` as soon as it is valid; a hook that throws is ignored
@@ -238,19 +231,19 @@ export async function runPolicies(
   const thrown: (
     PolicyThrewError | PolicyReadUnrequestedOutputError | PolicyReadFailedParseValueError
   )[] = []
-  // Indexed by each entry's position, not appended on promise resolution: the
-  // policies run concurrently and settle in arbitrary order, but `Verdict.checks`
-  // must follow declaration order, consistently with `Evidence.checks`.
+  // Indexed by each entry's position, not appended on promise resolution. The
+  // policies run concurrently and settle in arbitrary order. `Verdict.checks`
+  // must still follow declaration order, as `Evidence.checks` does.
   const checkResults: (readonly [string, PolicyResult] | undefined)[] = []
 
   await Promise.all(
     entries.map(async ([checkId, check, checkEvidence], entryIndex) => {
-      // Derived on the fly from data that already exists (this check's own
-      // dependsOn plus the already-fully-assembled evidence.checks):
-      // never persisted, so Evidence's own shape/schema doesn't grow. `{}`
-      // for a check with no dependsOn, never undefined.
-      // validate-config.ts guarantees every dependsOn id names a check in this run, and the phasing
-      // invariant guarantees its evidence is already assembled by the time any policy runs.
+      // Derived on the fly from data that already exists (this check's
+      // dependsOn plus the fully assembled evidence.checks). It is never
+      // persisted, so Evidence's shape/schema doesn't grow. It is `{}` for a
+      // check with no dependsOn, never undefined. validate-config.ts
+      // guarantees every dependsOn id names a check in this run. The phasing
+      // invariant guarantees its evidence is assembled before any policy runs.
       const dependencies = Object.fromEntries(
         (check.dependsOn ?? []).map((depId) => [depId, evidence.checks[depId]]),
       ) as Record<string, CheckEvidence>
@@ -291,10 +284,10 @@ export async function runPolicies(
         )
   }
 
-  // Every slot is filled and in declaration order by now: a policy that threw
-  // took the early-return path above, so `thrown.length === 0` here means every
+  // Every slot is filled and in declaration order by now. A policy that threw
+  // took the early-return path above. So `thrown.length === 0` here means every
   // `entries.map` callback assigned its `checkResults[entryIndex]`. The cast
-  // just drops the `| undefined` the sparse-write type carries.
+  // only drops the `| undefined` the sparse-write type carries.
   const orderedResults = checkResults as readonly (readonly [string, PolicyResult])[]
   const checks = Object.fromEntries(orderedResults)
   const passed = orderedResults.every(([, result]) => result.outcome !== "fail")

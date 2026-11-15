@@ -31,7 +31,7 @@ export interface RunRecordInput {
   readonly scope: "affected" | "full"
   readonly checks: readonly CheckRecord[]
   readonly base?: string
-  /** Who produced the change: set by the caller from its own configuration, never inferred. */
+  /** Who produced the change: set by the caller from its configuration, never inferred. */
   readonly actor?: "human" | "agent"
   /** Groups the runs of one change (a pull request, a branch) so a first pass can be told. */
   readonly change?: string

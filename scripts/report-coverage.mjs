@@ -5,11 +5,10 @@
 //
 // Report-only: prints each metric's actual percentage against the
 // threshold, annotated OK/BELOW THRESHOLD, but never fails the process over
-// it. That judgment belongs to repo-contract's own `coverage` check, which
+// it. That judgment belongs to repo-contract's `coverage` check, which
 // evaluates the same aggregate through its policy instead (see
-// repo-contract.config.ts). The one thing this script does still fail on is
-// a genuine precondition problem. That is the summary file not existing at
-// all, which means there is nothing to report.
+// repo-contract.config.ts). This script fails only on a precondition problem:
+// the summary file does not exist, so there is nothing to report.
 
 import { readFileSync } from "node:fs"
 import path from "node:path"
@@ -28,7 +27,7 @@ export function reportCoverage() {
     summaryText = readFileSync(summaryPath, "utf8")
   } catch {
     throw new Error(
-      `${path.relative(root, summaryPath)} does not exist -- run scripts/aggregate-coverage.mjs first.`,
+      `${path.relative(root, summaryPath)} does not exist: run scripts/aggregate-coverage.mjs first.`,
     )
   }
 

@@ -2,7 +2,7 @@
 //
 // It runs `actionlint` (rhysd/actionlint) over a repository's workflow files via the
 // `github-actionlint` npm wrapper. The wrapper is a devDependency that resolves the official
-// actionlint binary on first use and caches it. The whole thing therefore stays
+// actionlint binary on first use and caches it. The whole thing stays
 // `npm install`-only, with no `go`/`brew`/`pip` step (ADR 0008's "package install only" bar).
 // This script does not reimplement actionlint's specialized workflow analysis. It only shells out
 // to actionlint and normalizes its JSON, so the tool's evidence can participate in the contract
@@ -10,12 +10,12 @@
 // (specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md).
 //
 // The script enumerates the workflow files itself and passes them to actionlint explicitly.
-// It does not rely on actionlint's own directory auto-discovery. `filesScanned` in the evidence
-// is therefore an authoritative count. The policy can use it to reject a vacuous "nothing to lint"
+// It does not rely on actionlint's directory auto-discovery. `filesScanned` in the evidence
+// is an authoritative count. The policy can use it to reject a vacuous "nothing to lint"
 // pass.
 //
-// Report-only: actionlint findings never fail this script's own process. The `github-actions`
-// check's policy, which reads this same JSON evidence, makes that judgment. Only a genuine
+// Report-only: actionlint findings never fail this script's process. The `github-actions`
+// check's policy, which reads this same JSON evidence, makes that judgment. Only a
 // tool-infrastructure failure is reported as `{ ok: false, error }`. Such a failure is the binary
 // not resolving, actionlint crashing, or actionlint producing unparseable output.
 
@@ -29,7 +29,7 @@ const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 
 const require = createRequire(import.meta.url)
 
-// Resolve the `github-actionlint` wrapper's own entry file and run it through `node` directly.
+// Resolve the `github-actionlint` wrapper's entry file and run that file with `node`.
 // Spawning the `github-actionlint` bin by name off PATH would not work everywhere.
 // `node_modules/.bin` is only on PATH under `npm run`/`npx`. It is not on PATH for a bare
 // `node scripts/...` invocation or a test that imports this module.
@@ -93,7 +93,7 @@ export function lintWorkflows(root = DEFAULT_ROOT) {
   }
 
   // Exit 0 (clean) and exit 1 (findings) from actionlint are both a successful analysis.
-  // Any other exit code (or a null status) is a genuine tool failure.
+  // Any other exit code (or a null status) is a tool failure.
   if (result.status !== 0 && result.status !== 1) {
     return {
       ok: false,

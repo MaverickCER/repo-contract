@@ -1,7 +1,7 @@
-// The environment every check of this repository's own contract runs with. Checks spawn real
+// The environment every check of this repository's contract runs with. Checks spawn
 // tools (npm scripts, tsc, eslint, git, gh, stryker). Those need PATH, HOME and the rest of the
 // shell's furniture. Nothing they run needs the secrets or the clutter of the process that
-// started them. Every check therefore gets `inheritEnv: false` and this allowlist, picked from
+// started them. Every check gets `inheritEnv: false` and this allowlist, picked from
 // `process.env`. A variable not named here, and not under a prefix named here, is not visible to
 // a check. SECURITY.md's "environment scoping" section is the promise; this file is the mechanism.
 
@@ -48,7 +48,7 @@ const NAMES = new Set([
   "SOCKET_SECURITY_API_KEY",
 ])
 
-/** Prefixes a check may see (CI metadata, npm's own settings, test-runner knobs). */
+/** Prefixes a check may see (CI metadata, npm's settings, test-runner knobs). */
 const PREFIXES = ["GITHUB_", "RUNNER_", "npm_", "NVM_", "VITEST_", "STRYKER_"]
 
 /**

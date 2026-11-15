@@ -136,15 +136,20 @@ import type { AttwReport } from "./src/presets/arethetypeswrong.js"
 import { evaluateAttwReport } from "./src/presets/arethetypeswrong.js"
 import { readJsonReport } from "./src/presets/shared/read-json-report.js"
 import {
+  bundledDependencies,
   commitlint,
   distNoUrls,
   duplication,
   format,
   license,
   publint,
+  quickStart,
   securitySecrets,
   typecheck,
 } from "./src/presets/index.js"
+
+const quickStartCheck = quickStart()
+const [, ...quickStartArgs] = quickStartCheck.run as readonly string[]
 
 export default defineRepoContract({
   // repo-contract's own checks are exactly the kind of npm-installed CLI
@@ -374,6 +379,9 @@ export default defineRepoContract({
     // Reads the build output the Build barrier above just produced: no URL (not even in
     // JSDoc, declarations or sourcemaps) may ship, so supply-chain scanners have nothing to flag.
     "dist-no-urls": distNoUrls(),
+    // npm publishes a bundled name that `dependencies` lacks as "*", which Socket reports as
+    // manifest confusion. Nothing is bundled here today; this keeps it that way unless declared.
+    "bundled-dependencies": bundledDependencies,
     "dead-code": deadCode,
     "adr-governance": adrGovernance,
     // Conventional Commits drive the generated changesets (the shared workflow writes one per
@@ -431,6 +439,12 @@ export default defineRepoContract({
     "engine-matrix": engineMatrixCheck(),
     "no-minify": noMinify(),
     "packed-consumer": { ...packedConsumerCheck(), dependsOn: ["test-unit"] },
+    // Runs README.md's marked quick start against the packed tarball in an empty project. This
+    // repository is not installed into its own node_modules, so the command runs from bin/.
+    "quick-start": {
+      ...quickStartCheck,
+      run: ["node", "bin/repo-contract.mjs", ...quickStartArgs],
+    },
     "docs-fragments": docsFragments,
     prose: proseCheck(),
     "clean-checkout": cleanCheckoutCheck(),

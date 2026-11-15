@@ -1,6 +1,5 @@
 /**
- * Per-command review guidance for the `preset-commands` check: migrated from
- * `scripts/security-network/network-surface.mjs`'s former `PRESET_COMMAND_REVIEW`. This is **not**
+ * Per-command review guidance for the `preset-commands` check. This is **not**
  * an allowlist and nothing is gated on membership. Every `run:` command a published preset
  * (`src/presets/*.ts`) spawns needs its own record in
  * `.repo-contract/exceptions/preset-commands.json`, whether or not it appears here. This table
@@ -9,8 +8,8 @@
  *
  * The question is never "is this tool safe" in the abstract, which is unanswerable here.
  * Repo-contract never bundles these tools, and a consumer installs and trusts each one
- * separately. Nothing here can see what is actually on PATH when a preset runs. The question is
- * instead a specific thing that command's own documentation answers. See
+ * separately. Nothing here can see what is on PATH when a preset runs. The question is
+ * instead a specific thing that command's documentation answers. See
  * specs/decisions/0007-no-network-surface.md's Decision section.
  */
 interface PresetCommandGuidance {
@@ -125,7 +124,7 @@ const BY_COMMAND: ReadonlyMap<string, PresetCommandGuidance> = new Map(
 /**
  * The scaffold-guidance line for one preset command: the concrete question its `justification`
  * should answer, and where to find the answer. A command with no table entry gets a generic
- * prompt (still a real, blocking stub: the table is guidance, never a gate).
+ * prompt (still a blocking stub: the table is guidance, never a gate).
  * @param command - The preset command name.
  * @returns A one-line reviewer prompt.
  */

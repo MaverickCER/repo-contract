@@ -1,6 +1,6 @@
 // Entry point for repo-contract's `coverage` check (see repo-contract.config.ts).
 // This is aggregation + reporting ONLY: it never executes tests and never
-// discovers test files. It relies entirely on the `coverage` check's own
+// discovers test files. It relies on the `coverage` check's
 // `dependsOn: ["test-unit", "test-integration", "test-property"]`. That
 // guarantees those categories' coverage-final.json files already exist by
 // the time this runs. See scripts/aggregate-coverage.mjs for the merge

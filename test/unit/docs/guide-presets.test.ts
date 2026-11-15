@@ -9,6 +9,8 @@ import {
   DIST_OUTPUT,
   FACTORY_PRESETS,
   PRESET_DEPENDENCIES,
+  PUBLISHED_PACKAGE,
+  QUICK_START_BLOCK,
 } from "../../../bin/preset-catalog.mjs"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..")
@@ -51,6 +53,8 @@ function expectedPackageCell(dependency: string | null): string {
   if (dependency === null) return "none (`npm`)"
   if (dependency === DIST_OUTPUT) return "none (a built `dist/`)"
   if (dependency === AGENT_COMMAND) return "none (the agent you name)"
+  if (dependency === PUBLISHED_PACKAGE) return "none (a package that is not `private`)"
+  if (dependency === QUICK_START_BLOCK) return "none (a marked README block)"
   return `\`${dependency}\``
 }
 

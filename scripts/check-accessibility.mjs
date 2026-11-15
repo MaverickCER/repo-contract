@@ -9,13 +9,13 @@
 // ARIA issues surface as a browser would show them (see
 // specs/decisions/0008-self-hosting-tool-and-dependency-choices.md).
 //
-// Tests each page directly via a file:// URL. None has a build step (unlike
-// dist/), so nothing needs to run first.
+// Tests each page through a file:// URL, with no server. None has a build
+// step (unlike dist/), so nothing needs to run first.
 //
 // PAGES covers the shared page shell/template mechanically, not every
 // generated page individually. It holds docs/index.html (the main site).
 // Once `npm run docs:api` (TypeDoc) has run, it also holds
-// docs/api/index.html, TypeDoc's own generated landing page (not
+// docs/api/index.html, TypeDoc's generated landing page (not
 // hand-authored). The docs/api/ tree is regenerated fresh on every CI run and
 // never committed (see .gitignore and RELEASING.md's "GitHub Pages" section). It
 // is normal for it to be absent in a bare local checkout until that script
@@ -28,34 +28,28 @@
 // if a future API-doc tool or theme emits raw tables.
 //
 // pa11y is driven through its Node API rather than its CLI. The CLI cannot
-// pass `chromeLaunchConfig`, which `--no-sandbox` below needs. It also forced
-// this script to re-parse the CLI's own stdout as JSON. That turned any
-// Chromium launch failure into a misleading "Unexpected end of JSON input"
-// instead of the real error. The API returns the findings directly and lets
-// a genuine failure surface as a thrown Error with a usable message.
+// pass `chromeLaunchConfig`, which `--no-sandbox` below needs. The CLI also
+// reports through stdout JSON, so a Chromium launch failure reads as
+// "Unexpected end of JSON input". The API returns the findings as a value
+// and throws an Error with a usable message when the launch fails.
 //
-// `pa11y`/`puppeteer` are real, hard `devDependencies` of this package. The
-// real `puppeteer` package carries its own Chromium-download `postinstall`
-// script. This organization's public packages must ship with zero install
-// scripts of any kind. A Socket.dev "Install scripts" finding directly hurts
-// a package's own supply-chain score. The `overrides` field in package.json
-// aliases `puppeteer` to `puppeteer-core` wherever pa11y itself resolves it.
-// The `require("puppeteer")` inside pa11y transparently gets
-// puppeteer-core's identical launch API, with no bundled browser and,
-// critically, no install script at all.
+// `pa11y`/`puppeteer` are hard `devDependencies` of this package. The
+// upstream `puppeteer` package carries a Chromium-download `postinstall`
+// script. This organization's public packages ship with zero install
+// scripts. A Socket.dev "Install scripts" finding lowers a package's
+// supply-chain score. The `overrides` field in package.json aliases
+// `puppeteer` to `puppeteer-core` wherever pa11y resolves it. The
+// `require("puppeteer")` inside pa11y gets puppeteer-core's identical launch
+// API, with no bundled browser and no install script.
 //
 // `findChromeExecutable` below supplies the browser puppeteer-core no longer
-// downloads: a system Chrome/Chromium. It auto-detects the one a developer's
-// own machine or a CI runner already has. GitHub Actions' own `ubuntu-latest`
+// downloads: a system Chrome/Chromium. It auto-detects the one a developer
+// machine or a CI runner already has. GitHub Actions' `ubuntu-latest`
 // images ship Google Chrome preinstalled.
 //
-// This script is the original this pattern was ported FROM.
-// `internal-package-contract`'s own `scripts/check-accessibility.mjs` is a
-// near-direct port of it, generalized to run against whichever package
-// installs that shared devDependency. That file's own doc comment lists the
-// divergences. One is its own conclusion that a TypeDoc-based docs/api/ has
-// no <table>-markup accessibility case left to scan for. This file reaches
-// the same conclusion independently above.
+// `internal-package-contract`'s `scripts/check-accessibility.mjs` is a port
+// of this script, generalized to run against whichever package installs that
+// shared devDependency. That file's doc comment lists the divergences.
 
 import pa11y from "pa11y"
 import { sync as spawnSync } from "cross-spawn"
@@ -72,7 +66,7 @@ const API_LANDING_PAGE = join(docsApiDir, "index.html")
 
 // Every well-known system Chrome/Chromium install location this check knows to look for, in
 // priority order, per platform. Checked only if `PUPPETEER_EXECUTABLE_PATH`/`CHROME_PATH`
-// (an explicit override) isn't already set. Covers GitHub Actions' own `ubuntu-latest` runner
+// (an explicit override) isn't already set. Covers GitHub Actions' `ubuntu-latest` runner
 // image (which ships Google Chrome preinstalled). Also covers the common macOS/Linux
 // developer-machine defaults.
 const CANDIDATE_EXECUTABLE_PATHS = {
@@ -93,7 +87,7 @@ const CANDIDATE_EXECUTABLE_PATHS = {
 }
 
 // A last-resort PATH lookup for a handful of common binary names. It covers a Chromium installed
-// under a name/location this check's own candidate list doesn't happen to enumerate.
+// under a name/location this check's candidate list doesn't happen to enumerate.
 const PATH_LOOKUP_NAMES = ["google-chrome-stable", "google-chrome", "chromium-browser", "chromium"]
 
 async function pathExists(path) {
@@ -106,9 +100,9 @@ async function pathExists(path) {
 }
 
 /**
- * Finds a real, usable Chrome/Chromium executable on this machine. `puppeteer-core` bundles no
- * browser of its own and requires one to be supplied explicitly. This module's own doc comment
- * explains why it's used in place of real `puppeteer`.
+ * Finds a usable Chrome/Chromium executable on this machine. `puppeteer-core` bundles no browser
+ * and needs one supplied explicitly. This module's doc comment explains why it replaces the
+ * upstream `puppeteer`.
  * @returns The executable's absolute path, or `undefined` if none could be found.
  */
 async function findChromeExecutable() {
@@ -133,7 +127,7 @@ async function findChromeExecutable() {
 
 /**
  * Resolves which pages to scan. The main site is always scanned. The docs/api/ landing page is
- * scanned too, but only once docs/api/ has actually been generated in this working tree
+ * scanned too, but only once docs/api/ has been generated in this working tree
  * (`npm run docs:api`). It is normal for it to be absent in a bare local checkout that hasn't
  * run that script yet.
  * @returns Absolute paths of every page to scan.
@@ -163,11 +157,11 @@ try {
   } else {
     const chromeLaunchConfig = {
       executablePath,
-      // Chromium's own sandbox needs kernel unprivileged-user-namespace
+      // Chromium's sandbox needs kernel unprivileged-user-namespace
       // support. Ubuntu 23.10+ (GitHub's `ubuntu-latest` runner) restricts
       // it via AppArmor. Without these flags Chrome exits immediately on
       // launch and pa11y produces no report at all. This is safe here:
-      // every page this check ever loads is this repository's own static,
+      // every page this check ever loads is this repository's static,
       // committed HTML over a file:// URL, never untrusted content.
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     }

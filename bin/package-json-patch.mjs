@@ -60,8 +60,8 @@ function findValueEnd(text, start) {
 }
 
 /**
- * Lists every top-level property of the object literal starting at `objectStart` (the offset of
- * its opening `{`), in source order, with each property's key text and its value's span.
+ * Lists every top-level property of the object literal whose opening `{` is at `objectStart`.
+ * Properties come in source order, each with its key text and its value's span.
  * @param text - Full source text.
  * @param objectStart - Offset of the object's opening `{`.
  * @returns Ordered property descriptors.
@@ -100,8 +100,8 @@ function findProperty(text, objectStart, key) {
 }
 
 /**
- * Detects the file's newline style and the indentation unit used by an object's own properties
- * (the whitespace between the start of a property's line and its opening quote). It falls back to
+ * Detects the file's newline style and the indentation unit of an object's own properties. The
+ * unit is the whitespace from the start of a property's line to its opening quote. It falls back to
  * `"\n"` / two spaces when there's nothing to detect from (an empty object with no siblings to
  * copy).
  * @param text - Full source text.
@@ -116,10 +116,10 @@ function detectStyle(text, sampleKeyStart) {
   const candidate = text.slice(lineStart, sampleKeyStart)
   // A single-line (minified) file has no newline before `sampleKeyStart` at all. So `lineStart`
   // falls back to 0, and `candidate` becomes everything from the start of the file up to the key.
-  // That is real JSON content, not whitespace. Using that verbatim as "indentation" would splice
-  // arbitrary file content into the insertion and corrupt the output. Only ever treat `candidate`
-  // as a real indent when it actually is one (spaces/tabs only); anything else falls back to the
-  // same two-space default as "no sample to measure from".
+  // That is JSON content, not whitespace. Using that verbatim as "indentation" would splice
+  // arbitrary file content into the insertion and corrupt the output. So `candidate` counts as an
+  // indent only when it is spaces/tabs. Anything else falls back to the two-space default that
+  // "no sample to measure from" uses.
   const indent = /^[ \t]*$/.test(candidate) ? candidate : ""
   return { newline, indent: indent.length > 0 ? indent : "  " }
 }
@@ -130,10 +130,9 @@ function detectStyle(text, sampleKeyStart) {
  * scan is used instead of parse/stringify.
  * @param text - Raw `package.json` source text.
  * @param scriptValue - The desired value of `scripts.contract` (e.g. `"tsx scripts/contract.mjs"`).
- * @returns The (possibly unchanged) text and what happened: `"created"` (the property didn't
- * exist and was added), `"unchanged"` (it already had exactly this value), or `"conflict"` (it
- * existed with a different value and was deliberately left alone; the caller must report this,
- * never overwrite it).
+ * @returns The (possibly unchanged) text and what happened. `"created"`: the property didn't
+ * exist and was added. `"unchanged"`: it already had this value. `"conflict"`: it existed with a
+ * different value and was left alone. The caller must report a conflict, never overwrite it.
  */
 export function patchContractScript(text, scriptValue) {
   const rootStart = text.indexOf("{")

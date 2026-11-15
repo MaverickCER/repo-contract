@@ -11,8 +11,8 @@
  * It is true in any of three cases:
  * - `governedFilesTouched` is empty (nothing governed changed).
  * - `adrFilesTouched` is non-empty (the ADR set itself was engaged).
- * - `referencedAdrNumbers` contains at least one number that resolves to a real,
- *   currently-existing file under `specs/decisions/`.
+ * - `referencedAdrNumbers` contains at least one number that resolves to an existing file
+ *   under `specs/decisions/`.
  */
 export interface AdrGovernanceEvidence {
   readonly baseRef: string
@@ -24,11 +24,11 @@ export interface AdrGovernanceEvidence {
   readonly commitsScanned: number
   /**
    * Every syntactically valid `ADR NNNN`-shaped reference found in the branch's commit messages,
-   * whether or not the number resolves to a real file. It is kept for rationale/debuggability and
-   * is not itself the gate.
+   * whether or not the number resolves to an existing file. It is kept for rationale and
+   * debugging, and is not itself the gate.
    */
   readonly referencedAdrNumbers: readonly string[]
-  /** Subset of `referencedAdrNumbers` that actually corresponds to a real file under `specs/decisions/`. */
+  /** Subset of `referencedAdrNumbers` that corresponds to an existing file under `specs/decisions/`. */
   readonly resolvedAdrNumbers: readonly string[]
   readonly satisfied: boolean
 }

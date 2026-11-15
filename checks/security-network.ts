@@ -204,9 +204,9 @@ export function evaluateSecurityNetworkPolicy(input: {
   }
 }
 
-// Second, independent layer of the "no network calls" invariant: see eslint.config.js's own doc
+// Second, independent layer of the "no network calls" invariant: see eslint.config.js's doc
 // comment on the first (ESLint) layer, and specs/decisions/0007-no-network-surface.md. This
-// check's own script (scripts/security-network/scan.ts) never invokes ESLint, so a silently
+// check's script (scripts/security-network/scan.ts) never invokes ESLint, so a silently
 // weakened/removed ESLint rule or a suppressed violation still fails here.
 export const securityNetwork: CheckDefinitionConfig = {
   run: ["tsx", "scripts/security-network/scan.ts"],

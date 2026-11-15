@@ -3,7 +3,7 @@ import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
- * Playwright's own `--reporter=json` contract: not published as a
+ * Playwright's `--reporter=json` contract: not published as a
  * TypeScript type by the tool. Suites nest (a project, then a file, then
  * `describe` blocks), so failing specs are collected recursively.
  */
@@ -44,7 +44,7 @@ interface PlaywrightReport {
 
 /**
  * Recursively collects one human-readable line per failing spec across a (possibly nested) suite tree.
- * @param suites - the suite tree to walk, as `PlaywrightReport.suites` or a suite's own nested `suites`.
+ * @param suites - the suite tree to walk, as `PlaywrightReport.suites` or a suite's nested `suites`.
  * @returns one line per failing spec, depth-first: its `file:line`, its title, and its last error message when there is one.
  */
 function collectFailingSpecs(suites: readonly PlaywrightSuite[]): string[] {
@@ -58,9 +58,9 @@ function collectFailingSpecs(suites: readonly PlaywrightSuite[]): string[] {
       // Provably equivalent, not a coverage gap. A mutated `?? []` fallback
       // may substitute non-array/non-test garbage here. Every field access on
       // it below (`.results`, `.error`, `.message`) still resolves safely to
-      // `undefined` via its own optional chaining (confirmed by hand-tracing
+      // `undefined` via its optional chaining (confirmed by hand-tracing
       // both fallback sites). That converges on the same `message: undefined`
-      // this line already produces for a genuinely empty
+      // this line already produces for an empty
       // `spec.tests`/`t.results`. No test can observe a difference.
       const lastResult = (spec.tests ?? []).flatMap((t) => t.results ?? []).at(-1)
       const message = lastResult?.error?.message?.trim()
@@ -95,7 +95,7 @@ export const e2e: CheckDefinitionConfig = {
     }
 
     // `output.success` only means `JSON.parse` didn't throw: `value` is `unknown` at
-    // runtime. Guard it is a real object before trusting the cast, matching how
+    // runtime. Guard it is an object before trusting the cast, matching how
     // dead-code.ts / duplication.ts guard theirs, so `.stats` never throws out of the policy.
     const value: unknown = result.output.value
 
@@ -140,8 +140,8 @@ export const e2e: CheckDefinitionConfig = {
     if (stats.unexpected > 0) {
       // Provably equivalent, not a coverage gap. collectFailingSpecs itself
       // only ever reads `.specs`/`.suites` off each element via safe
-      // optional chaining (see its own comment). So substituting non-suite
-      // garbage for a genuinely absent `report.suites` still yields zero
+      // optional chaining (see its comment). So substituting non-suite
+      // garbage for an absent `report.suites` still yields zero
       // collected detail lines either way.
       const details = collectFailingSpecs(report.suites ?? [])
 

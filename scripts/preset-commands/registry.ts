@@ -6,7 +6,7 @@ export type { PresetCommandExceptionRecord } from "./evidence-types.js"
 
 // A command name is the first token of a preset's `run:` array: an npm-package bin name or a
 // path segment. This keeps out whitespace, path separators, and shell metacharacters that would
-// never be a real bin name and could smuggle intent into an id.
+// never be a bin name and could smuggle intent into an id.
 const COMMAND_NAME = /^[A-Za-z0-9._@/-]{1,64}$/
 
 /**

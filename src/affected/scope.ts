@@ -7,7 +7,7 @@ export type RequestedScope = RunScope | "auto"
 /** Where a scope decision came from. */
 export type ScopeSource = "flag" | "env" | "ci-full" | "release" | "ci-event" | "default"
 
-/** The scope a run uses and the reason, for the run's own output. */
+/** The scope a run uses and the reason, for the run's output. */
 export interface ScopeDecision {
   readonly scope: RunScope
   readonly source: ScopeSource

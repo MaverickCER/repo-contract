@@ -1,9 +1,9 @@
 // `repo-contract metrics`: summarize the run log (`.repo-contract/metrics/runs.jsonl`): how
 // often runs pass, which checks fail, how much the cache and affected scope save. Read-only. All
-// input and output is injected (argv, stdout/stderr, the file reader, the engine, the clock) so
-// the command is unit-testable without a process or a directory; bin/repo-contract.mjs wires the
-// real ones. Conventions: data goes to stdout and diagnostics to stderr; exit status is 0 on
-// success, 1 when the command could not run, 2 for a usage error. Nothing is sent anywhere.
+// input and output is injected: argv, stdout/stderr, the file reader, the engine and the clock.
+// Unit tests then need no process and no directory. bin/repo-contract.mjs wires the production
+// ones. Data goes to stdout and diagnostics to stderr. Exit status: 0 on success, 1 when the
+// command could not run, 2 for a usage error. Nothing is sent anywhere.
 
 import path from "node:path"
 

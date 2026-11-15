@@ -3,9 +3,9 @@ import type { PolicyResult } from "../../types.js"
 /**
  * The shared three-branch shape behind every lint-style preset's pass/warn/fail decision. It
  * fails, listing every error, if there are any; else warns, listing every warning, if there are
- * any; else passes. `lint` (ESLint) and `stylelint` share it: their only difference was the tool
- * name substituted into each rationale string.
- * @param toolName - the tool's own display name, substituted into every rationale (e.g. "ESLint", "stylelint").
+ * any; else passes. `lint` (ESLint) and `stylelint` share it: they differ only in the tool name
+ * substituted into each rationale string.
+ * @param toolName - the tool's display name, substituted into every rationale (e.g. "ESLint", "stylelint").
  * @param errorDetails - one rendered line per error-severity finding.
  * @param warningDetails - one rendered line per warning-severity finding.
  * @returns the fail/warn/pass `PolicyResult`.

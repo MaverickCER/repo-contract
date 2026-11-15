@@ -1,20 +1,18 @@
 /**
  * Error hierarchy for repo-contract. Every concrete error carries a stable
- * `code` string for programmatic handling, and never embeds raw
- * stdout/stderr/env values in its message: only check ids and field names
- * (see SECURITY.md).
+ * `code` string for programmatic handling. Its message never embeds raw
+ * stdout/stderr/env values, only check ids and field names (see SECURITY.md).
  *
- * Three distinct failure classes are kept deliberately separate (see
- * specs/architecture.md):
+ * Three failure classes stay separate (see specs/architecture.md):
  *   - Structural config problems throw synchronously, before any process
  *     spawns (`InvalidRepoContractConfigError`, `InvalidCheckConfigError`).
  *   - Anything only discoverable by attempting execution becomes evidence,
- *     never a throw (a bad `cwd`, a missing binary: recorded as
- *     `status: "spawn_error"` on that check's `CheckEvidence`).
+ *     never a throw. A bad `cwd` or a missing binary is recorded as
+ *     `status: "spawn_error"` on that check's `CheckEvidence`.
  *   - A policy function throwing or rejecting is a bug in consumer code, not
- *     a check failing its contract: it propagates as a rejected
- *     `runRepoContract()` promise (`PolicyThrewError`), never silently
- *     turned into a failed verdict entry.
+ *     a check failing its contract. It propagates as a rejected
+ *     `runRepoContract()` promise (`PolicyThrewError`). It never becomes a
+ *     failed verdict entry.
  * @public
  */
 export abstract class RepoContractError extends Error {
@@ -24,10 +22,10 @@ export abstract class RepoContractError extends Error {
 
 /**
  * The top-level `RepoContractConfig` itself is structurally invalid: e.g. `checks` is not an
- * object, or `concurrency` is not a positive integer. (A `checks` object with zero entries is
- * deliberately valid: the run produces an empty, passing `Verdict`.) Thrown synchronously by
- * `runRepoContract`, before anything spawns; not by `defineRepoContract`, which performs no
- * runtime validation of its own (see its own doc comment).
+ * object, or `concurrency` is not a positive integer. A `checks` object with zero entries is
+ * valid: the run produces an empty, passing `Verdict`. `runRepoContract` throws this
+ * synchronously, before anything spawns. `defineRepoContract` never throws it, because it
+ * performs no runtime validation (see its doc comment).
  * @public
  */
 export class InvalidRepoContractConfigError extends RepoContractError {
@@ -61,9 +59,8 @@ export class InvalidCheckConfigError extends RepoContractError {
 
 /**
  * `RunRepoContractOptions.checks` (a partial-run request) names a check id that doesn't exist in
- * the configured `checks`. Unlike a `dependsOn` id (already validated to exist by
- * `validateRepoContractConfig` before any run starts), `options.checks` is only ever checked once
- * `runChecks` actually resolves it: there is no earlier structural-validation pass for it.
+ * the configured `checks`. `validateRepoContractConfig` checks every `dependsOn` id before a run
+ * starts. `options.checks` has no such earlier pass: `runChecks` checks it when it resolves it.
  * @public
  */
 export class UnknownCheckIdError extends RepoContractError {
@@ -83,10 +80,10 @@ export class UnknownCheckIdError extends RepoContractError {
 
 /**
  * A check's `dependsOn` names a check declared *later* in the same `checks` object.
- * `dependsOn` may only reference a check declared earlier: see `CheckDefinition.dependsOn`'s own
- * doc comment. Declaration order doubles as the required topological order, so this is the only
- * way an invalid dependency graph can arise; a real cycle is structurally impossible once every
- * edge points backward. Thrown synchronously, before any check spawns.
+ * `dependsOn` may only reference a check declared earlier: see `CheckDefinition.dependsOn`'s
+ * doc comment. Declaration order doubles as the required topological order. This is the only way
+ * an invalid dependency graph can arise. A cycle is structurally impossible once every edge points
+ * backward. Thrown synchronously, before any check spawns.
  * @public
  */
 export class DependencyDeclaredLaterError extends RepoContractError {
@@ -140,13 +137,13 @@ export class StandardSchemaValidateThrewError extends RepoContractError {
  * A check's `policy` function threw synchronously, or returned a `Promise`
  * that later rejected. Both failure modes are wrapped identically. The
  * original thrown/rejected value is preserved verbatim via the native
- * `Error` `cause` chain (never stringified, summarized, or discarded)
- * so a consumer catching this can still inspect exactly what their own
- * policy code did wrong.
+ * `Error` `cause` chain (never stringified, summarized, or discarded).
+ * A consumer catching this can still inspect what their policy code did
+ * wrong.
  *
- * A policy throwing never stops any other check's policy from running:
- * every configured check's policy is invoked exactly once regardless of
- * what any other policy does. If more than one policy fails this way in the
+ * A policy throwing never stops any other check's policy from running.
+ * Every configured check's policy is invoked exactly once, whatever any
+ * other policy does. If more than one policy fails this way in the
  * same run, `runRepoContract()` rejects with a native `AggregateError`
  * instead of surfacing only the first. Its `errors` array holds one error per
  * failing check. Each is a `PolicyThrewError`, or one of its two narrower
@@ -171,7 +168,7 @@ export class PolicyThrewError extends RepoContractError {
  * A narrower error `runPolicies` throws instead of `PolicyThrewError`. Two
  * conditions must hold. The thrown `TypeError`'s message shows it came from
  * reading a `result.output` property (`.success`, `.value`, `.error`, or
- * `.format`). And this check's `CheckEvidence.output` really is `undefined`,
+ * `.format`). And this check's `CheckEvidence.output` is `undefined`,
  * which happens only when its config never requested
  * `output: { format: ... }` (see `CheckEvidence.output` in types.ts).
  *
@@ -184,7 +181,7 @@ export class PolicyThrewError extends RepoContractError {
  * unrelated bug that reads the same property name off some other `undefined`
  * value can still be misclassified (see `unrequestedOutputProperty` in
  * run-policies.ts). `cause` still holds the original `TypeError` verbatim, as
- * `PolicyThrewError` guarantees for every policy failure, so the true cause
+ * `PolicyThrewError` guarantees for every policy failure. The true cause
  * stays recoverable.
  * @public
  */
@@ -213,17 +210,16 @@ export class PolicyReadUnrequestedOutputError extends RepoContractError {
  * `PolicyReadUnrequestedOutputError`. This check *did* request
  * `output: { format: ... }`, but that parse failed
  * (`result.output.success === false`). `ParsedOutputFailure` in types.ts has
- * no `value` field, only `error`. The policy still read a property off `result.output.value` without
- * checking `.success` first. `runPolicies` detects it as it does the sibling
- * case: a thrown `TypeError` whose message shows a property read off
- * `undefined`. It then confirms this check's evidence has
- * `output.success === false`. So an unrelated `TypeError`, or a check whose
- * parse succeeded, still becomes a plain `PolicyThrewError`. Unlike `PolicyReadUnrequestedOutputError`, the read property
- * isn't restricted to a known list here (`result.output.value`'s shape is whatever
- * the external tool printed, entirely unknown to repo-contract) so this match is
- * necessarily a little broader. `cause` still holds the original `TypeError`
- * verbatim; the message never repeats `result.output.error`'s own text, which may
- * contain raw stdout content (see SECURITY.md).
+ * no `value` field, only `error`. The policy still read a property off
+ * `result.output.value` without checking `.success` first. `runPolicies` detects it as it does
+ * the sibling case: a thrown `TypeError` whose message shows a property read off `undefined`.
+ * It then confirms this check's evidence has `output.success === false`. So an unrelated
+ * `TypeError`, or a check whose parse succeeded, still becomes a plain `PolicyThrewError`.
+ * Unlike `PolicyReadUnrequestedOutputError`, this match does not restrict the read property to a
+ * known list. `result.output.value`'s shape is whatever the external tool printed, unknown to
+ * repo-contract. So this match is a little broader. `cause` still holds the original `TypeError`
+ * verbatim. The message never repeats `result.output.error`'s text, which may contain raw stdout
+ * content (see SECURITY.md).
  * @public
  */
 export class PolicyReadFailedParseValueError extends RepoContractError {

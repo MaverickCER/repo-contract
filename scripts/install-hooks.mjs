@@ -1,4 +1,4 @@
-// Wires this repository's own local git config for contributors:
+// Wires this repository's local git config for contributors:
 //   - core.hooksPath -> .githooks (commit-msg, pre-commit, pre-push)
 //   - commit.template -> <repo root>/.gitmessage (Conventional Commits cheat sheet
 //     shown in the editor on every `git commit`)
@@ -49,11 +49,11 @@ function gitConfigSet(key, value) {
 }
 
 /**
- * Wires one local git config value, honoring the "never clobber a contributor's own
+ * Wires one local git config value, honoring the "never clobber a contributor's
  * choice" rule. Returns a short status string for the caller to log.
  * @param key - The git config key, e.g. `core.hooksPath`.
  * @param value - The value this repository wants.
- * @param hint - How a contributor would opt in manually, shown when their own value is left alone.
+ * @param hint - How a contributor would opt in manually, shown when their value is left alone.
  */
 function wire(key, value, hint) {
   const current = gitConfigGet(key)

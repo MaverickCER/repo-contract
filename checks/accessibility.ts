@@ -28,8 +28,8 @@ function formatFinding(finding: Pa11yFinding): string {
 }
 
 // Runs pa11y (WCAG2AA, its default standard) against a short list of built
-// pages (scripts/check-accessibility.mjs's own PAGES). It reads a real
-// headless-Chromium accessibility tree, not static markup. That script's own
+// pages (scripts/check-accessibility.mjs's PAGES). It reads a rendered
+// headless-Chromium accessibility tree, not static markup. That script's
 // doc comment says which pages and why only those.
 // specs/decisions/0008-self-hosting-tool-and-dependency-choices.md says why
 // this tool was chosen. "error"-type findings fail; "warning" surfaces as
@@ -49,8 +49,8 @@ export const accessibility: CheckDefinitionConfig = {
 
     if (!evidence.ok) {
       // A missing system Chrome/Chromium is an environment gap, not a defect in this
-      // repository's own pages. Warn rather than fail closed on absence alone. This matches
-      // internal-package-contract's own generalized copy of this check.
+      // repository's pages. Warn rather than fail closed on absence alone. This matches
+      // internal-package-contract's generalized copy of this check.
       if (evidence.error.startsWith("no system Chrome/Chromium executable found")) {
         return { outcome: "warn", rationale: `Accessibility: ${evidence.error}` }
       }

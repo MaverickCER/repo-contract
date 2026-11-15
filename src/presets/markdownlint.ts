@@ -5,7 +5,7 @@ import { readJsonReport } from "./shared/read-json-report.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
- * markdownlint-cli2 has no stdout JSON mode. This describes its own JSON
+ * markdownlint-cli2 has no stdout JSON mode. This describes its JSON
  * output-formatter contract (markdownlint-cli2-formatter-json), read back
  * from disk. Not published as a TypeScript type by either package.
  */
@@ -39,9 +39,9 @@ function formatFinding(finding: MarkdownlintFinding): string {
 
 /**
  * Markdown structure/style lint via markdownlint-cli2. Unlike this
- * package's other file-based-report presets, the report path is
- * config-driven rather than a CLI flag: markdownlint-cli2 only writes
- * JSON when its own config file requests it. This preset assumes the
+ * package's other file-based-report presets, the report path comes from
+ * config, not a CLI flag. The `markdownlint-cli2` tool writes JSON only
+ * when its config file requests it. This preset assumes the
  * consumer's `.markdownlint-cli2.jsonc` includes:
  * ```jsonc
  * "outputFormatters": [["markdownlint-cli2-formatter-json", { "name": "reports/markdownlint.json" }]]

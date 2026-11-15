@@ -30,13 +30,13 @@ function socketFieldValue(record: SocketExceptionRecord, requirement: string): s
  * Evaluates one alert against `socketPolicy`, classified on its `severity`. When the alert is also
  * `shipped`, it is classified independently on its `category` too. `evaluateExceptionRecord`
  * resolves the strictest verdict across every classification. A `supplyChainRisk` alert on a
- * genuinely shipped dependency is therefore `forbidden` outright regardless of severity (see
+ * shipped dependency is `forbidden` outright regardless of severity (see
  * `policy-config.ts`'s `"socket-category"` group). `shipped: false` means a strictly
- * `devDependencies`-only package (see `NormalizedSocketAlert.shipped`'s own doc comment). It never
- * contributes this second classification. Such an alert is still evaluated (and still real
- * evidence), but purely on severity like every other non-supply-chain-risk alert. A real
+ * `devDependencies`-only package (see `NormalizedSocketAlert.shipped`'s doc comment). It never
+ * contributes this second classification. Such an alert is still evaluated and still counts as
+ * evidence, but only on severity, like every other non-supply-chain-risk alert. A
  * `peerDependencies` package IS `shipped`. Declaring a peer range is itself a supply-chain choice
- * this package makes for the consumer, removing their own choice of alternative. A devDependency
+ * this package makes for the consumer, removing their choice of alternative. A devDependency
  * is the opposite: it never surfaces to them at all.
  * @param alert - The alert.
  * @param record - The reconciled live record for it, or `undefined` if the bijection broke.
@@ -65,11 +65,10 @@ function evaluateAlert(
 }
 
 /**
- * Evaluates the `security-socket` check's own emitted evidence: a pure evidence->verdict
- * function; the scan script owns loading, reconciling, and writing
+ * Evaluates the `security-socket` check's emitted evidence: a pure evidence->verdict
+ * function. The scan script owns loading, reconciling, and writing
  * `.repo-contract/exceptions/socket.json`. `unavailable` (CLI not installed / not authenticated /
- * unreachable) is a `warn`, never a `fail`: this check cannot distinguish "genuinely clean" from
- * "never ran". `error` (a malformed report) fails closed. A malformed/unreconcilable registry
+ * unreachable) is a `warn`, never a `fail`: this check cannot tell "clean" from "never ran". `error` (a malformed report) fails closed. A malformed/unreconcilable registry
  * (`registryError`) fails regardless of status. A `passed`/`failed` scan: any `forbidden` /
  * `insufficient` / `unmatched` verdict or stale record fails, listed individually.
  * @param input - Wraps the evidence to evaluate.

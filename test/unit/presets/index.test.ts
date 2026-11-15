@@ -23,6 +23,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     license: presets.license,
     publint: presets.publint,
     arethetypeswrong: presets.arethetypeswrong,
+    bundledDependencies: presets.bundledDependencies,
   }
 
   const factoryPresets: Record<string, () => CheckDefinitionConfig> = {
@@ -35,6 +36,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     brokenLinks: () => presets.brokenLinks(),
     distNoUrls: () => presets.distNoUrls(),
     commitlint: () => presets.commitlint(),
+    quickStart: () => presets.quickStart(),
   }
 
   it("exports exactly the documented preset names", () => {
@@ -102,6 +104,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     ["brokenLinks", presets.brokenLinks(), "linkinator"],
     ["commitlint", presets.commitlint(), "@commitlint/cli"],
     ["securitySecrets", presets.securitySecrets, "secretlint"],
+    ["quickStart", presets.quickStart(), "repo-contract"],
   ] as const)(
     "%s reports an actionable missing-dependency failure through a real ENOENT spawn, not just fabricated evidence",
     async (_name, preset, packageName) => {

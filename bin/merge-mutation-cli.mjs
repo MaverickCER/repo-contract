@@ -1,10 +1,10 @@
 // `repo-contract merge-mutation`: combine the Stryker reports of a sharded mutation run into
 // the one report an unsharded run would have produced. It fails, rather than merging what it has,
 // if a shard is missing, repeated, out of range, unreadable, or mutated a file another shard did.
-// All input and output is injected (argv, stdout/stderr, file access, the engine) so the command is
-// unit-testable without a process or a directory; bin/repo-contract.mjs wires the real ones.
-// Conventions: data goes to stdout (unless --out) and diagnostics to stderr; exit status is 0 on
-// success, 1 when the shards cannot be merged, 2 for a usage error.
+// All input and output is injected: argv, stdout/stderr, file access and the engine. Unit tests
+// then need no process and no directory. bin/repo-contract.mjs wires the production ones.
+// Data goes to stdout (unless --out) and diagnostics to stderr. Exit status: 0 on success, 1 when
+// the shards cannot be merged, 2 for a usage error.
 
 import path from "node:path"
 

@@ -2,16 +2,16 @@
 // `run: ["tsx", "scripts/security-network/scan.ts"]` in repo-contract.config.ts.
 // Prints ONLY the JSON evidence to stdout (for `output: { format: "json" }`
 // to parse): mirrors scripts/adr-governance/check.ts's/scripts/suppression-
-// governance/check.ts's own stdout contract.
+// governance/check.ts's stdout contract.
 //
 // This is the second of two independent layers enforcing the "no network
-// calls" invariant (see eslint.config.js's own doc comment on the first).
+// calls" invariant (see eslint.config.js's doc comment on the first).
 // It deliberately does not invoke ESLint, load eslint.config.js, or depend
 // on any ESLint rule still being configured correctly. It is an AST scan of
-// the real source files, built from the language's own compiler API.
+// the source files, built from the language's compiler API.
 // scripts/suppression-governance/discover-suppressions.ts takes the same
-// approach for the identical reason. A suppression-governance-style
-// guarantee must survive its own primary enforcement mechanism being
+// approach for the same reason. A suppression-governance-style
+// guarantee must survive its primary enforcement mechanism being
 // silently weakened or bypassed. See specs/decisions/0007-no-network-surface.md.
 
 import { mkdir, readFile } from "node:fs/promises"
@@ -63,9 +63,9 @@ const registrySchema: StandardSchemaV1<unknown, readonly NetworkExceptionRecord[
  * "files"/exports; `npm pack --dry-run` confirms dist/ is built from nothing else).
  * `bin/**\/*.mjs` is the hand-written CLI that ships beside it, unbundled: `init`, `affected`,
  * `cache`, `doctor`, `metrics` and `merge-mutation`. A network call in the CLI would reach a consumer's machine just as
- * one in the library would. Reuses suppression-governance's own whole-repo walker (already excludes
+ * one in the library would. Reuses suppression-governance's whole-repo walker (already excludes
  * node_modules/dist/coverage/.stryker-tmp/etc. and fixtures directories) rather than re-implementing
- * file discovery, then filters to this check's own scope. Declaration files (`.d.mts`) carry no code.
+ * file discovery, then filters to this check's scope. Declaration files (`.d.mts`) carry no code.
  * @param repoRelativePath - A repo-relative, POSIX-separated file path, as produced by `listSourceFiles`.
  * @returns `true` if this file is inside this check's scope.
  */
@@ -88,7 +88,7 @@ const RESTRICTED_GLOBAL_NAMES: ReadonlySet<string> = new Set(NETWORK_GLOBALS)
 /**
  * @param sourceFile - The file the position belongs to.
  * @param pos - A 0-based character offset into `sourceFile`'s text.
- * @returns The 1-based line/column TypeScript's own scanner would report for `pos`.
+ * @returns The 1-based line/column TypeScript's scanner would report for `pos`.
  */
 function lineAndColumn(
   sourceFile: ts.SourceFile,
@@ -100,11 +100,11 @@ function lineAndColumn(
 
 /**
  * Walks one already-parsed source file's AST, looking for every prohibited
- * (or unverifiable) network capability this module's own doc comment and
+ * (or unverifiable) network capability this module's doc comment and
  * specs/decisions/0007-no-network-surface.md describe. Never executes
- * anything it finds: this is pure static analysis over the parsed syntax
- * tree, the same "prefer AST-based analysis over fragile regular
- * expressions" approach discover-suppressions.ts already uses.
+ * anything it finds: this is pure static analysis over the parsed syntax tree.
+ * The discover-suppressions.ts scanner takes the same "prefer AST-based
+ * analysis over fragile regular expressions" approach.
  * @param relativePath - The file's repo-relative path, used only to label findings.
  * @param text - The file's full source text.
  * @returns Every finding in this one file, in source order.
@@ -119,7 +119,7 @@ export function scanSourceFile(
   const sourceFile = ts.createSourceFile(relativePath, text, ts.ScriptTarget.Latest, true, kind)
 
   /**
-   * Records one finding at `node`'s own source position.
+   * Records one finding at `node`'s source position.
    * @param node - The AST node the finding is anchored to, for its line/column.
    * @param capability - Which prohibited (or unverifiable) capability this is.
    * @param detail - Human-readable explanation of what was found and why.
@@ -142,8 +142,8 @@ export function scanSourceFile(
 
   /**
    * Shared by static `import`, static `export ... from`, dynamic `import(...)`, and a bare
-   * `require(...)` call: all four resolve a module by a specifier expression, and all four are
-   * checked the same way.
+   * `require(...)` call. All four resolve a module by a specifier expression.
+   * All four are checked the same way.
    * @param specifier - The specifier expression, or `undefined` for a call with no arguments at all, or a re-export clause with no `from`.
    * @param namedElements - The static import's/export's named elements (for named-import restriction checks), or `undefined` for a dynamic import/require call, which cannot express one syntactically.
    * @param wholeNode - The enclosing node a finding not tied to a more specific location should be attached to.
@@ -194,7 +194,7 @@ export function scanSourceFile(
         // of them still hands back the whole module object. The restricted
         // name (`createRequire`) is reachable from that object. Flag the
         // import itself rather than let this be the gap that defeats the
-        // "close that path at its only real chokepoint" guarantee.
+        // "close that path at its only chokepoint" guarantee.
         addFinding(
           wholeNode,
           "restricted-named-import",
@@ -206,8 +206,8 @@ export function scanSourceFile(
 
   /**
    * Recursively walks the whole tree rooted at `node`, dispatching each recognized shape to the
-   * appropriate check above. (Preset `run:` command review moved to its own `preset-commands`
-   * check: see scripts/preset-commands/scan.ts and ADR 0007's amendment.)
+   * appropriate check above. Preset `run:` commands are reviewed by the separate
+   * `preset-commands` check (scripts/preset-commands/scan.ts, ADR 0007's amendment).
    * @param node - The AST node (or subtree root) to inspect.
    */
   function visit(node: ts.Node): void {
@@ -222,7 +222,7 @@ export function scanSourceFile(
       ts.isImportEqualsDeclaration(node) &&
       ts.isExternalModuleReference(node.moduleReference)
     ) {
-      // TypeScript's own `import x = require("...")` form: a real module
+      // TypeScript's `import x = require("...")` form: a module
       // load that the plain `require(...)` call branch below never sees
       // because it is a declaration, not a CallExpression.
       checkModuleSpecifier(node.moduleReference.expression, undefined, node)
@@ -275,7 +275,7 @@ export function scanSourceFile(
 
 /**
  * The pure static scan: every in-scope file looked at, every raw finding across all of them, in
- * deterministic order. No registry, no I/O beyond reading source. Exercised directly by
+ * deterministic order. No registry, no I/O beyond reading source. Exercised by
  * test/unit/security-network/scan.test.ts against fixture directories.
  * @param root - Absolute path to the repository (or fixture root) being scanned.
  * @returns How many files were scanned, and every finding across all of them.
@@ -288,8 +288,8 @@ export async function scanForNetworkCapability(root: string): Promise<{
   const scopedFiles = allFiles.filter((relativePath) => isInScope(relativePath))
 
   // Read all in-scope files in parallel, then scan them in the deterministic
-  // `scopedFiles` order: matching discover-suppressions.ts, which reads the
-  // same `listSourceFiles()` set with `Promise.all` for the same reason.
+  // `scopedFiles` order. The discover-suppressions.ts scanner reads the same
+  // `listSourceFiles()` set with `Promise.all` for the same reason.
   const texts = await Promise.all(
     scopedFiles.map((relativePath) => readFile(path.join(root, relativePath), "utf8")),
   )
@@ -325,8 +325,9 @@ function dedupeFindings(
 
 /**
  * The check's full logic: scan, then reconcile `.repo-contract/exceptions/security-network.json`
- * against what was found (a fresh blank stub per unmatched finding, stale records surfaced never
- * removed) and write it back. On a fully-governed clean tree it produces no diff.
+ * against what was found and write it back. Reconciling adds a fresh blank stub per unmatched
+ * finding and surfaces stale records without removing them. On a fully-governed clean tree it
+ * produces no diff.
  * @param root - Absolute path to the repository (or fixture root) being scanned.
  * @returns The full `NetworkScanEvidence` for `output: { format: "json" }`.
  */

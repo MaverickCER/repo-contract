@@ -2,7 +2,7 @@ import type { CheckDefinitionConfig } from "../src/types.js"
 import { evaluateVitestJsonPolicy } from "../src/presets/shared/vitest-json-policy.js"
 
 // One check per accepted Vitest-based verification category (see
-// specs/verification-taxonomy.md). Each independently runs only its own
+// specs/verification-taxonomy.md). Each independently runs only its
 // test/<category>/** via scripts/run-test-category.mjs. That script is the
 // single canonical implementation package.json's test:<category> scripts
 // also call. The test-unit/test-integration/test-property checks also pass

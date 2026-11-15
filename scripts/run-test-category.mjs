@@ -5,22 +5,22 @@
 // scripts/run-coverage.mjs. None of them separately re-encodes the same
 // `vitest run --config ...` invocation. See
 // specs/decisions/0005-independent-verification-boundaries-coverage-is-a-union.md for why
-// that duplication was a real defect, not a stylistic one.
+// that duplication is a defect, not a stylistic one.
 //
 // Usage: node scripts/run-test-category.mjs <unit|integration|property|e2e> [--coverage] [--reporter=json]
 //
 // Every flag after the category name is passed through to vitest verbatim.
 // The stdio streams are fully inherited. This script never writes anything
 // of its own to stdout. A caller parsing vitest's --reporter=json output
-// (e.g. a repo-contract check) sees exactly vitest's own stdout, uncorrupted.
+// (e.g. a repo-contract check) sees only vitest's stdout, uncorrupted.
 //
-// One exception, for --reporter=json: as of Vitest 5 that reporter no longer prints the report to
-// stdout. It writes a file of its own choosing and prints only a "JSON report written to ..."
-// line. Vitest 4 with --outputFile writes the file alone. This script therefore has Vitest write
+// One exception, for --reporter=json: Vitest 5's reporter does not print the report to
+// stdout. It writes a file it chooses and prints only a "JSON report written to ..."
+// line. Vitest 4 with --outputFile writes the file alone. This script has Vitest write
 // the report to a fresh private temporary file. It prints that file's contents to stdout once
-// Vitest has exited. Vitest's own stdout (its "JSON report written to ..." notice, any coverage
+// Vitest has exited. Vitest's stdout (its "JSON report written to ..." notice, any coverage
 // text) goes to stderr meanwhile, so stdout carries the report and nothing else. A caller that
-// parses stdout therefore gets the report on either major. It can never read a stale one: the
+// parses stdout gets the report on either major. It can never read a stale one: the
 // file is created for this run and removed after it.
 
 import spawn from "cross-spawn"
@@ -37,7 +37,7 @@ const [category, ...passthroughArgs] = process.argv.slice(2)
 
 if (!category || !CATEGORIES.has(category)) {
   console.error(
-    `[run-test-category] expected one of: ${[...CATEGORIES].join(", ")} -- got ${JSON.stringify(category)}`,
+    `[run-test-category] expected one of: ${[...CATEGORIES].join(", ")}; got ${JSON.stringify(category)}`,
   )
   process.exit(1)
 }

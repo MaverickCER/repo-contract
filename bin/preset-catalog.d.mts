@@ -17,10 +17,16 @@ export type PresetName =
   | "publint"
   | "arethetypeswrong"
   | "aiReview"
+  | "bundledDependencies"
+  | "quickStart"
 
 export declare const DIST_OUTPUT: "dist/"
 
 export declare const AGENT_COMMAND: "agent command"
+
+export declare const PUBLISHED_PACKAGE: "published package"
+
+export declare const QUICK_START_BLOCK: "quick-start block"
 
 export declare const PRESET_DEPENDENCIES: Readonly<Record<PresetName, string | null>>
 
@@ -37,9 +43,8 @@ export interface DetectPresetsResult {
 }
 
 export declare function detectPresets(packageJson: {
-  // A real package.json naturally has both fields: this type accepts `dependencies` for
-  // shape-compatibility with that, even though detectPresets's implementation only ever reads
-  // `devDependencies` (see preset-catalog.mjs's own doc comment for why).
+  // A package.json usually has both fields, so this type accepts `dependencies` too. The
+  // implementation reads only `devDependencies` (preset-catalog.mjs's doc comment says why).
   readonly dependencies?: Readonly<Record<string, string>>
   readonly devDependencies?: Readonly<Record<string, string>>
   // Read only to detect a published `dist/` (the `distNoUrls` preset).
@@ -48,4 +53,6 @@ export declare function detectPresets(packageJson: {
   readonly types?: string
   readonly files?: readonly string[]
   readonly exports?: unknown
+  // Read only to detect a published package (the `bundledDependencies` preset).
+  readonly private?: unknown
 }): DetectPresetsResult

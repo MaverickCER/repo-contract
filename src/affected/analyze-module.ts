@@ -131,9 +131,9 @@ class Extractor {
   }
 
   /**
-   * The node's tokens joined by single spaces: insensitive to whitespace, line breaks and comments
-   * (the compiler's printer is not; it preserves block layout and keeps comments), sensitive to
-   * everything that can change behavior, including quote style, which is merely conservative.
+   * The node's tokens joined by single spaces. It ignores whitespace, line breaks and comments,
+   * which the compiler's printer keeps. It is sensitive to everything that can change behavior,
+   * and also to quote style, which is only conservative.
    * @param node - The node to flatten into tokens.
    * @returns The normalized token text.
    */

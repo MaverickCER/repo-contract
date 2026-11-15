@@ -35,24 +35,24 @@ interface JscpdReport {
 
 /** Options accepted by {@link duplication}. */
 interface DuplicationOptions {
-  /** Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope the scan to your own source tree. */
+  /** Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope the scan to your source tree. */
   readonly path?: string
 }
 
 // Kept in lockstep with the `--output reports/jscpd` argument below. Both are
-// relative and resolve against the *host* process's cwd, not the check's own
-// `cwd` option: jscpd writes here and this policy's `readFile` reads from here,
-// so a check configured with a different `cwd` would look in the wrong place.
+// relative and resolve against the *host* process's cwd, not the check's
+// `cwd` option. jscpd writes here and this policy's `readFile` reads from here.
+// A check configured with a different `cwd` would look in the wrong place.
 // This preset does not expose an output-path option: a consumer needing one
 // runs jscpd via a custom `run`/`policy` instead.
 const REPORT_PATH = "reports/jscpd/jscpd-report.json"
 
 // jscpd's JSON reporter writes its report to disk. It never prints JSON to
 // stdout, which instead carries decorative progress/summary text. So the
-// report is read from disk directly. jscpd's own `--threshold`/`--exit-code`
+// report is read from disk. jscpd's `--threshold`/`--exit-code`
 // flags are deliberately not used. This preset reads the raw clone count
 // from evidence and owns the pass/fail decision itself, as the
-// deadCode/securityDeps presets already do for their own tools.
+// deadCode/securityDeps presets already do for their tools.
 /**
  * Duplicated-code detection via jscpd.
  * @param options - configuration for this check; see {@link DuplicationOptions}.
@@ -73,7 +73,7 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
 
       const parsed = await readJsonReport<JscpdReport>(
         // Provably equivalent, not a coverage gap. `JSON.parse` coerces
-        // whatever `readFile` returns via that value's own `toString()`.
+        // whatever `readFile` returns via that value's `toString()`.
         // That is confirmed empirically for a Buffer, which is what a mutated/
         // unrecognized encoding argument produces here. `Buffer`'s default
         // `toString()` encoding is itself utf8, so parsing succeeds
@@ -85,7 +85,7 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
       )
       if (!parsed.ok) return parsed.result
       // `readJsonReport<T>` narrows only at the type level: the value is `unknown` at
-      // runtime. Guard it is a real object before trusting the cast, so `.statistics` /
+      // runtime. Guard it is an object before trusting the cast, so `.statistics` /
       // `.duplicates` never throw a TypeError out of the policy (matching markdownlint.ts).
       const value: unknown = parsed.value
 

@@ -10,11 +10,11 @@ const OUTPUT_FORMATS: readonly OutputFormat[] = ["json", "text"]
 
 /**
  * Validates a `RepoContractConfig` structurally and throws before any
- * process spawns. A config with zero checks is valid (an empty `checks`
- * object vacuously satisfies "every check passed"); everything else here is
- * a genuine structural problem. Runtime checks are deliberately defensive
- * about field types rather than trusting the compile-time type, since a
- * config can arrive from plain JavaScript or a widened/cast value.
+ * process spawns. A config with zero checks is valid: an empty `checks`
+ * object vacuously satisfies "every check passed". Everything else here is
+ * a structural problem. Runtime checks test field types instead of trusting
+ * the compile-time type. A config can arrive from plain JavaScript or as a
+ * widened or cast value.
  * @param config - the config to validate; throws if structurally invalid.
  */
 export function validateRepoContractConfig(config: RepoContractConfig): void {
@@ -59,11 +59,11 @@ export function validateRepoContractConfig(config: RepoContractConfig): void {
     throw new InvalidRepoContractConfigError("spawn must be a function.")
   }
 
-  // Same rationale as `spawn` above, for `process.env`: `env` is required, not defaulted to
-  // `{}` internally, since a silent empty environment would break `PATH` resolution for most
-  // real check commands. Delegated to its own function, mirroring validateEnv's per-check
-  // counterpart below, so this function's own complexity stays flat regardless of how much a
-  // single field's validation requires.
+  // Same reason as `spawn` above, for `process.env`. `env` is required, not defaulted to `{}`
+  // internally: a silent empty environment would break `PATH` resolution for most check
+  // commands. Its validation lives in a separate function, like validateEnv's per-check
+  // counterpart below. That keeps this function's complexity flat however much one field's
+  // validation needs.
   validateConfigEnv(env)
 
   if (shell !== undefined && typeof shell !== "boolean") {
@@ -71,9 +71,9 @@ export function validateRepoContractConfig(config: RepoContractConfig): void {
   }
   const globalShell = shell === true
 
-  // Optional, unlike spawn/env: omitting it is a documented, valid choice (Windows falls back to
-  // killing only a timed-out/aborted check's immediate process, not its full descendant tree);
-  // see killProcessTree's own doc comment on RepoContractConfig.
+  // Optional, unlike spawn/env: omitting it is a documented choice. Windows then kills only a
+  // timed-out or aborted check's immediate process, not its descendant tree. See
+  // killProcessTree's doc comment on RepoContractConfig.
   if (killProcessTree !== undefined && typeof killProcessTree !== "function") {
     throw new InvalidRepoContractConfigError("killProcessTree must be a function when provided.")
   }
@@ -86,11 +86,11 @@ export function validateRepoContractConfig(config: RepoContractConfig): void {
 }
 
 /**
- * Validates that `env` (`RepoContractConfig.env`, required) is an object whose every value is a
- * string or `undefined`: `NodeJS.ProcessEnv`'s own contract, distinct from `validateEnv` below,
- * which validates the per-check `env` field against a stricter string-only `Record<string, string>`.
- * `undefined` is accepted here (not just tolerated) because it's a legitimate value `buildEnv`
- * itself filters out, not a type escape hatch.
+ * Validates that `env` (`RepoContractConfig.env`, required) maps every key to a string or
+ * `undefined`, as `NodeJS.ProcessEnv` does. `validateEnv` below differs: it validates the
+ * per-check `env` field against a stricter string-only `Record<string, string>`.
+ * `undefined` is accepted here because `buildEnv` filters it out. It is a legitimate value, not
+ * a type escape hatch.
  * @param env - the config's raw `env` field to validate.
  */
 function validateConfigEnv(env: unknown): void {
@@ -107,14 +107,14 @@ function validateConfigEnv(env: unknown): void {
 }
 
 /**
- * Orchestrates one check's field-level validators. Deliberately a flat
- * sequence of calls with no branching of its own. Each field's validation
- * logic (and its own complexity) lives in its own small function below. So
- * this function's own cyclomatic complexity (and CRAP score) stays low
- * regardless of how many fields exist to check.
+ * Orchestrates one check's field-level validators. It is a flat
+ * sequence of calls with no branching. Each field's validation logic
+ * (and its complexity) lives in a separate small function below. So
+ * this function's cyclomatic complexity (and CRAP score) stays low
+ * however many fields there are to check.
  * @param checkId - identifies which check is being validated, used in thrown error messages.
  * @param check - the check definition to validate.
- * @param globalShell - the run-wide `shell` default (`config.shell ?? false`, already validated), used when this check doesn't set its own `shell`.
+ * @param globalShell - the run-wide `shell` default (`config.shell ?? false`, already validated), used when this check doesn't set its `shell`.
  */
 function validateCheckDefinition(checkId: string, check: unknown, globalShell: boolean): void {
   // An integer-like key ("0", "42", ...) is enumerated by `Object.keys` in
@@ -150,10 +150,10 @@ function validateCheckDefinition(checkId: string, check: unknown, globalShell: b
 
 /**
  * Returns this check's effective shell mode (`check.shell ?? globalShell`), having already
- * validated `shell`'s own type.
+ * validated `shell`'s type.
  * @param checkId - identifies which check is being validated, used in thrown error messages.
  * @param shell - the check's raw `shell` field to validate.
- * @param globalShell - the run-wide `shell` default, used when this check's own `shell` is omitted.
+ * @param globalShell - the run-wide `shell` default, used when this check's `shell` is omitted.
  * @returns this check's effective shell mode: `shell` itself when set, `globalShell` otherwise.
  */
 function validateShell(checkId: string, shell: unknown, globalShell: boolean): boolean {
@@ -181,20 +181,19 @@ function validateRun(checkId: string, run: unknown, usesShell: boolean): void {
 }
 
 /**
- * Validates a string-form `run`: tokenizes it (for its side effect of rejecting unquoted shell operators) when no shell is used, or rejects an empty/whitespace-only string when a shell is used.
+ * Validates a string-form `run`. Without a shell, it tokenizes `run` to reject unquoted shell
+ * operators. With a shell, it rejects an empty or whitespace-only string.
  * @param checkId - identifies which check is being validated, used in thrown error messages.
  * @param run - the check's raw `run` string to validate.
  * @param usesShell - whether `shell: true` was set, from `validateShell`.
  */
 function validateStringRun(checkId: string, run: string, usesShell: boolean): void {
   if (!usesShell) {
-    // Tokenized here for its side effect (throws on an empty string or an
-    // unquoted shell operator); the result is recomputed at spawn time,
-    // since tokenization is cheap and pure. The first token is additionally
-    // checked for emptiness: `run: "''"` / `run: "'  ' build"` tokenizes to
-    // a non-empty array whose executable is `""`. That would otherwise fail
-    // only later, as an opaque spawn error rather than a synchronous config
-    // error like every other structurally-broken `run`.
+    // Tokenized here to throw on an empty string or an unquoted shell operator. Spawn time
+    // recomputes the tokens, since tokenization is cheap and pure. The first token is also checked
+    // for emptiness: `run: "''"` / `run: "'  ' build"` tokenizes to a non-empty array whose
+    // executable is `""`. That would otherwise fail later as an opaque spawn error, not as a
+    // synchronous config error like every other structurally-broken `run`.
     // `tokenizeRunString` throws on any input that would produce no tokens, so there is always a first one.
     const [executable] = tokenizeRunString(run, checkId) as readonly [string, ...string[]]
     if (executable.trim().length === 0) {
@@ -211,7 +210,8 @@ function validateStringRun(checkId: string, run: string, usesShell: boolean): vo
 }
 
 /**
- * Validates an array-form `run`: rejects it outright when a shell is used (array args can't express shell operators), and otherwise requires a non-empty array of strings.
+ * Validates an array-form `run`. With a shell it is rejected, because array args can't express
+ * shell operators. Without one, it must be a non-empty array of strings.
  * @param checkId - identifies which check is being validated, used in thrown error messages.
  * @param items - the check's raw `run` array to validate.
  * @param usesShell - whether `shell: true` was set, from `validateShell`.
@@ -231,9 +231,9 @@ function validateArrayRun(checkId: string, items: readonly unknown[], usesShell:
   if (items.some((item) => typeof item !== "string")) {
     throw new InvalidCheckConfigError(checkId, "run array must contain only strings.")
   }
-  // The first element is the executable; an empty or whitespace-only value
-  // there fails only later as an opaque spawn error, so reject it here like
-  // every other structurally-broken `run`.
+  // The first element is the executable. An empty or whitespace-only value there would fail
+  // later as an opaque spawn error. Rejecting it here matches every other structurally-broken
+  // `run`.
   if ((items[0] as string).trim().length === 0) {
     throw new InvalidCheckConfigError(
       checkId,
@@ -322,16 +322,16 @@ function validateOutput(checkId: string, output: unknown): void {
  * Validates that `schema`, when provided, is at least *plausibly* a `StandardSchemaV1`-compliant
  * object (standardschema.dev). It checks only the three fields every
  * `StandardSchemaV1.Props` object must have (`version`, `vendor`, `validate`). `schema` is an
- * opaque, consumer-supplied object, so anything else in its shape (e.g. the optional `types`
- * field) is not part of the contract this function can or should enforce. Never calls `validate`
- * itself: that only happens once a check's stdout actually parses (see `parseOutput`). This
- * function's whole job is structural, not behavioral.
+ * opaque, consumer-supplied object. The rest of its shape (e.g. the optional `types` field) is
+ * outside the contract this function enforces. It never calls `validate`: that happens only once
+ * a check's stdout parses (see `parseOutput`). This function's job is structural, not
+ * behavioral.
  *
  * Accepts a callable `schema` (`typeof schema === "function"`), not only a plain object. ArkType's
- * `Type` values are callable functions with `"~standard"` attached as a property. They are exactly
- * as valid a Standard Schema-compliant value as a plain object one (e.g. Zod's), since
- * `["~standard"]` property access works identically on either. Rejecting callable schemas outright
- * would incorrectly reject a real, popular Standard Schema implementation.
+ * `Type` values are callable functions with `"~standard"` attached as a property. They are as
+ * valid a Standard Schema value as a plain object (e.g. Zod's): `["~standard"]` property access
+ * works the same on either. Rejecting callable schemas would reject a popular Standard Schema
+ * implementation.
  * @param checkId - identifies which check is being validated, used in thrown error messages.
  * @param schema - the check's raw `output.schema` field to validate.
  */
@@ -383,12 +383,10 @@ function validatePolicy(checkId: string, policy: unknown): void {
 }
 
 /**
- * Only this check's own shape (array of strings) and self-dependency:
- * both need nothing beyond this one check's own id/field. Self-dependency
- * is a degenerate one-node cycle, but is deliberately caught here rather
- * than deferred to `validateDependencyGraph`'s cycle detector below. Here
- * it needs no other check's data, gives a clearer message, and fails in
- * this same per-check pass instead of waiting for a second one.
+ * Validates this check's `dependsOn` shape (array of strings) and self-dependency. Both need
+ * nothing beyond this one check's id and field. Self-dependency is a one-node cycle, caught here
+ * and not in `validateDependencyGraph` below. Here it needs no other check's data and gives a
+ * clearer message. It also fails in this per-check pass instead of a second one.
  * @param checkId - identifies which check is being validated, used in thrown error messages and to detect self-dependency.
  * @param dependsOn - the check's raw `dependsOn` field to validate.
  */
@@ -428,20 +426,17 @@ function validateExpensive(checkId: string, expensive: unknown): void {
 }
 
 /**
- * Whole-graph properties that can't be checked per-check in isolation:
- * run once, after every check's own `dependsOn` shape has already been
- * validated by `validateDependsOn` above, so this can walk every
+ * Whole-graph properties that can't be checked one check at a time. It runs once, after
+ * `validateDependsOn` has validated every check's `dependsOn` shape. So it walks every
  * `dependsOn` array without re-checking its shape.
  *
  * Declaration order in the `checks` object doubles as the required topological order (see
- * `CheckDefinition.dependsOn`'s own doc comment): every `dependsOn` id must name a check declared
- * earlier* than the check declaring it. This single backward-reference check subsumes what used
- * to be two separate passes (an unknown-id check, then a DFS cycle detector). A cycle is no
- * longer expressible once every edge is required to point backward, so there is nothing left
- * for a separate cycle detector to catch. `isolated` needs no validation-time edge computation
- * here. Its own implied positional edges (see `run-checks.ts`'s `dependencyIndexesFor`) always
- * point backward (to earlier-declared checks) or are pointed at by later-declared checks, by
- * construction. So they can never introduce a cycle either.
+ * `CheckDefinition.dependsOn`'s doc comment). Every `dependsOn` id must name a check declared
+ * earlier* than the check declaring it. This one backward-reference check catches unknown ids
+ * and cycles alike: no cycle can exist when every edge points backward. `isolated` needs no edge
+ * computation here. Its implied positional edges (see `run-checks.ts`'s `dependencyIndexesFor`)
+ * point backward to earlier-declared checks, or are pointed at by later-declared ones. So they
+ * cannot introduce a cycle either.
  * @param checks - the full check map, keyed by check id, in declaration order.
  */
 export function validateDependencyGraph(

@@ -17,14 +17,14 @@ export interface DiscoveredSuppression {
 const JSX_EXTENSIONS: ReadonlySet<string> = new Set([".tsx", ".jsx"])
 
 /**
- * Which scanner language variant to use, by file extension: JSX changes how the scanner
- * tokenizes some constructs, so `.tsx`/`.jsx` files need it even though comment tokenization
- * itself doesn't otherwise differ.
+ * Which scanner language variant to use, by file extension. JSX changes how the scanner
+ * tokenizes some constructs, so `.tsx`/`.jsx` files need it. Comment tokenization itself
+ * does not otherwise differ.
  * @param file - The file's path (only its extension is inspected).
  * @returns The scanner language variant to use for `file`.
  */
 function languageVariantFor(file: string): ts.LanguageVariant {
-  // Lowercased to match find-source-files.ts's own case-insensitive discovery. Its doc comment
+  // Lowercased to match find-source-files.ts's case-insensitive discovery. Its doc comment
   // gives "Legacy.TSX" as an example file it must match. Without this, a mixed-case .TSX/.JSX
   // file is scanned with the wrong (Standard, not JSX) variant.
   return JSX_EXTENSIONS.has(path.extname(file).toLowerCase())
@@ -34,7 +34,7 @@ function languageVariantFor(file: string): ts.LanguageVariant {
 
 /**
  * Scans one file's full text for every comment token. It returns every one a recognizer
- * (recognizers.ts) classifies as a suppression directive. It uses the TypeScript compiler's own
+ * (recognizers.ts) classifies as a suppression directive. It uses the TypeScript compiler's
  * scanner, not a hand-rolled comment parser and not ESLint itself. This check must be able to
  * audit suppressions that caused ESLint to be bypassed, so it can't depend on ESLint running
  * successfully (see specs/decisions/0006-suppression-governance.md).
@@ -42,14 +42,13 @@ function languageVariantFor(file: string): ts.LanguageVariant {
  * A bare `scanner.scan()` loop doesn't, by itself, know how to resume scanning a template literal
  * after a `${...}` substitution. That is normally the parser's job. The parser calls
  * `scanner.reScanTemplateToken()` once it has tracked enough brace nesting to know a given `}`
- * closes the substitution rather than some other construct. Skipping that (as this function
- * previously did) desyncs the scanner permanently at the first template literal containing a
- * substitution anywhere in the file. The `}` that should resume template scanning is instead
- * read as an ordinary `CloseBraceToken`. The substitution's own closing backtick is then misread
+ * closes the substitution rather than some other construct. Skipping that desyncs the scanner
+ * permanently at the first template literal containing a substitution anywhere in the file. The `}` that should resume template scanning is instead
+ * read as an ordinary `CloseBraceToken`. The substitution's closing backtick is then misread
  * as the *opening* of a new, unterminated template literal. That literal swallows everything after
  * it, including every subsequent comment's text, until some later, unrelated backtick closes it.
  * `templateBraceDepths` records, for each currently-open template substitution, the brace depth
- * at which it began. That depth counts `{`/`}` pairs *within* the substitution's own expression.
+ * at which it began. That depth counts `{`/`}` pairs *within* the substitution's expression.
  * The matching `}` can then be identified and correctly re-scanned.
  * @param relativePath - The file's repo-relative POSIX path, used as `DiscoveredSuppression.file` and to select the scanner's language variant.
  * @param text - The file's full source text.
@@ -131,7 +130,7 @@ export async function discoverSuppressions(
   // Each file's read is independent I/O with no dependency on any other file's. Promise.all
   // parallelizes them, and `.map` preserves file order in the resolved array whichever read
   // settles first. That keeps "in file order and then source order within each file" (see this
-  // function's own doc comment) intact.
+  // function's doc comment) intact.
   const perFile = await Promise.all(
     files.map(async (relativePath) => {
       const text = await readFile(path.join(root, relativePath), "utf8")
