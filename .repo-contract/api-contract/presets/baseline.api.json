@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "repo-contract!",
-  "docComment": "/**\n * Ready-made checks for common TypeScript and JavaScript tools. Spread a preset into your own\n * `checks` record and override what you need, most often `policy`.\n *\n * A preset encodes how to run and read one tool, never what counts as good enough\n * (specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). To change\n * what a factory preset runs, pass it options; overriding `run` directly is the escape hatch.\n *\n * Experimental, and published under its own `./presets` subpath. It is never re-exported from the\n * package root, and it re-exports nothing from there.\n *\n * @packageDocumentation\n */\n",
+  "docComment": "/**\n * Ready-made checks for common TypeScript and JavaScript tools. Spread a preset into your\n * `checks` record and override what you need, most often `policy`.\n *\n * A preset encodes how to run and read one tool, never what counts as good enough\n * (specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). To change\n * what a factory preset runs, pass it options; overriding `run` directly is the escape hatch.\n *\n * Experimental, and published under its `./presets` subpath. It is never re-exported from the\n * package root, and it re-exports nothing from there.\n *\n * @packageDocumentation\n */\n",
   "name": "repo-contract",
   "preserveMemberOrder": false,
   "members": [
@@ -191,7 +191,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!aiReview:function(1)",
-          "docComment": "/**\n * An AI review as a check. It runs your agent with a prompt that asks for one fixed JSON shape,\n * {@link AiReviewReply}, with a confidence score on every finding, and gates on those scores. A\n * model can answer differently on every run, so the policy reads only that structured reply,\n * never prose.\n *\n * The output is read in three steps. The whole output is parsed as JSON. If that fails, the text\n * from its first `{` to its last `}` is parsed. If that fails too, or the JSON is not the\n * requested shape, `fallback` is judged in its place and the reason lists the problems.\n *\n * The verdict: `fail` when an `error` finding scores at or above `errorThreshold`; `warn` for any\n * other `warn` or `error` finding, which includes the default fallback; `pass` for `info` findings\n * only. Each reason lists every `warn` and `error` finding with its file, line, rule and confidence.\n * A timeout, a missing agent or a process killed by a signal fails. A non-zero exit code alone\n * does not: a well-formed reply still counts, and an unreadable one names the code. The tests prove\n * the parsing and the policy; they do not prove a model's judgement.\n *\n * @param options - The agent to run and how to judge it; see {@link AiReviewOptions}.\n *\n * @returns The configured check.\n *\n * @example\n * ```ts\n * aiReview: aiReview({\n *   agent: [\"claude\", \"-p\", \"{prompt}\"],\n *   credentials: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY },\n *   errorThreshold: 0.8,\n * }),\n * ```\n *\n * @beta\n */\n",
+          "docComment": "/**\n * An AI review as a check. It runs your agent with a prompt that asks for one fixed JSON shape,\n * {@link AiReviewReply}. Every finding carries a confidence score, and the check gates on them. A\n * model can answer differently on every run, so the policy reads only that structured reply,\n * never prose.\n *\n * The output is read in three steps. The whole output is parsed as JSON. If that fails, the text\n * from its first `{` to its last `}` is parsed. If that fails too, or the JSON is not the\n * requested shape, `fallback` is judged in its place and the reason lists the problems.\n *\n * The verdict is `fail` when an `error` finding scores at or above `errorThreshold`. It is `warn`\n * for any other `warn` or `error` finding, including the default fallback. It is `pass` for `info`\n * findings only. Each reason lists every `warn` and `error` finding with its file, line, rule and\n * confidence.\n * A timeout, a missing agent or a process killed by a signal fails. A non-zero exit code alone\n * does not: a well-formed reply still counts, and an unreadable one names the code. The tests prove\n * the parsing and the policy; they do not prove a model's judgement.\n *\n * @param options - The agent to run and how to judge it; see {@link AiReviewOptions}.\n *\n * @returns The configured check.\n *\n * @example\n * ```ts\n * aiReview: aiReview({\n *   agent: [\"claude\", \"-p\", \"{prompt}\"],\n *   credentials: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY },\n *   errorThreshold: 0.8,\n * }),\n * ```\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -460,7 +460,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!AiReviewOptions#credentials:member",
-              "docComment": "/**\n * Environment variables the agent authenticates with, by name, for example\n * `{ ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY }`. Each value reaches the agent's process\n * through the check's `env`, so it works when the runner sets `inheritEnv: false`. A value never\n * enters the command line, and every occurrence of it in a reason is replaced with `[redacted]`.\n * The evidence keeps the agent's own stdout and stderr, so a value the agent prints lands there.\n * A name whose value is `undefined` or `\"\"` is left unset and turns a `pass` into a `warn`.\n */\n",
+              "docComment": "/**\n * Environment variables the agent authenticates with, by name, for example\n * `{ ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY }`. Each value reaches the agent's process\n * through the check's `env`, so it works when the runner sets `inheritEnv: false`. A value never\n * enters the command line, and every occurrence of it in a reason is replaced with `[redacted]`.\n * The evidence keeps the agent's stdout and stderr, so a value the agent prints lands there.\n * A name whose value is `undefined` or `\"\"` is left unset and turns a `pass` into a `warn`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -637,7 +637,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!AiReviewOptions#prompt:member",
-              "docComment": "/**\n * What the agent is asked. A string is the prompt text. `{ file }` hands the agent that path in\n * place of the text, for an agent that reads its prompt from a file. Defaults to a prompt that\n * asks for {@link AiReviewReply} and shows an example of it; a replacement must ask for the same\n * shape, or every reply goes to `fallback`.\n */\n",
+              "docComment": "/**\n * What the agent is asked. A string is the prompt text. `{ file }` hands the agent that path in\n * place of the text, for an agent that reads its prompt from a file. The default prompt asks for\n * {@link AiReviewReply} and shows an example of it. A replacement must ask for the same shape, or\n * every reply goes to `fallback`.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -844,9 +844,33 @@
           "name": "brokenLinks"
         },
         {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!bundledDependencies:var",
+          "docComment": "/**\n * Fails when package.json bundles a package (`bundleDependencies` or `bundledDependencies`) that\n * its `dependencies` do not declare. npm writes each such name into the published registry\n * manifest as `\"*\"`, and supply-chain scanners such as Socket report the mismatch as manifest\n * confusion. Passes a package that bundles nothing. Reads package.json in the working directory\n * with `node -e`; no external tool.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "bundledDependencies: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            }
+          ],
+          "fileUrlPath": "src/presets/bundled-dependencies.ts",
+          "isReadonly": true,
+          "releaseTag": "Beta",
+          "name": "bundledDependencies",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
           "kind": "Function",
           "canonicalReference": "repo-contract!commitlint:function(1)",
-          "docComment": "/**\n * Commit-message governance via commitlint, using whatever commitlint\n * config the consumer's own repository already has (commitlint ships no\n * rules of its own: e.g. `@commitlint/config-conventional`). Exit-code\n * based rather than `--format json`: commitlint has no broadly-documented,\n * stable JSON CLI output, so this preset reads its plain-text report the\n * same way the `format`/`typecheck` presets already do for their tools,\n * rather than relying on an unconfirmed flag.\n *\n * @param options - configuration for this check; see {@link CommitlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Commit-message governance via commitlint, using whatever commitlint\n * config the consumer's repository already has (commitlint ships no\n * rules of its own: e.g. `@commitlint/config-conventional`). It judges the\n * exit code, not `--format json`: commitlint has no broadly-documented,\n * stable JSON CLI output. This preset reads its plain-text report as the\n * `format`/`typecheck` presets do for their tools, instead of relying on an\n * unconfirmed flag.\n *\n * @param options - configuration for this check; see {@link CommitlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -940,7 +964,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!distNoUrls:function(1)",
-          "docComment": "/**\n * Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the build output directory, so\n * supply-chain scanners that flag shipped URLs (Socket.dev's \"URL strings\" alert, for one) have\n * nothing to flag. Scans every file, sourcemaps and declaration files included. Individual URLs can\n * be allowed with a mandatory, reviewable `reason`; there is no blanket opt-out.\n *\n * @param options - configuration for this check; see {@link DistNoUrlsOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the\n * build output directory. Supply-chain scanners that flag shipped URLs then have nothing to flag\n * (Socket.dev's \"URL strings\" alert, for one). Scans every file, sourcemaps and declaration files\n * included. Individual URLs can be allowed with a mandatory, reviewable `reason`; there is no\n * blanket opt-out.\n *\n * @param options - configuration for this check; see {@link DistNoUrlsOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1235,7 +1259,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "repo-contract!license:var",
-          "docComment": "/**\n * Dependency license compliance via licensee. The repository's own `.licensee.json` is the policy\n * when it exists; otherwise a dependency's license must be OSI-approved (`--osi`).\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Dependency license compliance via licensee. The repository's `.licensee.json` is the policy\n * when it exists; otherwise a dependency's license must be OSI-approved (`--osi`).\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1259,7 +1283,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!lint:function(1)",
-          "docComment": "/**\n * Static analysis via ESLint, using whatever `eslint.config.js` the\n * consumer's own repository already has: this preset makes no assumption\n * about rule configuration, only about how to run the tool and interpret\n * its JSON output. Severity `2` (error) blocks; severity `1` (warning) is\n * reported but never blocks: ESLint's own severities already encode that\n * distinction, so this preset just respects it rather than treating every\n * finding as equally blocking.\n *\n * @param options - configuration for this check; see {@link LintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Static analysis via ESLint, using whatever `eslint.config.js` the\n * consumer's repository already has. This preset assumes nothing about\n * rule configuration, only how to run the tool and read its JSON output.\n * Severity `2` (error) blocks. Severity `1` (warning) is reported but\n * never blocks. ESLint's severities already encode that distinction, and\n * this preset keeps it instead of treating every finding as blocking.\n *\n * @param options - configuration for this check; see {@link LintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1306,7 +1330,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!markdownlint:function(1)",
-          "docComment": "/**\n * Markdown structure/style lint via markdownlint-cli2. Unlike this\n * package's other file-based-report presets, the report path is\n * config-driven rather than a CLI flag: markdownlint-cli2 only writes\n * JSON when its own config file requests it. This preset assumes the\n * consumer's `.markdownlint-cli2.jsonc` includes:\n * ```jsonc\n * \"outputFormatters\": [[\"markdownlint-cli2-formatter-json\", { \"name\": \"reports/markdownlint.json\" }]]\n * ```\n *\n * which also requires the `markdownlint-cli2-formatter-json` package\n * alongside `markdownlint-cli2` itself.\n *\n * @param options - configuration for this check; see {@link MarkdownlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Markdown structure/style lint via markdownlint-cli2. Unlike this\n * package's other file-based-report presets, the report path comes from\n * config, not a CLI flag. The `markdownlint-cli2` tool writes JSON only\n * when its config file requests it. This preset assumes the\n * consumer's `.markdownlint-cli2.jsonc` includes:\n * ```jsonc\n * \"outputFormatters\": [[\"markdownlint-cli2-formatter-json\", { \"name\": \"reports/markdownlint.json\" }]]\n * ```\n *\n * which also requires the `markdownlint-cli2-formatter-json` package\n * alongside `markdownlint-cli2` itself.\n *\n * @param options - configuration for this check; see {@link MarkdownlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1353,7 +1377,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "repo-contract!publint:var",
-          "docComment": "/**\n * publint has no machine-readable output mode: only a plain-text CLI\n * reporter (see its own `src/cli.js` `formatMessages`). Its process exit\n * code reflects only 'error'-level findings; 'warning'/'suggestion'-level\n * findings never affect it. This preset reads the same three section\n * headers publint's own CLI writes (\"Errors:\", \"Warnings:\", \"Suggestions:\")\n * to distinguish blocking findings from non-blocking ones, without\n * depending on any per-message structure publint doesn't expose. Relevant\n * only to repositories that publish an npm package.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * publint has no machine-readable output mode: only a plain-text CLI\n * reporter (see its `src/cli.js` `formatMessages`). Its process exit\n * code reflects only 'error'-level findings; 'warning'/'suggestion'-level\n * findings never affect it. This preset reads the three section headers\n * publint's CLI writes (\"Errors:\", \"Warnings:\", \"Suggestions:\") to tell\n * blocking findings from non-blocking ones. It depends on no per-message\n * structure, which publint doesn't expose. Relevant only to repositories\n * that publish an npm package.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1373,6 +1397,125 @@
             "startIndex": 1,
             "endIndex": 2
           }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!quickStart:function(1)",
+          "docComment": "/**\n * Runs the README's marked quick start, one line at a time, against the tarball npm would publish.\n * The commands run in an empty project: a directory holding only a package.json. The command that\n * installs this package installs the packed tarball instead. Fails when any command exits non-zero or the time\n * budget runs out, and when the README has no marked block. Mark the block by putting\n * `<!-- quick-start:begin -->` on the line before its fenced `sh` block and\n * `<!-- quick-start:end -->` on the line after it.\n *\n * Runs `repo-contract quick-start`, so the package must be built first, and the commands reach\n * whatever network they reach (an install usually reaches the registry).\n *\n * @param options - configuration for this check; see {@link QuickStartOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function quickStart(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "QuickStartOptions",
+              "canonicalReference": "repo-contract!QuickStartOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/quick-start.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "quickStart"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!QuickStartOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link quickStart}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface QuickStartOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/quick-start.ts",
+          "releaseTag": "Public",
+          "name": "QuickStartOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!QuickStartOptions#readme:member",
+              "docComment": "/**\n * The Markdown file that holds the marked quick start, relative to the working directory. Defaults to `\"README.md\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly readme?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "readme",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!QuickStartOptions#timeoutMs:member",
+              "docComment": "/**\n * Time all of the quick start's commands together may take, in milliseconds. Defaults to `300000` (five minutes).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly timeoutMs?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "timeoutMs",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Variable",
@@ -1425,7 +1568,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!stylelint:function(1)",
-          "docComment": "/**\n * CSS/SCSS lint via stylelint, using whatever stylelint config the\n * consumer's own repository already has. `severity: \"error\"` blocks;\n * `severity: \"warning\"` is reported but never blocks, matching how the\n * `lint` preset treats ESLint's own severities.\n *\n * @param options - configuration for this check; see {@link StylelintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * CSS/SCSS lint via stylelint, using whatever stylelint config the\n * consumer's repository already has. `severity: \"error\"` blocks;\n * `severity: \"warning\"` is reported but never blocks, matching how the\n * `lint` preset treats ESLint's severities.\n *\n * @param options - configuration for this check; see {@link StylelintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

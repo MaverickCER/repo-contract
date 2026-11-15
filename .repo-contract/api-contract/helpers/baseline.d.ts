@@ -4,7 +4,7 @@
  * a policy (exact, then glob, then default) and checks the record's fields against it.
  *
  * The check stays in charge of everything else. It decides what a finding is, matches records to
- * findings and owns the identity of each finding (see `checks/shared/`, unpublished). This is the
+ * findings and owns the identity of each finding (see `scripts/shared/`, unpublished). This is the
  * mechanism `scripts/suppression-governance/` built for `disable-comments.json` (ADR 0006),
  * extracted for any check; specs/decisions/0013-reusable-exception-policy-helper.md has the
  * boundary.
@@ -14,32 +14,32 @@
  * a minor release and a changed signature or behavior is a major one. While the package is `0.x`,
  * the release tooling deflates a new export to a patch.
  *
- * Published under its own `./helpers` subpath, independent of the root and `./presets` barrels.
+ * Published under its `./helpers` subpath, independent of the root and `./presets` barrels.
  * @packageDocumentation
  */
 
 /**
- * What actually happened when one configured check ran. `output` is present
- * only if that check's config requested a format, and is otherwise
- * `undefined`: a policy narrows with `ctx.result.output?.success` (or an
+ * What happened when one configured check ran. `output` is present only if
+ * that check's config requested a format; otherwise it is `undefined`. A
+ * policy narrows with `ctx.result.output?.success` (or an
  * `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.
  *
- * `output.value` is the value the configured `format` parser produced. If the check's config
- * supplies `output.schema` (see `CheckDefinitionConfig.output.schema`), the schema validates it and
- * may replace it with a transformed value, so it is not always the raw parser result.
+ * `output.value` is the value the configured `format` parser produced. A check's config may
+ * supply `output.schema` (see `CheckDefinitionConfig.output.schema`). The schema then validates
+ * the value and may replace it with a transformed one, so it is not always the raw parser result.
  *
  * It is typed `unknown` for every format, including `"text"` (where `parseText` always produces a
- * `string`), with or without a schema. TypeScript's generic inference cannot carry one check's
- * literal `output.format`, or its schema's output type, through to that check's `policy` once
- * several checks with different formats share one `checks` record. That limit was confirmed during
- * implementation; specs/decisions/ holds the isolated repro. This is a deliberate tradeoff. A
- * schema still types its author's own code through `StandardSchemaV1<Input, Output>`, but not this
+ * `string`), with or without a schema. Several checks with different formats can share one
+ * `checks` record. TypeScript's generic inference then cannot carry one check's literal
+ * `output.format`, or its schema's output type, through to that check's `policy`.
+ * specs/decisions/ holds the isolated repro. This is a deliberate tradeoff. A
+ * schema still types its author's code through `StandardSchemaV1<Input, Output>`, but not this
  * shared `CheckEvidence` shape. A policy author narrows or casts `.value`, as they already must for
  * `"json"` or `"text"` without a schema.
  * @public
  */
 declare interface CheckEvidence {
-    /** The executable that was actually spawned (after tokenization, if `run` was a string). */
+    /** The executable that was spawned (after tokenization, if `run` was a string). */
     readonly command: string;
     /** The arguments passed to `command`, exactly as spawned. */
     readonly args: readonly string[];
@@ -72,24 +72,24 @@ declare interface CheckEvidence {
     readonly spawnErrorCode?: string;
     /**
      * The parsed interpretation of `stdout`, present only if this check's config requested a
-     * `format`. If that config also supplied `output.schema`, a successful parse is additionally
-     * validated (and possibly transformed) by that schema before landing here: see this
-     * interface's own doc comment above and `CheckDefinitionConfig.output.schema`.
+     * `format`. When that config also supplied `output.schema`, that schema validates (and may
+     * transform) a successful parse before it lands here. See this interface's doc comment above
+     * and `CheckDefinitionConfig.output.schema`.
      */
     readonly output?: ParsedOutput<unknown>;
 }
 
 /**
  * Why a check's process ended up in its terminal state. `"completed"` means
- * the process ran to exit on its own: the exit code may still be
- * non-zero, and that is for the check's policy to interpret, never this
- * package. The other five values all mean the process did not exit on its
- * own; repo-contract terminated it, or it was terminated for a reason
- * repo-contract can observe but did not cause.
+ * the process ran to exit by itself. The exit code may still be non-zero;
+ * the check's policy interprets it, never this package. The other five
+ * values all mean the process did not exit by itself. Either repo-contract
+ * terminated it, or something else did, for a reason repo-contract can
+ * observe but did not cause.
  *
  * `"signaled"` specifically means a signal repo-contract did *not* itself request: an
  * externally-caused termination. A check is instead `"host_terminated"` when the *host* process
- * running repo-contract received its own SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler
+ * running repo-contract received its SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler
  * cleanup). In that case repo-contract did request the signal, though not via `options.signal` or
  * `timeoutMs` (see `"aborted"`/`"timed_out"`). So it must not be conflated with an
  * externally-caused `"signaled"`.
@@ -107,60 +107,55 @@ declare type CheckStatus = "completed" | "timed_out" | "signaled" | "host_termin
 export declare function createFileCacheStore(directory: string): FileCacheStore;
 
 /**
- * Evaluates one record against every one of its own classifications, taking the strictest
- * (`stricterOf`) of each classification's resolved policy: a record matching both a forbidden
- * classification and an otherwise-fine one is forbidden overall. `classifications` is a non-empty
- * tuple by type: zero classifications would be a caller bug (which classification would silently
- * fall back to `globalDefault`?), never a case this function has to guess about at runtime. A
- * required field only counts as satisfied once `fieldValue(record, requirement).trim()` is
- * non-empty: an empty field is valid *data*, but policy-insufficient, exactly as `"exception"`
- * mode's name implies. `fieldValue` may resolve a dotted path (e.g. `"verification.verifiedBy"`)
- * or anything else a consumer's own record shape needs: this function never interprets
- * `requirement` itself, it only ever calls `fieldValue(record, requirement)` and trims the result.
- * @param input - The record to evaluate, its classifications, the policy configuration and global default to resolve them against, and the field-value accessor: see `ExceptionRecordEvaluation`'s own per-field doc comments.
+ * Evaluates one record against each of its classifications and takes the strictest
+ * (`stricterOf`) resolved policy. A record matching a forbidden classification and an
+ * otherwise-fine one is forbidden overall. `classifications` is a non-empty tuple by type. Zero
+ * classifications would be a caller bug, not a case to guess about at runtime. A required field
+ * counts as satisfied once `fieldValue(record, requirement).trim()` is non-empty. An empty field
+ * is valid *data* but insufficient for policy, as the `"exception"` mode name implies.
+ * `fieldValue` may resolve a dotted path (e.g. `"verification.verifiedBy"`) or anything else a
+ * record shape needs. This function never interprets `requirement`; it calls `fieldValue` and
+ * trims the result.
+ * @param input - The record, its classifications, the policy configuration, the global default and the field-value accessor. See `ExceptionRecordEvaluation` for each field.
  * @returns The record's verdict, and which required fields (if any) are still missing.
  * @public
  */
 export declare function evaluateExceptionRecord<TRecord>(input: ExceptionRecordEvaluation<TRecord>): ExceptionDeterminant<TRecord>;
 
 /**
- * A thin batch over already-matched `(record, classifications)` pairs: exactly
- * `inputs.map(evaluateExceptionRecord)`, provided so a caller evaluating many records against the
- * same `config`/`globalDefault`/`fieldValue` doesn't have to write that `.map` itself. Matching a
- * record to a finding in the first place stays entirely check-owned (each check reconciles its own
- * findings against its own registry): this function takes already-paired inputs, it never does
- * any matching of its own.
- * @param inputs - Each already-matched record to evaluate, in the same shape `evaluateExceptionRecord` itself takes.
- * @returns Each input's own determinant, in the same order as `inputs`.
+ * A thin batch over already-matched `(record, classifications)` pairs:
+ * `inputs.map(evaluateExceptionRecord)`. It saves a caller that evaluates many records against one
+ * `config`, `globalDefault` and `fieldValue` from writing the `.map`. Matching a record to a
+ * finding stays with each check, which reconciles its findings against its registry. This
+ * function takes already-paired inputs and does no matching.
+ * @param inputs - Each already-matched record to evaluate, in the shape `evaluateExceptionRecord` takes.
+ * @returns Each input's determinant, in the same order as `inputs`.
  * @public
  */
 export declare function evaluateExceptionRecords<TRecord>(inputs: readonly ExceptionRecordEvaluation<TRecord>[]): readonly ExceptionDeterminant<TRecord>[];
 
 /**
- * One classification group's own policy: `default` is this group's fallback for any `category`
- * with no exact or glob match in `rules` (see `resolveExceptionPolicy` for the full exact > glob >
- * group-default > global-default precedence). Omit `default` to fall through to the caller-supplied
- * `globalDefault` instead. Each key of `rules` is either an exact `category` string or a
- * glob pattern. `resolveExceptionPolicy` tries an exact match first and only
- * consults glob matching once no exact key exists. So a glob can never shadow a more specific
- * exact entry.
+ * One classification group's policy. `default` is the group's fallback for any `category` with
+ * no exact or glob match in `rules`. Omit `default` to fall through to the caller's
+ * `globalDefault`. `resolveExceptionPolicy` documents the full precedence: exact, glob, group
+ * default, global default. Each key of `rules` is an exact `category` string or a glob pattern.
+ * An exact match always wins, so a glob never shadows a more specific exact entry.
  * @public
  */
 export declare interface ExceptionCategoryGroup {
     /** This group's fallback policy when `category` matches neither an exact nor a glob key in `rules`. Falls through to the caller's `globalDefault` when omitted. */
     readonly default?: ExceptionPolicy;
-    /** Keyed by exact `category` string or glob pattern. A literal `"*"` key is rejected by `validateExceptionPolicyConfig`: see that function's own doc comment for why. */
+    /** Keyed by exact `category` string or glob pattern. A literal `"*"` key is rejected by `validateExceptionPolicyConfig`: see that function's doc comment for why. */
     readonly rules?: Readonly<Record<string, ExceptionPolicy>>;
 }
 
 /**
- * One classification a record is evaluated against: deliberately just `{ group, category }`,
- * never `domain`/`rule`/`severity`/`exceptionType` or any other consumer-specific vocabulary. A
- * consumer maps its own domain concepts onto this shape at the call site (e.g.
- * `suppression-governance`'s `{ group: record.domain, category: rule }` per suppressed rule;
- * `security-socket`'s `{ group: "socket", category: normalizedSeverity }`): the core itself
- * never interprets `group`/`category` beyond using them as lookup keys into an
- * `ExceptionPolicyConfig`.
+ * One classification a record is evaluated against: only `{ group, category }`, with no
+ * consumer vocabulary such as `domain`, `rule`, `severity` or `exceptionType`. A consumer maps its
+ * concepts onto this shape at the call site. For example, `suppression-governance` passes
+ * `{ group: record.domain, category: rule }` per suppressed rule. `security-socket` passes
+ * `{ group: "socket", category: normalizedSeverity }`. The core uses `group` and `category` only
+ * as lookup keys into an `ExceptionPolicyConfig`.
  * @public
  */
 export declare interface ExceptionClassification {
@@ -172,9 +167,9 @@ export declare interface ExceptionClassification {
 
 /**
  * One record's resolved policy verdict, and (for `"insufficient"`) which required fields are
- * still empty. Never published as a batch/matched-vs-unmatched shape: matching a finding to a
- * record stays entirely check-owned (each check reconciles its own findings against its own
- * registry via `reconcileExceptions`).
+ * still empty. There is no batch or matched-vs-unmatched shape. Matching a finding to a record
+ * stays with each check, which reconciles its findings against its registry via
+ * `reconcileExceptions`.
  * @public
  */
 export declare interface ExceptionDeterminant<TRecord> {
@@ -182,22 +177,20 @@ export declare interface ExceptionDeterminant<TRecord> {
     readonly record: TRecord;
     /** `"forbidden"`: never permitted. `"insufficient"`: exception-eligible, but `missing` is non-empty. `"permitted"`: every required field is filled in (or the resolved policy was `"allowed"`). */
     readonly verdict: ExceptionVerdict;
-    /** Every required field (by name) still empty on `record`, in the resolved policy's own `requirements` order. Always `[]` for `"forbidden"`/`"permitted"`. */
+    /** Every required field (by name) still empty on `record`, in the resolved policy's `requirements` order. Always `[]` for `"forbidden"`/`"permitted"`. */
     readonly missing: readonly string[];
 }
 
 /**
  * A resolved decision for one `{ group, category }` classification. `"forbidden"`: never
- * permitted, regardless of any field's content. `"allowed"`: permitted unconditionally; no
- * field is required. `"exception"`: permitted only once every field named in `requirements` is a
- * non-empty (post-`.trim()`) string on the record being evaluated (see `evaluateExceptionRecord`).
+ * permitted, whatever the fields hold. `"allowed"`: permitted unconditionally; no field is
+ * required. `"exception"`: permitted once every field named in `requirements` is a non-empty
+ * (post-`.trim()`) string on the record (see `evaluateExceptionRecord`).
  *
- * Deliberately not a numeric "how many details are required" threshold: a plain count is
- * trivially satisfied by generating that many generic-sounding filler entries without doing any of
- * the underlying work the count was meant to prove happened. Naming exactly which fields must be
- * filled in makes each one individually reviewable against a specific question instead. This is
- * the same design `scripts/suppression-governance/policy-config.ts`'s `SuppressionPolicy`
- * establishes for the disable-comment domain this type generalizes.
+ * It names fields instead of setting a numeric threshold. Generic filler entries satisfy a plain
+ * count without the work the count was meant to prove. A named field can be reviewed against a
+ * specific question. `scripts/suppression-governance/policy-config.ts`'s `SuppressionPolicy` uses
+ * the same design for the disable-comment domain this type generalizes.
  * @public
  */
 export declare type ExceptionPolicy = {
@@ -211,9 +204,8 @@ export declare type ExceptionPolicy = {
 
 /**
  * A full exception-policy configuration, keyed by classification `group` (e.g. a tool name, or a
- * suppression domain). The core never invents the names "domain"/"rule"/"severity"/
- * "exceptionType": those are every consumer's own vocabulary, expressed here purely as
- * `{ group, category }` (see `ExceptionClassification`).
+ * suppression domain). Names such as "domain", "rule", "severity" and "exceptionType" belong to
+ * each consumer. The core sees them only as `{ group, category }` (see `ExceptionClassification`).
  * @public
  */
 export declare type ExceptionPolicyConfig = Readonly<Record<string, ExceptionCategoryGroup>>;
@@ -230,17 +222,17 @@ export declare interface ExceptionReconciliation<TFinding, TRecord> {
     }[];
     /** Every record to persist as live: matched records verbatim, plus one fresh `createStub` per unmatched finding. Never contains a stale record. */
     readonly activeRecords: readonly TRecord[];
-    /** Existing records whose id matched no finding this run: surfaced for the policy to fail on, **never removed** by this function (retiring one is an explicit human edit). */
+    /** Existing records whose id matched no finding this run. They are surfaced for the policy to fail on and **never removed** here: retiring one is an explicit human edit. */
     readonly staleRecords: readonly TRecord[];
     /** The ids of the stubs created this run: a subset of `activeRecords`' ids. */
     readonly newStubIds: readonly string[];
 }
 
 /**
- * The registry-lifecycle half of `repo-contract/helpers`: `reconcileExceptions` diffs a check's
- * raw findings against its already-loaded exception registry, and `serializeExceptionRegistry`
+ * The registry-lifecycle half of `repo-contract/helpers`. `reconcileExceptions` diffs a check's
+ * raw findings against its already-loaded exception registry. `serializeExceptionRegistry`
  * renders the reconciled records back to their canonical on-disk form. Both are pure; the only
- * I/O is `writeExceptionRegistry` in its own module. See
+ * I/O is `writeExceptionRegistry`, in a separate module. See
  * specs/decisions/0013-reusable-exception-policy-helper.md's "The exception registry is the review
  * surface" section for the model these serve. A check emits 100% of its findings. Reconciliation
  * maintains one record per finding (a fresh stub for a new one). Stale records are surfaced,
@@ -248,7 +240,7 @@ export declare interface ExceptionReconciliation<TFinding, TRecord> {
  */
 /**
  * The three fields every exception record in `.repo-contract/exceptions/*.json` carries, whatever
- * the owning check. A registry adds its own typed fields on top; this is the shared core the
+ * the owning check. A registry adds its typed fields on top; this is the shared core the
  * generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,
  * `validateExceptionRegistry` in the check-owned layer) relies on.
  * @public
@@ -263,10 +255,9 @@ export declare interface ExceptionRecordCore {
 }
 
 /**
- * One record to evaluate, paired with everything `evaluateExceptionRecord` needs to judge it:
- * shared by `evaluateExceptionRecord` and `evaluateExceptionRecords` (whose own `inputs` is just
- * `readonly ExceptionRecordEvaluation<TRecord>[]`) so the same five-field shape isn't declared
- * twice.
+ * One record to evaluate, with everything `evaluateExceptionRecord` needs to judge it.
+ * `evaluateExceptionRecord` and `evaluateExceptionRecords` share it, so the five-field shape is
+ * declared once.
  * @public
  */
 export declare interface ExceptionRecordEvaluation<TRecord> {
@@ -284,7 +275,7 @@ export declare interface ExceptionRecordEvaluation<TRecord> {
 
 /**
  * A resolved judgment about one record, once its `ExceptionPolicy` has been checked against its
- * own field values. See `ExceptionDeterminant`.
+ * field values. See `ExceptionDeterminant`.
  * @public
  */
 export declare type ExceptionVerdict = "forbidden" | "insufficient" | "permitted";
@@ -306,21 +297,19 @@ export declare interface FileCacheStore {
 }
 
 /**
- * A deterministic digest of a set of fields' current values on `record`, via `node:crypto`:
- * pure, synchronous, no ambient state. Socket.dev has no alert on `node:crypto`. It is not
- * `child_process`/`process.env`, the two capabilities `src/helpers/**` must never touch (see
- * the `AmbientCapabilities` check). This is what makes a "verification" *content-bound*
- * rather than merely attested. A consumer records this hash (see `ExceptionVerification` in
- * `checks/shared/exception-record.ts`) at the moment a human or a mechanical re-check approved a
- * record's current prose. Recomputing it later and comparing detects staleness with no
- * separate tracking logic: edit any field named in `fields` and the hash stops matching.
- * Each field's name is bound into the digest alongside its value, both serialized via
- * `JSON.stringify` as a `[name, value]` pair. JSON's own escaping makes the digest unambiguous
- * whatever characters a field's name or value contains. So two different field sets whose
- * values happen to concatenate identically as plain text can never collide here.
+ * A deterministic digest of some fields' current values on `record`, via `node:crypto`. It is
+ * pure and synchronous, with no ambient state. Socket.dev has no alert on `node:crypto`. It is
+ * neither `child_process` nor `process.env`, the two capabilities `src/helpers/**` must never
+ * touch (see the `AmbientCapabilities` check). The digest makes a verification *content-bound*
+ * rather than merely attested. A consumer records this hash when a human or a mechanical re-check
+ * approves a record's current prose. Recomputing and comparing it later detects staleness with no
+ * separate tracking: edit any field named in `fields` and the hash stops matching. Each field's
+ * name is bound into the digest with its value, as a `JSON.stringify`'d `[name, value]` pair.
+ * JSON escaping keeps the digest unambiguous whatever characters a name or value holds. Two field
+ * sets whose values concatenate to the same plain text cannot collide.
  * @param record - The record to hash fields from.
- * @param fields - Which fields (by name, in this exact order) to include in the digest: the same names `fieldValue` would be called with by `evaluateExceptionRecord`.
- * @param fieldValue - Resolves one named field's current string value on `record`, exactly like `evaluateExceptionRecord`'s own `fieldValue` parameter.
+ * @param fields - Which fields (by name, in this order) to include in the digest: the names `evaluateExceptionRecord` passes to `fieldValue`.
+ * @param fieldValue - Resolves one named field's current string value on `record`, like `evaluateExceptionRecord`'s `fieldValue` parameter.
  * @returns A hex-encoded SHA-256 digest of `fields`' current values.
  * @public
  */
@@ -329,29 +318,29 @@ export declare function hashRequirementFields<TRecord>(record: TRecord, fields: 
 /**
  * Reads and validates one exception registry file from disk: `path -> { "$schema"?: string,
  * "exceptions": T[] }`, in two independently-validated layers. This function owns only the
- * envelope: that the file exists (or is absent, a normal empty-registry state), parses as JSON,
- * and is an object carrying an `"exceptions"` field at all. It never inspects what is inside
- * `exceptions` beyond that. `schema` (a `StandardSchemaV1`, hand-written or from a real library;
- * see `src/standard-schema/types.ts`) owns every field-level concern for the caller's own record
- * shape. That is the same "consumer supplies a trusted capability, this package calls it without
+ * envelope. The file exists or is absent (a normal empty-registry state), parses as JSON, and is
+ * an object carrying an `"exceptions"` field. It never inspects what is inside `exceptions`.
+ * `schema` (a `StandardSchemaV1`, hand-written or from a library; see
+ * `src/standard-schema/types.ts`) owns every field-level concern for the caller's record shape.
+ * That is the same "consumer supplies a trusted capability, this package calls it without
  * owning its internals" relationship `RepoContractConfig.spawn`/`env` already establish (see
  * `specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md`).
  *
- * `readFile` defaults to `node:fs/promises`' own `readFile`. `src/presets/security-secrets.ts`
+ * `readFile` defaults to `node:fs/promises`' `readFile`. `src/presets/security-secrets.ts`
  * already uses it, so this introduces no new filesystem-access surface. A missing file is a normal
  * "no exceptions recorded yet" state, not an error (`{ ok: true, records: [] }`). That matches
- * `scripts/suppression-governance/check.ts`'s own `loadExistingRegistry` precedent for the same
+ * `scripts/suppression-governance/check.ts`'s `loadExistingRegistry` precedent for the same
  * first-run case. Every other failure returns `{ ok: false, errors }` rather than throwing:
  * unreadable for another reason, malformed JSON, a missing/malformed envelope, or a schema
  * validation failure. A bad registry is reported as data for a check's policy to fail on, never an
- * uncaught exception that crashes the run. The one exception is `schema`'s own
- * `validate()` throwing or rejecting (a bug in the *caller-supplied schema*, not malformed
- * registry data) which is deliberately left to propagate as a rejected `Promise`, mirroring
- * `src/parsing/parse-output.ts`'s identical treatment of a throwing `output.schema`.
+ * uncaught exception that crashes the run. The one exception is a throwing or rejecting
+ * `schema.validate()`. That is a bug in the *caller-supplied schema*, not malformed registry data.
+ * It propagates as a rejected `Promise`, as a throwing `output.schema` does in
+ * `src/parsing/parse-output.ts`.
  * @param input - Where to read the registry from, the schema that validates its `exceptions` array, and (for tests, or a non-`node:fs` environment) an override for how to read `path`.
  * @param input.path - The registry file's path, passed to `input.readFile` verbatim.
- * @param input.schema - Validates (and may transform) the envelope's `exceptions` array once this function's own envelope checks pass.
- * @param input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' own `readFile(path, "utf8")`.
+ * @param input.schema - Validates (and may transform) the envelope's `exceptions` array once the envelope checks pass.
+ * @param input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' `readFile(path, "utf8")`.
  * @returns Every valid record (`ok: true`), or every problem found reading/parsing/validating the file (`ok: false`).
  * @public
  */
@@ -389,8 +378,8 @@ export declare function onVerdictPrependRepoContractLogs(options?: RepoContractL
  * Output interpretation a check can explicitly request. No format requested means no parsing:
  * the consumer gets raw stdout/stderr only. Other formats (e.g. YAML) are left out on purpose:
  * JSON and plain text cover every check this package or its consumers run. A check whose tool
- * emits another format converts it in its own `run` step, or reads it in its `policy` function
- * with a library it already depends on. That keeps this package free of an optional peer
+ * emits another format converts it in its `run` step. Or its `policy` function reads it with a
+ * library the check already depends on. That keeps this package free of an optional peer
  * dependency carried on everyone's behalf.
  * @public
  */
@@ -449,10 +438,10 @@ declare type PolicyOutcome = "pass" | "fail" | "warn";
  * AI without rerunning anything.
  *
  * `rationale` is mandatory. It must hold enough actionable detail (specific
- * file/line locations, rule ids, test names, counts) for a consumer to
- * understand *why* the policy reached its outcome from this value alone. A
- * rationale like "see output above" or "check the report for details"
- * defeats the purpose: it sends the consumer back to raw command output,
+ * file/line locations, rule ids, test names, counts) to explain *why* the
+ * policy reached its outcome. A consumer should need nothing but this value.
+ * A rationale like "see output above" or "check the report for details"
+ * defeats the purpose. It sends the consumer back to raw command output,
  * which this type exists to avoid. `runPolicies` rejects such a rationale at
  * runtime (`src/policy/run-policies.ts`'s `VAGUE_RATIONALE_PATTERNS`, ADR
  * 0016), the same as any other malformed `PolicyResult`. So a check that
@@ -477,13 +466,13 @@ declare interface PolicyResult {
  *
  * `deriveId` must be **injective** over `findings`: every independently-governable finding needs
  * a distinct id, or the mechanism cannot tell which finding a record's `justification` belongs to.
- * A collision is returned as `{ ok: false }` (a real condition a check must surface: the source
- * genuinely holds two identical directives), naming both finding indices so the check can point a
- * developer at them.
+ * A collision is returned as `{ ok: false }`, naming both finding indices so the check can point a
+ * developer at them. It is a condition a check must surface: the source holds two identical
+ * directives.
  *
- * `createStub(finding, id)` is handed the canonical id and its result's `id` is asserted equal to
- * it: a `createStub` that derives its own identity differently is a `{ ok: false }` bug report,
- * never a silently-mismatched record.
+ * `createStub(finding, id)` is handed the canonical id, and its result's `id` is asserted equal to
+ * it. A `createStub` that derives its identity differently gets a `{ ok: false }` bug report, never
+ * a silently-mismatched record.
  *
  * Precondition: `existing` has already passed the check's registry validator (unique ids, correct
  * namespace). This function does not re-validate it.
@@ -576,7 +565,8 @@ export declare interface RepoContractLogs {
 export declare function repoContractLogs(options?: RepoContractLogsOptions): RepoContractLogs;
 
 /**
- * The file operations the logs use; every one defaults to `node:fs/promises`' own. For tests, or a non-`node:fs` environment.
+ * The file operations the logs use; each defaults to its `node:fs/promises` counterpart. For
+ * tests, or a non-`node:fs` environment.
  * @beta
  */
 export declare interface RepoContractLogsFileSystem {
@@ -610,31 +600,29 @@ export declare interface RepoContractLogsOptions {
 }
 
 /**
- * Resolves the policy one `{ group, category }` classification is subject to, in strict precedence
- * order: documented here as this function's one authoritative source of truth for that order
- * (generalized from `scripts/suppression-governance/resolve-policy.ts`'s own `resolveRequirement`,
- * which this function's future retrofit replaces):
+ * Resolves the policy one `{ group, category }` classification is subject to. This comment is the
+ * single source of truth for the precedence order. The function generalizes
+ * `scripts/suppression-governance/resolve-policy.ts`'s `resolveRequirement`, which it is meant to
+ * replace:
  *
- * 0. **No entry for `group`** (`config[group] === undefined`) resolves to `globalDefault`
- *    immediately, before `category` is even inspected (so a blanket `category === "*"` against an
- *    unconfigured group still just returns `globalDefault`, never an empty-array reduce).
- * 1. **Blanket category**: `category === "*"` means every category this group could ever apply
- *    to was matched at once, not one specific category literally named `"*"`. It resolves as the
- *    strictest (`stricterOf`) policy across every entry in `group.rules` plus the group's own
- *    default (or `globalDefault`). It never goes through the glob matcher. `globMatch("*", pattern)`
- *    tests the literal one-character string `"*"` as a path against `pattern`. That does not
- *    glob-match a pattern like `"security/*"` (it would require the *pattern*, not the *target*, to
- *    be `"*"`). So treating this case as an ordinary pattern match would silently let a blanket
- *    match fall through a group's `forbidden` rules into its far more lenient default.
- * 2. **Exact match**: `group.rules[category]`, if present. A glob is never even consulted once an
- *    exact entry exists for `category`.
- * 3. **Glob match**: the strictest (`stricterOf`) policy among every key in `group.rules` that is
- *    not itself an exact match for `category` but does match it as a glob (e.g.
- *    `"security/*"` matching `"security/detect-object-injection"`).
- * 4. **Group default**: `group.default`, if `group` itself has an entry in `config` (whether or
- *    not that entry defines its own `default`).
- * 5. **Global default**: `globalDefault`, used only when `group` itself has no entry in `config`
- *    at all, or when neither an exact/glob match nor a `group.default` applies.
+ * 0. **No entry for `group`** (`config[group] === undefined`) resolves to `globalDefault` before
+ *    `category` is inspected. A blanket `category === "*"` against an unconfigured group also
+ *    returns `globalDefault`, never an empty-array reduce.
+ * 1. **Blanket category**: `category === "*"` means every category this group could apply to was
+ *    matched at once. It is not one category literally named `"*"`. It resolves to the strictest
+ *    (`stricterOf`) policy across every entry in `group.rules` plus the group's default (or
+ *    `globalDefault`). It skips the glob matcher. `globMatch("*", pattern)` tests the literal
+ *    string `"*"` against `pattern`, so it does not match a pattern like `"security/*"`. As an
+ *    ordinary pattern match, a blanket match would skip a group's `forbidden` rules and land on
+ *    its more lenient default.
+ * 2. **Exact match**: `group.rules[category]`, if present. No glob is consulted once an exact entry
+ *    exists for `category`.
+ * 3. **Glob match**: the strictest (`stricterOf`) policy among the `group.rules` keys that match
+ *    `category` as a glob (e.g. `"security/*"` matching `"security/detect-object-injection"`).
+ * 4. **Group default**: `group.default`, when `group` has an entry in `config` (whether or not
+ *    that entry defines `default`).
+ * 5. **Global default**: `globalDefault`, when `group` has no entry in `config`, or when no exact
+ *    match, glob match or `group.default` applies.
  *
  * Assumes `config` has already passed `validateExceptionPolicyConfig`.
  * @param classification - The `{ group, category }` pair to resolve a policy for.
@@ -646,11 +634,11 @@ export declare interface RepoContractLogsOptions {
 export declare function resolveExceptionPolicy(classification: ExceptionClassification, config: ExceptionPolicyConfig, globalDefault: ExceptionPolicy): ExceptionPolicy;
 
 /**
- * The canonical on-disk form of one exception registry: `{ "exceptions": [ ... ] }`, records
- * sorted ascending by `id` (code-unit order, locale-independent), each record's keys in
- * `canonicalRecord` order, 2-space indent, `\n` line endings, a trailing newline. Fully
- * deterministic: the same records always serialize byte-for-byte identically, so a reconcile that
- * changes nothing produces no diff and `writeExceptionRegistry` writes nothing.
+ * The canonical on-disk form of one exception registry: `{ "exceptions": [ ... ] }`. Records are
+ * sorted ascending by `id` (code-unit order, locale-independent), with each record's keys in
+ * `canonicalRecord` order. It uses a 2-space indent, `\n` line endings and a trailing newline. The
+ * same records always serialize to identical bytes. A reconcile that changes nothing produces no
+ * diff, and `writeExceptionRegistry` writes nothing.
  *
  * Assumes `records` have unique ids (the caller reconciled them and validated its registry).
  * @param records - The reconciled records (`activeRecords` plus any `staleRecords`, in any order).
@@ -663,24 +651,24 @@ export declare function serializeExceptionRegistry(records: readonly (Record<str
 
 /**
  * Hand-vendored from `@standard-schema/spec@1.1.0` (standardschema.dev), pinned
- * 2026-09-04: see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
- * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type
- * declarations, zero runtime code: assigning any real Zod/Valibot/ArkType (etc.) schema to this
- * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here: the
+ * 2026-09-04. See specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md
+ * for why this is vendored rather than installed, and for the version-pin/re-diff process. Pure
+ * type declarations, zero runtime code: assigning a Zod/Valibot/ArkType (etc.) schema to this
+ * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here. The
  * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension
  * (standardschema.dev/json-schema) is out of scope; see the ADR.
  *
- * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base
- * (`version`/`vendor`/`types`). This vendored copy inlines those fields directly into one flat
- * interface, since repo-contract has no use for the shared base on its own. It is structurally
- * identical for any real schema object assigned to it. Re-diff against
- * `@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.
+ * Upstream's `StandardSchemaV1.Props` extends a shared `StandardTypedV1.Props` base
+ * (`version`/`vendor`/`types`). This vendored copy inlines those fields into one flat
+ * interface, since repo-contract has no use for the shared base alone. It is structurally
+ * identical for any library schema object assigned to it. Re-diff against
+ * `@standard-schema/spec`'s published `dist/index.d.ts` whenever this file is touched.
  *
- * Tagged `@public`, not tied to either re-exporting barrel's own stability tier. This type is
- * re-exported from both the Stable root barrel, for `output.schema`, and the Experimental
- * `repo-contract/helpers` barrel. This vendored copy's own shape only ever changes via a
+ * Tagged `@public`, not tied to either re-exporting barrel's stability tier. This type is
+ * re-exported from the root barrel, for `output.schema`, and from the
+ * `repo-contract/helpers` barrel. This vendored copy's shape changes only through a
  * deliberate re-diff against the pinned upstream spec version above. It never changes as a side
- * effect of either barrel's own stability classification.
+ * effect of either barrel's stability classification.
  * @public
  */
 export declare interface StandardSchemaV1<Input = unknown, Output = Input> {
@@ -750,15 +738,12 @@ export declare namespace StandardSchemaV1 {
 }
 
 /**
- * Validates an entire `ExceptionPolicyConfig`'s shape: every group's `default` and every entry
- * in its `rules` must be a well-formed `ExceptionPolicy` (see `validateExceptionPolicyValue`), and
- * no group's `rules` may use the literal `"*"` as a key. A literal `"*"` key is always a mistake,
- * never an intentional blanket policy. `resolveExceptionPolicy`'s own blanket-category handling is
- * triggered by the *input* `category` being `"*"`, not by a `"*"` entry in `rules`. A `"*"` rules
- * key would instead be consulted only as an ordinary glob. That glob matches the literal
- * one-character string `"*"` as a *target*, not as a wildcard pattern matching every real category
- * name (`globMatch("*", pattern)` truthiness depends on `pattern`, not the other way around). See
- * `resolveExceptionPolicy`'s own doc comment, case 1, for the failure mode this prevents.
+ * Validates an `ExceptionPolicyConfig`'s shape. Every group's `default` and every entry in its
+ * `rules` must be a well-formed `ExceptionPolicy` (see `validateExceptionPolicyValue`). No group's
+ * `rules` may use the literal `"*"` as a key, because that key is never a blanket policy.
+ * `resolveExceptionPolicy` applies the blanket policy when the *input* `category` is `"*"`. A
+ * `"*"` rules key is consulted only as an ordinary glob, which matches no category containing a
+ * `/`. See `resolveExceptionPolicy`'s doc comment, case 1, for the failure mode this prevents.
  * @param config - The exception policy configuration to validate.
  * @param validRequirements - The complete set of field names this consumer's policy may require, if the consumer wants that checked. Omit to skip that check entirely.
  * @returns Every configuration problem found; empty if `config` is valid.
@@ -774,17 +759,17 @@ export declare function validateExceptionPolicyConfig(config: ExceptionPolicyCon
  *   through one would escape `.repo-contract/exceptions/`.
  * - **No file yet** -> written.
  * - **On-disk bytes already equal the canonical form** -> `{ ok: true, written: false }`, no
- *   write. A reconcile that changed nothing therefore never dirties the working tree.
- * - **Different** -> the canonical bytes are written to a sibling temp file (`<path>.<uuid>.tmp`)
- *   and `rename`d over the target: the target is replaced atomically, and partial serialized
- *   content is never written to the target path. A `rename` failure (e.g. a Windows lock on the
- *   target) returns `{ ok: false }` deterministically; the temp file is left in place (harmless, a
- *   uuid name, and the run has already failed): `.gitignore` covers `.repo-contract/exceptions/*.tmp`.
+ *   write. A reconcile that changed nothing never dirties the working tree.
+ * - **Different** -> the canonical bytes go to a sibling temp file (`<path>.<uuid>.tmp`), which is
+ *   `rename`d over the target. The target is replaced atomically and never holds partial content.
+ *   A `rename` failure (e.g. a Windows lock on the target) returns `{ ok: false }`. The temp file
+ *   stays in place: it has a uuid name and the run has already failed. `.gitignore` covers
+ *   `.repo-contract/exceptions/*.tmp`.
  *
- * Path containment is the caller's responsibility: repo-contract's own checks always pass
+ * Path containment is the caller's responsibility: repo-contract's checks always pass
  * `.repo-contract/exceptions/<name>.json`. `readFile`/`writeFile`/`rename`/`isSymlink` default to
  * `node:fs/promises` and are overridable for tests or a non-`node:fs` environment, mirroring
- * `loadExceptionRegistry`'s own `readFile` parameter.
+ * `loadExceptionRegistry`'s `readFile` parameter.
  * @param input - The target path, the records to persist, and (optional) filesystem-capability overrides.
  * @param input.path - Where to write. Passed verbatim to every capability.
  * @param input.records - The reconciled records; serialized via `serializeExceptionRegistry`.

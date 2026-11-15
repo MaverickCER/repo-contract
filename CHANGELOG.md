@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.15.0
+
+### Minor Changes
+
+- 5215d0b: `repo-contract/presets` gains `bundledDependencies`, a check that fails when package.json bundles a package its `dependencies` do not declare. npm publishes each such name into the registry manifest as `"*"`, and Socket reports the mismatch as manifest confusion.
+  
+  - **What it reads.** `bundleDependencies` and `bundledDependencies` in the package.json of the working directory, through `node -e`; no tool to install. `true` bundles exactly the declared dependencies, so it passes.
+  - **What it fails.** A bundled name missing from `dependencies`, each one listed. A field that is neither a list of names nor a boolean. A package.json that cannot be read. A package that bundles nothing passes.
+  - **On by default for published packages.** `repo-contract init` now adds it unless package.json says `"private": true`. That matches how `init` adds `distNoUrls` for a package that publishes `dist/`. Its "Not detected" list names a private package's skip.
+- 5215d0b: `repo-contract/presets` gains `quickStart(options?)`, and the CLI gains `repo-contract quick-start`. Together they run a README's quick start against the tarball npm would publish, so a broken first step fails before release.
+  
+  - **Marking the block.** Put `<!-- quick-start:begin -->` on the line before a fenced `sh` block and `<!-- quick-start:end -->` on the line after it. Each line is one command; comments and blank lines are skipped.
+  - **What runs.** The command packs the package with install scripts off and makes an empty project (a directory holding only a package.json). A command that installs the package with npm, pnpm, yarn or bun installs the tarball instead. Each command then runs in a shell, in order.
+  - **What fails.** A command that exits non-zero; the reason shows its last output. A run past the time budget. A README without a marked block, or a quick start that never installs the package.
+  - **Options.** `readme` (default `README.md`) and `timeoutMs` (default five minutes, for all the commands together). The CLI takes `--readme`, `--timeout`, `--json` and `-C`.
+  - **Opt-in.** `repo-contract init` never adds it. The commands reach whatever network they reach, so an install reaches the registry.
+- 5215d0b: The optional `typescript` peer now starts at `>=5.8.0`, the oldest release CI proves. It was `>=5.0.0`, and nothing tested 5.0 to 5.7.
+  
+  - **Who is affected.** A project on TypeScript 5.0 to 5.7. Under them, a CommonJS project with `module: "nodenext"` fails to type-check the package's declarations (TS1479). Each `dist/*.d.cts` re-exports an ES module, which 5.8 is the first to allow. npm now warns about the peer on install.
+  - **What to do.** Upgrade TypeScript to 5.8 or later. An ES module project, or one with `skipLibCheck`, may keep working on an older 5.x, but no release below 5.8 is tested.
+  - **How it stays true.** CI's `typescript-compat` job now type-checks the packed tarball under the peer's floor as well as the newest 5, 6 and 7. A unit test fails when the floor in `package.json` and the job's list disagree, or when a document states another range.
+
+### Patch Changes
+
+- 5215d0b: Comment and description wording only. No exported type, flag, error `code`, JSON key or schema constraint changed.
+  
+  - TSDoc in the shipped `.d.ts` files is shorter and plainer, and so is the `description` text of the published Evidence and Verdict JSON Schemas.
+  - No comment sentence in `src/` or `bin/` is longer than 25 words, except two coverage-directive reasons.
+
 ## 0.14.0
 
 ### Minor Changes

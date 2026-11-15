@@ -1,19 +1,19 @@
 /**
- * Ready-made checks for common TypeScript and JavaScript tools. Spread a preset into your own
+ * Ready-made checks for common TypeScript and JavaScript tools. Spread a preset into your
  * `checks` record and override what you need, most often `policy`.
  *
  * A preset encodes how to run and read one tool, never what counts as good enough
  * (specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). To change
  * what a factory preset runs, pass it options; overriding `run` directly is the escape hatch.
  *
- * Experimental, and published under its own `./presets` subpath. It is never re-exported from the
+ * Experimental, and published under its `./presets` subpath. It is never re-exported from the
  * package root, and it re-exports nothing from there.
  * @packageDocumentation
  */
 
 /**
  * An AI review as a check. It runs your agent with a prompt that asks for one fixed JSON shape,
- * {@link AiReviewReply}, with a confidence score on every finding, and gates on those scores. A
+ * {@link AiReviewReply}. Every finding carries a confidence score, and the check gates on them. A
  * model can answer differently on every run, so the policy reads only that structured reply,
  * never prose.
  *
@@ -21,9 +21,10 @@
  * from its first `{` to its last `}` is parsed. If that fails too, or the JSON is not the
  * requested shape, `fallback` is judged in its place and the reason lists the problems.
  *
- * The verdict: `fail` when an `error` finding scores at or above `errorThreshold`; `warn` for any
- * other `warn` or `error` finding, which includes the default fallback; `pass` for `info` findings
- * only. Each reason lists every `warn` and `error` finding with its file, line, rule and confidence.
+ * The verdict is `fail` when an `error` finding scores at or above `errorThreshold`. It is `warn`
+ * for any other `warn` or `error` finding, including the default fallback. It is `pass` for `info`
+ * findings only. Each reason lists every `warn` and `error` finding with its file, line, rule and
+ * confidence.
  * A timeout, a missing agent or a process killed by a signal fails. A non-zero exit code alone
  * does not: a well-formed reply still counts, and an unreadable one names the code. The tests prove
  * the parsing and the policy; they do not prove a model's judgement.
@@ -73,9 +74,9 @@ export declare interface AiReviewOptions {
     readonly agent: readonly string[];
     /**
      * What the agent is asked. A string is the prompt text. `{ file }` hands the agent that path in
-     * place of the text, for an agent that reads its prompt from a file. Defaults to a prompt that
-     * asks for {@link AiReviewReply} and shows an example of it; a replacement must ask for the same
-     * shape, or every reply goes to `fallback`.
+     * place of the text, for an agent that reads its prompt from a file. The default prompt asks for
+     * {@link AiReviewReply} and shows an example of it. A replacement must ask for the same shape, or
+     * every reply goes to `fallback`.
      */
     readonly prompt?: string | {
         readonly file: string;
@@ -87,7 +88,7 @@ export declare interface AiReviewOptions {
      * `{ ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY }`. Each value reaches the agent's process
      * through the check's `env`, so it works when the runner sets `inheritEnv: false`. A value never
      * enters the command line, and every occurrence of it in a reason is replaced with `[redacted]`.
-     * The evidence keeps the agent's own stdout and stderr, so a value the agent prints lands there.
+     * The evidence keeps the agent's stdout and stderr, so a value the agent prints lands there.
      * A name whose value is `undefined` or `""` is left unset and turns a `pass` into a `warn`.
      */
     readonly credentials?: Readonly<Record<string, string | undefined>>;
@@ -144,24 +145,34 @@ declare interface BrokenLinksOptions {
 }
 
 /**
- * One fully configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.
+ * Fails when package.json bundles a package (`bundleDependencies` or `bundledDependencies`) that
+ * its `dependencies` do not declare. npm writes each such name into the published registry
+ * manifest as `"*"`, and supply-chain scanners such as Socket report the mismatch as manifest
+ * confusion. Passes a package that bundles nothing. Reads package.json in the working directory
+ * with `node -e`; no external tool.
+ * @beta
+ */
+export declare const bundledDependencies: CheckDefinitionConfig;
+
+/**
+ * One fully configured check. It says how to run the check and how (if at all) to interpret its
+ * output. Its policy decides whether its evidence is acceptable.
  * @public
  */
 declare interface CheckDefinition extends CheckDefinitionConfig {
     /**
      * Other check ids (from this same `checks` record) that must reach a
      * terminal status (not necessarily a passing policy) before this
-     * check's own process is spawned. Execution ordering only: whether a
-     * dependency's *policy* passed is never consulted by repo-contract to
-     * decide whether this check's process spawns; that is this check's
-     * own command or policy's decision (see `ctx.dependencies` on
-     * `PolicyContext`). Omit, or an empty array, for no dependencies: the
+     * check's process is spawned. It orders execution only. repo-contract never
+     * consults whether a dependency's *policy* passed to decide whether this
+     * check spawns. That is for this check's command or policy to decide (see
+     * `ctx.dependencies` on `PolicyContext`). Omit, or an empty array, for no dependencies: the
      * default, fully-parallel behavior. Validated before any process spawns.
      * Every named id must exist in `checks`, and a check cannot depend on itself.
      * Declaration order in the `checks` object doubles as the required
      * topological order. So every named id must be declared *earlier* than the
      * check that depends on it, and a forward reference throws
-     * `DependencyDeclaredLaterError`. A cycle is therefore impossible, since no
+     * `DependencyDeclaredLaterError`. A cycle is impossible, since no
      * edge can point forward. See
      * specs/decisions/0002-dependson-and-isolated-are-two-scheduling-primitives.md.
      */
@@ -169,7 +180,8 @@ declare interface CheckDefinition extends CheckDefinitionConfig {
 }
 
 /**
- * One partially configured check: how to run it, how (if at all) to interpret its output, and the policy that decides whether its evidence is acceptable.
+ * One partially configured check. It says how to run the check and how (if at all) to interpret
+ * its output. Its policy decides whether its evidence is acceptable.
  * @public
  */
 declare interface CheckDefinitionConfig {
@@ -178,19 +190,19 @@ declare interface CheckDefinitionConfig {
      * without invoking a shell. Shell operators (`;`, `&`, `|`, backticks,
      * `$(`, `<`, `>`, newlines) are rejected with a configuration error, not
      * passed through as literal arguments. A string containing one almost
-     * always means its author assumed a shell would interpret it. Glob characters (`*`, `?`, `~`, `[`, `]`,
-     * `{`, `}`) are NOT rejected: they are common, legitimate literal argv
-     * content (e.g. `eslint "src/**\/*.ts"`) that many CLI tools glob-expand
-     * internally, and carry no shell-injection risk when no shell is invoked.
+     * always means its author assumed a shell would interpret it. Glob characters (`*`, `?`, `~`,
+     * `[`, `]`, `{`, `}`) are NOT rejected. They are common, legitimate literal argv content
+     * (e.g. `eslint "src/**\/*.ts"`) that many CLI tools glob-expand internally. They carry no
+     * shell-injection risk when no shell is invoked.
      * An array bypasses tokenization entirely and is used as argv verbatim.
      */
     readonly run: string | readonly string[];
     /**
-     * Opt into real shell execution instead of the safe argv-only default.
-     * When `true` (or left unset with `RepoContractConfig.shell: true` as the
-     * run-wide default (see that field), `run` must be a `string` and is
-     * passed to the platform shell as-is (via the supplied `Spawner`'s own
-     * `shell` option)) shell metacharacter rejection does not apply. See
+     * Opt into shell execution instead of the safe argv-only default. This
+     * applies when `true`, or when unset with `RepoContractConfig.shell: true`
+     * as the run-wide default (see that field). `run` must then be a `string`.
+     * It is passed to the platform shell as-is, via the supplied `Spawner`'s
+     * `shell` option. Shell metacharacter rejection does not apply. See
      * SECURITY.md before enabling this.
      */
     readonly shell?: boolean;
@@ -206,8 +218,8 @@ declare interface CheckDefinitionConfig {
     readonly output?: {
         readonly format: OutputFormat;
         /**
-         * An optional Standard Schema validator (Zod, Valibot, ArkType, or any other
-         * implementation of standardschema.dev), run once the requested `format` parse
+         * An optional Standard Schema validator: Zod, Valibot, ArkType, or any other
+         * implementation of standardschema.dev. It runs once the requested `format` parse
          * itself succeeds. repo-contract never imports a schema library itself.
          * `StandardSchemaV1` is hand-vendored (see `src/standard-schema/types.ts`) as a
          * type-level contract only. So accepting a consumer's schema object adds no runtime or
@@ -232,16 +244,16 @@ declare interface CheckDefinitionConfig {
         readonly schema?: StandardSchemaV1;
     };
     /**
-     * A full scheduling barrier at this check's own position in the `checks` object. It does not
+     * A full scheduling barrier at this check's position in the `checks` object. It does not
      * spawn until every check declared *earlier* has reached a terminal status. Every check
      * declared *after* it waits for it in turn, so nothing overlaps it in either direction. When its turn
      * comes, only earlier-declared checks can be in flight, since later ones have not been reached.
      *
-     * It is a scheduling primitive only, for a check whose tooling spawns concurrent workers that
-     * would contend with the rest of the run for machine resources (e.g. Stryker's worker pool). It
-     * needs no other check's evidence, only the machine to itself. So on its own it never appears in
-     * a policy's `ctx.dependencies` or in a partial `options.checks` run's transitive closure. An
-     * explicit `dependsOn` alongside it works as it would on any other check.
+     * It is a scheduling primitive only. It suits a check whose tooling spawns concurrent workers
+     * that would contend with the rest of the run for machine resources (e.g. Stryker's worker
+     * pool). It needs no other check's evidence, only the machine to itself. So by itself it never
+     * appears in a policy's `ctx.dependencies` or in a partial `options.checks` run's transitive
+     * closure. An explicit `dependsOn` alongside it works as it would on any other check.
      *
      * Defaults to `false`: fully-parallel scheduling in declaration order. Two isolated checks always
      * run one after the other: the one declared second waits for the first, as it does for every
@@ -249,9 +261,10 @@ declare interface CheckDefinitionConfig {
      */
     readonly isolated?: boolean;
     /**
-     * Marks a check as costly enough to be worth skipping when the run asked for fail-fast
-     * (`RunRepoContractOptions.failFast`) and a check that is not marked has already failed. Such a
-     * check that has not yet spawned then resolves to `status: "aborted"` evidence with `skipReason: "fail-fast"` instead of running.
+     * Marks a check as costly enough to be worth skipping under fail-fast. That applies when the run
+     * asked for fail-fast (`RunRepoContractOptions.failFast`) and an unmarked check has already
+     * failed. A marked check that has not yet spawned then resolves to `status: "aborted"` evidence
+     * with `skipReason: "fail-fast"` instead of running.
      * A check that is already running is never killed, and an `expensive` check failing never skips
      * anything. Skipping is decided when the check's turn comes, so to make it certain, declare the
      * expensive check after (or `dependsOn`) the cheap ones. Does nothing unless the run opts in to
@@ -263,27 +276,27 @@ declare interface CheckDefinitionConfig {
 }
 
 /**
- * What actually happened when one configured check ran. `output` is present
- * only if that check's config requested a format, and is otherwise
- * `undefined`: a policy narrows with `ctx.result.output?.success` (or an
+ * What happened when one configured check ran. `output` is present only if
+ * that check's config requested a format; otherwise it is `undefined`. A
+ * policy narrows with `ctx.result.output?.success` (or an
  * `if (ctx.result.output) { ... }` guard) before reading `.value`/`.error`.
  *
- * `output.value` is the value the configured `format` parser produced. If the check's config
- * supplies `output.schema` (see `CheckDefinitionConfig.output.schema`), the schema validates it and
- * may replace it with a transformed value, so it is not always the raw parser result.
+ * `output.value` is the value the configured `format` parser produced. A check's config may
+ * supply `output.schema` (see `CheckDefinitionConfig.output.schema`). The schema then validates
+ * the value and may replace it with a transformed one, so it is not always the raw parser result.
  *
  * It is typed `unknown` for every format, including `"text"` (where `parseText` always produces a
- * `string`), with or without a schema. TypeScript's generic inference cannot carry one check's
- * literal `output.format`, or its schema's output type, through to that check's `policy` once
- * several checks with different formats share one `checks` record. That limit was confirmed during
- * implementation; specs/decisions/ holds the isolated repro. This is a deliberate tradeoff. A
- * schema still types its author's own code through `StandardSchemaV1<Input, Output>`, but not this
+ * `string`), with or without a schema. Several checks with different formats can share one
+ * `checks` record. TypeScript's generic inference then cannot carry one check's literal
+ * `output.format`, or its schema's output type, through to that check's `policy`.
+ * specs/decisions/ holds the isolated repro. This is a deliberate tradeoff. A
+ * schema still types its author's code through `StandardSchemaV1<Input, Output>`, but not this
  * shared `CheckEvidence` shape. A policy author narrows or casts `.value`, as they already must for
  * `"json"` or `"text"` without a schema.
  * @public
  */
 declare interface CheckEvidence {
-    /** The executable that was actually spawned (after tokenization, if `run` was a string). */
+    /** The executable that was spawned (after tokenization, if `run` was a string). */
     readonly command: string;
     /** The arguments passed to `command`, exactly as spawned. */
     readonly args: readonly string[];
@@ -316,9 +329,9 @@ declare interface CheckEvidence {
     readonly spawnErrorCode?: string;
     /**
      * The parsed interpretation of `stdout`, present only if this check's config requested a
-     * `format`. If that config also supplied `output.schema`, a successful parse is additionally
-     * validated (and possibly transformed) by that schema before landing here: see this
-     * interface's own doc comment above and `CheckDefinitionConfig.output.schema`.
+     * `format`. When that config also supplied `output.schema`, that schema validates (and may
+     * transform) a successful parse before it lands here. See this interface's doc comment above
+     * and `CheckDefinitionConfig.output.schema`.
      */
     readonly output?: ParsedOutput<unknown>;
 }
@@ -331,15 +344,15 @@ declare type CheckSchema = Record<string, CheckDefinition>;
 
 /**
  * Why a check's process ended up in its terminal state. `"completed"` means
- * the process ran to exit on its own: the exit code may still be
- * non-zero, and that is for the check's policy to interpret, never this
- * package. The other five values all mean the process did not exit on its
- * own; repo-contract terminated it, or it was terminated for a reason
- * repo-contract can observe but did not cause.
+ * the process ran to exit by itself. The exit code may still be non-zero;
+ * the check's policy interprets it, never this package. The other five
+ * values all mean the process did not exit by itself. Either repo-contract
+ * terminated it, or something else did, for a reason repo-contract can
+ * observe but did not cause.
  *
  * `"signaled"` specifically means a signal repo-contract did *not* itself request: an
  * externally-caused termination. A check is instead `"host_terminated"` when the *host* process
- * running repo-contract received its own SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler
+ * running repo-contract received its SIGINT/SIGTERM (see `run-checks.ts`'s termination-handler
  * cleanup). In that case repo-contract did request the signal, though not via `options.signal` or
  * `timeoutMs` (see `"aborted"`/`"timed_out"`). So it must not be conflated with an
  * externally-caused `"signaled"`.
@@ -349,12 +362,12 @@ declare type CheckStatus = "completed" | "timed_out" | "signaled" | "host_termin
 
 /**
  * Commit-message governance via commitlint, using whatever commitlint
- * config the consumer's own repository already has (commitlint ships no
- * rules of its own: e.g. `@commitlint/config-conventional`). Exit-code
- * based rather than `--format json`: commitlint has no broadly-documented,
- * stable JSON CLI output, so this preset reads its plain-text report the
- * same way the `format`/`typecheck` presets already do for their tools,
- * rather than relying on an unconfirmed flag.
+ * config the consumer's repository already has (commitlint ships no
+ * rules of its own: e.g. `@commitlint/config-conventional`). It judges the
+ * exit code, not `--format json`: commitlint has no broadly-documented,
+ * stable JSON CLI output. This preset reads its plain-text report as the
+ * `format`/`typecheck` presets do for their tools, instead of relying on an
+ * unconfirmed flag.
  * @param options - configuration for this check; see {@link CommitlintOptions}.
  * @returns the configured check.
  * @beta
@@ -382,21 +395,22 @@ declare interface DeadCodeOptions {
     /**
      * devDependency names to exclude from the "unused devDependency" issue
      * category: e.g. CLI tools knip has no way to see are used, because
-     * nothing `import`s them. Round-tripped through knip's own
-     * `--reporter-options` flag (see `readReporterOptions`) rather than kept in
-     * a closure, so the exempt list this check actually ran with is visible on
-     * the recorded command line and in persisted evidence, not just in this
-     * file's source. Defaults to an empty list: repo-contract ships no
-     * built-in exemptions; add your own repository's here.
+     * nothing `import`s them. The list travels through knip's
+     * `--reporter-options` flag (see `readReporterOptions`), not a closure. So
+     * the exempt list this check ran with is visible on the recorded command
+     * line and in persisted evidence, not only in this file's source. Defaults
+     * to an empty list: repo-contract ships no built-in exemptions; add your
+     * repository's here.
      */
     readonly exemptUnusedDevDependencies?: readonly string[];
 }
 
 /**
- * Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the build output directory, so
- * supply-chain scanners that flag shipped URLs (Socket.dev's "URL strings" alert, for one) have
- * nothing to flag. Scans every file, sourcemaps and declaration files included. Individual URLs can
- * be allowed with a mandatory, reviewable `reason`; there is no blanket opt-out.
+ * Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the
+ * build output directory. Supply-chain scanners that flag shipped URLs then have nothing to flag
+ * (Socket.dev's "URL strings" alert, for one). Scans every file, sourcemaps and declaration files
+ * included. Individual URLs can be allowed with a mandatory, reviewable `reason`; there is no
+ * blanket opt-out.
  * @param options - configuration for this check; see {@link DistNoUrlsOptions}.
  * @returns the configured check.
  * @beta
@@ -429,7 +443,7 @@ export declare function duplication(options?: DuplicationOptions): CheckDefiniti
 
 /** Options accepted by {@link duplication}. */
 declare interface DuplicationOptions {
-    /** Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope the scan to your own source tree. */
+    /** Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope the scan to your source tree. */
     readonly path?: string;
 }
 
@@ -458,7 +472,7 @@ declare interface Evidence<TChecks extends CheckSchema = CheckSchema> {
     readonly completedAt: string;
     /** Wall-clock time for the run as a whole, in milliseconds. */
     readonly durationMs: number;
-    /** Each configured check's own evidence, keyed by check id. */
+    /** Each configured check's evidence, keyed by check id. */
     readonly checks: {
         readonly [K in keyof TChecks]: CheckEvidence;
     };
@@ -471,7 +485,7 @@ declare interface Evidence<TChecks extends CheckSchema = CheckSchema> {
 export declare const format: CheckDefinitionConfig;
 
 /**
- * Dependency license compliance via licensee. The repository's own `.licensee.json` is the policy
+ * Dependency license compliance via licensee. The repository's `.licensee.json` is the policy
  * when it exists; otherwise a dependency's license must be OSI-approved (`--osi`).
  * @beta
  */
@@ -479,12 +493,11 @@ export declare const license: CheckDefinitionConfig;
 
 /**
  * Static analysis via ESLint, using whatever `eslint.config.js` the
- * consumer's own repository already has: this preset makes no assumption
- * about rule configuration, only about how to run the tool and interpret
- * its JSON output. Severity `2` (error) blocks; severity `1` (warning) is
- * reported but never blocks: ESLint's own severities already encode that
- * distinction, so this preset just respects it rather than treating every
- * finding as equally blocking.
+ * consumer's repository already has. This preset assumes nothing about
+ * rule configuration, only how to run the tool and read its JSON output.
+ * Severity `2` (error) blocks. Severity `1` (warning) is reported but
+ * never blocks. ESLint's severities already encode that distinction, and
+ * this preset keeps it instead of treating every finding as blocking.
  * @param options - configuration for this check; see {@link LintOptions}.
  * @returns the configured check.
  * @beta
@@ -493,15 +506,15 @@ export declare function lint(options?: LintOptions): CheckDefinitionConfig;
 
 /** Options accepted by {@link lint}. */
 declare interface LintOptions {
-    /** Path (or glob) passed straight through to ESLint as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope linting to your own source tree. */
+    /** Path (or glob) passed straight through to ESLint as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope linting to your source tree. */
     readonly path?: string;
 }
 
 /**
  * Markdown structure/style lint via markdownlint-cli2. Unlike this
- * package's other file-based-report presets, the report path is
- * config-driven rather than a CLI flag: markdownlint-cli2 only writes
- * JSON when its own config file requests it. This preset assumes the
+ * package's other file-based-report presets, the report path comes from
+ * config, not a CLI flag. The `markdownlint-cli2` tool writes JSON only
+ * when its config file requests it. This preset assumes the
  * consumer's `.markdownlint-cli2.jsonc` includes:
  * ```jsonc
  * "outputFormatters": [["markdownlint-cli2-formatter-json", { "name": "reports/markdownlint.json" }]]
@@ -524,8 +537,8 @@ declare interface MarkdownlintOptions {
  * Output interpretation a check can explicitly request. No format requested means no parsing:
  * the consumer gets raw stdout/stderr only. Other formats (e.g. YAML) are left out on purpose:
  * JSON and plain text cover every check this package or its consumers run. A check whose tool
- * emits another format converts it in its own `run` step, or reads it in its `policy` function
- * with a library it already depends on. That keeps this package free of an optional peer
+ * emits another format converts it in its `run` step. Or its `policy` function reads it with a
+ * library the check already depends on. That keeps this package free of an optional peer
  * dependency carried on everyone's behalf.
  * @public
  */
@@ -567,11 +580,11 @@ declare interface ParsedOutputSuccess<T> {
 
 /**
  * A repository-owned decision about whether one check's evidence is
- * acceptable. Returns a `PolicyResult` (never a bare boolean or string)
- * so a policy can communicate more than pass/fail even when the run is
- * otherwise acceptable (see `PolicyResult`/`PolicyOutcome`). May be
- * synchronous or return a `Promise`. repo-contract does not interpret
- * `rationale` beyond storing and surfacing it verbatim; the package has no
+ * acceptable. It returns a `PolicyResult`, never a bare boolean or string.
+ * So a policy can communicate more than pass/fail, even when the run is
+ * otherwise acceptable (see `PolicyResult`/`PolicyOutcome`). It may be
+ * synchronous or return a `Promise`. repo-contract stores and surfaces
+ * `rationale` verbatim and does not interpret it. The package has no
  * opinion about what makes a check pass, fail, or warrant a `warn`.
  * @public
  */
@@ -579,30 +592,29 @@ declare type Policy<TChecks extends CheckSchema = CheckSchema> = (ctx: PolicyCon
 
 /**
  * What a check's `policy` function is called with. `result` is that check's
- * own evidence; `evidence` is the complete run's evidence, including every
- * sibling check: present so a policy can make cross-check decisions (e.g.
- * "only enforce the mutation-score threshold if the tests check passed").
- * By the time any policy runs, every check has already finished executing
- * and every check's evidence has already been assembled: no policy ever
- * observes a partially-populated `evidence` (see specs/architecture.md).
+ * evidence. `evidence` is the complete run's evidence, including every
+ * sibling check, so a policy can make cross-check decisions (e.g. "only
+ * enforce the mutation-score threshold if the tests check passed"). Before
+ * any policy runs, every check has finished executing and every check's
+ * evidence has been assembled. No policy ever observes a partially-populated
+ * `evidence` (see specs/architecture.md).
  * @public
  */
 declare interface PolicyContext<TChecks extends CheckSchema = CheckSchema> {
-    /** This check's own evidence. */
+    /** This check's evidence. */
     readonly result: CheckEvidence;
     /** The complete run's evidence, including every sibling check. */
     readonly evidence: Evidence<TChecks>;
     /**
-     * This check's own declared `dependsOn` dependencies' evidence, keyed by
-     * check id: a convenience view, fully derivable from `evidence.checks`
-     * plus this check's own `dependsOn`, provided so no policy has to do that
-     * lookup itself. `{}` for a check with no `dependsOn`: always an
-     * object, never `undefined`, matching how `evidence.checks` is already
-     * used today (a policy narrows a specific key's presence, never the
-     * field itself). Evidence only, not policy outcomes: a dependency's
-     * policy result stays visible only via the top-level `Verdict`, exactly
-     * as today; this keeps policy evaluation itself fully parallel and
-     * unaffected by `dependsOn`.
+     * This check's declared `dependsOn` dependencies' evidence, keyed by
+     * check id. It is a convenience view, fully derivable from
+     * `evidence.checks` plus this check's `dependsOn`, so no policy has to do
+     * that lookup itself. It is `{}` for a check with no `dependsOn`: always
+     * an object, never `undefined`. That matches how `evidence.checks` is used
+     * (a policy narrows a specific key's presence, never the field itself).
+     * It holds evidence only, not policy outcomes. A dependency's policy
+     * result stays visible only via the top-level `Verdict`. That keeps
+     * policy evaluation fully parallel and unaffected by `dependsOn`.
      */
     readonly dependencies: Readonly<Record<string, CheckEvidence>>;
 }
@@ -626,10 +638,10 @@ declare type PolicyOutcome = "pass" | "fail" | "warn";
  * AI without rerunning anything.
  *
  * `rationale` is mandatory. It must hold enough actionable detail (specific
- * file/line locations, rule ids, test names, counts) for a consumer to
- * understand *why* the policy reached its outcome from this value alone. A
- * rationale like "see output above" or "check the report for details"
- * defeats the purpose: it sends the consumer back to raw command output,
+ * file/line locations, rule ids, test names, counts) to explain *why* the
+ * policy reached its outcome. A consumer should need nothing but this value.
+ * A rationale like "see output above" or "check the report for details"
+ * defeats the purpose. It sends the consumer back to raw command output,
  * which this type exists to avoid. `runPolicies` rejects such a rationale at
  * runtime (`src/policy/run-policies.ts`'s `VAGUE_RATIONALE_PATTERNS`, ADR
  * 0016), the same as any other malformed `PolicyResult`. So a check that
@@ -649,16 +661,40 @@ declare interface PolicyResult {
 
 /**
  * publint has no machine-readable output mode: only a plain-text CLI
- * reporter (see its own `src/cli.js` `formatMessages`). Its process exit
+ * reporter (see its `src/cli.js` `formatMessages`). Its process exit
  * code reflects only 'error'-level findings; 'warning'/'suggestion'-level
- * findings never affect it. This preset reads the same three section
- * headers publint's own CLI writes ("Errors:", "Warnings:", "Suggestions:")
- * to distinguish blocking findings from non-blocking ones, without
- * depending on any per-message structure publint doesn't expose. Relevant
- * only to repositories that publish an npm package.
+ * findings never affect it. This preset reads the three section headers
+ * publint's CLI writes ("Errors:", "Warnings:", "Suggestions:") to tell
+ * blocking findings from non-blocking ones. It depends on no per-message
+ * structure, which publint doesn't expose. Relevant only to repositories
+ * that publish an npm package.
  * @beta
  */
 export declare const publint: CheckDefinitionConfig;
+
+/**
+ * Runs the README's marked quick start, one line at a time, against the tarball npm would publish.
+ * The commands run in an empty project: a directory holding only a package.json. The command that
+ * installs this package installs the packed tarball instead. Fails when any command exits non-zero or the time
+ * budget runs out, and when the README has no marked block. Mark the block by putting
+ * `<!-- quick-start:begin -->` on the line before its fenced `sh` block and
+ * `<!-- quick-start:end -->` on the line after it.
+ *
+ * Runs `repo-contract quick-start`, so the package must be built first, and the commands reach
+ * whatever network they reach (an install usually reaches the registry).
+ * @param options - configuration for this check; see {@link QuickStartOptions}.
+ * @returns the configured check.
+ * @beta
+ */
+export declare function quickStart(options?: QuickStartOptions): CheckDefinitionConfig;
+
+/** Options accepted by {@link quickStart}. */
+export declare interface QuickStartOptions {
+    /** The Markdown file that holds the marked quick start, relative to the working directory. Defaults to `"README.md"`. */
+    readonly readme?: string;
+    /** Time all of the quick start's commands together may take, in milliseconds. Defaults to `300000` (five minutes). */
+    readonly timeoutMs?: number;
+}
 
 /**
  * Dependency vulnerability scanning via `npm audit`.
@@ -674,24 +710,24 @@ export declare const securitySecrets: CheckDefinitionConfig;
 
 /**
  * Hand-vendored from `@standard-schema/spec@1.1.0` (standardschema.dev), pinned
- * 2026-09-04: see specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md for why this is
- * vendored rather than an installed dependency, and for the version-pin/re-diff process. Pure type
- * declarations, zero runtime code: assigning any real Zod/Valibot/ArkType (etc.) schema to this
- * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here: the
+ * 2026-09-04. See specs/decisions/0012-hand-vendored-standard-schema-support-for-optional-output-validation.md
+ * for why this is vendored rather than installed, and for the version-pin/re-diff process. Pure
+ * type declarations, zero runtime code: assigning a Zod/Valibot/ArkType (etc.) schema to this
+ * type costs nothing at runtime. Only `StandardSchemaV1` (validation) is vendored here. The
  * separate, optional `StandardJSONSchemaV1` (JSON Schema conversion) extension
  * (standardschema.dev/json-schema) is out of scope; see the ADR.
  *
- * Upstream's `StandardSchemaV1.Props` actually extends a shared `StandardTypedV1.Props` base
- * (`version`/`vendor`/`types`). This vendored copy inlines those fields directly into one flat
- * interface, since repo-contract has no use for the shared base on its own. It is structurally
- * identical for any real schema object assigned to it. Re-diff against
- * `@standard-schema/spec`'s published `dist/index.d.ts` if this file is ever touched.
+ * Upstream's `StandardSchemaV1.Props` extends a shared `StandardTypedV1.Props` base
+ * (`version`/`vendor`/`types`). This vendored copy inlines those fields into one flat
+ * interface, since repo-contract has no use for the shared base alone. It is structurally
+ * identical for any library schema object assigned to it. Re-diff against
+ * `@standard-schema/spec`'s published `dist/index.d.ts` whenever this file is touched.
  *
- * Tagged `@public`, not tied to either re-exporting barrel's own stability tier. This type is
- * re-exported from both the Stable root barrel, for `output.schema`, and the Experimental
- * `repo-contract/helpers` barrel. This vendored copy's own shape only ever changes via a
+ * Tagged `@public`, not tied to either re-exporting barrel's stability tier. This type is
+ * re-exported from the root barrel, for `output.schema`, and from the
+ * `repo-contract/helpers` barrel. This vendored copy's shape changes only through a
  * deliberate re-diff against the pinned upstream spec version above. It never changes as a side
- * effect of either barrel's own stability classification.
+ * effect of either barrel's stability classification.
  * @public
  */
 declare interface StandardSchemaV1<Input = unknown, Output = Input> {
@@ -762,9 +798,9 @@ declare namespace StandardSchemaV1 {
 
 /**
  * CSS/SCSS lint via stylelint, using whatever stylelint config the
- * consumer's own repository already has. `severity: "error"` blocks;
+ * consumer's repository already has. `severity: "error"` blocks;
  * `severity: "warning"` is reported but never blocks, matching how the
- * `lint` preset treats ESLint's own severities.
+ * `lint` preset treats ESLint's severities.
  * @param options - configuration for this check; see {@link StylelintOptions}.
  * @returns the configured check.
  * @beta
@@ -773,7 +809,7 @@ export declare function stylelint(options?: StylelintOptions): CheckDefinitionCo
 
 /** Options accepted by {@link stylelint}. */
 declare interface StylelintOptions {
-    /** Glob passed straight through to stylelint as its positional target. Defaults to `"**\/*.{css,scss}"`: adjust it for your own stylesheet file extensions (e.g. `.less`, `.vue`, `.svelte`). */
+    /** Glob passed straight through to stylelint as its positional target. Defaults to `"**\/*.{css,scss}"`: adjust it for your stylesheet file extensions (e.g. `.less`, `.vue`, `.svelte`). */
     readonly glob?: string;
 }
 

@@ -4,11 +4,11 @@
  * exports are followed through the import graph. A case the analysis cannot reason about widens
  * the answer toward a full run; it never narrows on a guess.
  *
- * Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities,
- * so this barrel reads no file and runs no process (see
+ * Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities.
+ * This barrel reads no file and runs no process (see
  * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
  *
- * Experimental, and published under its own `./affected` subpath; never re-exported from the
+ * Experimental, and published under its `./affected` subpath; never re-exported from the
  * package root.
  * @packageDocumentation
  */
@@ -92,7 +92,7 @@ export declare interface CacheEntry<TValue = unknown> {
 }
 
 /**
- * Builds the key a result is stored under: a digest of the check, every input's name and content
+ * Builds the key a result is stored under. It digests the check, every input's name and content
  * digest, the tool versions, and the cache format. Anything that can change the result belongs in
  * `inputs` or `tools`; the key says nothing about what is left out.
  * @param input - The check id, its inputs (name to content digest) and the tools' versions.
@@ -191,8 +191,8 @@ export declare type ChangeKind = "added" | "modified" | "deleted" | "renamed";
  * The analysis is symbol-level: each changed module is diffed against its base to find the exported
  * names whose behavior may differ. Those names are followed through the import graph (including
  * re-exports and `export *`) to every module that uses them. Anything it cannot reason about does
- * not narrow the result. A changed file the graph cannot place, a global trigger such as a
- * lockfile, or a file that does not parse makes the whole result `"full"`. A module that loads
+ * not narrow the result. Three cases make the whole result `"full"`: an unplaceable changed file,
+ * a global trigger such as a lockfile, and an unparseable file. A module that loads
  * code dynamically is treated as affected by everything. Narrowing is only ever an optimization of
  * a sound answer, never a guess.
  * @param input - Module contents, the diff, and the TypeScript compiler API.
@@ -321,8 +321,8 @@ export declare interface DoctorSnapshot {
 export declare function explainAffected(result: AffectedResult): string[];
 
 /**
- * Proves the affected scope sound against evidence: after a full run on the same change, any test
- * that failed there but was not in the affected set is an escape; a regression the narrow run
+ * Proves the affected scope sound against evidence from a full run on the same change. A test
+ * that failed there but was not in the affected set is an escape: a regression the narrow run
  * would have shipped. Run it on merges to the main branch, where both answers exist.
  * @param input - The affected tests, all tests and the full run's failures.
  * @returns Whether the narrow scope was sound, and which tests escaped it.
@@ -347,8 +347,8 @@ export declare interface LinkRule {
 /**
  * Reads the compiler options module resolution depends on (`paths`, `baseUrl`, ...), following
  * `extends` through the repository and `node_modules`. An import written through a path alias
- * looks like a package to the graph, so options that could not be read must widen the answer,
- * not be skipped.
+ * looks like a package to the graph. Options that could not be read must widen the answer, not
+ * be skipped.
  * @param input - The TypeScript API, a file reader and optionally the config to use.
  * @returns The options (absent when there is no default `tsconfig.json`), or the reason to go full.
  */
@@ -367,9 +367,9 @@ export declare interface LoadCompilerOptionsInput {
 }
 
 /**
- * Combines per-shard Stryker reports into the report an unsharded run would have produced. Never
- * a partial pass: a missing, repeated or out-of-range shard, an unreadable report, a file mutated
- * by two shards, or disagreeing schema versions all fail the merge.
+ * Combines per-shard Stryker reports into the report an unsharded run would have produced. It never
+ * passes partially. These all fail the merge: a missing, repeated or out-of-range shard, an
+ * unreadable report, a file mutated by two shards, or disagreeing schema versions.
  * @param reports - Each shard's number and parsed report.
  * @param total - How many shards the run was split into.
  * @returns The merged report, or why the shards cannot be merged.
@@ -531,8 +531,8 @@ export declare function resolveCacheMode(input: {
 };
 
 /**
- * Decides whether a run stops spending time on expensive checks once a cheap one has failed. Off
- * unless asked for, in CI as much as locally, so a run reports every problem by default; and never
+ * Decides whether a run stops spending time on expensive checks once a cheap one has failed. It is
+ * off unless asked for, in CI and locally, so a run reports every problem by default. It is never
  * on for a release, which always runs everything.
  * @param input - The explicit flag and the environment.
  * @param input.flag - `--fail-fast` (true) or `--no-fail-fast` (false), if given.
@@ -567,7 +567,7 @@ export declare interface ResolveScopeInput {
 /** How much of the repository a run validates. */
 export declare type RunScope = "affected" | "full";
 
-/** The scope a run uses and the reason, for the run's own output. */
+/** The scope a run uses and the reason, for the run's output. */
 export declare interface ScopeDecision {
     readonly scope: RunScope;
     readonly source: ScopeSource;
@@ -637,8 +637,8 @@ export declare type ShardSpec = {
 export declare type TypeScriptApi = typeof TypeScript;
 
 /**
- * Unpacks a cached set of files, trusting nothing: the shape, every path and every checksum are
- * checked, and any problem means the whole set is refused (a cache miss, never a partial restore).
+ * Unpacks a cached set of files, trusting nothing. The shape, every path and every checksum are
+ * checked. Any problem refuses the whole set: a cache miss, never a partial restore.
  * @param value - What the cache returned.
  * @returns The files with their content, or why the set cannot be used.
  */

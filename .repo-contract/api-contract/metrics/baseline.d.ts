@@ -7,14 +7,14 @@
  * process (see
  * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
  *
- * Experimental, and published under its own `./metrics` subpath; never re-exported from the
+ * Experimental, and published under its `./metrics` subpath; never re-exported from the
  * package root.
  * @packageDocumentation
  */
 
 /**
- * Records that a release passed the full contract: every check's verdict with a hash of its
- * evidence, the inputs and tool versions, and a digest over all of it.
+ * Records that a release passed the full contract. It holds every check's verdict with a hash of
+ * its evidence, the inputs and tool versions, and a digest over all of it.
  * @param input - The run's facts.
  * @returns The manifest.
  * @throws {Error} If the run was not a full, cache-bypassing one, or a check id repeats.
@@ -76,8 +76,8 @@ declare interface ManifestFacts {
     /** Each tool's version. */
     readonly tools: Readonly<Record<string, string>>;
     /**
-     * What the run looked at: the commit it ran on and, when known, the ref. Without a subject a
-     * manifest says "a full run passed" but not of what; with one, a reader can pair it with the
+     * What the run looked at: the commit it ran on and, when known, the ref. Without a subject, a
+     * manifest says "a full run passed" but not of what. With one, a reader can pair it with the
      * repository state it vouches for. Optional for compatibility with manifests built before it existed.
      */
     readonly subject?: {
@@ -195,7 +195,7 @@ export declare interface RunRecordInput {
     readonly scope: "affected" | "full";
     readonly checks: readonly CheckRecord[];
     readonly base?: string;
-    /** Who produced the change: set by the caller from its own configuration, never inferred. */
+    /** Who produced the change: set by the caller from its configuration, never inferred. */
     readonly actor?: "human" | "agent";
     /** Groups the runs of one change (a pull request, a branch) so a first pass can be told. */
     readonly change?: string;
