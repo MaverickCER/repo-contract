@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "repo-contract!",
-  "docComment": "/**\n * Run records: an append-only log of what each contract run did, and what that log shows. It\n * summarizes speed and trust, maps the configured checks onto the six pillars, and computes a\n * maturity level from those facts.\n *\n * Pure: records come in as data and go out as text, so this barrel reads no file and runs no\n * process (see\n * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).\n *\n * Experimental, and published under its own `./metrics` subpath; never re-exported from the\n * package root.\n *\n * @packageDocumentation\n */\n",
+  "docComment": "/**\n * Run records: an append-only log of what each contract run did, and what that log shows. It\n * summarizes speed and trust, maps the configured checks onto the six pillars, and computes a\n * maturity level from those facts.\n *\n * Pure: records come in as data and go out as text, so this barrel reads no file and runs no\n * process (see\n * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).\n *\n * Experimental, and published under its `./metrics` subpath; never re-exported from the\n * package root.\n *\n * @packageDocumentation\n */\n",
   "name": "repo-contract",
   "preserveMemberOrder": false,
   "members": [
@@ -191,7 +191,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!buildEvidenceManifest:function(1)",
-          "docComment": "/**\n * Records that a release passed the full contract: every check's verdict with a hash of its\n * evidence, the inputs and tool versions, and a digest over all of it.\n *\n * @param input - The run's facts.\n *\n * @returns The manifest.\n *\n * @throws\n *\n * {Error} If the run was not a full, cache-bypassing one, or a check id repeats.\n */\n",
+          "docComment": "/**\n * Records that a release passed the full contract. It holds every check's verdict with a hash of\n * its evidence, the inputs and tool versions, and a digest over all of it.\n *\n * @param input - The run's facts.\n *\n * @returns The manifest.\n *\n * @throws\n *\n * {Error} If the run was not a full, cache-bypassing one, or a check id repeats.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1558,7 +1558,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "repo-contract!RunRecordInput#actor:member",
-              "docComment": "/**\n * Who produced the change: set by the caller from its own configuration, never inferred.\n */\n",
+              "docComment": "/**\n * Who produced the change: set by the caller from its configuration, never inferred.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",

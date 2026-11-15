@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "repo-contract!",
-  "docComment": "/**\n * Affected scope: given a diff, list the tests and mutation targets the change can reach. Changed\n * files are compared with their base to find the exports whose behavior may differ, and those\n * exports are followed through the import graph. A case the analysis cannot reason about widens\n * the answer toward a full run; it never narrows on a guess.\n *\n * Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities,\n * so this barrel reads no file and runs no process (see\n * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).\n *\n * Experimental, and published under its own `./affected` subpath; never re-exported from the\n * package root.\n *\n * @packageDocumentation\n */\n",
+  "docComment": "/**\n * Affected scope: given a diff, list the tests and mutation targets the change can reach. Changed\n * files are compared with their base to find the exports whose behavior may differ, and those\n * exports are followed through the import graph. A case the analysis cannot reason about widens\n * the answer toward a full run; it never narrows on a guess.\n *\n * Pure: file contents, the diff and the TypeScript compiler API come in as data and capabilities.\n * This barrel reads no file and runs no process (see\n * specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).\n *\n * Experimental, and published under its `./affected` subpath; never re-exported from the\n * package root.\n *\n * @packageDocumentation\n */\n",
   "name": "repo-contract",
   "preserveMemberOrder": false,
   "members": [
@@ -1411,7 +1411,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!cacheKey:function(1)",
-          "docComment": "/**\n * Builds the key a result is stored under: a digest of the check, every input's name and content\n * digest, the tool versions, and the cache format. Anything that can change the result belongs in\n * `inputs` or `tools`; the key says nothing about what is left out.\n *\n * @param input - The check id, its inputs (name to content digest) and the tools' versions.\n *\n * @param  - input.check - The check id.\n *\n * @param  - input.inputs - Each input's name and a digest of its content.\n *\n * @param  - input.tools - Each tool's name and version.\n *\n * @returns A 64-character hex digest.\n */\n",
+          "docComment": "/**\n * Builds the key a result is stored under. It digests the check, every input's name and content\n * digest, the tool versions, and the cache format. Anything that can change the result belongs in\n * `inputs` or `tools`; the key says nothing about what is left out.\n *\n * @param input - The check id, its inputs (name to content digest) and the tools' versions.\n *\n * @param  - input.check - The check id.\n *\n * @param  - input.inputs - Each input's name and a digest of its content.\n *\n * @param  - input.tools - Each tool's name and version.\n *\n * @returns A 64-character hex digest.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2439,7 +2439,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!computeAffected:function(1)",
-          "docComment": "/**\n * Computes which tests (and which mutation targets) a change can affect.\n *\n * The analysis is symbol-level: each changed module is diffed against its base to find the exported\n * names whose behavior may differ. Those names are followed through the import graph (including\n * re-exports and `export *`) to every module that uses them. Anything it cannot reason about does\n * not narrow the result. A changed file the graph cannot place, a global trigger such as a\n * lockfile, or a file that does not parse makes the whole result `\"full\"`. A module that loads\n * code dynamically is treated as affected by everything. Narrowing is only ever an optimization of\n * a sound answer, never a guess.\n *\n * @param input - Module contents, the diff, and the TypeScript compiler API.\n *\n * @returns The affected sets, with provenance for every test (see `explainAffected`).\n */\n",
+          "docComment": "/**\n * Computes which tests (and which mutation targets) a change can affect.\n *\n * The analysis is symbol-level: each changed module is diffed against its base to find the exported\n * names whose behavior may differ. Those names are followed through the import graph (including\n * re-exports and `export *`) to every module that uses them. Anything it cannot reason about does\n * not narrow the result. Three cases make the whole result `\"full\"`: an unplaceable changed file,\n * a global trigger such as a lockfile, and an unparseable file. A module that loads\n * code dynamically is treated as affected by everything. Narrowing is only ever an optimization of\n * a sound answer, never a guess.\n *\n * @param input - Module contents, the diff, and the TypeScript compiler API.\n *\n * @returns The affected sets, with provenance for every test (see `explainAffected`).\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3679,7 +3679,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!findEscapes:function(1)",
-          "docComment": "/**\n * Proves the affected scope sound against evidence: after a full run on the same change, any test\n * that failed there but was not in the affected set is an escape; a regression the narrow run\n * would have shipped. Run it on merges to the main branch, where both answers exist.\n *\n * @param input - The affected tests, all tests and the full run's failures.\n *\n * @returns Whether the narrow scope was sound, and which tests escaped it.\n */\n",
+          "docComment": "/**\n * Proves the affected scope sound against evidence from a full run on the same change. A test\n * that failed there but was not in the affected set is an escape: a regression the narrow run\n * would have shipped. Run it on merges to the main branch, where both answers exist.\n *\n * @param input - The affected tests, all tests and the full run's failures.\n *\n * @returns Whether the narrow scope was sound, and which tests escaped it.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3942,7 +3942,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!loadCompilerOptions:function(1)",
-          "docComment": "/**\n * Reads the compiler options module resolution depends on (`paths`, `baseUrl`, ...), following\n * `extends` through the repository and `node_modules`. An import written through a path alias\n * looks like a package to the graph, so options that could not be read must widen the answer,\n * not be skipped.\n *\n * @param input - The TypeScript API, a file reader and optionally the config to use.\n *\n * @returns The options (absent when there is no default `tsconfig.json`), or the reason to go full.\n */\n",
+          "docComment": "/**\n * Reads the compiler options module resolution depends on (`paths`, `baseUrl`, ...), following\n * `extends` through the repository and `node_modules`. An import written through a path alias\n * looks like a package to the graph. Options that could not be read must widen the answer, not\n * be skipped.\n *\n * @param input - The TypeScript API, a file reader and optionally the config to use.\n *\n * @returns The options (absent when there is no default `tsconfig.json`), or the reason to go full.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4120,7 +4120,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!mergeMutationReports:function(1)",
-          "docComment": "/**\n * Combines per-shard Stryker reports into the report an unsharded run would have produced. Never\n * a partial pass: a missing, repeated or out-of-range shard, an unreadable report, a file mutated\n * by two shards, or disagreeing schema versions all fail the merge.\n *\n * @param reports - Each shard's number and parsed report.\n *\n * @param total - How many shards the run was split into.\n *\n * @returns The merged report, or why the shards cannot be merged.\n */\n",
+          "docComment": "/**\n * Combines per-shard Stryker reports into the report an unsharded run would have produced. It never\n * passes partially. These all fail the merge: a missing, repeated or out-of-range shard, an\n * unreadable report, a file mutated by two shards, or disagreeing schema versions.\n *\n * @param reports - Each shard's number and parsed report.\n *\n * @param total - How many shards the run was split into.\n *\n * @returns The merged report, or why the shards cannot be merged.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5182,7 +5182,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!resolveFailFast:function(1)",
-          "docComment": "/**\n * Decides whether a run stops spending time on expensive checks once a cheap one has failed. Off\n * unless asked for, in CI as much as locally, so a run reports every problem by default; and never\n * on for a release, which always runs everything.\n *\n * @param input - The explicit flag and the environment.\n *\n * @param  - input.flag - `--fail-fast` (true) or `--no-fail-fast` (false), if given.\n *\n * @param  - input.env - The environment variables to read; this function reads no ambient state.\n *\n * @returns Whether to pass `failFast: true` to the run.\n */\n",
+          "docComment": "/**\n * Decides whether a run stops spending time on expensive checks once a cheap one has failed. It is\n * off unless asked for, in CI and locally, so a run reports every problem by default. It is never\n * on for a release, which always runs everything.\n *\n * @param input - The explicit flag and the environment.\n *\n * @param  - input.flag - `--fail-fast` (true) or `--no-fail-fast` (false), if given.\n *\n * @param  - input.env - The environment variables to read; this function reads no ambient state.\n *\n * @returns Whether to pass `failFast: true` to the run.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5405,7 +5405,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!ScopeDecision:interface",
-          "docComment": "/**\n * The scope a run uses and the reason, for the run's own output.\n */\n",
+          "docComment": "/**\n * The scope a run uses and the reason, for the run's output.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -6018,7 +6018,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!unpackArtifacts:function(1)",
-          "docComment": "/**\n * Unpacks a cached set of files, trusting nothing: the shape, every path and every checksum are\n * checked, and any problem means the whole set is refused (a cache miss, never a partial restore).\n *\n * @param value - What the cache returned.\n *\n * @returns The files with their content, or why the set cannot be used.\n */\n",
+          "docComment": "/**\n * Unpacks a cached set of files, trusting nothing. The shape, every path and every checksum are\n * checked. Any problem refuses the whole set: a cache miss, never a partial restore.\n *\n * @param value - What the cache returned.\n *\n * @returns The files with their content, or why the set cannot be used.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

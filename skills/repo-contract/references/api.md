@@ -1,6 +1,6 @@
 # repo-contract public API
 
-Every export a consumer can import, by entry point, for version 0.14.0. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
+Every export a consumer can import, by entry point, for version 0.15.0. Generated from the package's committed API baselines; the type declarations in the installed package are the authority.
 
 ## `repo-contract`
 
@@ -186,6 +186,7 @@ Every export a consumer can import, by entry point, for version 0.14.0. Generate
 - `AiReviewReply` (interface, beta): `interface AiReviewReply`
 - `arethetypeswrong` (variable, beta): `arethetypeswrong: CheckDefinitionConfig`
 - `brokenLinks` (function, beta): `function brokenLinks(options?: BrokenLinksOptions): CheckDefinitionConfig`
+- `bundledDependencies` (variable, beta): `bundledDependencies: CheckDefinitionConfig`
 - `commitlint` (function, beta): `function commitlint(options?: CommitlintOptions): CheckDefinitionConfig`
 - `deadCode` (function, beta): `function deadCode(options?: DeadCodeOptions): CheckDefinitionConfig`
 - `distNoUrls` (function, beta): `function distNoUrls(options?: DistNoUrlsOptions): CheckDefinitionConfig`
@@ -198,6 +199,8 @@ Every export a consumer can import, by entry point, for version 0.14.0. Generate
 - `lint` (function, beta): `function lint(options?: LintOptions): CheckDefinitionConfig`
 - `markdownlint` (function, beta): `function markdownlint(options?: MarkdownlintOptions): CheckDefinitionConfig`
 - `publint` (variable, beta): `publint: CheckDefinitionConfig`
+- `quickStart` (function, beta): `function quickStart(options?: QuickStartOptions): CheckDefinitionConfig`
+- `QuickStartOptions` (interface): `interface QuickStartOptions`
 - `securityDeps` (variable, beta): `securityDeps: CheckDefinitionConfig`
 - `securitySecrets` (variable, beta): `securitySecrets: CheckDefinitionConfig`
 - `stylelint` (function, beta): `function stylelint(options?: StylelintOptions): CheckDefinitionConfig`
