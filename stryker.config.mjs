@@ -71,6 +71,10 @@ const config = {
     // report and decides pass or fail on several branches of its own.
     "src/presets/bundled-dependencies.ts",
     "src/presets/quick-start.ts",
+    // sbom is one too: its policy validates the generator's report and decides on write mode, all
+    // documents current, or a listed failure. The generator itself is a string run by `node -e`,
+    // so Stryker cannot mutate it; test/unit/presets/sbom.test.ts runs it end to end instead.
+    "src/presets/sbom.ts",
   ],
   // Lets a manually-invoked `npx stryker run` skip re-testing mutants it
   // believes are unaffected by a source change, reusing their previous

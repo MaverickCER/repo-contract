@@ -43,17 +43,17 @@
       "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
-      "id": "dead-code:unused-dev-dependency:@cyclonedx/cyclonedx-npm",
+      "id": "dead-code:unused-dev-dependency:@cyclonedx/cyclonedx-library",
       "version": 2,
-      "justification": "Spawned by literal command name (\"cyclonedx-npm\") via `cross-spawn` in scripts/sbom/spawn.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
-      "attempted": "Searched the repository for `@cyclonedx/cyclonedx-npm`: it appears in SECURITY.md, checks/sbom.ts, docs/sbom.cdx.json, package.json and 8 more.",
-      "constraint": "Spawned by literal command name (\"cyclonedx-npm\") via `cross-spawn` in scripts/sbom/spawn.ts -- nothing `import`s the package, so knip cannot see a spawned binary name as a use of the package that provides it.",
+      "justification": "test/unit/presets/sbom.test.ts reads the official CycloneDX 1.6 JSON schema files this package ships under res/schema/ by path and validates the sbom preset's documents against them -- nothing `import`s the package, so knip cannot see a file read as a use of the package that provides it.",
+      "attempted": "Searched the repository for `@cyclonedx/cyclonedx-library`: it appears in test/unit/presets/sbom.test.ts, test/helpers/ajv-formats-draft2019.d.ts, package.json and package-lock.json.",
+      "constraint": "test/unit/presets/sbom.test.ts reads the official CycloneDX 1.6 JSON schema files this package ships under res/schema/ by path and validates the sbom preset's documents against them -- nothing `import`s the package, so knip cannot see a file read as a use of the package that provides it.",
       "expires": "",
       "kind": "unused-dev-dependency",
-      "name": "@cyclonedx/cyclonedx-npm",
+      "name": "@cyclonedx/cyclonedx-library",
       "residualRisk": "If the use goes away, knip can no longer say so, and this record then hides an unused dependency.",
       "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
-      "ruleBroken": "knip reports `@cyclonedx/cyclonedx-npm` as an unused dev dependency.",
+      "ruleBroken": "knip reports `@cyclonedx/cyclonedx-library` as an unused dev dependency.",
       "whyPreferable": "Recording why the dependency is used is preferable to removing something the repository relies on, or to ignoring the dependency for every future knip run."
     },
     {
@@ -312,7 +312,7 @@
       "id": "dead-code:unused-file:scripts/openssf-scorecard/run.ts",
       "version": 2,
       "justification": "The openssf-scorecard check's own entrypoint, spawned by literal path via checks/openssf-scorecard.ts's `run: [\"tsx\", \"scripts/openssf-scorecard/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
-      "attempted": "Searched the repository for `scripts/openssf-scorecard/run.ts`: it appears in checks/openssf-scorecard.ts, eslint.config.js, scripts/sbom/run.ts, test/unit/checks/openssf-scorecard.test.ts.",
+      "attempted": "Searched the repository for `scripts/openssf-scorecard/run.ts`: it appears in checks/openssf-scorecard.ts, eslint.config.js, test/unit/checks/openssf-scorecard.test.ts.",
       "constraint": "The openssf-scorecard check's own entrypoint, spawned by literal path via checks/openssf-scorecard.ts's `run: [\"tsx\", \"scripts/openssf-scorecard/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
       "expires": "",
       "kind": "unused-file",
@@ -320,20 +320,6 @@
       "residualRisk": "If the file stops being used, knip can no longer say so, and this record then hides an unused file.",
       "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
       "ruleBroken": "knip reports `scripts/openssf-scorecard/run.ts` as an unused file.",
-      "whyPreferable": "Recording why the file is needed is preferable to deleting something the repository relies on, or to ignoring the file for every future knip run."
-    },
-    {
-      "id": "dead-code:unused-file:scripts/sbom/run.ts",
-      "version": 2,
-      "justification": "The sbom check's own entrypoint, spawned by literal path via checks/sbom.ts's `run: [\"tsx\", \"scripts/sbom/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/openssf-scorecard/run.ts, scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
-      "attempted": "Searched the repository for `scripts/sbom/run.ts`: it appears in checks/sbom.ts, eslint.config.js, prettierignore, scripts/sbom/run.ts and 1 more.",
-      "constraint": "The sbom check's own entrypoint, spawned by literal path via checks/sbom.ts's `run: [\"tsx\", \"scripts/sbom/run.ts\"]` -- nothing `import`s it, so knip cannot see the use, the same as every other check's own spawned run script (see e.g. scripts/openssf-scorecard/run.ts, scripts/security-socket/scan.ts, scripts/dead-code/check.ts).",
-      "expires": "",
-      "kind": "unused-file",
-      "name": "scripts/sbom/run.ts",
-      "residualRisk": "If the file stops being used, knip can no longer say so, and this record then hides an unused file.",
-      "revisitWhen": "The use named in the justification changes or is removed, or knip learns to see it.",
-      "ruleBroken": "knip reports `scripts/sbom/run.ts` as an unused file.",
       "whyPreferable": "Recording why the file is needed is preferable to deleting something the repository relies on, or to ignoring the file for every future knip run."
     }
   ]

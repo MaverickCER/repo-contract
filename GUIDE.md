@@ -621,7 +621,7 @@ checks: {
 
 **Preset options are the preferred way to change what a preset executes.** A direct `run` override is an escape hatch. Every execution-affecting option is threaded through the actual command line, so evidence records the exact options used in `evidence.checks.<id>.args`. The one exception is `aiReview`'s `credentials`, which reach the agent through `env` and are never recorded.
 
-Every preset's policy fails with an actionable message if its underlying tool is not installed. The one exception is `securityDeps`, which shells out to `npm` itself. Each preset assumes its CLI is already a devDependency of your repository; repo-contract never installs, bundles, or implicitly depends on these tools. `repo-contract init` adds a preset to the config it writes when the package in the last column is a devDependency. It always adds `securityDeps`, adds `distNoUrls` when package.json publishes a built `dist/`, and adds `bundledDependencies` unless package.json is `private`. It never adds `aiReview`, which needs your agent's command, or `quickStart`, which needs a marked README block.
+Every preset's policy fails with an actionable message if its underlying tool is not installed. The one exception is `securityDeps`, which shells out to `npm` itself. Each preset assumes its CLI is already a devDependency of your repository; repo-contract never installs, bundles, or implicitly depends on these tools. `repo-contract init` adds a preset to the config it writes when the package in the last column is a devDependency. It always adds `securityDeps`, adds `distNoUrls` when package.json publishes a built `dist/`, and adds `bundledDependencies` unless package.json is `private`. It never adds `aiReview`, which needs your agent's command, `quickStart`, which needs a marked README block, or `sbom`, which fails until you write and commit its documents.
 
 | Category            | Preset                   | Wraps                                                                                                                                   | Package `init` detects                 |
 | ------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
@@ -641,6 +641,7 @@ Every preset's policy fails with an actionable message if its underlying tool is
 | Publishing          | `bundledDependencies`    | `node -e <reader>`: fails on a bundled package missing from `dependencies`; no external tool                                            | none (a package that is not `private`) |
 | Publishing          | `quickStart(options?)`   | `repo-contract quick-start --json --readme README.md --timeout 300000`: runs the README's marked quick start against the packed tarball | none (a marked README block)           |
 | Security/governance | `license`                | `licensee --production --errors-only --ndjson`, plus `--osi` without `.licensee.json`                                                   | `licensee`                             |
+| Security/governance | `sbom(options?)`         | `node -e <generator> <lockfile> <output> <production> check`: CycloneDX 1.6 SBOMs from the lockfile; no external tool                   | none (`package-lock.json`)             |
 | Security/governance | `commitlint(options?)`   | `commitlint --from <from> --to <to>`                                                                                                    | `@commitlint/cli`                      |
 | Publishing          | `publint`                | `publint run`                                                                                                                           | `publint`                              |
 | Publishing          | `arethetypeswrong`       | `attw --pack . --format json`                                                                                                           | `@arethetypeswrong/cli`                |
@@ -649,6 +650,43 @@ Every preset's policy fails with an actionable message if its underlying tool is
 Not every test runner has a preset. Jest, Cypress, and Mocha have different reporter formats and may need bespoke presets. The pattern is the same: execute the tool, capture evidence, interpret its output, apply your policy.
 
 Unlike its neighbors, `format` auto-fixes (`--write`) and therefore cannot itself fail on unformatted input. For a hard gate on formatting, run `prettier --check .` directly instead of this preset. That is exactly the substitution the [demo](README.md#see-it-run) makes.
+
+### Keep an SBOM current
+
+`sbom` keeps two CycloneDX 1.6 documents in step with `package-lock.json`. `docs/sbom.cdx.json` lists every locked package, dev dependencies included with `scope: "excluded"`. `docs/sbom.production.cdx.json` lists what installing the package brings in: every locked package not marked `dev`. Each component carries its purl, the hashes from the lockfile's `integrity`, its declared license and where it was resolved from, and each document holds the full dependency graph.
+
+The documents come from the lockfile alone. The preset never runs `npm ls` and needs no SBOM tool. The same lockfile always gives the same bytes: no timestamp, sorted components and edges, and a serial number derived from the content.
+
+By default the check writes nothing. It fails when a document is missing, is not a JSON object, or differs from what the lockfile gives. The comparison ignores `serialNumber`, `metadata.timestamp`, key order and formatting, so a formatter or another tool's equivalent output still counts as current.
+
+To regenerate, run the preset's own command with `write: true`. A short script does it:
+
+```js
+// scripts/sbom.mjs, run as "sbom": "node scripts/sbom.mjs" in package.json
+import { spawnSync } from "node:child_process"
+import { sbom } from "repo-contract/presets"
+
+const [command, ...args] = sbom({ write: true }).run
+process.exitCode = spawnSync(command, args, { stdio: "inherit" }).status ?? 1
+```
+
+Then point the check's failure message at it:
+
+```ts
+checks: {
+  sbom: sbom({ fix: "npm run sbom" }),
+}
+```
+
+| Option             | Default                           | What it does                                             |
+| ------------------ | --------------------------------- | -------------------------------------------------------- |
+| `lockfile`         | `"package-lock.json"`             | The lockfile to read; lockfileVersion 2 or 3.            |
+| `output`           | `"docs/sbom.cdx.json"`            | The full document.                                       |
+| `productionOutput` | `"docs/sbom.production.cdx.json"` | The production document; `null` skips it.                |
+| `write`            | `false`                           | Write the documents instead of checking them.            |
+| `fix`              | none                              | The command the failure message tells the reader to run. |
+
+The documents describe what the lockfile pins, not what is installed in `node_modules`. A `git+` resolved URL becomes a `vcs` reference without the `git+` prefix; a resolved value that is not a URL, or whose scheme contains `+`, gets no reference.
 
 ### Run the README's quick start
 

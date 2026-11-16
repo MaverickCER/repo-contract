@@ -19,7 +19,8 @@
  *    `schema`) write files that other checks or people read, so they come first.
  *    - `api-docs-report` regenerates `docs/api-report/*.md` from `src/**` with TypeDoc and fails
  *      on a diff. It needs no build, unlike `api-contract`.
- *    - `sbom` regenerates `docs/sbom.cdx.json` with `@cyclonedx/cyclonedx-npm`. The output is
+ *    - `sbom` regenerates `docs/sbom.cdx.json` and `docs/sbom.production.cdx.json` from
+ *      `package-lock.json` with this package's own `sbom` preset in write mode. The output is
  *      byte-identical run to run, so the clean-tree CI step needs no exclusion for it. It reads
  *      no other check's evidence, unlike `openssf-scorecard`, so it can sit here.
  *    - `lint` and `format` rewrite the source tree in place, and `schema` regenerates
@@ -119,7 +120,6 @@ import { lint } from "./checks/lint.js"
 import { mutation } from "./checks/mutation.js"
 import { openssfScorecard } from "./checks/openssf-scorecard.js"
 import { presetCommands } from "./checks/preset-commands.js"
-import { sbom } from "./checks/sbom.js"
 import { schema } from "./checks/schema.js"
 import { securityDeps } from "./checks/security-deps.js"
 import { securityNetwork } from "./checks/security-network.js"
@@ -133,6 +133,7 @@ import { testUnit } from "./checks/test-unit.js"
 import { defineRepoContract } from "./src/index.js"
 import type { PolicyContext } from "./src/index.js"
 import type { AttwReport } from "./src/presets/arethetypeswrong.js"
+import { sbom } from "./src/presets/sbom.js"
 import { evaluateAttwReport } from "./src/presets/arethetypeswrong.js"
 import { readJsonReport } from "./src/presets/shared/read-json-report.js"
 import {
@@ -178,14 +179,13 @@ export default defineRepoContract({
       label: "API docs report",
       mustNotChange: ["docs/api-report"],
     }),
-    // Regenerates docs/sbom.cdx.json (a real CycloneDX SBOM for this repository's own npm
-    // dependency graph) on every run via @cyclonedx/cyclonedx-npm: a real write, and, thanks to
-    // `--output-reproducible` (scripts/sbom/spawn.ts), a byte-identical one given an unchanged
-    // package-lock.json, so it needs no special exclusion from the "working tree is clean" CI gate
-    // the way docs/OpenSSF-Scorecard.md does. Declared here rather than among the readers below
-    // (where `openssf-scorecard`, which also writes a doc, lives) because it reads no other
-    // check's evidence via `dependsOn`: see checks/sbom.ts's own module doc comment.
-    sbom,
+    // Dogfoods the `sbom` preset: regenerates docs/sbom.cdx.json and docs/sbom.production.cdx.json
+    // (CycloneDX 1.6, built from package-lock.json alone) on every run. The generator is
+    // deterministic, so an unchanged lockfile gives byte-identical files and the "working tree is
+    // clean" CI gate catches a stale committed copy with no exclusion, unlike
+    // docs/OpenSSF-Scorecard.md. Write mode keeps `npm run sbom` (and so the `version` script)
+    // regenerating them. Declared among the writers because it reads no other check's evidence.
+    sbom: sbom({ write: true }),
     // Rewrites the whole source tree in place (`eslint --fix`/`oxlint --fix`): a writer, not a
     // reader, for the same reason format/schema below are: a reader that concurrently lints or
     // reads the same files it's rewriting must never race that rewrite. See module doc comment.

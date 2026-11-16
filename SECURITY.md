@@ -172,9 +172,12 @@ particular:
 ## SBOMs
 
 This repository commits two [CycloneDX](https://cyclonedx.org/) 1.6 Software Bills of Materials.
-Every `npm run contract` run regenerates them via
-[`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`).
-They answer different questions:
+Every `npm run contract` run regenerates them from `package-lock.json` with this package's own
+`sbom` preset (`src/presets/sbom.ts`), which needs no external tool and never runs `npm ls`. Each
+component carries its purl, the hashes from the lockfile's `integrity`, its declared license and
+where it was resolved from, and the documents hold the full dependency graph. They describe what
+the lockfile pins, not what happens to be installed in `node_modules`. They answer different
+questions:
 
 - [`docs/sbom.production.cdx.json`](https://github.com/MaverickCER/repo-contract/blob/main/docs/sbom.production.cdx.json) is the **runtime inventory**: what installing `repo-contract` brings in. The package declares no runtime dependencies, so the document lists the package alone. This is the one to import into a vulnerability scanner to describe what you would deploy.
 - [`docs/sbom.cdx.json`](https://github.com/MaverickCER/repo-contract/blob/main/docs/sbom.cdx.json) is the **build-environment inventory**: every direct and transitive dependency of this repository's own tooling, as resolved in `package-lock.json`. It is for auditing how the package is built and is not what installing the package adds.

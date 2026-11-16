@@ -19,6 +19,7 @@ export type PresetName =
   | "aiReview"
   | "bundledDependencies"
   | "quickStart"
+  | "sbom"
 
 export declare const DIST_OUTPUT: "dist/"
 
@@ -27,6 +28,8 @@ export declare const AGENT_COMMAND: "agent command"
 export declare const PUBLISHED_PACKAGE: "published package"
 
 export declare const QUICK_START_BLOCK: "quick-start block"
+
+export declare const NPM_LOCKFILE: "npm lockfile"
 
 export declare const PRESET_DEPENDENCIES: Readonly<Record<PresetName, string | null>>
 

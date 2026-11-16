@@ -10,6 +10,7 @@ import {
   FACTORY_PRESETS,
   PRESET_DEPENDENCIES,
   PUBLISHED_PACKAGE,
+  NPM_LOCKFILE,
   QUICK_START_BLOCK,
 } from "../../../bin/preset-catalog.mjs"
 
@@ -55,6 +56,7 @@ function expectedPackageCell(dependency: string | null): string {
   if (dependency === AGENT_COMMAND) return "none (the agent you name)"
   if (dependency === PUBLISHED_PACKAGE) return "none (a package that is not `private`)"
   if (dependency === QUICK_START_BLOCK) return "none (a marked README block)"
+  if (dependency === NPM_LOCKFILE) return "none (`package-lock.json`)"
   return `\`${dependency}\``
 }
 

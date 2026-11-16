@@ -37,6 +37,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     distNoUrls: () => presets.distNoUrls(),
     commitlint: () => presets.commitlint(),
     quickStart: () => presets.quickStart(),
+    sbom: () => presets.sbom(),
   }
 
   it("exports exactly the documented preset names", () => {

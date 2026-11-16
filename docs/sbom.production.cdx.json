@@ -1,148 +1,40 @@
 {
-  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
+  "serialNumber": "urn:uuid:935d40f3-e5b8-5711-8bc1-9f557d359496",
   "version": 1,
   "metadata": {
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
     "tools": {
       "components": [
         {
-          "type": "library",
-          "name": "cyclonedx-library",
-          "group": "@cyclonedx",
-          "version": "10.3.0",
-          "author": "Jan Kowalleck",
-          "description": "Core functionality of CycloneDX for JavaScript (Node.js or WebBrowser).",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0"
-              }
-            }
-          ],
-          "externalReferences": [
-            {
-              "url": "https://github.com/CycloneDX/cyclonedx-javascript-library/issues",
-              "type": "issue-tracker",
-              "comment": "as detected from PackageJson property \"bugs.url\""
-            },
-            {
-              "url": "git+https://github.com/CycloneDX/cyclonedx-javascript-library.git",
-              "type": "vcs",
-              "comment": "as detected from PackageJson property \"repository.url\""
-            },
-            {
-              "url": "https://github.com/CycloneDX/cyclonedx-javascript-library#readme",
-              "type": "website",
-              "comment": "as detected from PackageJson property \"homepage\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:constraint:engine:node",
-              "value": ">=20.18.0"
-            }
-          ]
-        },
-        {
           "type": "application",
-          "name": "cyclonedx-npm",
-          "group": "@cyclonedx",
-          "version": "6.0.1",
-          "author": "Jan Kowalleck",
-          "description": "Create CycloneDX Software Bill of Materials (SBOM) from NPM projects.",
-          "licenses": [
-            {
-              "license": {
-                "id": "Apache-2.0"
-              }
-            }
-          ],
-          "externalReferences": [
-            {
-              "url": "https://github.com/CycloneDX/cyclonedx-node-npm/issues",
-              "type": "issue-tracker",
-              "comment": "as detected from PackageJson property \"bugs.url\""
-            },
-            {
-              "url": "git+https://github.com/CycloneDX/cyclonedx-node-npm.git",
-              "type": "vcs",
-              "comment": "as detected from PackageJson property \"repository.url\""
-            },
-            {
-              "url": "https://github.com/CycloneDX/cyclonedx-node-npm#readme",
-              "type": "website",
-              "comment": "as detected from PackageJson property \"homepage\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:constraint:engine:node",
-              "value": ">=20.18.0"
-            },
-            {
-              "name": "cdx:npm:package:constraint:engine:npm",
-              "value": ">=9"
-            }
-          ]
+          "name": "repo-contract sbom preset"
         }
       ]
     },
     "component": {
-      "type": "application",
+      "type": "library",
+      "bom-ref": "repo-contract@0.15.0",
       "name": "repo-contract",
       "version": "0.15.0",
-      "bom-ref": "repo-contract@0.15.0",
-      "author": "MaverickCER",
-      "description": "Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason.",
+      "purl": "pkg:npm/repo-contract@0.15.0",
       "licenses": [
         {
-          "license": {
-            "id": "MIT",
-            "acknowledgement": "declared"
-          }
-        }
-      ],
-      "purl": "pkg:npm/repo-contract@0.15.0?vcs_url=git%2Bhttps%3A%2F%2Fgithub.com%2FMaverickCER%2Frepo-contract.git",
-      "externalReferences": [
-        {
-          "url": "https://github.com/MaverickCER/repo-contract/issues",
-          "type": "issue-tracker",
-          "comment": "as detected from PackageJson property \"bugs.url\""
-        },
-        {
-          "url": "git+https://github.com/MaverickCER/repo-contract.git",
-          "type": "vcs",
-          "comment": "as detected from PackageJson property \"repository.url\""
-        },
-        {
-          "url": "https://maverickcer.github.io/repo-contract/",
-          "type": "website",
-          "comment": "as detected from PackageJson property \"homepage\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:constraint:engine:node",
-          "value": ">=22.0.0"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": ""
+          "expression": "MIT"
         }
       ]
-    },
-    "properties": [
-      {
-        "name": "cdx:reproducible",
-        "value": "true"
-      }
-    ]
+    }
   },
   "components": [],
   "dependencies": [
     {
-      "ref": "repo-contract@0.15.0"
+      "ref": "repo-contract@0.15.0",
+      "dependsOn": []
     }
   ]
 }

@@ -7,6 +7,7 @@ import {
   DIST_OUTPUT,
   PRESET_DEPENDENCIES,
   PUBLISHED_PACKAGE,
+  NPM_LOCKFILE,
   QUICK_START_BLOCK,
 } from "../../../bin/preset-catalog.mjs"
 
@@ -115,14 +116,23 @@ describe("detectPresets", () => {
     expect(skipped).toContainEqual({ preset: "quickStart", dependency: QUICK_START_BLOCK })
   })
 
+  it("never detects sbom, which fails until the consumer commits its documents", () => {
+    expect(PRESET_DEPENDENCIES.sbom).toBe(NPM_LOCKFILE)
+    const { detected, skipped } = detectPresets({
+      devDependencies: { [NPM_LOCKFILE]: "1.0.0" },
+    })
+    expect(detected).not.toContain("sbom")
+    expect(skipped).toContainEqual({ preset: "sbom", dependency: NPM_LOCKFILE })
+  })
+
   it("produces a valid config for a private repository with none of the 16 tool-specific dependencies: only securityDeps", () => {
     const { detected, skipped } = detectPresets({
       private: true,
       devDependencies: { "some-unrelated-tool": "1.0.0" },
     })
     expect(detected).toEqual(["securityDeps"])
-    // The 16 tools, plus bundledDependencies (private), and aiReview and quickStart, which are
-    // never detected.
-    expect(skipped).toHaveLength(19)
+    // The 16 tools, plus bundledDependencies (private), and aiReview, quickStart and sbom, which
+    // are never detected.
+    expect(skipped).toHaveLength(20)
   })
 })

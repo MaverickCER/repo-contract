@@ -35,7 +35,7 @@ interface RawDiffFile {
  * - This file's `--name-status`/`--numstat` reads report an unresolvable diff range the same
  *   as "no changes".
  * - git-commits.ts's `readBranchCommits` reports an unresolvable base as "no commits".
- * - checks/openssf-scorecard.ts and checks/sbom.ts record the `rev-parse HEAD` commit as
+ * - checks/openssf-scorecard.ts records the `rev-parse HEAD` commit as
  *   `"unknown"` when it fails.
  * @param args - Arguments to pass to the `git` executable.
  * @param cwd - Directory to run the command in. It is authoritative regardless of the calling

@@ -22,6 +22,7 @@ import {
   AGENT_COMMAND,
   DIST_OUTPUT,
   PUBLISHED_PACKAGE,
+  NPM_LOCKFILE,
   QUICK_START_BLOCK,
   detectPresets,
 } from "./preset-catalog.mjs"
@@ -157,6 +158,8 @@ function skipReason(dependency) {
   if (dependency === PUBLISHED_PACKAGE) return "package.json is private, so npm never publishes it"
   if (dependency === QUICK_START_BLOCK)
     return "runs the README block you mark; see GUIDE.md#presets"
+  if (dependency === NPM_LOCKFILE)
+    return "checks SBOM documents you write and commit first; see GUIDE.md#keep-an-sbom-current"
   return `${dependency} not installed`
 }
 

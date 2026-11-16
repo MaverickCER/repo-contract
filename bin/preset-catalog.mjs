@@ -29,6 +29,10 @@
 //
 // `quickStart` maps to `QUICK_START_BLOCK`, a pseudo-dependency that is never detected. It runs
 // the commands of a README block the consumer marks, so `init` cannot tell it is wanted.
+//
+// `sbom` maps to `NPM_LOCKFILE`, a pseudo-dependency that is never detected. It needs no CLI, only
+// `package-lock.json`, but it fails until the consumer has written and committed the SBOM
+// documents, so adding it to a fresh config would fail the first run.
 /** The pseudo-dependency `distNoUrls` maps to: see the comment above. */
 export const DIST_OUTPUT = "dist/"
 
@@ -41,8 +45,11 @@ export const PUBLISHED_PACKAGE = "published package"
 /** The pseudo-dependency `quickStart` maps to: see the comment above. */
 export const QUICK_START_BLOCK = "quick-start block"
 
+/** The pseudo-dependency `sbom` maps to: see the comment above. */
+export const NPM_LOCKFILE = "npm lockfile"
+
 /** Pseudo-dependencies `init` never detects: the consumer opts in by writing the check. */
-const NEVER_DETECTED = new Set([AGENT_COMMAND, QUICK_START_BLOCK])
+const NEVER_DETECTED = new Set([AGENT_COMMAND, QUICK_START_BLOCK, NPM_LOCKFILE])
 
 export const PRESET_DEPENDENCIES = {
   test: "vitest",
@@ -65,6 +72,7 @@ export const PRESET_DEPENDENCIES = {
   arethetypeswrong: "@arethetypeswrong/cli",
   aiReview: AGENT_COMMAND,
   quickStart: QUICK_START_BLOCK,
+  sbom: NPM_LOCKFILE,
 }
 
 // Presets published as factories (`lint(options?)`, `deadCode(options?)`, ...): the generated
@@ -80,6 +88,7 @@ export const FACTORY_PRESETS = new Set([
   "distNoUrls",
   "aiReview",
   "quickStart",
+  "sbom",
 ])
 
 /**
