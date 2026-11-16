@@ -60,7 +60,7 @@ the package reaches 1.0 (see [Pre-1.0 status](#pre-10-status) below):
 Experimental library surface, along with `./affected` and `./metrics` below.
 
 - Consumers that cannot tolerate a changed preset pin a tilde range: `internal-package-contract`
-  uses `~0.12.0`.
+  uses `~0.15.0`.
 - It is a new pre-1.0 surface shipped before a real feedback cycle, per this section's own stated
   convention (see
   [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)).

@@ -1,13 +1,12 @@
 #!/bin/sh
-# repo-contract full pre-push gate -- the same self-assurance suite CI runs
-# (`npm run contract`, ~5-6 min). Fix what it reports instead of skipping it; CI enforces the same
-# suite on the PR.
+# repo-contract full pre-push gate: the same self-assurance suite CI runs (`npm run contract`).
+# It runs every check, mutation testing included, so it takes many minutes. Fix what it reports
+# instead of skipping it; CI enforces the same suite on the PR.
 # See CONTRIBUTING.md and specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
 #
-# `npm run contract` now includes the `coderabbitai` check (see
-# specs/decisions/0014-coderabbit-as-a-surfaced-check.md), which runs the same local
-# `coderabbit review --agent` pass this hook used to invoke as its own separate step --
-# superseded, not duplicated: `coderabbitai`'s own policy self-skips to a `warn` (never a silent
-# pass) when the CLI isn't installed, exactly like this hook's own former guard did.
+# `npm run contract` includes the `coderabbitai` check (see
+# specs/decisions/0014-coderabbit-as-a-surfaced-check.md). It runs the local
+# `coderabbit review --agent` pass that this hook once ran as a separate step. When the CLI is not
+# installed, the check's policy reports a `warn`, so the skip stays visible.
 set -eu
 npm run contract

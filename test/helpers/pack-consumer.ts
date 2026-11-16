@@ -96,3 +96,23 @@ export function isRuntimeAvailable(command: string): boolean {
     return false
   }
 }
+
+/** The variable CI's `runtime-compat` job sets to the runtimes it installs, comma-separated. */
+export const REQUIRED_RUNTIMES_VARIABLE = "REPO_CONTRACT_REQUIRED_RUNTIMES"
+
+/**
+ * Whether the run requires a runtime, so its suite fails instead of skipping when it is missing.
+ * Local runs leave the variable unset and keep skipping.
+ * @param command - The runtime's executable name, e.g. `"bun"` or `"deno"`.
+ * @param env - The environment to read; the test process's own by default.
+ * @returns Whether {@link REQUIRED_RUNTIMES_VARIABLE} names `command`.
+ */
+export function isRuntimeRequired(
+  command: string,
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): boolean {
+  return (env[REQUIRED_RUNTIMES_VARIABLE] ?? "")
+    .split(",")
+    .map((name) => name.trim())
+    .includes(command)
+}

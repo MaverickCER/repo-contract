@@ -5,7 +5,8 @@
 - Commands run with **no shell interpretation** unless a check opts in with `shell: true`.
 - Process spawning and environment access are capabilities **the consumer supplies**, not
   owned by the package.
-- The `init` CLI only scaffolds local config/hook files. Neither it nor the library engine
+- The `init` CLI only writes local files: `repo-contract.config.mts`, `scripts/contract.mjs`
+  and a `contract` script in `package.json`. Neither it nor the library engine
   makes network calls or collects telemetry. An AST scan of `src/` fails the contract on any
   network import or global. A scan of the packed tarball rejects `child_process` and
   `process.env` outside `bin/`.

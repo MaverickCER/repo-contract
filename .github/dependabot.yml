@@ -28,6 +28,8 @@ updates:
       # Changesets CLI; a new major moves together with that workflow, not on its own.
       - dependency-name: "@changesets/cli"
         update-types: ["version-update:semver-major"]
+      # sync-internal-package-contract.yml owns this pin and moves the workflow SHAs with it.
+      - dependency-name: "internal-package-contract"
     groups:
       # One PR per week for the whole dev/verification toolchain: minor, patch,
       # AND major. None of it reaches consumers, so a batched bump is fine. A

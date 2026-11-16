@@ -785,7 +785,7 @@ npx repo-contract affected --mutate --shard 2/3 --timings timings.json     # thi
 
 repo-contract has no built-in baseline system. The core engine does not read or write files on its own initiative. Beyond spawning the commands you configure, it only parses that command's own captured stdout when you set `output: { format: "json" | "text" }`.
 
-A handful of published presets (`securitySecrets`, `duplication`, `markdownlint`) additionally read back a fixed report file their own `run` command was told to write. That is always the preset's own single, hardcoded path, never a scan of arbitrary files.
+Four published presets (`duplication`, `markdownlint`, `securitySecrets`, `test`) also read back the report file their own `run` command wrote. Each reads one fixed path and scans no other file. `test/unit/docs/preset-file-reads.test.ts` fails when this list disagrees with the presets that import `node:fs`.
 
 The opt-in pieces added in 0.12.0 write only where you point them:
 
@@ -838,41 +838,7 @@ Still stuck? [SUPPORT.md](SUPPORT.md) says what to include in an issue.
 
 ## `Evidence` and `Verdict` shapes
 
-Browse the generated [HTML API reference](https://maverickcer.github.io/repo-contract/api/) for the full field-by-field shape of `Evidence`, `CheckEvidence`, `Verdict`, and every error class. This repository's own `api-docs-report` check regenerates the underlying [markdown reports](docs/api-report/index/README.md) on every commit and byte-compares them against the source. The reference therefore can never drift from what the package actually exports.
-
-```ts
-interface Evidence {
-  version: 1
-  startedAt: string
-  completedAt: string
-  durationMs: number
-  checks: Record<
-    string,
-    {
-      command: string
-      args: readonly string[]
-      startedAt: string
-      completedAt: string
-      durationMs: number
-      exitCode: number | null
-      signal: NodeJS.Signals | null
-      stdout: string
-      stderr: string
-      status: "completed" | "timed_out" | "signaled" | "host_terminated" | "spawn_error" | "aborted"
-      spawnError?: string
-      output?:
-        | { format: string; success: true; value: unknown }
-        | { format: string; success: false; error: string }
-    }
-  >
-}
-
-interface Verdict {
-  version: 2
-  passed: boolean
-  checks: Record<string, { outcome: "pass" | "fail" | "warn"; rationale: string }>
-}
-```
+The generated API report holds the field-by-field shape of [`Evidence`](docs/api-report/index/README.md#evidence), [`CheckEvidence`](docs/api-report/index/README.md#checkevidence), [`Verdict`](docs/api-report/index/README.md#verdict) and every error class. The [HTML API reference](https://maverickcer.github.io/repo-contract/api/) renders the same source. This repository's `api-docs-report` check regenerates the markdown report on every contract run and fails on any difference, so the report matches what the package exports.
 
 `status` distinguishes **why** a process ended in its terminal state, independently of whether the policy considered that result acceptable. A non-zero exit code is `status: "completed"`, not an execution error.
 
@@ -889,14 +855,14 @@ The version ranges, generated from `package.json`. The optional `typescript` pee
 
 <!-- ipc:end supported-versions -->
 
-| Environment                                | Supported                                                                                                                                                                                                   |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js `>=22.0.0` (macOS, Linux, Windows) | Yes                                                                                                                                                                                                         |
-| Bun (latest release)                       | Yes. Tested in CI against the real published package shape. No non-default permissions needed.                                                                                                              |
-| Deno (latest release)                      | Yes. Tested in CI against the real published package shape. Requires `--allow-read --allow-run --allow-env` (see [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md)). |
-| Browser                                    | No: this package executes local processes                                                                                                                                                                   |
+| Environment                                | Supported                                                                                                                                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js `>=22.0.0` (macOS, Linux, Windows) | Yes. CI's `verify` job tests the packed package on all three.                                                                                                                                                                         |
+| Bun (latest release) on Linux              | Yes. CI's `runtime-compat` job installs the packed tarball on `ubuntu-latest` and fails when Bun is missing. No non-default permissions needed. Bun on macOS and Windows is untested.                                                 |
+| Deno 2.x on Linux                          | Yes. The same job, with the same failure rule. Requires `--allow-read --allow-run --allow-env` (see [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md)). Deno on macOS and Windows is untested. |
+| Browser                                    | No: this package executes local processes                                                                                                                                                                                             |
 
-repo-contract's checks run as spawned processes and read the ambient environment, but the package itself never imports a process-spawning implementation or reads `process.env`. It is server/CLI-only by design regardless, since the capability a consumer supplies is itself always a real Node-only spawning mechanism. See [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md) for what "tested" covers.
+The library under `dist/` never imports a process-spawning implementation or reads `process.env`; your config supplies both. The `AmbientCapabilities` check scans the packed tarball and fails on either outside `bin/`. The `repo-contract` CLI in `bin/` does both: `affected` and `doctor` run `git`, and `quick-start` runs npm and the commands your README marks, each with a copy of `process.env`. See [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md) for what "tested" covers.
 
 ### Package managers
 

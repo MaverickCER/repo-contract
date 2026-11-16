@@ -6,7 +6,9 @@ import {
   createConsumerFixture,
   distIsBuilt,
   isRuntimeAvailable,
+  isRuntimeRequired,
   removeConsumerFixture,
+  REQUIRED_RUNTIMES_VARIABLE,
 } from "../helpers/pack-consumer.js"
 
 /**
@@ -25,28 +27,32 @@ import {
  * superset rather than assumed unchanged. `--allow-run` still spawns the check's process.
  * `--allow-env` may still be needed by Deno's node:child_process compat shim for PATH resolution.
  * Re-verify against a real `deno run` failure (a permission error names the exact missing flag) if
- * this ever needs tightening. Skips (not fails) when `deno` isn't on `PATH`, same reasoning as
- * `distIsBuilt` below: most CI jobs and most local machines don't have Deno installed. CI's
- * dedicated `runtime-compat` job (see .github/workflows/ci.yml) is what exercises this suite.
+ * this ever needs tightening. Most machines have no Deno, so the suite skips when `deno` is not on
+ * `PATH` or `dist/` is not built. CI's `runtime-compat` job (see .github/workflows/ci.yml) sets
+ * `REPO_CONTRACT_REQUIRED_RUNTIMES` to name Deno, and there the suite runs and fails on either gap.
  */
 const denoAvailable = isRuntimeAvailable("deno")
+const skipDeno = !isRuntimeRequired("deno") && (!distIsBuilt || !denoAvailable)
 const DENO_PERMISSIONS = ["--allow-read", "--allow-run", "--allow-env"]
 
-describe.skipIf(!distIsBuilt || !denoAvailable)(
-  "consumer install (packed tarball) via Deno",
-  () => {
-    let consumerDir: string
+describe.skipIf(skipDeno)("consumer install (packed tarball) via Deno", () => {
+  it("finds Deno on PATH and a built dist/ when the run requires Deno", () => {
+    expect(denoAvailable, `${REQUIRED_RUNTIMES_VARIABLE} names deno; install Deno`).toBe(true)
+    expect(distIsBuilt, "run `npm run build` first").toBe(true)
+  })
 
-    beforeAll(() => {
-      ;({ consumerDir } = createConsumerFixture("repo-contract-consumer-deno-"))
-    }, 120_000)
+  let consumerDir: string
 
-    afterAll(() => {
-      removeConsumerFixture(consumerDir)
-    })
+  beforeAll(() => {
+    ;({ consumerDir } = createConsumerFixture("repo-contract-consumer-deno-"))
+  }, 120_000)
 
-    it("imports defineRepoContract and runRepoContract from the installed package", () => {
-      const script = `
+  afterAll(() => {
+    removeConsumerFixture(consumerDir)
+  })
+
+  it("imports defineRepoContract and runRepoContract from the installed package", () => {
+    const script = `
       import { defineRepoContract, runRepoContract } from "repo-contract";
       import { spawn } from "node:child_process";
 
@@ -76,20 +82,20 @@ describe.skipIf(!distIsBuilt || !denoAvailable)(
 
       console.log("DENO_CONSUMER_ESM_OK");
     `
-      writeFileSync(path.join(consumerDir, "run.mjs"), script)
+    writeFileSync(path.join(consumerDir, "run.mjs"), script)
 
-      const result = spawnSync("deno", ["run", ...DENO_PERMISSIONS, "run.mjs"], {
-        cwd: consumerDir,
-        encoding: "utf8",
-      })
+    const result = spawnSync("deno", ["run", ...DENO_PERMISSIONS, "run.mjs"], {
+      cwd: consumerDir,
+      encoding: "utf8",
+    })
 
-      expect(result.stderr).toBe("")
-      expect(result.stdout).toContain("DENO_CONSUMER_ESM_OK")
-      expect(result.status).toBe(0)
-    }, 20_000)
+    expect(result.stderr).toBe("")
+    expect(result.stdout).toContain("DENO_CONSUMER_ESM_OK")
+    expect(result.status).toBe(0)
+  }, 20_000)
 
-    it("requires defineRepoContract and runRepoContract via CommonJS (dist/index.cjs)", () => {
-      const script = `
+  it("requires defineRepoContract and runRepoContract via CommonJS (dist/index.cjs)", () => {
+    const script = `
       const { defineRepoContract, runRepoContract } = require("repo-contract");
       const { spawn } = require("node:child_process");
 
@@ -117,20 +123,20 @@ describe.skipIf(!distIsBuilt || !denoAvailable)(
         console.log("DENO_CONSUMER_CJS_OK");
       });
     `
-      writeFileSync(path.join(consumerDir, "run.cjs"), script)
+    writeFileSync(path.join(consumerDir, "run.cjs"), script)
 
-      const result = spawnSync("deno", ["run", ...DENO_PERMISSIONS, "run.cjs"], {
-        cwd: consumerDir,
-        encoding: "utf8",
-      })
+    const result = spawnSync("deno", ["run", ...DENO_PERMISSIONS, "run.cjs"], {
+      cwd: consumerDir,
+      encoding: "utf8",
+    })
 
-      expect(result.stderr).toBe("")
-      expect(result.stdout).toContain("DENO_CONSUMER_CJS_OK")
-      expect(result.status).toBe(0)
-    }, 20_000)
+    expect(result.stderr).toBe("")
+    expect(result.stdout).toContain("DENO_CONSUMER_CJS_OK")
+    expect(result.status).toBe(0)
+  }, 20_000)
 
-    it("resolves the ./presets export and runs a real check built from a preset", () => {
-      const script = `
+  it("resolves the ./presets export and runs a real check built from a preset", () => {
+    const script = `
       import { defineRepoContract, runRepoContract } from "repo-contract";
       import { format } from "repo-contract/presets";
       import { spawn } from "node:child_process";
@@ -153,20 +159,20 @@ describe.skipIf(!distIsBuilt || !denoAvailable)(
 
       console.log("DENO_CONSUMER_PRESETS_OK");
     `
-      writeFileSync(path.join(consumerDir, "run-presets.mjs"), script)
+    writeFileSync(path.join(consumerDir, "run-presets.mjs"), script)
 
-      const result = spawnSync("deno", ["run", ...DENO_PERMISSIONS, "run-presets.mjs"], {
-        cwd: consumerDir,
-        encoding: "utf8",
-      })
+    const result = spawnSync("deno", ["run", ...DENO_PERMISSIONS, "run-presets.mjs"], {
+      cwd: consumerDir,
+      encoding: "utf8",
+    })
 
-      expect(result.stderr).toBe("")
-      expect(result.stdout).toContain("DENO_CONSUMER_PRESETS_OK")
-      expect(result.status).toBe(0)
-    }, 20_000)
+    expect(result.stderr).toBe("")
+    expect(result.stdout).toContain("DENO_CONSUMER_PRESETS_OK")
+    expect(result.status).toBe(0)
+  }, 20_000)
 
-    it("resolves the ./helpers, ./affected and ./metrics exports and runs their pure entry points", () => {
-      const script = `
+  it("resolves the ./helpers, ./affected and ./metrics exports and runs their pure entry points", () => {
+    const script = `
       import { hashRequirementFields } from "repo-contract/helpers";
       import { parseScopeArgs, resolveScope } from "repo-contract/affected";
       import { createRunRecord, serializeRunRecord } from "repo-contract/metrics";
@@ -182,16 +188,15 @@ describe.skipIf(!distIsBuilt || !denoAvailable)(
 
       console.log("DENO_CONSUMER_BARRELS_OK");
       `
-      writeFileSync(path.join(consumerDir, "run-barrels.mjs"), script)
+    writeFileSync(path.join(consumerDir, "run-barrels.mjs"), script)
 
-      const result = spawnSync("deno", ["run", ...DENO_PERMISSIONS, "run-barrels.mjs"], {
-        cwd: consumerDir,
-        encoding: "utf8",
-      })
+    const result = spawnSync("deno", ["run", ...DENO_PERMISSIONS, "run-barrels.mjs"], {
+      cwd: consumerDir,
+      encoding: "utf8",
+    })
 
-      expect(result.stderr).toBe("")
-      expect(result.stdout).toContain("DENO_CONSUMER_BARRELS_OK")
-      expect(result.status).toBe(0)
-    }, 20_000)
-  },
-)
+    expect(result.stderr).toBe("")
+    expect(result.stdout).toContain("DENO_CONSUMER_BARRELS_OK")
+    expect(result.status).toBe(0)
+  }, 20_000)
+})

@@ -44,7 +44,7 @@ From `examples/demo/repo-contract.config.ts`.
 
 ## Rules
 
-- Supply `spawn` and `env` yourself: the package never imports a spawner or reads `process.env`. On Windows pass `cross-spawn`.
+- Supply `spawn` and `env` yourself: the library never imports a spawner or reads `process.env`. On Windows pass `cross-spawn`.
 - A policy returns `{ outcome, rationale }`; the rationale is required even for `pass`. Put file, line, rule and counts in it.
 - `warn` is visible and never blocks. Only `fail` fails the run.
 - Name a check in `dependsOn` only after it is declared. `dependsOn` orders execution; the policy decides what a failed dependency means.

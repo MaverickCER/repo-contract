@@ -6,7 +6,9 @@ import {
   createConsumerFixture,
   distIsBuilt,
   isRuntimeAvailable,
+  isRuntimeRequired,
   removeConsumerFixture,
+  REQUIRED_RUNTIMES_VARIABLE,
 } from "../helpers/pack-consumer.js"
 
 /**
@@ -15,14 +17,19 @@ import {
  * tarball resolves and runs under Bun with no non-default permissions. It covers both entry points
  * (`import` and `require`) and the `./presets` subpath export. This is the surface most likely to
  * differ across runtimes, because it depends on each runtime's module resolution and CJS interop
- * rather than on this package. Skips (not fails) when `bun` isn't on `PATH`, same reasoning as
- * `distIsBuilt` below: most CI jobs and most local machines don't have Bun installed, and that's a
- * legitimate, common state, not a broken one. CI's dedicated `runtime-compat` job (see
- * .github/workflows/ci.yml) is what exercises this suite.
+ * rather than on this package. Most machines have no Bun, so the suite skips when `bun` is not on
+ * `PATH` or `dist/` is not built. CI's `runtime-compat` job (see .github/workflows/ci.yml) sets
+ * `REPO_CONTRACT_REQUIRED_RUNTIMES` to name Bun, and there the suite runs and fails on either gap.
  */
 const bunAvailable = isRuntimeAvailable("bun")
+const skipBun = !isRuntimeRequired("bun") && (!distIsBuilt || !bunAvailable)
 
-describe.skipIf(!distIsBuilt || !bunAvailable)("consumer install (packed tarball) via Bun", () => {
+describe.skipIf(skipBun)("consumer install (packed tarball) via Bun", () => {
+  it("finds Bun on PATH and a built dist/ when the run requires Bun", () => {
+    expect(bunAvailable, `${REQUIRED_RUNTIMES_VARIABLE} names bun; install Bun`).toBe(true)
+    expect(distIsBuilt, "run `npm run build` first").toBe(true)
+  })
+
   let consumerDir: string
 
   beforeAll(() => {

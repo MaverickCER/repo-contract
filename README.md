@@ -13,7 +13,7 @@
 
 repo-contract is a TypeScript library and CLI for teams that own quality gates in one repository or many. Each tool your CI runs, such as `tsc`, ESLint or Vitest, becomes a **deterministic check** in one typed config file, the **contract**: the same code always gets the same result. A **policy**, a function you write, reads a check's result and returns `pass`, `warn` or `fail` with a reason that says what to fix. `npm run contract` runs every check the same way on a laptop, in a git hook and in CI.
 
-An **AI check** asks a model reviewer for a fixed JSON shape with a confidence score on every finding. The [`aiReview` preset](GUIDE.md#ai-review-checks) runs the agent you name and fails only on confident `error` findings. It warns on the rest, so a model's changing answers stay visible without flipping builds.
+An **AI check** asks a model reviewer for a fixed JSON shape with a confidence score on every finding. The [`aiReview` preset](GUIDE.md#ai-review-checks) runs the agent you name. Among its findings, only confident `error` ones fail the check; the rest warn, so a model's changing answers stay visible without flipping builds. A missing agent, a timeout or a misconfiguration also fails it.
 
 Publish a contract as an npm package and it becomes your organization's **standard**. It is a **baseline**: every repository that extends it runs the same checks and policies, can add its own on top, and gets changes as a dependency update. Shared ESLint configs and reusable workflows share single checks; a standard also shares the policies that judge them.
 
@@ -128,7 +128,7 @@ checks: {
 ### Evidence it works
 
 - **Self-hosted:** this repository is checked by its own contract on every change, with the coverage and mutation badges above generated from it. Mutation testing is held at zero survivors across `src/`. The `mutate` array in `stryker.config.mjs` lists each excluded file with its reason. Static mutants are not counted, and every other exception is a reviewable record ([CODE_REVIEW.md](CODE_REVIEW.md#3-automated-checks-versus-residual-review)).
-- **Tested as shipped:** CI installs and exercises the published package shape on Node.js, Bun, and Deno. It does so on Linux, macOS, and Windows ([runtime support](GUIDE.md#runtime-support)).
+- **Tested as shipped:** CI installs and exercises the packed tarball on Node.js under Linux, macOS and Windows. Bun and Deno run it on Linux only, in a CI job that fails when either runtime is missing ([runtime support](GUIDE.md#runtime-support)).
 - **Runnable proof:** the [examples](examples/README.md) are real projects, not snippets. CI's `examples` job runs each example's main command (`scripts/run-examples.mjs`) and checks the exit code and output lines its README shows. Follow-up steps, such as fixing a file and rerunning, are not run. They cover the demo above, a [ratchet rollout](examples/day-one-walkthrough/README.md), a [governed exception](examples/exceptions-walkthrough/README.md), and a [cross-check release gate](examples/release-gate/README.md).
 - **Verifiable release:** published with npm OIDC provenance, so a consumer can check that an artifact was built by this repository's CI ([ADOPTION.md](ADOPTION.md#security--threat-model)).
 
