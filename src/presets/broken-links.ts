@@ -14,10 +14,18 @@ interface LinkinatorReport {
   readonly links: readonly LinkinatorLink[]
 }
 
+/** One place a crawl starts, and how its files are read. */
+export interface BrokenLinksStart {
+  /** A file or directory, relative to the working directory. */
+  readonly path: string
+  /** `"markdown"` follows links in Markdown files; `"html"` (the default) reads HTML only. */
+  readonly mode?: "html" | "markdown"
+}
+
 /** Options accepted by {@link brokenLinks}. */
-interface BrokenLinksOptions {
-  /** File or directory passed straight through to linkinator as its positional target. Defaults to `"."`. */
-  readonly start?: string
+export interface BrokenLinksOptions {
+  /** Where the crawl starts. A string is one HTML start point. Defaults to `"."`. */
+  readonly start?: string | readonly BrokenLinksStart[]
 }
 
 /**
@@ -40,9 +48,11 @@ function formatBrokenLink(link: LinkinatorLink): string {
  */
 export function brokenLinks(options: BrokenLinksOptions = {}): CheckDefinitionConfig {
   const { start = "." } = options
+  // R2 crawls every start point in its mode; until then a list crawls its first path.
+  const target = typeof start === "string" ? start : (start[0]?.path ?? ".")
 
   return {
-    run: ["linkinator", start, "--recurse", "--format", "json", "--skip", "node_modules"],
+    run: ["linkinator", target, "--recurse", "--format", "json", "--skip", "node_modules"],
     output: { format: "json" },
     policy: ({ result }) => {
       const missing = checkDependencyInstalled(result, "linkinator")

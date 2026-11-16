@@ -125,14 +125,14 @@ describe("detectPresets", () => {
     expect(skipped).toContainEqual({ preset: "sbom", dependency: NPM_LOCKFILE })
   })
 
-  it("produces a valid config for a private repository with none of the 16 tool-specific dependencies: only securityDeps", () => {
+  it("produces a valid config for a private repository with none of the 19 tool-specific dependencies: only securityDeps", () => {
     const { detected, skipped } = detectPresets({
       private: true,
       devDependencies: { "some-unrelated-tool": "1.0.0" },
     })
     expect(detected).toEqual(["securityDeps"])
-    // The 16 tools, plus bundledDependencies (private), and aiReview, quickStart and sbom, which
-    // are never detected.
-    expect(skipped).toHaveLength(20)
+    // The 19 tools, plus bundledDependencies (private), and aiReview, quickStart, sbom and
+    // npmScript, which are never detected.
+    expect(skipped).toHaveLength(24)
   })
 })

@@ -24,6 +24,7 @@ import {
   PUBLISHED_PACKAGE,
   NPM_LOCKFILE,
   QUICK_START_BLOCK,
+  NPM_SCRIPT,
   detectPresets,
 } from "./preset-catalog.mjs"
 import { buildConfigTemplate, CONTRACT_RUNNER_TEMPLATE } from "./templates.mjs"
@@ -160,6 +161,7 @@ function skipReason(dependency) {
     return "runs the README block you mark; see GUIDE.md#presets"
   if (dependency === NPM_LOCKFILE)
     return "checks SBOM documents you write and commit first; see GUIDE.md#keep-an-sbom-current"
+  if (dependency === NPM_SCRIPT) return "runs the npm script you name; see GUIDE.md#presets"
   return `${dependency} not installed`
 }
 
@@ -381,6 +383,11 @@ Commands:
   repo-contract doctor          Find settings that slow or break affected-scope runs, and fix the safe ones
   repo-contract cache           Inspect and tidy the computation cache (stats, clear, prune, why)
   repo-contract quick-start     Run the README's marked quick start against the packed tarball
+  repo-contract explain         Show what the config runs and every setting looser than its tier
+  repo-contract except <id>     Fill in one exception record and list what it still lacks
+  repo-contract exceptions      Count the exception records by registry and type
+  repo-contract mutation        Plan a sharded mutation run, or run Stryker for the mutation check
+  repo-contract npm-script      Run one npm script for the npmScript check
 
 Options:
   -h, --help     Show this help
@@ -522,6 +529,108 @@ async function main() {
       createStore: helpers.createFileCacheStore,
       readFile: (file) => readFile(file, "utf8").catch(() => undefined),
       now: () => new Date(),
+    })
+    return
+  }
+
+  // R4 owns this block.
+  if (command === "explain") {
+    const { runExplain } = await import("./explain-cli.mjs")
+    process.exitCode = await runExplain({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      engine: await import("../dist/tiers.js"),
+      createRequire,
+    })
+    return
+  }
+
+  // R4 owns this block.
+  if (command === "except") {
+    const { runExcept } = await import("./except-cli.mjs")
+    const [helpers, affected] = await Promise.all([
+      import("../dist/helpers.js"),
+      import("../dist/affected.js"),
+    ])
+    process.exitCode = await runExcept({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      helpers,
+      affected,
+      readFile: (file) => readFile(file, "utf8").catch(() => undefined),
+      writeFile: async (file, text) => {
+        await mkdir(path.dirname(file), { recursive: true })
+        await writeFile(file, text, "utf8")
+      },
+      now: () => new Date(),
+    })
+    return
+  }
+
+  // R4 owns this block.
+  if (command === "exceptions") {
+    const { runExceptions } = await import("./exceptions-cli.mjs")
+    process.exitCode = await runExceptions({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      helpers: await import("../dist/helpers.js"),
+      now: () => new Date(),
+    })
+    return
+  }
+
+  // R7a owns this block.
+  if (command === "mutation") {
+    const { runMutation } = await import("./mutation-cli.mjs")
+    const [affected, helpers] = await Promise.all([
+      import("../dist/affected.js"),
+      import("../dist/helpers.js"),
+    ])
+    process.exitCode = await runMutation({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      affected,
+      helpers,
+      exec: execCapability,
+      createCapabilities,
+      readFile: (file) => readFile(file, "utf8").catch(() => undefined),
+      writeFile: async (file, text) => {
+        await mkdir(path.dirname(file), { recursive: true })
+        await writeFile(file, text, "utf8")
+      },
+      now: () => new Date(),
+    })
+    return
+  }
+
+  // R7b owns this block.
+  if (command === "npm-script") {
+    const { runNpmScript } = await import("./npm-script-cli.mjs")
+    process.exitCode = await runNpmScript({
+      argv: rest,
+      cwd: process.cwd(),
+      version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+        .version,
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      exec: execCapability,
+      readFile: (file) => readFile(file, "utf8").catch(() => undefined),
     })
     return
   }

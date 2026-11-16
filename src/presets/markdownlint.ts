@@ -19,9 +19,15 @@ interface MarkdownlintFinding {
 }
 
 /** Options accepted by {@link markdownlint}. */
-interface MarkdownlintOptions {
-  /** Glob passed straight through to markdownlint-cli2 as its positional target. Defaults to `"**\/*.md"`. */
+export interface MarkdownlintOptions {
+  /** Glob passed straight through to markdownlint-cli2 as its positional target. Defaults to `"**\/*.md"`. Ignored when `globs` is set. */
   readonly glob?: string
+  /** Globs passed to markdownlint-cli2 in place of `glob`. Explicit globs such as `["*.md", "docs/**\/*.md"]` keep the run out of `node_modules`. */
+  readonly globs?: readonly string[]
+  /** A markdownlint config file, passed as `--config`. */
+  readonly config?: string
+  /** How the verdict is read. `"json"` (the default) reads the JSON formatter's report file. `"exit-code"` reads the exit code and printed output, so no formatter is needed. */
+  readonly verdict?: "json" | "exit-code"
 }
 
 const REPORT_PATH = "reports/markdownlint.json"

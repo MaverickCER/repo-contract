@@ -18,11 +18,9 @@ describe("presets barrel (src/presets/index.ts)", () => {
     typecheck: presets.typecheck,
     test: presets.test,
     e2e: presets.e2e,
-    securityDeps: presets.securityDeps,
     securitySecrets: presets.securitySecrets,
     license: presets.license,
     publint: presets.publint,
-    arethetypeswrong: presets.arethetypeswrong,
     bundledDependencies: presets.bundledDependencies,
   }
 
@@ -38,6 +36,12 @@ describe("presets barrel (src/presets/index.ts)", () => {
     commitlint: () => presets.commitlint(),
     quickStart: () => presets.quickStart(),
     sbom: () => presets.sbom(),
+    arethetypeswrong: () => presets.arethetypeswrong(),
+    securityDeps: () => presets.securityDeps(),
+    coverage: () => presets.coverage(),
+    crap: () => presets.crap(),
+    mutation: () => presets.mutation(),
+    npmScript: () => presets.npmScript({ script: "build" }),
   }
 
   it("exports exactly the documented preset names", () => {
@@ -97,7 +101,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     ["e2e", presets.e2e, "@playwright/test"],
     ["license", presets.license, "licensee"],
     ["publint", presets.publint, "publint"],
-    ["arethetypeswrong", presets.arethetypeswrong, "@arethetypeswrong/cli"],
+    ["arethetypeswrong", presets.arethetypeswrong(), "@arethetypeswrong/cli"],
     ["deadCode", presets.deadCode(), "knip"],
     ["duplication", presets.duplication(), "jscpd"],
     ["stylelint", presets.stylelint(), "stylelint"],
@@ -224,7 +228,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     const config = defineRepoContract({
       checks: {
         missing: {
-          ...presets.securityDeps,
+          ...presets.securityDeps(),
           run: ["definitely-not-a-real-binary-repo-contract-preset-test"],
         },
       },

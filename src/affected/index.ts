@@ -20,6 +20,8 @@ export {
   DEFAULT_TRIGGERS,
 } from "./compute-affected.js"
 export { parseAffectedConfig } from "./config.js"
+export { readContractConfig } from "./contract-namespace.js"
+export type { ContractConfig, ContractConfigSource } from "./contract-namespace.js"
 export { loadCompilerOptions } from "./tsconfig.js"
 export type { LoadCompilerOptionsInput } from "./tsconfig.js"
 export { computeAffectedFromGit, parseNameStatus } from "./collect.js"
@@ -46,6 +48,15 @@ export type {
   ShardReport,
   ShardSpec,
 } from "./shard.js"
+export {
+  MAX_MUTATION_SHARDS,
+  MUTATION_SHARD_BYTES,
+  mutationShardCount,
+  planMutationShards,
+} from "./mutation-plan.js"
+export type { MutatedFile, MutationPlan } from "./mutation-plan.js"
+export { findMutantById, mutationExceptionId, resolveMutants } from "./mutation-report.js"
+export type { MutantIdentity, ResolvedMutant } from "./mutation-report.js"
 export { findEscapes } from "./canary.js"
 export type { CanaryInput, CanaryResult } from "./canary.js"
 export { packArtifacts, unpackArtifacts } from "./artifacts.js"

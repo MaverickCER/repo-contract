@@ -22,11 +22,11 @@ function withVulns(
 
 describe("securityDeps preset", () => {
   it("shells out to npm audit --omit=dev --json", () => {
-    expect(securityDeps.run).toEqual(["npm", "audit", "--omit=dev", "--json"])
+    expect(securityDeps().run).toEqual(["npm", "audit", "--omit=dev", "--json"])
   })
 
   it("fails when output could not be parsed as JSON", async () => {
-    const result = await securityDeps.policy(
+    const result = await securityDeps().policy(
       fakeContext(fakeCheckEvidence({ output: { format: "json", success: false, error: "bad" } })),
     )
     expect(result).toEqual({
@@ -36,7 +36,9 @@ describe("securityDeps preset", () => {
   })
 
   it("fails when output is entirely absent (not just success: false)", async () => {
-    const result = await securityDeps.policy(fakeContext(fakeCheckEvidence({ output: undefined })))
+    const result = await securityDeps().policy(
+      fakeContext(fakeCheckEvidence({ output: undefined })),
+    )
     expect(result).toEqual({
       outcome: "fail",
       rationale: "npm audit output could not be parsed as JSON.",
@@ -44,7 +46,7 @@ describe("securityDeps preset", () => {
   })
 
   it("fails when metadata.vulnerabilities is missing", async () => {
-    const result = await securityDeps.policy(
+    const result = await securityDeps().policy(
       fakeContext(fakeCheckEvidence({ output: { format: "json", success: true, value: {} } })),
     )
     expect(result).toEqual({
@@ -60,7 +62,7 @@ describe("securityDeps preset", () => {
   ])(
     "fails with the invalid-report-data rationale (never throws) when the parsed value is %s",
     async (_label, value) => {
-      const result = await securityDeps.policy(
+      const result = await securityDeps().policy(
         fakeContext(fakeCheckEvidence({ output: { format: "json", success: true, value } })),
       )
       expect(result).toEqual({
@@ -71,7 +73,7 @@ describe("securityDeps preset", () => {
   )
 
   it("passes with the exact rationale when every severity count is 0", async () => {
-    const result = await securityDeps.policy(
+    const result = await securityDeps().policy(
       fakeContext(
         fakeCheckEvidence({ output: { format: "json", success: true, value: withVulns({}) } }),
       ),
@@ -84,7 +86,7 @@ describe("securityDeps preset", () => {
   })
 
   it("fails (not passes) when a severity count is missing from the summary: NaN must not read as 0", async () => {
-    const result = await securityDeps.policy(
+    const result = await securityDeps().policy(
       fakeContext(
         fakeCheckEvidence({
           output: {
@@ -102,7 +104,7 @@ describe("securityDeps preset", () => {
   })
 
   it("fails when npm audit itself timed out rather than misreporting it as a parse failure", async () => {
-    const result = await securityDeps.policy(
+    const result = await securityDeps().policy(
       fakeContext(fakeCheckEvidence({ status: "timed_out", exitCode: null, output: undefined })),
     )
     expect(result.outcome).toBe("fail")
@@ -110,7 +112,7 @@ describe("securityDeps preset", () => {
   })
 
   it("warns when only info-severity findings remain", async () => {
-    const result = await securityDeps.policy(
+    const result = await securityDeps().policy(
       fakeContext(
         fakeCheckEvidence({
           output: { format: "json", success: true, value: withVulns({ info: 3 }) },
@@ -125,7 +127,7 @@ describe("securityDeps preset", () => {
     // Distinct, non-overlapping magnitudes: any single severity's count
     // being dropped, double-counted, or subtracted instead of added would
     // produce a total other than 15.
-    const result = await securityDeps.policy(
+    const result = await securityDeps().policy(
       fakeContext(
         fakeCheckEvidence({
           output: {
@@ -157,7 +159,7 @@ describe("securityDeps preset", () => {
         "alpha-pkg": { severity: "low", isDirect: true, range: ">=1.0.0", fixAvailable: true },
       },
     }
-    const result = await securityDeps.policy(
+    const result = await securityDeps().policy(
       fakeContext(fakeCheckEvidence({ output: { format: "json", success: true, value: report } })),
     )
 

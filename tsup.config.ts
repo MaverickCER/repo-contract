@@ -15,6 +15,13 @@ export default defineConfig({
     helpers: "src/helpers/index.ts",
     affected: "src/affected/index.ts",
     metrics: "src/metrics/index.ts",
+    tiers: "src/tiers/index.ts",
+    config: "src/tool-config/index.ts",
+    "config/tsup": "src/tool-config/tsup.ts",
+    "config/typedoc": "src/tool-config/typedoc.ts",
+    "config/knip": "src/tool-config/knip.ts",
+    "config/vitest": "src/tool-config/vitest.ts",
+    "config/stryker": "src/tool-config/stryker.ts",
   },
   format: ["esm", "cjs"],
   // This package is Node-only by nature (it uses node:os/node:fs-promises

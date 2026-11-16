@@ -20,6 +20,10 @@ export type PresetName =
   | "bundledDependencies"
   | "quickStart"
   | "sbom"
+  | "coverage"
+  | "crap"
+  | "mutation"
+  | "npmScript"
 
 export declare const DIST_OUTPUT: "dist/"
 
@@ -30,6 +34,8 @@ export declare const PUBLISHED_PACKAGE: "published package"
 export declare const QUICK_START_BLOCK: "quick-start block"
 
 export declare const NPM_LOCKFILE: "npm lockfile"
+
+export declare const NPM_SCRIPT: "npm script"
 
 export declare const PRESET_DEPENDENCIES: Readonly<Record<PresetName, string | null>>
 

@@ -50,6 +50,66 @@
         "default": "./dist/affected.cjs"
       }
     },
+    "./config": {
+      "import": {
+        "types": "./dist/config.d.ts",
+        "default": "./dist/config.js"
+      },
+      "require": {
+        "types": "./dist/config.d.cts",
+        "default": "./dist/config.cjs"
+      }
+    },
+    "./config/knip": {
+      "import": {
+        "types": "./dist/config/knip.d.ts",
+        "default": "./dist/config/knip.js"
+      },
+      "require": {
+        "types": "./dist/config/knip.d.cts",
+        "default": "./dist/config/knip.cjs"
+      }
+    },
+    "./config/stryker": {
+      "import": {
+        "types": "./dist/config/stryker.d.ts",
+        "default": "./dist/config/stryker.js"
+      },
+      "require": {
+        "types": "./dist/config/stryker.d.cts",
+        "default": "./dist/config/stryker.cjs"
+      }
+    },
+    "./config/tsup": {
+      "import": {
+        "types": "./dist/config/tsup.d.ts",
+        "default": "./dist/config/tsup.js"
+      },
+      "require": {
+        "types": "./dist/config/tsup.d.cts",
+        "default": "./dist/config/tsup.cjs"
+      }
+    },
+    "./config/typedoc": {
+      "import": {
+        "types": "./dist/config/typedoc.d.ts",
+        "default": "./dist/config/typedoc.js"
+      },
+      "require": {
+        "types": "./dist/config/typedoc.d.cts",
+        "default": "./dist/config/typedoc.cjs"
+      }
+    },
+    "./config/vitest": {
+      "import": {
+        "types": "./dist/config/vitest.d.ts",
+        "default": "./dist/config/vitest.js"
+      },
+      "require": {
+        "types": "./dist/config/vitest.d.cts",
+        "default": "./dist/config/vitest.cjs"
+      }
+    },
     "./helpers": {
       "import": {
         "types": "./dist/helpers.d.ts",
@@ -82,7 +142,17 @@
       }
     },
     "./schema": "./schemas/evidence.schema.json",
-    "./schema/*": "./schemas/*.schema.json"
+    "./schema/*": "./schemas/*.schema.json",
+    "./tiers": {
+      "import": {
+        "types": "./dist/tiers.d.ts",
+        "default": "./dist/tiers.js"
+      },
+      "require": {
+        "types": "./dist/tiers.d.cts",
+        "default": "./dist/tiers.cjs"
+      }
+    }
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -93,12 +163,14 @@
   "files": [
     "affected",
     "bin",
+    "config",
     "dist",
     "helpers",
     "metrics",
     "presets",
     "schemas",
     "src",
+    "tiers",
     "/*.md",
     "specs/**/*.md",
     "examples/**/*.md",

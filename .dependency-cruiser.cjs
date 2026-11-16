@@ -279,6 +279,14 @@ module.exports = {
       to: { path: "^src/(execution|evidence|policy)" },
     },
     {
+      name: "tiers-and-tool-config-must-not-import-execution-evidence-or-policy",
+      severity: "error",
+      comment:
+        "src/tiers/ and src/tool-config/ are independent published barrels (repo-contract/tiers, repo-contract/config): they build check and tool configs, so they must not depend on the runtime layers that consume checks.",
+      from: { path: "^src/(tiers|tool-config)" },
+      to: { path: "^src/(execution|evidence|policy)" },
+    },
+    {
       name: "src-must-not-import-scripts",
       severity: "error",
       comment:

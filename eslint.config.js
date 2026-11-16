@@ -112,6 +112,10 @@ export default tseslint.config(
       "affected/package.json",
       // Same shim, same reasoning, for the `./metrics` subpath.
       "metrics/package.json",
+      // Same shim, same reasoning, for `./tiers`, `./config` and the five `./config/<tool>` subpaths.
+      "tiers/package.json",
+      "config/package.json",
+      "config/*/package.json",
       // docs/ is the published static site (docs/index.html), not a TypeScript/source layer covered
       // by the module-boundary model (`boundaries/elements` below). Its one plain-JS asset,
       // docs/script.js, runs in the browser against browser globals this config never defines. It
@@ -184,6 +188,12 @@ export default tseslint.config(
         // src/metrics/ is a fifth independent public barrel (src/metrics/index.ts), published under
         // `./metrics`: pure record keeping and summaries over supplied data.
         { type: "metrics", pattern: "src/metrics" },
+        // src/tiers/ is a sixth independent published barrel (`./tiers`): tier functions built
+        // from src/presets/.
+        { type: "tiers", pattern: "src/tiers" },
+        // src/tool-config/ backs the seventh barrel (`./config`) and its five per-tool subpaths:
+        // plain config objects derived from package.json data.
+        { type: "tool-config", pattern: "src/tool-config" },
         // checks/ (including checks/shared/), scripts/ (including its
         // suppression-governance/architecture/adr-governance subdirectories), and eslint-rules/ are
         // each one architectural unit. None needs a finer internal boundary than "the whole tree
@@ -299,6 +309,14 @@ export default tseslint.config(
                 "src/metrics is a fifth, independent published barrel (repo-contract/metrics) -- pure record keeping over supplied data -- and must not depend on the runtime layers that consume checks -- execution, evidence, or policy.",
             },
             {
+              from: { element: { types: { anyOf: ["tiers", "tool-config"] } } },
+              disallow: {
+                to: { element: { types: { anyOf: ["execution", "evidence", "policy"] } } },
+              },
+              message:
+                "src/tiers and src/tool-config are independent published barrels (repo-contract/tiers, repo-contract/config) and must not depend on the runtime layers that consume checks -- execution, evidence, or policy.",
+            },
+            {
               from: { element: { type: "affected" } },
               disallow: {
                 to: { element: { types: { anyOf: ["execution", "evidence", "policy"] } } },
@@ -321,6 +339,8 @@ export default tseslint.config(
                         "helpers",
                         "affected",
                         "metrics",
+                        "tiers",
+                        "tool-config",
                         "standard-schema",
                       ],
                     },

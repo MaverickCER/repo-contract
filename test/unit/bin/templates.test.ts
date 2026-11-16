@@ -35,7 +35,7 @@ describe("buildConfigTemplate", () => {
     const content = buildConfigTemplate(["typecheck", "securityDeps"])
     expect(content).toContain('import { typecheck, securityDeps } from "repo-contract/presets"')
     expect(content).toContain("    typecheck,")
-    expect(content).toContain("    securityDeps,")
+    expect(content).toContain("    securityDeps: securityDeps(),")
   })
 
   it("calls factory presets instead of spreading them bare", () => {

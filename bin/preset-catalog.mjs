@@ -48,8 +48,11 @@ export const QUICK_START_BLOCK = "quick-start block"
 /** The pseudo-dependency `sbom` maps to: see the comment above. */
 export const NPM_LOCKFILE = "npm lockfile"
 
+/** The pseudo-dependency `npmScript` maps to. It runs a script the consumer names, so `init` cannot tell which. */
+export const NPM_SCRIPT = "npm script"
+
 /** Pseudo-dependencies `init` never detects: the consumer opts in by writing the check. */
-const NEVER_DETECTED = new Set([AGENT_COMMAND, QUICK_START_BLOCK, NPM_LOCKFILE])
+const NEVER_DETECTED = new Set([AGENT_COMMAND, QUICK_START_BLOCK, NPM_LOCKFILE, NPM_SCRIPT])
 
 export const PRESET_DEPENDENCIES = {
   test: "vitest",
@@ -73,6 +76,10 @@ export const PRESET_DEPENDENCIES = {
   aiReview: AGENT_COMMAND,
   quickStart: QUICK_START_BLOCK,
   sbom: NPM_LOCKFILE,
+  coverage: "@vitest/coverage-v8",
+  crap: "@danibram/crap4ts",
+  mutation: "@stryker-mutator/core",
+  npmScript: NPM_SCRIPT,
 }
 
 // Presets published as factories (`lint(options?)`, `deadCode(options?)`, ...): the generated
@@ -89,6 +96,12 @@ export const FACTORY_PRESETS = new Set([
   "aiReview",
   "quickStart",
   "sbom",
+  "arethetypeswrong",
+  "securityDeps",
+  "coverage",
+  "crap",
+  "mutation",
+  "npmScript",
 ])
 
 /**

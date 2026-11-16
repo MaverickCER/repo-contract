@@ -75,6 +75,14 @@ const config = {
     // documents current, or a listed failure. The generator itself is a string run by `node -e`,
     // so Stryker cannot mutate it; test/unit/presets/sbom.test.ts runs it end to end instead.
     "src/presets/sbom.ts",
+    // The redesign keeps each new preset decision in src/presets/rules/, so the logic is mutated
+    // while the per-preset wiring stays excluded. coverage, crap, mutation and npmScript read a
+    // report and decide on several branches, like quickStart, so their files are mutated too.
+    "src/presets/rules/**/*.ts",
+    "src/presets/coverage.ts",
+    "src/presets/crap.ts",
+    "src/presets/mutation.ts",
+    "src/presets/npm-script.ts",
   ],
   // Lets a manually-invoked `npx stryker run` skip re-testing mutants it
   // believes are unaffected by a source change, reusing their previous

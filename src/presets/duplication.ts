@@ -34,9 +34,11 @@ interface JscpdReport {
 }
 
 /** Options accepted by {@link duplication}. */
-interface DuplicationOptions {
+export interface DuplicationOptions {
   /** Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope the scan to your source tree. */
   readonly path?: string
+  /** The largest share of scanned lines that may be duplicated, in percent. A pass still lists every block. Defaults to `0`: any duplicated block fails. */
+  readonly maxPercentage?: number
 }
 
 // Kept in lockstep with the `--output reports/jscpd` argument below. Both are
