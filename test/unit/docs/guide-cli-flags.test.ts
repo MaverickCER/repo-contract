@@ -5,9 +5,15 @@ import { describe, expect, it } from "vitest"
 import { AFFECTED_USAGE, parseAffectedArgs } from "../../../bin/affected-cli.mjs"
 import { CACHE_USAGE, parseCacheArgs } from "../../../bin/cache-cli.mjs"
 import { DOCTOR_USAGE, parseDoctorArgs } from "../../../bin/doctor-cli.mjs"
+import { parseExceptArgs } from "../../../bin/except-cli.mjs"
+import { parseExceptionsArgs } from "../../../bin/exceptions-cli.mjs"
+import { parseExplainArgs } from "../../../bin/explain-cli.mjs"
+import { parseInitArgs } from "../../../bin/init-cli.mjs"
 import { MERGE_MUTATION_USAGE, parseMergeMutationArgs } from "../../../bin/merge-mutation-cli.mjs"
 import { METRICS_USAGE, parseMetricsArgs } from "../../../bin/metrics-cli.mjs"
 import { parseQuickStartArgs, QUICK_START_USAGE } from "../../../bin/quick-start-cli.mjs"
+import { MUTATION_USAGE, parseMutationArgs } from "../../../bin/mutation-cli.mjs"
+import { NPM_SCRIPT_USAGE, parseNpmScriptArgs } from "../../../bin/npm-script-cli.mjs"
 import { parseFailFastArgs, parseScopeArgs } from "../../../src/affected/index.js"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..")
@@ -24,6 +30,24 @@ const COMMANDS: Record<string, { readonly usage: string; readonly parse: Parse }
   metrics: { usage: METRICS_USAGE, parse: parseMetricsArgs },
   "merge-mutation": { usage: MERGE_MUTATION_USAGE, parse: parseMergeMutationArgs },
   "quick-start": { usage: QUICK_START_USAGE, parse: parseQuickStartArgs },
+  // `mutation` parses to its subcommand's kind, `plan` or `run`; either is an accepted line. A bare
+  // option is probed as a `run` option, the subcommand that takes most of them.
+  mutation: {
+    usage: MUTATION_USAGE,
+    parse: (argv) => {
+      const parsed = parseMutationArgs(argv[0]?.startsWith("-") ? ["run", ...argv] : argv)
+      return parsed.kind === "plan" ? { ...parsed, kind: "run" } : parsed
+    },
+  },
+  "npm-script": { usage: NPM_SCRIPT_USAGE, parse: parseNpmScriptArgs },
+}
+
+/** Commands GUIDE.md documents outside "Running less": their command lines must still parse. */
+const PARSE_ONLY: Record<string, Parse> = {
+  explain: parseExplainArgs,
+  except: parseExceptArgs,
+  exceptions: parseExceptionsArgs,
+  init: parseInitArgs,
 }
 
 /** `--help` and `--version` work the same in every command, so GUIDE.md need not repeat them. */
@@ -67,6 +91,13 @@ function quickStartSection(): string {
   return guide.slice(start, end)
 }
 
+/** GUIDE.md's npm-script section, where `npm-script` and its options are documented. */
+function npmScriptSection(): string {
+  const start = guide.indexOf("\n### Run an npm script as a check")
+  const end = guide.indexOf("\n## ", start + 1)
+  return guide.slice(start, end)
+}
+
 /**
  * @param text - Markdown.
  * @returns The inline code spans outside fenced blocks, and the lines inside them.
@@ -91,8 +122,9 @@ function codeOf(text: string): { readonly spans: string[]; readonly blockLines: 
 function invocationIn(
   code: string,
 ): { readonly command: string; readonly argv: string[] } | undefined {
-  // An install line names the package, not a command: `npm install --save-dev repo-contract tsx`.
-  if (/\b(?:install|add)\b/.test(code)) return undefined
+  // An install line names the package, not a command: `npm install --save-dev repo-contract tsx`
+  // or `npm i -D repo-contract tsx`.
+  if (/\b(?:install|add)\b|\bnpm i\b/.test(code)) return undefined
   const match = /(?:^|\s)repo-contract ([a-z-]+)((?: [^#|]*)?)/.exec(code)
   if (match?.[1] === undefined) return undefined
   return { command: match[1], argv: (match[2] ?? "").trim().split(/\s+/).filter(Boolean) }
@@ -120,10 +152,9 @@ function rejectedInvocations(
 ): string[] {
   return found.flatMap(({ command, argv }) => {
     const line = `repo-contract ${[command, ...argv].join(" ")}`
-    if (command === "init") return argv.length === 0 ? [] : [`${line}: init takes no arguments`]
-    const entry = COMMANDS[command]
-    if (entry === undefined) return [`${line}: no such command`]
-    const parsed = entry.parse(argv)
+    const parse = COMMANDS[command]?.parse ?? PARSE_ONLY[command]
+    if (parse === undefined) return [`${line}: no such command`]
+    const parsed = parse(argv)
     return parsed.kind === "run" ? [] : [`${line}: ${parsed.message ?? parsed.kind}`]
   })
 }
@@ -171,7 +202,16 @@ describe("GUIDE.md's CLI commands and flags", () => {
   it("shows command lines that each command's own argument parser accepts", () => {
     const found = invocations(guide)
     expect(found.map(({ command }) => command)).toEqual(
-      expect.arrayContaining(["affected", "cache", "doctor", "metrics", "merge-mutation", "init"]),
+      expect.arrayContaining([
+        "affected",
+        "cache",
+        "doctor",
+        "metrics",
+        "merge-mutation",
+        "init",
+        "mutation",
+        "npm-script",
+      ]),
     )
     expect(rejectedInvocations(found)).toEqual([])
   })
@@ -198,7 +238,9 @@ describe("GUIDE.md's CLI commands and flags", () => {
   })
 
   it("documents every option each command's --help lists", () => {
-    const { spans, blockLines } = codeOf(`${runningLessSection()}${quickStartSection()}`)
+    const { spans, blockLines } = codeOf(
+      `${runningLessSection()}${quickStartSection()}${npmScriptSection()}`,
+    )
     const shown = new Set(
       [...spans, ...blockLines].flatMap((code) =>
         code
@@ -237,10 +279,9 @@ describe("README.md's CLI commands and flags", () => {
       expect.arrayContaining(["--base", "--explain"]),
     )
     const unknown = lines.flatMap(({ command, flags }) => {
-      const parse = COMMANDS[command]?.parse
-      return flags
-        .filter((flag) => parse === undefined || !knows(parse, flag))
-        .map((flag) => `${command} ${flag}`)
+      const parse = COMMANDS[command]?.parse ?? PARSE_ONLY[command]
+      const known = (flag: string): boolean => parse !== undefined && knows(parse, flag)
+      return flags.filter((flag) => !known(flag)).map((flag) => `${command} ${flag}`)
     })
     expect(unknown).toEqual([])
   })

@@ -1,18 +1,11 @@
 {
   "name": "repo-contract",
   "version": "0.15.0",
-  "description": "Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason.",
+  "description": "One typed contract for the tools your CI runs: each check says pass, warn or fail and why; every governed exception is a reviewable record.",
   "keywords": [
     "quality-gate",
-    "code-quality",
     "policy-as-code",
-    "ci",
-    "pre-commit",
-    "git-hooks",
-    "engineering-standards",
-    "evidence",
-    "typescript",
-    "contract"
+    "pre-commit"
   ],
   "homepage": "https://maverickcer.github.io/repo-contract/",
   "bugs": {
@@ -50,6 +43,66 @@
         "default": "./dist/affected.cjs"
       }
     },
+    "./config": {
+      "import": {
+        "types": "./dist/config.d.ts",
+        "default": "./dist/config.js"
+      },
+      "require": {
+        "types": "./dist/config.d.cts",
+        "default": "./dist/config.cjs"
+      }
+    },
+    "./config/knip": {
+      "import": {
+        "types": "./dist/config/knip.d.ts",
+        "default": "./dist/config/knip.js"
+      },
+      "require": {
+        "types": "./dist/config/knip.d.cts",
+        "default": "./dist/config/knip.cjs"
+      }
+    },
+    "./config/stryker": {
+      "import": {
+        "types": "./dist/config/stryker.d.ts",
+        "default": "./dist/config/stryker.js"
+      },
+      "require": {
+        "types": "./dist/config/stryker.d.cts",
+        "default": "./dist/config/stryker.cjs"
+      }
+    },
+    "./config/tsup": {
+      "import": {
+        "types": "./dist/config/tsup.d.ts",
+        "default": "./dist/config/tsup.js"
+      },
+      "require": {
+        "types": "./dist/config/tsup.d.cts",
+        "default": "./dist/config/tsup.cjs"
+      }
+    },
+    "./config/typedoc": {
+      "import": {
+        "types": "./dist/config/typedoc.d.ts",
+        "default": "./dist/config/typedoc.js"
+      },
+      "require": {
+        "types": "./dist/config/typedoc.d.cts",
+        "default": "./dist/config/typedoc.cjs"
+      }
+    },
+    "./config/vitest": {
+      "import": {
+        "types": "./dist/config/vitest.d.ts",
+        "default": "./dist/config/vitest.js"
+      },
+      "require": {
+        "types": "./dist/config/vitest.d.cts",
+        "default": "./dist/config/vitest.cjs"
+      }
+    },
     "./helpers": {
       "import": {
         "types": "./dist/helpers.d.ts",
@@ -82,7 +135,17 @@
       }
     },
     "./schema": "./schemas/evidence.schema.json",
-    "./schema/*": "./schemas/*.schema.json"
+    "./schema/*": "./schemas/*.schema.json",
+    "./tiers": {
+      "import": {
+        "types": "./dist/tiers.d.ts",
+        "default": "./dist/tiers.js"
+      },
+      "require": {
+        "types": "./dist/tiers.d.cts",
+        "default": "./dist/tiers.cjs"
+      }
+    }
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -93,12 +156,15 @@
   "files": [
     "affected",
     "bin",
+    "config",
     "dist",
     "helpers",
     "metrics",
     "presets",
     "schemas",
+    "skills",
     "src",
+    "tiers",
     "/*.md",
     "specs/**/*.md",
     "examples/**/*.md",
@@ -187,7 +253,7 @@
     "@changesets/cli": "^3.0.3",
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
-    "@cyclonedx/cyclonedx-npm": "^6.0.1",
+    "@cyclonedx/cyclonedx-library": "^10.5.1",
     "@danibram/crap4ts": "^0.6.0",
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^10.0.1",
@@ -203,6 +269,8 @@
     "@types/shell-quote": "^1.7.5",
     "@vitest/coverage-v8": "^5.0.5",
     "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "ajv-formats-draft2019": "^1.6.1",
     "cross-spawn": "^7.0.6",
     "dependency-cruiser": "^18.2.0",
     "eslint": "^10.13.0",
@@ -220,7 +288,7 @@
     "fast-check": "^4.9.0",
     "github-actionlint": "^1.7.12",
     "globals": "^17.9.0",
-    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.19.0",
+    "internal-package-contract": "github:MaverickCER/internal-package-contract#v0.21.0",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-reports": "^3.2.0",
@@ -269,6 +337,14 @@
       "AgentSkill",
       "AmbientCapabilities"
     ],
+    "apiTargets": {
+      "./config": "src/tool-config/index.ts",
+      "./config/tsup": "src/tool-config/tsup.ts",
+      "./config/typedoc": "src/tool-config/typedoc.ts",
+      "./config/knip": "src/tool-config/knip.ts",
+      "./config/vitest": "src/tool-config/vitest.ts",
+      "./config/stryker": "src/tool-config/stryker.ts"
+    },
     "ambientCapabilities": {
       "forbiddenDependencies": [
         "cross-spawn"

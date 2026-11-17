@@ -6,9 +6,10 @@ Accepted. Implemented in
 `src/helpers/{index,exception-policy,load-exception-registry,reconcile-exceptions,write-exception-registry}.ts`,
 published as the third, independent `repo-contract/helpers` subpath (Experimental when this was
 decided; promoted to Stable by [ADR 0019](0019-helpers-promoted-presets-stay-experimental.md), see
-VERSIONING.md). `scripts/shared/exception-record.ts` builds the check-owned layer on top of it:
-the generic `validateExceptionRegistry` + per-registry `ExceptionRegistrySchema` (with the shared
-`validateSecurityExceptionFields` for the security family). Each check reconciles its own findings
+VERSIONING.md). The record layer on top of it, the generic `validateExceptionRegistry` +
+per-registry `ExceptionRegistrySchema` (with the shared `validateSecurityExceptionFields` for the
+security family), lived in the unpublished `scripts/shared/exception-record.ts`. The 2026-11-16
+amendment at the end moved it into `src/helpers/exception-record.ts`. Each check reconciles its own findings
 against its own registry via `reconcileExceptions` in its own scan/review script; the policy is a
 pure evidence->verdict function. The `suppression-governance`, `security-network`,
 `security-socket`, `coderabbitai`, `preset-commands`, and `dead-code` checks all consume this; each
@@ -277,3 +278,28 @@ amendment.
 > **Amended by [ADR 0017](0017-own-glob-matcher-replaces-minimatch.md):** the `minimatch` runtime
 > dependency described above was removed; glob matching is now the dependency-free
 > `src/helpers/glob-match.ts`.
+
+## The v2 record and its vocabulary ship in `helpers` (amendment, 2026-11-16)
+
+This reverses the Consequences bullet that kept the record layer and its vocabulary unpublished.
+Two copies of that layer had drifted: this repository's and internal-package-contract's. Consumer
+registries already used types this repository's copy rejected.
+
+- `repo-contract/helpers` now exports the v2 record: `validateExceptionRegistry`,
+  `exceptionRegistryStandardSchema`, `ExceptionRegistrySchema`, the v2 and security field keys,
+  `recordFieldValue`, `evaluateFindingVerdict` and the legacy and expiry tests.
+- It exports the vocabulary too: eight `EXCEPTION_TYPES` and three `EXCEPTION_METHODS`.
+  internal-package-contract's superset wins: env-cap's and data-cap's Socket records use
+  `required-for-package-to-exist`, which this repository's copy rejected.
+- It exports the read-reconcile-write sequence (`loadAndReconcileExceptionRegistry`) and the
+  read-only inventory behind `repo-contract exceptions`.
+- `scripts/shared/exception-record.ts` is deleted. Its importers use `src/helpers/index.ts`.
+- A check still owns its findings' identity and which types it accepts. Socket's four types,
+  CodeScanning's one and the never-waivable Socket severities stay in internal-package-contract.
+- The `securityDeps` preset gains a `registry` option built on this layer. A critical advisory is
+  never waivable. A lower one needs a complete record, and a stale record fails.
+  This repository's own `security-deps` check now uses it, and `checks/security-deps.ts` is gone.
+- `test/unit/helpers/registry-compatibility.test.ts` loads this repository's registries, and
+  env-cap's and data-cap's when their checkouts are present, under the published validator.
+- `helpers` is Stable ([ADR 0019](0019-helpers-promoted-presets-stay-experimental.md)), so these
+  exports are permanent. The vocabulary can grow in a minor; removing a member is a major.

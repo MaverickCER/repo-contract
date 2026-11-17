@@ -127,6 +127,12 @@ describe("published documentation links", () => {
     expect(documents.length).toBeGreaterThan(20)
   })
 
+  // An agent working in a consumer project reads the skill from node_modules, not from GitHub.
+  it("publishes the agent skill and its references", () => {
+    expect(documents).toContain("skills/repo-contract/SKILL.md")
+    expect(documents).toContain("skills/repo-contract/references/api.md")
+  })
+
   it("publishes Markdown only from the folders meant to ship documentation", () => {
     const unexpected = documents.filter(
       (file) =>

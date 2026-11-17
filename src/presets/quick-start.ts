@@ -1,6 +1,7 @@
 import type { CheckDefinitionConfig, PolicyResult } from "../types.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /** Options accepted by {@link quickStart}. */
 export interface QuickStartOptions {
@@ -94,9 +95,11 @@ function howItEnded(command: CommandResult, timeoutMs: number): string {
  * whatever network they reach (an install usually reaches the registry).
  * @param options - configuration for this check; see {@link QuickStartOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export function quickStart(options: QuickStartOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("quickStart", options)
   const { readme = "README.md", timeoutMs = 300_000 } = options
 
   return {

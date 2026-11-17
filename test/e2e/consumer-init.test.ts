@@ -188,7 +188,7 @@ describe.skipIf(!distIsBuilt)("consumer init (packed tarball)", () => {
 
     const config = readFileSync(path.join(dir, "repo-contract.config.mts"), "utf8")
     expect(config).toContain("import { securityDeps } from")
-    expect(config).toContain("securityDeps,")
+    expect(config).toContain("securityDeps: securityDeps(),")
 
     rmSync(dir, { recursive: true, force: true })
   }, 20_000)

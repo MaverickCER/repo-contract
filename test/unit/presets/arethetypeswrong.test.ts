@@ -4,17 +4,17 @@ import { enoentEvidence, fakeContext, fakeCheckEvidence } from "./fixtures.js"
 
 describe("arethetypeswrong preset", () => {
   it("shells out to attw --pack . --format json with no --exclude-entrypoints", () => {
-    expect(arethetypeswrong.run).toEqual(["attw", "--pack", ".", "--format", "json"])
+    expect(arethetypeswrong().run).toEqual(["attw", "--pack", ".", "--format", "json"])
   })
 
   it("fails with an actionable message when @arethetypeswrong/cli is not installed", async () => {
-    const result = await arethetypeswrong.policy(fakeContext(enoentEvidence("attw")))
+    const result = await arethetypeswrong().policy(fakeContext(enoentEvidence("attw")))
     expect(result.outcome).toBe("fail")
     expect(result.rationale).toContain("`@arethetypeswrong/cli`")
   })
 
   it("fails when output could not be parsed as JSON", async () => {
-    const result = await arethetypeswrong.policy(
+    const result = await arethetypeswrong().policy(
       fakeContext(fakeCheckEvidence({ output: { format: "json", success: false, error: "bad" } })),
     )
     expect(result).toEqual({
@@ -24,7 +24,7 @@ describe("arethetypeswrong preset", () => {
   })
 
   it("fails when output is entirely absent (not just success: false)", async () => {
-    const result = await arethetypeswrong.policy(
+    const result = await arethetypeswrong().policy(
       fakeContext(fakeCheckEvidence({ output: undefined })),
     )
     expect(result).toEqual({
@@ -34,7 +34,7 @@ describe("arethetypeswrong preset", () => {
   })
 
   it("passes when there are 0 problems", async () => {
-    const result = await arethetypeswrong.policy(
+    const result = await arethetypeswrong().policy(
       fakeContext(
         fakeCheckEvidence({ output: { format: "json", success: true, value: { problems: {} } } }),
       ),
@@ -46,7 +46,7 @@ describe("arethetypeswrong preset", () => {
   })
 
   it("fails and renders exactly the header plus one line per problem across multiple kinds, omitting absent context fields entirely", async () => {
-    const result = await arethetypeswrong.policy(
+    const result = await arethetypeswrong().policy(
       fakeContext(
         fakeCheckEvidence({
           output: {
@@ -74,7 +74,7 @@ describe("arethetypeswrong preset", () => {
   })
 
   it("renders all four context fields, in order, when every one is present", async () => {
-    const result = await arethetypeswrong.policy(
+    const result = await arethetypeswrong().policy(
       fakeContext(
         fakeCheckEvidence({
           output: {
@@ -103,7 +103,7 @@ describe("arethetypeswrong preset", () => {
   })
 
   it("renders a problem with no context fields as exactly its kind: no trailing colon or empty context", async () => {
-    const result = await arethetypeswrong.policy(
+    const result = await arethetypeswrong().policy(
       fakeContext(
         fakeCheckEvidence({
           output: {

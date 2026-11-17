@@ -3,6 +3,7 @@ import { combinedOutput } from "./shared/exit-code-fail-rationale.js"
 import { errorWarningPassPolicy } from "./shared/error-warning-pass-policy.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /** Stylelint's `--formatter json` contract: not published as a TypeScript type by the tool. */
 interface StylelintWarning {
@@ -32,9 +33,11 @@ interface StylelintOptions {
  * `lint` preset treats ESLint's severities.
  * @param options - configuration for this check; see {@link StylelintOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export function stylelint(options: StylelintOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("stylelint", options)
   const { glob = "**/*.{css,scss}" } = options
 
   return {

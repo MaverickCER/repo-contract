@@ -4,15 +4,14 @@ Maintainer-facing. Contributors don't run any of this. A normal change is a PR;
 a changeset is generated for a `feat`, `fix`, `perf` or `revert` commit when you add none (see
 [`CONTRIBUTING.md`](CONTRIBUTING.md#making-a-change)).
 
-Releases are driven by [Changesets](https://github.com/changesets/changesets)
-and npm's [OIDC trusted publishing](https://docs.npmjs.com/trusted-publishers), via a
-shared, centrally-maintained workflow hosted in
-[`internal-package-contract`](https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml)
-that this repo's own [`.github/workflows/release.yml`](https://github.com/MaverickCER/repo-contract/blob/main/.github/workflows/release.yml)
-calls into (`uses:`). **No `NPM_TOKEN` secret exists in this repository** and none is
-needed: npm verifies the workflow's OIDC identity against a one-time
-trusted-publisher registration on npmjs.com (see [One-time setup](#one-time-setup)
-below).
+A release publishes to npm with no stored npm token. [Changesets](https://github.com/changesets/changesets)
+decides the version, and npm's [OIDC trusted publishing](https://docs.npmjs.com/trusted-publishers)
+authenticates the upload. The work runs in a
+[shared workflow in `internal-package-contract`](https://github.com/MaverickCER/internal-package-contract/blob/main/.github/workflows/release-npm-changesets.yml),
+which this repository's [`.github/workflows/release.yml`](https://github.com/MaverickCER/repo-contract/blob/main/.github/workflows/release.yml)
+calls with `uses:`. **No `NPM_TOKEN` secret exists in this repository.** npm checks the
+workflow's OIDC identity against a one-time trusted-publisher registration on npmjs.com (see
+[One-time setup](#one-time-setup)).
 
 This setup replaced [release-please](https://github.com/googleapis/release-please). repo-contract
 now releases exactly as data-cap and env-cap do, not through a third mechanism of its own. ADR
@@ -21,48 +20,50 @@ records the change.
 
 ## How releases work
 
-1. A release is driven by the commits on `main`. The shared workflow writes a changeset
-   into `.changeset/` for each `feat`, `fix`, `perf` or `revert` commit that has none
-   (while the package is `0.x`: a breaking commit gives `minor`, everything else `patch`);
-   `chore`, `docs`, `ci`, `test`, `build`, `refactor` and bot commits release nothing. A
-   hand-written `.changeset/*.md` (Markdown, `patch`/`minor`/`major` plus a consumer-facing
-   description) always wins over the generated one. Separately, the `api-contract` check
-   fails a PR whose public-API change has no changeset at the matching level.
-2. On each push to `main`, the shared workflow runs `changesets/action`. If any
-   unreleased changesets are pending, it opens or updates a pull request titled
-   **"Version Packages"** from the branch **`changeset-release/main`** and dispatches
-   this repo's own `ci.yml` onto that branch (a `GITHUB_TOKEN`-pushed branch never
-   otherwise triggers `push`/`pull_request` workflows). A maintainer reads that PR and
-   merges it; nothing merges it automatically.
-3. That merge triggers the shared workflow again. This time there are no pending
-   changesets, so it publishes in two jobs:
+1. **Commits on `main` drive a release.** The shared workflow writes a changeset into
+   `.changeset/` for each `feat`, `fix`, `perf` or `revert` commit that has none. While the
+   package is `0.x`, a breaking commit gives `minor` and everything else `patch`. `chore`,
+   `docs`, `ci`, `test`, `build`, `refactor` and bot commits release nothing. A hand-written
+   `.changeset/*.md` always wins over the generated one: Markdown with `patch`, `minor` or
+   `major` and a consumer-facing description. Separately, the `api-contract` check fails a PR
+   whose public-API change has no changeset at the matching level.
+2. **Pending changesets open a release PR.** On each push to `main`, the shared workflow runs
+   `changesets/action`. With unreleased changesets pending, it opens or updates a pull request
+   titled **`chore: version packages`** from the branch **`changeset-release/main`**. It then
+   dispatches this repository's `ci.yml` onto that branch, because a branch pushed with
+   `GITHUB_TOKEN` never triggers `push` or `pull_request` workflows. A maintainer reads that PR
+   and merges it; nothing merges it automatically.
+3. **Merging that PR publishes.** The merge triggers the shared workflow again. With no pending
+   changesets, it publishes in two jobs:
    - `build` has no publishing credentials. It runs `npm run build`, because this repository
-     defines no `verify` script. It does not run the contract again: it requires a workflow run
-     on the same tree whose `contract` job, and `required` job where the run has one, succeeded.
-     That job reads the repository's code-scanning alerts, which `build` has no permission to
-     read. Then it packs the tarball.
+     defines no `verify` script. It does not run the contract again. Instead it requires a
+     workflow run on the same tree whose `contract` job succeeded, and its `required` job too
+     where the run has one. That job reads the repository's code-scanning alerts, which `build`
+     has no permission to read. Then it packs the tarball.
    - `publish` checks out and installs nothing. It runs `npm publish <tarball> --ignore-scripts`
      on that tarball over OIDC with provenance, so `prepublishOnly` and `npm run release` do not
      run there.
-4. After the publish, `internal-package-contract` notices the new release on its own daily check
-   (`sync-repo-contract-version.yml`) and opens and auto-merges a PR there bumping its own
-   `repo-contract` dependency pin and its own version by the matching severity. Nothing here has to
-   notify it, so there is no token to maintain; run that workflow from the Actions tab to sync at once.
+4. **`internal-package-contract` follows on its own.** Its daily check
+   (`sync-repo-contract-version.yml`) notices the new release. It opens and auto-merges a PR
+   there that bumps its `repo-contract` pin and its own version by the matching severity.
+   Nothing here has to notify it, so there is no token to maintain. Run that workflow from the
+   Actions tab to sync at once.
 
 `CHANGELOG.md` is generated by `@changesets/cli/changelog`; never hand-edit it. Fix a
-wrong entry by correcting the offending changeset before the "Version Packages" PR
+wrong entry by correcting the offending changeset before the `chore: version packages` PR
 merges, or with a follow-up changeset after. Its pre-migration history (the
 release-please era) stays as-is; only future entries render through Changesets.
 
 ## API baseline and browsable docs
 
-The `version` script runs `internal-package-contract update-baseline` after the build. The
-"Version Packages" pull request therefore carries every entry point's
-`.repo-contract/api-contract/<target>/baseline.*` (`index`, `presets`, `helpers`, `affected`,
-`metrics`) and `.repo-contract/surface-contract/baseline.json` at the new version, in the same
-merge as the version bump. `api-contract` and `surface-contract` fail on a baseline that records
-another version than `package.json`, so a release that skipped the refresh fails its own pull
-request. `npm run contract:baseline` runs the same command by hand.
+The `version` script runs `internal-package-contract update-baseline` after the build. So the
+`chore: version packages` pull request carries the new version's baselines in the same merge as
+the version bump. They are each entry point's `.repo-contract/api-contract/<target>/baseline.*`
+and `.repo-contract/surface-contract/baseline.json`. The twelve targets are `index`, `presets`,
+`helpers`, `affected`, `metrics`, `tiers`, `tool-config` and `tool-config/{knip,stryker,tsup,typedoc,vitest}`.
+`api-contract` and `surface-contract` fail on a baseline that records another version than
+`package.json`, so a release that skipped the refresh fails its own pull request.
+`npm run contract:baseline` runs the same command by hand.
 
 The browsable HTML API reference (`docs/api/`) is **no longer tied to the release
 cadence**; see the GitHub Pages section below. It is not committed at all anymore; it
@@ -79,42 +80,36 @@ exit 0:
 | `refused` | `package.json`'s version is unparseable; **or** older than the baseline's (a would-be regression); **or** the committed baseline records an unparseable version | no      |
 | `failed`  | API Extractor reported errors                                                                                                                                   | no      |
 
-`current` is what every re-run of the same Version Packages PR sees (the job's own
-baseline commit, `changesets/action` refreshing the PR after a later merge), so the
-job stays green. This guardrail's own standing verification now lives in
-internal-package-contract's suite (this engine, `api-contract`, moved there; see
-`repo-contract.config.ts`'s own module doc comment); the `api-contract` check itself,
-run as part of `npm run contract` on every PR here, is what confirms it still behaves
-correctly against this repository's own real multi-target baseline, so no manual dry
-run is needed before a release.
+Every re-run of the same release PR sees `current`, so the job stays green. Re-runs come from
+the job's own baseline commit and from `changesets/action` refreshing the PR after a later merge.
+The engine's own tests live in internal-package-contract's suite, where `api-contract` moved (see
+the module comment in `repo-contract.config.ts`). The `api-contract` check runs in
+`npm run contract` on every PR here. It confirms the engine still works against this
+repository's real multi-target baseline, so a release needs no manual dry run.
 
 ## GitHub Pages
 
-Deployed via [`actions/deploy-pages`](https://github.com/actions/deploy-pages) (the
-modern, artifact-based flow), through a shared reusable workflow hosted in
-`internal-package-contract` (`deploy-pages-typedoc.yml`), the same mechanism
-data-cap/env-cap already use. `docs/api/`, the coverage/mutation badge JSON, and the
-OpenSSF Scorecard evidence doc are all built fresh on every push to `main`
-and handed to the deploy step as build artifacts; **nothing is committed back to the
-repo for Pages anymore.** Repo setting: GitHub → Settings → Pages → source is "GitHub
-Actions" (not "Deploy from a branch").
+Pages deploys with [`actions/deploy-pages`](https://github.com/actions/deploy-pages), through
+the shared reusable workflow `deploy-pages-typedoc.yml` in `internal-package-contract`. data-cap
+and env-cap use the same workflow. Every push to `main` builds `docs/api/`, the coverage and
+mutation badge JSON, and the OpenSSF Scorecard evidence doc fresh. The deploy step receives them
+as build artifacts; **nothing is committed back to the repo for Pages.** Repo setting: GitHub →
+Settings → Pages → source is "GitHub Actions" (not "Deploy from a branch").
 
-`docs/api/` regenerating on every push instead of only at release time is a deliberate
-behavior change from before this migration:
+`docs/api/` now regenerates on every push instead of only at release time. That is a deliberate
+change from before this migration.
 [specs/decisions/0008](specs/decisions/0008-self-hosting-tool-and-dependency-choices.md)
-documented the old release-cadence-only rationale and has a follow-up amendment
-recording this change.
+recorded the old release-cadence rationale, and its follow-up amendment records this change.
 
-If the `deploy` job is ever disabled, run `npm run docs:api` locally and it will
-regenerate `docs/api/` (uncommitted; Pages won't reflect it until the job runs
-again).
+If the `deploy` job is ever disabled, run `npm run docs:api` locally to regenerate `docs/api/`.
+The output stays uncommitted, and Pages shows it only once the job runs again.
 
 ## One-time setup
 
-- **Merge style.** No longer constrained by release-please's tag-matching needs:
-  squash, merge-commit, or rebase are all fine; `changesets/action`'s own release
-  commit is what release automation actually keys off, not the PR's own merge shape.
-- **Let Actions open the Version Packages PR.** GitHub → Settings → Actions →
+- **Merge style.** Squash, merge-commit and rebase all work. Release automation keys off
+  `changesets/action`'s own release commit, not the shape of the PR merge. release-please's
+  tag matching no longer constrains this.
+- **Let Actions open the release PR.** GitHub → Settings → Actions →
   General → Workflow permissions: tick **"Allow GitHub Actions to create and approve
   pull requests"**. Without it, `changesets/action` cannot open the PR at all.
 - **Dependency pin sync.** This repo keeps its internal-package-contract pin current with
@@ -123,18 +118,25 @@ again).
   GitHub does not let `GITHUB_TOKEN` push a change to `.github/workflows/*`. So add a
   `PIN_SYNC_TOKEN` secret: a fine-grained token with Contents, Pull requests, Workflows and
   Actions write. Actions write lets it start CI on the pull request it opens. Without the secret,
-  the daily run fails whenever a new release exists, and the pin is bumped by hand.
-- **npm trusted publishing.** Already registered from before this migration; no
-  change needed. Registration on npmjs.com is keyed to `workflow: release.yml` in
-  this repo, which doesn't change; only the workflow's own internals do.
+  the daily run fails whenever a new release exists, and the pin is bumped by hand. Dependabot
+  ignores `internal-package-contract` (`.github/dependabot.yml`), so this workflow is the only
+  automation that moves the pin.
+- **npm trusted publishing.** Already registered before this migration; nothing to change. The
+  registration on npmjs.com is keyed to `workflow: release.yml` in this repo. That file name
+  stays the same; only the workflow's internals changed.
 
 ## Recovering from a failed release
 
-Same recovery playbook as any other Changesets-based consumer in this org; see
-env-cap's or data-cap's own `RELEASING.md` "Recovering from a failed release" section
-for the general cases (PR open but nothing published; PR merged but publish failed;
-published but a trailing step failed; wrong version published). Nothing about this
-repo's recovery differs from theirs now that it uses the identical shared workflow.
+This repository uses the same shared release workflow as env-cap and data-cap, so their
+`RELEASING.md` "Recovering from a failed release" sections apply here. They cover four cases:
+
+- the release PR is open, and nothing is published;
+- the release PR merged, and the publish failed;
+- the publish succeeded, and a trailing step failed;
+- the wrong version was published.
+
+Where those steps run `npm run verify`, run `npm run contract` here: this repository defines no
+`verify` script.
 
 ## Versioning
 

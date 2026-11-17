@@ -245,3 +245,31 @@ not arbitrary files, which is why this code lives in the entry point itself.
 **Consequences.** A supply-chain scanner reading the tarball will see shell access and environment
 access in that one file, plainly named and explained; the library bundles remain clean. The cost is
 accepted knowingly in exchange for a command that works like other command-line tools.
+
+## Amendment (2026-11-16): `mutation run` and `npm-script` spawn from the entry point
+
+The `mutation` and `npmScript` presets follow the `quickStart` pattern. The preset's `run` calls a
+`repo-contract` subcommand, and only `bin/repo-contract.mjs` starts a process.
+
+**Decision.**
+
+- `repo-contract npm-script <script>` starts one process, `npm --loglevel=silent run <script>`, in
+  the package directory. On POSIX it passes arguments without a shell and leads its own process
+  group, so the time limit stops npm and every process npm started. Windows needs a shell to start
+  `npm.cmd`. The child gets the environment minus `npm_package_*`, `npm_lifecycle_*`,
+  `npm_config_local_prefix`, `npm_command` and `INIT_CWD`, so a nested npm never reads the outer
+  package's settings. The command reads no variable for itself.
+- `repo-contract mutation run` starts `stryker run <config> --force --reporters json,clear-text`,
+  with `--mutate` when the run is restricted. It re-runs each timed-out mutant alone with
+  `--concurrency 1 --mutate <file>:<lines>`. With the cache on, it also runs
+  `git ls-files -co --exclude-standard -z` to key the cache on every tracked file.
+- Shard, cache and report are the preset's `shard`, `cache` and `report` options, passed to the
+  subcommand as flags. They are never environment variables: the preset owns the mutate set, and
+  `src/` never reads `process.env`. A caller that keeps such a setting in a variable maps it onto
+  the option in its own config, as internal-package-contract does with `IPC_MUTATION_SHARD`.
+- `repo-contract explain` loads the consumer's config with the consumer's tsx. That runs the
+  config's top-level code, as the generated runner does, and starts no check. `except` and
+  `exceptions` read and write files only.
+
+**Consequences.** `AmbientCapabilities` still exempts only the entry point. The library bundles
+import no spawner and read no environment, and the scan of the packed `dist/` still verifies it.

@@ -137,11 +137,13 @@ Nothing in `src/**` opens a socket. A check enforces that mechanically (an ESLin
 independent, ESLint-free repository check); it is not merely documented. See
 [ADR 0007](decisions/0007-no-network-surface.md) and [SECURITY.md](../SECURITY.md).
 
-### The public API is five curated barrels
+### The public API is seven curated barrels and five tool entry files
 
-`src/index.ts`, `src/presets/index.ts`, `src/helpers/index.ts`, `src/affected/index.ts` and
-`src/metrics/index.ts` are the entire public surface. A symbol is public only if one of those five
-explicitly re-exports it. See [Module layout](#module-layout).
+`src/index.ts`, `src/presets/index.ts`, `src/helpers/index.ts`, `src/affected/index.ts`,
+`src/metrics/index.ts`, `src/tiers/index.ts` and `src/tool-config/index.ts` are the curated
+barrels. The five tool entry files, `src/tool-config/{tsup,typedoc,knip,vitest,stryker}.ts`, each
+publish one function. Together they are the entire public surface. A symbol is public only if one
+of them explicitly exports it. See [Module layout](#module-layout).
 
 ## Execution phase
 
@@ -458,6 +460,13 @@ src/
     record.ts, summary.ts    run records, their log format, summarizeRuns()
     maturity.ts              pillarCoverage() and maturityLevel()
     manifest.ts              buildEvidenceManifest() / verifyEvidenceManifest()
+  tiers/
+    index.ts                 sixth curated barrel -- repo-contract/tiers (Experimental)
+    catalog.ts, tiers.ts     each tier's checks, order and defaults; basic() to strict()
+    explain.ts, loosening.ts explainTier() / renderExplain() and the loosening rules
+  tool-config/
+    index.ts                 seventh curated barrel -- repo-contract/config (Experimental)
+    tsup.ts ... stryker.ts   one entry file per tool -- repo-contract/config/<tool>
 ```
 
 Nothing outside `src/index.ts`'s explicit re-export list is part of the public API, regardless of
@@ -480,6 +489,12 @@ barrels, published under `./affected` and `./metrics`. See
 are pure libraries whose inputs (the compiler API, git output, the store, the environment) are
 passed in, and neither imports the engine.
 
+`src/tiers/index.ts` (Experimental) is built from the presets and publishes under `./tiers`. Each
+tier returns `checks` plus metadata that `explainTier` reads back. See
+[ADR 0025](decisions/0025-four-tiers-each-a-general-rule.md). `src/tool-config/index.ts` and its
+five tool entry files publish under `./config` and `./config/<tool>`. They import neither the engine
+nor the tools they configure.
+
 `scripts/schema-types.ts` exists solely as a target for `ts-json-schema-generator` (see
 [ADR 0008](decisions/0008-self-hosting-tool-and-dependency-choices.md)); it is not part of the
 runtime.
@@ -492,8 +507,8 @@ published: not compiled by tsup and not routed through `src/index.ts`. `init` im
 `node:fs`/`node:path` and writes files. The `affected`, `cache`, `doctor`, `metrics` and
 `merge-mutation` commands added in 0.12.0 import the built `dist/affected.js` and
 `dist/metrics.js` barrels. They also spawn `git` through `node:child_process`. `quick-start`
-spawns `npm pack` and a shell for the README's marked commands. None of them executes the
-pipeline above.
+spawns `npm pack` and a shell for the README's marked commands. `npm-script` spawns one
+`npm run`, and `mutation run` spawns Stryker. None of them executes the pipeline above.
 
 ## Self-hosting
 

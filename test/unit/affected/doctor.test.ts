@@ -172,6 +172,82 @@ describe("diagnose", () => {
     expect(finding?.message).toContain("src/util/index.ts")
   })
 
+  describe("legacy-affected-key", () => {
+    const legacy = { "repo-contract": { affected: { ignore: ["docs/**"] } } }
+    const current = { contract: { affected: { ignore: ["docs/**"] } } }
+
+    it("reports the legacy key as information, with no automatic fix", () => {
+      const [finding] = diagnose({ ...healthy, manifest: legacy }).findings
+      expect(finding).toMatchObject({ id: "legacy-affected-key", severity: "info" })
+      expect(finding?.message).toContain('"repo-contract".affected')
+      expect(finding?.hint).toContain('"contract".affected')
+      expect(finding).not.toHaveProperty("fix")
+    })
+
+    it("reports an invalid legacy block too, since the key is what moves", () => {
+      expect(
+        ids({ ...healthy, manifest: { "repo-contract": { affected: { ignroe: [] } } } }),
+      ).toEqual(["legacy-affected-key"])
+    })
+
+    it("warns when both keys are present, because the legacy block is ignored", () => {
+      const [finding] = diagnose({ ...healthy, manifest: { ...legacy, ...current } }).findings
+      expect(finding).toMatchObject({ id: "legacy-affected-key", severity: "warn" })
+      expect(finding?.message).toContain("ignored")
+      expect(finding?.hint).toBe(
+        'Move anything still needed into "contract".affected, then delete "repo-contract".affected.',
+      )
+    })
+
+    it.each([
+      ["no manifest", undefined],
+      ["the current key", current],
+      ["neither key", { name: "x" }],
+      ["a repo-contract key without affected", { "repo-contract": {} }],
+      ["a manifest that is not an object", []],
+    ])("is silent with %s", (_name, manifest) => {
+      expect(ids({ ...healthy, manifest })).toEqual([])
+    })
+  })
+
+  describe("contract-key-not-object", () => {
+    it.each([
+      ["a string", "strict"],
+      ["a list", []],
+      ["null", null],
+      ["a number", 1],
+    ])("reports a contract key that is %s as information, with no fix", (_name, contract) => {
+      const [finding, ...rest] = diagnose({ ...healthy, manifest: { contract } }).findings
+      expect(rest).toEqual([])
+      expect(finding).toEqual({
+        id: "contract-key-not-object",
+        severity: "info",
+        message:
+          'package.json\'s "contract" key is not an object, so repo-contract reads no settings from it.',
+        hint: 'Leave it if another tool owns it, and keep affected-scope settings under "repo-contract".affected.',
+      })
+    })
+
+    it.each([
+      ["no manifest", undefined],
+      ["an object", { contract: {} }],
+      ["no contract key", { name: "x" }],
+      ["a manifest that is not an object", "strict"],
+    ])("is silent with %s", (_name, manifest) => {
+      expect(ids({ ...healthy, manifest })).toEqual([])
+    })
+
+    it("sorts by id among the other information findings", () => {
+      expect(
+        ids({
+          ...healthy,
+          hooksInstalled: false,
+          manifest: { contract: "strict", "repo-contract": { affected: {} } },
+        }),
+      ).toEqual(["contract-key-not-object", "hooks-missing", "legacy-affected-key"])
+    })
+  })
+
   it("orders findings by severity, then by id, and is not clean while any exists", () => {
     const result = diagnose({
       gitignore: "",

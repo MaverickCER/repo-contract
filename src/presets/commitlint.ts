@@ -2,6 +2,7 @@ import type { CheckDefinitionConfig } from "../types.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 import { exitCodeFailRationale } from "./shared/exit-code-fail-rationale.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /** Options accepted by {@link commitlint}. */
 interface CommitlintOptions {
@@ -46,9 +47,11 @@ function remediation(from: string): string {
  * unconfirmed flag.
  * @param options - configuration for this check; see {@link CommitlintOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export function commitlint(options: CommitlintOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("commitlint", options)
   const { from = "origin/main", to = "HEAD" } = options
 
   return {

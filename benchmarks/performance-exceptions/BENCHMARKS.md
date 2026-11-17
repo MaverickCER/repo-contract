@@ -4,18 +4,18 @@ What does adopting this package add to latency, CPU, memory and compute spend, a
 
 ## What adopting this package costs
 
-For a typical workload of **640 entrys** per operation, routing the work through `repo-contract` adds **1.18 ms** per operation compared with a bare-minimum baseline (**218% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 1.03). At list prices that is on the order of **~$0.001 – $0.01 per million operations** of compute.
+For a typical workload of **640 entrys** per operation, routing the work through `repo-contract` adds **1.62 ms** per operation compared with a bare-minimum baseline (**281% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 1.03). At list prices that is on the order of **~$0.01 per million operations** of compute.
 
 > The relative figure and the growth class are the steadier ones. Both come from the same run, so they depend far less on the machine than a time does. Runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below). They show scale, not a budget.
 
 | Cost | Typical (640 entrys) | Largest (10240 entrys) |
 | --- | --- | --- |
-| Added latency per operation | 1.18 ms | 22.7 ms |
-| Added latency, relative to baseline | 218% | 363% |
-| Added CPU time per operation | 1.21 ms | 22.7 ms |
-| Added memory per operation (heap delta) | 1.4 MiB | 23.8 MiB |
-| Compute cost per 1M operations (order of magnitude) | ~$0.001 – $0.01 | ~$0.1 |
-| Single-core throughput ceiling of the overhead alone | 849 ops/s | 44 ops/s |
+| Added latency per operation | 1.62 ms | 29.7 ms |
+| Added latency, relative to baseline | 281% | 382% |
+| Added CPU time per operation | 1.30 ms | 30.1 ms |
+| Added memory per operation (heap delta) | 1.5 MiB | 23.8 MiB |
+| Compute cost per 1M operations (order of magnitude) | ~$0.01 | ~$0.1 – $1 |
+| Single-core throughput ceiling of the overhead alone | 617 ops/s | 34 ops/s |
 
 ## 1. End-to-end: the package's total impact
 
@@ -39,16 +39,16 @@ The baseline is an empty or minimal function, so it costs almost nothing. The _r
 
 | entrys | Baseline | With package | Added | Added vs baseline | Added CPU | Est. $ / 1M ops |
 | --- | --- | --- | --- | --- | --- | --- |
-| 20 | 33.7 µs | 139 µs | 105 µs | 313% | 106 µs | $0.00022 – $0.0012 |
-| 40 | 48.5 µs | 218 µs | 171 µs | 353% | 171 µs | $0.00036 – $0.0019 |
-| 80 | 81.0 µs | 351 µs | 270 µs | 334% | 272 µs | $0.00056 – $0.0031 |
-| 160 | 147 µs | 586 µs | 438 µs | 297% | 1.99 ms | $0.00091 – $0.022 |
-| 320 | 283 µs | 934 µs | 650 µs | 230% | 2.27 ms | $0.0014 – $0.026 |
-| 640 | 540 µs | 1.70 ms | 1.18 ms | 218% | 1.21 ms | $0.0025 – $0.014 |
-| 1280 | 862 µs | 3.18 ms | 2.31 ms | 268% | 2.32 ms | $0.0048 – $0.026 |
-| 2560 | 1.54 ms | 6.20 ms | 4.67 ms | 303% | 4.75 ms | $0.0097 – $0.053 |
-| 5120 | 3.01 ms | 14.0 ms | 11.0 ms | 366% | 11.4 ms | $0.023 – $0.129 |
-| 10240 | 6.25 ms | 28.7 ms | 22.7 ms | 363% | 22.7 ms | $0.047 – $0.256 |
+| 20 | 33.0 µs | 251 µs | 216 µs | 654% | 219 µs | $0.00045 – $0.0025 |
+| 40 | 52.6 µs | 334 µs | 283 µs | 539% | 742 µs | $0.00059 – $0.0083 |
+| 80 | 92.5 µs | 461 µs | 367 µs | 397% | 1.59 ms | $0.00076 – $0.018 |
+| 160 | 177 µs | 675 µs | 496 µs | 280% | 1.75 ms | $0.001 – $0.020 |
+| 320 | 347 µs | 1.10 ms | 740 µs | 213% | 1.69 ms | $0.0015 – $0.019 |
+| 640 | 577 µs | 2.20 ms | 1.62 ms | 281% | 1.30 ms | $0.0034 – $0.015 |
+| 1280 | 1.00 ms | 3.95 ms | 2.95 ms | 295% | 2.64 ms | $0.0061 – $0.030 |
+| 2560 | 1.90 ms | 7.57 ms | 5.65 ms | 298% | 5.48 ms | $0.012 – $0.062 |
+| 5120 | 3.82 ms | 16.9 ms | 13.2 ms | 345% | 13.1 ms | $0.027 – $0.147 |
+| 10240 | 7.78 ms | 37.4 ms | 29.7 ms | 382% | 30.1 ms | $0.062 – $0.339 |
 
 **How the total grows:** O(n) (linear), exponent 1.03 over 10 sizes.
 
@@ -58,17 +58,17 @@ Every function the package exposes is measured on its own across the full size l
 
 | Function | Varies | Documented | Measured | Agreement | At 640 | At 10240 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `reconcileExceptions` | entry | O(n) | O(n) | ✅ matches | 279 µs | 2.92 ms |
-| `reconcileExceptions` | existing-records | O(n) | O(n log n) | 🟡 close (neighbouring class) | 44.7 µs | 1.05 ms |
-| `loadExceptionRegistry` | entry | O(n) | O(n) | ✅ matches | 333 µs | 4.55 ms |
-| `writeExceptionRegistry` | entry | O(n log n) | O(n) | 🟡 close (neighbouring class) | 1.30 ms | 20.2 ms |
-| `resolveExceptionPolicy` (glob-match) | entry | O(n) | O(n) | ✅ matches | 22.7 ms | 371 ms |
-| `resolveExceptionPolicy` (every-category) | entry | O(n) | O(n log n) | 🟡 close (neighbouring class) | 100 µs | 3.17 ms |
-| `evaluateExceptionRecord` | entry | O(n) | O(n) | ✅ matches | 44.4 ms | 698 ms |
-| `evaluateExceptionRecord` | rules | O(n) | O(n) | ✅ matches | 22.6 ms | 370 ms |
-| `validateExceptionPolicyConfig` | entry | O(n) | O(n log n) | 🟡 close (neighbouring class) | 56.8 µs | 2.61 ms |
-| `validateExceptionPolicyConfig` | valid-requirements | O(n) | O(n) | ✅ matches | 9.14 µs | 101 µs |
-| `hashRequirementFields` | entry | O(n) | O(n) | ✅ matches | 118 µs | 1.72 ms |
+| `reconcileExceptions` | entry | O(n) | O(n) | ✅ matches | 315 µs | 3.70 ms |
+| `reconcileExceptions` | existing-records | O(n) | O(n log n) | 🟡 close (neighbouring class) | 48.9 µs | 1.17 ms |
+| `loadExceptionRegistry` | entry | O(n) | O(n) | ✅ matches | 501 µs | 6.03 ms |
+| `writeExceptionRegistry` | entry | O(n log n) | O(n) | 🟡 close (neighbouring class) | 1.43 ms | 24.6 ms |
+| `resolveExceptionPolicy` (glob-match) | entry | O(n) | O(n) | ✅ matches | 28.3 ms | 462 ms |
+| `resolveExceptionPolicy` (every-category) | entry | O(n) | O(n log n) | 🟡 close (neighbouring class) | 106 µs | 3.55 ms |
+| `evaluateExceptionRecord` | entry | O(n) | O(n) | ✅ matches | 55.4 ms | 873 ms |
+| `evaluateExceptionRecord` | rules | O(n) | O(n) | ✅ matches | 28.2 ms | 459 ms |
+| `validateExceptionPolicyConfig` | entry | O(n) | O(n log n) | 🟡 close (neighbouring class) | 58.0 µs | 2.95 ms |
+| `validateExceptionPolicyConfig` | valid-requirements | O(n) | O(n) | ✅ matches | 9.70 µs | 111 µs |
+| `hashRequirementFields` | entry | O(n) | O(n) | ✅ matches | 121 µs | 1.82 ms |
 
 ### `reconcileExceptions`
 
@@ -89,20 +89,20 @@ Every function the package exposes is measured on its own across the full size l
 
 **In the end-to-end run:** Called once per run, between reading and writing the registry, but not attributed: the end-to-end run reconciles a registry in which every finding matches, while this benchmark holds the registry at 640 records with only some findings matching, so its time would misstate that share.
 
-**Measured: O(n)** (exponent 0.87, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 0.91, 10 sizes): ✅ matches.
 
 | entrys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 78.5 µs | 105 µs | 308 µs | 117.8 KiB | 12,733 |
-| 40 | 49.5 µs | 52.0 µs | 164 µs | 97.6 KiB | 20,190 |
-| 80 | 58.6 µs | 61.3 µs | 190 µs | 121.7 KiB | 17,053 |
-| 160 | 75.7 µs | 78.5 µs | 233 µs | 158.4 KiB | 13,207 |
-| 320 | 103 µs | 109 µs | 262 µs | 241.1 KiB | 9,754 |
-| 640 | 279 µs | 403 µs | 1.04 ms | 656.2 KiB | 3,581 |
-| 1280 | 406 µs | 418 µs | 1.21 ms | 1.0 MiB | 2,463 |
-| 2560 | 693 µs | 724 µs | 1.46 ms | 2.1 MiB | 1,444 |
-| 5120 | 1.51 ms | 1.57 ms | 2.89 ms | 4.3 MiB | 661 |
-| 10240 | 2.92 ms | 2.97 ms | 4.03 ms | 8.6 MiB | 342 |
+| 20 | 79.6 µs | 97.4 µs | 255 µs | 117.8 KiB | 12,557 |
+| 40 | 53.5 µs | 57.8 µs | 143 µs | 97.6 KiB | 18,702 |
+| 80 | 65.0 µs | 66.8 µs | 193 µs | 120.4 KiB | 15,388 |
+| 160 | 84.1 µs | 86.2 µs | 226 µs | 158.7 KiB | 11,896 |
+| 320 | 126 µs | 132 µs | 340 µs | 237.1 KiB | 7,963 |
+| 640 | 315 µs | 395 µs | 937 µs | 656.2 KiB | 3,175 |
+| 1280 | 457 µs | 475 µs | 1.11 ms | 1.0 MiB | 2,191 |
+| 2560 | 799 µs | 829 µs | 1.41 ms | 2.1 MiB | 1,252 |
+| 5120 | 1.83 ms | 1.88 ms | 3.03 ms | 4.3 MiB | 546 |
+| 10240 | 3.70 ms | 3.89 ms | 4.33 ms | 8.6 MiB | 270 |
 
 ##### Varying `existing-records`
 
@@ -110,20 +110,20 @@ How many records the registry already holds.
 
 **Expected: O(n).** Each existing record is indexed once and checked for staleness once.
 
-**Measured: O(n log n)** (exponent 1.15, 10 sizes): 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.16, 10 sizes): 🟡 close (neighbouring class).
 
 | existing-records | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 7.52 µs | 8.22 µs | 7.60 µs | 17.0 KiB | 132,991 |
-| 40 | 8.20 µs | 9.44 µs | 8.33 µs | 16.3 KiB | 121,904 |
-| 80 | 10.6 µs | 11.3 µs | 22.8 µs | 20.5 KiB | 94,504 |
-| 160 | 15.1 µs | 16.0 µs | 60.2 µs | 28.6 KiB | 66,183 |
-| 320 | 24.6 µs | 25.9 µs | 92.0 µs | 48.2 KiB | 40,666 |
-| 640 | 44.7 µs | 46.5 µs | 149 µs | 86.7 KiB | 22,368 |
-| 1280 | 88.5 µs | 91.1 µs | 266 µs | 169.1 KiB | 11,302 |
-| 2560 | 184 µs | 192 µs | 529 µs | 343.9 KiB | 5,440 |
-| 5120 | 466 µs | 479 µs | 1.39 ms | 634.3 KiB | 2,146 |
-| 10240 | 1.05 ms | 1.07 ms | 3.23 ms | 1.3 MiB | 955 |
+| 20 | 8.53 µs | 8.93 µs | 33.2 µs | 17.0 KiB | 117,235 |
+| 40 | 8.97 µs | 9.39 µs | 35.3 µs | 16.3 KiB | 111,510 |
+| 80 | 11.2 µs | 12.2 µs | 38.8 µs | 20.5 KiB | 89,438 |
+| 160 | 16.7 µs | 17.3 µs | 55.1 µs | 28.6 KiB | 59,835 |
+| 320 | 27.0 µs | 29.8 µs | 80.4 µs | 48.1 KiB | 37,014 |
+| 640 | 48.9 µs | 50.4 µs | 140 µs | 86.7 KiB | 20,468 |
+| 1280 | 93.9 µs | 98.6 µs | 258 µs | 171.2 KiB | 10,644 |
+| 2560 | 202 µs | 207 µs | 546 µs | 329.7 KiB | 4,957 |
+| 5120 | 521 µs | 548 µs | 1.27 ms | 634.3 KiB | 1,921 |
+| 10240 | 1.17 ms | 1.20 ms | 3.00 ms | 1.3 MiB | 854 |
 
 ### `loadExceptionRegistry`
 
@@ -144,20 +144,20 @@ How many records the registry already holds.
 
 **In the end-to-end run:** Once per run, before reconciling.
 
-**Measured: O(n)** (exponent 0.97, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 0.89, 10 sizes): ✅ matches.
 
 | entrys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 15.0 µs | 16.6 µs | 15.2 µs | 7.3 KiB | 66,630 |
-| 40 | 25.3 µs | 26.5 µs | 86.5 µs | 13.2 KiB | 39,526 |
-| 80 | 47.1 µs | 49.9 µs | 150 µs | 25.1 KiB | 21,247 |
-| 160 | 89.6 µs | 93.5 µs | 262 µs | 48.9 KiB | 11,159 |
-| 320 | 174 µs | 180 µs | 483 µs | 96.4 KiB | 5,754 |
-| 640 | 333 µs | 349 µs | 857 µs | 191.5 KiB | 3,002 |
-| 1280 | 642 µs | 668 µs | 1.46 ms | 381.6 KiB | 1,557 |
-| 2560 | 1.33 ms | 1.57 ms | 3.12 ms | 761.9 KiB | 750 |
-| 5120 | 2.82 ms | 2.96 ms | 4.75 ms | 1.5 MiB | 355 |
-| 10240 | 4.55 ms | 4.67 ms | 6.76 ms | 3.0 MiB | 220 |
+| 20 | 103 µs | 121 µs | 254 µs | 11.6 KiB | 9,671 |
+| 40 | 215 µs | 257 µs | 686 µs | 18.2 KiB | 4,651 |
+| 80 | 125 µs | 131 µs | 254 µs | 29.4 KiB | 7,992 |
+| 160 | 251 µs | 325 µs | 797 µs | 53.8 KiB | 3,980 |
+| 320 | 296 µs | 329 µs | 922 µs | 101.3 KiB | 3,382 |
+| 640 | 501 µs | 594 µs | 1.09 ms | 196.3 KiB | 1,996 |
+| 1280 | 1.11 ms | 1.17 ms | 2.10 ms | 387.2 KiB | 897 |
+| 2560 | 1.95 ms | 2.36 ms | 3.10 ms | 767.2 KiB | 512 |
+| 5120 | 3.76 ms | 4.05 ms | 5.28 ms | 1.5 MiB | 266 |
+| 10240 | 6.03 ms | 6.32 ms | 7.74 ms | 3.0 MiB | 166 |
 
 ### `writeExceptionRegistry`
 
@@ -177,20 +177,20 @@ How many records the registry already holds.
 
 **In the end-to-end run:** Once per run, after reconciling, when the registry changed.
 
-**Measured: O(n)** (exponent 0.99, 10 sizes): 🟡 close (neighbouring class).
+**Measured: O(n)** (exponent 1.02, 10 sizes): 🟡 close (neighbouring class).
 
 | entrys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 58.9 µs | 66.8 µs | 186 µs | 44.1 KiB | 16,980 |
-| 40 | 95.0 µs | 108 µs | 320 µs | 83.0 KiB | 10,521 |
-| 80 | 181 µs | 189 µs | 571 µs | 161.5 KiB | 5,535 |
-| 160 | 323 µs | 337 µs | 837 µs | 318.6 KiB | 3,097 |
-| 320 | 612 µs | 630 µs | 1.40 ms | 632.2 KiB | 1,634 |
-| 640 | 1.30 ms | 1.35 ms | 2.93 ms | 1.2 MiB | 772 |
-| 1280 | 2.34 ms | 2.41 ms | 4.00 ms | 2.5 MiB | 427 |
-| 2560 | 4.50 ms | 4.61 ms | 6.31 ms | 4.9 MiB | 222 |
-| 5120 | 8.88 ms | 9.03 ms | 10.9 ms | 9.8 MiB | 113 |
-| 10240 | 20.2 ms | 20.6 ms | 22.8 ms | 19.7 MiB | 49 |
+| 20 | 60.0 µs | 73.6 µs | 217 µs | 44.1 KiB | 16,658 |
+| 40 | 97.2 µs | 110 µs | 278 µs | 83.0 KiB | 10,284 |
+| 80 | 186 µs | 200 µs | 502 µs | 161.6 KiB | 5,377 |
+| 160 | 344 µs | 368 µs | 771 µs | 318.6 KiB | 2,905 |
+| 320 | 655 µs | 699 µs | 1.30 ms | 632.1 KiB | 1,526 |
+| 640 | 1.43 ms | 1.57 ms | 2.76 ms | 1.2 MiB | 700 |
+| 1280 | 2.62 ms | 2.75 ms | 4.05 ms | 2.5 MiB | 381 |
+| 2560 | 5.13 ms | 5.31 ms | 6.71 ms | 4.9 MiB | 195 |
+| 5120 | 10.4 ms | 10.6 ms | 12.3 ms | 9.8 MiB | 97 |
+| 10240 | 24.6 ms | 25.0 ms | 27.0 ms | 19.7 MiB | 41 |
 
 ### `resolveExceptionPolicy`
 
@@ -218,35 +218,35 @@ The category matches one glob rule.
 
 | entrys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 1.37 ms | 1.61 ms | 3.59 ms | 652.5 KiB | 730 |
-| 40 | 1.67 ms | 2.36 ms | 3.29 ms | 1.3 MiB | 598 |
-| 80 | 3.08 ms | 4.08 ms | 4.68 ms | 2.6 MiB | 324 |
-| 160 | 5.95 ms | 7.13 ms | 7.56 ms | 5.3 MiB | 168 |
-| 320 | 11.4 ms | 12.2 ms | 13.2 ms | 10.6 MiB | 87 |
-| 640 | 22.7 ms | 22.9 ms | 24.5 ms | 21.4 MiB | 44 |
-| 1280 | 45.7 ms | 46.8 ms | 48.1 ms | 43.7 MiB | 22 |
-| 2560 | 92.1 ms | 93.1 ms | 94.8 ms | 25.9 MiB | 11 |
-| 5120 | 185 ms | 187 ms | 193 ms | 54.2 MiB | 5 |
-| 10240 | 371 ms | 373 ms | 381 ms | 47.0 MiB | 3 |
+| 20 | 1.51 ms | 1.80 ms | 3.44 ms | 652.5 KiB | 660 |
+| 40 | 1.99 ms | 2.78 ms | 3.31 ms | 1.3 MiB | 502 |
+| 80 | 3.77 ms | 4.68 ms | 5.10 ms | 2.6 MiB | 265 |
+| 160 | 7.38 ms | 9.38 ms | 8.86 ms | 5.3 MiB | 136 |
+| 320 | 14.4 ms | 15.3 ms | 16.3 ms | 10.6 MiB | 69 |
+| 640 | 28.3 ms | 32.0 ms | 29.9 ms | 21.4 MiB | 35 |
+| 1280 | 56.4 ms | 57.8 ms | 58.5 ms | 43.7 MiB | 18 |
+| 2560 | 114 ms | 117 ms | 116 ms | 25.9 MiB | 9 |
+| 5120 | 231 ms | 232 ms | 235 ms | 54.2 MiB | 4 |
+| 10240 | 462 ms | 466 ms | 473 ms | 47.0 MiB | 2 |
 
 #### Variant `every-category`
 
 The category is `*`: every rule is combined with the stricter-of rule.
 
-**Measured: O(n log n)** (exponent 1.19, 10 sizes): 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.21, 10 sizes): 🟡 close (neighbouring class).
 
 | entrys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 4.69 µs | 5.84 µs | 4.97 µs | 7.4 KiB | 213,117 |
-| 40 | 8.56 µs | 9.11 µs | 17.7 µs | 14.0 KiB | 116,841 |
-| 80 | 14.7 µs | 15.6 µs | 53.0 µs | 27.3 KiB | 68,088 |
-| 160 | 27.0 µs | 29.9 µs | 88.8 µs | 53.9 KiB | 36,998 |
-| 320 | 51.0 µs | 53.7 µs | 158 µs | 107.0 KiB | 19,590 |
-| 640 | 100 µs | 109 µs | 308 µs | 213.3 KiB | 9,958 |
-| 1280 | 411 µs | 428 µs | 1.23 ms | 516.0 KiB | 2,435 |
-| 2560 | 732 µs | 755 µs | 1.63 ms | 1.0 MiB | 1,366 |
-| 5120 | 1.56 ms | 1.65 ms | 3.25 ms | 2.1 MiB | 640 |
-| 10240 | 3.17 ms | 3.36 ms | 5.65 ms | 4.0 MiB | 315 |
+| 20 | 5.77 µs | 6.83 µs | 5.98 µs | 7.4 KiB | 173,340 |
+| 40 | 8.53 µs | 9.87 µs | 30.8 µs | 14.0 KiB | 117,300 |
+| 80 | 17.4 µs | 19.8 µs | 66.4 µs | 27.3 KiB | 57,493 |
+| 160 | 28.8 µs | 33.6 µs | 86.2 µs | 53.9 KiB | 34,715 |
+| 320 | 54.9 µs | 61.3 µs | 156 µs | 107.0 KiB | 18,216 |
+| 640 | 106 µs | 121 µs | 294 µs | 213.3 KiB | 9,438 |
+| 1280 | 427 µs | 439 µs | 1.09 ms | 516.0 KiB | 2,341 |
+| 2560 | 760 µs | 826 µs | 1.46 ms | 1.0 MiB | 1,316 |
+| 5120 | 1.70 ms | 1.85 ms | 3.09 ms | 2.1 MiB | 588 |
+| 10240 | 3.55 ms | 3.72 ms | 5.39 ms | 4.2 MiB | 281 |
 
 ### `evaluateExceptionRecord`
 
@@ -271,16 +271,16 @@ The category is `*`: every rule is combined with the stricter-of rule.
 
 | entrys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 1.73 ms | 1.77 ms | 3.73 ms | 1.2 MiB | 579 |
-| 40 | 3.08 ms | 3.12 ms | 5.09 ms | 2.5 MiB | 324 |
-| 80 | 5.81 ms | 5.98 ms | 7.84 ms | 5.0 MiB | 172 |
-| 160 | 11.2 ms | 11.3 ms | 13.3 ms | 10.0 MiB | 89 |
-| 320 | 22.2 ms | 22.3 ms | 24.3 ms | 20.0 MiB | 45 |
-| 640 | 44.4 ms | 45.3 ms | 46.9 ms | 40.1 MiB | 23 |
-| 1280 | 88.7 ms | 94.0 ms | 91.0 ms | 16.1 MiB | 11 |
-| 2560 | 176 ms | 177 ms | 179 ms | 32.3 MiB | 6 |
-| 5120 | 350 ms | 350 ms | 353 ms | 708.6 KiB | 3 |
-| 10240 | 698 ms | 700 ms | 701 ms | 1.4 MiB | 1 |
+| 20 | 2.02 ms | 2.10 ms | 3.67 ms | 1.2 MiB | 494 |
+| 40 | 3.73 ms | 3.79 ms | 5.38 ms | 2.5 MiB | 268 |
+| 80 | 7.15 ms | 7.43 ms | 8.86 ms | 5.0 MiB | 140 |
+| 160 | 14.1 ms | 14.3 ms | 16.0 ms | 10.0 MiB | 71 |
+| 320 | 27.8 ms | 28.1 ms | 29.7 ms | 20.0 MiB | 36 |
+| 640 | 55.4 ms | 62.6 ms | 57.7 ms | 40.1 MiB | 18 |
+| 1280 | 112 ms | 113 ms | 114 ms | 16.1 MiB | 9 |
+| 2560 | 218 ms | 223 ms | 221 ms | 32.3 MiB | 5 |
+| 5120 | 436 ms | 441 ms | 439 ms | 707.4 KiB | 2 |
+| 10240 | 873 ms | 881 ms | 876 ms | 1.4 MiB | 1 |
 
 ##### Varying `rules`
 
@@ -292,16 +292,16 @@ How many rules the policy group has.
 
 | rules | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 986 µs | 1.07 ms | 3.01 ms | 645.6 KiB | 1,015 |
-| 40 | 1.68 ms | 1.78 ms | 3.69 ms | 1.3 MiB | 597 |
-| 80 | 3.07 ms | 3.14 ms | 5.07 ms | 2.5 MiB | 325 |
-| 160 | 5.82 ms | 5.89 ms | 7.84 ms | 5.2 MiB | 172 |
-| 320 | 11.4 ms | 11.6 ms | 13.4 ms | 10.6 MiB | 88 |
-| 640 | 22.6 ms | 22.8 ms | 24.8 ms | 21.4 MiB | 44 |
-| 1280 | 45.2 ms | 45.3 ms | 47.4 ms | 43.6 MiB | 22 |
-| 2560 | 91.2 ms | 91.4 ms | 93.9 ms | 25.7 MiB | 11 |
-| 5120 | 184 ms | 184 ms | 187 ms | 53.9 MiB | 5 |
-| 10240 | 370 ms | 371 ms | 375 ms | 46.1 MiB | 3 |
+| 20 | 1.15 ms | 1.20 ms | 2.79 ms | 645.6 KiB | 871 |
+| 40 | 2.00 ms | 2.06 ms | 3.69 ms | 1.3 MiB | 499 |
+| 80 | 3.72 ms | 3.90 ms | 5.46 ms | 2.5 MiB | 268 |
+| 160 | 7.19 ms | 7.31 ms | 9.03 ms | 5.2 MiB | 139 |
+| 320 | 14.2 ms | 14.3 ms | 16.2 ms | 10.6 MiB | 70 |
+| 640 | 28.2 ms | 32.9 ms | 30.4 ms | 21.4 MiB | 35 |
+| 1280 | 56.4 ms | 56.6 ms | 58.5 ms | 43.6 MiB | 18 |
+| 2560 | 114 ms | 114 ms | 116 ms | 25.7 MiB | 9 |
+| 5120 | 229 ms | 229 ms | 232 ms | 53.9 MiB | 4 |
+| 10240 | 459 ms | 459 ms | 463 ms | 46.2 MiB | 2 |
 
 ### `validateExceptionPolicyConfig`
 
@@ -321,20 +321,20 @@ How many rules the policy group has.
 
 **In the end-to-end run:** Not part of the end-to-end operation, which reads and writes a registry.
 
-**Measured: O(n log n)** (exponent 1.31, 10 sizes): 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.35, 10 sizes): 🟡 close (neighbouring class).
 
 | entrys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 3.67 µs | 9.08 µs | 3.75 µs | 9.3 KiB | 272,622 |
-| 40 | 5.20 µs | 6.28 µs | 5.87 µs | 8.4 KiB | 192,189 |
-| 80 | 9.01 µs | 9.38 µs | 35.1 µs | 16.2 KiB | 111,047 |
-| 160 | 15.9 µs | 16.7 µs | 55.6 µs | 31.8 KiB | 62,855 |
-| 320 | 29.7 µs | 30.7 µs | 95.3 µs | 63.1 KiB | 33,666 |
-| 640 | 56.8 µs | 58.3 µs | 175 µs | 127.6 KiB | 17,592 |
-| 1280 | 306 µs | 316 µs | 853 µs | 352.8 KiB | 3,267 |
-| 2560 | 609 µs | 625 µs | 1.46 ms | 694.2 KiB | 1,642 |
-| 5120 | 1.30 ms | 1.33 ms | 3.06 ms | 1.3 MiB | 770 |
-| 10240 | 2.61 ms | 2.69 ms | 4.53 ms | 2.7 MiB | 383 |
+| 20 | 4.22 µs | 9.73 µs | 4.33 µs | 9.3 KiB | 237,137 |
+| 40 | 5.31 µs | 6.67 µs | 20.6 µs | 8.4 KiB | 188,460 |
+| 80 | 8.62 µs | 9.06 µs | 29.1 µs | 16.2 KiB | 116,020 |
+| 160 | 16.0 µs | 16.8 µs | 49.6 µs | 31.8 KiB | 62,324 |
+| 320 | 29.8 µs | 30.9 µs | 86.3 µs | 63.1 KiB | 33,604 |
+| 640 | 58.0 µs | 60.0 µs | 166 µs | 127.6 KiB | 17,242 |
+| 1280 | 330 µs | 336 µs | 777 µs | 352.8 KiB | 3,027 |
+| 2560 | 652 µs | 665 µs | 1.34 ms | 694.2 KiB | 1,533 |
+| 5120 | 1.46 ms | 1.54 ms | 2.88 ms | 1.3 MiB | 686 |
+| 10240 | 2.95 ms | 3.06 ms | 4.52 ms | 2.7 MiB | 339 |
 
 ##### Varying `valid-requirements`
 
@@ -342,20 +342,20 @@ How many requirement names are valid.
 
 **Expected: O(n).** Each requirement is looked up by scanning the list of valid names.
 
-**Measured: O(n)** (exponent 0.87, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 0.88, 10 sizes): ✅ matches.
 
 | valid-requirements | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 2.77 µs | 3.01 µs | 2.80 µs | 4.5 KiB | 360,807 |
-| 40 | 3.09 µs | 3.48 µs | 3.12 µs | 4.5 KiB | 323,529 |
-| 80 | 3.50 µs | 3.87 µs | 3.54 µs | 4.5 KiB | 285,334 |
-| 160 | 4.37 µs | 4.77 µs | 4.42 µs | 4.5 KiB | 228,608 |
-| 320 | 6.11 µs | 6.54 µs | 16.9 µs | 4.5 KiB | 163,635 |
-| 640 | 9.14 µs | 9.60 µs | 36.0 µs | 4.5 KiB | 109,466 |
-| 1280 | 15.2 µs | 15.8 µs | 54.8 µs | 4.5 KiB | 65,599 |
-| 2560 | 27.3 µs | 28.7 µs | 89.0 µs | 4.5 KiB | 36,586 |
-| 5120 | 51.8 µs | 53.9 µs | 163 µs | 4.5 KiB | 19,290 |
-| 10240 | 101 µs | 108 µs | 317 µs | 4.5 KiB | 9,879 |
+| 20 | 3.20 µs | 3.28 µs | 13.2 µs | 4.5 KiB | 312,760 |
+| 40 | 3.40 µs | 3.57 µs | 14.3 µs | 4.5 KiB | 293,899 |
+| 80 | 3.88 µs | 4.01 µs | 15.6 µs | 4.5 KiB | 257,872 |
+| 160 | 4.55 µs | 4.73 µs | 17.3 µs | 4.5 KiB | 219,813 |
+| 320 | 6.28 µs | 6.54 µs | 22.0 µs | 4.5 KiB | 159,282 |
+| 640 | 9.70 µs | 10.1 µs | 31.3 µs | 4.5 KiB | 103,139 |
+| 1280 | 16.9 µs | 17.3 µs | 50.2 µs | 4.5 KiB | 59,066 |
+| 2560 | 30.3 µs | 38.1 µs | 85.0 µs | 4.5 KiB | 32,970 |
+| 5120 | 56.8 µs | 59.0 µs | 161 µs | 4.5 KiB | 17,593 |
+| 10240 | 111 µs | 114 µs | 308 µs | 4.5 KiB | 8,986 |
 
 ### `hashRequirementFields`
 
@@ -378,46 +378,46 @@ How many requirement names are valid.
 
 | entrys | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 9.31 µs | 11.6 µs | 9.56 µs | 3.7 KiB | 107,392 |
-| 40 | 12.7 µs | 14.5 µs | 12.9 µs | 6.3 KiB | 78,769 |
-| 80 | 20.8 µs | 23.0 µs | 21.1 µs | 11.6 KiB | 48,079 |
-| 160 | 37.3 µs | 40.0 µs | 79.6 µs | 22.3 KiB | 26,791 |
-| 320 | 67.3 µs | 71.8 µs | 264 µs | 45.0 KiB | 14,860 |
-| 640 | 118 µs | 126 µs | 389 µs | 91.0 KiB | 8,472 |
-| 1280 | 218 µs | 226 µs | 617 µs | 186.4 KiB | 4,589 |
-| 2560 | 440 µs | 471 µs | 1.28 ms | 360.0 KiB | 2,272 |
-| 5120 | 980 µs | 1.02 ms | 2.67 ms | 683.6 KiB | 1,021 |
-| 10240 | 1.72 ms | 1.79 ms | 3.53 ms | 1.3 MiB | 581 |
+| 20 | 9.47 µs | 11.6 µs | 9.71 µs | 3.7 KiB | 105,624 |
+| 40 | 13.4 µs | 14.8 µs | 13.6 µs | 6.3 KiB | 74,419 |
+| 80 | 22.7 µs | 24.3 µs | 94.3 µs | 11.6 KiB | 43,990 |
+| 160 | 36.4 µs | 38.9 µs | 130 µs | 22.3 KiB | 27,443 |
+| 320 | 63.7 µs | 71.6 µs | 195 µs | 44.7 KiB | 15,697 |
+| 640 | 121 µs | 129 µs | 342 µs | 91.0 KiB | 8,280 |
+| 1280 | 236 µs | 245 µs | 678 µs | 191.5 KiB | 4,234 |
+| 2560 | 504 µs | 638 µs | 1.26 ms | 360.0 KiB | 1,982 |
+| 5120 | 1.02 ms | 1.12 ms | 2.38 ms | 685.2 KiB | 982 |
+| 10240 | 1.82 ms | 1.87 ms | 3.31 ms | 1.3 MiB | 549 |
 
 ## 3. What makes up one end-to-end operation
 
 Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls. So where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time). Every moment of the operation then belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly. They are not measured against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
 
-**At 640 entrys** (whole operation: 1.70 ms)
+**At 640 entrys** (whole operation: 2.20 ms)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `write-exception-registry` | 1 | 1.30 ms | 1.30 ms | 76% |
-| `load-exception-registry` | 1 | 333 µs | 333 µs | 20% |
+| `write-exception-registry` | 1 | 1.43 ms | 1.43 ms | 65% |
+| `load-exception-registry` | 1 | 501 µs | 501 µs | 23% |
 | `reconcile-exceptions` | 0 | 0 | 0 | 0.0% |
 | `resolve-exception-policy` | 0 | 0 | 0 | 0.0% |
 | `evaluate-exception-record` | 0 | 0 | 0 | 0.0% |
 | `validate-exception-policy-config` | 0 | 0 | 0 | 0.0% |
 | `hash-requirement-fields` | 0 | 0 | 0 | 0.0% |
-| _unattributed_ |  |  | 72.0 µs | 4.2% |
+| _unattributed_ |  |  | 272 µs | 12% |
 
-**At 10240 entrys** (whole operation: 28.7 ms)
+**At 10240 entrys** (whole operation: 37.4 ms)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `write-exception-registry` | 1 | 20.2 ms | 20.2 ms | 70% |
-| `load-exception-registry` | 1 | 4.55 ms | 4.55 ms | 16% |
+| `write-exception-registry` | 1 | 24.6 ms | 24.6 ms | 66% |
+| `load-exception-registry` | 1 | 6.03 ms | 6.03 ms | 16% |
 | `reconcile-exceptions` | 0 | 0 | 0 | 0.0% |
 | `resolve-exception-policy` | 0 | 0 | 0 | 0.0% |
 | `evaluate-exception-record` | 0 | 0 | 0 | 0.0% |
 | `validate-exception-policy-config` | 0 | 0 | 0 | 0.0% |
 | `hash-requirement-fields` | 0 | 0 | 0 | 0.0% |
-| _unattributed_ |  |  | 3.94 ms | 14% |
+| _unattributed_ |  |  | 6.80 ms | 18% |
 
 ## Cost model
 
@@ -425,9 +425,9 @@ Estimates use two bracketing price shapes. **Low** is CPU-priced compute ($0.040
 
 ## Environment and method
 
-- Run: `2026-11-15T21:53:05.215Z` → `2026-11-15T21:53:54.251Z` (49 s), ci: CI (run 43764681048)
-- Machine: Intel(R) Xeon(R) 6975P-C, 4 logical core(s) (2 physical), 15701 MB RAM, linux/x64, Node v24.22.2, GitHub Actions
-- Git: `4e579bb6c18fc4991d98d19f391f709f27edd82e` on `feat/v1-readiness`
+- Run: `2026-11-17T20:34:48.005Z` → `2026-11-17T20:35:39.711Z` (52 s), ci: CI (run 44167179680)
+- Machine: AMD EPYC 9V74 80-Core Processor, 4 logical core(s) (2 physical), 15983 MB RAM, linux/x64, Node v24.22.2, GitHub Actions
+- Git: `a818d5635be77d2a10710078525555624f69cf5c` on `fix/round7-gaps`
 - Sizes: 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240 entrys: One entry of the main input a helper reads, writes or judges: an exception record, a finding, a rule of a policy config, a requirement field or a classification. Each function says which. 640 is a very large registry.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They show how _this_ package's cost changes between runs on comparable hardware, and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).

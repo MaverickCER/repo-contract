@@ -43,11 +43,18 @@ function fixture(name: string, readme: string): string {
   return dir
 }
 
-function quickStartIn(dir: string): { status: number | null; report: unknown } {
-  const run = spawnSync(process.execPath, [bin, "quick-start", "--json", "--timeout", "120000"], {
-    cwd: dir,
-    encoding: "utf8",
-  })
+function quickStartIn(
+  dir: string,
+  timeoutMs = 120_000,
+): { status: number | null; report: unknown } {
+  const run = spawnSync(
+    process.execPath,
+    [bin, "quick-start", "--json", "--timeout", String(timeoutMs)],
+    {
+      cwd: dir,
+      encoding: "utf8",
+    },
+  )
   return { status: run.status, report: JSON.parse(run.stdout) as unknown }
 }
 
@@ -84,6 +91,34 @@ describe("repo-contract quick-start (real npm pack, install and shell)", () => {
       commands: [{ exitCode: 0 }, { command: "npx qs-fixture-fail", exitCode: 3, timedOut: false }],
     })
     expect((report as { output: string }).output).toContain("the fixture failed on purpose")
+    expect(status).toBe(1)
+  }, 120_000)
+
+  it("keeps the last 20 lines of a command that prints 20 MB and fails", () => {
+    const flood = `node -e "for (let i = 1; i <= 200000; i++) console.log(i + ' ' + 'z'.repeat(100)); process.exitCode = 1"`
+    const dir = fixture("flooding", marked(`npm install --no-audit --no-fund qs-fixture\n${flood}`))
+    const { status, report } = quickStartIn(dir)
+    expect(report).toMatchObject({ state: "failed", commands: [{ exitCode: 0 }, { exitCode: 1 }] })
+    const lines = (report as { output: string }).output.split("\n")
+    expect(lines).toHaveLength(20)
+    expect(lines[0]).toBe(`199981 ${"z".repeat(100)}`)
+    expect(lines.at(-1)).toBe(`200000 ${"z".repeat(100)}`)
+    expect(status).toBe(1)
+  }, 120_000)
+
+  it("stops a command that outlives the time budget, with the processes it started", () => {
+    const dir = fixture(
+      "hanging",
+      marked(
+        `npm install --no-audit --no-fund qs-fixture\nnode -e "console.log('waiting'); setTimeout(() => {}, 600000)"`,
+      ),
+    )
+    const { status, report } = quickStartIn(dir, 30_000)
+    expect(report).toMatchObject({
+      state: "failed",
+      commands: [{ exitCode: 0 }, { exitCode: null, timedOut: true }],
+      output: "waiting",
+    })
     expect(status).toBe(1)
   }, 120_000)
 

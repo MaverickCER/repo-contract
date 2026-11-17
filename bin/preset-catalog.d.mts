@@ -19,6 +19,11 @@ export type PresetName =
   | "aiReview"
   | "bundledDependencies"
   | "quickStart"
+  | "sbom"
+  | "coverage"
+  | "crap"
+  | "mutation"
+  | "npmScript"
 
 export declare const DIST_OUTPUT: "dist/"
 
@@ -28,13 +33,20 @@ export declare const PUBLISHED_PACKAGE: "published package"
 
 export declare const QUICK_START_BLOCK: "quick-start block"
 
-export declare const PRESET_DEPENDENCIES: Readonly<Record<PresetName, string | null>>
+export declare const NPM_LOCKFILE: "npm lockfile"
+
+export declare const NPM_SCRIPT: "npm script"
+
+/** A preset's npm package, or several when it needs them all, as `mutation` does. */
+export declare const PRESET_DEPENDENCIES: Readonly<
+  Record<PresetName, string | readonly string[] | null>
+>
 
 export declare const FACTORY_PRESETS: ReadonlySet<PresetName>
 
 export interface SkippedPreset {
   readonly preset: PresetName
-  readonly dependency: string
+  readonly dependency: string | readonly string[]
 }
 
 export interface DetectPresetsResult {
@@ -56,3 +68,25 @@ export declare function detectPresets(packageJson: {
   // Read only to detect a published package (the `bundledDependencies` preset).
   readonly private?: unknown
 }): DetectPresetsResult
+
+export declare const TIER_ONLY_PRESETS: ReadonlySet<PresetName>
+
+export type TierPresetName = "basic" | "app" | "library" | "strict"
+
+export declare const TIER_PRESET_NAMES: readonly TierPresetName[]
+
+export declare const TIER_CHECK_PRESETS: Readonly<Record<string, PresetName>>
+
+export interface MissingTierTool {
+  readonly check: string
+  readonly preset: PresetName
+  readonly dependency: string
+}
+
+export declare function missingTierTools(
+  checkIds: readonly string[],
+  packageJson: {
+    readonly dependencies?: Readonly<Record<string, string>>
+    readonly devDependencies?: Readonly<Record<string, string>>
+  },
+): readonly MissingTierTool[]

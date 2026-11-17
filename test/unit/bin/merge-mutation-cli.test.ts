@@ -23,6 +23,8 @@ async function invoke(argv: string[], files: Record<string, string> = {}, failWr
     version: "9.9.9",
     stdout: (t: string) => out.push(t),
     stderr: (t: string) => err.push(t),
+    checkDirectory: async (dir: string) =>
+      path.basename(dir) === "missing" ? `the directory ${dir} does not exist` : undefined,
     engine: { mergeMutationReports },
     readFile: async (file: string) => files[file],
     writeFile: async (file: string, text: string) => {

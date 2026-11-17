@@ -117,6 +117,47 @@ Every export a consumer can import, by entry point, for version 0.15.0. Generate
 - `Widening` (interface): `interface Widening`
 - `WideningReason` (typealias): `type WideningReason = "global-trigger" | "unplaced-file" | "parse-error" | "dynamic-import" | "module-side-effect" | "git-failed" | "tsconfig"`
 
+## `repo-contract/config`
+
+- `DEFAULT_EXCLUDE` (variable): `DEFAULT_EXCLUDE: readonly string[]`
+- `entries` (function): `function entries(manifest: PackageManifest, options?: EntriesOptions): readonly EntryPoint[]`
+- `EntriesOptions` (interface): `interface EntriesOptions`
+- `EntryPoint` (interface): `interface EntryPoint`
+- `excludeGlobs` (function): `function excludeGlobs(exclude?: readonly string[]): readonly string[]`
+- `negateGlobs` (function): `function negateGlobs(globs: readonly string[]): readonly string[]`
+- `PackageManifest` (interface): `interface PackageManifest`
+- `ToolConfigOptions` (interface): `interface ToolConfigOptions`
+
+## `repo-contract/config/knip`
+
+- `knipConfig` (function, beta): `function knipConfig(options: KnipConfigOptions): KnipConfigFragment`
+- `KnipConfigFragment` (interface): `interface KnipConfigFragment`
+- `KnipConfigOptions` (interface): `interface KnipConfigOptions extends ToolConfigOptions`
+
+## `repo-contract/config/stryker`
+
+- `strykerConfig` (function, beta): `function strykerConfig(options?: StrykerConfigOptions): StrykerConfigFragment`
+- `StrykerConfigFragment` (interface): `interface StrykerConfigFragment`
+- `StrykerConfigOptions` (interface): `interface StrykerConfigOptions extends Pick<ToolConfigOptions, "srcDir" | "exclude">`
+
+## `repo-contract/config/tsup`
+
+- `tsupConfig` (function, beta): `function tsupConfig(options: TsupConfigOptions): TsupConfigFragment`
+- `TsupConfigFragment` (interface): `interface TsupConfigFragment`
+- `TsupConfigOptions` (interface): `interface TsupConfigOptions extends ToolConfigOptions`
+
+## `repo-contract/config/typedoc`
+
+- `typedocConfig` (function, beta): `function typedocConfig(options: ToolConfigOptions): TypedocConfigFragment`
+- `TypedocConfigFragment` (interface): `interface TypedocConfigFragment`
+
+## `repo-contract/config/vitest`
+
+- `CoverageReporterName` (typealias): `type CoverageReporterName = "text" | "html" | "lcov" | "json" | "json-summary"`
+- `vitestConfig` (function, beta): `function vitestConfig(options?: VitestConfigOptions): VitestConfigFragment`
+- `VitestConfigFragment` (interface): `interface VitestConfigFragment`
+- `VitestConfigOptions` (interface): `interface VitestConfigOptions extends Pick<ToolConfigOptions, "srcDir" | "exclude">`
+
 ## `repo-contract/helpers`
 
 - `createFileCacheStore` (function): `function createFileCacheStore(directory: string): FileCacheStore`
@@ -206,3 +247,47 @@ Every export a consumer can import, by entry point, for version 0.15.0. Generate
 - `stylelint` (function, beta): `function stylelint(options?: StylelintOptions): CheckDefinitionConfig`
 - `test` (variable, beta): `test: CheckDefinitionConfig`
 - `typecheck` (variable, beta): `typecheck: CheckDefinitionConfig`
+
+## `repo-contract/tiers`
+
+- `app` (function, beta): `function app(overrides?: TierOverrides<AppCheckId>): TierConfig<AppCheckId>`
+- `AppCheckId` (typealias): `type AppCheckId = BasicCheckId | "Build" | "DeadCode" | "Duplication" | "Licenses" | "DocsLinks" | "Coverage"`
+- `basic` (function, beta): `function basic(overrides?: TierOverrides<BasicCheckId>): TierConfig<BasicCheckId>`
+- `BasicCheckId` (typealias): `type BasicCheckId = "Format" | "Lint" | "Typecheck" | "Tests" | "SecuritySecrets" | "SecurityDeps"`
+- `compareSetting` (function): `function compareSetting(direction: LooseningDirection, baseline: number | undefined, value: number | undefined): SettingComparison`
+- `ExplainableConfig` (interface): `interface ExplainableConfig`
+- `ExplainBaseline` (interface): `interface ExplainBaseline`
+- `ExplainedCheck` (interface): `interface ExplainedCheck`
+- `explainTier` (function, beta): `function explainTier(config: ExplainableConfig, baseline?: ExplainBaseline): TierExplanation`
+- `LIBRARY_ONLY_CHECKS` (variable): `LIBRARY_ONLY_CHECKS: readonly TierCheckId[]`
+- `library` (function, beta): `function library(overrides?: TierOverrides<LibraryCheckId>): TierConfig<LibraryCheckId>`
+- `LibraryCheckId` (typealias): `type LibraryCheckId = AppCheckId | "Packaging" | "TypeResolution" | "BundledDependencies" | "QuickStart"`
+- `LOOSENING_RULES` (variable): `LOOSENING_RULES: readonly LooseningRule[]`
+- `Loosening` (interface): `interface Loosening`
+- `LooseningDirection` (typealias): `type LooseningDirection = "higher-is-stricter" | "lower-is-stricter"`
+- `LooseningRule` (interface): `interface LooseningRule`
+- `PlannedCheck` (interface): `interface PlannedCheck`
+- `PlannedCheckId` (typealias): `type PlannedCheckId = "DocsFragments" | "GithubActions" | "GitHygiene" | "PackedConsumer" | "EngineMatrix" | "Suppressions" | "SecurityDevDeps" | "CleanCheckout"`
+- `plannedChecks` (function): `function plannedChecks(name: TierName): readonly PlannedCheck[]`
+- `renderExplain` (function, beta): `function renderExplain(explanation: TierExplanation, options?: RenderExplainOptions): string`
+- `RenderExplainOptions` (interface): `interface RenderExplainOptions`
+- `SettingComparison` (typealias): `type SettingComparison = "stricter" | "same" | "looser"`
+- `strict` (function, beta): `function strict(overrides?: TierOverrides): TierConfig<StrictCheckId>`
+- `StrictCheckId` (typealias): `type StrictCheckId = LibraryCheckId | "Mutation" | "Crap" | "DistNoUrls" | "DocsMarkdown" | "Commits"`
+- `TIER_NAMES` (variable): `TIER_NAMES: readonly TierName[]`
+- `tier` (function, beta): `function tier(name: TierName, overrides?: TierOverrides): TierConfig<TierCheckId>`
+- `tierBaseline` (function, beta): `function tierBaseline(name: TierName): ExplainBaseline`
+- `TierCheck` (typealias): `type TierCheck<Dependency extends string> = CheckDefinitionConfig & { readonly dependsOn?: readonly Dependency[]; }`
+- `TierCheckId` (typealias): `type TierCheckId = StrictCheckId`
+- `TierCheckOptions` (interface): `interface TierCheckOptions`
+- `tierChecks` (function): `function tierChecks(name: TierName): readonly TierCheckId[]`
+- `TierChecks` (typealias): `type TierChecks<Id extends TierCheckId> = { readonly [K in Id]: TierCheck<Exclude<Id, K>>; }`
+- `TierConfig` (interface): `interface TierConfig<Id extends TierCheckId>`
+- `tierDefinition` (function): `function tierDefinition(name: TierName): TierDefinition`
+- `TierDefinition` (interface): `interface TierDefinition`
+- `TierExplanation` (interface): `interface TierExplanation`
+- `TierMetadata` (interface): `interface TierMetadata`
+- `TierName` (typealias): `type TierName = "basic" | "app" | "library" | "strict"`
+- `TierOverrides` (typealias): `type TierOverrides<Id extends TierCheckId = TierCheckId> = { readonly [K in Id]?: TierCheckOptions[K] | false; }`
+- `tierSettings` (function): `function tierSettings(name: TierName): TierSettings`
+- `TierSettings` (interface): `interface TierSettings`

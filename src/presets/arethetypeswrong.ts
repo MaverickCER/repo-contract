@@ -1,6 +1,12 @@
 import type { CheckDefinitionConfig, PolicyResult } from "../types.js"
+import {
+  type AttwResolutionKind,
+  checkResolutionKinds,
+  dropResolutionProblems,
+} from "./rules/attw-resolutions.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /**
  * attw's `--format json` contract: not published as a TypeScript type
@@ -91,27 +97,44 @@ export function evaluateAttwReport(report: unknown): PolicyResult {
 // preset excludes no entrypoint. `--exclude-entrypoints` depends on which of
 // a consumer's `exports` subpaths are non-code (e.g. a bare JSON schema
 // export). So it is left as a `run` override for the consumer to add.
+// Declared beside the filter that reads it, so the rule never imports this file back.
+export type { AttwResolutionKind }
+
+/** Options accepted by {@link arethetypeswrong}. */
+export interface ArethetypeswrongOptions {
+  /** Resolutions whose problems are dropped before judging. `["node10"]` suits a package that supports only `exports`-aware resolution. Defaults to none. */
+  readonly ignoreResolutions?: readonly AttwResolutionKind[]
+}
+
 /**
  * Published-package type-resolution correctness via `@arethetypeswrong/cli`.
+ * @param options - configuration for this check; see {@link ArethetypeswrongOptions}.
+ * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `ignoreResolutions` names a resolution attw does not use.
  * @beta
  */
-export const arethetypeswrong: CheckDefinitionConfig = {
-  run: ["attw", "--pack", ".", "--format", "json"],
-  output: { format: "json" },
-  policy: ({ result }) => {
-    const missing = checkDependencyInstalled(result, "@arethetypeswrong/cli")
-    if (missing) return missing
+export function arethetypeswrong(options: ArethetypeswrongOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("arethetypeswrong", options)
+  const ignoreResolutions = checkResolutionKinds(options.ignoreResolutions ?? [])
+  return {
+    run: ["attw", "--pack", ".", "--format", "json"],
+    output: { format: "json" },
+    policy: ({ result }) => {
+      const missing = checkDependencyInstalled(result, "@arethetypeswrong/cli")
+      if (missing) return missing
 
-    const terminated = checkTerminatedAbnormally(result, "@arethetypeswrong/cli")
-    if (terminated) return terminated
+      const terminated = checkTerminatedAbnormally(result, "@arethetypeswrong/cli")
+      if (terminated) return terminated
 
-    if (!result.output?.success) {
-      return {
-        outcome: "fail",
-        rationale: "@arethetypeswrong/cli output could not be parsed as JSON.",
+      if (!result.output?.success) {
+        return {
+          outcome: "fail",
+          rationale: "@arethetypeswrong/cli output could not be parsed as JSON.",
+        }
       }
-    }
 
-    return evaluateAttwReport(result.output.value)
-  },
+      return evaluateAttwReport(dropResolutionProblems(result.output.value, ignoreResolutions))
+    },
+  }
 }

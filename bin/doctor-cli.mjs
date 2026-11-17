@@ -2,10 +2,12 @@
 // and repair the ones that are safe to repair. All input and output is injected: argv, stdout
 // and stderr, git and file access, and the engine. Unit tests then need no process and no
 // repository. bin/repo-contract.mjs wires the production ones. Data goes to stdout and
-// diagnostics to stderr. Exit status: 0 on success (findings are the answer, not a failure), 1
-// when the command could not run, 2 for a usage error. Without --fix nothing is written.
+// diagnostics to stderr; with --json a failure is a JSON error on stdout. Exit status: 0 on
+// success (findings are the answer, not a failure), 1 when the command could not run, 2 for a
+// usage error. Without --fix nothing is written.
 
 import path from "node:path"
+import { checkDirectory } from "./cli-options.mjs"
 
 export const DOCTOR_USAGE = `Usage: repo-contract doctor [options]
 
@@ -44,20 +46,26 @@ export function parseDoctorArgs(argv) {
     return { kind: "version" }
   }
   const options = { fix: false, json: false }
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index]
+  // A `for...of` over the entries cannot loop forever, whatever the body does to its position.
+  let valueTaken = false
+  for (const [index, arg] of argv.entries()) {
+    if (valueTaken) {
+      valueTaken = false
+      continue
+    }
     if (arg === "--") {
       return { kind: "error", message: `unexpected argument '${argv[index + 1]}'` }
     }
     const equals = arg.startsWith("--") ? arg.indexOf("=") : -1
     const name = equals === -1 ? arg : arg.slice(0, equals)
     if (name === "-C") {
-      const value = equals === -1 ? argv[index + 1] : arg.slice(equals + 1)
+      // `-C=<dir>` never reaches here: only `--` options split at `=`.
+      const value = argv[index + 1]
       if (value === undefined || value === "" || value.startsWith("-")) {
         return { kind: "error", message: "option '-C' needs a value" }
       }
       options.cwd = value
-      index += 1
+      valueTaken = true
     } else if (name === "--fix" || name === "--json") {
       if (equals !== -1) {
         return { kind: "error", message: `option '${name}' does not take a value` }
@@ -85,14 +93,18 @@ function messageOf(error) {
  * @returns {Promise<object>} The facts `diagnose` needs.
  */
 async function gather(capabilities) {
-  const listing = (await capabilities.git(["ls-files", "-z"])) ?? ""
-  const tracked = listing.split("\0").filter(Boolean)
-  const contents = async (paths) =>
-    (
-      await Promise.all(
-        paths.map(async (file) => ({ path: file, text: await capabilities.readFile(file) })),
-      )
-    ).filter((entry) => entry.text !== undefined)
+  const listing = await capabilities.git(["ls-files", "-z"])
+  // Outside a repository there is nothing to diagnose, and "Nothing to change." would mislead.
+  if (listing === undefined) throw new Error("git cannot list the tracked files")
+  const tracked = listing.split("\0")
+  // A tracked file deleted from disk reads as undefined. It holds nothing to diagnose, so it is
+  // left out, and every entry the rules see has text.
+  const contents = async (paths) => {
+    const read = await Promise.all(
+      paths.map(async (file) => ({ path: file, text: await capabilities.readFile(file) })),
+    )
+    return read.filter(({ text }) => text !== undefined)
+  }
   const sources = await contents(
     tracked.filter((file) => SOURCE.test(file) && !NOT_SOURCE.test(file)),
   )
@@ -104,7 +116,22 @@ async function gather(capabilities) {
     hooksInstalled:
       hooksPath !== "" || (await capabilities.readFile(".git/hooks/pre-commit")) !== undefined,
     starExportFiles: sources.filter(({ text }) => STAR_EXPORT.test(text)).map(({ path: p }) => p),
+    manifest: parseManifest(await capabilities.readFile("package.json")),
   }
+}
+
+/**
+ * @param {string | undefined} text - The root package.json's content, if any.
+ * @returns {unknown} The parsed manifest; `undefined` when it is missing or not valid JSON, since
+ *   `affected` reports a broken package.json and doctor only looks for the legacy key.
+ */
+function parseManifest(text) {
+  try {
+    return JSON.parse(text)
+  } catch {
+    // JSON.parse(undefined) throws too, so a missing file lands here.
+  }
+  return undefined
 }
 
 /**
@@ -112,7 +139,7 @@ async function gather(capabilities) {
  * @returns {string} The lines it adds, in unified-diff style.
  */
 function renderChange({ file, before, after }) {
-  const added = after.slice(before === undefined ? 0 : before.length).replace(/^\n/, "")
+  const added = after.slice(before === undefined ? 0 : before.length)
   return [
     `--- ${file}`,
     `+++ ${file}`,
@@ -145,6 +172,9 @@ function renderFindings(findings) {
  * @param {(text: string) => void} input.stdout - Writes to standard output.
  * @param {(text: string) => void} input.stderr - Writes to standard error.
  * @param {object} input.engine - `diagnose` and `planFixes`.
+ * @param {(dir: string) => string | undefined | Promise<string | undefined>} [input.checkDirectory]
+ *   - Checks the `-C` directory without throwing: `undefined`, or a message. Defaults to
+ *   `checkDirectory`.
  * @param {(dir: string) => object} input.createCapabilities - Builds git, read and write access.
  * @returns {Promise<number>} The exit status.
  */
@@ -166,8 +196,11 @@ export async function runDoctor(input) {
   }
 
   const { options } = parsed
-  const dir = path.resolve(input.cwd, options.cwd ?? ".")
+  const dir = path.resolve(input.cwd, options.cwd ?? "")
   try {
+    // git started in a missing directory fails as "spawn git ENOENT", which blames git.
+    const directoryProblem = await (input.checkDirectory ?? checkDirectory)(dir)
+    if (directoryProblem !== undefined) throw new Error(directoryProblem)
     const capabilities = input.createCapabilities(dir)
     const report = input.engine.diagnose(await gather(capabilities))
     const files = {}
@@ -208,7 +241,12 @@ export async function runDoctor(input) {
     input.stdout(`${lines.join("\n")}\n`)
     return 0
   } catch (error) {
-    input.stderr(`repo-contract doctor: failed: ${messageOf(error)}\n`)
+    // An agent that asked for JSON gets JSON on failure too, as `mutation run --json` does.
+    if (options.json) {
+      input.stdout(`${JSON.stringify({ schemaVersion: 1, error: messageOf(error) }, null, 2)}\n`)
+    } else {
+      input.stderr(`repo-contract doctor: failed: ${messageOf(error)}\n`)
+    }
     return 1
   }
 }

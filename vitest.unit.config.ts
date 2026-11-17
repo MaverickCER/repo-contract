@@ -1,5 +1,5 @@
 import { defineConfig, mergeConfig } from "vitest/config"
-import baseConfig from "./vitest.base.config.js"
+import baseConfig, { COVERAGE_INCLUDE } from "./vitest.base.config.js"
 
 // Execution boundary: test/unit/** only. Coverage thresholds are deliberately
 // NOT declared here: a single category's coverage was never meant to meet
@@ -24,7 +24,7 @@ export default mergeConfig(
         // never got written) instead of directly pointing at the test that
         // actually failed.
         reportOnFailure: true,
-        include: ["src/**/*.ts"],
+        include: COVERAGE_INCLUDE,
         // src/types.ts is interfaces/type aliases only: erased entirely at
         // compile time (verbatimModuleSyntax), so it has no coverable runtime
         // statements at all.

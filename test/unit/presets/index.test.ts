@@ -18,11 +18,9 @@ describe("presets barrel (src/presets/index.ts)", () => {
     typecheck: presets.typecheck,
     test: presets.test,
     e2e: presets.e2e,
-    securityDeps: presets.securityDeps,
     securitySecrets: presets.securitySecrets,
     license: presets.license,
     publint: presets.publint,
-    arethetypeswrong: presets.arethetypeswrong,
     bundledDependencies: presets.bundledDependencies,
   }
 
@@ -37,11 +35,35 @@ describe("presets barrel (src/presets/index.ts)", () => {
     distNoUrls: () => presets.distNoUrls(),
     commitlint: () => presets.commitlint(),
     quickStart: () => presets.quickStart(),
+    sbom: () => presets.sbom(),
+    arethetypeswrong: () => presets.arethetypeswrong(),
+    securityDeps: () => presets.securityDeps(),
+    coverage: () => presets.coverage(),
+    crap: () => presets.crap(),
+    mutation: () => presets.mutation(),
+    npmScript: () => presets.npmScript({ script: "build" }),
   }
 
   it("exports exactly the documented preset names", () => {
     const names = Object.keys({ ...plainObjectPresets, ...factoryPresets }).sort()
     expect(Object.keys(presets).sort()).toEqual(names)
+  })
+
+  // Every function the barrel exports is a factory that takes options. A parameter default
+  // replaces only undefined, so null must reach the factory's own check, not a property read.
+  const factories = Object.entries(presets).filter(
+    (entry): entry is [string, (options: unknown) => CheckDefinitionConfig] =>
+      typeof entry[1] === "function",
+  )
+
+  it("lists every exported factory among the factory presets", () => {
+    expect(factories.map(([name]) => name).sort()).toEqual(Object.keys(factoryPresets).sort())
+  })
+
+  it.each(factories)("%s(null) throws a TypeError naming the preset", (name, factory) => {
+    expect(() => factory(null)).toThrow(
+      new TypeError(`${name}: options must be an object, got null.`),
+    )
   })
 
   it("exports every plain-object preset as a { run, policy } shape", () => {
@@ -96,7 +118,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     ["e2e", presets.e2e, "@playwright/test"],
     ["license", presets.license, "licensee"],
     ["publint", presets.publint, "publint"],
-    ["arethetypeswrong", presets.arethetypeswrong, "@arethetypeswrong/cli"],
+    ["arethetypeswrong", presets.arethetypeswrong(), "@arethetypeswrong/cli"],
     ["deadCode", presets.deadCode(), "knip"],
     ["duplication", presets.duplication(), "jscpd"],
     ["stylelint", presets.stylelint(), "stylelint"],
@@ -223,7 +245,7 @@ describe("presets barrel (src/presets/index.ts)", () => {
     const config = defineRepoContract({
       checks: {
         missing: {
-          ...presets.securityDeps,
+          ...presets.securityDeps(),
           run: ["definitely-not-a-real-binary-repo-contract-preset-test"],
         },
       },

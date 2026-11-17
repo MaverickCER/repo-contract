@@ -2,7 +2,13 @@ import { readFileSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
-import { buildConfigTemplate, CONTRACT_RUNNER_TEMPLATE } from "../../../bin/templates.mjs"
+import {
+  buildConfigTemplate,
+  buildTierConfigTemplate,
+  CONTRACT_RUNNER_TEMPLATE,
+  spreadTierOf,
+  tierInitHeadline,
+} from "../../../bin/templates.mjs"
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..")
 
@@ -35,12 +41,26 @@ describe("buildConfigTemplate", () => {
     const content = buildConfigTemplate(["typecheck", "securityDeps"])
     expect(content).toContain('import { typecheck, securityDeps } from "repo-contract/presets"')
     expect(content).toContain("    typecheck,")
-    expect(content).toContain("    securityDeps,")
+    expect(content).toContain("    securityDeps: securityDeps(),")
+  })
+
+  it("puts each check on its own line", () => {
+    const content = buildConfigTemplate(["typecheck", "lint", "securityDeps"])
+    expect(content).toContain(
+      "  checks: {\n    typecheck,\n    lint: lint(),\n    securityDeps: securityDeps(),\n  },\n",
+    )
   })
 
   it("calls factory presets instead of spreading them bare", () => {
     const content = buildConfigTemplate(["lint", "securityDeps"])
     expect(content).toContain("    lint: lint(),")
+  })
+
+  it("calls securityDeps and arethetypeswrong, which became factories in this release", () => {
+    const content = buildConfigTemplate(["arethetypeswrong", "securityDeps"])
+    expect(content).toContain("    arethetypeswrong: arethetypeswrong(),")
+    expect(content).toContain("    securityDeps: securityDeps(),")
+    expect(content).not.toMatch(/^ {4}(arethetypeswrong|securityDeps),$/m)
   })
 
   it("produces content that never spells the ambient-capability scanner's forbidden substrings verbatim as its own bin/templates.mjs source, only as this function's runtime output", () => {
@@ -50,5 +70,142 @@ describe("buildConfigTemplate", () => {
     const content = buildConfigTemplate(["securityDeps"])
     expect(content).toContain('import { spawn } from "node:child_process"')
     expect(content).toContain("env: process.env,")
+  })
+})
+
+describe("buildTierConfigTemplate", () => {
+  it.each(["basic", "app", "library", "strict"] as const)(
+    "spreads %s() from repo-contract/tiers into defineRepoContract",
+    (tier) => {
+      const content = buildTierConfigTemplate(tier)
+      expect(content).toContain(`import { ${tier} } from "repo-contract/tiers"`)
+      expect(content).toContain('import { defineRepoContract } from "repo-contract"')
+      expect(content).toMatch(new RegExp(`^ {2}\\.\\.\\.${tier}\\(\\),$`, "m"))
+      expect(content).toContain(`repo-contract init --preset ${tier}`)
+      expect(content).toContain("repo-contract explain")
+      expect(content).not.toContain("repo-contract/presets")
+    },
+  )
+
+  it("supplies spawn and the environment, as the flat config does", () => {
+    const content = buildTierConfigTemplate("app")
+    expect(content).toContain('import { spawn } from "node:child_process"')
+    expect(content).toContain("env: process.env,")
+  })
+
+  it("throws a RangeError for a name that is not a tier", () => {
+    expect(() => buildTierConfigTemplate("fleet" as never)).toThrow(RangeError)
+    expect(() => buildTierConfigTemplate("fleet" as never)).toThrow("basic, app, library, strict")
+  })
+})
+
+describe("spreadTierOf", () => {
+  it.each(["basic", "app", "library", "strict"] as const)(
+    "reads %s from the config init --preset writes",
+    (tier) => {
+      expect(spreadTierOf(buildTierConfigTemplate(tier))).toBe(tier)
+    },
+  )
+
+  it("reads a spread with options and spaces", () => {
+    expect(spreadTierOf("  ... strict ({ Typecheck: false }),")).toBe("strict")
+    expect(spreadTierOf("...app(),\n...strict(),")).toBe("app")
+  })
+
+  it("finds no tier in a flat config, a call without a spread or a longer name", () => {
+    expect(spreadTierOf(buildConfigTemplate(["securityDeps"]))).toBeUndefined()
+    expect(spreadTierOf("// mine\n")).toBeUndefined()
+    expect(spreadTierOf("strict({ Typecheck: false })")).toBeUndefined()
+    expect(spreadTierOf("...myapp(), ...strictest(), ...app")).toBeUndefined()
+  })
+
+  it("skips a commented-out spread of another tier", () => {
+    expect(spreadTierOf("  // ...strict(),\n  ...library(),")).toBe("library")
+    expect(spreadTierOf("/* was:\n  ...strict()\n */\n...app()")).toBe("app")
+    expect(spreadTierOf("// ...strict(")).toBeUndefined()
+    expect(spreadTierOf("/* never closed ...strict(")).toBeUndefined()
+  })
+
+  it("reads a comment as a gap between tokens, as JavaScript does", () => {
+    expect(spreadTierOf("...st/* */rict(), ...app()")).toBe("app")
+  })
+
+  it("keeps a // or /* inside a string, such as a URL", () => {
+    expect(spreadTierOf('{ docs: "https://example.test/a", ...app() }')).toBe("app")
+    expect(spreadTierOf("{ docs: 'https://example.test/a', ...app() }")).toBe("app")
+    expect(spreadTierOf("{ docs: `https://example.test/a`, ...app() }")).toBe("app")
+    expect(spreadTierOf('{ glob: "src/*", ...app(), end: "*/" }')).toBe("app")
+    expect(spreadTierOf('{ note: "say \\"//\\"", ...app() }')).toBe("app")
+  })
+
+  it("skips a spread written inside a string", () => {
+    expect(spreadTierOf('const note = "...strict()"\nexport default { ...app() }')).toBe("app")
+    expect(spreadTierOf("const note = '...strict()', other = `...basic()`")).toBeUndefined()
+  })
+
+  it("keeps an escaped line break inside a string", () => {
+    expect(spreadTierOf('"\\\n...strict()" ...app()')).toBe("app")
+    expect(spreadTierOf("'\\ ...strict()' ...app()")).toBe("app")
+  })
+
+  it.each(['"', "'", "`"])("ends a %s string at the quote after an escaped backslash", (quote) => {
+    expect(spreadTierOf(`${quote}a\\\\${quote} ...app()`)).toBe("app")
+  })
+
+  it.each(['"', "'", "`"])("reads an unclosed %s string as running to the end", (quote) => {
+    expect(spreadTierOf(`${quote} ...strict()`)).toBeUndefined()
+    expect(spreadTierOf(`...app() ${quote} ...strict()`)).toBe("app")
+    expect(spreadTierOf(`${quote}\\${quote} ...strict()\\`)).toBeUndefined()
+  })
+
+  // An unclosed string that failed to match used to be retried from each escaped quote inside it,
+  // which made the scan quadratic: 37 s for 100,000 escaped quotes. These run after the cases
+  // above, so a mutant that brings the retry back fails on them first instead of timing out here.
+  // The 5 s bound leaves room for a loaded CI runner and still sits far below the quadratic 37 s.
+  it.each(['"', "'", "`"])("reads 200,000 escaped %s quotes in linear time", (quote) => {
+    for (const tail of ["", "\\"]) {
+      const text = `${quote}${`\\${quote}`.repeat(200_000)}${tail} ...strict()`
+      const started = performance.now()
+      expect(spreadTierOf(text)).toBeUndefined()
+      expect(performance.now() - started).toBeLessThan(5_000)
+    }
+  })
+})
+
+describe("tierInitHeadline", () => {
+  const kept = "repo-contract init: kept the existing repo-contract.config.mts"
+
+  it("names the tier it wrote", () => {
+    expect(tierInitHeadline("strict", undefined)).toEqual({
+      lines: ["repo-contract initialized: tier strict"],
+      tier: "strict",
+    })
+  })
+
+  it("says a kept config already spreads the tier asked for", () => {
+    expect(tierInitHeadline("app", buildTierConfigTemplate("app"))).toEqual({
+      lines: [`${kept}, which already spreads tier app.`],
+      tier: "app",
+    })
+  })
+
+  it("names the other tier a kept config spreads, and how to move", () => {
+    expect(tierInitHeadline("strict", buildTierConfigTemplate("app"))).toEqual({
+      lines: [
+        `${kept}, which spreads tier app, not strict.`,
+        "To move to strict, spread strict() in place of app(), or delete the file and run init again.",
+      ],
+      tier: "app",
+    })
+  })
+
+  it("says a kept config spreads no tier, and how to add one", () => {
+    expect(tierInitHeadline("library", "// mine\n")).toEqual({
+      lines: [
+        `${kept}, which spreads no tier.`,
+        "To use library, spread library() in it, or delete the file and run init again.",
+      ],
+      tier: undefined,
+    })
   })
 })

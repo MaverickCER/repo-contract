@@ -34,6 +34,8 @@ async function invoke(argv: string[], files: Record<string, string> = {}) {
     version: "9.9.9",
     stdout: (t: string) => out.push(t),
     stderr: (t: string) => err.push(t),
+    checkDirectory: async (dir: string) =>
+      path.basename(dir) === "missing" ? `the directory ${dir} does not exist` : undefined,
     engine: { parseRunLog, summarizeRuns },
     readFile: async (file: string) => {
       read.push(file)
@@ -178,6 +180,8 @@ describe("runMetrics", () => {
       version: "1",
       stdout: () => undefined,
       stderr: () => undefined,
+      checkDirectory: async (dir: string) =>
+        path.basename(dir) === "missing" ? `the directory ${dir} does not exist` : undefined,
       engine: { parseRunLog, summarizeRuns },
       readFile: () => Promise.reject(new Error("EIO")),
       now: () => new Date(),

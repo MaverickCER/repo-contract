@@ -201,7 +201,7 @@
       "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
-      "id": "suppression:eslint:@typescript-eslint/prefer-promise-reject-errors:test/unit/helpers/write-exception-registry.test.ts:126",
+      "id": "suppression:eslint:@typescript-eslint/prefer-promise-reject-errors:test/unit/helpers/write-exception-registry.test.ts:147",
       "version": 2,
       "justification": "This test's whole purpose is to reject the readFile capability with values that are deliberately NOT Errors -- a bare string and `null` -- to prove `isEnoent`'s `typeof`/`!== null` guards and the `String(error)` fallback never throw a TypeError out of writeExceptionRegistry's `{ ok: false }` path. Wrapping the reason in an Error would defeat the test.\n\nAlternatives considered: Wrap each reason in `new Error(String(reason))` before rejecting, satisfying the rule.\n\nRemediation: Wrapping would make the test exercise only the happy 'error is an Error' path and stop covering the exact non-Error inputs the defensive guards exist for -- the same trade-off, and the same resolution, as the three prefer-promise-reject-errors exceptions recorded for test/unit/helpers/load-exception-registry.test.ts at lines 83, 96, and 108.",
       "attempted": "Wrap each reason in `new Error(String(reason))` before rejecting, satisfying the rule.  Remediation: Wrapping would make the test exercise only the happy 'error is an Error' path and stop covering the exact non-Error inputs the defensive guards exist for -- the same trade-off, and the same resolution, as the three prefer-promise-reject-errors exceptions recorded for test/unit/helpers/load-exception-registry.test.ts at lines 83, 96, and 108.",
@@ -210,13 +210,13 @@
       "domain": "eslint",
       "expires": "",
       "file": "test/unit/helpers/write-exception-registry.test.ts",
-      "line": 126,
+      "line": 147,
       "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
       "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
         "@typescript-eslint/prefer-promise-reject-errors"
       ],
-      "ruleBroken": "The eslint rule `['@typescript-eslint/prefer-promise-reject-errors']` is disabled at test/unit/helpers/write-exception-registry.test.ts:126.",
+      "ruleBroken": "The eslint rule `['@typescript-eslint/prefer-promise-reject-errors']` is disabled at test/unit/helpers/write-exception-registry.test.ts:147.",
       "verificationMethod": "static-reasoning",
       "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
@@ -301,7 +301,7 @@
       "whyPreferable": "The suppression, with its reason recorded, is preferable to restructuring the code in the way the justification rules out."
     },
     {
-      "id": "suppression:eslint:n/no-process-env:repo-contract.config.ts:162",
+      "id": "suppression:eslint:n/no-process-env:repo-contract.config.ts:173",
       "version": 2,
       "justification": "This is repo-contract's own top-level self-hosting config (repo-contract.config.ts), not published library code -- src/ never reads process.env itself (see specs/decisions/0011), and RepoContractConfig.env is a required, consumer-supplied field. Here, repo-contract is the consumer of its own library, and supplying the real ambient environment to its own checks is exactly the responsibility ADR 0011 places on a consumer, not a config smell.\n\nAlternatives considered: Route environment access through a wrapper/config module instead of reading process.env inline.\n\nRemediation: A wrapper would only relocate this same read one file over, not remove it -- n/no-process-env exists to catch config values read ad hoc instead of through an app's config layer, which doesn't apply to a top-level consumer script whose entire job is supplying the ambient environment to the library it configures.",
       "attempted": "Route environment access through a wrapper/config module instead of reading process.env inline.  Remediation: A wrapper would only relocate this same read one file over, not remove it -- n/no-process-env exists to catch config values read ad hoc instead of through an app's config layer, which doesn't apply to a top-level consumer script whose entire job is supplying the ambient environment to the library it configures.",
@@ -310,7 +310,7 @@
       "domain": "eslint",
       "expires": "",
       "file": "repo-contract.config.ts",
-      "line": 162,
+      "line": 173,
       "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
       "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
       "rule": [
@@ -419,46 +419,6 @@
       "ruleBroken": "Every `Stryker disable` must say what it hides from mutation testing and why; this one hides nothing in this repository.",
       "verificationMethod": "static-reasoning",
       "whyPreferable": "A record that names the copy as inert is preferable to excluding managed copies from suppression governance, which would also hide a real directive added upstream."
-    },
-    {
-      "id": "suppression:typescript:@ts-expect-error:test/unit/crap/policy.test.ts:149",
-      "version": 2,
-      "justification": "A test that feeds the CRAP policy a row of untrusted crap4ts JSON with no `crap` field, which the row type forbids on purpose; the `@ts-expect-error` comment on the line says the same.",
-      "attempted": "Building the row through the typed `report()` helper, which requires every field; the test needs a row that is missing one.",
-      "category": "tooling-limit",
-      "constraint": "The row type requires `crap`, so a malformed row cannot be written without suppressing the type error.",
-      "domain": "typescript",
-      "expires": "",
-      "file": "test/unit/crap/policy.test.ts",
-      "line": 149,
-      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
-      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
-      "rule": [
-        "@ts-expect-error"
-      ],
-      "ruleBroken": "The typescript rule `['@ts-expect-error']` is disabled at test/unit/crap/policy.test.ts:149.",
-      "verificationMethod": "existing-test-suite",
-      "whyPreferable": "One suppressed line in a test is preferable to loosening the production row type so that a malformed row could be written."
-    },
-    {
-      "id": "suppression:typescript:@ts-expect-error:test/unit/crap/policy.test.ts:157",
-      "version": 2,
-      "justification": "A test that feeds the CRAP policy a row of untrusted crap4ts JSON with no `complexity` field, which the row type forbids on purpose; the `@ts-expect-error` comment on the line says the same.",
-      "attempted": "Building the row through the typed `report()` helper, which requires every field; the test needs a row that is missing one.",
-      "category": "tooling-limit",
-      "constraint": "The row type requires `complexity`, so a malformed row cannot be written without suppressing the type error.",
-      "domain": "typescript",
-      "expires": "",
-      "file": "test/unit/crap/policy.test.ts",
-      "line": 157,
-      "residualRisk": "The rule no longer covers this line, so a later change to it is not flagged by that rule.",
-      "revisitWhen": "The code at this location changes, or the rule or the upstream shape it mirrors changes.",
-      "rule": [
-        "@ts-expect-error"
-      ],
-      "ruleBroken": "The typescript rule `['@ts-expect-error']` is disabled at test/unit/crap/policy.test.ts:157.",
-      "verificationMethod": "existing-test-suite",
-      "whyPreferable": "One suppressed line in a test is preferable to loosening the production row type so that a malformed row could be written."
     }
   ]
 }

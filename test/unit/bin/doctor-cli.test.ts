@@ -36,6 +36,8 @@ async function invoke(argv: string[], repo: Repo = healthy, failWrites = false) 
     stdout: (text: string) => out.push(text),
     stderr: (text: string) => err.push(text),
     engine: { diagnose, planFixes },
+    checkDirectory: async (dir: string) =>
+      dir === at("missing") ? `the directory ${dir} does not exist` : undefined,
     createCapabilities: () => ({
       git: async (args: string[]) => {
         if (args[0] === "ls-files") return (repo.tracked ?? Object.keys(files)).join("\0") + "\0"
@@ -78,6 +80,12 @@ describe("parseDoctorArgs", () => {
     [["-C"], { kind: "error", message: "option '-C' needs a value" }],
     [["--fix=1"], { kind: "error", message: "option '--fix' does not take a value" }],
     [["--json=1"], { kind: "error", message: "option '--json' does not take a value" }],
+    [["--", "--help"], { kind: "error", message: "unexpected argument '--help'" }],
+    [["-"], { kind: "error", message: "unexpected argument '-'" }],
+    [["-C", ""], { kind: "error", message: "option '-C' needs a value" }],
+    [["-C", "-x"], { kind: "error", message: "option '-C' needs a value" }],
+    [["-C=pkg"], { kind: "error", message: "unknown option '-C=pkg'" }],
+    [["-C", "pkg", "--json"], { kind: "run", options: { fix: false, json: true, cwd: "pkg" } }],
     [["--", "x"], { kind: "error", message: "unexpected argument 'x'" }],
   ])("reads %j", (argv, expected) => {
     expect(parseDoctorArgs(argv)).toEqual(expected)
@@ -131,6 +139,22 @@ describe("runDoctor", () => {
     const files = { ...healthy.files }
     delete (files as Record<string, string | undefined>)[".git/hooks/pre-commit"]
     const { stdout } = await invoke([], { ...healthy, files, hooksPath: ".husky" })
+    expect(stdout).toBe("Nothing to change.\n")
+  })
+
+  it("reads package.json and reports the legacy affected key", async () => {
+    const manifest = JSON.stringify({ "repo-contract": { affected: { ignore: ["docs/**"] } } })
+    const repo = { ...healthy, files: { ...healthy.files, "package.json": manifest } }
+    const { code, stdout } = await invoke([], repo)
+    expect(code).toBe(0)
+    expect(stdout).toContain("info  legacy-affected-key")
+    expect(stdout).toContain('"contract".affected')
+  })
+
+  it("does not fail on a package.json that is not valid JSON", async () => {
+    const repo = { ...healthy, files: { ...healthy.files, "package.json": "{" } }
+    const { code, stdout } = await invoke([], repo)
+    expect(code).toBe(0)
     expect(stdout).toBe("Nothing to change.\n")
   })
 
@@ -207,6 +231,25 @@ describe("runDoctor", () => {
     expect(Object.keys(written)).toEqual([".gitignore"])
   })
 
+  it("exits 1 and names a -C directory that does not exist", async () => {
+    const { code, stdout, stderr } = await invoke(["-C", "missing"])
+    expect(code).toBe(1)
+    expect(stdout).toBe("")
+    expect(stderr).toBe(
+      `repo-contract doctor: failed: the directory ${at("missing")} does not exist\n`,
+    )
+  })
+
+  it("--json names a -C directory that does not exist in a JSON error on stdout", async () => {
+    const { code, stdout, stderr } = await invoke(["-C", "missing", "--json"])
+    expect(code).toBe(1)
+    expect(stderr).toBe("")
+    expect(JSON.parse(stdout)).toStrictEqual({
+      schemaVersion: 1,
+      error: `the directory ${at("missing")} does not exist`,
+    })
+  })
+
   it("exits 1 with a message when a write fails", async () => {
     const repo = { ...healthy, files: { ...healthy.files, ".gitignore": "" } }
     const { code, stderr } = await invoke(["--fix"], repo, true)
@@ -224,6 +267,7 @@ describe("runDoctor", () => {
       stdout: (t: string) => out.push(t),
       stderr: (t: string) => err.push(t),
       engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
       createCapabilities: () => ({
         git: () => Promise.reject(new Error("spawn git ENOENT")),
         readFile: async () => undefined,
@@ -243,6 +287,7 @@ describe("runDoctor", () => {
       stdout: () => undefined,
       stderr: (t: string) => err.push(t),
       engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
       createCapabilities: () => ({
         git: () => {
           const thrown: unknown = "boom"
@@ -256,6 +301,254 @@ describe("runDoctor", () => {
     expect(err.join("")).toContain("failed: boom")
   })
 
+  it("--fix creates .gitignore when there is none, and shows every line it adds", async () => {
+    const files = { ...healthy.files }
+    delete (files as Record<string, string | undefined>)[".gitignore"]
+    const { code, stdout, written } = await invoke(["--fix"], { ...healthy, files })
+    expect(code).toBe(0)
+    expect(written).toEqual({ ".gitignore": ".repo-contract/cache/\n" })
+    expect(stdout).toContain("--- .gitignore\n+++ .gitignore\n+.repo-contract/cache/\n")
+  })
+
+  it("--fix with nothing fixable writes nothing and claims no change", async () => {
+    const files = { ...healthy.files }
+    delete (files as Record<string, string | undefined>)[".git/hooks/pre-commit"]
+    const { code, stdout, written } = await invoke(["--fix"], { ...healthy, files })
+    expect(code).toBe(0)
+    expect(written).toEqual({})
+    expect(stdout).toContain("info  hooks-missing")
+    expect(stdout).not.toContain("Applied")
+    expect(stdout.endsWith("\n\n")).toBe(false)
+  })
+
+  it("--json --fix with nothing to change reports nothing applied", async () => {
+    const { stdout, written } = await invoke(["--json", "--fix"])
+    expect(JSON.parse(stdout)).toMatchObject({ clean: true, changes: [], applied: false })
+    expect(written).toEqual({})
+  })
+
+  it("exits 1 when git cannot list the tracked files, as outside a repository", async () => {
+    const out: string[] = []
+    const err: string[] = []
+    const code = await runDoctor({
+      argv: [],
+      cwd: "/w",
+      version: "1",
+      stdout: (t: string) => out.push(t),
+      stderr: (t: string) => err.push(t),
+      engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
+      createCapabilities: () => ({
+        git: async () => undefined,
+        readFile: async (file: string) => healthy.files[file],
+        writeFile: async () => undefined,
+      }),
+    })
+    expect(code).toBe(1)
+    expect(out).toEqual([])
+    expect(err.join("")).toBe("repo-contract doctor: failed: git cannot list the tracked files\n")
+  })
+
+  it("--json prints a failure as a versioned JSON error on stdout, as outside a repository", async () => {
+    const out: string[] = []
+    const err: string[] = []
+    const code = await runDoctor({
+      argv: ["--json"],
+      cwd: "/w",
+      version: "1",
+      stdout: (t: string) => out.push(t),
+      stderr: (t: string) => err.push(t),
+      engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
+      createCapabilities: () => ({
+        git: async () => undefined,
+        readFile: async () => undefined,
+        writeFile: async () => undefined,
+      }),
+    })
+    expect(code).toBe(1)
+    expect(err).toEqual([])
+    expect(out).toEqual([
+      `${JSON.stringify({ schemaVersion: 1, error: "git cannot list the tracked files" }, null, 2)}\n`,
+    ])
+  })
+
+  it("leaves a tracked file deleted from disk out of the snapshot, so every entry has text", async () => {
+    const snapshots: unknown[] = []
+    const tracked = [
+      ...(healthy.tracked ?? []),
+      "vitest.e2e.config.ts",
+      ".github/workflows/gone.yml",
+      "src/gone.ts",
+    ]
+    const out: string[] = []
+    const code = await runDoctor({
+      argv: [],
+      cwd: "/w",
+      version: "1",
+      stdout: (t: string) => out.push(t),
+      stderr: () => undefined,
+      engine: {
+        diagnose: (snapshot: Parameters<typeof diagnose>[0]) => {
+          snapshots.push(snapshot)
+          return diagnose(snapshot)
+        },
+        planFixes,
+      },
+      checkDirectory: async () => undefined,
+      createCapabilities: () => ({
+        git: async (args: string[]) =>
+          args[0] === "ls-files" ? `${tracked.join("\0")}\0` : undefined,
+        readFile: async (file: string) => healthy.files[file],
+        writeFile: async () => undefined,
+      }),
+    })
+    expect(code).toBe(0)
+    expect(out).toEqual(["Nothing to change.\n"])
+    expect(snapshots).toEqual([
+      expect.objectContaining({
+        vitestConfigs: [{ path: "vitest.config.ts", text: healthy.files["vitest.config.ts"] }],
+        workflows: [
+          {
+            path: ".github/workflows/ci.yml",
+            text: healthy.files[".github/workflows/ci.yml"],
+          },
+        ],
+        starExportFiles: [],
+      }),
+    ])
+  })
+
+  it.each([
+    [[], "Run with --fix to apply 2 safe changes."],
+    [["--fix"], "Applied 2 changes."],
+  ])("counts two changes in the plural with %j", async (argv, line) => {
+    const out: string[] = []
+    const finding = {
+      id: "two",
+      severity: "warn",
+      message: "m",
+      hint: "h",
+      fix: { file: "a", append: "x\n" },
+    }
+    await runDoctor({
+      argv,
+      cwd: "/w",
+      version: "1",
+      stdout: (t: string) => out.push(t),
+      stderr: () => undefined,
+      engine: {
+        diagnose: () => ({ clean: false, findings: [finding] }),
+        planFixes: () => [
+          { file: "a", before: "", after: "x\n" },
+          { file: "b", before: "", after: "y\n" },
+        ],
+      },
+      checkDirectory: async () => undefined,
+      createCapabilities: () => ({
+        git: async () => "",
+        readFile: async () => undefined,
+        writeFile: async () => undefined,
+      }),
+    })
+    expect(out.join("")).toContain(line)
+  })
+
+  it("asks git for exactly the tracked files and core.hooksPath", async () => {
+    const files: Record<string, string | undefined> = { ...healthy.files }
+    delete files[".git/hooks/pre-commit"]
+    const run = async (hooksPath: string) => {
+      const out: string[] = []
+      const code = await runDoctor({
+        argv: [],
+        cwd: "/w",
+        version: "1",
+        stdout: (t: string) => out.push(t),
+        stderr: () => undefined,
+        engine: { diagnose, planFixes },
+        checkDirectory: async () => undefined,
+        createCapabilities: () => ({
+          git: async (args: string[]) => {
+            const asked = args.join(" ")
+            if (asked === "ls-files -z") return `${(healthy.tracked ?? []).join("\0")}\0`
+            if (asked === "config core.hooksPath") return hooksPath
+            return undefined
+          },
+          readFile: async (file: string) => files[file],
+          writeFile: async () => undefined,
+        }),
+      })
+      return { code, stdout: out.join("") }
+    }
+    expect(await run(".husky\n")).toEqual({ code: 0, stdout: "Nothing to change.\n" })
+    expect((await run("  \n")).stdout).toContain("info  hooks-missing")
+  })
+
+  it("reads only tracked vitest configs and workflows, and names a shallow checkout", async () => {
+    const shallow = "- uses: actions/checkout@v4\n- run: npm run contract\n"
+    const repo = {
+      ...healthy,
+      files: {
+        ...healthy.files,
+        ".github/workflows/ci.yml": shallow,
+        "docs/ci-notes.md": shallow,
+        "src/settings.ts": "coverage: { reporter: ['text'] }",
+      },
+      tracked: [...(healthy.tracked ?? []), "docs/ci-notes.md", "src/settings.ts"],
+    }
+    const { stdout } = await invoke([], repo)
+    expect(stdout).toContain("checkout-shallow")
+    expect(stdout).toContain(".github/workflows/ci.yml")
+    expect(stdout).not.toContain("docs/ci-notes.md")
+    expect(stdout).not.toContain("coverage-json-reporter")
+  })
+
+  it("prints each finding on its own lines, then the offer, and writes nothing without --fix", async () => {
+    const files: Record<string, string | undefined> = {
+      ...healthy.files,
+      ".gitignore": "node_modules",
+    }
+    delete files[".git/hooks/pre-commit"]
+    const { stdout, written } = await invoke([], {
+      ...healthy,
+      files: files as Record<string, string>,
+    })
+    expect(written).toEqual({})
+    expect(stdout).toBe(
+      [
+        "warn  cache-not-ignored",
+        "      .repo-contract/cache/ is not in .gitignore, so cached results could be committed.",
+        "      Add .repo-contract/cache/ to .gitignore (other files under .repo-contract/ stay tracked).",
+        "info  hooks-missing",
+        "      The git hooks that run the contract are not installed.",
+        "      Install them so a commit is checked before it leaves the machine.",
+        "",
+        "Run with --fix to apply 1 safe change.",
+        "",
+      ].join("\n"),
+    )
+  })
+
+  it("--fix prints only the lines it adds, then the count", async () => {
+    const repo = { ...healthy, files: { ...healthy.files, ".gitignore": "node_modules" } }
+    const { stdout, written } = await invoke(["--fix"], repo)
+    expect(written).toEqual({ ".gitignore": "node_modules\n.repo-contract/cache/\n" })
+    expect(stdout).toBe(
+      [
+        "warn  cache-not-ignored",
+        "      .repo-contract/cache/ is not in .gitignore, so cached results could be committed.",
+        "      Add .repo-contract/cache/ to .gitignore (other files under .repo-contract/ stay tracked).",
+        "",
+        "--- .gitignore",
+        "+++ .gitignore",
+        "+.repo-contract/cache/",
+        "",
+        "Applied 1 change.",
+        "",
+      ].join("\n"),
+    )
+  })
+
   it("runs in the directory given with -C", async () => {
     const dirs: string[] = []
     await runDoctor({
@@ -265,6 +558,7 @@ describe("runDoctor", () => {
       stdout: () => undefined,
       stderr: () => undefined,
       engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
       createCapabilities: (dir: string) => {
         dirs.push(dir)
         return {
@@ -275,5 +569,27 @@ describe("runDoctor", () => {
       },
     })
     expect(dirs).toEqual([path.resolve("/work", "pkg")])
+  })
+
+  it("runs in the working directory without -C", async () => {
+    const dirs: string[] = []
+    await runDoctor({
+      argv: [],
+      cwd: "/work",
+      version: "1",
+      stdout: () => undefined,
+      stderr: () => undefined,
+      engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
+      createCapabilities: (dir: string) => {
+        dirs.push(dir)
+        return {
+          git: async () => "",
+          readFile: async () => undefined,
+          writeFile: async () => undefined,
+        }
+      },
+    })
+    expect(dirs).toEqual([path.resolve("/work")])
   })
 })

@@ -14,7 +14,7 @@
  * anything that doesn't match.
  */
 
-import type { SecurityExceptionFields } from "../shared/exception-record.js"
+import type { SecurityExceptionFields } from "../../src/helpers/index.js"
 
 /** One Socket.dev alert, normalized from the CLI's report shape. */
 export interface NormalizedSocketAlert {

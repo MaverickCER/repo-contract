@@ -8,7 +8,7 @@
  * surface" amendment for the full rationale.
  */
 
-import type { SecurityExceptionFields } from "../shared/exception-record.js"
+import type { SecurityExceptionFields } from "../../src/helpers/index.js"
 
 /** What kind of prohibited (or unverifiable) capability a finding represents. Preset `run:` commands are reviewed by the separate `preset-commands` check (ADR 0007's amendment). */
 export type NetworkCapabilityKind =

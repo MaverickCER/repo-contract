@@ -59,6 +59,7 @@ export const STANDARD_COVERAGE: Readonly<Record<string, StandardCoverage>> = {
   Packaging: { runs: "publint" },
   TypeResolution: { runs: "arethetypeswrong" },
   PackedConsumer: { runs: "packed-consumer" },
+  BundledDependencies: { runs: "bundled-dependencies" },
   Licenses: { runs: "license" },
   DocsMarkdown: { runs: "docs" },
   BenchmarkGuides: { runs: "benchmark-guides" },

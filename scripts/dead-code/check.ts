@@ -18,9 +18,10 @@ import {
   loadExceptionRegistry,
   reconcileExceptions,
   writeExceptionRegistry,
+  asFlatExceptionRecords,
+  validateExceptionRegistry,
 } from "../../src/helpers/index.js"
 import type { StandardSchemaV1 } from "../../src/helpers/index.js"
-import { asFlatExceptionRecords, validateExceptionRegistry } from "../shared/exception-record.js"
 import type {
   DeadCodeEvidence,
   DeadCodeExceptionRecord,

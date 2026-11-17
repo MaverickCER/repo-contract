@@ -220,3 +220,52 @@ the tarball into an empty project. It then runs each command of the README block
 **Consequences.** The `bin` now starts a shell. The commands it runs are the README's own text,
 which a user runs by hand anyway. The command parsing and reporting live in
 `bin/quick-start-cli.mjs` with the process capabilities injected, so they stay unit-testable.
+
+## Amendment (2026-11-16): tiers, exceptions, mutation and npm scripts
+
+The preset redesign gives a stranger four tiers, a way to record an exception and the presets
+`strict` needs. Each needs a command or a subpath.
+
+**Decision.** Six commands and two subpath families join the surface:
+
+- `repo-contract init --preset <tier>` writes a config that spreads `basic`, `app`, `library` or
+  `strict`, plus the runner and `scripts.contract`. It writes no workflow: pinned action SHAs go
+  stale without a sync tool, and repo-contract has none. It names each tool the tier runs that
+  package.json does not declare.
+- Without `--preset`, `init` leaves `coverage`, `crap` and `mutation` to the tiers. Coverage reads
+  reports only when Tests runs with coverage flags, and Crap reads Coverage's. A flat config would
+  need a second, hand-written copy of the tiers' wiring.
+- `repo-contract explain` loads the config through the project's tsx and prints `explainTier` and
+  `renderExplain` from `repo-contract/tiers`. It starts no check.
+- `repo-contract except <id>` fills one exception record, validates it with the v2 rules from
+  `repo-contract/helpers` and writes only the registry that holds it. For a `mutation:` id with no
+  record it builds one from the Stryker report, because the Mutation check writes no stubs.
+- `repo-contract exceptions` prints the inventory from `readExceptionRegistries` and
+  `summarizeExceptionRegistries`. It judges nothing.
+- `repo-contract mutation plan|run` plans shards and runs Stryker for the `mutation` preset.
+  `repo-contract npm-script <script>` runs one npm script for the `npmScript` preset. ADR 0011's
+  2026-11-16 amendment says what each starts.
+- `repo-contract/tiers`, `repo-contract/config` and `repo-contract/config/{tsup,typedoc,knip,vitest,stryker}`
+  are Experimental, like the presets they build on
+  ([ADR 0019](0019-helpers-promoted-presets-stay-experimental.md)).
+
+Every command keeps the 2026-11-01 conventions for help, version, option syntax, `-C` and usage
+errors (exit `2`), with two departures:
+
+- Two commands write files. `except` writes the registry that holds its record. `mutation run`
+  deletes Stryker's incremental file, the previous report and the temp directory, and writes the
+  report. With `--cache read-write` it also writes `.repo-contract/cache`. Unless
+  `--no-patch-vitest-runner` is passed, it patches `@stryker-mutator/vitest-runner` in
+  `node_modules` for Vitest 5.
+- Three commands exit `1` on a failed result, not only when they cannot run. `except` does while its
+  record is incomplete, so a script can tell a filled record from a stub. `npm-script` does when the
+  script fails or changes a watched path. `mutation run` exits with Stryker's own code.
+
+**Limits.** `except` checks the shared v2 rules, and for a mutation record, that the id still
+matches its fields. A registry's own rules, such as the exception types it accepts, apply when its
+check next runs. `explain` reads settings from the tier metadata, so it cannot see inside a check
+replaced by hand.
+
+**Consequences.** The CLI still runs no check; `npm run contract` does. `repo-contract --help` lists
+twelve commands. Each command's parsing and output live in `bin/<command>-cli.mjs` with their
+capabilities injected, so the unit tests start no process.

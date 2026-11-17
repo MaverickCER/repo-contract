@@ -31,6 +31,8 @@ function isEnoent(error: unknown): boolean {
  * Writes one exception registry to disk in its canonical form (`serializeExceptionRegistry`),
  * atomically and idempotently: the sole filesystem-writing primitive in `repo-contract/helpers`.
  *
+ * - **A record that is not an object with a string `id`** -> `{ ok: false }` naming its index.
+ *   Nothing is read or written.
  * - **Symlinked target** -> `{ ok: false }`: a governance registry is never a symlink, and writing
  *   through one would escape `.repo-contract/exceptions/`.
  * - **No file yet** -> written.
@@ -77,6 +79,17 @@ export async function writeExceptionRegistry(input: {
     rename = (from: string, to: string) => renameFromFs(from, to),
     isSymlink = defaultIsSymlink,
   } = input
+
+  // Callers outside TypeScript can pass anything, and serializing a non-record would throw.
+  const malformed = records.findIndex(
+    (record: unknown) => typeof (record as { readonly id?: unknown } | null)?.id !== "string",
+  )
+  if (malformed !== -1) {
+    return {
+      ok: false,
+      error: `${path}: exceptions[${String(malformed)}] is not a record with a string id, so nothing was written.`,
+    }
+  }
 
   if (await isSymlink(path)) {
     return {

@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises"
+import { mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
@@ -289,5 +289,116 @@ describe("loadExceptionRegistry: default readFile (real node:fs/promises)", () =
 
     const result = await loadExceptionRegistry({ path: filePath, schema: fixtureExceptionsSchema })
     expect(result).toEqual({ ok: true, records: [{ id: "real-file" }] })
+  })
+})
+
+// New cases go at the end: disable-comments.json pins the suppressions above by line number.
+describe("loadExceptionRegistry: symbolic links and error text", () => {
+  const PATH = ".repo-contract/exceptions/fixture.json"
+
+  it("refuses a symlinked registry and never reads through it (default isSymlink)", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "repo-contract-load-link-"))
+    try {
+      await writeFile(path.join(dir, "real.json"), JSON.stringify({ exceptions: [{ id: "x" }] }))
+      const link = path.join(dir, "registry.json")
+      await symlink(path.join(dir, "real.json"), link)
+      expect(await loadExceptionRegistry({ path: link, schema: fixtureExceptionsSchema })).toEqual({
+        ok: false,
+        errors: [
+          `${link} is a symbolic link. An exception registry must be a regular file, and a link is never followed.`,
+        ],
+      })
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it("treats a dangling link as a link, a missing file as empty, and a broken path as unreadable (default isSymlink)", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "repo-contract-load-probe-"))
+    try {
+      const dangling = path.join(dir, "dangling.json")
+      await symlink(path.join(dir, "absent.json"), dangling)
+      const linked = await loadExceptionRegistry({
+        path: dangling,
+        schema: fixtureExceptionsSchema,
+      })
+      expect(linked.ok).toBe(false)
+      if (!linked.ok) expect(linked.errors[0]).toContain("is a symbolic link")
+      expect(
+        await loadExceptionRegistry({
+          path: path.join(dir, "absent.json"),
+          schema: fixtureExceptionsSchema,
+        }),
+      ).toEqual({ ok: true, records: [] })
+      await writeFile(path.join(dir, "file"), "")
+      const broken = path.join(dir, "file", "registry.json")
+      const result = await loadExceptionRegistry({ path: broken, schema: fixtureExceptionsSchema })
+      if (process.platform === "win32") {
+        // Windows reports a path under a file as not found, so it reads as a missing registry.
+        expect(result).toEqual({ ok: true, records: [] })
+      } else {
+        expect(result.ok).toBe(false)
+        // The probe's own failure, before any read: lstat, not open, names the path.
+        if (!result.ok) expect(result.errors[0]).toMatch(/^Could not read .*ENOTDIR.*lstat/)
+      }
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it("asks the injected isSymlink before reading, and reads nothing when it says yes", async () => {
+    const asked: string[] = []
+    let reads = 0
+    const result = await loadExceptionRegistry({
+      path: PATH,
+      schema: fixtureExceptionsSchema,
+      isSymlink: (target) => {
+        asked.push(target)
+        return Promise.resolve(true)
+      },
+      readFile: () => {
+        reads += 1
+        return Promise.resolve('{"exceptions": []}')
+      },
+    })
+    expect(asked).toEqual([PATH])
+    expect(reads).toBe(0)
+    expect(result.ok).toBe(false)
+  })
+
+  it("reads a registry the injected isSymlink calls a regular file", async () => {
+    const result = await loadExceptionRegistry({
+      path: PATH,
+      schema: fixtureExceptionsSchema,
+      isSymlink: () => Promise.resolve(false),
+      readFile: () => Promise.resolve('{"exceptions": [{"id": "a"}]}'),
+    })
+    expect(result).toEqual({ ok: true, records: [{ id: "a" }] })
+  })
+
+  it("reports a failing isSymlink probe as unreadable instead of throwing", async () => {
+    const result = await loadExceptionRegistry({
+      path: PATH,
+      schema: fixtureExceptionsSchema,
+      isSymlink: () =>
+        Promise.reject(Object.assign(new Error("EACCES: denied"), { code: "EACCES" })),
+      readFile: () => Promise.resolve('{"exceptions": []}'),
+    })
+    expect(result).toEqual({ ok: false, errors: [`Could not read ${PATH}: EACCES: denied`] })
+  })
+
+  it("names where the JSON breaks, and never quotes the file", async () => {
+    const at = await loadExceptionRegistry({
+      path: PATH,
+      schema: fixtureExceptionsSchema,
+      readFile: () => Promise.resolve('{"exceptions": [1]'),
+    })
+    expect(at).toEqual({ ok: false, errors: [`${PATH} is not valid JSON (line 1, column 19).`] })
+    const quoted = await loadExceptionRegistry({
+      path: PATH,
+      schema: fixtureExceptionsSchema,
+      readFile: () => Promise.resolve('{"exceptions": [hunter2]}'),
+    })
+    expect(quoted).toEqual({ ok: false, errors: [`${PATH} is not valid JSON.`] })
   })
 })

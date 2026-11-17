@@ -1,8 +1,10 @@
 import { readFile } from "node:fs/promises"
 import type { CheckDefinitionConfig } from "../types.js"
+import { checkMaxPercentage, evaluateDuplicationBudget } from "./rules/duplication-budget.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { readJsonReport } from "./shared/read-json-report.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 interface JscpdFileSpan {
   readonly name: string
@@ -34,9 +36,11 @@ interface JscpdReport {
 }
 
 /** Options accepted by {@link duplication}. */
-interface DuplicationOptions {
+export interface DuplicationOptions {
   /** Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope the scan to your source tree. */
   readonly path?: string
+  /** The largest share of scanned lines that may be duplicated, in percent. A pass still lists every block. Defaults to `0`: any duplicated block fails. */
+  readonly maxPercentage?: number
 }
 
 // Kept in lockstep with the `--output reports/jscpd` argument below. Both are
@@ -57,10 +61,14 @@ const REPORT_PATH = "reports/jscpd/jscpd-report.json"
  * Duplicated-code detection via jscpd.
  * @param options - configuration for this check; see {@link DuplicationOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `maxPercentage` is not a number from 0 to 100.
  * @beta
  */
 export function duplication(options: DuplicationOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("duplication", options)
   const { path = "." } = options
+  const maxPercentage = checkMaxPercentage(options.maxPercentage ?? 0)
 
   return {
     run: ["jscpd", path, "--reporters", "json", "--output", "reports/jscpd", "--silent"],
@@ -102,7 +110,7 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
         typeof total.percentage !== "number" ||
         !Number.isFinite(total.percentage)
       ) {
-        // `total.percentage` feeds `.toFixed(2)` below: a missing or non-finite
+        // `total.percentage` feeds `.toFixed(2)` in the budget: a missing or non-finite
         // value would throw or render "NaN" instead of failing cleanly.
         return { outcome: "fail", rationale: "jscpd produced invalid JSON report data." }
       }
@@ -110,28 +118,18 @@ export function duplication(options: DuplicationOptions = {}): CheckDefinitionCo
       // Re-annotated rather than used directly. `Array.isArray` narrows its
       // argument to `any[]` regardless of the checked value's declared type (a
       // long-standing TypeScript limitation). So `report.duplicates` would
-      // otherwise silently lose its `JscpdDuplicate` element type below.
+      // otherwise silently lose its `JscpdDuplicate` element type.
       const duplicates: readonly JscpdDuplicate[] = report.duplicates
 
-      if (duplicates.length === 0) {
-        return {
-          outcome: "pass",
-          rationale: `jscpd found 0 duplicated block(s) across ${String(total.sources)} file(s) (${String(total.lines)} lines).`,
-        }
-      }
-
-      const details = duplicates.map(
-        (duplicate) =>
-          `${duplicate.firstFile.name}:${String(duplicate.firstFile.start)} duplicates ${duplicate.secondFile.name}:${String(duplicate.secondFile.start)} (${String(duplicate.lines)} lines / ${String(duplicate.tokens)} tokens)`,
+      return evaluateDuplicationBudget(
+        {
+          duplicates,
+          percentage: total.percentage,
+          lines: total.lines,
+          sources: total.sources,
+        },
+        maxPercentage,
       )
-
-      return {
-        outcome: "fail",
-        rationale: [
-          `jscpd found ${String(duplicates.length)} duplicated block(s) (${total.percentage.toFixed(2)}% of ${String(total.lines)} lines across ${String(total.sources)} file(s)):`,
-          ...details.map((detail) => `- ${detail}`),
-        ].join("\n"),
-      }
     },
   }
 }

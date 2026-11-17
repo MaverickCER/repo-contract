@@ -112,6 +112,10 @@ export default tseslint.config(
       "affected/package.json",
       // Same shim, same reasoning, for the `./metrics` subpath.
       "metrics/package.json",
+      // Same shim, same reasoning, for `./tiers`, `./config` and the five `./config/<tool>` subpaths.
+      "tiers/package.json",
+      "config/package.json",
+      "config/*/package.json",
       // docs/ is the published static site (docs/index.html), not a TypeScript/source layer covered
       // by the module-boundary model (`boundaries/elements` below). Its one plain-JS asset,
       // docs/script.js, runs in the browser against browser globals this config never defines. It
@@ -184,6 +188,12 @@ export default tseslint.config(
         // src/metrics/ is a fifth independent public barrel (src/metrics/index.ts), published under
         // `./metrics`: pure record keeping and summaries over supplied data.
         { type: "metrics", pattern: "src/metrics" },
+        // src/tiers/ is a sixth independent published barrel (`./tiers`): tier functions built
+        // from src/presets/.
+        { type: "tiers", pattern: "src/tiers" },
+        // src/tool-config/ backs the seventh barrel (`./config`) and its five per-tool subpaths:
+        // plain config objects derived from package.json data.
+        { type: "tool-config", pattern: "src/tool-config" },
         // checks/ (including checks/shared/), scripts/ (including its
         // suppression-governance/architecture/adr-governance subdirectories), and eslint-rules/ are
         // each one architectural unit. None needs a finer internal boundary than "the whole tree
@@ -299,6 +309,14 @@ export default tseslint.config(
                 "src/metrics is a fifth, independent published barrel (repo-contract/metrics) -- pure record keeping over supplied data -- and must not depend on the runtime layers that consume checks -- execution, evidence, or policy.",
             },
             {
+              from: { element: { types: { anyOf: ["tiers", "tool-config"] } } },
+              disallow: {
+                to: { element: { types: { anyOf: ["execution", "evidence", "policy"] } } },
+              },
+              message:
+                "src/tiers and src/tool-config are independent published barrels (repo-contract/tiers, repo-contract/config) and must not depend on the runtime layers that consume checks -- execution, evidence, or policy.",
+            },
+            {
               from: { element: { type: "affected" } },
               disallow: {
                 to: { element: { types: { anyOf: ["execution", "evidence", "policy"] } } },
@@ -321,6 +339,8 @@ export default tseslint.config(
                         "helpers",
                         "affected",
                         "metrics",
+                        "tiers",
+                        "tool-config",
                         "standard-schema",
                       ],
                     },
@@ -514,7 +534,7 @@ export default tseslint.config(
     // `flat/recommended`. Its Node-specific correctness and forward-compat checks apply equally to
     // library source, tests, and tooling scripts. `no-missing-import` is off. eslint-plugin-n's
     // resolver produces false positives on existing files throughout this repo, e.g.
-    // checks/coverage.ts's relative import of scripts/coverage-thresholds.mjs. This package's root
+    // repo-contract.config.ts's relative import of scripts/coverage-thresholds.mjs. This package's root
     // `package.json#exports` map appears to leak into how the resolver treats plain relative
     // imports. That map curates only the *published* subpaths, not every internal relative import.
     // import-x's `no-unresolved` (see the import-x blocks above) covers the same "does this import
@@ -602,8 +622,8 @@ export default tseslint.config(
     // might want to catch; don't read ambient env instead of explicit config. None applies to a
     // one-shot script that IS the whole process for a single `npm run` invocation. None applies to
     // test setup/teardown code either. `no-process-exit` in particular is how
-    // scripts/run-mutation.mjs and scripts/run-test-category.mjs propagate a spawned child's exit
-    // code. They do it from inside an `"exit"` event callback, where `throw` can't.
+    // scripts/run-test-category.mjs propagates a spawned child's exit code. It does so from inside
+    // an `"exit"` event callback, where `throw` can't.
     files: ["scripts/**/*.mjs", "scripts/**/*.ts", "test/**/*.ts"],
     plugins: { n },
     rules: {
@@ -651,9 +671,10 @@ export default tseslint.config(
     },
   },
   {
-    // Same narrow carve-out as the scripts/ block above, for the same reason, scoped to four files
-    // in src/helpers/: load-exception-registry.ts, write-exception-registry.ts, file-cache-store.ts
-    // and contract-logs.ts. The registry helpers
+    // Same narrow carve-out as the scripts/ block above, for the same reason, scoped to six files
+    // in src/helpers/: load-exception-registry.ts, write-exception-registry.ts,
+    // persist-exception-registry.ts, exception-inventory.ts, file-cache-store.ts and
+    // contract-logs.ts. The registry helpers
     // (specs/decisions/0013-reusable-exception-policy-helper.md) take a caller-supplied `path`: the
     // calling application's registry-file location, e.g. from its check config. contract-logs.ts
     // writes under the caller's `directory` option, inside the caller's `cwd`. They access these
@@ -673,9 +694,20 @@ export default tseslint.config(
       "src/helpers/load-exception-registry.ts",
       "src/helpers/write-exception-registry.ts",
       "src/helpers/contract-logs.ts",
+      // Both take the caller's registry path or directory, as the two registry helpers above do.
+      "src/helpers/persist-exception-registry.ts",
+      "src/helpers/exception-inventory.ts",
       // The cache directory is the caller's (`.repo-contract/cache` by default). Every path inside
       // it is validated segment by segment: no `..`, absolute, drive or backslash form.
       "src/helpers/file-cache-store.ts",
+      // The `crap` preset's `report` option: crap4ts writes there, and the policy reads it back.
+      "src/presets/crap.ts",
+      // The `mutation` preset reads the Stryker report its own `repo-contract mutation run` names.
+      "src/presets/mutation.ts",
+      // `brokenLinks` asks whether a local link linkinator reported broken exists on disk. The
+      // path comes from the repository's own docs and is checked for no `..`, absolute or drive
+      // form first (localLinkPath in src/presets/rules/link-results.ts).
+      "src/presets/broken-links.ts",
     ],
     plugins: { "secure-coding": secureCoding, security },
     rules: {
@@ -838,7 +870,6 @@ export default tseslint.config(
       "scripts/dead-code/check.ts",
       "scripts/openssf-scorecard/run.ts",
       "scripts/preset-commands/scan.ts",
-      "scripts/sbom/run.ts",
       "scripts/security-network/scan.ts",
       "scripts/security-socket/scan.ts",
       "scripts/suppression-governance/check.ts",

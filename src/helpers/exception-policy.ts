@@ -88,8 +88,7 @@ export interface ExceptionDeterminant<TRecord> {
  * several classifications resolved for one record (see `evaluateExceptionRecord`). The union keeps
  * `a`'s field order, then appends `b`'s fields not already present. That keeps the result
  * deterministic without a closed field-name enum like `resolve-policy.ts`'s `REQUIREMENT_ORDER`.
- * This core owns no closed vocabulary of field names. A consumer keeps its closed enum in its
- * code, as `scripts/shared/exception-record.ts` does with `EXCEPTION_TYPES`.
+ * This core owns no closed vocabulary of field names: each check's `requirements` name them.
  * @param a - One resolved policy.
  * @param b - The other resolved policy.
  * @returns The stricter of `a` and `b`.

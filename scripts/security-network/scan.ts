@@ -22,10 +22,11 @@ import {
   loadExceptionRegistry,
   reconcileExceptions,
   writeExceptionRegistry,
+  asFlatExceptionRecords,
+  validateExceptionRegistry,
 } from "../../src/helpers/index.js"
 import type { StandardSchemaV1 } from "../../src/helpers/index.js"
 import { listSourceFiles } from "../suppression-governance/find-source-files.js"
-import { asFlatExceptionRecords, validateExceptionRegistry } from "../shared/exception-record.js"
 import type {
   NetworkCapabilityFinding,
   NetworkExceptionRecord,

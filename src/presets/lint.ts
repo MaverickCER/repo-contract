@@ -3,6 +3,7 @@ import { combinedOutput } from "./shared/exit-code-fail-rationale.js"
 import { errorWarningPassPolicy } from "./shared/error-warning-pass-policy.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /**
  * ESLint does not expose its JSON formatter result as a public LintResult
@@ -57,9 +58,11 @@ function renderMessages(results: readonly EslintResult[], severity: 1 | 2): stri
  * this preset keeps it instead of treating every finding as blocking.
  * @param options - configuration for this check; see {@link LintOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export function lint(options: LintOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("lint", options)
   const { path = "." } = options
 
   return {

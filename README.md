@@ -9,25 +9,78 @@
 [![Node](https://img.shields.io/node/v/repo-contract.svg)](https://www.npmjs.com/package/repo-contract)
 [![License](https://img.shields.io/npm/l/repo-contract.svg)](LICENSE)
 
-**Use deterministic and AI checks to enforce a baseline engineering standard across your org.**
+**One typed contract for the tools your CI runs: each check says pass, warn or fail and why; every governed exception is a reviewable record.**
 
-repo-contract is a TypeScript library and CLI for teams that own quality gates in one repository or many. Each tool your CI runs, such as `tsc`, ESLint or Vitest, becomes a **deterministic check** in one typed config file, the **contract**: the same code always gets the same result. A **policy**, a function you write, reads a check's result and returns `pass`, `warn` or `fail` with a reason that says what to fix. `npm run contract` runs every check the same way on a laptop, in a git hook and in CI.
-
-An **AI check** asks a model reviewer for a fixed JSON shape with a confidence score on every finding. The [`aiReview` preset](GUIDE.md#ai-review-checks) runs the agent you name and fails only on confident `error` findings. It warns on the rest, so a model's changing answers stay visible without flipping builds.
-
-Publish a contract as an npm package and it becomes your organization's **standard**. It is a **baseline**: every repository that extends it runs the same checks and policies, can add its own on top, and gets changes as a dependency update. Shared ESLint configs and reusable workflows share single checks; a standard also shares the policies that judge them.
+For engineers who own quality gates in one repository or many. Most presets wrap a real tool, such as tsc, ESLint, Vitest or Stryker; `coverage`, `sbom`, `distNoUrls` and `bundledDependencies` run their own `node -e` script.
+A policy you write turns the tool's output into a verdict with a reason. It can read another check's result first.
+A governed exception, kept in an exception registry that `repo-contract except <id>` can fill in, holds a justification, review fields and an optional expiry date. A tier check turned off shows in `explain` as loosened. Agents get the same reasons, a skill and JSON with published schemas.
+It runs the tools you install and replaces none of them.
 
 <!-- quick-start:begin -->
 
 ```sh
-npm install --save-dev repo-contract tsx
-npx repo-contract init   # writes a contract for the tools your package.json lists
-npm run contract         # one [PASS|WARN|FAIL] line per check, with its reason
+npm i -D repo-contract tsx
+npx repo-contract init --preset strict   # writes the config, the runner and scripts.contract
+npx repo-contract explain                # lists the tier's checks and any setting you loosened
 ```
 
 <!-- quick-start:end -->
 
-The [`examples/demo/`](examples/demo/README.md) contract runs three published presets against one deliberately imperfect file. `npm run demo` prints:
+Next, install the tools `init` listed as missing, then run the gate. For `strict` in an empty project, that is:
+
+```sh
+npm i -D prettier eslint typescript vitest secretlint knip jscpd licensee linkinator @vitest/coverage-v8 publint @arethetypeswrong/cli @danibram/crap4ts markdownlint-cli2 @commitlint/cli @stryker-mutator/core @stryker-mutator/vitest-runner
+npm run contract   # one [PASS|WARN|FAIL] line per check, with its reason
+```
+
+Tiers (`basic`, `app`, `library`, `strict`) and `explain` are Experimental. Plain `npx repo-contract init` wires the tools your package.json lists. It also adds three checks that need no tool: `securityDeps` always, `bundledDependencies` unless the package is private, and `distNoUrls` when it publishes `dist/`.
+
+[Why](#why-it-exists) · [Alternatives](#alternatives) · [See it run](#see-it-run) · [Install](#install-and-verify) · [Limits](#limits-and-when-not-to-use-it) · [Security](#security-and-supply-chain) · [Maturity](#maturity-versioning-and-support) · [Guide](GUIDE.md)
+
+## Why it exists
+
+**Problem:** green CI does not mean your rules held. Coverage stays above the floor while the new file you added has almost none. The mutation score moves because the test suite moved, and nothing reconciles the two. A contributor gets "CI failed" and no idea what the repository expects. The rules live across CI YAML, `package.json` scripts, tool configuration and review habits, so no single file says what they are.
+
+**Who it is for:** platform and staff engineers who own quality gates for several repositories, and teams whose gates have outgrown independent CI steps. A developer can use it alone in one repository.
+
+**Outcome:** one reviewed, versioned contract that runs on a laptop and in CI. It tells a contributor what to fix, not only that something failed. Publish it as an npm package and it becomes your organization's **standard**. Each repository that extends it runs the same checks and policies, and can add its own.
+
+## How it differs
+
+Hook runners such as pre-commit and lefthook judge by exit code. In repo-contract, each tool's output becomes **evidence**, and your policies decide what it means. A policy can read one check's evidence to judge another, and the same typed code runs locally and in CI.
+
+Sharing config is not new: lefthook `remotes` and MegaLinter `EXTENDS` share commands across repositories, and Renovate presets share config. A standard also shares the policies that judge the results. It stays a dependency, so a changed check or policy arrives as an update.
+
+### Alternatives
+
+| Use instead                                     | When you need                                                | repo-contract adds                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| husky + lint-staged, or lefthook                | Commands on staged files, set up in a minute                 | Warn as well as fail, a reason per check, and waivers that can expire                                    |
+| pre-commit, Trunk, MegaLinter or Qlty           | Hooks for many languages, with the tools installed for you   | A policy that reads another check's result, and evidence JSON with published schemas                     |
+| Trunk "Hold The Line"                           | Only new issues fail, line by line                           | A dated ratchet you write as a policy (`warn` until a date, then `fail`), per check rather than per line |
+| Danger JS                                       | `warn()` and `fail()` comments about the pull request itself | Wrapped tools with recorded evidence; Danger can still post the summary                                  |
+| Nx or Turborepo                                 | Remote caching and task graphs across a monorepo             | Test-level scope with `--explain`, and mutation shards                                                   |
+| `vitest --changed` or `jest --findRelatedTests` | Only the tests a change touches                              | Why each test was picked, and the mutation targets for the same change                                   |
+
+repo-contract installs no tools. If you want them installed for you, pick pre-commit, Trunk, MegaLinter or Qlty.
+
+## What it does
+
+A **check** runs a command and captures its result as **evidence**. A **policy** you own turns that evidence into a **verdict**: `pass`, `warn` or `fail`, each with a reason (its `rationale` field). `warn` is visible and does not block the run; `fail` does. [How it works](GUIDE.md#the-model) covers the model; [presets](GUIDE.md#presets) wrap the common tools (TypeScript, ESLint, Vitest, Prettier, security auditing, dead-code and package validation).
+
+### See it run
+
+[`examples/demo/`](examples/demo/README.md) runs three published presets against one deliberately imperfect file:
+
+```ts
+checks: {
+  typecheck,
+  format: { ...format, run: ["prettier", "--check", "."] },
+  lint: lint(),
+}
+```
+
+`npm run demo` prints:
 
 <!-- example-output: demo/demo (scripts/run-examples.mjs fails CI when the demo stops printing these lines) -->
 
@@ -46,40 +99,6 @@ The [`examples/demo/`](examples/demo/README.md) contract runs three published pr
   - src/greet.ts:15:3 [no-console]: Unexpected console statement.
 ```
 
-It runs your linters, test runners and scanners, and replaces none of them. Skip it when exit codes already tell you enough.
-
-[Why](#why-it-exists) · [See it run](#see-it-run) · [Install](#install-and-verify) · [Fit](#fit-and-capabilities) · [Limits](#limits-and-when-not-to-use-it) · [Security](#security-and-supply-chain) · [Maturity](#maturity-versioning-and-support) · [Docs](#documentation)
-
-## Why it exists
-
-**Problem:** green CI does not mean your rules held. Coverage stays above the floor while the new file you added has almost none. The mutation score moves because the test suite moved, and nothing reconciles the two. A contributor gets "CI failed" and no idea what the repository expects. The rules live across CI YAML, `package.json` scripts, tool configuration and review habits, so no single file says what they are.
-
-**Who it is for:** platform and staff engineers who own quality gates for several repositories, and teams whose gates have outgrown independent CI steps. A developer can use it alone in one repository.
-
-**Outcome:** one reviewed, versioned contract that runs on a laptop and in CI. It tells a contributor what to fix, not only that something failed. Twenty repositories that copy CI YAML end up with twenty slightly different rule sets. Twenty that extend one standard get the same rules through a dependency update.
-
-## How it differs
-
-Tools run checks, and CI jobs aggregate their exit codes. repo-contract sits a layer under both: it records each tool's output as **evidence**, then your policies decide what that evidence means. A policy can also read one check's evidence to judge another, and the same typed code runs locally and in CI.
-
-A template repository copies a starting point once, and each copy then drifts. A standard stays a dependency, so its checks, its policies and the reason for each outcome keep arriving as updates.
-
-## What it does
-
-A **check** runs a command and captures its result as **evidence**. A **policy** you own turns that evidence into a **verdict**: `pass`, `warn` or `fail`, each with a reason (its `rationale` field). `warn` is visible and does not block the run; `fail` does. [How it works](GUIDE.md#the-model) covers the model; [presets](GUIDE.md#presets) wrap the common tools (TypeScript, ESLint, Vitest, Prettier, security auditing, dead-code and package validation).
-
-### See it run
-
-The output at the top of this page comes from these checks in [`examples/demo/`](examples/demo/README.md):
-
-```ts
-checks: {
-  typecheck,
-  format: { ...format, run: ["prettier", "--check", "."] },
-  lint: lint(),
-}
-```
-
 Each result names the check, its outcome and the reason behind it. Failures carry the diagnostics needed to fix them; warnings stay visible without blocking. [`examples/release-gate/`](examples/release-gate/README.md) adds a fourth check, `release`, whose policy reads the other three and makes one decision:
 
 <!-- example-output: release-gate/demo (scripts/run-examples.mjs fails CI when the example stops printing these lines) -->
@@ -89,7 +108,7 @@ Each result names the check, its outcome and the reason behind it. Failures carr
   Release blocked by format. Passing: typecheck. lint: 0 error(s), 1 warning(s); warnings do not block a release.
 ```
 
-The demo's [AI review check](examples/demo/README.md#the-ai-review-check) runs the demo contract as a baseline and adds the `aiReview` preset. Given a recorded reply with one confident error, it adds:
+An **AI check** asks a model reviewer for fixed JSON with a confidence score on every finding. Only confident `error` findings fail it; the rest warn, so low-confidence answers stay visible without failing the build. The demo's [AI review check](examples/demo/README.md#the-ai-review-check) adds the [`aiReview` preset](GUIDE.md#ai-review-checks). Given a recorded reply with one confident error, it prints:
 
 <!-- example-output: demo/ai-review (scripts/run-examples.mjs fails CI when the example stops printing these lines) -->
 
@@ -105,22 +124,18 @@ The demo's [AI review check](examples/demo/README.md#the-ai-review-check) runs t
 A policy can read any other check's evidence. Here mutation testing is only meaningful once the tests pass:
 
 ```ts
-checks: {
-  tests: test,
-
-  mutation: {
-    run: ["npm", "run", "mutation"],
-    dependsOn: ["tests"], // orders execution and hands this policy the tests' evidence
-    policy: ({ result, dependencies }) => {
-      if (dependencies.tests?.exitCode !== 0) {
-        return { outcome: "fail", rationale: "The test suite is failing, so no mutation score was evaluated. Fix the failing tests first." }
-      }
-      return result.exitCode === 0
-        ? { outcome: "pass", rationale: "Mutation testing passed against a green test suite." }
-        : { outcome: "fail", rationale: "Tests pass but mutation testing failed: surviving mutants mean tests run code they never assert on." }
-    },
+mutation: {
+  run: ["npm", "run", "mutation"],
+  dependsOn: ["tests"], // orders execution and hands this policy the tests' evidence
+  policy: ({ result, dependencies }) => {
+    if (dependencies.tests?.exitCode !== 0) {
+      return { outcome: "fail", rationale: "The test suite is failing, so no mutation score was evaluated. Fix the failing tests first." }
+    }
+    return result.exitCode === 0
+      ? { outcome: "pass", rationale: "Mutation testing passed against a green test suite." }
+      : { outcome: "fail", rationale: "Tests pass but mutation testing failed: surviving mutants mean tests run code they never assert on." }
   },
-}
+},
 ```
 
 `dependsOn` orders execution and exposes the dependency's evidence to the policy, but it does not skip a check. The mutation command still runs when tests fail, and its policy decides what that evidence means. The policy separates a red dependency (no valid mutation evidence) from a valid but inadequate mutation result. The [Guide](GUIDE.md#a-fuller-example-cross-check-policy) has the full version with coverage floors, per-file warnings and a reason for each surviving mutant.
@@ -128,7 +143,7 @@ checks: {
 ### Evidence it works
 
 - **Self-hosted:** this repository is checked by its own contract on every change, with the coverage and mutation badges above generated from it. Mutation testing is held at zero survivors across `src/`. The `mutate` array in `stryker.config.mjs` lists each excluded file with its reason. Static mutants are not counted, and every other exception is a reviewable record ([CODE_REVIEW.md](CODE_REVIEW.md#3-automated-checks-versus-residual-review)).
-- **Tested as shipped:** CI installs and exercises the published package shape on Node.js, Bun, and Deno. It does so on Linux, macOS, and Windows ([runtime support](GUIDE.md#runtime-support)).
+- **Tested as shipped:** CI installs and exercises the packed tarball on Node.js under Linux, macOS and Windows. Bun and Deno run it on Linux only, in a CI job that fails when either runtime is missing ([runtime support](GUIDE.md#runtime-support)).
 - **Runnable proof:** the [examples](examples/README.md) are real projects, not snippets. CI's `examples` job runs each example's main command (`scripts/run-examples.mjs`) and checks the exit code and output lines its README shows. Follow-up steps, such as fixing a file and rerunning, are not run. They cover the demo above, a [ratchet rollout](examples/day-one-walkthrough/README.md), a [governed exception](examples/exceptions-walkthrough/README.md), and a [cross-check release gate](examples/release-gate/README.md).
 - **Verifiable release:** published with npm OIDC provenance, so a consumer can check that an artifact was built by this repository's CI ([ADOPTION.md](ADOPTION.md#security--threat-model)).
 
@@ -136,22 +151,11 @@ checks: {
 
 **Prerequisites:** Node.js `>=22` (Bun and Deno are tested too) and a project with a `package.json`. The package has no runtime dependencies and bundles none of the tools it runs. Install the ones you want checked (`typescript`, `eslint`, `vitest`, and so on), and `init` wires up the checks for what it finds.
 
-The three commands at the top of this page are the whole install. `init` writes `repo-contract.config.mts` and `scripts/contract.mjs`, and adds a `contract` script to `package.json`. In a project with only these two packages, `init` wires `securityDeps`, which passes when `npm audit` finds nothing. It also wires `bundledDependencies` unless package.json is `private`. A tool you add later gets its check by adding its [preset](GUIDE.md#presets) to the generated config (`init` never overwrites existing files). Each tool still needs its own configuration (`tsconfig.json`, an ESLint flat config). `init` does not scaffold those; a missing one surfaces as that tool's own "no config found" error.
+The quick start at the top installs the package and `tsx`, which loads the TypeScript config. `init --preset strict` writes `repo-contract.config.mts`, which spreads the [tier](GUIDE.md#tiers), and `scripts/contract.mjs`, and adds a `contract` script to `package.json`. It also names each tool the tier runs that your devDependencies lack. Plain `npx repo-contract init` wires one [preset](GUIDE.md#presets) per tool package.json lists, plus `securityDeps`, and `bundledDependencies` unless package.json is `private`. `init` never overwrites existing files, and it does not scaffold tool configuration (`tsconfig.json`, an ESLint flat config). A missing one surfaces as that tool's own "no config found" error. The smallest hand-written contract is `defineRepoContract({ spawn, env: process.env, checks: { typecheck } })`, with `spawn` from `node:child_process`.
 
-The smallest hand-written contract has the same shape as the file `init` generates:
+**Verify it works:** `npm run contract` prints one `[PASS|WARN|FAIL] check: rationale` line per check and exits non-zero on a `fail`. Point your pre-commit hook and CI job at that same command. Saving evidence as files and publishing a CI summary are in the [Guide](GUIDE.md#the-runner-and-ci-integration); [Windows notes](GUIDE.md#troubleshooting) are in the troubleshooting table.
 
-```ts
-// repo-contract.config.mts
-import { spawn } from "node:child_process"
-import { defineRepoContract } from "repo-contract"
-import { typecheck } from "repo-contract/presets"
-
-export default defineRepoContract({ spawn, env: process.env, checks: { typecheck } })
-```
-
-**Verify it works:** `npm run contract` prints one `[PASS|WARN|FAIL] check: rationale` line per check and exits non-zero on a `fail`. Point your pre-commit hook and CI job at that same command. Writing the runner by hand, saving evidence as JSON, and publishing a CI summary are in the [Guide](GUIDE.md#the-runner-and-ci-integration); [Windows notes](GUIDE.md#troubleshooting) are in the troubleshooting table.
-
-**Using an AI agent?** Give it [the skill](https://raw.githubusercontent.com/MaverickCER/repo-contract/main/skills/repo-contract/SKILL.md): a short manual written from this package's own exports, with the rules a type signature cannot say.
+**Using an AI agent?** The package ships its skill at `node_modules/repo-contract/skills/repo-contract/SKILL.md`, a short manual written from its own exports. `npm run --silent contract -- --json` prints the run as JSON: the evidence and verdict documents, each valid against its `repo-contract/schema` file. `--silent` keeps npm's banner out of the JSON. This repository's `agent-skill` check keeps the skill current and within its word budget; nothing measures whether it makes an agent more accurate.
 
 ### Run less on a pull request
 
@@ -159,18 +163,13 @@ export default defineRepoContract({ spawn, env: process.env, checks: { typecheck
 
 ## Fit and capabilities
 
-**Use cases:**
-
-- Enforce a quality bar in one repository.
-- Hold one standard across many repositories: an internal package wraps a contract and owns the executors ([ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md)).
-- Roll out a new requirement safely as a dated `warn` that becomes `fail` ([ratchet](examples/day-one-walkthrough/README.md)).
-- Give CI bots and coding agents a concrete reason to act on.
+**Use cases:** enforce a quality bar in one repository. Hold one standard across many, with an internal package that wraps a contract ([ADR 0010](specs/decisions/0010-review-driven-contracts-and-shared-internal-system-contracts.md)). Roll out a new requirement as a dated `warn` that becomes `fail` ([ratchet](examples/day-one-walkthrough/README.md)). Give CI bots and coding agents a reason to act on.
 
 **Core capabilities:**
 
 - Checks that run any command, with output parsed as JSON or validated against a schema ([Defining checks](GUIDE.md#defining-checks)).
 - Policies that read other checks' evidence, with `dependsOn` ordering and `isolated` barriers.
-- Presets for common tools, spread and overridden as needed ([catalog](GUIDE.md#presets)).
+- Presets for common tools, spread and overridden as needed ([catalog](GUIDE.md#presets)), and four tiers that bundle them: `basic`, `app`, `library` and `strict` ([tiers](GUIDE.md#tiers)).
 - Structured, schema-versioned evidence and verdict documents, plus a Markdown summary renderer ([Persisting a run](GUIDE.md#persisting-a-run-and-publishing-a-summary)).
 - Ratchets and [governed exceptions](GUIDE.md#advanced-governed-exceptions) for a justified waiver of one finding without weakening the check.
 
@@ -181,13 +180,13 @@ export default defineRepoContract({ spawn, env: process.env, checks: { typecheck
 ## Limits and when not to use it
 
 - **Skip it when** `npm test` plus a linter is the whole story. The same goes when each CI check is independent and that is fine, or you need no policy logic beyond exit codes.
-- **Trade-offs:** it is a layer you maintain (a config and a runner). Checks run as local processes, so tools must be installed in every environment. `init`'s detection table, the presets, `./affected` and `./metrics` are Experimental and may change shape before 1.0.
+- **Trade-offs:** it is a layer you maintain (a config and a runner). Checks run as local processes, so tools must be installed in every environment. `init`'s detection table, the presets, `./tiers`, `./config`, `./affected` and `./metrics` are Experimental and may change shape before 1.0.
 - **Not a replacement** for your CI provider, test runner, or scanners. It does not install tools, host results, or authorize anything; it is not a dashboard.
-- **Automation:** agents and bots can consume the same structured verdicts, but a reason does not ensure a fix converges. The loop that retries, stops, and validates changes is the automation's job.
+- **Automation:** agents and bots can read the same verdicts as JSON, but a reason does not ensure a fix converges. The loop that retries, stops, and validates changes is the automation's job.
 
 ## Security and supply chain
 
-- **Runtime properties:** no shell by default (a `run` array is argv; a string is tokenized). No ambient spawn or environment access in the library; the `affected` and `doctor` commands in the `bin` run `git`, and `quick-start` runs npm and the commands your README marks ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md#amendment-2026-11-01-the-command-line-tool-is-a-consumer-of-its-own-library)). The library makes no network calls and sends no telemetry, and a check in this repository's own contract enforces the no-network property ([SECURITY.md](SECURITY.md#runtime-security-model)).
+- **Runtime properties:** no shell by default (a `run` array is argv; a string is tokenized). No ambient spawn or environment access in the library. In the `bin`, `affected` and `doctor` run `git`, and `quick-start` runs npm and the commands your README marks. `npm-script` runs one npm script, and `mutation run` runs Stryker ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md#amendment-2026-11-01-the-command-line-tool-is-a-consumer-of-its-own-library)). The library makes no network calls and sends no telemetry, and a check in this repository's own contract enforces the no-network property ([SECURITY.md](SECURITY.md#runtime-security-model)).
 - **Trust boundaries:** it executes the commands your config names with the environment you pass, so the config and any policy you write are trusted code. What these properties do not cover is in [Application responsibilities](SECURITY.md#application-responsibilities).
 - **Dependencies and licence:** zero runtime dependencies (the list, generated from `package.json`, is in the [Adoption guide](ADOPTION.md#security--threat-model)), MIT licensed. Two CycloneDX SBOMs are committed, one for what installing the package adds and one for this repository's build tooling ([what each covers](SECURITY.md#sboms)).
 - **Reporting:** [private security advisory](https://github.com/MaverickCER/repo-contract/security/advisories/new); supported versions are in [SECURITY.md](SECURITY.md#supported-versions).

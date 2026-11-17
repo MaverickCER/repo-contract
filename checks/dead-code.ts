@@ -1,6 +1,6 @@
 import type { DeadCodeEvidence } from "../scripts/dead-code/evidence-types.js"
 import { DEAD_CODE_EXCEPTION_SCHEMA } from "../scripts/dead-code/registry.js"
-import { validateExceptionRegistry } from "../scripts/shared/exception-record.js"
+import { validateExceptionRegistry } from "../src/helpers/index.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 

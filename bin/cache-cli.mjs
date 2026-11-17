@@ -6,6 +6,7 @@
 // they say, and only ever touch the cache directory.
 
 import path from "node:path"
+import { checkDirectory } from "./cli-options.mjs"
 
 export const CACHE_USAGE = `Usage: repo-contract cache <command> [options]
 
@@ -259,6 +260,9 @@ async function readInputs(readFile, file, resolved) {
  * @param {(text: string) => void} input.stdout - Writes to standard output.
  * @param {(text: string) => void} input.stderr - Writes to standard error.
  * @param {object} input.engine - `createCache`.
+ * @param {(dir: string) => string | undefined | Promise<string | undefined>} [input.checkDirectory]
+ *   - Checks the `-C` directory without throwing: `undefined`, or a message. Defaults to
+ *   `checkDirectory`.
  * @param {(dir: string) => object} input.createStore - Builds the store over a directory.
  * @param {(file: string) => Promise<string | undefined>} input.readFile - Reads a file (for `why`).
  * @param {() => Date} input.now - The clock.
@@ -285,6 +289,11 @@ export async function runCache(input) {
   const root = path.resolve(input.cwd, options.cwd ?? ".")
   const directory = path.resolve(root, options.cacheDir ?? path.join(".repo-contract", "cache"))
   try {
+    const directoryProblem = await (input.checkDirectory ?? checkDirectory)(root)
+    if (directoryProblem !== undefined) {
+      input.stderr(`repo-contract cache: ${directoryProblem}\n`)
+      return 1
+    }
     const cache = input.engine.createCache({
       store: input.createStore(directory),
       mode: "read-write",

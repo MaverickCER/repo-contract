@@ -1,6 +1,6 @@
 import type { PresetCommandExceptionRecord, PresetCommandFinding } from "./evidence-types.js"
 import { derivePresetCommandId } from "./evidence-types.js"
-import type { ExceptionRegistrySchema } from "../shared/exception-record.js"
+import type { ExceptionRegistrySchema } from "../../src/helpers/index.js"
 
 export type { PresetCommandExceptionRecord } from "./evidence-types.js"
 

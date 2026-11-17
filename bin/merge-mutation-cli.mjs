@@ -7,6 +7,7 @@
 // the shards cannot be merged, 2 for a usage error.
 
 import path from "node:path"
+import { checkDirectory } from "./cli-options.mjs"
 
 export const MERGE_MUTATION_USAGE = `Usage: repo-contract merge-mutation --total <n> [options] <shard>=<file>...
 
@@ -97,6 +98,9 @@ function messageOf(error) {
  * @param {(text: string) => void} input.stdout - Writes to standard output.
  * @param {(text: string) => void} input.stderr - Writes to standard error.
  * @param {object} input.engine - `mergeMutationReports`.
+ * @param {(dir: string) => string | undefined | Promise<string | undefined>} [input.checkDirectory]
+ *   - Checks the `-C` directory without throwing: `undefined`, or a message. Defaults to
+ *   `checkDirectory`.
  * @param {(file: string) => Promise<string | undefined>} input.readFile - Reads a file.
  * @param {(file: string, text: string) => Promise<void>} input.writeFile - Writes a file.
  * @returns {Promise<number>} The exit status.
@@ -125,6 +129,8 @@ export async function runMergeMutation(input) {
     return 1
   }
   try {
+    const directoryProblem = await (input.checkDirectory ?? checkDirectory)(root)
+    if (directoryProblem !== undefined) return fail(directoryProblem)
     const reports = []
     for (const { shard, file } of options.reports) {
       const text = await input.readFile(path.resolve(root, file))

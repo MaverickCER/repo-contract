@@ -1,0 +1,3875 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.60.1",
+    "schemaVersion": 1011,
+    "oldestForwardsCompatibleVersion": 1001,
+    "tsdocConfig": {
+      "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+      "noStandardTags": true,
+      "tagDefinitions": [
+        {
+          "tagName": "@alpha",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@beta",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@defaultValue",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@decorator",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@deprecated",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@eventProperty",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@example",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@experimental",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@inheritDoc",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@internal",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@label",
+          "syntaxKind": "inline"
+        },
+        {
+          "tagName": "@link",
+          "syntaxKind": "inline",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@override",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@packageDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@param",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@privateRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@public",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@readonly",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@remarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@returns",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@sealed",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@see",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@throws",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@typeParam",
+          "syntaxKind": "block",
+          "allowMultiple": true
+        },
+        {
+          "tagName": "@virtual",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@jsx",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxRuntime",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxFrag",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@jsxImportSource",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@betaDocumentation",
+          "syntaxKind": "modifier"
+        },
+        {
+          "tagName": "@internalRemarks",
+          "syntaxKind": "block"
+        },
+        {
+          "tagName": "@preapproved",
+          "syntaxKind": "modifier"
+        }
+      ],
+      "supportForTags": {
+        "@alpha": true,
+        "@beta": true,
+        "@defaultValue": true,
+        "@decorator": true,
+        "@deprecated": true,
+        "@eventProperty": true,
+        "@example": true,
+        "@experimental": true,
+        "@inheritDoc": true,
+        "@internal": true,
+        "@label": true,
+        "@link": true,
+        "@override": true,
+        "@packageDocumentation": true,
+        "@param": true,
+        "@privateRemarks": true,
+        "@public": true,
+        "@readonly": true,
+        "@remarks": true,
+        "@returns": true,
+        "@sealed": true,
+        "@see": true,
+        "@throws": true,
+        "@typeParam": true,
+        "@virtual": true,
+        "@betaDocumentation": true,
+        "@internalRemarks": true,
+        "@preapproved": true
+      },
+      "reportUnsupportedHtmlElements": false
+    }
+  },
+  "kind": "Package",
+  "canonicalReference": "repo-contract!",
+  "docComment": "/**\n * Four tiers of checks, each a function that returns `checks` to spread into\n * `defineRepoContract`: `basic`, `app`, `library` and `strict`. Each tier holds every check of the\n * tier before it. One overrides object, keyed by check id, changes a check's options or turns it\n * off. `explainTier` and `renderExplain` say what a config runs and what it loosened.\n *\n * Built from `repo-contract/presets`, so Experimental like them. Published under its `./tiers`\n * subpath, independent of the other barrels.\n *\n * @packageDocumentation\n */\n",
+  "name": "repo-contract",
+  "preserveMemberOrder": false,
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "repo-contract!",
+      "name": "",
+      "preserveMemberOrder": false,
+      "members": [
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!app:function(1)",
+          "docComment": "/**\n * `basic` plus Build, DeadCode, Duplication (2%), Licenses, DocsLinks and Coverage (80% of lines\n * and statements): what built, shipped and maintained code needs. Tests also writes the coverage\n * reports Coverage reads.\n *\n * @param overrides - options per check id, or `false` to turn a check off.\n *\n * @returns the checks and the tier's metadata, to spread into `defineRepoContract`.\n *\n * @throws\n *\n * {TypeError} on overrides that are not an object, an override for a check the tier\n * lacks, or one that is neither `false` nor an options object the check accepts.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function app(overrides?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierOverrides",
+              "canonicalReference": "repo-contract!TierOverrides:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "AppCheckId",
+              "canonicalReference": "repo-contract!AppCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierConfig",
+              "canonicalReference": "repo-contract!TierConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "AppCheckId",
+              "canonicalReference": "repo-contract!AppCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/tiers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 6,
+            "endIndex": 10
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "overrides",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "app"
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!AppCheckId:type",
+          "docComment": "/**\n * The checks `app` turns on: `basic` plus what built, shipped and maintained code needs.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type AppCheckId = "
+            },
+            {
+              "kind": "Reference",
+              "text": "BasicCheckId",
+              "canonicalReference": "repo-contract!BasicCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": " | \"Build\" | \"DeadCode\" | \"Duplication\" | \"Licenses\" | \"DocsLinks\" | \"Coverage\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "AppCheckId",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 3
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!basic:function(1)",
+          "docComment": "/**\n * Format, Lint, Typecheck, Tests, SecuritySecrets and SecurityDeps: what every codebase with\n * source code needs.\n *\n * @param overrides - options per check id, or `false` to turn a check off.\n *\n * @returns the checks and the tier's metadata, to spread into `defineRepoContract`.\n *\n * @throws\n *\n * {TypeError} on overrides that are not an object, an override for a check the tier\n * lacks, or one that is neither `false` nor an options object the check accepts.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function basic(overrides?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierOverrides",
+              "canonicalReference": "repo-contract!TierOverrides:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "BasicCheckId",
+              "canonicalReference": "repo-contract!BasicCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierConfig",
+              "canonicalReference": "repo-contract!TierConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "BasicCheckId",
+              "canonicalReference": "repo-contract!BasicCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/tiers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 6,
+            "endIndex": 10
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "overrides",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "basic"
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!BasicCheckId:type",
+          "docComment": "/**\n * The checks `basic` turns on: what every codebase with source code needs.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type BasicCheckId = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"Format\" | \"Lint\" | \"Typecheck\" | \"Tests\" | \"SecuritySecrets\" | \"SecurityDeps\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "BasicCheckId",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!compareSetting:function(1)",
+          "docComment": "/**\n * Compares one setting with its baseline. A value the baseline sets but the config leaves out\n * (a coverage metric no longer judged) is looser; one only the config sets is stricter.\n *\n * @param direction - which way the setting gets stricter.\n *\n * @param baseline - the baseline's value, or `undefined` when the baseline does not judge it.\n *\n * @param value - the config's value, or `undefined` when the config does not judge it.\n *\n * @returns whether the config is stricter, the same or looser.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function compareSetting(direction: "
+            },
+            {
+              "kind": "Reference",
+              "text": "LooseningDirection",
+              "canonicalReference": "repo-contract!LooseningDirection:type"
+            },
+            {
+              "kind": "Content",
+              "text": ", baseline: "
+            },
+            {
+              "kind": "Content",
+              "text": "number | undefined"
+            },
+            {
+              "kind": "Content",
+              "text": ", value: "
+            },
+            {
+              "kind": "Content",
+              "text": "number | undefined"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "SettingComparison",
+              "canonicalReference": "repo-contract!SettingComparison:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/loosening.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 7,
+            "endIndex": 8
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "direction",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "baseline",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "value",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "compareSetting"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ExplainableConfig:interface",
+          "docComment": "/**\n * The part of a config `explainTier` reads. A config built by a tier carries `tier`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ExplainableConfig "
+            }
+          ],
+          "fileUrlPath": "src/tiers/explain.ts",
+          "releaseTag": "Public",
+          "name": "ExplainableConfig",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainableConfig#checks:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly checks: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Readonly",
+                  "canonicalReference": "!Readonly:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, unknown>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "checks",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainableConfig#tier:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly tier?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "tier",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ExplainBaseline:interface",
+          "docComment": "/**\n * What a config is compared against: a tier's defaults, or a stricter standard such as IPC's.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ExplainBaseline "
+            }
+          ],
+          "fileUrlPath": "src/tiers/explain.ts",
+          "releaseTag": "Public",
+          "name": "ExplainBaseline",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainBaseline#checks:member",
+              "docComment": "/**\n * The check ids the baseline turns on.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly checks: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "checks",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainBaseline#name:member",
+              "docComment": "/**\n * A name for the rendered output, such as `\"strict\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainBaseline#planned:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly planned: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PlannedCheck",
+                  "canonicalReference": "repo-contract!PlannedCheck:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "planned",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainBaseline#settings:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly settings: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierSettings",
+                  "canonicalReference": "repo-contract!TierSettings:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "settings",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ExplainedCheck:interface",
+          "docComment": "/**\n * One check in the config, as `explain` reports it.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ExplainedCheck "
+            }
+          ],
+          "fileUrlPath": "src/tiers/explain.ts",
+          "releaseTag": "Public",
+          "name": "ExplainedCheck",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainedCheck#enabled:member",
+              "docComment": "/**\n * `false` when the tier's overrides turned the check off.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly enabled: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "enabled",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainedCheck#id:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly id: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "id",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainedCheck#loosened:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly loosened: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Loosening",
+                  "canonicalReference": "repo-contract!Loosening:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "loosened",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainedCheck#settings:member",
+              "docComment": "/**\n * The numeric settings in force, as `explain` knows them from the tier metadata.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly settings: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Readonly",
+                  "canonicalReference": "!Readonly:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, number>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "settings",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExplainedCheck#source:member",
+              "docComment": "/**\n * `\"tier\"` when the baseline turns the check on; `\"added\"` when only the config does.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly source: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"tier\" | \"added\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "source",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!explainTier:function(1)",
+          "docComment": "/**\n * Lists what a config runs and every setting looser than the baseline. Without a baseline it\n * compares against the defaults of the tier the config carries. Settings come from the tier\n * metadata alone: a check replaced by hand keeps the metadata's settings, and a config without\n * metadata has its checks compared but not its settings.\n *\n * @param config - a config, usually one spread from a tier.\n *\n * @param baseline - what to compare against; defaults to the config's own tier.\n *\n * @returns the explanation.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function explainTier(config: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExplainableConfig",
+              "canonicalReference": "repo-contract!ExplainableConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ", baseline?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExplainBaseline",
+              "canonicalReference": "repo-contract!ExplainBaseline:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierExplanation",
+              "canonicalReference": "repo-contract!TierExplanation:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/explain.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 5,
+            "endIndex": 6
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "config",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "baseline",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "explainTier"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!LIBRARY_ONLY_CHECKS:var",
+          "docComment": "/**\n * The checks that only matter to a package someone installs. On a `private: true` package they pass as not applicable.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "LIBRARY_ONLY_CHECKS: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierCheckId",
+              "canonicalReference": "repo-contract!TierCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            }
+          ],
+          "fileUrlPath": "src/tiers/catalog.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "LIBRARY_ONLY_CHECKS",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!library:function(1)",
+          "docComment": "/**\n * `app` plus Packaging, TypeResolution, BundledDependencies and QuickStart: what keeps a package\n * working for the people who install it. On a `private: true` package these four pass as not\n * applicable.\n *\n * @param overrides - options per check id, or `false` to turn a check off.\n *\n * @returns the checks and the tier's metadata, to spread into `defineRepoContract`.\n *\n * @throws\n *\n * {TypeError} on overrides that are not an object, an override for a check the tier\n * lacks, or one that is neither `false` nor an options object the check accepts.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function library(overrides?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierOverrides",
+              "canonicalReference": "repo-contract!TierOverrides:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "LibraryCheckId",
+              "canonicalReference": "repo-contract!LibraryCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierConfig",
+              "canonicalReference": "repo-contract!TierConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "LibraryCheckId",
+              "canonicalReference": "repo-contract!LibraryCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/tiers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 6,
+            "endIndex": 10
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "overrides",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "library"
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!LibraryCheckId:type",
+          "docComment": "/**\n * The checks `library` turns on: `app` plus what keeps a package working for the people who install it.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type LibraryCheckId = "
+            },
+            {
+              "kind": "Reference",
+              "text": "AppCheckId",
+              "canonicalReference": "repo-contract!AppCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": " | \"Packaging\" | \"TypeResolution\" | \"BundledDependencies\" | \"QuickStart\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "LibraryCheckId",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 3
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!LOOSENING_RULES:var",
+          "docComment": "/**\n * Every numeric setting `explain` compares. Coverage and the mutation score are stricter higher.\n * The duplication budget and the CRAP and complexity ceilings are stricter lower. A check turned\n * off is always looser, and needs no rule.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "LOOSENING_RULES: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "LooseningRule",
+              "canonicalReference": "repo-contract!LooseningRule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            }
+          ],
+          "fileUrlPath": "src/tiers/loosening.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "LOOSENING_RULES",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!Loosening:interface",
+          "docComment": "/**\n * One setting looser than the baseline, or a baseline check turned off (`setting: \"enabled\"`).\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface Loosening "
+            }
+          ],
+          "fileUrlPath": "src/tiers/explain.ts",
+          "releaseTag": "Public",
+          "name": "Loosening",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!Loosening#baseline:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly baseline: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number | boolean | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "baseline",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!Loosening#check:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly check: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "check",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!Loosening#setting:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly setting: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "setting",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!Loosening#value:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly value: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number | boolean | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "value",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!LooseningDirection:type",
+          "docComment": "/**\n * Which way a setting gets stricter.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type LooseningDirection = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"higher-is-stricter\" | \"lower-is-stricter\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/loosening.ts",
+          "releaseTag": "Public",
+          "name": "LooseningDirection",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!LooseningRule:interface",
+          "docComment": "/**\n * One numeric setting `explain` compares, and which way it gets stricter.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface LooseningRule "
+            }
+          ],
+          "fileUrlPath": "src/tiers/loosening.ts",
+          "releaseTag": "Public",
+          "name": "LooseningRule",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!LooseningRule#check:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly check: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierCheckId",
+                  "canonicalReference": "repo-contract!TierCheckId:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " & keyof "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierSettings",
+                  "canonicalReference": "repo-contract!TierSettings:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "check",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!LooseningRule#direction:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly direction: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "LooseningDirection",
+                  "canonicalReference": "repo-contract!LooseningDirection:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "direction",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!LooseningRule#setting:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly setting: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "setting",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!PlannedCheck:interface",
+          "docComment": "/**\n * A check a tier will turn on later, with the tier it belongs to and why it waits.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface PlannedCheck "
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "PlannedCheck",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!PlannedCheck#id:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly id: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PlannedCheckId",
+                  "canonicalReference": "repo-contract!PlannedCheckId:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "id",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!PlannedCheck#reason:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly reason: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "reason",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!PlannedCheck#tier:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly tier: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierName",
+                  "canonicalReference": "repo-contract!TierName:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "tier",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!PlannedCheckId:type",
+          "docComment": "/**\n * General checks a tier will turn on in a later minor release. `explain` lists them so no tier looks more complete than it is.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type PlannedCheckId = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"DocsFragments\" | \"GithubActions\" | \"GitHygiene\" | \"PackedConsumer\" | \"EngineMatrix\" | \"Suppressions\" | \"SecurityDevDeps\" | \"CleanCheckout\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "PlannedCheckId",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!plannedChecks:function(1)",
+          "docComment": "/**\n * @param name - the tier.\n *\n * @returns the planned checks at this tier and below.\n *\n * @throws\n *\n * {TypeError} when `name` is not one of {@link TIER_NAMES}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function plannedChecks(name: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierName",
+              "canonicalReference": "repo-contract!TierName:type"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "PlannedCheck",
+              "canonicalReference": "repo-contract!PlannedCheck:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/catalog.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 6
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "name",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "plannedChecks"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!renderExplain:function(1)",
+          "docComment": "/**\n * Renders an explanation for a person: each check with its settings, then the loosened settings\n * under their own heading, then the planned checks.\n *\n * @param explanation - what {@link explainTier} returned.\n *\n * @param options - the format and heading.\n *\n * @returns the text, ending in a newline.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function renderExplain(explanation: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierExplanation",
+              "canonicalReference": "repo-contract!TierExplanation:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ", options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "RenderExplainOptions",
+              "canonicalReference": "repo-contract!RenderExplainOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/explain.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 5,
+            "endIndex": 6
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "explanation",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "renderExplain"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!RenderExplainOptions:interface",
+          "docComment": "/**\n * Options for {@link renderExplain}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface RenderExplainOptions "
+            }
+          ],
+          "fileUrlPath": "src/tiers/explain.ts",
+          "releaseTag": "Public",
+          "name": "RenderExplainOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RenderExplainOptions#format:member",
+              "docComment": "/**\n * `\"text\"` for a terminal (the default), `\"markdown\"` for a report or step summary.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly format?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"text\" | \"markdown\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "format",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!RenderExplainOptions#heading:member",
+              "docComment": "/**\n * The heading over the loosened settings. Defaults to `\"Loosened\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly heading?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "heading",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!SettingComparison:type",
+          "docComment": "/**\n * How a configured value compares with its baseline.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type SettingComparison = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"stricter\" | \"same\" | \"looser\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/loosening.ts",
+          "releaseTag": "Public",
+          "name": "SettingComparison",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!strict:function(1)",
+          "docComment": "/**\n * `library` plus Crap (30, complexity 20), DistNoUrls, DocsMarkdown, Commits and Mutation (score\n * 80, no unconfirmed Timeout). Coverage rises to 80% on all four metrics and Duplication falls to\n * 0.75%.\n *\n * @param overrides - options per check id, or `false` to turn a check off.\n *\n * @returns the checks and the tier's metadata, to spread into `defineRepoContract`.\n *\n * @throws\n *\n * {TypeError} on overrides that are not an object, or an override that is neither\n * `false` nor an options object the check accepts.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function strict(overrides?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierOverrides",
+              "canonicalReference": "repo-contract!TierOverrides:type"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierConfig",
+              "canonicalReference": "repo-contract!TierConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "StrictCheckId",
+              "canonicalReference": "repo-contract!StrictCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/tiers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 7
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "overrides",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "strict"
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!StrictCheckId:type",
+          "docComment": "/**\n * The checks `strict` turns on: `library` plus general rigor that costs time.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type StrictCheckId = "
+            },
+            {
+              "kind": "Reference",
+              "text": "LibraryCheckId",
+              "canonicalReference": "repo-contract!LibraryCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": " | \"Mutation\" | \"Crap\" | \"DistNoUrls\" | \"DocsMarkdown\" | \"Commits\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "StrictCheckId",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 3
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!TIER_NAMES:var",
+          "docComment": "/**\n * The tier names, loosest first.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "TIER_NAMES: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierName",
+              "canonicalReference": "repo-contract!TierName:type"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            }
+          ],
+          "fileUrlPath": "src/tiers/catalog.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "TIER_NAMES",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!tier:function(1)",
+          "docComment": "/**\n * Builds a tier chosen at run time, as `init --preset <tier>` and `explain` do.\n *\n * @param name - the tier.\n *\n * @param overrides - options per check id, or `false` to turn a check off.\n *\n * @returns the checks and the tier's metadata.\n *\n * @throws\n *\n * {TypeError} on an unknown tier, overrides that are not an object, an override for a\n * check the tier lacks, or one that is neither `false` nor an options object the check accepts.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function tier(name: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierName",
+              "canonicalReference": "repo-contract!TierName:type"
+            },
+            {
+              "kind": "Content",
+              "text": ", overrides?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierOverrides",
+              "canonicalReference": "repo-contract!TierOverrides:type"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierConfig",
+              "canonicalReference": "repo-contract!TierConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "TierCheckId",
+              "canonicalReference": "repo-contract!TierCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": ">"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/tiers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 5,
+            "endIndex": 9
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "name",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "overrides",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "tier"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!tierBaseline:function(1)",
+          "docComment": "/**\n * @param name - a tier.\n *\n * @returns that tier's defaults as a baseline.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function tierBaseline(name: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierName",
+              "canonicalReference": "repo-contract!TierName:type"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExplainBaseline",
+              "canonicalReference": "repo-contract!ExplainBaseline:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/explain.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "name",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "tierBaseline"
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!TierCheck:type",
+          "docComment": "/**\n * One check as a tier builds it. `dependsOn` is narrowed to the tier's other ids, which is what\n * lets `defineRepoContract` accept a spread tier.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type TierCheck<Dependency extends "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " & {\n    readonly dependsOn?: readonly Dependency[];\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "TierCheck",
+          "typeParameters": [
+            {
+              "typeParameterName": "Dependency",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 5
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!TierCheckId:type",
+          "docComment": "/**\n * Every check id a tier can turn on. The ids are PascalCase so a stricter config can replace one by id.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type TierCheckId = "
+            },
+            {
+              "kind": "Reference",
+              "text": "StrictCheckId",
+              "canonicalReference": "repo-contract!StrictCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "TierCheckId",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!TierCheckOptions:interface",
+          "docComment": "/**\n * What each check accepts in a tier's overrides object. `never` means the check takes no options,\n * so the only override is `false`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface TierCheckOptions "
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "TierCheckOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Build:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Build: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "NpmScriptOptions",
+                  "canonicalReference": "repo-contract!~NpmScriptOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Build",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#BundledDependencies:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly BundledDependencies: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "never"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "BundledDependencies",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Commits:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Commits: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "NonNullable",
+                  "canonicalReference": "!NonNullable:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Parameters",
+                  "canonicalReference": "!Parameters:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<typeof "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "commitlint",
+                  "canonicalReference": "repo-contract!~commitlint:function"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">[0]>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Commits",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 7
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Coverage:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Coverage: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CoverageOptions",
+                  "canonicalReference": "repo-contract!~CoverageOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Coverage",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Crap:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Crap: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CrapOptions",
+                  "canonicalReference": "repo-contract!~CrapOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Crap",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#DeadCode:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly DeadCode: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "NonNullable",
+                  "canonicalReference": "!NonNullable:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Parameters",
+                  "canonicalReference": "!Parameters:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<typeof "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "deadCode",
+                  "canonicalReference": "repo-contract!~deadCode:function"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">[0]>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "DeadCode",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 7
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#DistNoUrls:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly DistNoUrls: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistNoUrlsOptions",
+                  "canonicalReference": "repo-contract!~DistNoUrlsOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "DistNoUrls",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#DocsLinks:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly DocsLinks: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "BrokenLinksOptions",
+                  "canonicalReference": "repo-contract!~BrokenLinksOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "DocsLinks",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#DocsMarkdown:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly DocsMarkdown: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "MarkdownlintOptions",
+                  "canonicalReference": "repo-contract!~MarkdownlintOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "DocsMarkdown",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Duplication:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Duplication: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DuplicationOptions",
+                  "canonicalReference": "repo-contract!~DuplicationOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Duplication",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Format:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Format: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "never"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Format",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Licenses:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Licenses: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "never"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Licenses",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Lint:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Lint: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "NonNullable",
+                  "canonicalReference": "!NonNullable:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Parameters",
+                  "canonicalReference": "!Parameters:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<typeof "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "lint",
+                  "canonicalReference": "repo-contract!~lint:function"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">[0]>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Lint",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 7
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Mutation:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Mutation: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "MutationOptions",
+                  "canonicalReference": "repo-contract!~MutationOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Mutation",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Packaging:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Packaging: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "never"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Packaging",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#QuickStart:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly QuickStart: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "QuickStartOptions",
+                  "canonicalReference": "repo-contract!~QuickStartOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "QuickStart",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#SecurityDeps:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly SecurityDeps: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SecurityDepsOptions",
+                  "canonicalReference": "repo-contract!~SecurityDepsOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "SecurityDeps",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#SecuritySecrets:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly SecuritySecrets: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "never"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "SecuritySecrets",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Tests:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Tests: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "never"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Tests",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#Typecheck:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Typecheck: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "never"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Typecheck",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierCheckOptions#TypeResolution:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly TypeResolution: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ArethetypeswrongOptions",
+                  "canonicalReference": "repo-contract!~ArethetypeswrongOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "TypeResolution",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!tierChecks:function(1)",
+          "docComment": "/**\n * @param name - the tier.\n *\n * @returns every check the tier turns on, the checks of the tiers below it first, in schedule order.\n *\n * @throws\n *\n * {TypeError} when `name` is not one of {@link TIER_NAMES}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function tierChecks(name: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierName",
+              "canonicalReference": "repo-contract!TierName:type"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierCheckId",
+              "canonicalReference": "repo-contract!TierCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/catalog.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 6
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "name",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "tierChecks"
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!TierChecks:type",
+          "docComment": "/**\n * Every check of a tier, keyed by id, in schedule order.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type TierChecks<Id extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierCheckId",
+              "canonicalReference": "repo-contract!TierCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly [K in Id]: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierCheck",
+              "canonicalReference": "repo-contract!TierCheck:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "Exclude",
+              "canonicalReference": "!Exclude:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<Id, K>>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "TierChecks",
+          "typeParameters": [
+            {
+              "typeParameterName": "Id",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 8
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!TierConfig:interface",
+          "docComment": "/**\n * What a tier function returns. Spread it into `defineRepoContract` next to `spawn` and `env`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface TierConfig<Id extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierCheckId",
+              "canonicalReference": "repo-contract!TierCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "Id",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "TierConfig",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierConfig#checks:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly checks: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierChecks",
+                  "canonicalReference": "repo-contract!TierChecks:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<Id>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "checks",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierConfig#tier:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly tier: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierMetadata",
+                  "canonicalReference": "repo-contract!TierMetadata:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "tier",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!tierDefinition:function(1)",
+          "docComment": "/**\n * Each tier's own definition. A tier's full check list is its `adds` after every tier it extends.\n *\n * @param name - the tier.\n *\n * @returns its definition.\n *\n * @throws\n *\n * {TypeError} when `name` is not one of {@link TIER_NAMES}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function tierDefinition(name: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierName",
+              "canonicalReference": "repo-contract!TierName:type"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierDefinition",
+              "canonicalReference": "repo-contract!TierDefinition:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/catalog.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "name",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "tierDefinition"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!TierDefinition:interface",
+          "docComment": "/**\n * One tier's own definition: what it adds to the tier it extends, and its default settings.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface TierDefinition "
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "TierDefinition",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierDefinition#adds:member",
+              "docComment": "/**\n * The checks this tier adds, in schedule order.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly adds: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierCheckId",
+                  "canonicalReference": "repo-contract!TierCheckId:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "adds",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierDefinition#extends:member",
+              "docComment": "/**\n * The tier this one builds on; `undefined` for `basic`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly extends: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierName",
+                  "canonicalReference": "repo-contract!TierName:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "extends",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierDefinition#name:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly name: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierName",
+                  "canonicalReference": "repo-contract!TierName:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierDefinition#planned:member",
+              "docComment": "/**\n * The planned checks that belong to this tier.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly planned: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PlannedCheck",
+                  "canonicalReference": "repo-contract!PlannedCheck:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "planned",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierDefinition#settings:member",
+              "docComment": "/**\n * The default settings at this tier.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly settings: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierSettings",
+                  "canonicalReference": "repo-contract!TierSettings:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "settings",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!TierExplanation:interface",
+          "docComment": "/**\n * What `explainTier` returns, and what `repo-contract explain --json` prints.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface TierExplanation "
+            }
+          ],
+          "fileUrlPath": "src/tiers/explain.ts",
+          "releaseTag": "Public",
+          "name": "TierExplanation",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierExplanation#baseline:member",
+              "docComment": "/**\n * The baseline's name, or `undefined` when there was nothing to compare against.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly baseline: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "baseline",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierExplanation#checks:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly checks: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ExplainedCheck",
+                  "canonicalReference": "repo-contract!ExplainedCheck:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "checks",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierExplanation#loosened:member",
+              "docComment": "/**\n * Every loosening, in check order.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly loosened: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Loosening",
+                  "canonicalReference": "repo-contract!Loosening:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "loosened",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierExplanation#missing:member",
+              "docComment": "/**\n * Baseline checks the config does not contain at all.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly missing: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "missing",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierExplanation#planned:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly planned: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PlannedCheck",
+                  "canonicalReference": "repo-contract!PlannedCheck:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "planned",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierExplanation#schemaVersion:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly schemaVersion: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "1"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "schemaVersion",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierExplanation#tier:member",
+              "docComment": "/**\n * The tier the config was built from, or `undefined` when it carries no tier metadata.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly tier: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierName",
+                  "canonicalReference": "repo-contract!TierName:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "tier",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!TierMetadata:interface",
+          "docComment": "/**\n * What a tier records about itself. It rides along on the config as `tier`, which\n * `validateRepoContractConfig` ignores, so `explain` can read it back.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface TierMetadata "
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "TierMetadata",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierMetadata#checks:member",
+              "docComment": "/**\n * The ids the tier put in `checks`, in schedule order, turned-off ones included.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly checks: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierCheckId",
+                  "canonicalReference": "repo-contract!TierCheckId:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "checks",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierMetadata#name:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly name: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierName",
+                  "canonicalReference": "repo-contract!TierName:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierMetadata#off:member",
+              "docComment": "/**\n * The ids the overrides turned off.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly off: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierCheckId",
+                  "canonicalReference": "repo-contract!TierCheckId:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "off",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierMetadata#overrides:member",
+              "docComment": "/**\n * The overrides object exactly as passed.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly overrides: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierOverrides",
+                  "canonicalReference": "repo-contract!TierOverrides:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "overrides",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierMetadata#planned:member",
+              "docComment": "/**\n * Planned checks at this tier and below.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly planned: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "PlannedCheck",
+                  "canonicalReference": "repo-contract!PlannedCheck:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "planned",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierMetadata#settings:member",
+              "docComment": "/**\n * The settings in force: the tier's defaults with the overrides applied.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly settings: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TierSettings",
+                  "canonicalReference": "repo-contract!TierSettings:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "settings",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!TierName:type",
+          "docComment": "/**\n * The four tiers, loosest first. Each tier holds every check of the tier before it.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type TierName = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"basic\" | \"app\" | \"library\" | \"strict\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "TierName",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!TierOverrides:type",
+          "docComment": "/**\n * The one overrides object a tier takes, keyed by check id. Options replace the tier's options for\n * that check. `false` turns the check off: it stays in the config and passes with a rationale that\n * names the override, so the run still shows it.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type TierOverrides<Id extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierCheckId",
+              "canonicalReference": "repo-contract!TierCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": " = "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierCheckId",
+              "canonicalReference": "repo-contract!TierCheckId:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly [K in Id]?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierCheckOptions",
+              "canonicalReference": "repo-contract!TierCheckOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[K] | false;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "TierOverrides",
+          "typeParameters": [
+            {
+              "typeParameterName": "Id",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 5,
+            "endIndex": 8
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!tierSettings:function(1)",
+          "docComment": "/**\n * A tier's setting for a check it does not run is that preset's own default: what the preset\n * judges when added by hand with no options.\n *\n * @param name - the tier.\n *\n * @returns the tier's default settings.\n *\n * @throws\n *\n * {TypeError} when `name` is not one of {@link TIER_NAMES}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function tierSettings(name: "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierName",
+              "canonicalReference": "repo-contract!TierName:type"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "TierSettings",
+              "canonicalReference": "repo-contract!TierSettings:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/tiers/catalog.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "name",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "tierSettings"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!TierSettings:interface",
+          "docComment": "/**\n * The numeric settings `explain` compares against a baseline.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface TierSettings "
+            }
+          ],
+          "fileUrlPath": "src/tiers/types.ts",
+          "releaseTag": "Public",
+          "name": "TierSettings",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierSettings#Coverage:member",
+              "docComment": "/**\n * Minimum coverage per metric. A metric left out is not judged.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Coverage: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        readonly lines?: number;\n        readonly statements?: number;\n        readonly functions?: number;\n        readonly branches?: number;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Coverage",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierSettings#Crap:member",
+              "docComment": "/**\n * The CRAP ceiling and the cyclomatic-complexity ceiling per function.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Crap: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        readonly threshold: number;\n        readonly maxComplexity: number;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Crap",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierSettings#Duplication:member",
+              "docComment": "/**\n * The largest duplicated share of scanned lines, in percent.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Duplication: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        readonly maxPercentage: number;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Duplication",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!TierSettings#Mutation:member",
+              "docComment": "/**\n * The lowest mutation score that passes, in percent.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly Mutation: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        readonly minScore: number;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "Mutation",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        }
+      ]
+    }
+  ]
+}

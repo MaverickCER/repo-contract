@@ -19,29 +19,29 @@
         } catch (error) {}
       })()
     </script>
-    <title>repo-contract: deterministic and AI checks, one engineering standard</title>
+    <title>repo-contract: one typed contract for the tools your CI runs</title>
     <meta
       name="description"
-      content="Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason."
+      content="One typed contract for the tools your CI runs: each check says pass, warn or fail and why; every governed exception is a reviewable record. It runs the tools you install and replaces none of them."
     />
     <link rel="canonical" href="https://maverickcer.github.io/repo-contract/" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://maverickcer.github.io/repo-contract/" />
     <meta
       property="og:title"
-      content="repo-contract: deterministic and AI checks, one engineering standard"
+      content="repo-contract: one typed contract for the tools your CI runs"
     />
     <meta
       property="og:description"
-      content="Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason."
+      content="One typed contract for the tools your CI runs: each check says pass, warn or fail and why; every governed exception is a reviewable record. It runs the tools you install and replaces none of them."
     />
     <meta
       name="twitter:title"
-      content="repo-contract: deterministic and AI checks, one engineering standard"
+      content="repo-contract: one typed contract for the tools your CI runs"
     />
     <meta
       name="twitter:description"
-      content="Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason."
+      content="One typed contract for the tools your CI runs: each check says pass, warn or fail and why; every governed exception is a reviewable record. It runs the tools you install and replaces none of them."
     />
     <meta
       property="og:image"
@@ -90,10 +90,10 @@
     <main id="main">
       <section class="hero" id="top" aria-labelledby="hero-heading">
         <div class="container">
-          <p class="section-eyebrow">Deterministic and AI checks, one contract</p>
+          <p class="section-eyebrow">Your tools, your policies, one contract</p>
           <h1 id="hero-heading">
-            Use deterministic and AI checks to enforce a baseline engineering standard across your
-            org.
+            One typed contract for the tools your CI runs: each check says pass, warn or fail and
+            why; every governed exception is a reviewable record.
           </h1>
           <p class="hero-lede">
             Your linters, test runners and security scanners can tell you what happened. They
@@ -116,14 +116,14 @@
                 Copy
               </button>
             </div>
-            <pre tabindex="0"><code id="hero-install">npm install --save-dev repo-contract tsx
-npx repo-contract init
-npm run contract</code></pre>
+            <pre tabindex="0"><code id="hero-install">npm i -D repo-contract tsx
+npx repo-contract init --preset strict
+npx repo-contract explain</code></pre>
           </div>
           <p class="hero-note">
-            For a project that already has its tools, such as <code>typescript</code>,
-            <code>vitest</code> and <code>eslint</code>. repo-contract bundles none of them;
-            <code>init</code> wires up only the ones it finds in your <code>package.json</code>.
+            <code>init</code> names each tool the tier runs that your devDependencies lack;
+            repo-contract installs none of them. Install those, then run
+            <code>npm run contract</code>. Tiers and <code>explain</code> are Experimental.
           </p>
           <div class="hero-actions">
             <a
@@ -305,11 +305,13 @@ npm run contract</code></pre>
               >
             </div>
             <div class="adoption-card guarantee">
-              <span class="adoption-card-title">No shell by default, and no ambient access.</span
+              <span class="adoption-card-title"
+                >No shell by default, and no ambient access in the library.</span
               ><span class="adoption-card-desc"
                 ><strong>Scope:</strong> The consumer supplies the process and environment
-                capabilities. repo-contract cannot vouch for what the commands you configure do once
-                they run.</span
+                capabilities. The bin/ CLI is the exception: it reads process.env and spawns, as the
+                mutation and npmScript presets use. repo-contract cannot vouch for what the commands
+                you configure do once they run.</span
               ><a
                 class="external-link-note"
                 href="https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md"
@@ -327,9 +329,10 @@ npm run contract</code></pre>
             considers acceptable.
           </h2>
           <p class="section-lede">
-            Keep your CI. Shared ESLint configs, reusable workflows and template repositories all
-            distribute individual checks. repo-contract distributes a standard: one versioned
-            package with the checks, the policies that relate them, and the reason for each outcome.
+            Keep your CI. Reusable workflows, lefthook remotes and MegaLinter EXTENDS already share
+            commands across repositories. A repo-contract standard also shares the policies that
+            judge their results. It is one versioned package with the checks, the policies that
+            relate them, and the reason for each outcome.
           </p>
           <div class="table-scroll">
             <table class="comparison-table">
@@ -356,8 +359,13 @@ npm run contract</code></pre>
                   <td>The same contract, run locally and in CI</td>
                 </tr>
                 <tr>
-                  <th scope="row">Exit codes and CI job state</th>
-                  <td>Structured evidence with a stable, versioned shape</td>
+                  <th scope="row">
+                    Hook runners such as pre-commit and lefthook judge by exit code
+                  </th>
+                  <td>
+                    Each tool&#39;s output becomes evidence with a published schema, and your
+                    policies judge it
+                  </td>
                 </tr>
                 <tr>
                   <th scope="row">&quot;CI failed&quot;</th>
@@ -420,9 +428,8 @@ npm run contract</code></pre>
           <p class="section-eyebrow">For decision-makers</p>
           <h2 id="brief-heading">A one-page brief for your manager</h2>
           <p class="section-lede">
-            repo-contract runs a team&#39;s deterministic and AI checks on every developer&#39;s
-            machine and in CI, and shares them across repositories as one baseline engineering
-            standard.
+            repo-contract runs a team&#39;s existing quality checks on every developer&#39;s machine
+            and in CI, gives each result a written reason, and can share them across repositories.
           </p>
           <p>
             It answers what this is, why it matters, what it costs, what could go wrong and what is

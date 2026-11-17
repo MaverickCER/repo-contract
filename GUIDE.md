@@ -14,6 +14,9 @@ This guide covers everything past "should I adopt this?": integrating repo-contr
 - [A fuller example: cross-check policy](#a-fuller-example-cross-check-policy)
 - [AI review checks](#ai-review-checks)
 - [Presets](#presets)
+- [Tiers](#tiers)
+- [Tool config helpers](#tool-config-helpers)
+- [Running less: affected scope, cache and speed](#running-less-affected-scope-cache-and-speed)
 - [Regression detection](#regression-detection)
 - [Errors](#errors)
 - [`Evidence` and `Verdict` shapes](#evidence-and-verdict-shapes)
@@ -70,7 +73,7 @@ Consumer → What should happen next?
 
 ## Supplying `spawn` and `env`
 
-`spawn` and `env` are required fields on the config. The package never imports a process-spawning implementation or reads `process.env` internally (see [ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)). You supply both as trusted capabilities, which repo-contract calls with a resolved command/argv/options. It does not inspect, wrap, or sanitize them.
+`spawn` and `env` are required fields on the config. The library under `dist/` never imports a process-spawning implementation or reads `process.env` (see [ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)). The `repo-contract` CLI in `bin/` is the exception: `affected`, `doctor`, `quick-start`, `npm-script` and `mutation run` start processes, and [Runtime support](#runtime-support) says which. You supply both as trusted capabilities, which repo-contract calls with a resolved command/argv/options. It does not inspect, wrap, or sanitize them.
 
 **macOS/Linux:** plain `node:child_process` is enough:
 
@@ -107,9 +110,9 @@ Passing `cross-spawn` fixes Windows command resolution; it does not by itself en
 
 ## The runner and CI integration
 
-### Why the CLI only scaffolds
+### Why your runner owns the run
 
-repo-contract is a library, not a repository-wide command. Your repository owns the entry point, the process-spawning capability, and the environment it runs with. That keeps the contract composable, and the package never becomes another opaque layer between you and your tools.
+The contract runs as a library, not as a repository-wide command. Your repository owns the entry point, the process-spawning capability, and the environment it runs with. That keeps the contract composable, and the package never becomes another opaque layer between you and your tools. The `repo-contract` CLI never runs the checks. It scaffolds and explains a config, and runs helper commands such as `mutation run`. Its help lists all twelve commands.
 
 `npx repo-contract init` (see the [README's Quick Start](README.md#install-and-verify)) automates writing the files below. It is a one-time scaffold, not a runtime:
 
@@ -123,14 +126,20 @@ It never runs a check itself, never spawns anything, and never becomes a prerequ
 
 ```ts
 // scripts/contract.mjs: the entry point, and the whole of it
-import { runRepoContract } from "repo-contract"
+import { runRepoContract, serializeRun } from "repo-contract"
 import config from "../repo-contract.config.mjs"
 
-const { verdict } = await runRepoContract(config)
-for (const [id, result] of Object.entries(verdict.checks)) {
-  console.log(`[${result.outcome.toUpperCase()}] ${id}: ${result.rationale}`)
+const run = await runRepoContract(config)
+if (process.argv.includes("--json")) {
+  // The evidence and verdict documents, each valid against its repo-contract/schema file.
+  const { evidence, verdict } = serializeRun(run)
+  console.log(`{ "evidence": ${evidence.trim()}, "verdict": ${verdict.trim()} }`)
+} else {
+  for (const [id, result] of Object.entries(run.verdict.checks)) {
+    console.log(`[${result.outcome.toUpperCase()}] ${id}: ${result.rationale}`)
+  }
 }
-process.exitCode = verdict.passed ? 0 : 1
+process.exitCode = run.verdict.passed ? 0 : 1
 ```
 
 The config is `repo-contract.config.mts`, not `.ts`. An `.mts` file is always ESM to Node, whether or not your `package.json` has `"type": "module"` set (`npm init`'s default output doesn't). Without that setting, a plain `.ts` config would compile to CommonJS, while this `.mjs` runner (ESM by its own extension) imports it. Node's CJS/ESM default-export interop would then silently hand `runRepoContract` the wrong shape. `config.checks` ends up `undefined`, and the run fails with `InvalidRepoContractConfigError` before anything spawns.
@@ -150,6 +159,8 @@ npm run contract
 ```
 
 Point a `precommit`, `prepublishOnly`, or CI job at that command. `spawn`, `env`, and the installed toolchain are consumer-supplied and can differ per environment. What stays identical is the contract definition and the code path, with no hidden state. This repository uses its own `repo-contract.config.ts` to validate itself (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+
+For an agent or a bot, `npm run --silent contract -- --json` prints one JSON object instead of the lines. Its `evidence` and `verdict` are the two documents [`serializeRun`](#persisting-a-run-and-publishing-a-summary) writes, each valid against its `repo-contract/schema` file. `--silent` keeps npm's banner out of stdout. The exit code is the same in both modes.
 
 ## Reporting while a run is going
 
@@ -182,7 +193,7 @@ Creating the first hook removes the logs of an earlier run, and a log is overwri
 
 ## Persisting a run and publishing a summary
 
-To keep a record that a dashboard, a reviewer, or the next run can read, store the run. The runner above prints the verdict and forgets it.
+To keep a record that a dashboard, a reviewer, or the next run can read, store the run. The runner above prints the run and forgets it.
 
 `serializeRun` turns the raw result into the two JSON documents that match the published `repo-contract/schema` files. Each carries its own `version` field, so a stored document stays interpretable independently of the package version that wrote it (see [VERSIONING.md](VERSIONING.md#evidence-and-verdict-schema-versioning)).
 
@@ -575,7 +586,7 @@ Every option except `agent` has a default:
 | `timeoutMs`      | `600_000` (10 minutes)                     | When the agent is stopped; the check then fails                   |
 | `cwd`            | the runner's                               | The agent's working directory                                     |
 
-Credentials stay out of the record. You pass each value yourself, because repo-contract never reads `process.env`. It reaches the agent through the check's `env`, so it works under a runner that sets `inheritEnv: false`, as this repository's does. A value never enters the command line, and the policy replaces it with `[redacted]` in every reason. The evidence still keeps the agent's own stdout and stderr, so an agent that prints its key leaks it there. A credential with no value turns a `pass` into a `warn`.
+Credentials stay out of the record. You pass each value yourself, because the library never reads `process.env`. It reaches the agent through the check's `env`, so it works under a runner that sets `inheritEnv: false`, as this repository's does. A value never enters the command line, and the policy replaces it with `[redacted]` in every reason. The evidence still keeps the agent's own stdout and stderr, so an agent that prints its key leaks it there. A credential with no value turns a `pass` into a `warn`.
 
 Pass a `fallback` with an `error` finding at score 1 when an unusable reply must block a merge. repo-contract runs each check once, so a retry belongs in `agent`, for example a script that asks again when a reply fails to parse.
 
@@ -621,34 +632,80 @@ checks: {
 
 **Preset options are the preferred way to change what a preset executes.** A direct `run` override is an escape hatch. Every execution-affecting option is threaded through the actual command line, so evidence records the exact options used in `evidence.checks.<id>.args`. The one exception is `aiReview`'s `credentials`, which reach the agent through `env` and are never recorded.
 
-Every preset's policy fails with an actionable message if its underlying tool is not installed. The one exception is `securityDeps`, which shells out to `npm` itself. Each preset assumes its CLI is already a devDependency of your repository; repo-contract never installs, bundles, or implicitly depends on these tools. `repo-contract init` adds a preset to the config it writes when the package in the last column is a devDependency. It always adds `securityDeps`, adds `distNoUrls` when package.json publishes a built `dist/`, and adds `bundledDependencies` unless package.json is `private`. It never adds `aiReview`, which needs your agent's command, or `quickStart`, which needs a marked README block.
+Every preset's policy fails with an actionable message if its underlying tool is not installed. The one exception is `securityDeps`, which shells out to `npm` itself. Each preset assumes its CLI is already a devDependency of your repository; repo-contract never installs, bundles, or implicitly depends on these tools. `repo-contract init` adds a preset to the config it writes when the package in the last column is a devDependency. It always adds `securityDeps`, adds `distNoUrls` when package.json publishes a built `dist/`, and adds `bundledDependencies` unless package.json is `private`. It never adds `aiReview`, `quickStart`, `sbom` or `npmScript`. They need your agent's command, a marked README block, committed documents and a script only you can name.
 
-| Category            | Preset                   | Wraps                                                                                                                                   | Package `init` detects                 |
-| ------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Testing             | `test`                   | `vitest run --reporter=json --outputFile=reports/vitest/vitest-report.json`                                                             | `vitest`                               |
-| Testing             | `e2e`                    | `playwright test --reporter=json`                                                                                                       | `@playwright/test`                     |
-| Code quality        | `lint(options?)`         | `eslint <path> --format json`                                                                                                           | `eslint`                               |
-| Code quality        | `format`                 | `prettier --write .`                                                                                                                    | `prettier`                             |
-| Code quality        | `typecheck`              | `tsc --noEmit -p tsconfig.json`                                                                                                         | `typescript`                           |
-| Code quality        | `deadCode(options?)`     | `knip --reporter json --reporter-options <options>`                                                                                     | `knip`                                 |
-| Code quality        | `duplication(options?)`  | `jscpd <path> --reporters json --output reports/jscpd --silent`                                                                         | `jscpd`                                |
-| Code quality        | `stylelint(options?)`    | `stylelint <glob> --formatter json`                                                                                                     | `stylelint`                            |
-| Docs                | `markdownlint(options?)` | `markdownlint-cli2 <glob>`: requires repository configuration for JSON output                                                           | `markdownlint-cli2`                    |
-| Docs                | `brokenLinks(options?)`  | `linkinator <start> --recurse --format json --skip node_modules`                                                                        | `linkinator`                           |
-| Security/governance | `securityDeps`           | `npm audit --omit=dev --json`                                                                                                           | none (`npm`)                           |
-| Security/governance | `securitySecrets`        | `secretlint --format json --output reports/secretlint.json **/*`                                                                        | `secretlint`                           |
-| Publishing          | `distNoUrls(options?)`   | `node -e <scanner> <dir>`: fails on any URL in the build output; no external tool                                                       | none (a built `dist/`)                 |
-| Publishing          | `bundledDependencies`    | `node -e <reader>`: fails on a bundled package missing from `dependencies`; no external tool                                            | none (a package that is not `private`) |
-| Publishing          | `quickStart(options?)`   | `repo-contract quick-start --json --readme README.md --timeout 300000`: runs the README's marked quick start against the packed tarball | none (a marked README block)           |
-| Security/governance | `license`                | `licensee --production --errors-only --ndjson`, plus `--osi` without `.licensee.json`                                                   | `licensee`                             |
-| Security/governance | `commitlint(options?)`   | `commitlint --from <from> --to <to>`                                                                                                    | `@commitlint/cli`                      |
-| Publishing          | `publint`                | `publint run`                                                                                                                           | `publint`                              |
-| Publishing          | `arethetypeswrong`       | `attw --pack . --format json`                                                                                                           | `@arethetypeswrong/cli`                |
-| Code review         | `aiReview(options)`      | `<agent> <prompt>`: the agent you name; the prompt goes at `{prompt}` or last                                                           | none (the agent you name)              |
+`init` without `--preset` never adds `coverage`, `crap` or `mutation`, even when their packages are installed. Coverage reads reports only when Tests runs with coverage flags, and Crap reads Coverage's, so the tiers wire all three: `repo-contract init --preset app` adds Coverage, and `repo-contract init --preset strict` adds all three.
+
+`arethetypeswrong` and `securityDeps` are factories: write `arethetypeswrong()` and `securityDeps()`. A config that spreads the bare preset no longer type-checks.
+
+| Category            | Preset                       | Wraps                                                                                                                                   | Package `init` detects                                    |
+| ------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Testing             | `test`                       | `vitest run --reporter=json --outputFile=reports/vitest/vitest-report.json`                                                             | `vitest`                                                  |
+| Testing             | `e2e`                        | `playwright test --reporter=json`                                                                                                       | `@playwright/test`                                        |
+| Code quality        | `lint(options?)`             | `eslint <path> --format json`                                                                                                           | `eslint`                                                  |
+| Code quality        | `format`                     | `prettier --write .`                                                                                                                    | `prettier`                                                |
+| Code quality        | `typecheck`                  | `tsc --noEmit -p tsconfig.json`                                                                                                         | `typescript`                                              |
+| Code quality        | `deadCode(options?)`         | `knip --reporter json --reporter-options <options>`                                                                                     | `knip`                                                    |
+| Code quality        | `duplication(options?)`      | `jscpd <path> --reporters json --output reports/jscpd --silent`                                                                         | `jscpd`                                                   |
+| Code quality        | `stylelint(options?)`        | `stylelint <glob> --formatter json`                                                                                                     | `stylelint`                                               |
+| Docs                | `markdownlint(options?)`     | `markdownlint-cli2 <glob>`: the default `json` verdict requires repository configuration for JSON output                                | `markdownlint-cli2`                                       |
+| Docs                | `brokenLinks(options?)`      | `linkinator <start> --recurse --format json --skip node_modules`                                                                        | `linkinator`                                              |
+| Security/governance | `securityDeps(options?)`     | `npm audit --omit=dev --json`                                                                                                           | none (`npm`)                                              |
+| Security/governance | `securitySecrets`            | `secretlint --format json --output reports/secretlint.json **/*`                                                                        | `secretlint`                                              |
+| Publishing          | `distNoUrls(options?)`       | `node -e <scanner> <dir>`: fails on any URL in the build output; no external tool                                                       | none (a built `dist/`)                                    |
+| Publishing          | `bundledDependencies`        | `node -e <reader>`: fails on a bundled package missing from `dependencies`; no external tool                                            | none (a package that is not `private`)                    |
+| Publishing          | `quickStart(options?)`       | `repo-contract quick-start --json --readme README.md --timeout 300000`: runs the README's marked quick start against the packed tarball | none (a marked README block)                              |
+| Security/governance | `license`                    | `licensee --production --errors-only --ndjson`, plus `--osi` without `.licensee.json`                                                   | `licensee`                                                |
+| Security/governance | `sbom(options?)`             | `node -e <generator> <lockfile> <output> <production> check`: CycloneDX 1.6 SBOMs from the lockfile; no external tool                   | none (`package-lock.json`)                                |
+| Security/governance | `commitlint(options?)`       | `commitlint --from <from> --to <to>`                                                                                                    | `@commitlint/cli`                                         |
+| Publishing          | `publint`                    | `publint run`                                                                                                                           | `publint`                                                 |
+| Publishing          | `arethetypeswrong(options?)` | `attw --pack . --format json`                                                                                                           | `@arethetypeswrong/cli`                                   |
+| Code review         | `aiReview(options)`          | `<agent> <prompt>`: the agent you name; the prompt goes at `{prompt}` or last                                                           | none (the agent you name)                                 |
+| Testing             | `coverage(options?)`         | `node -e <reader> <summary>`: judges the coverage summary a test run wrote; runs no tests                                               | `@vitest/coverage-v8`                                     |
+| Code quality        | `crap(options?)`             | `crap4ts src --coverage coverage/coverage-final.json --threshold 30 --reporter json --output reports/crap.json`                         | `@danibram/crap4ts`                                       |
+| Testing             | `mutation(options?)`         | `repo-contract mutation run --json --cache off --confirm-timeouts 5`: runs Stryker cold, then fails below a score of 80                 | `@stryker-mutator/core`, `@stryker-mutator/vitest-runner` |
+| Build               | `npmScript(options)`         | `repo-contract npm-script <script> --json`: runs `npm run <script>`; fails when it changes a `mustNotChange` path                       | none (the npm script you name)                            |
 
 Not every test runner has a preset. Jest, Cypress, and Mocha have different reporter formats and may need bespoke presets. The pattern is the same: execute the tool, capture evidence, interpret its output, apply your policy.
 
 Unlike its neighbors, `format` auto-fixes (`--write`) and therefore cannot itself fail on unformatted input. For a hard gate on formatting, run `prettier --check .` directly instead of this preset. That is exactly the substitution the [demo](README.md#see-it-run) makes.
+
+### Keep an SBOM current
+
+`sbom` keeps two CycloneDX 1.6 documents in step with `package-lock.json`. `docs/sbom.cdx.json` lists every locked package, dev dependencies included with `scope: "excluded"`. `docs/sbom.production.cdx.json` lists what installing the package brings in: every locked package not marked `dev`. Each component carries its purl, the hashes from the lockfile's `integrity`, its declared license and where it was resolved from, and each document holds the full dependency graph.
+
+The documents come from the lockfile alone. The preset never runs `npm ls` and needs no SBOM tool. The same lockfile always gives the same bytes: no timestamp, sorted components and edges, and a serial number derived from the content.
+
+By default the check writes nothing. It fails when a document is missing, is not a JSON object, or differs from what the lockfile gives. The comparison ignores `serialNumber`, `metadata.timestamp`, key order and formatting, so a formatter or another tool's equivalent output still counts as current.
+
+To regenerate, run the preset's own command with `write: true`. Write mode stays inside the project and away from the lockfile. It refuses an output that is a symbolic link, is not a regular file or resolves outside the working directory. It refuses the lockfile itself: its path, a hard link to it, or a case-variant name on a case-insensitive file system. It then writes nothing and exits 1. It writes each document to a temporary file and renames it into place. A short script does it:
+
+```js
+// scripts/sbom.mjs, run as "sbom": "node scripts/sbom.mjs" in package.json
+import { spawnSync } from "node:child_process"
+import { sbom } from "repo-contract/presets"
+
+const [command, ...args] = sbom({ write: true }).run
+process.exitCode = spawnSync(command, args, { stdio: "inherit" }).status ?? 1
+```
+
+Then point the check's failure message at it:
+
+```ts
+checks: {
+  sbom: sbom({ fix: "npm run sbom" }),
+}
+```
+
+| Option             | Default                           | What it does                                             |
+| ------------------ | --------------------------------- | -------------------------------------------------------- |
+| `lockfile`         | `"package-lock.json"`             | The lockfile to read; lockfileVersion 2 or 3.            |
+| `output`           | `"docs/sbom.cdx.json"`            | The full document.                                       |
+| `productionOutput` | `"docs/sbom.production.cdx.json"` | The production document; `null` skips it.                |
+| `write`            | `false`                           | Write the documents instead of checking them.            |
+| `fix`              | none                              | The command the failure message tells the reader to run. |
+
+The documents describe what the lockfile pins, not what is installed in `node_modules`. A `git+` resolved URL becomes a `vcs` reference without the `git+` prefix; a resolved value that is not a URL, or whose scheme contains `+`, gets no reference.
 
 ### Run the README's quick start
 
@@ -671,9 +728,314 @@ Each line is one command; comment lines and blank lines are skipped, and a line 
 
 `repo-contract quick-start` runs the same thing from a terminal. `--readme <file>` reads another Markdown file. `--timeout <ms>` sets the budget for all the commands together, five minutes by default. `--json` prints the report the check reads, and `-C <dir>` runs as if started in `<dir>`. The exit status is `0` when every command passed, `1` when one failed or the run could not start, and `2` for a usage error.
 
+### Options that change a verdict
+
+Every preset the table above writes with `(options?)` or `(options)` takes options. This table covers five of them. `sbom`, `coverage`, `crap`, `mutation`, `npmScript` and `aiReview` describe theirs in their own sections. Every preset that takes options throws `TypeError` when the config loads if its options are not an object, such as `lint(null)`. Eight presets also throw `RangeError` when the config loads, naming the bad option. `mutation` throws only for `null` and other non-objects. Its bad option values fail the check instead, by design.
+
+- `duplication`: a `maxPercentage` that is not a number from 0 to 100.
+- `markdownlint`: an empty `globs` list.
+- `brokenLinks`: an empty `start` list.
+- `arethetypeswrong`: an `ignoreResolutions` entry attw does not use.
+- `coverage`: `thresholds` that is not an object, names an unknown metric, or sets a metric outside 0 to 100.
+- `crap`: a `threshold` or `maxComplexity` that is not a finite number above 0.
+- `npmScript`: a blank `script`, or one that starts with `-`. A `mustNotChange` that is not a list of non-empty paths, or holds one that starts with `-`. A `timeoutMs` that is not a whole number above 0.
+- `sbom`: a `lockfile`, `output` or `productionOutput` that is not a non-empty string. An `output` or `productionOutput` spelled as the lockfile's path, after normalizing; write mode refuses the other ways of reaching the lockfile when it runs. A `write` that is not `true` or `false`. `productionOutput: null` is allowed and skips that document.
+
+| Preset             | Option              | Default  | What it does                                                                                                                           |
+| ------------------ | ------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `duplication`      | `maxPercentage`     | `0`      | The largest share of scanned lines that may be duplicated, in percent. At `0` any block fails. A pass within budget lists every block. |
+| `markdownlint`     | `globs`             | none     | Globs in place of `glob`, such as `["*.md", "docs/**/*.md"]`. Explicit globs keep markdownlint out of `node_modules`.                  |
+| `markdownlint`     | `config`            | none     | A markdownlint config file, passed as `--config`.                                                                                      |
+| `markdownlint`     | `verdict`           | `"json"` | `"json"` reads the JSON formatter's report file. `"exit-code"` reads the exit code and the printed findings, so it needs no formatter. |
+| `brokenLinks`      | `start`             | `"."`    | A string is one HTML start point. A list of `{ path, mode }` runs one crawl over every start point.                                    |
+| `arethetypeswrong` | `ignoreResolutions` | none     | Resolutions whose problems are dropped before judging, such as `["node10"]` for a package that supports only `exports`.                |
+| `securityDeps`     | `registry`          | `false`  | An exception registry for advisories. See below.                                                                                       |
+
+A `brokenLinks` start list is crawled in one linkinator run, served from the working directory. A root-relative `/x` link in `docs/` therefore resolves from the repository root. linkinator's Markdown mode is all or nothing, so one `"markdown"` start turns it on for the whole crawl. Two kinds of link pass that linkinator reports broken, and the rationale lists both:
+
+- a link that answered HTTP 429, since a rate limit says nothing about whether the page exists;
+- a local link that exists on disk inside the working directory, such as a bare directory link every git host renders.
+
+**SecurityDeps with a registry.** `securityDeps({ registry: ".repo-contract/exceptions/security-deps.json" })` lets a complete record accept an advisory:
+
+- A `critical` advisory fails whatever its record says. Upgrade or remove the package.
+- A `low`, `moderate` or `high` advisory passes only while a complete record accepts it. Complete means `justification`, the four security fields and the six v2 fields are filled in (see [governed exceptions](#advanced-governed-exceptions)).
+- The check writes a blank record for each new advisory, with the id `security-deps:<package>@<range>`. The run fails until a person fills it in.
+- A record whose advisory is gone is stale and fails. Delete it.
+- An `info` advisory warns and gets no record.
+
+Without a registry, any `low`, `moderate`, `high` or `critical` advisory fails and the check writes nothing. Every tier turns the registry on.
+
+### Coverage and CRAP
+
+`coverage` judges the `json-summary` report a test run already wrote; it runs no tests. Its `run` reads the summary through `node -e`, so the numbers land in the evidence. It fails on a judged metric below its threshold, and on a summary that is missing or not JSON. The default is 80 on lines and statements. A `thresholds` option replaces that default whole. `summary` names another file than `coverage/coverage-summary.json`.
+
+`crap` scores every function with `@danibram/crap4ts`, from the `coverage-final.json` the same test run wrote. It fails on a function above the CRAP `threshold` (default 30), or above `maxComplexity` (default 20) however well it is covered. `src` (default `"src"`), `coverage`, `ignore` and `report` (default `"reports/crap.json"`) change what it reads and writes. crap4ts writes its report to a file, because it exits before a large report drains through a pipe.
+
+Neither preset runs the tests, so each depends on the check that does:
+
+```ts
+checks: {
+  tests: test,
+  coverage: { ...coverage(), dependsOn: ["tests"] },
+  crap: { ...crap(), dependsOn: ["coverage"] },
+}
+```
+
+The test run must write both reports into `coverage/`: run Vitest with `--coverage.enabled` and the `json-summary` and `json` coverage reporters. The tiers append exactly those flags to their Tests check. When a check they depend on failed, both presets warn instead of judging numbers that may be stale.
+
+### Mutation testing
+
+`mutation(options?)` runs Stryker through `repo-contract mutation run --json` and judges the report. It is `isolated`, because Stryker's workers would contend with any check beside it. It fails:
+
+- below `minScore` (default 80). The score is detected mutants over detected plus Survived, NoCoverage and Timeout. Killed, RuntimeError and CompileError count as detected. Ignored mutants and mutants a record covers are left out, and the rationale counts them.
+- on any Timeout still standing after re-runs. Up to `confirmTimeouts` (default 5) timed-out mutants are re-run alone at concurrency 1 first. No record covers a Timeout.
+- when a Survived mutant ran 0 tests. A survivor no test ran against proves nothing, so the whole run is untrusted.
+- when the report holds no mutants.
+- on a record that is incomplete or past its `expires` date, and on a stale record in a full run. A shard or a `mutate` list never calls a record stale.
+
+Every run that mutates is cold. The command deletes Stryker's incremental file and the previous report, and passes `--force`. Only the opt-in `cache` below can replay an earlier run.
+
+The registry, `.repo-contract/exceptions/mutation.json` by default, holds mutants a person applied by hand and saw the suite fail on. A record matches a Survived or NoCoverage mutant by file, mutator, original text and replacement, never by line. Its id is `mutation:<file>:<mutator>:<12 hex digits>`, and the failure rationale prints the id beside each uncovered mutant. A record is complete when `justification` and the six v2 fields are filled in. `registry: false` reads none. The preset never writes the registry.
+
+`repo-contract except <id>` writes the record for you. For a `mutation:` id with no record yet, it builds the record from `reports/mutation/mutation.json`, or the file `--report <file>` names. You then add the text with `--set`. See [Fill in and count exception records](#fill-in-and-count-exception-records).
+
+| Option              | Default                                          | What it does                                                                                                            |
+| ------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `minScore`          | `80`                                             | The lowest score that passes, in percent. `100` demands every mutant detected or recorded.                              |
+| `registry`          | `".repo-contract/exceptions/mutation.json"`      | The record file, or `false`.                                                                                            |
+| `shard`             | none                                             | Mutate one slice, written `<index>/<total>`, cut by file size as `mutation plan` cuts it.                               |
+| `mutate`            | none                                             | Mutate only these files. An empty list passes with nothing to mutate.                                                   |
+| `report`            | none                                             | Judge this report and mutate nothing, such as the merged report of a sharded run.                                       |
+| `cache`             | `"off"`                                          | `"read-write"` or `"read-only"` reuses a clean run while nothing it depends on changed.                                 |
+| `config`            | the first `stryker.config.*` or `stryker.conf.*` | The Stryker config.                                                                                                     |
+| `confirmTimeouts`   | `5`                                              | How many timed-out mutants to re-run alone before a Timeout counts.                                                     |
+| `timeoutMs`         | none                                             | The time the whole run may take.                                                                                        |
+| `patchVitestRunner` | `true`                                           | On Vitest 5, patch the test-name separator of the Stryker Vitest runner installed inside the project. `false` skips it. |
+
+These are options, never environment variables: the library reads no `process.env` ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)). Your config can map a variable onto one, as [`examples/ci/contract.yml`](https://github.com/maverickcer/repo-contract/blob/main/examples/ci/contract.yml) does for `report`. A cached run is keyed on the resolved Stryker config, the Node version, the restriction and each file `git ls-files -co --exclude-standard` lists. Those are every tracked file and every untracked file git does not ignore, by content. The key leaves out ignored files, `node_modules/`, `reports/` and `coverage/`. It also leaves out the paths a run writes: Stryker's report, incremental file and temp directory, and the cache. Only a run with no Survived, NoCoverage or Timeout mutant is kept. Keep the cache off in CI, so a release is judged cold.
+
+The same commands run from a terminal:
+
+```sh
+npx repo-contract mutation plan --json                  # the shard matrix for the Stryker config's mutate set
+npx repo-contract mutation run --json --shard 2/8       # mutate slice 2 of 8
+npx repo-contract mutation run --json --report reports/mutation/merged.json   # judge a merged report
+```
+
+`mutation plan` cuts the config's mutate set into one shard per 64 KiB of source, at most 256 and never more than the file count. `--json` prints the matrix to feed a CI job's `strategy.matrix`. It exits `1` when the config cannot be read or selects no file. `mutation run` takes the preset's options as flags: `--shard <i>/<n>`, `--mutate <file>[,<file>...]` (`--mutate=` mutates nothing and passes), `--report <file>`, `--cache read-write|read-only|off`, `--confirm-timeouts <n>`, `--config <file>` and `--no-patch-vitest-runner`. It refuses `--report` with `--shard`. It checks that a `--report` covers every file of this checkout's plan, with the same text on disk, before judging it. Both take `-C <dir>`. `run` exits with Stryker's code when Stryker ran. It exits `0` when it reused, adopted or had nothing to mutate, `1` when it could not run, and `2` for a usage error. With `--json`, `run` prints its report on stdout: `{ schemaVersion, state, report, exitCode, shard, mutate, timeouts, inputs, message }`. When the run ends with nothing it can judge, `state` is `"error"` and `message` names the cause.
+
+### Run an npm script as a check
+
+`npmScript({ script })` runs one of the package's own npm scripts through `repo-contract npm-script <script> --json`. It fails when the script exits non-zero, runs out of time, or changes a path in `mustNotChange`. Those paths are hashed before and after, so the verdict does not depend on git state. A missing script passes as not applicable; `whenMissing: "fail"` fails it instead.
+
+```ts
+checks: {
+  build: npmScript({ script: "build" }),
+  apiDocs: npmScript({ script: "docs:api", mustNotChange: ["docs/api"], timeoutMs: 120_000 }),
+}
+```
+
+`repo-contract npm-script <script>` runs it from a terminal: one `npm --loglevel=silent run <script>` in the package directory. `--must-not-change <path>` adds a watched path and repeats. `--timeout <ms>` stops the script after that many milliseconds. On POSIX the script runs in its own process group, so the limit stops npm and its children; on Windows npm starts through a shell. `--json` prints the report the check reads, and `-C <dir>` runs as if started in `<dir>`. The script gets the environment minus `npm_package_*`, `npm_lifecycle_*`, `npm_config_local_prefix`, `npm_command` and `INIT_CWD`, so values from an outer `npm run contract` do not leak in. The exit status is `0` when the script exited `0` and changed no watched path. It is `1` when the script failed, changed one, is missing or could not start, and `2` for a usage error.
+
+## Tiers
+
+A tier is a named set of checks with their defaults, so a repository adopts a bar in one line. `repo-contract/tiers` exports four: `basic`, `app`, `library` and `strict`. Each holds every check of the tier before it, and each is Experimental like the presets it is built from. [ADR 0025](specs/decisions/0025-four-tiers-each-a-general-rule.md) records the rule behind each.
+
+| Tier      | The rule                                                                | Adds                                                          | Defaults                                                                                      |
+| --------- | ----------------------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `basic`   | Every codebase that has source code.                                    | Format, Lint, Typecheck, Tests, SecuritySecrets, SecurityDeps | no coverage                                                                                   |
+| `app`     | `basic`, plus what built, shipped and maintained code needs.            | Build, DeadCode, Duplication, Licenses, DocsLinks, Coverage   | duplication 2%; coverage 80 on lines and statements                                           |
+| `library` | `app`, plus what keeps a package working for the people who install it. | Packaging, TypeResolution, BundledDependencies, QuickStart    | as `app`                                                                                      |
+| `strict`  | `library`, plus general rigor that costs time.                          | Crap, DistNoUrls, DocsMarkdown, Commits, Mutation             | coverage 80 on all four metrics; duplication 0.75%; CRAP 30, complexity 20; mutation score 80 |
+
+Spread a tier into the config. The overrides object is optional:
+
+```ts
+// repo-contract.config.mts
+import { spawn } from "node:child_process"
+import { defineRepoContract } from "repo-contract"
+import { strict } from "repo-contract/tiers"
+
+export default defineRepoContract({
+  spawn,
+  env: process.env,
+  ...strict({
+    Coverage: { thresholds: { branches: 70 } },
+    Duplication: { path: "src" },
+    Commits: false,
+  }),
+})
+```
+
+`repo-contract init --preset strict` writes this file without the overrides, plus `scripts/contract.mjs` and `scripts.contract`. It writes no workflow, and it names each tool the tier runs that your devDependencies lack. `repo-contract explain` then lists what the config runs and every setting looser than the tier.
+
+Each check is a preset with the tier's options. Checks run in this order, and Mutation runs last:
+
+| Check               | Preset and the tier's options                                                                       |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| Format              | `format`, run as `prettier --check .`, so it reports files instead of rewriting them                |
+| Lint                | `lint()`                                                                                            |
+| Typecheck           | `typecheck`                                                                                         |
+| Tests               | `test`; from `app` up, with the Vitest flags that write the coverage reports                        |
+| SecuritySecrets     | `securitySecrets`                                                                                   |
+| SecurityDeps        | `securityDeps({ registry: ".repo-contract/exceptions/security-deps.json" })`                        |
+| Build               | `npmScript({ script: "build", whenMissing: "skip" })`, `isolated`                                   |
+| DeadCode            | `deadCode()`                                                                                        |
+| Duplication         | `duplication({ maxPercentage })`                                                                    |
+| Licenses            | `license`                                                                                           |
+| DocsLinks           | `brokenLinks({ start: [{ path: "README.md", mode: "markdown" }, { path: "docs", mode: "html" }] })` |
+| Coverage            | `coverage({ thresholds })`, after Tests                                                             |
+| Packaging           | `publint`                                                                                           |
+| TypeResolution      | `arethetypeswrong()`, judging every resolution                                                      |
+| BundledDependencies | `bundledDependencies`                                                                               |
+| QuickStart          | `quickStart()`                                                                                      |
+| Crap                | `crap({ threshold, maxComplexity })`, after Coverage                                                |
+| DistNoUrls          | `distNoUrls()`                                                                                      |
+| DocsMarkdown        | `markdownlint({ globs: ["*.md", "docs/**/*.md"], verdict: "exit-code" })`                           |
+| Commits             | `commitlint()`                                                                                      |
+| Mutation            | `mutation({ minScore })`, `isolated`                                                                |
+
+Because SecurityDeps keeps a registry on every tier, a new advisory writes a blank record into `.repo-contract/exceptions/security-deps.json`. Commit the file once a person has filled the record in.
+
+### Overrides
+
+One object, keyed by check id, changes a tier:
+
+- **An options object** merges over the tier's options for that check, one level deep. `Duplication: { path: "src" }` keeps the tier's budget. Coverage `thresholds` merge per metric, so `{ branches: 70 }` keeps the other three.
+- **`false`** turns a check off. It stays in the run as a pass whose rationale names the override, so the skip is visible and a `dependsOn` naming it still resolves.
+- **A mistake throws `TypeError`** when the config loads. Overrides that are not an object, such as `basic(null)`, throw it. So does a key the tier does not contain, or a value that is neither `false` nor an options object. Format, Typecheck, Tests, SecuritySecrets, Licenses, Packaging and BundledDependencies take no options, so they accept only `false`.
+
+To add a check the tier lacks, spread the tier's `checks` and add yours:
+
+```ts
+const base = app()
+
+export default defineRepoContract({
+  spawn,
+  env: process.env,
+  ...base,
+  checks: { ...base.checks, sbom: sbom() },
+})
+```
+
+A check you replace by hand this way keeps the tier's settings in the metadata, so [`explainTier`](#see-what-a-config-loosened) reports the tier's numbers for it, not yours. Prefer an override when one exists.
+
+### Private packages
+
+On a `private: true` package, Packaging, TypeResolution, BundledDependencies and QuickStart pass as not applicable. They judge a package someone installs, and a private one has no such consumer, so a private app can run `strict`. The tools still run; only the verdict changes. The verdict reads `package.json` in the working directory, not a check's `cwd`. A missing or unreadable manifest counts as public, so the checks still judge.
+
+### Planned checks
+
+Eight general checks keep a tier on paper and ship in a later release. None of them runs yet. `plannedChecks(tier)` lists them, and `renderExplain` prints them, so no tier looks more complete than it is.
+
+| Tier      | Planned checks                               |
+| --------- | -------------------------------------------- |
+| `app`     | DocsFragments, GithubActions, GitHygiene     |
+| `library` | PackedConsumer, EngineMatrix                 |
+| `strict`  | Suppressions, SecurityDevDeps, CleanCheckout |
+
+A planned check that joins a tier can fail a repository that passed before. The tiers are Experimental, so that can land in a minor release. The changeset that adds it must say so.
+
+### See what a config loosened
+
+`explainTier(config, baseline?)` lists what a config runs and every setting looser than its tier. `renderExplain` prints the result as text or Markdown:
+
+```ts
+import { explainTier, renderExplain, strict } from "repo-contract/tiers"
+
+const config = strict({ Coverage: { thresholds: { branches: 70 } }, Commits: false })
+console.log(renderExplain(explainTier(config)))
+```
+
+The end of its output:
+
+```text
+Loosened:
+  Coverage branches: 70 (baseline 80)
+  Commits: turned off (baseline runs it)
+```
+
+The output also lists each check with its settings, the tier checks the config lacks, and the planned checks. `explainTier` compares with the config's own tier by default. Pass another `ExplainBaseline` to compare with a stricter standard; `tierBaseline(name)` builds one from a tier. `renderExplain(explanation, { format: "markdown", heading })` suits a pull request comment or a step summary.
+
+A setting is looser by these rules, which `LOOSENING_RULES` and `compareSetting` export:
+
+- Coverage's four metrics and the Mutation `minScore` are stricter higher.
+- Duplication `maxPercentage`, Crap `threshold` and Crap `maxComplexity` are stricter lower.
+- A metric the baseline judges but the config leaves out is looser.
+- A check turned off with `false`, or missing from `checks`, is looser.
+
+Two limits follow from reading the tier metadata, not the checks themselves. A check you replaced by hand keeps the metadata's settings, because `explainTier` cannot see inside a policy. A config without tier metadata gets its checks compared, but not its settings.
+
+`repo-contract explain` prints the same for your config file:
+
+```sh
+npx repo-contract explain                 # text, for a terminal
+npx repo-contract explain --markdown      # for a report or a CI step summary
+npx repo-contract explain --json --config repo-contract.config.ts
+```
+
+It loads the first of `repo-contract.config.mts`, `.ts` and `.mjs`, or the file `--config <file>` names, through the project's own `tsx`. `--json` prints the explanation plus a `config` key naming the file. A config without tier metadata has no `tier` or `baseline` key there. `-C <dir>` runs as if started in `<dir>`. The exit status is `0` when it printed, `1` when the config cannot load or has no default export, and `2` for a usage error.
+
+### Run it before every commit and in CI
+
+A three-line hook runs the whole contract before each commit:
+
+```sh
+#!/bin/sh
+# .githooks/pre-commit: commit only what passes the whole contract.
+exec npm run contract
+```
+
+Make it executable and point git at the directory once: `chmod +x .githooks/pre-commit` and `git config core.hooksPath .githooks`. `repo-contract doctor` stops reporting `hooks-missing` once `core.hooksPath` is set or `.git/hooks/pre-commit` exists. It does not check what the hook runs.
+
+[`examples/ci/contract.yml`](https://github.com/maverickcer/repo-contract/blob/main/examples/ci/contract.yml) is a GitHub Actions workflow for a `strict` repository. One job plans the mutation shards, and one job per shard runs Stryker on its slice. The contract job merges the shard reports and runs every check once. The Mutation check judges the merged report through its `report` option, so Stryker runs once per shard and never again. Copy it into `.github/workflows/`. repo-contract does not keep your copy's action pins fresh. `test/unit/docs/example-workflow.test.ts` fails when the example's pins differ from this repository's own workflows. This repository's actionlint run covers `.github/workflows/` and `examples/ci/`, so the example parses as published. Run actionlint on your copy after you change it.
+
+## Tool config helpers
+
+`repo-contract/config` builds each tool's entry points and exclude list from two sources: package.json `exports` and one list of globs. Five subpaths each return a plain object to spread into one tool's config. None imports its tool, so repo-contract keeps zero runtime dependencies. All six subpaths are Experimental.
+
+| Subpath                        | Exports                                                     | What it sets                                                                                                                                                                               |
+| ------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `repo-contract/config`         | `entries`, `excludeGlobs`, `negateGlobs`, `DEFAULT_EXCLUDE` | The shared inputs.                                                                                                                                                                         |
+| `repo-contract/config/tsup`    | `tsupConfig`                                                | `entry` per code subpath; `format` (default ESM and CJS), `platform` (`node`), `target` (`node22`), source maps and tree shaking. No `dts`.                                                |
+| `repo-contract/config/typedoc` | `typedocConfig`                                             | `entryPoints` and `exclude`.                                                                                                                                                               |
+| `repo-contract/config/knip`    | `knipConfig`                                                | `entry`, plus any `extraEntries`, and `project`: the source glob minus the exclude list.                                                                                                   |
+| `repo-contract/config/vitest`  | `vitestConfig`                                              | `test.include` (default `test/**/*.test.ts`) and v8 coverage that writes `json-summary` and `json` into `coverage/`, even on a failing run.                                                |
+| `repo-contract/config/stryker` | `strykerConfig`                                             | The Vitest runner, per-test coverage, `ignoreStatic`, `incremental: false`, `mutate` from the source glob minus the exclude list, and the JSON report at `reports/mutation/mutation.json`. |
+
+```ts
+// tsup.config.ts
+import { readFileSync } from "node:fs"
+import { defineConfig } from "tsup"
+import { tsupConfig } from "repo-contract/config/tsup"
+
+const manifest = JSON.parse(readFileSync("package.json", "utf8"))
+export default defineConfig({ ...tsupConfig({ manifest }), clean: true })
+```
+
+```js
+// stryker.config.mjs
+import { strykerConfig } from "repo-contract/config/stryker"
+
+export default strykerConfig({ exclude: ["src/generated/**"] })
+```
+
+**Entry points.** `entries(manifest)` reads `exports` in order. The source of `"."` is `<srcDir>/index.ts`. The source of `"./x"` is `<srcDir>/x/index.ts` when that file exists, else `<srcDir>/x.ts`. `srcDir` defaults to `"src"`. `sources` maps a subpath outside the convention, such as `{ ".": "src/runtime/index.ts" }`. A subpath with no JavaScript target, such as a JSON schema or `./package.json`, is skipped. Without `exports`, `main` (else `module`) stands for `"."`. `entries` throws on a wildcard subpath with a JavaScript target and on a `sources` key that `exports` lacks. It also throws when two subpaths build one file.
+
+**One exclude list.** Every helper leaves out `DEFAULT_EXCLUDE` (test and spec files, `__tests__`, `__mocks__`, fixtures and declarations) plus the `exclude` globs you pass. The same list feeds Stryker's `mutate`, coverage's `exclude`, knip's `project` and TypeDoc's `exclude`. A blank glob, or one that starts with `!`, throws `TypeError`.
+
+**Coverage must be turned on.** `vitestConfig` sets where coverage goes, not whether it runs. The tiers pass `--coverage.enabled` to their Tests check; a hand-written config sets `coverage.enabled` or passes the flag.
+
+**Stryker concurrency.** `strykerConfig` sets `concurrency: 4` and `timeoutMS: 20000`; both are options. If two runs of one commit report different survivors, set `concurrency: 1`.
+
 ## Running less: affected scope, cache and speed
 
-Everything here is opt-in and lives in `repo-contract/affected`, `repo-contract/metrics` and the `bin` commands. With none of it, a run reports every problem and runs everything. Each command below takes `-C <dir>` to run as if started in `<dir>`, and `--help` lists all of its options.
+Everything here is opt-in and lives in `repo-contract/affected`, `repo-contract/metrics` and the `bin` commands. With none of it, a run reports every problem and runs everything. Each command below takes `-C <dir>` to run as if started in `<dir>`, and `--help` lists all of its options. Every repo-contract command that takes `-C` checks `<dir>` first. When `<dir>` is not a usable directory, the command exits `1` with one of three messages:
+
+- `the directory <dir> does not exist`: nothing is at the path.
+- `<dir> is not a directory`: a file or other non-directory is there.
+- `cannot read the directory <dir>: <code>`: the check failed with an error code, such as `ENAMETOOLONG`, or the process may not list or enter the directory (`EACCES`).
 
 ### See what a change affects
 
@@ -700,7 +1062,7 @@ Declare a coupling it cannot see in `package.json`, such as a test that reads a 
 
 ```json
 {
-  "repo-contract": {
+  "contract": {
     "affected": {
       "ignore": ["docs/**"],
       "links": [{ "when": "test/fixtures/**", "run": ["test/golden/**"] }]
@@ -710,6 +1072,8 @@ Declare a coupling it cannot see in `package.json`, such as a test that reads a 
 ```
 
 `ignore`, `triggers`, `tests` and `notMutated` take globs; an unknown key is an error, so a typo cannot silently drop a link. Path aliases (`paths` in `tsconfig.json`, including through `extends`) are honoured. A tsconfig it cannot read, or one that uses project references, makes it report everything. To avoid that, point `--tsconfig` at the config that holds the paths. Why it works this way: [ADR 0021](specs/decisions/0021-affected-scope-is-a-pure-analysis-that-only-ever-widens.md). Release runs should always run everything.
+
+The `"contract"` key replaces `"repo-contract"`. repo-contract reads only `affected` under it; other tools may keep their own keys there. The old `"repo-contract": { "affected": { ... } }` still reads, but is deprecated. When both are present, `"contract".affected` wins and the old block is ignored, even when it is invalid. `repo-contract doctor` reports the old key as `legacy-affected-key`: `info` alone, `warn` when both are present. A `"contract"` value that is not an object belongs to another tool. repo-contract ignores it and still reads the old key, and `doctor` reports `contract-key-not-object` as `info`. `readContractConfig` from `repo-contract/affected` reads the settings the same way.
 
 ### Choose a run's scope and reuse results
 
@@ -744,7 +1108,7 @@ The commands below are exercised end to end by `test/integration/affected/workfl
 
 **Run less on a pull request.** `repo-contract affected --tests` lists only the tests a change can reach; `--explain` says why (`src/math.ts#double changed -> ...`). Give a CI checkout `fetch-depth: 0` or it cannot see the base commit and runs everything.
 
-**Split mutation testing across CI jobs.** Plan the matrix, then give each job its share. The shards together are exactly the mutation targets, with no overlap:
+**Split mutation testing across CI jobs.** For the whole mutate set, use `repo-contract mutation plan --json` and the `mutation` preset's `shard` option ([Mutation testing](#mutation-testing)). For only what a change affects, plan the matrix here, then give each job its share. The shards together are exactly the mutation targets, with no overlap:
 
 ```sh
 npx repo-contract affected --plan-shards --target-minutes 10 --max-shards 8 --timings timings.json
@@ -764,7 +1128,7 @@ npx repo-contract affected --mutate --shard 2/3 --timings timings.json     # thi
 - missing hooks;
 - `export *` barrels, which widen a change to everything behind them.
 
-`doctor --fix` applies only the safe fix (the `.gitignore` line) and shows it first. `repo-contract cache why tests --inputs inputs.json` names the inputs that changed since a check's last cached result.
+`doctor --fix` applies only the safe fix (the `.gitignore` line) and shows it first. `doctor --json` prints the report as JSON. When doctor cannot run, as outside a git repository or with a `-C` directory that does not exist, it exits `1`. With `--json` it then prints `{ schemaVersion, error }` on stdout. That shape is smaller than the `state: "error"` report of [`mutation run --json`](#mutation-testing). `repo-contract cache why tests --inputs inputs.json` names the inputs that changed since a check's last cached result.
 
 **Prove the narrow scope is sound.** After a merge, run everything once and call `findEscapes({ affectedTests, allTests, failedInFullRun })` (`repo-contract/affected`). Any test that failed in the full run but was left out of the affected set is an escape. `clean: false` means the analysis needs a wider rule.
 
@@ -785,7 +1149,9 @@ npx repo-contract affected --mutate --shard 2/3 --timings timings.json     # thi
 
 repo-contract has no built-in baseline system. The core engine does not read or write files on its own initiative. Beyond spawning the commands you configure, it only parses that command's own captured stdout when you set `output: { format: "json" | "text" }`.
 
-A handful of published presets (`securitySecrets`, `duplication`, `markdownlint`) additionally read back a fixed report file their own `run` command was told to write. That is always the preset's own single, hardcoded path, never a scan of arbitrary files.
+Seven published presets (`brokenLinks`, `crap`, `duplication`, `markdownlint`, `mutation`, `securitySecrets`, `test`) also touch the file system in their policy. Four read back the report file their own `run` command wrote: one fixed path each, and no other file. `crap` reads back the report crap4ts wrote, at the path its `report` option names. `mutation` reads the Stryker report its run names, and its `registry` file. `brokenLinks` asks whether each local link linkinator reported broken exists on disk; it never reads a file's contents or looks outside the working directory. `test/unit/docs/preset-file-reads.test.ts` fails when this list disagrees with the presets that import `node:fs`.
+
+Two more pieces touch files without importing `node:fs` in a preset. With a `registry`, `securityDeps` writes that one registry file through `repo-contract/helpers`: a blank stub per new advisory. A tier's library-only checks read `package.json` in the working directory to tell whether the package is private.
 
 The opt-in pieces added in 0.12.0 write only where you point them:
 
@@ -823,56 +1189,22 @@ repo-contract distinguishes several failure categories and does not conflate the
 
 Find the symptom, then follow the cause to the fix. The [Errors](#errors) section explains the failure categories behind these.
 
-| Symptom                                                                                        | Cause                                                                                                                                                                                                                   | What to do                                                                                                                                               |
-| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A preset check fails with "`<tool>` is required by this preset but was not found"              | The tool could not be started (`status: "spawn_error"`, code `ENOENT`).                                                                                                                                                 | Install it as a development dependency, and run the contract through an npm script such as `npm run contract` so npm puts `node_modules/.bin` on `PATH`. |
-| `init` left out a check you expected                                                           | `init` only wires up tools it finds in your `devDependencies`, and it does not create the tools' own configuration.                                                                                                     | Install the tool, then add its [preset](#presets) to your config.                                                                                        |
-| A tool behaves differently than in your shell, or cannot find `PATH`, `HOME` or a token        | You supply `env`; repo-contract never reads `process.env` itself ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)).            | Pass `env: process.env`, or the variables the tool needs, to `defineRepoContract`. See [Supplying `spawn` and `env`](#supplying-spawn-and-env).          |
-| On Windows, checks for npm-installed tools fail to start                                       | Node refuses to run `.cmd` shims through plain `node:child_process.spawn` without `shell: true` (its CVE-2024-27980 mitigation).                                                                                        | Supply `cross-spawn` as `spawn`, which resolves the shims safely, or set `shell: true`. See [Supplying `spawn` and `env`](#supplying-spawn-and-env).     |
-| Config throws `run string contains an unquoted "&"`                                            | A string `run` is split into arguments without a shell, so `&&`, pipes and redirects are not available.                                                                                                                 | Use the array form, or set `shell: true` (then `run` must be a string). See [`run`](#run).                                                               |
-| `runRepoContract()` rejects with `PolicyThrewError` after a policy returned "see output above" | repo-contract rejects rationales that only point back at raw output, such as "see output above" or "check the report for details" ([ADR 0016](specs/decisions/0016-vague-rationale-is-a-structural-policy-failure.md)). | Say what happened and what to do next in the rationale: the count, the file, the threshold.                                                              |
-| `PolicyReadUnrequestedOutputError` or `PolicyReadFailedParseValueError`                        | A policy read `result.output` on a check with no `output`, or `.value` on a check whose parse failed.                                                                                                                   | Add `output` to the check, or test `result.output.success` before reading `.value`. See [Errors](#errors).                                               |
-| A check ends with `status: "timed_out"`                                                        | It ran longer than its `timeoutMs`.                                                                                                                                                                                     | Raise `timeoutMs` on that check, or fix the slow tool.                                                                                                   |
+| Symptom                                                                                        | Cause                                                                                                                                                                                                                   | What to do                                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A preset check fails with "`<tool>` is required by this preset but was not found"              | The tool could not be started (`status: "spawn_error"`, code `ENOENT`).                                                                                                                                                 | Install it as a development dependency, and run the contract through an npm script such as `npm run contract` so npm puts `node_modules/.bin` on `PATH`.                 |
+| `init` left out a check you expected                                                           | `init` only wires up tools it finds in your `devDependencies`, and it does not create the tools' own configuration. Without `--preset` it never adds `coverage`, `crap` or `mutation`.                                  | Install the tool, then add its [preset](#presets) to your config. For those three, run `repo-contract init --preset strict` on a new project or spread a [tier](#tiers). |
+| A tool behaves differently than in your shell, or cannot find `PATH`, `HOME` or a token        | You supply `env`; the library never reads `process.env` itself ([ADR 0011](specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md)).              | Pass `env: process.env`, or the variables the tool needs, to `defineRepoContract`. See [Supplying `spawn` and `env`](#supplying-spawn-and-env).                          |
+| On Windows, checks for npm-installed tools fail to start                                       | Node refuses to run `.cmd` shims through plain `node:child_process.spawn` without `shell: true` (its CVE-2024-27980 mitigation).                                                                                        | Supply `cross-spawn` as `spawn`, which resolves the shims safely, or set `shell: true`. See [Supplying `spawn` and `env`](#supplying-spawn-and-env).                     |
+| Config throws `run string contains an unquoted "&"`                                            | A string `run` is split into arguments without a shell, so `&&`, pipes and redirects are not available.                                                                                                                 | Use the array form, or set `shell: true` (then `run` must be a string). See [`run`](#run).                                                                               |
+| `runRepoContract()` rejects with `PolicyThrewError` after a policy returned "see output above" | repo-contract rejects rationales that only point back at raw output, such as "see output above" or "check the report for details" ([ADR 0016](specs/decisions/0016-vague-rationale-is-a-structural-policy-failure.md)). | Say what happened and what to do next in the rationale: the count, the file, the threshold.                                                                              |
+| `PolicyReadUnrequestedOutputError` or `PolicyReadFailedParseValueError`                        | A policy read `result.output` on a check with no `output`, or `.value` on a check whose parse failed.                                                                                                                   | Add `output` to the check, or test `result.output.success` before reading `.value`. See [Errors](#errors).                                                               |
+| A check ends with `status: "timed_out"`                                                        | It ran longer than its `timeoutMs`.                                                                                                                                                                                     | Raise `timeoutMs` on that check, or fix the slow tool.                                                                                                                   |
 
 Still stuck? [SUPPORT.md](SUPPORT.md) says what to include in an issue.
 
 ## `Evidence` and `Verdict` shapes
 
-Browse the generated [HTML API reference](https://maverickcer.github.io/repo-contract/api/) for the full field-by-field shape of `Evidence`, `CheckEvidence`, `Verdict`, and every error class. This repository's own `api-docs-report` check regenerates the underlying [markdown reports](docs/api-report/index/README.md) on every commit and byte-compares them against the source. The reference therefore can never drift from what the package actually exports.
-
-```ts
-interface Evidence {
-  version: 1
-  startedAt: string
-  completedAt: string
-  durationMs: number
-  checks: Record<
-    string,
-    {
-      command: string
-      args: readonly string[]
-      startedAt: string
-      completedAt: string
-      durationMs: number
-      exitCode: number | null
-      signal: NodeJS.Signals | null
-      stdout: string
-      stderr: string
-      status: "completed" | "timed_out" | "signaled" | "host_terminated" | "spawn_error" | "aborted"
-      spawnError?: string
-      output?:
-        | { format: string; success: true; value: unknown }
-        | { format: string; success: false; error: string }
-    }
-  >
-}
-
-interface Verdict {
-  version: 2
-  passed: boolean
-  checks: Record<string, { outcome: "pass" | "fail" | "warn"; rationale: string }>
-}
-```
+The generated API report holds the field-by-field shape of [`Evidence`](docs/api-report/index/README.md#evidence), [`CheckEvidence`](docs/api-report/index/README.md#checkevidence), [`Verdict`](docs/api-report/index/README.md#verdict) and every error class. The [HTML API reference](https://maverickcer.github.io/repo-contract/api/) renders the same source. This repository's `api-docs-report` check regenerates the markdown report on every contract run and fails on any difference, so the report matches what the package exports.
 
 `status` distinguishes **why** a process ended in its terminal state, independently of whether the policy considered that result acceptable. A non-zero exit code is `status: "completed"`, not an execution error.
 
@@ -889,14 +1221,14 @@ The version ranges, generated from `package.json`. The optional `typescript` pee
 
 <!-- ipc:end supported-versions -->
 
-| Environment                                | Supported                                                                                                                                                                                                   |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js `>=22.0.0` (macOS, Linux, Windows) | Yes                                                                                                                                                                                                         |
-| Bun (latest release)                       | Yes. Tested in CI against the real published package shape. No non-default permissions needed.                                                                                                              |
-| Deno (latest release)                      | Yes. Tested in CI against the real published package shape. Requires `--allow-read --allow-run --allow-env` (see [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md)). |
-| Browser                                    | No: this package executes local processes                                                                                                                                                                   |
+| Environment                                | Supported                                                                                                                                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js `>=22.0.0` (macOS, Linux, Windows) | Yes. CI's `verify` job tests the packed package on all three.                                                                                                                                                                         |
+| Bun (latest release) on Linux              | Yes. CI's `runtime-compat` job installs the packed tarball on `ubuntu-latest` and fails when Bun is missing. No non-default permissions needed. Bun on macOS and Windows is untested.                                                 |
+| Deno 2.x on Linux                          | Yes. The same job, with the same failure rule. Requires `--allow-read --allow-run --allow-env` (see [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md)). Deno on macOS and Windows is untested. |
+| Browser                                    | No: this package executes local processes                                                                                                                                                                                             |
 
-repo-contract's checks run as spawned processes and read the ambient environment, but the package itself never imports a process-spawning implementation or reads `process.env`. It is server/CLI-only by design regardless, since the capability a consumer supplies is itself always a real Node-only spawning mechanism. See [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md) for what "tested" covers.
+The library under `dist/` never imports a process-spawning implementation or reads `process.env`; your config supplies both. The `AmbientCapabilities` check scans the packed tarball and fails on either outside `bin/`. The `repo-contract` CLI in `bin/` does both: `affected` and `doctor` run `git`, and `quick-start` runs npm and the commands your README marks, each with a copy of `process.env`. `npm-script` runs one npm script. `mutation run` runs Stryker, and `git ls-files` only when its cache is on. See [ADR 0003](specs/decisions/0003-cross-platform-command-execution-and-process-cleanup.md) for what "tested" covers.
 
 ### Package managers
 
@@ -946,12 +1278,41 @@ const determinant = evaluateExceptionRecord({
 
 `hashRequirementFields` produces a deterministic digest of a set of fields' current values, useful for binding a sign-off to the exact prose it approved.
 
-This package deliberately does **not**:
+The helpers deliberately do **not**:
 
 - decide what a "finding" is;
-- match a finding to a registry record;
+- match a finding to a record by anything but the id you give it;
 - derive a canonical identity for either one.
 
 Those stay entirely up to you.
 
-[`examples/exceptions-walkthrough/`](examples/exceptions-walkthrough/README.md) is a runnable end-to-end use of every helper.
+[`examples/exceptions-walkthrough/`](examples/exceptions-walkthrough/README.md) is a runnable end-to-end use of `loadExceptionRegistry`, `reconcileExceptions`, `evaluateExceptionRecord`, `resolveExceptionPolicy` and `hashRequirementFields`.
+
+### The v2 exception record
+
+Every `.repo-contract/exceptions/*.json` registry shares one record core: `id`, `version` and `justification`. A `version: 2` record adds six text fields (`EXCEPTION_V2_FIELD_KEYS`: `ruleBroken`, `attempted`, `constraint`, `whyPreferable`, `residualRisk`, `revisitWhen`) and `expires`, a `YYYY-MM-DD` date or `""`. A security record adds four more: `alternatives`, `remediation`, `method` and `exceptionType`. `EXCEPTION_TYPES` lists the eight exception types, and `EXCEPTION_METHODS` the three ways a claim was checked. A `validated-false-positive` needs `mechanical-reverification`.
+
+`validateExceptionRegistry(value, schema)` checks a registry against an `ExceptionRegistrySchema`: the id namespace, the keys a record may carry, and a validator for the registry's own fields. It names every problem in one pass. A registry fails on an unknown key, an id outside the namespace, a duplicate id, a wrong version or a malformed field. A date that does not exist, such as `2027-02-30`, fails too. A blank field loads: completeness is the owning check's policy, so a fresh stub loads and then fails as incomplete. A `version: 1` record still loads, so a registry can migrate one record at a time. `exceptionRegistryStandardSchema(schema)` wraps the same rules as a Standard Schema for `loadExceptionRegistry`.
+
+`loadAndReconcileExceptionRegistry` reads a registry, reconciles this run's findings against it by id, and writes it back. Each new finding gets a blank stub, and each stale record stays for the policy to fail on. It is the one helper that writes to your tree, and it writes only the registry you name. The `securityDeps` preset uses it.
+
+`readExceptionRegistries(directory)`, `summarizeExceptionRegistries` and `renderExceptionInventory` count each registry's records by `exceptionType`, and how many are legacy, expired or incomplete. `EXCEPTION_REGISTRY_DIRECTORY` is `.repo-contract/exceptions`. They decide nothing, and an unreadable file becomes an error row, never a throw.
+
+### Fill in and count exception records
+
+A check writes a blank record, a stub, when it finds something a record can excuse. `repo-contract except <id>` fills one in and lists the fields still blank:
+
+```sh
+npx repo-contract except dead-code:unused-file:src/a.ts --set expires=2027-06-01
+npx repo-contract exceptions              # how many records each registry holds
+```
+
+- **`except`** finds the record by id across every registry in `--dir <dir>` (default `.repo-contract/exceptions`). For a `mutation:` id with no record yet, it builds one from `--report <file>` (default `reports/mutation/mutation.json`).
+- **`--set <field>=<text>`** sets one field and repeats. Setting a v2 field on a `version: 1` record upgrades it to `version: 2`. `expires` takes a `YYYY-MM-DD` date or `""`.
+- **Complete** means `justification` and the six v2 fields have text, plus the four security fields when the record carries them. The command writes only the registry it changed.
+- **`--json`** prints the id, the registry, the `state` (`created`, `updated` or `unchanged`), `complete`, the `missing` fields and the record.
+- **The exit status** is `0` when the record is complete, `1` when it is incomplete or cannot be written, and `2` for a usage error.
+
+`except` checks only the shared v2 rules and the shape of a mutation id. A registry's own rules, such as the exception types its check accepts, apply when that check next runs. A record `except` calls complete can still fail there.
+
+`repo-contract exceptions` prints the inventory from `summarizeExceptionRegistries`: per registry, the records by exception type and how many are legacy, expired or incomplete. `--dir <dir>` reads another directory, and `--json` prints the inventory as JSON. It judges nothing and lists an unreadable registry instead of failing. It exits `0` after printing, `1` when `-C` names no readable directory, and `2` for a usage error. Both commands take `-C <dir>`.

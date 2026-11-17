@@ -19,6 +19,14 @@ const ENTRIES = [
   { name: "helpers", dtsPath: "./.dts/helpers/index.js" },
   { name: "affected", dtsPath: "./.dts/affected/index.js" },
   { name: "metrics", dtsPath: "./.dts/metrics/index.js" },
+  { name: "tiers", dtsPath: "./.dts/tiers/index.js" },
+  { name: "config", dtsPath: "./.dts/tool-config/index.js" },
+  // A nested name's shim sits one directory down, so its path climbs back to dist/ first.
+  { name: "config/tsup", dtsPath: "../.dts/tool-config/tsup.js" },
+  { name: "config/typedoc", dtsPath: "../.dts/tool-config/typedoc.js" },
+  { name: "config/knip", dtsPath: "../.dts/tool-config/knip.js" },
+  { name: "config/vitest", dtsPath: "../.dts/tool-config/vitest.js" },
+  { name: "config/stryker", dtsPath: "../.dts/tool-config/stryker.js" },
 ]
 
 for (const { name, dtsPath } of ENTRIES) {

@@ -20,7 +20,7 @@ import { testSpawn } from "../../helpers/test-spawn.js"
  * small strengthening of the existing Golden/snapshot contracts category.
  *
  * disable-comments.json deliberately has no generated schema. Its runtime
- * validator is authoritative: scripts/shared/exception-record.ts's
+ * validator is authoritative: src/helpers/exception-record.ts's
  * validateExceptionRegistry plus
  * scripts/suppression-governance/evidence-types.ts's
  * SUPPRESSION_EXCEPTION_SCHEMA. Editor schema support for that internal

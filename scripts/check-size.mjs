@@ -41,6 +41,20 @@ const ENTRIES = [
   { label: "affected (cjs)", file: "dist/affected.cjs" },
   { label: "metrics (esm)", file: "dist/metrics.js" },
   { label: "metrics (cjs)", file: "dist/metrics.cjs" },
+  { label: "tiers (esm)", file: "dist/tiers.js" },
+  { label: "tiers (cjs)", file: "dist/tiers.cjs" },
+  { label: "config (esm)", file: "dist/config.js" },
+  { label: "config (cjs)", file: "dist/config.cjs" },
+  { label: "config/knip (esm)", file: "dist/config/knip.js" },
+  { label: "config/knip (cjs)", file: "dist/config/knip.cjs" },
+  { label: "config/stryker (esm)", file: "dist/config/stryker.js" },
+  { label: "config/stryker (cjs)", file: "dist/config/stryker.cjs" },
+  { label: "config/tsup (esm)", file: "dist/config/tsup.js" },
+  { label: "config/tsup (cjs)", file: "dist/config/tsup.cjs" },
+  { label: "config/typedoc (esm)", file: "dist/config/typedoc.js" },
+  { label: "config/typedoc (cjs)", file: "dist/config/typedoc.cjs" },
+  { label: "config/vitest (esm)", file: "dist/config/vitest.js" },
+  { label: "config/vitest (cjs)", file: "dist/config/vitest.cjs" },
 ]
 
 function parseArgs(argv) {

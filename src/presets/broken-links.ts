@@ -1,50 +1,56 @@
+import { stat } from "node:fs/promises"
+import { resolve } from "node:path"
 import type { CheckDefinitionConfig } from "../types.js"
+import {
+  type BrokenLinksStart,
+  type CheckedLink,
+  crawlArguments,
+  judgeLinks,
+  linksToProbe,
+} from "./rules/link-results.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /** linkinator's `--format json` contract: not published as a TypeScript type by the tool. */
-interface LinkinatorLink {
-  readonly url: string
-  readonly status: number
-  readonly state: "OK" | "BROKEN" | "SKIPPED"
-  readonly parent?: string
+interface LinkinatorReport {
+  readonly links: readonly CheckedLink[]
 }
 
-interface LinkinatorReport {
-  readonly links: readonly LinkinatorLink[]
-}
+// Declared beside the rule that reads it, so the rule never imports this file back.
+export type { BrokenLinksStart }
 
 /** Options accepted by {@link brokenLinks}. */
-interface BrokenLinksOptions {
-  /** File or directory passed straight through to linkinator as its positional target. Defaults to `"."`. */
-  readonly start?: string
+export interface BrokenLinksOptions {
+  /**
+   * Where the crawl starts. A string is one HTML start point. Defaults to `"."`. A list runs one
+   * crawl over every start point, served from the working directory. linkinator's Markdown mode
+   * is all or nothing, so one `"markdown"` start turns it on for the whole crawl.
+   */
+  readonly start?: string | readonly BrokenLinksStart[]
 }
 
 /**
- * @param link One linkinator link result with `state === "BROKEN"`.
- * @returns A single-line `url returned HTTP status (linked from parent)` summary.
- */
-function formatBrokenLink(link: LinkinatorLink): string {
-  const parent = link.parent ? ` (linked from ${link.parent})` : ""
-
-  return `${link.url} returned HTTP ${String(link.status)}${parent}`
-}
-
-/**
- * Broken-link detection via linkinator, recursing through local files and
- * following both local and remote links. `--skip node_modules` avoids
- * wasting the crawl on vendored files that were never authored content.
+ * Broken-link detection via linkinator, recursing through local files and following both local
+ * and remote links. `--skip node_modules` avoids wasting the crawl on vendored files that were
+ * never authored content. A link that answered HTTP 429 passes, since a rate limit says nothing
+ * about whether the page exists. A local link linkinator could not serve passes when it exists
+ * on disk, resolved from the working directory: linkinator reports a bare directory link as
+ * broken, though every git host renders it.
  * @param options - configuration for this check; see {@link BrokenLinksOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `start` is an empty list.
  * @beta
  */
 export function brokenLinks(options: BrokenLinksOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("brokenLinks", options)
   const { start = "." } = options
 
   return {
-    run: ["linkinator", start, "--recurse", "--format", "json", "--skip", "node_modules"],
+    run: ["linkinator", ...crawlArguments(start), "--format", "json", "--skip", "node_modules"],
     output: { format: "json" },
-    policy: ({ result }) => {
+    policy: async ({ result }) => {
       const missing = checkDependencyInstalled(result, "linkinator")
       if (missing) return missing
 
@@ -72,25 +78,20 @@ export function brokenLinks(options: BrokenLinksOptions = {}): CheckDefinitionCo
         return { outcome: "fail", rationale: "linkinator produced invalid JSON report data." }
       }
 
-      // Re-annotated rather than used directly: `Array.isArray` narrows to
-      // `any[]` regardless of the checked value's declared type.
-      const links: readonly LinkinatorLink[] = report.links
-      const brokenLinkResults = links.filter((link) => link.state === "BROKEN")
+      // Probed up front because the judgement is synchronous. Each path is relative and has no
+      // `..` segment, so it resolves inside the working directory.
+      const onDisk = new Set<string>()
+      await Promise.all(
+        linksToProbe(report.links).map(async (local) => {
+          const found = await stat(resolve(local)).then(
+            () => true,
+            () => false,
+          )
+          if (found) onDisk.add(local)
+        }),
+      )
 
-      if (brokenLinkResults.length === 0) {
-        return {
-          outcome: "pass",
-          rationale: `linkinator found 0 broken link(s) across ${String(links.length)} checked.`,
-        }
-      }
-
-      return {
-        outcome: "fail",
-        rationale: [
-          `linkinator found ${String(brokenLinkResults.length)} broken link(s):`,
-          ...brokenLinkResults.map((link) => `- ${formatBrokenLink(link)}`),
-        ].join("\n"),
-      }
+      return judgeLinks({ links: report.links, existsLocally: (local) => onDisk.has(local) })
     },
   }
 }

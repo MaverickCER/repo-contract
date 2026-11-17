@@ -3,12 +3,20 @@
 **In short:**
 
 - Commands run with **no shell interpretation** unless a check opts in with `shell: true`.
-- Process spawning and environment access are capabilities **the consumer supplies**, not
-  owned by the package.
-- The `init` CLI only scaffolds local config/hook files. Neither it nor the library engine
+- Process spawning and environment access are capabilities **the consumer supplies** to the
+  library. Only the `repo-contract` CLI in `bin/` starts processes and reads `process.env` itself.
+- The `init` CLI only writes local files: `repo-contract.config.mts`, `scripts/contract.mjs`
+  and a `contract` script in `package.json`. Neither it nor the library engine
   makes network calls or collects telemetry. An AST scan of `src/` fails the contract on any
   network import or global. A scan of the packed tarball rejects `child_process` and
   `process.env` outside `bin/`.
+- Beyond `init`, eight features write or delete files in the project when you use them:
+  `securityDeps({ registry })`, `sbom({ write: true })`, `repo-contract except`,
+  `repo-contract mutation run`, `repo-contract doctor --fix`, `repo-contract merge-mutation --out`,
+  `repo-contract cache clear` and `repo-contract cache prune`.
+  `mutation run` also patches `@stryker-mutator/vitest-runner` in the project's own `node_modules`, unless
+  `patchVitestRunner: false` or `--no-patch-vitest-runner` turns that off.
+  [You own persistence](#application-responsibilities) says what each touches.
 
 The rest of this document defines the security boundaries and threat model for
 `repo-contract`. It covers the protections the package intentionally provides, the
@@ -145,11 +153,34 @@ particular:
 
 - **You own what commands you configure.** repo-contract does not attempt to detect or block a
   dangerous `run` command. If you configure `rm -rf /` with `shell: true`, it will run it.
-- **You own persistence.** repo-contract never writes evidence, reports, or baseline files to
-  disk on its own initiative. The opt-in result cache writes only to the path you pass, and run
-  records are appended by the caller. If you persist evidence (for baseline comparison, audit
-  trails, etc.), you are responsible for where it goes and who can read it. That includes
-  whatever secrets a check's captured output might contain.
+- **You own persistence.** The engine never writes evidence, reports, or baseline files to disk.
+  The opt-in result cache writes only to the path you pass, and run records are appended by the
+  caller. These features write or delete files when you use them:
+  - `securityDeps({ registry })` adds a blank record to that registry for each new advisory. Every
+    tier turns the registry on.
+  - `sbom({ write: true })` rewrites the documents at `output` and `productionOutput`.
+  - `repo-contract except <id>` writes the registry that holds the record.
+  - `repo-contract doctor --fix` appends the cache rule to `.gitignore`, after printing the change.
+  - `repo-contract merge-mutation --out <file>` writes the merged report to that file.
+  - `repo-contract cache clear` and `cache prune` delete entries in the cache directory
+    (`--cache-dir`, default `.repo-contract/cache`).
+  - `repo-contract quick-start` packs the tarball and runs the README commands in a new folder under
+    the system temp directory. It then tries to delete that folder.
+  - `repo-contract mutation run`, which the `mutation` preset runs, deletes Stryker's incremental
+    file, the previous report and the temp directory. When one of those paths is not strictly
+    inside the project once symbolic links resolve, it refuses and deletes nothing. It writes the
+    report, and with `--cache read-write` an entry in `.repo-contract/cache`.
+  - Before Stryker starts, `mutation run` patches `@stryker-mutator/vitest-runner` for Vitest 5
+    (stryker-js#6210). It rewrites the test-name separator in two runner files of the nearest
+    install, only when that install's realpath is inside the project. An install outside it is left
+    untouched, and the run prints a note naming it. It does so only on Vitest 5 or later, and only when it
+    recognises both files. `mutation({ patchVitestRunner: false })` or `--no-patch-vitest-runner`
+    leaves them as installed.
+
+  If you persist evidence (for baseline comparison, audit trails, etc.), you are responsible for
+  where it goes and who can read it. That includes whatever secrets a check's captured output
+  might contain.
+
 - **You own secret hygiene in check output.** Mind what a configured command might print before
   you persist or transmit the resulting evidence.
 - **You own environment scoping.** `inheritEnv`/`env` are the tools. Deciding what a given check
@@ -171,9 +202,9 @@ particular:
 ## SBOMs
 
 This repository commits two [CycloneDX](https://cyclonedx.org/) 1.6 Software Bills of Materials.
-Every `npm run contract` run regenerates them via
-[`@cyclonedx/cyclonedx-npm`](https://github.com/CycloneDX/cyclonedx-node-npm) (`checks/sbom.ts`).
-They answer different questions:
+Every `npm run contract` run regenerates them from `package-lock.json` with this package's own
+`sbom` preset in write mode. [Keep an SBOM current](GUIDE.md#keep-an-sbom-current) says what each
+component carries and what the documents leave out. The two answer different questions:
 
 - [`docs/sbom.production.cdx.json`](https://github.com/MaverickCER/repo-contract/blob/main/docs/sbom.production.cdx.json) is the **runtime inventory**: what installing `repo-contract` brings in. The package declares no runtime dependencies, so the document lists the package alone. This is the one to import into a vulnerability scanner to describe what you would deploy.
 - [`docs/sbom.cdx.json`](https://github.com/MaverickCER/repo-contract/blob/main/docs/sbom.cdx.json) is the **build-environment inventory**: every direct and transitive dependency of this repository's own tooling, as resolved in `package-lock.json`. It is for auditing how the package is built and is not what installing the package adds.

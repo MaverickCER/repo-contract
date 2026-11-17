@@ -1,9 +1,10 @@
 import { spawnSync } from "node:child_process"
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { packTarball, runNpm } from "../../scripts/npm-pack.mjs"
+import { distBuilt } from "./dist-built.js"
 
 /**
  * Shared by every E2E test that installs the packed tarball into a fresh consumer project:
@@ -20,9 +21,10 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
  * These tests exercise `dist/`, not `../../src`: required to have been built already (this
  * repo's `npm run contract` and CI always run `npm run build` before `npm run test:coverage`).
  * Callers `describe.skipIf(!distIsBuilt)` rather than failing confusingly. A developer may
- * reasonably run `npm test` alone, without a prior build.
+ * reasonably run `npm test` alone, without a prior build. In CI a missing build throws instead
+ * (see dist-built.ts).
  */
-export const distIsBuilt = existsSync(path.join(packageRoot, "dist", "index.js"))
+export const distIsBuilt = distBuilt(["index.js"])
 
 interface ConsumerFixture {
   readonly consumerDir: string
@@ -95,4 +97,24 @@ export function isRuntimeAvailable(command: string): boolean {
   } catch {
     return false
   }
+}
+
+/** The variable CI's `runtime-compat` job sets to the runtimes it installs, comma-separated. */
+export const REQUIRED_RUNTIMES_VARIABLE = "REPO_CONTRACT_REQUIRED_RUNTIMES"
+
+/**
+ * Whether the run requires a runtime, so its suite fails instead of skipping when it is missing.
+ * Local runs leave the variable unset and keep skipping.
+ * @param command - The runtime's executable name, e.g. `"bun"` or `"deno"`.
+ * @param env - The environment to read; the test process's own by default.
+ * @returns Whether {@link REQUIRED_RUNTIMES_VARIABLE} names `command`.
+ */
+export function isRuntimeRequired(
+  command: string,
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): boolean {
+  return (env[REQUIRED_RUNTIMES_VARIABLE] ?? "")
+    .split(",")
+    .map((name) => name.trim())
+    .includes(command)
 }

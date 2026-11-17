@@ -5,9 +5,9 @@ import { AFFECTED_USAGE, parseAffectedArgs, runAffected } from "../../../bin/aff
 import {
   computeAffectedFromGit,
   explainAffected,
-  parseAffectedConfig,
   parseShardSpec,
   planShards,
+  readContractConfig,
   shardMatrix,
 } from "../../../src/affected/index.js"
 import { fakeGit } from "../affected/fake-git.js"
@@ -47,12 +47,14 @@ async function invoke(
     version: "9.9.9",
     stdout: (text: string) => harness.out.push(text),
     stderr: (text: string) => harness.err.push(text),
+    checkDirectory: async (dir: string) =>
+      path.basename(dir) === "missing" ? `the directory ${dir} does not exist` : undefined,
     engine: {
       computeAffectedFromGit,
       explainAffected,
-      parseAffectedConfig,
       parseShardSpec,
       planShards,
+      readContractConfig,
       shardMatrix,
     },
     createCapabilities: (dir: string) => {
@@ -156,8 +158,43 @@ describe("parseAffectedArgs", () => {
     [["--tests", "--explain"], "--explain cannot be combined with --tests"],
     [["--json=1"], "option '--json' does not take a value"],
     [["--", "x"], "unexpected argument 'x'"],
+    [["--", "--help"], "unexpected argument '--help'"],
+    [["-"], "unexpected argument '-'"],
+    [
+      ["--plan-shards", "--target-minutes", "1e3"],
+      "option '--target-minutes' needs a positive number, not '1e3'",
+    ],
+    [
+      ["--plan-shards", "--target-minutes", "0x10"],
+      "option '--target-minutes' needs a positive number, not '0x10'",
+    ],
+    [
+      ["--mutate", "--shard", "1/2x"],
+      "A shard must be written <index>/<total> with 1 <= index <= total, not '1/2x'.",
+    ],
+    [
+      ["--mutate", "--shard", "x1/2"],
+      "A shard must be written <index>/<total> with 1 <= index <= total, not 'x1/2'.",
+    ],
   ])("rejects %j with a message naming the problem", (argv, message) => {
     expect(parseAffectedArgs(argv)).toEqual({ kind: "error", message })
+  })
+
+  it("reads decimal minutes, multi-digit shards, and a value given after = that starts with -", () => {
+    expect(parseAffectedArgs(["--plan-shards", "--target-minutes", "1.25"])).toMatchObject({
+      options: { targetMinutes: 1.25 },
+    })
+    expect(parseAffectedArgs(["--mutate", "--shard", "12/20"])).toMatchObject({
+      options: { shard: { index: 12, total: 20 } },
+    })
+    expect(parseAffectedArgs(["--base=-x"])).toMatchObject({ kind: "run", options: { base: "-x" } })
+  })
+
+  it("reads the next argument as an option after a value given with =", () => {
+    expect(parseAffectedArgs(["--base=main", "--json"])).toEqual({
+      kind: "run",
+      options: { format: "json", explain: false, base: "main" },
+    })
   })
 })
 
@@ -363,8 +400,12 @@ describe("runAffected: options reach the engine", () => {
 })
 
 describe("runAffected: configuration in package.json", () => {
+  const withManifest = (manifest: string, extra: Record<string, string> = {}) => ({
+    base: { ...base, "package.json": manifest },
+    work: { ...edited, "package.json": manifest, ...extra },
+  })
   const withConfig = (block: unknown, extra: Record<string, string> = {}) => {
-    const manifest = JSON.stringify({ name: "x", "repo-contract": { affected: block } })
+    const manifest = JSON.stringify({ name: "x", contract: { affected: block } })
     return {
       base: { ...base, "package.json": manifest },
       work: { ...edited, "package.json": manifest, ...extra },
@@ -387,8 +428,38 @@ describe("runAffected: configuration in package.json", () => {
     expect(code).toBe(1)
     expect(stdout).toBe("")
     expect(stderr).toBe(
-      "repo-contract affected: invalid configuration in package.json (repo-contract.affected): unknown key 'ignroe' (expected one of: ignore, triggers, tests, notMutated, links)\n",
+      "repo-contract affected: invalid configuration in package.json (contract.affected): unknown key 'ignroe' (expected one of: ignore, triggers, tests, notMutated, links)\n",
     )
+  })
+
+  it("still reads the legacy repo-contract.affected block", async () => {
+    const manifest = JSON.stringify({ "repo-contract": { affected: { ignore: ["notes/**"] } } })
+    const { code, stdout } = await invoke(
+      ["--json"],
+      withManifest(manifest, { "src/a.ts": "export const a = 1\n", "notes/a.txt": "x" }),
+    )
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout)).toMatchObject({ scope: "affected", affectedTests: [] })
+  })
+
+  it("names the legacy key when the legacy block is invalid", async () => {
+    const manifest = JSON.stringify({ "repo-contract": { affected: { ignroe: [] } } })
+    const { code, stderr } = await invoke([], withManifest(manifest))
+    expect(code).toBe(1)
+    expect(stderr).toContain("(repo-contract.affected): unknown key 'ignroe'")
+  })
+
+  it("lets contract.affected win over the legacy block", async () => {
+    const manifest = JSON.stringify({
+      contract: { affected: { ignore: ["notes/**"] } },
+      "repo-contract": { affected: { ignroe: [] } },
+    })
+    const { code, stdout } = await invoke(
+      ["--json"],
+      withManifest(manifest, { "src/a.ts": "export const a = 1\n", "notes/a.txt": "x" }),
+    )
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout)).toMatchObject({ scope: "affected", affectedTests: [] })
   })
 
   it("exits 1 when package.json is not valid JSON", async () => {
@@ -422,7 +493,7 @@ describe("runAffected: configuration in package.json", () => {
             return computeAffectedFromGit(input as never)
           },
           explainAffected,
-          parseAffectedConfig,
+          readContractConfig,
         },
       },
     )
@@ -449,12 +520,11 @@ describe("runAffected: failures exit 1 with one clear line on stderr", () => {
     )
   })
 
-  it("reports a TypeScript without the compiler API", async () => {
-    const { code, stderr } = await invoke(
-      [],
-      {},
-      { loadTypeScript: async () => ({ version: "7.0.0" }) },
-    )
+  it.each([
+    ["TypeScript 7", { version: "7.0.0" }],
+    ["a module that resolved to nothing", undefined],
+  ])("reports %s as a TypeScript without the compiler API", async (_, loaded) => {
+    const { code, stderr } = await invoke([], {}, { loadTypeScript: async () => loaded })
     expect(code).toBe(1)
     expect(stderr).toBe(
       "repo-contract affected: the installed TypeScript has no compiler API (TypeScript 7 does not); install typescript@6 or earlier\n",
@@ -621,13 +691,32 @@ describe("runAffected sharding", () => {
     expect(stdout.split("\n").filter(Boolean)).toEqual([heavy])
   })
 
+  it("accepts a timings file that records zero milliseconds", async () => {
+    const all = await targets()
+    const timings = JSON.stringify(Object.fromEntries(all.map((f) => [f, 0])))
+    const { code } = await invoke(
+      ["--mutate", "--shard", "1/2", "--timings", "t.json"],
+      { work: wide },
+      {
+        createCapabilities: () => {
+          const { capabilities } = fakeGit({ base, work: wide })
+          return {
+            ...capabilities,
+            readFile: async (n: string) => (n === "t.json" ? timings : capabilities.readFile(n)),
+          }
+        },
+      },
+    )
+    expect(code).toBe(0)
+  })
+
   it("fails when the timings file is missing or not a record of numbers", async () => {
     const missing = await invoke(["--mutate", "--shard", "1/2", "--timings", "nope.json"], {
       work: wide,
     })
     expect(missing.code).toBe(1)
     expect(missing.stderr).toContain("could not read timings file nope.json")
-    for (const text of ["{", "[]", '{"a": "x"}', '{"a": -1}']) {
+    for (const text of ["{", "[]", "5", "null", '{"a": "x"}', '{"a": 1, "b": "x"}', '{"a": -1}']) {
       const bad = await invoke(
         ["--mutate", "--shard", "1/2", "--timings", "t.json"],
         { work: wide },
@@ -682,5 +771,37 @@ describe("runAffected sharding", () => {
       },
     )
     expect((JSON.parse(stdout) as { count: number }).count).toBe(all.length)
+  })
+
+  it("caps the time-budget matrix at --max-shards", async () => {
+    const all = await targets()
+    expect(all.length).toBeGreaterThan(1)
+    const timings = JSON.stringify(Object.fromEntries(all.map((f) => [f, 600_000])))
+    const { stdout } = await invoke(
+      ["--plan-shards", "--target-minutes", "10", "--max-shards", "1", "--timings", "t.json"],
+      { work: wide },
+      {
+        createCapabilities: () => {
+          const { capabilities } = fakeGit({ base, work: wide })
+          return {
+            ...capabilities,
+            readFile: async (n: string) => (n === "t.json" ? timings : capabilities.readFile(n)),
+          }
+        },
+      },
+    )
+    expect(JSON.parse(stdout)).toEqual({ count: 1, include: [{ shard: 1, total: 1, spec: "1/1" }] })
+  })
+
+  it("prints no target for a shard past the last one the plan fills", async () => {
+    const all = await targets()
+    const { code, stdout } = await invoke(
+      ["--mutate", "--shard", `${String(all.length + 1)}/${String(all.length + 1)}`],
+      {
+        work: wide,
+      },
+    )
+    expect(code).toBe(0)
+    expect(stdout).toBe("")
   })
 })

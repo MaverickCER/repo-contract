@@ -5,6 +5,8 @@ import {
   loadExceptionRegistry,
   reconcileExceptions,
   writeExceptionRegistry,
+  asFlatExceptionRecords,
+  validateExceptionRegistry,
 } from "../src/helpers/index.js"
 import type {
   ExceptionClassification,
@@ -12,12 +14,8 @@ import type {
   ExceptionPolicyConfig,
   ExceptionRecordCore,
   StandardSchemaV1,
+  ExceptionRegistrySchema,
 } from "../src/helpers/index.js"
-import {
-  asFlatExceptionRecords,
-  validateExceptionRegistry,
-} from "../scripts/shared/exception-record.js"
-import type { ExceptionRegistrySchema } from "../scripts/shared/exception-record.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 

@@ -8,7 +8,7 @@
     },
     "./presets": {
       "source": "src/presets/",
-      "environment": "Node (three presets read their own report file through `node:fs`)",
+      "environment": "Node (`crap`, `duplication`, `markdownlint`, `securitySecrets` and `test` read their own report file through `node:fs`; `mutation` reads the Stryker report and its registry; `brokenLinks` checks that local links exist on disk)",
       "tier": "Experimental",
       "purpose": "Ready-made checks for common tools: `typecheck`, `lint`, `format`, `test`, `securityDeps`, `license` and others, to spread and override"
     },
@@ -16,7 +16,7 @@
       "source": "src/helpers/",
       "environment": "Node: node:crypto and node:fs/promises (the file system is injectable)",
       "tier": "Stable",
-      "purpose": "Governed exceptions: `loadExceptionRegistry`, `reconcileExceptions`, `evaluateExceptionRecord`; `repoContractLogs` and its two hooks are beta"
+      "purpose": "Governed exceptions: `loadExceptionRegistry`, `reconcileExceptions`, `evaluateExceptionRecord`, the v2 record (`validateExceptionRegistry`, `loadAndReconcileExceptionRegistry`) and the registry inventory; `repoContractLogs` and its two hooks are beta"
     },
     "./affected": {
       "source": "src/affected/",
@@ -29,6 +29,48 @@
       "environment": "Node >=22; pure",
       "tier": "Experimental",
       "purpose": "Run records and what they prove: `createRunRecord`, `serializeRunRecord`, `summarizeRuns`, `pillarCoverage`, `maturityLevel`, `buildEvidenceManifest`, `verifyEvidenceManifest`"
+    },
+    "./tiers": {
+      "source": "src/tiers/",
+      "environment": "Node (the library-only checks read `package.json` through `node:fs` to tell whether the package is private)",
+      "tier": "Experimental",
+      "purpose": "Four tiers of checks to spread into `defineRepoContract`: `basic`, `app`, `library`, `strict`, with one overrides object; `explainTier` and `renderExplain` say what a config loosened"
+    },
+    "./config": {
+      "source": "src/tool-config/index.ts",
+      "environment": "Node (`entries` checks that a source file exists through `node:fs`)",
+      "tier": "Experimental",
+      "purpose": "The shared inputs of the tool config helpers: `entries` from package.json `exports`, and one exclude list (`excludeGlobs`, `negateGlobs`, `DEFAULT_EXCLUDE`)"
+    },
+    "./config/tsup": {
+      "source": "src/tool-config/tsup.ts",
+      "environment": "Node; imports nothing from tsup",
+      "tier": "Experimental",
+      "purpose": "`tsupConfig`: one tsup entry per code subpath of `exports`"
+    },
+    "./config/typedoc": {
+      "source": "src/tool-config/typedoc.ts",
+      "environment": "Node; imports nothing from TypeDoc",
+      "tier": "Experimental",
+      "purpose": "`typedocConfig`: TypeDoc entry points from `exports`, and the shared exclude list"
+    },
+    "./config/knip": {
+      "source": "src/tool-config/knip.ts",
+      "environment": "Node; imports nothing from knip",
+      "tier": "Experimental",
+      "purpose": "`knipConfig`: knip entries from `exports`, and a project glob without the shared exclude list"
+    },
+    "./config/vitest": {
+      "source": "src/tool-config/vitest.ts",
+      "environment": "Node; imports nothing from Vitest",
+      "tier": "Experimental",
+      "purpose": "`vitestConfig`: coverage settings that write the reports the `coverage` and `crap` presets read"
+    },
+    "./config/stryker": {
+      "source": "src/tool-config/stryker.ts",
+      "environment": "Node; imports nothing from Stryker",
+      "tier": "Experimental",
+      "purpose": "`strykerConfig`: a non-incremental Stryker config whose `mutate` set leaves out the shared exclude list"
     },
     "./schema": {
       "source": "schemas/",

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 import { parse as parseYaml } from "yaml"
 import { auditCiJobs, ciJobsOptions } from "../../_ipc/ci-jobs.js"
+import { isRuntimeRequired, REQUIRED_RUNTIMES_VARIABLE } from "../../helpers/pack-consumer.js"
 
 /**
  * The default branch's ruleset requires three status checks: `contract`, `lint` and `required`. GitHub
@@ -17,7 +18,12 @@ interface Job {
   readonly needs?: string | readonly string[]
   readonly if?: string
   readonly "continue-on-error"?: boolean | string
-  readonly steps?: readonly { readonly name?: string; readonly if?: string }[]
+  readonly steps?: readonly {
+    readonly name?: string
+    readonly if?: string
+    readonly run?: string
+    readonly env?: Readonly<Record<string, string>>
+  }[]
 }
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..")
@@ -91,5 +97,21 @@ describe("ci.yml: the `required` aggregator stands for every gate job", () => {
     expect(guard?.if).toContain(
       "(needs.benchmark-pr.result != 'success' && needs.benchmark-pr.result != 'skipped')",
     )
+  })
+})
+
+describe("ci.yml: `runtime-compat` fails, not skips, without Bun or Deno", () => {
+  it("requires both runtimes on the step that runs the e2e suites", () => {
+    const steps = workflow.jobs["runtime-compat"]?.steps ?? []
+    const e2e = steps.find((step) => step.run?.includes("run-test-category.mjs e2e"))
+    expect(e2e, "runtime-compat runs the e2e category").toBeDefined()
+    expect(isRuntimeRequired("bun", e2e?.env)).toBe(true)
+    expect(isRuntimeRequired("deno", e2e?.env)).toBe(true)
+  })
+
+  it("leaves a runtime optional when the variable is unset or names others", () => {
+    expect(isRuntimeRequired("bun", {})).toBe(false)
+    expect(isRuntimeRequired("bun", { [REQUIRED_RUNTIMES_VARIABLE]: "deno" })).toBe(false)
+    expect(isRuntimeRequired("deno", { [REQUIRED_RUNTIMES_VARIABLE]: " bun , deno " })).toBe(true)
   })
 })

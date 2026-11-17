@@ -1,14 +1,11 @@
-// Entry point for repo-contract's `coverage` check (see repo-contract.config.ts).
-// This is aggregation + reporting ONLY: it never executes tests and never
-// discovers test files. It relies on the `coverage` check's
-// `dependsOn: ["test-unit", "test-integration", "test-property"]`. That
-// guarantees those categories' coverage-final.json files already exist by
-// the time this runs. See scripts/aggregate-coverage.mjs for the merge
-// itself.
+// The `run` of repo-contract's `coverage` check (see repo-contract.config.ts). The published
+// `coverage` preset reads one coverage-summary.json; this repository's coverage is the union of
+// three categories, so this script merges them first (scripts/aggregate-coverage.mjs). It never
+// runs tests: the check's `dependsOn` on test-unit, test-integration and test-property makes
+// their coverage-final.json files exist first.
 //
-// Prints the aggregate coverage-summary.json's `total` figures to stdout as
-// JSON, for the `coverage` check's `output: { format: "json" }` to parse and
-// compare against scripts/coverage-thresholds.mjs.
+// It prints `{ "total": ... }`, the shape the preset's own summary reader prints, so the preset's
+// policy judges it unchanged. A missing category throws, and the preset reports stderr.
 
 import { readFileSync } from "node:fs"
 import { aggregateCoverage } from "./aggregate-coverage.mjs"
@@ -16,4 +13,4 @@ import { aggregateCoverage } from "./aggregate-coverage.mjs"
 const { summaryPath } = aggregateCoverage()
 const summary = JSON.parse(readFileSync(summaryPath, "utf8"))
 
-process.stdout.write(JSON.stringify(summary.total))
+process.stdout.write(JSON.stringify({ total: summary.total ?? null }))

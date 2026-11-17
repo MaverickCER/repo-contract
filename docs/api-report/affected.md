@@ -690,6 +690,28 @@ readonly ts: typeof ts;
 
 ***
 
+### ContractConfig
+
+The settings repo-contract reads from package.json. Other keys under `"contract"` belong to other tools.
+
+#### Properties
+
+##### affected
+
+```ts
+readonly affected: AffectedOptions;
+```
+
+##### source
+
+```ts
+readonly source: ContractConfigSource;
+```
+
+`"repo-contract"` means the legacy `"repo-contract".affected` key was read; `doctor` reports it.
+
+***
+
 ### DoctorFinding
 
 One thing worth changing, and how.
@@ -791,6 +813,14 @@ readonly hooksInstalled: boolean;
 ```
 
 Whether the git hooks that run the contract are installed.
+
+##### manifest?
+
+```ts
+readonly manifest?: unknown;
+```
+
+The root package.json, parsed; `undefined` when it is missing or not valid JSON.
 
 ##### starExportFiles
 
@@ -924,6 +954,68 @@ readonly ts: typeof ts;
 
 ***
 
+### MutatedFile
+
+One file the Stryker config mutates, and its size.
+
+#### Properties
+
+##### bytes
+
+```ts
+readonly bytes: number;
+```
+
+##### path
+
+```ts
+readonly path: string;
+```
+
+***
+
+### MutationPlan
+
+What [planMutationShards](#planmutationshards) returns, and the core of `repo-contract mutation plan --json`.
+
+#### Properties
+
+##### bytes
+
+```ts
+readonly bytes: number;
+```
+
+##### count
+
+```ts
+readonly count: number;
+```
+
+`clamp(ceil(bytes / 65536), 1, min(files, 256))`.
+
+##### files
+
+```ts
+readonly files: number;
+```
+
+##### matrix
+
+```ts
+readonly matrix: ShardMatrix;
+```
+
+##### plan
+
+```ts
+readonly plan: ShardPlan;
+```
+
+The files of each shard. `weightsMs` holds each shard's bytes here, not milliseconds.
+
+***
+
 ### PackedArtifact
 
 A packed file: content as base64, with the checksum it must still have when unpacked.
@@ -1017,6 +1109,74 @@ readonly maxEntries?: number;
 ```
 
 Only this many of the newest entries are kept.
+
+***
+
+### ResolvedMutant
+
+One mutant of a Stryker JSON report, with the source text it replaces.
+
+#### Properties
+
+##### column
+
+```ts
+readonly column: number;
+```
+
+##### file
+
+```ts
+readonly file: string;
+```
+
+##### line
+
+```ts
+readonly line: number;
+```
+
+1-indexed start line, or `0` when the report has no location.
+
+##### mutator
+
+```ts
+readonly mutator: string;
+```
+
+##### original
+
+```ts
+readonly original: string;
+```
+
+The exact source span the mutant replaces, read from the report's `source`.
+
+##### replacement
+
+```ts
+readonly replacement: string;
+```
+
+##### status
+
+```ts
+readonly status: string;
+```
+
+##### statusReason
+
+```ts
+readonly statusReason: string | undefined;
+```
+
+##### testsCompleted
+
+```ts
+readonly testsCompleted: number | undefined;
+```
+
+How many tests ran against the mutant, or `undefined` when the report does not say.
 
 ***
 
@@ -1278,6 +1438,16 @@ How one path differs between the base and the working tree.
 
 ***
 
+### ContractConfigSource
+
+```ts
+type ContractConfigSource = "contract" | "repo-contract" | "none";
+```
+
+Where a repository's settings came from in package.json.
+
+***
+
 ### FindingSeverity
 
 ```ts
@@ -1324,6 +1494,16 @@ type MissExplanation =
 ```
 
 Why a computation is not served from the cache, relative to the check's latest entry.
+
+***
+
+### MutantIdentity
+
+```ts
+type MutantIdentity = Pick<ResolvedMutant, "file" | "mutator" | "original" | "replacement">;
+```
+
+The fields a mutation exception id is derived from. Never the line: a record survives code moving.
 
 ***
 
@@ -1487,6 +1667,26 @@ const DEFAULT_TRIGGERS: readonly string[];
 ```
 
 Files whose change can alter how every test behaves, so nothing narrower than a full run is sound.
+
+***
+
+### MAX\_MUTATION\_SHARDS
+
+```ts
+const MAX_MUTATION_SHARDS: 256 = 256;
+```
+
+The most shards a plan asks for.
+
+***
+
+### MUTATION\_SHARD\_BYTES
+
+```ts
+const MUTATION_SHARD_BYTES: 65536 = 65_536;
+```
+
+Bytes of mutated source one shard is sized for.
 
 ## Functions
 
@@ -1665,6 +1865,29 @@ Whether the narrow scope was sound, and which tests escaped it.
 
 ***
 
+### findMutantById()
+
+```ts
+function findMutantById(mutants, id): ResolvedMutant | undefined;
+```
+
+Finds the mutant a mutation exception id names, for `repo-contract except`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `mutants` | readonly [`ResolvedMutant`](#resolvedmutant)[] | a report's mutants. |
+| `id` | `string` | a `mutation:` id. |
+
+#### Returns
+
+[`ResolvedMutant`](#resolvedmutant) \| `undefined`
+
+the first mutant with that id, or `undefined`.
+
+***
+
 ### loadCompilerOptions()
 
 ```ts
@@ -1727,6 +1950,59 @@ The merged report, or why the shards cannot be merged.
 
 ***
 
+### mutationExceptionId()
+
+```ts
+function mutationExceptionId(mutant): string;
+```
+
+`mutation:<file>:<mutator>:<first 12 hex of the hash of original and replacement>`. The format
+matches internal-package-contract's, so existing `mutation.json` records keep their ids.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `mutant` | [`MutantIdentity`](#mutantidentity) | the identity fields. |
+
+#### Returns
+
+`string`
+
+the id.
+
+***
+
+### mutationShardCount()
+
+```ts
+function mutationShardCount(input): number;
+```
+
+The shard count with no knobs: one shard per 64 KiB of mutated source, at least one, never more
+shards than files, and never more than [MAX\_MUTATION\_SHARDS](#max_mutation_shards). Bytes stand in for Stryker's
+cost because every repository has them; recorded timings exist only after a run.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `input` | \{ `bytes`: `number`; `files`: `number`; \} | the mutated source. |
+| `input.bytes` | `number` | its total size. |
+| `input.files` | `number` | how many files it spans. |
+
+#### Returns
+
+`number`
+
+the count; `0` only when there are no files.
+
+#### Throws
+
+If either input is not a whole number of at least 0, or bytes come with no files.
+
+***
+
 ### packArtifacts()
 
 ```ts
@@ -1766,8 +2042,9 @@ function parseAffectedConfig(value):
 ```
 
 Validates the `affected` block of a repository's configuration (`package.json`'s
-`"repo-contract"."affected"`). Strict on purpose: a misspelt key would otherwise silently
-leave a coupling undeclared, which is the one thing this block exists to prevent.
+`"contract"."affected"`, or the legacy `"repo-contract"."affected"`). `readContractConfig` picks
+the block; this checks it. Strict on purpose: a misspelt key would otherwise silently leave a
+coupling undeclared, which is the one thing this block exists to prevent.
 
 #### Parameters
 
@@ -1919,6 +2196,34 @@ One change per file that would differ.
 
 ***
 
+### planMutationShards()
+
+```ts
+function planMutationShards(files): MutationPlan;
+```
+
+Plans a sharded mutation run of every file the Stryker config mutates. Files are split
+heaviest first onto the lightest shard, by bytes, so the shards finish at about the same time.
+The same files give the same plan in any order.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `files` | readonly [`MutatedFile`](#mutatedfile)[] | the mutated files and their sizes; each path once. |
+
+#### Returns
+
+[`MutationPlan`](#mutationplan)
+
+the count, the split and the matrix. No files gives a count of 0 and an empty matrix.
+
+#### Throws
+
+If a path is empty or listed twice, or a size is not a whole number of at least 0.
+
+***
+
 ### planShards()
 
 ```ts
@@ -1943,6 +2248,43 @@ The plan.
 #### Throws
 
 If a count or budget is not a positive number.
+
+***
+
+### readContractConfig()
+
+```ts
+function readContractConfig(manifest): 
+  | {
+  config: ContractConfig;
+}
+  | {
+  error: string;
+};
+```
+
+Reads `"contract".affected` from a parsed package.json, through `parseAffectedConfig`. Falls back
+to the legacy `"repo-contract".affected` when the new key is absent. When both are present, the
+new key wins and the legacy block is not read, so a broken legacy block cannot fail a migrated
+repository; `doctor` warns about it. A `"contract"` key that is not an object belongs to another
+tool and is skipped like an absent one.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `manifest` | `unknown` | the parsed package.json, or `undefined` when there is none. |
+
+#### Returns
+
+  \| \{
+  `config`: [`ContractConfig`](#contractconfig);
+\}
+  \| \{
+  `error`: `string`;
+\}
+
+the settings, or a one-line description of what is wrong, naming the key it read.
 
 ***
 
@@ -2020,6 +2362,43 @@ on for a release, which always runs everything.
 `boolean`
 
 Whether to pass `failFast: true` to the run.
+
+***
+
+### resolveMutants()
+
+```ts
+function resolveMutants(report): 
+  | {
+  mutants: readonly ResolvedMutant[];
+  ok: true;
+}
+  | {
+  error: string;
+  ok: false;
+};
+```
+
+Reads every mutant of a Stryker JSON report (schema version 1 or 2).
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `report` | `unknown` | the parsed report. |
+
+#### Returns
+
+  \| \{
+  `mutants`: readonly [`ResolvedMutant`](#resolvedmutant)[];
+  `ok`: `true`;
+\}
+  \| \{
+  `error`: `string`;
+  `ok`: `false`;
+\}
+
+the mutants in file then report order, or why the report cannot be read.
 
 ***
 

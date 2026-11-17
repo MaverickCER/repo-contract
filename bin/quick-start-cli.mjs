@@ -8,6 +8,7 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
+import { checkDirectory } from "./cli-options.mjs"
 
 export const QUICK_START_USAGE = `Usage: repo-contract quick-start [options]
 
@@ -283,6 +284,8 @@ export async function runQuickStart(input) {
  */
 async function quickStartReport(input) {
   const { dir, options } = input
+  const directoryProblem = checkDirectory(dir)
+  if (directoryProblem !== undefined) return { state: "error", message: directoryProblem }
   let markdown
   let packageName
   try {

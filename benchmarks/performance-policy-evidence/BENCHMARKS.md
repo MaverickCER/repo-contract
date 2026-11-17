@@ -4,18 +4,18 @@ What does adopting this package add to latency, CPU, memory and compute spend, a
 
 ## What adopting this package costs
 
-For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **297 µs** per operation compared with a bare-minimum baseline (**170% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 0.82). At list prices that is on the order of **~$0.001 – $0.01 per million operations** of compute.
+For a typical workload of **80 checks** per operation, routing the work through `repo-contract` adds **323 µs** per operation compared with a bare-minimum baseline (**152% of the baseline**). Overall, it grows O(n) with workload size (measured exponent 0.87). At list prices that is on the order of **~$0.001 – $0.01 per million operations** of compute.
 
 > The relative figure and the growth class are the steadier ones. Both come from the same run, so they depend far less on the machine than a time does. Runtime behaviour and contention on the runner still move them. The growth class is an empirical fit to the sizes tested, not a proof of asymptotic complexity. Dollar figures are **order-of-magnitude** estimates from published list prices on shared hardware (see _Cost model_ below). They show scale, not a budget.
 
 | Cost | Typical (80 checks) | Largest (10240 checks) |
 | --- | --- | --- |
-| Added latency per operation | 297 µs | 29.4 ms |
-| Added latency, relative to baseline | 170% | 222% |
-| Added CPU time per operation | 1.41 ms | 32.2 ms |
-| Added memory per operation (heap delta) | 353.8 KiB | 44.7 MiB |
+| Added latency per operation | 323 µs | 45.2 ms |
+| Added latency, relative to baseline | 152% | 255% |
+| Added CPU time per operation | 1.55 ms | 48.5 ms |
+| Added memory per operation (heap delta) | 353.9 KiB | 45.1 MiB |
 | Compute cost per 1M operations (order of magnitude) | ~$0.001 – $0.01 | ~$0.1 – $1 |
-| Single-core throughput ceiling of the overhead alone | 3,369 ops/s | 34 ops/s |
+| Single-core throughput ceiling of the overhead alone | 3,095 ops/s | 22 ops/s |
 
 ## 1. End-to-end: the package's total impact
 
@@ -40,18 +40,18 @@ The baseline is an empty or minimal function, so it costs almost nothing. The _r
 
 | checks | Baseline | With package | Added | Added vs baseline | Added CPU | Est. $ / 1M ops |
 | --- | --- | --- | --- | --- | --- | --- |
-| 20 | 58.1 µs | 175 µs | 118 µs | 203% | 117 µs | $0.00025 – $0.0013 |
-| 40 | 94.8 µs | 277 µs | 176 µs | 186% | 190 µs | $0.00037 – $0.0021 |
-| 80 | 175 µs | 499 µs | 297 µs | 170% | 1.41 ms | $0.00062 – $0.016 |
-| 160 | 335 µs | 788 µs | 454 µs | 135% | 2.10 ms | $0.00094 – $0.024 |
-| 320 | 606 µs | 1.60 ms | 953 µs | 157% | 1.04 ms | $0.002 – $0.012 |
-| 640 | 1.02 ms | 3.95 ms | 2.94 ms | 288% | 3.22 ms | $0.0061 – $0.036 |
-| 1280 | 1.83 ms | 8.75 ms | 6.91 ms | 377% | 7.42 ms | $0.014 – $0.083 |
-| 2560 | 3.49 ms | 13.0 ms | 9.46 ms | 271% | 9.99 ms | $0.020 – $0.112 |
-| 5120 | 6.34 ms | 22.8 ms | 15.9 ms | 251% | 21.0 ms | $0.033 – $0.236 |
-| 10240 | 13.2 ms | 42.0 ms | 29.4 ms | 222% | 32.2 ms | $0.061 – $0.362 |
+| 20 | 67.6 µs | 211 µs | 143 µs | 211% | 149 µs | $0.0003 – $0.0017 |
+| 40 | 112 µs | 324 µs | 213 µs | 191% | 828 µs | $0.00044 – $0.0093 |
+| 80 | 213 µs | 531 µs | 323 µs | 152% | 1.55 ms | $0.00067 – $0.017 |
+| 160 | 405 µs | 941 µs | 520 µs | 128% | 525 µs | $0.0011 – $0.0059 |
+| 320 | 680 µs | 1.94 ms | 1.28 ms | 188% | 1.30 ms | $0.0027 – $0.015 |
+| 640 | 1.23 ms | 5.13 ms | 3.92 ms | 318% | 4.09 ms | $0.0082 – $0.046 |
+| 1280 | 2.34 ms | 11.8 ms | 9.48 ms | 405% | 10.1 ms | $0.020 – $0.113 |
+| 2560 | 4.47 ms | 17.9 ms | 13.4 ms | 299% | 14.3 ms | $0.028 – $0.161 |
+| 5120 | 8.94 ms | 32.6 ms | 23.8 ms | 266% | 25.7 ms | $0.050 – $0.288 |
+| 10240 | 17.7 ms | 62.8 ms | 45.2 ms | 255% | 48.5 ms | $0.094 – $0.545 |
 
-**How the total grows:** O(n) (linear), exponent 0.82 over 10 sizes.
+**How the total grows:** O(n) (linear), exponent 0.87 over 10 sizes.
 
 ## 2. Function by function
 
@@ -59,20 +59,20 @@ Every function the package exposes is measured on its own across the full size l
 
 | Function | Varies | Documented | Measured | Agreement | At 80 | At 10240 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `buildEvidence` (quiet-output) | check | O(n) | O(n) | ✅ matches | 198 µs | 23.4 ms |
-| `buildEvidence` (chatty-output) | check | O(n) | O(n) | ✅ matches | 1.92 ms | 262 ms |
-| `runPolicies` (quiet-output) | check | O(n) | O(n) | ✅ matches | 94.4 µs | 15.7 ms |
-| `runPolicies` (chatty-output) | check | O(n) | O(n) | ✅ matches | 121 µs | 25.3 ms |
-| `runPolicies with an onVerdict hook` (quiet-output) | check | O(n) | O(n) | ✅ matches | 93.5 µs | 14.6 ms |
-| `runPolicies with an onVerdict hook` (chatty-output) | check | O(n) | O(n) | ✅ matches | 136 µs | 26.7 ms |
-| `renderMarkdownSummary` | check | O(n log n) | O(n log n) | ✅ matches | 53.3 µs | 6.73 ms |
-| `renderMarkdownSummary` | slowest | O(1) | O(1) | ✅ matches | 198 µs | 275 µs |
-| `serializeRun` (quiet-output) | check | O(n) | O(n) | ✅ matches | 523 µs | 63.8 ms |
-| `serializeRun` (chatty-output) | check | O(n) | O(n) | ✅ matches | 5.30 ms | 997 ms |
-| `repoContractLogs saveEvidence` (quiet-output) | check | O(n) | O(n) | ✅ matches | 158 µs | 17.1 ms |
-| `repoContractLogs saveEvidence` (chatty-output) | check | O(n) | O(n log n) | 🟡 close (neighbouring class) | 249 µs | 51.1 ms |
-| `repoContractLogs prependVerdict` (quiet-output) | check | O(n) | O(n) | ✅ matches | 198 µs | 17.9 ms |
-| `repoContractLogs prependVerdict` (chatty-output) | check | O(n) | O(n) | ✅ matches | 199 µs | 19.9 ms |
+| `buildEvidence` (quiet-output) | check | O(n) | O(n) | ✅ matches | 227 µs | 33.3 ms |
+| `buildEvidence` (chatty-output) | check | O(n) | O(n) | ✅ matches | 2.31 ms | 325 ms |
+| `runPolicies` (quiet-output) | check | O(n) | O(n) | ✅ matches | 99.6 µs | 24.1 ms |
+| `runPolicies` (chatty-output) | check | O(n) | O(n) | ✅ matches | 139 µs | 32.8 ms |
+| `runPolicies with an onVerdict hook` (quiet-output) | check | O(n) | O(n) | ✅ matches | 107 µs | 24.5 ms |
+| `runPolicies with an onVerdict hook` (chatty-output) | check | O(n) | O(n) | ✅ matches | 144 µs | 34.1 ms |
+| `renderMarkdownSummary` | check | O(n log n) | O(n log n) | ✅ matches | 66.9 µs | 8.56 ms |
+| `renderMarkdownSummary` | slowest | O(1) | O(1) | ✅ matches | 214 µs | 303 µs |
+| `serializeRun` (quiet-output) | check | O(n) | O(n) | ✅ matches | 568 µs | 74.1 ms |
+| `serializeRun` (chatty-output) | check | O(n) | O(n log n) | 🟡 close (neighbouring class) | 5.79 ms | 1.12 s |
+| `repoContractLogs saveEvidence` (quiet-output) | check | O(n) | O(n) | ✅ matches | 223 µs | 27.2 ms |
+| `repoContractLogs saveEvidence` (chatty-output) | check | O(n) | O(n log n) | 🟡 close (neighbouring class) | 289 µs | 68.5 ms |
+| `repoContractLogs prependVerdict` (quiet-output) | check | O(n) | O(n) | ✅ matches | 268 µs | 23.5 ms |
+| `repoContractLogs prependVerdict` (chatty-output) | check | O(n) | O(n) | ✅ matches | 269 µs | 26.2 ms |
 
 ### `buildEvidence`
 
@@ -97,39 +97,39 @@ Every function the package exposes is measured on its own across the full size l
 
 Each check printed about 500 bytes of JSON.
 
-**Measured: O(n)** (exponent 0.94, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 1.01, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 59.1 µs | 65.1 µs | 208 µs | 52.8 KiB | 16,934 |
-| 40 | 104 µs | 108 µs | 313 µs | 104.3 KiB | 9,616 |
-| 80 | 198 µs | 206 µs | 566 µs | 211.1 KiB | 5,038 |
-| 160 | 408 µs | 428 µs | 1.20 ms | 436.3 KiB | 2,452 |
-| 320 | 705 µs | 724 µs | 1.54 ms | 938.5 KiB | 1,419 |
-| 640 | 1.42 ms | 1.50 ms | 3.13 ms | 2.1 MiB | 705 |
-| 1280 | 5.09 ms | 5.35 ms | 6.63 ms | 4.7 MiB | 196 |
-| 2560 | 7.52 ms | 7.70 ms | 9.44 ms | 8.0 MiB | 133 |
-| 5120 | 12.8 ms | 13.7 ms | 14.8 ms | 14.5 MiB | 78 |
-| 10240 | 23.4 ms | 24.2 ms | 27.6 ms | 27.5 MiB | 43 |
+| 20 | 76.0 µs | 81.9 µs | 213 µs | 52.8 KiB | 13,158 |
+| 40 | 153 µs | 161 µs | 404 µs | 104.5 KiB | 6,521 |
+| 80 | 227 µs | 235 µs | 537 µs | 211.2 KiB | 4,406 |
+| 160 | 456 µs | 501 µs | 1.08 ms | 436.3 KiB | 2,194 |
+| 320 | 852 µs | 894 µs | 1.52 ms | 938.5 KiB | 1,174 |
+| 640 | 1.74 ms | 1.88 ms | 3.11 ms | 2.1 MiB | 574 |
+| 1280 | 6.34 ms | 6.77 ms | 7.86 ms | 4.7 MiB | 158 |
+| 2560 | 9.84 ms | 10.2 ms | 11.9 ms | 8.0 MiB | 102 |
+| 5120 | 18.5 ms | 19.7 ms | 20.4 ms | 14.5 MiB | 54 |
+| 10240 | 33.3 ms | 36.4 ms | 37.4 ms | 27.6 MiB | 30 |
 
 #### Variant `chatty-output`
 
 Each check printed about 10 KB of JSON (a linter with many findings).
 
-**Measured: O(n)** (exponent 1.07, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 1.06, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 545 µs | 556 µs | 1.41 ms | 294.9 KiB | 1,835 |
-| 40 | 1.09 ms | 1.21 ms | 2.86 ms | 587.1 KiB | 916 |
-| 80 | 1.92 ms | 2.32 ms | 4.49 ms | 1.1 MiB | 520 |
-| 160 | 3.58 ms | 3.94 ms | 5.99 ms | 2.3 MiB | 279 |
-| 320 | 6.93 ms | 7.50 ms | 10.2 ms | 4.7 MiB | 144 |
-| 640 | 13.5 ms | 13.8 ms | 17.8 ms | 9.8 MiB | 74 |
-| 1280 | 29.9 ms | 30.1 ms | 36.8 ms | 20.1 MiB | 33 |
-| 2560 | 58.0 ms | 61.6 ms | 72.4 ms | 38.7 MiB | 17 |
-| 5120 | 134 ms | 134 ms | 216 ms | 73.5 MiB | 7 |
-| 10240 | 262 ms | 265 ms | 431 ms | 145.3 MiB | 4 |
+| 20 | 616 µs | 628 µs | 1.26 ms | 294.9 KiB | 1,624 |
+| 40 | 1.23 ms | 1.25 ms | 2.56 ms | 587.1 KiB | 815 |
+| 80 | 2.31 ms | 2.83 ms | 3.78 ms | 1.1 MiB | 433 |
+| 160 | 4.43 ms | 4.53 ms | 6.21 ms | 2.3 MiB | 226 |
+| 320 | 8.68 ms | 8.77 ms | 11.0 ms | 4.7 MiB | 115 |
+| 640 | 17.2 ms | 17.6 ms | 20.4 ms | 9.8 MiB | 58 |
+| 1280 | 37.0 ms | 37.4 ms | 41.9 ms | 20.1 MiB | 27 |
+| 2560 | 71.9 ms | 78.0 ms | 82.3 ms | 38.7 MiB | 14 |
+| 5120 | 165 ms | 169 ms | 248 ms | 73.5 MiB | 6 |
+| 10240 | 325 ms | 329 ms | 493 ms | 145.3 MiB | 3 |
 
 ### `runPolicies`
 
@@ -155,39 +155,39 @@ Each check printed about 10 KB of JSON (a linter with many findings).
 
 Each check printed about 500 bytes of JSON.
 
-**Measured: O(n)** (exponent 0.95, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 1.07, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 32.4 µs | 38.2 µs | 33.1 µs | 48.1 KiB | 30,875 |
-| 40 | 48.6 µs | 60.4 µs | 177 µs | 92.4 KiB | 20,586 |
-| 80 | 94.4 µs | 104 µs | 319 µs | 188.3 KiB | 10,597 |
-| 160 | 172 µs | 185 µs | 532 µs | 393.0 KiB | 5,822 |
-| 320 | 341 µs | 437 µs | 929 µs | 853.1 KiB | 2,933 |
-| 640 | 847 µs | 882 µs | 2.09 ms | 1.9 MiB | 1,181 |
-| 1280 | 3.85 ms | 4.08 ms | 6.29 ms | 4.4 MiB | 260 |
-| 2560 | 5.21 ms | 5.50 ms | 7.98 ms | 7.3 MiB | 192 |
-| 5120 | 8.07 ms | 8.41 ms | 12.1 ms | 13.2 MiB | 124 |
-| 10240 | 15.7 ms | 16.9 ms | 22.7 ms | 24.6 MiB | 64 |
+| 20 | 39.1 µs | 47.6 µs | 39.8 µs | 48.2 KiB | 25,568 |
+| 40 | 52.6 µs | 73.0 µs | 168 µs | 92.5 KiB | 19,026 |
+| 80 | 99.6 µs | 133 µs | 293 µs | 188.3 KiB | 10,042 |
+| 160 | 199 µs | 274 µs | 597 µs | 393.3 KiB | 5,013 |
+| 320 | 438 µs | 588 µs | 1.23 ms | 855.2 KiB | 2,283 |
+| 640 | 959 µs | 1.22 ms | 2.15 ms | 1.9 MiB | 1,043 |
+| 1280 | 4.88 ms | 5.57 ms | 7.00 ms | 4.4 MiB | 205 |
+| 2560 | 7.08 ms | 7.87 ms | 9.83 ms | 7.3 MiB | 141 |
+| 5120 | 12.8 ms | 13.4 ms | 16.9 ms | 13.1 MiB | 78 |
+| 10240 | 24.1 ms | 24.6 ms | 31.1 ms | 24.3 MiB | 41 |
 
 #### Variant `chatty-output`
 
 Each check printed about 10 KB of JSON (a linter with many findings).
 
-**Measured: O(n)** (exponent 1.00, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 0.98, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 31.9 µs | 34.0 µs | 33.0 µs | 54.0 KiB | 31,355 |
-| 40 | 61.7 µs | 66.9 µs | 228 µs | 106.9 KiB | 16,210 |
-| 80 | 121 µs | 133 µs | 394 µs | 217.1 KiB | 8,280 |
-| 160 | 286 µs | 315 µs | 1.01 ms | 451.7 KiB | 3,498 |
-| 320 | 557 µs | 611 µs | 1.87 ms | 970.6 KiB | 1,797 |
-| 640 | 1.24 ms | 1.31 ms | 4.82 ms | 2.2 MiB | 806 |
-| 1280 | 4.94 ms | 5.27 ms | 11.0 ms | 4.9 MiB | 202 |
-| 2560 | 6.52 ms | 7.29 ms | 15.3 ms | 8.1 MiB | 153 |
-| 5120 | 12.3 ms | 13.6 ms | 30.3 ms | 15.1 MiB | 82 |
-| 10240 | 25.3 ms | 27.4 ms | 62.6 ms | 28.1 MiB | 40 |
+| 20 | 40.7 µs | 44.4 µs | 166 µs | 54.1 KiB | 24,566 |
+| 40 | 65.7 µs | 83.2 µs | 203 µs | 106.9 KiB | 15,232 |
+| 80 | 139 µs | 172 µs | 438 µs | 217.3 KiB | 7,177 |
+| 160 | 293 µs | 371 µs | 912 µs | 451.7 KiB | 3,410 |
+| 320 | 623 µs | 775 µs | 1.79 ms | 965.7 KiB | 1,606 |
+| 640 | 1.74 ms | 2.06 ms | 4.93 ms | 2.2 MiB | 575 |
+| 1280 | 6.54 ms | 6.83 ms | 12.1 ms | 4.9 MiB | 153 |
+| 2560 | 9.44 ms | 9.88 ms | 17.9 ms | 8.3 MiB | 106 |
+| 5120 | 16.5 ms | 17.3 ms | 31.4 ms | 15.0 MiB | 61 |
+| 10240 | 32.8 ms | 36.4 ms | 62.3 ms | 27.9 MiB | 30 |
 
 ### `runPolicies with an onVerdict hook`
 
@@ -213,39 +213,39 @@ Each check printed about 10 KB of JSON (a linter with many findings).
 
 Each check printed about 500 bytes of JSON.
 
-**Measured: O(n)** (exponent 0.97, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 1.05, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 27.5 µs | 29.8 µs | 28.7 µs | 46.9 KiB | 36,360 |
-| 40 | 48.7 µs | 53.1 µs | 178 µs | 92.5 KiB | 20,548 |
-| 80 | 93.5 µs | 102 µs | 315 µs | 188.3 KiB | 10,694 |
-| 160 | 178 µs | 213 µs | 545 µs | 393.2 KiB | 5,615 |
-| 320 | 344 µs | 431 µs | 904 µs | 853.8 KiB | 2,910 |
-| 640 | 718 µs | 867 µs | 1.75 ms | 1.9 MiB | 1,393 |
-| 1280 | 3.86 ms | 4.10 ms | 6.41 ms | 4.4 MiB | 259 |
-| 2560 | 5.26 ms | 5.49 ms | 8.09 ms | 7.3 MiB | 190 |
-| 5120 | 7.93 ms | 8.24 ms | 11.6 ms | 13.0 MiB | 126 |
-| 10240 | 14.6 ms | 15.6 ms | 21.1 ms | 24.5 MiB | 69 |
+| 20 | 32.6 µs | 36.2 µs | 131 µs | 46.9 KiB | 30,670 |
+| 40 | 56.2 µs | 69.4 µs | 194 µs | 92.6 KiB | 17,780 |
+| 80 | 107 µs | 137 µs | 319 µs | 188.3 KiB | 9,315 |
+| 160 | 207 µs | 287 µs | 615 µs | 393.6 KiB | 4,830 |
+| 320 | 457 µs | 617 µs | 1.29 ms | 856.1 KiB | 2,188 |
+| 640 | 1.07 ms | 1.33 ms | 2.65 ms | 1.9 MiB | 939 |
+| 1280 | 4.97 ms | 5.91 ms | 7.26 ms | 4.4 MiB | 201 |
+| 2560 | 6.84 ms | 7.61 ms | 9.62 ms | 7.3 MiB | 146 |
+| 5120 | 13.3 ms | 29.0 ms | 18.2 ms | 13.1 MiB | 75 |
+| 10240 | 24.5 ms | 25.4 ms | 31.9 ms | 24.2 MiB | 41 |
 
 #### Variant `chatty-output`
 
 Each check printed about 10 KB of JSON (a linter with many findings).
 
-**Measured: O(n)** (exponent 1.01, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 1.00, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 33.1 µs | 36.0 µs | 34.3 µs | 54.1 KiB | 30,224 |
-| 40 | 63.6 µs | 67.5 µs | 172 µs | 107.0 KiB | 15,717 |
-| 80 | 136 µs | 152 µs | 453 µs | 217.2 KiB | 7,352 |
-| 160 | 267 µs | 306 µs | 844 µs | 451.3 KiB | 3,743 |
-| 320 | 606 µs | 671 µs | 2.03 ms | 970.6 KiB | 1,651 |
-| 640 | 1.30 ms | 1.35 ms | 4.80 ms | 2.2 MiB | 771 |
-| 1280 | 4.80 ms | 5.00 ms | 10.9 ms | 4.9 MiB | 208 |
-| 2560 | 6.47 ms | 7.19 ms | 15.4 ms | 8.3 MiB | 154 |
-| 5120 | 12.2 ms | 14.1 ms | 30.3 ms | 15.1 MiB | 82 |
-| 10240 | 26.7 ms | 30.4 ms | 66.6 ms | 28.0 MiB | 37 |
+| 20 | 41.3 µs | 46.2 µs | 133 µs | 54.2 KiB | 24,205 |
+| 40 | 68.1 µs | 85.6 µs | 217 µs | 106.9 KiB | 14,693 |
+| 80 | 144 µs | 176 µs | 448 µs | 217.3 KiB | 6,960 |
+| 160 | 293 µs | 371 µs | 873 µs | 451.7 KiB | 3,409 |
+| 320 | 662 µs | 805 µs | 1.86 ms | 970.6 KiB | 1,510 |
+| 640 | 1.74 ms | 2.33 ms | 5.06 ms | 2.2 MiB | 576 |
+| 1280 | 6.52 ms | 6.88 ms | 12.3 ms | 4.9 MiB | 153 |
+| 2560 | 9.66 ms | 10.4 ms | 18.1 ms | 8.3 MiB | 104 |
+| 5120 | 17.4 ms | 17.9 ms | 33.0 ms | 15.1 MiB | 58 |
+| 10240 | 34.1 ms | 42.4 ms | 62.8 ms | 27.9 MiB | 29 |
 
 ### `renderMarkdownSummary`
 
@@ -266,20 +266,20 @@ Each check printed about 10 KB of JSON (a linter with many findings).
 
 **In the end-to-end run:** Not part of the end-to-end operation, which ends at the verdict.
 
-**Measured: O(n log n)** (exponent 1.23, 10 sizes): ✅ matches.
+**Measured: O(n log n)** (exponent 1.22, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 20.1 µs | 31.6 µs | 20.5 µs | 30.4 KiB | 49,699 |
-| 40 | 30.3 µs | 37.5 µs | 108 µs | 55.1 KiB | 33,029 |
-| 80 | 53.3 µs | 61.0 µs | 181 µs | 104.5 KiB | 18,748 |
-| 160 | 106 µs | 140 µs | 382 µs | 204.7 KiB | 9,392 |
-| 320 | 185 µs | 234 µs | 564 µs | 401.4 KiB | 5,405 |
-| 640 | 181 µs | 191 µs | 565 µs | 611.5 KiB | 5,536 |
-| 1280 | 909 µs | 1.01 ms | 3.06 ms | 1.3 MiB | 1,101 |
-| 2560 | 1.65 ms | 1.72 ms | 4.35 ms | 2.7 MiB | 606 |
-| 5120 | 3.29 ms | 3.41 ms | 7.04 ms | 5.5 MiB | 304 |
-| 10240 | 6.73 ms | 6.95 ms | 12.3 ms | 10.8 MiB | 149 |
+| 20 | 24.5 µs | 34.7 µs | 31.0 µs | 30.4 KiB | 40,827 |
+| 40 | 30.9 µs | 36.8 µs | 102 µs | 55.1 KiB | 32,353 |
+| 80 | 66.9 µs | 88.4 µs | 255 µs | 104.5 KiB | 14,943 |
+| 160 | 104 µs | 162 µs | 300 µs | 204.7 KiB | 9,637 |
+| 320 | 217 µs | 273 µs | 634 µs | 401.5 KiB | 4,610 |
+| 640 | 256 µs | 542 µs | 1.01 ms | 599.5 KiB | 3,912 |
+| 1280 | 992 µs | 1.06 ms | 2.75 ms | 1.3 MiB | 1,008 |
+| 2560 | 1.94 ms | 2.27 ms | 4.24 ms | 2.7 MiB | 514 |
+| 5120 | 4.03 ms | 4.32 ms | 7.57 ms | 5.5 MiB | 248 |
+| 10240 | 8.56 ms | 8.81 ms | 15.1 ms | 10.8 MiB | 117 |
 
 ##### Varying `slowest`
 
@@ -287,20 +287,20 @@ How many of the slowest checks the summary lists.
 
 **Expected: O(1).** Each listed check adds one table row, so cost rises with this value until it reaches the 640 checks held during the sweep, then stops: the list never outgrows the checks it ranks. Sorting all 640 costs the same throughout, which keeps the rise to about half.
 
-**Measured: O(1)** (exponent 0.00, 10 sizes): ✅ matches.
+**Measured: O(1)** (exponent -0.01, 10 sizes): ✅ matches.
 
 | slowests | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 194 µs | 204 µs | 669 µs | 615.8 KiB | 5,150 |
-| 40 | 194 µs | 204 µs | 662 µs | 617.6 KiB | 5,160 |
-| 80 | 198 µs | 222 µs | 666 µs | 623.8 KiB | 5,058 |
-| 160 | 195 µs | 203 µs | 568 µs | 661.1 KiB | 5,135 |
-| 320 | 224 µs | 235 µs | 692 µs | 722.4 KiB | 4,470 |
-| 640 | 275 µs | 284 µs | 905 µs | 828.1 KiB | 3,638 |
-| 1280 | 254 µs | 286 µs | 724 µs | 825.5 KiB | 3,932 |
-| 2560 | 275 µs | 298 µs | 902 µs | 828.1 KiB | 3,633 |
-| 5120 | 255 µs | 265 µs | 727 µs | 825.5 KiB | 3,927 |
-| 10240 | 275 µs | 306 µs | 899 µs | 828.1 KiB | 3,635 |
+| 20 | 208 µs | 232 µs | 593 µs | 615.8 KiB | 4,802 |
+| 40 | 210 µs | 235 µs | 586 µs | 617.6 KiB | 4,764 |
+| 80 | 214 µs | 239 µs | 597 µs | 623.8 KiB | 4,669 |
+| 160 | 238 µs | 254 µs | 740 µs | 666.7 KiB | 4,193 |
+| 320 | 247 µs | 304 µs | 636 µs | 722.4 KiB | 4,041 |
+| 640 | 303 µs | 362 µs | 815 µs | 828.2 KiB | 3,303 |
+| 1280 | 330 µs | 374 µs | 1.10 ms | 833.1 KiB | 3,033 |
+| 2560 | 295 µs | 327 µs | 800 µs | 828.1 KiB | 3,386 |
+| 5120 | 303 µs | 385 µs | 821 µs | 828.1 KiB | 3,297 |
+| 10240 | 303 µs | 327 µs | 817 µs | 828.1 KiB | 3,303 |
 
 ### `serializeRun`
 
@@ -324,39 +324,39 @@ How many of the slowest checks the summary lists.
 
 Each check printed about 500 bytes of JSON.
 
-**Measured: O(n)** (exponent 0.98, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 1.05, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 136 µs | 144 µs | 459 µs | 45.5 KiB | 7,342 |
-| 40 | 235 µs | 243 µs | 650 µs | 109.0 KiB | 4,254 |
-| 80 | 523 µs | 547 µs | 1.38 ms | 178.6 KiB | 1,913 |
-| 160 | 1.02 ms | 1.08 ms | 2.72 ms | 357.3 KiB | 979 |
-| 320 | 1.79 ms | 1.88 ms | 3.77 ms | 712.3 KiB | 559 |
-| 640 | 4.30 ms | 4.45 ms | 6.36 ms | 1.4 MiB | 233 |
-| 1280 | 8.86 ms | 9.04 ms | 11.2 ms | 2.8 MiB | 113 |
-| 2560 | 18.1 ms | 18.3 ms | 20.8 ms | 5.7 MiB | 55 |
-| 5120 | 36.9 ms | 37.4 ms | 40.4 ms | 11.3 MiB | 27 |
-| 10240 | 63.8 ms | 64.4 ms | 67.9 ms | 22.7 MiB | 16 |
+| 20 | 144 µs | 155 µs | 402 µs | 45.5 KiB | 6,968 |
+| 40 | 270 µs | 286 µs | 718 µs | 115.7 KiB | 3,699 |
+| 80 | 568 µs | 618 µs | 1.26 ms | 178.6 KiB | 1,760 |
+| 160 | 1.10 ms | 1.13 ms | 2.49 ms | 357.3 KiB | 907 |
+| 320 | 2.01 ms | 2.19 ms | 3.75 ms | 712.3 KiB | 498 |
+| 640 | 3.83 ms | 4.01 ms | 5.67 ms | 1.4 MiB | 261 |
+| 1280 | 7.75 ms | 8.04 ms | 10.0 ms | 2.8 MiB | 129 |
+| 2560 | 15.5 ms | 15.8 ms | 18.0 ms | 5.7 MiB | 65 |
+| 5120 | 30.7 ms | 31.3 ms | 32.1 ms | 11.3 MiB | 33 |
+| 10240 | 74.1 ms | 74.7 ms | 74.5 ms | 22.7 MiB | 13 |
 
 #### Variant `chatty-output`
 
 Each check printed about 10 KB of JSON (a linter with many findings).
 
-**Measured: O(n)** (exponent 1.02, 10 sizes): ✅ matches.
+**Measured: O(n log n)** (exponent 1.11, 10 sizes): 🟡 close (neighbouring class).
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 1.57 ms | 1.65 ms | 3.51 ms | 599.8 KiB | 635 |
-| 40 | 2.79 ms | 2.95 ms | 4.83 ms | 1.2 MiB | 358 |
-| 80 | 5.30 ms | 5.41 ms | 7.45 ms | 2.3 MiB | 189 |
-| 160 | 10.3 ms | 10.4 ms | 12.7 ms | 4.6 MiB | 97 |
-| 320 | 29.7 ms | 34.3 ms | 32.8 ms | 9.3 MiB | 34 |
-| 640 | 58.7 ms | 58.9 ms | 61.9 ms | 18.5 MiB | 17 |
-| 1280 | 117 ms | 117 ms | 120 ms | 37.0 MiB | 9 |
-| 2560 | 232 ms | 233 ms | 233 ms | 73.9 MiB | 4 |
-| 5120 | 469 ms | 483 ms | 488 ms | 147.7 MiB | 2 |
-| 10240 | 997 ms | 1.00e+3 ms | 1.03 s | 295.3 MiB | 1 |
+| 20 | 1.72 ms | 1.89 ms | 3.43 ms | 599.8 KiB | 583 |
+| 40 | 3.08 ms | 3.24 ms | 4.90 ms | 1.2 MiB | 325 |
+| 80 | 5.79 ms | 5.95 ms | 7.82 ms | 2.3 MiB | 173 |
+| 160 | 11.1 ms | 22.1 ms | 13.3 ms | 4.6 MiB | 90 |
+| 320 | 21.7 ms | 21.9 ms | 22.2 ms | 9.3 MiB | 46 |
+| 640 | 51.2 ms | 52.0 ms | 51.9 ms | 18.5 MiB | 20 |
+| 1280 | 122 ms | 129 ms | 122 ms | 37.0 MiB | 8 |
+| 2560 | 269 ms | 271 ms | 269 ms | 73.9 MiB | 4 |
+| 5120 | 546 ms | 565 ms | 562 ms | 147.7 MiB | 2 |
+| 10240 | 1.12 s | 1.12 s | 1.15 s | 295.3 MiB | 1 |
 
 ### `repoContractLogs saveEvidence`
 
@@ -381,39 +381,39 @@ Each check printed about 10 KB of JSON (a linter with many findings).
 
 Each check printed about 500 bytes of JSON.
 
-**Measured: O(n)** (exponent 0.98, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 1.07, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 63.0 µs | 89.7 µs | 197 µs | 98.0 KiB | 15,883 |
-| 40 | 91.0 µs | 108 µs | 279 µs | 178.9 KiB | 10,987 |
-| 80 | 158 µs | 168 µs | 458 µs | 322.2 KiB | 6,323 |
-| 160 | 305 µs | 320 µs | 820 µs | 637.7 KiB | 3,282 |
-| 320 | 582 µs | 621 µs | 1.39 ms | 1.2 MiB | 1,717 |
-| 640 | 1.15 ms | 1.24 ms | 2.79 ms | 2.5 MiB | 866 |
-| 1280 | 2.15 ms | 2.26 ms | 3.69 ms | 4.9 MiB | 464 |
-| 2560 | 4.16 ms | 4.28 ms | 5.92 ms | 9.9 MiB | 240 |
-| 5120 | 8.54 ms | 8.58 ms | 11.0 ms | 19.8 MiB | 117 |
-| 10240 | 17.1 ms | 17.9 ms | 21.1 ms | 39.6 MiB | 58 |
+| 20 | 90.2 µs | 125 µs | 349 µs | 98.0 KiB | 11,090 |
+| 40 | 125 µs | 164 µs | 370 µs | 179.0 KiB | 8,029 |
+| 80 | 223 µs | 307 µs | 624 µs | 328.4 KiB | 4,486 |
+| 160 | 367 µs | 394 µs | 782 µs | 637.7 KiB | 2,726 |
+| 320 | 717 µs | 797 µs | 1.37 ms | 1.2 MiB | 1,395 |
+| 640 | 1.44 ms | 1.67 ms | 2.79 ms | 2.5 MiB | 692 |
+| 1280 | 2.78 ms | 3.01 ms | 4.00 ms | 4.9 MiB | 359 |
+| 2560 | 5.75 ms | 6.20 ms | 7.63 ms | 9.9 MiB | 174 |
+| 5120 | 13.0 ms | 26.0 ms | 15.7 ms | 19.8 MiB | 77 |
+| 10240 | 27.2 ms | 27.8 ms | 31.7 ms | 39.6 MiB | 37 |
 
 #### Variant `chatty-output`
 
 Each check printed about 10 KB of JSON (a linter with many findings).
 
-**Measured: O(n log n)** (exponent 1.19, 10 sizes): 🟡 close (neighbouring class).
+**Measured: O(n log n)** (exponent 1.20, 10 sizes): 🟡 close (neighbouring class).
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 66.9 µs | 71.6 µs | 239 µs | 281.3 KiB | 14,942 |
-| 40 | 128 µs | 134 µs | 385 µs | 539.0 KiB | 7,841 |
-| 80 | 249 µs | 260 µs | 732 µs | 1.0 MiB | 4,009 |
-| 160 | 538 µs | 557 µs | 1.78 ms | 2.1 MiB | 1,859 |
-| 320 | 1.11 ms | 1.15 ms | 3.63 ms | 4.2 MiB | 900 |
-| 640 | 1.97 ms | 2.04 ms | 4.66 ms | 8.3 MiB | 508 |
-| 1280 | 3.67 ms | 3.80 ms | 6.63 ms | 16.7 MiB | 272 |
-| 2560 | 7.03 ms | 7.29 ms | 10.5 ms | 33.3 MiB | 142 |
-| 5120 | 21.0 ms | 22.5 ms | 26.1 ms | 52.0 MiB | 48 |
-| 10240 | 51.1 ms | 56.2 ms | 62.1 ms | 103.7 MiB | 20 |
+| 20 | 84.3 µs | 95.0 µs | 289 µs | 281.1 KiB | 11,863 |
+| 40 | 150 µs | 170 µs | 398 µs | 539.5 KiB | 6,689 |
+| 80 | 289 µs | 360 µs | 690 µs | 1.0 MiB | 3,462 |
+| 160 | 579 µs | 660 µs | 1.22 ms | 2.1 MiB | 1,728 |
+| 320 | 1.24 ms | 1.45 ms | 2.56 ms | 4.2 MiB | 808 |
+| 640 | 2.56 ms | 5.11 ms | 4.19 ms | 8.3 MiB | 390 |
+| 1280 | 4.97 ms | 5.30 ms | 7.00 ms | 16.7 MiB | 201 |
+| 2560 | 10.1 ms | 10.7 ms | 12.8 ms | 33.3 MiB | 99 |
+| 5120 | 28.4 ms | 29.1 ms | 32.1 ms | 51.9 MiB | 35 |
+| 10240 | 68.5 ms | 69.7 ms | 78.7 ms | 103.7 MiB | 15 |
 
 ### `repoContractLogs prependVerdict`
 
@@ -438,69 +438,69 @@ Each check printed about 10 KB of JSON (a linter with many findings).
 
 Each check printed about 500 bytes of JSON.
 
-**Measured: O(n)** (exponent 0.98, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 1.00, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 67.2 µs | 90.7 µs | 71.0 µs | 57.3 KiB | 14,871 |
-| 40 | 110 µs | 130 µs | 113 µs | 113.3 KiB | 9,105 |
-| 80 | 198 µs | 226 µs | 201 µs | 225.5 KiB | 5,053 |
-| 160 | 373 µs | 408 µs | 379 µs | 450.0 KiB | 2,679 |
-| 320 | 657 µs | 685 µs | 2.17 ms | 898.7 KiB | 1,522 |
-| 640 | 1.16 ms | 1.19 ms | 2.67 ms | 1.8 MiB | 862 |
-| 1280 | 2.13 ms | 2.16 ms | 3.37 ms | 3.5 MiB | 470 |
-| 2560 | 4.09 ms | 4.39 ms | 4.52 ms | 7.0 MiB | 245 |
-| 5120 | 8.20 ms | 8.71 ms | 8.66 ms | 14.0 MiB | 122 |
-| 10240 | 17.9 ms | 18.2 ms | 18.3 ms | 28.1 MiB | 56 |
+| 20 | 85.7 µs | 111 µs | 89.0 µs | 57.4 KiB | 11,668 |
+| 40 | 143 µs | 172 µs | 146 µs | 113.5 KiB | 7,006 |
+| 80 | 268 µs | 292 µs | 272 µs | 225.7 KiB | 3,729 |
+| 160 | 458 µs | 514 µs | 1.70 ms | 450.0 KiB | 2,183 |
+| 320 | 788 µs | 920 µs | 2.05 ms | 898.9 KiB | 1,270 |
+| 640 | 1.50 ms | 1.81 ms | 2.88 ms | 1.8 MiB | 666 |
+| 1280 | 2.76 ms | 2.97 ms | 3.76 ms | 3.5 MiB | 362 |
+| 2560 | 5.37 ms | 5.79 ms | 5.76 ms | 6.9 MiB | 186 |
+| 5120 | 11.2 ms | 11.9 ms | 11.3 ms | 13.8 MiB | 89 |
+| 10240 | 23.5 ms | 23.9 ms | 23.9 ms | 27.7 MiB | 42 |
 
 #### Variant `chatty-output`
 
 Each check printed about 10 KB of JSON (a linter with many findings).
 
-**Measured: O(n)** (exponent 1.00, 10 sizes): ✅ matches.
+**Measured: O(n)** (exponent 1.06, 10 sizes): ✅ matches.
 
 | checks | Median | p95 | CPU (median) | Heap Δ | Ops/s |
 | --- | --- | --- | --- | --- | --- |
-| 20 | 64.1 µs | 74.3 µs | 67.0 µs | 57.3 KiB | 15,590 |
-| 40 | 109 µs | 130 µs | 112 µs | 113.3 KiB | 9,199 |
-| 80 | 199 µs | 229 µs | 203 µs | 225.5 KiB | 5,014 |
-| 160 | 388 µs | 418 µs | 891 µs | 450.0 KiB | 2,575 |
-| 320 | 662 µs | 752 µs | 2.10 ms | 898.7 KiB | 1,511 |
-| 640 | 1.24 ms | 1.28 ms | 2.89 ms | 1.8 MiB | 804 |
-| 1280 | 2.29 ms | 2.34 ms | 4.46 ms | 3.5 MiB | 436 |
-| 2560 | 4.41 ms | 4.58 ms | 6.39 ms | 7.0 MiB | 227 |
-| 5120 | 9.03 ms | 9.27 ms | 12.8 ms | 14.0 MiB | 111 |
-| 10240 | 19.9 ms | 20.4 ms | 25.8 ms | 28.1 MiB | 50 |
+| 20 | 77.0 µs | 91.2 µs | 80.0 µs | 56.5 KiB | 12,981 |
+| 40 | 143 µs | 161 µs | 147 µs | 111.8 KiB | 6,981 |
+| 80 | 269 µs | 284 µs | 274 µs | 222.5 KiB | 3,712 |
+| 160 | 468 µs | 505 µs | 1.82 ms | 443.7 KiB | 2,137 |
+| 320 | 786 µs | 939 µs | 2.22 ms | 886.2 KiB | 1,272 |
+| 640 | 1.38 ms | 1.44 ms | 2.83 ms | 1.7 MiB | 726 |
+| 1280 | 2.74 ms | 2.86 ms | 4.82 ms | 3.5 MiB | 365 |
+| 2560 | 5.33 ms | 6.30 ms | 7.31 ms | 6.9 MiB | 187 |
+| 5120 | 11.8 ms | 24.6 ms | 14.9 ms | 13.8 MiB | 85 |
+| 10240 | 26.2 ms | 26.9 ms | 31.8 ms | 27.7 MiB | 38 |
 
 ## 3. What makes up one end-to-end operation
 
 Each function's measured cost is multiplied by how many times one end-to-end operation calls it. A function measured on its own includes everything it calls. So where one attributed function calls another, the nested time is subtracted from the caller (its _exclusive_ time). Every moment of the operation then belongs to at most one row. Shares are measured against the whole operation with the package, a figure measured directly. They are not measured against the _added_ time, which is the small difference of two noisy medians. They are estimates (each function was measured separately); the remainder is shown as _unattributed_.
 
-**At 80 checks** (whole operation: 499 µs)
+**At 80 checks** (whole operation: 531 µs)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `build-evidence` | 1 | 198 µs | 198 µs | 40% |
-| `run-policies` | 1 | 94.4 µs | 94.4 µs | 19% |
+| `build-evidence` | 1 | 227 µs | 227 µs | 43% |
+| `run-policies` | 1 | 99.6 µs | 99.6 µs | 19% |
 | `run-policies-with-verdict-hook` | 0 | 0 | 0 | 0.0% |
 | `render-markdown-summary` | 0 | 0 | 0 | 0.0% |
 | `serialize-run` | 0 | 0 | 0 | 0.0% |
 | `save-evidence-to-logs` | 0 | 0 | 0 | 0.0% |
 | `prepend-verdict-to-logs` | 0 | 0 | 0 | 0.0% |
-| _unattributed_ |  |  | 206 µs | 41% |
+| _unattributed_ |  |  | 205 µs | 39% |
 
-**At 10240 checks** (whole operation: 42.0 ms)
+**At 10240 checks** (whole operation: 62.8 ms)
 
 | Function | Calls / operation | Time if called that often | Exclusive time | Share of operation |
 | --- | --- | --- | --- | --- |
-| `build-evidence` | 1 | 23.4 ms | 23.4 ms | 56% |
-| `run-policies` | 1 | 15.7 ms | 15.7 ms | 37% |
+| `build-evidence` | 1 | 33.3 ms | 33.3 ms | 53% |
+| `run-policies` | 1 | 24.1 ms | 24.1 ms | 38% |
 | `run-policies-with-verdict-hook` | 0 | 0 | 0 | 0.0% |
 | `render-markdown-summary` | 0 | 0 | 0 | 0.0% |
 | `serialize-run` | 0 | 0 | 0 | 0.0% |
 | `save-evidence-to-logs` | 0 | 0 | 0 | 0.0% |
 | `prepend-verdict-to-logs` | 0 | 0 | 0 | 0.0% |
-| _unattributed_ |  |  | 2.92 ms | 6.9% |
+| _unattributed_ |  |  | 5.40 ms | 8.6% |
 
 ## Cost model
 
@@ -508,9 +508,9 @@ Estimates use two bracketing price shapes. **Low** is CPU-priced compute ($0.040
 
 ## Environment and method
 
-- Run: `2026-11-15T21:48:39.448Z` → `2026-11-15T21:49:53.851Z` (74 s), ci: CI (run 43764681048)
-- Machine: Intel(R) Xeon(R) 6975P-C, 4 logical core(s) (2 physical), 15701 MB RAM, linux/x64, Node v24.22.2, GitHub Actions
-- Git: `4e579bb6c18fc4991d98d19f391f709f27edd82e` on `feat/v1-readiness`
+- Run: `2026-11-17T20:29:36.177Z` → `2026-11-17T20:30:54.100Z` (78 s), ci: CI (run 44167179680)
+- Machine: AMD EPYC 9V74 80-Core Processor, 4 logical core(s) (2 physical), 15983 MB RAM, linux/x64, Node v24.22.2, GitHub Actions
+- Git: `a818d5635be77d2a10710078525555624f69cf5c` on `fix/round7-gaps`
 - Sizes: 20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240 checks: One check result entering evidence assembly and policy evaluation. 80 is a large real repository's contract; the ladder shows how both stages scale well beyond it.
 
 **Do not compare these numbers with another machine's, another day's, or another package's.** They show how _this_ package's cost changes between runs on comparable hardware, and how it scales with size. See [READING-BENCHMARKS.md](../READING-BENCHMARKS.md).

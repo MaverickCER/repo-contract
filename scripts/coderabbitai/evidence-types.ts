@@ -16,7 +16,7 @@
  * changes are when a human should re-confirm that any waiver still applies.
  */
 
-import type { SecurityExceptionFields } from "../shared/exception-record.js"
+import type { SecurityExceptionFields } from "../../src/helpers/index.js"
 
 export interface NormalizedFinding {
   /** `coderabbit:<file>:<severity>:<hash>`: see `deriveCoderabbitExceptionId`. */

@@ -1,5 +1,5 @@
 #!/bin/sh
-# repo-contract fast pre-commit gate -- a quick, offline subset of the
+# repo-contract fast pre-commit gate: a quick, offline subset of the
 # self-assurance suite. The full `npm run contract` runs on pre-push and in CI.
 # Fix what it reports instead of skipping it; keep work in progress unstaged or stashed until it passes.
 # See CONTRIBUTING.md and specs/decisions/0009-conventional-commits-versioning-and-local-gates.md.
@@ -19,7 +19,7 @@ npm run --silent precommit
 
 # Re-stage auto-fixes (prettier / eslint --fix, regenerated schemas) that the
 # checks applied to files which were already staged. Files that were NOT staged
-# are left untouched -- the full pre-push run and CI still see them.
+# are left untouched; the full pre-push run and CI still see them.
 printf '%s\n' "$STAGED" | while IFS= read -r file; do
   [ -n "$file" ] && [ -e "$file" ] && git add -- "$file"
 done

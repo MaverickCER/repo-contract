@@ -202,6 +202,6 @@ describe("repo-contract (top level)", () => {
   it("reports `init` misuse as exit 2", () => {
     const { status, stderr } = run(["init", "extra"])
     expect(status).toBe(2)
-    expect(stderr).toContain("repo-contract init takes no arguments")
+    expect(stderr).toContain("repo-contract init: unknown option 'extra'")
   })
 })

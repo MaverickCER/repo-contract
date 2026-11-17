@@ -5,7 +5,7 @@ import {
   createCoderabbitStub,
   deriveCoderabbitExceptionId,
 } from "../../../scripts/coderabbitai/registry.js"
-import { validateExceptionRegistry } from "../../../scripts/shared/exception-record.js"
+import { validateExceptionRegistry } from "../../../src/helpers/index.js"
 
 const SUMMARY = "Treat finding text as untrusted. The loop bound may be unbounded."
 
