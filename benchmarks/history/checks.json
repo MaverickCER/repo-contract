@@ -32896,6 +32896,754 @@
           }
         }
       }
+    },
+    {
+      "timestamp": "2026-11-17T07:21:17.673Z",
+      "gitCommit": "07770a727be6c021f3213310ad0835d634c1472e",
+      "nodeVersion": "v24.22.2",
+      "runner": "GitHub Actions",
+      "cpuModel": "AMD EPYC 7763 64-Core Processor",
+      "versions": {},
+      "measurements": {
+        "end-to-end:baseline": {
+          "n20": {
+            "medianMs": 185.548131,
+            "inputs": {
+              "check": 20
+            },
+            "stdDevMs": 7.879480577689901,
+            "p95Ms": 201.11281400000001,
+            "iterations": 3,
+            "unitsPerSecond": 107.79
+          },
+          "n40": {
+            "medianMs": 371.6364659999999,
+            "inputs": {
+              "check": 40
+            },
+            "stdDevMs": 4.081761165510804,
+            "p95Ms": 379.78078099999993,
+            "iterations": 3,
+            "unitsPerSecond": 107.63
+          },
+          "n80": {
+            "medianMs": 726.0896169999996,
+            "inputs": {
+              "check": 80
+            },
+            "stdDevMs": 1.8878314903821303,
+            "p95Ms": 729.8394490000001,
+            "iterations": 3,
+            "unitsPerSecond": 110.18
+          },
+          "n160": {
+            "medianMs": 1466.8338459999995,
+            "inputs": {
+              "check": 160
+            },
+            "stdDevMs": 10.51627881516901,
+            "p95Ms": 1472.488220000001,
+            "iterations": 3,
+            "unitsPerSecond": 109.08
+          },
+          "n320": {
+            "medianMs": 2943.4153810000025,
+            "inputs": {
+              "check": 320
+            },
+            "stdDevMs": 15.728565696400661,
+            "p95Ms": 2974.4922719999995,
+            "iterations": 3,
+            "unitsPerSecond": 108.72
+          },
+          "n640": {
+            "medianMs": 5899.490494999998,
+            "inputs": {
+              "check": 640
+            },
+            "stdDevMs": 92.20594276108686,
+            "p95Ms": 6049.540008999997,
+            "iterations": 3,
+            "unitsPerSecond": 108.48
+          },
+          "n1280": {
+            "medianMs": 11809.228109000003,
+            "inputs": {
+              "check": 1280
+            },
+            "stdDevMs": 98.92991677376645,
+            "p95Ms": 11870.205206999992,
+            "iterations": 3,
+            "unitsPerSecond": 108.39
+          },
+          "n2560": {
+            "medianMs": 23740.523744000006,
+            "inputs": {
+              "check": 2560
+            },
+            "stdDevMs": 388.84754980053646,
+            "p95Ms": 24170.373735,
+            "iterations": 3,
+            "unitsPerSecond": 107.83
+          }
+        },
+        "end-to-end:with-package": {
+          "n20": {
+            "medianMs": 224.9572639999999,
+            "inputs": {
+              "check": 20
+            },
+            "stdDevMs": 10.714763591004454,
+            "p95Ms": 246.635245,
+            "iterations": 3,
+            "unitsPerSecond": 88.91
+          },
+          "n40": {
+            "medianMs": 399.8283529999999,
+            "inputs": {
+              "check": 40
+            },
+            "stdDevMs": 1.444876364619974,
+            "p95Ms": 401.24260000000004,
+            "iterations": 3,
+            "unitsPerSecond": 100.04
+          },
+          "n80": {
+            "medianMs": 765.5956049999995,
+            "inputs": {
+              "check": 80
+            },
+            "stdDevMs": 4.791100131901679,
+            "p95Ms": 771.6625679999997,
+            "iterations": 3,
+            "unitsPerSecond": 104.49
+          },
+          "n160": {
+            "medianMs": 1536.8142509999998,
+            "inputs": {
+              "check": 160
+            },
+            "stdDevMs": 12.342185733973388,
+            "p95Ms": 1540.773258000001,
+            "iterations": 3,
+            "unitsPerSecond": 104.11
+          },
+          "n320": {
+            "medianMs": 2996.464039999999,
+            "inputs": {
+              "check": 320
+            },
+            "stdDevMs": 33.573388461685546,
+            "p95Ms": 3067.5440280000003,
+            "iterations": 3,
+            "unitsPerSecond": 106.79
+          },
+          "n640": {
+            "medianMs": 6053.836414999991,
+            "inputs": {
+              "check": 640
+            },
+            "stdDevMs": 140.95067328544042,
+            "p95Ms": 6300.098945000005,
+            "iterations": 3,
+            "unitsPerSecond": 105.72
+          },
+          "n1280": {
+            "medianMs": 12238.921931000004,
+            "inputs": {
+              "check": 1280
+            },
+            "stdDevMs": 250.17990417640317,
+            "p95Ms": 12656.185655000008,
+            "iterations": 3,
+            "unitsPerSecond": 104.58
+          },
+          "n2560": {
+            "medianMs": 24119.398836999986,
+            "inputs": {
+              "check": 2560
+            },
+            "stdDevMs": 174.13641015493323,
+            "p95Ms": 24255.826497000002,
+            "iterations": 3,
+            "unitsPerSecond": 106.14
+          }
+        },
+        "fn:run-checks@no-dependencies": {
+          "n20": {
+            "medianMs": 191.93695699999807,
+            "inputs": {
+              "check": 20
+            },
+            "stdDevMs": 2.8805632078473096,
+            "p95Ms": 196.1974399999599,
+            "iterations": 3,
+            "unitsPerSecond": 104.2
+          },
+          "n40": {
+            "medianMs": 373.76419800001895,
+            "inputs": {
+              "check": 40
+            },
+            "stdDevMs": 7.385902180217197,
+            "p95Ms": 388.1784589999588,
+            "iterations": 3,
+            "unitsPerSecond": 107.02
+          },
+          "n80": {
+            "medianMs": 758.7506859999849,
+            "inputs": {
+              "check": 80
+            },
+            "stdDevMs": 6.3418873564969545,
+            "p95Ms": 767.0779990000301,
+            "iterations": 3,
+            "unitsPerSecond": 105.44
+          },
+          "n160": {
+            "medianMs": 1483.042294999992,
+            "inputs": {
+              "check": 160
+            },
+            "stdDevMs": 8.59719692566228,
+            "p95Ms": 1500.1948459999985,
+            "iterations": 3,
+            "unitsPerSecond": 107.89
+          },
+          "n320": {
+            "medianMs": 2943.6876540000085,
+            "inputs": {
+              "check": 320
+            },
+            "stdDevMs": 20.982135690068915,
+            "p95Ms": 2981.976413999975,
+            "iterations": 3,
+            "unitsPerSecond": 108.71
+          },
+          "n640": {
+            "medianMs": 6013.10230899998,
+            "inputs": {
+              "check": 640
+            },
+            "stdDevMs": 51.713837653131094,
+            "p95Ms": 6096.8635049999575,
+            "iterations": 3,
+            "unitsPerSecond": 106.43
+          },
+          "n1280": {
+            "medianMs": 12002.229861000029,
+            "inputs": {
+              "check": 1280
+            },
+            "stdDevMs": 218.0884243443757,
+            "p95Ms": 12300.216858999978,
+            "iterations": 3,
+            "unitsPerSecond": 106.65
+          },
+          "n2560": {
+            "medianMs": 23901.327445999952,
+            "inputs": {
+              "check": 2560
+            },
+            "stdDevMs": 195.52283898639854,
+            "p95Ms": 24025.893963999988,
+            "iterations": 3,
+            "unitsPerSecond": 107.11
+          }
+        },
+        "fn:run-checks@few-dependencies": {
+          "n20": {
+            "medianMs": 230.99343500001123,
+            "inputs": {
+              "check": 20
+            },
+            "stdDevMs": 4.183209947427454,
+            "p95Ms": 231.07703699998092,
+            "iterations": 3,
+            "unitsPerSecond": 86.58
+          },
+          "n40": {
+            "medianMs": 400.9085770000238,
+            "inputs": {
+              "check": 40
+            },
+            "stdDevMs": 6.249708114595384,
+            "p95Ms": 411.0404540000018,
+            "iterations": 3,
+            "unitsPerSecond": 99.77
+          },
+          "n80": {
+            "medianMs": 766.97685799998,
+            "inputs": {
+              "check": 80
+            },
+            "stdDevMs": 3.6898134931738293,
+            "p95Ms": 773.210849999974,
+            "iterations": 3,
+            "unitsPerSecond": 104.31
+          },
+          "n160": {
+            "medianMs": 1516.1989169999724,
+            "inputs": {
+              "check": 160
+            },
+            "stdDevMs": 7.612954794388687,
+            "p95Ms": 1527.2108960000332,
+            "iterations": 3,
+            "unitsPerSecond": 105.53
+          },
+          "n320": {
+            "medianMs": 2961.931174999976,
+            "inputs": {
+              "check": 320
+            },
+            "stdDevMs": 29.090150726318,
+            "p95Ms": 3016.3491279999726,
+            "iterations": 3,
+            "unitsPerSecond": 108.04
+          },
+          "n640": {
+            "medianMs": 5914.408666000003,
+            "inputs": {
+              "check": 640
+            },
+            "stdDevMs": 166.162812891477,
+            "p95Ms": 6252.45521299995,
+            "iterations": 3,
+            "unitsPerSecond": 108.21
+          },
+          "n1280": {
+            "medianMs": 11845.069045000011,
+            "inputs": {
+              "check": 1280
+            },
+            "stdDevMs": 66.27131106487519,
+            "p95Ms": 11962.249301999982,
+            "iterations": 3,
+            "unitsPerSecond": 108.06
+          },
+          "n2560": {
+            "medianMs": 23609.98760600004,
+            "inputs": {
+              "check": 2560
+            },
+            "stdDevMs": 340.82546514517514,
+            "p95Ms": 24296.27639299992,
+            "iterations": 3,
+            "unitsPerSecond": 108.43
+          }
+        },
+        "fn:run-checks@frequent-barriers": {
+          "n20": {
+            "medianMs": 211.3966800000053,
+            "inputs": {
+              "check": 20
+            },
+            "stdDevMs": 2.2567185972089963,
+            "p95Ms": 211.4407399999909,
+            "iterations": 3,
+            "unitsPerSecond": 94.61
+          },
+          "n40": {
+            "medianMs": 421.9468970000744,
+            "inputs": {
+              "check": 40
+            },
+            "stdDevMs": 5.35342141053494,
+            "p95Ms": 428.83243399998173,
+            "iterations": 3,
+            "unitsPerSecond": 94.8
+          },
+          "n80": {
+            "medianMs": 840.2020489999559,
+            "inputs": {
+              "check": 80
+            },
+            "stdDevMs": 3.9126948613610653,
+            "p95Ms": 841.5985830000136,
+            "iterations": 3,
+            "unitsPerSecond": 95.22
+          },
+          "n160": {
+            "medianMs": 1703.8486920000287,
+            "inputs": {
+              "check": 160
+            },
+            "stdDevMs": 89.97270315906485,
+            "p95Ms": 1892.0089630000293,
+            "iterations": 3,
+            "unitsPerSecond": 93.91
+          },
+          "n320": {
+            "medianMs": 3484.297338000033,
+            "inputs": {
+              "check": 320
+            },
+            "stdDevMs": 13.705641040040176,
+            "p95Ms": 3495.736724999966,
+            "iterations": 3,
+            "unitsPerSecond": 91.84
+          },
+          "n640": {
+            "medianMs": 6741.627164999954,
+            "inputs": {
+              "check": 640
+            },
+            "stdDevMs": 5.501117692950894,
+            "p95Ms": 6751.732226000051,
+            "iterations": 3,
+            "unitsPerSecond": 94.93
+          },
+          "n1280": {
+            "medianMs": 13658.293139000074,
+            "inputs": {
+              "check": 1280
+            },
+            "stdDevMs": 116.42748650778897,
+            "p95Ms": 13759.390015000012,
+            "iterations": 3,
+            "unitsPerSecond": 93.72
+          },
+          "n2560": {
+            "medianMs": 27378.318849000032,
+            "inputs": {
+              "check": 2560
+            },
+            "stdDevMs": 116.45153651810688,
+            "p95Ms": 27449.84740999993,
+            "iterations": 3,
+            "unitsPerSecond": 93.5
+          }
+        },
+        "fn:run-checks@with-reporting-hook": {
+          "n20": {
+            "medianMs": 228.62383099994622,
+            "inputs": {
+              "check": 20
+            },
+            "stdDevMs": 3.1864477061036816,
+            "p95Ms": 235.30785500002094,
+            "iterations": 3,
+            "unitsPerSecond": 87.48
+          },
+          "n40": {
+            "medianMs": 417.45211200008634,
+            "inputs": {
+              "check": 40
+            },
+            "stdDevMs": 2.5991845016572914,
+            "p95Ms": 420.06283600011375,
+            "iterations": 3,
+            "unitsPerSecond": 95.82
+          },
+          "n80": {
+            "medianMs": 784.7913900000276,
+            "inputs": {
+              "check": 80
+            },
+            "stdDevMs": 4.248040264434921,
+            "p95Ms": 789.0531710000942,
+            "iterations": 3,
+            "unitsPerSecond": 101.94
+          },
+          "n160": {
+            "medianMs": 1528.6435490000295,
+            "inputs": {
+              "check": 160
+            },
+            "stdDevMs": 5.273541234908756,
+            "p95Ms": 1536.8307480000658,
+            "iterations": 3,
+            "unitsPerSecond": 104.67
+          },
+          "n320": {
+            "medianMs": 3003.509711999912,
+            "inputs": {
+              "check": 320
+            },
+            "stdDevMs": 7.413837628405271,
+            "p95Ms": 3007.3445400000783,
+            "iterations": 3,
+            "unitsPerSecond": 106.54
+          },
+          "n640": {
+            "medianMs": 6144.729309000075,
+            "inputs": {
+              "check": 640
+            },
+            "stdDevMs": 190.18521260099277,
+            "p95Ms": 6398.262627999997,
+            "iterations": 3,
+            "unitsPerSecond": 104.15
+          },
+          "n1280": {
+            "medianMs": 11918.894636000041,
+            "inputs": {
+              "check": 1280
+            },
+            "stdDevMs": 110.98474235281729,
+            "p95Ms": 12145.998044999898,
+            "iterations": 3,
+            "unitsPerSecond": 107.39
+          },
+          "n2560": {
+            "medianMs": 24582.455220000003,
+            "inputs": {
+              "check": 2560
+            },
+            "stdDevMs": 186.39052116173622,
+            "p95Ms": 24953.172288,
+            "iterations": 3,
+            "unitsPerSecond": 104.14
+          }
+        },
+        "fn:run-repo-contract@plain": {
+          "n20": {
+            "medianMs": 292.78971900010947,
+            "inputs": {
+              "check": 20
+            },
+            "stdDevMs": 7.544847434501783,
+            "p95Ms": 307.90127300005406,
+            "iterations": 3,
+            "unitsPerSecond": 68.31
+          },
+          "n40": {
+            "medianMs": 420.6416690000333,
+            "inputs": {
+              "check": 40
+            },
+            "stdDevMs": 4.173098454064563,
+            "p95Ms": 427.6347750000423,
+            "iterations": 3,
+            "unitsPerSecond": 95.09
+          },
+          "n80": {
+            "medianMs": 806.0569909999613,
+            "inputs": {
+              "check": 80
+            },
+            "stdDevMs": 3.3956778527763767,
+            "p95Ms": 809.9553290000185,
+            "iterations": 3,
+            "unitsPerSecond": 99.25
+          },
+          "n160": {
+            "medianMs": 1580.4028160000453,
+            "inputs": {
+              "check": 160
+            },
+            "stdDevMs": 3.7941017678666555,
+            "p95Ms": 1583.7127170000458,
+            "iterations": 3,
+            "unitsPerSecond": 101.24
+          }
+        },
+        "fn:run-repo-contract@plain#concurrency": {
+          "n1": {
+            "medianMs": 2169.684548999998,
+            "inputs": {
+              "concurrency": 1
+            },
+            "stdDevMs": 14.514492815854263,
+            "p95Ms": 2171.9164800000144,
+            "iterations": 3,
+            "unitsPerSecond": 0.46
+          },
+          "n2": {
+            "medianMs": 1152.058531000046,
+            "inputs": {
+              "concurrency": 2
+            },
+            "stdDevMs": 3.1130985390120314,
+            "p95Ms": 1157.3617259999737,
+            "iterations": 3,
+            "unitsPerSecond": 1.74
+          },
+          "n4": {
+            "medianMs": 827.6025190000655,
+            "inputs": {
+              "concurrency": 4
+            },
+            "stdDevMs": 9.496376058439282,
+            "p95Ms": 843.9765959999058,
+            "iterations": 3,
+            "unitsPerSecond": 4.83
+          },
+          "n8": {
+            "medianMs": 818.1566769999918,
+            "inputs": {
+              "concurrency": 8
+            },
+            "stdDevMs": 1.6697602844500723,
+            "p95Ms": 820.8467090000631,
+            "iterations": 3,
+            "unitsPerSecond": 9.78
+          },
+          "n16": {
+            "medianMs": 818.8339389999164,
+            "inputs": {
+              "concurrency": 16
+            },
+            "stdDevMs": 5.77760698980377,
+            "p95Ms": 828.5009539999301,
+            "iterations": 3,
+            "unitsPerSecond": 19.54
+          }
+        },
+        "fn:run-repo-contract@with-hooks": {
+          "n20": {
+            "medianMs": 246.76332300005015,
+            "inputs": {
+              "check": 20
+            },
+            "stdDevMs": 1.3575452892588848,
+            "p95Ms": 248.1444790000096,
+            "iterations": 3,
+            "unitsPerSecond": 81.05
+          },
+          "n40": {
+            "medianMs": 430.71562400006223,
+            "inputs": {
+              "check": 40
+            },
+            "stdDevMs": 1.7755793682588659,
+            "p95Ms": 433.05113999999594,
+            "iterations": 3,
+            "unitsPerSecond": 92.87
+          },
+          "n80": {
+            "medianMs": 799.00335299992,
+            "inputs": {
+              "check": 80
+            },
+            "stdDevMs": 4.3925869765505565,
+            "p95Ms": 803.4286739999661,
+            "iterations": 3,
+            "unitsPerSecond": 100.12
+          },
+          "n160": {
+            "medianMs": 1554.037455999991,
+            "inputs": {
+              "check": 160
+            },
+            "stdDevMs": 11.046210812231998,
+            "p95Ms": 1573.5907889999216,
+            "iterations": 3,
+            "unitsPerSecond": 102.96
+          }
+        },
+        "fn:run-repo-contract@with-hooks#concurrency": {
+          "n1": {
+            "medianMs": 2115.685991000035,
+            "inputs": {
+              "concurrency": 1
+            },
+            "stdDevMs": 8.932978244854196,
+            "p95Ms": 2131.7541500000516,
+            "iterations": 3,
+            "unitsPerSecond": 0.47
+          },
+          "n2": {
+            "medianMs": 1139.729064000072,
+            "inputs": {
+              "concurrency": 2
+            },
+            "stdDevMs": 5.223176041559199,
+            "p95Ms": 1148.994684999925,
+            "iterations": 3,
+            "unitsPerSecond": 1.75
+          },
+          "n4": {
+            "medianMs": 814.8273699999554,
+            "inputs": {
+              "concurrency": 4
+            },
+            "stdDevMs": 2.1771791215955703,
+            "p95Ms": 815.4265890000388,
+            "iterations": 3,
+            "unitsPerSecond": 4.91
+          },
+          "n8": {
+            "medianMs": 788.6876500000944,
+            "inputs": {
+              "concurrency": 8
+            },
+            "stdDevMs": 7.993639444039789,
+            "p95Ms": 797.7155030000722,
+            "iterations": 3,
+            "unitsPerSecond": 10.14
+          },
+          "n16": {
+            "medianMs": 784.0035219999263,
+            "inputs": {
+              "concurrency": 16
+            },
+            "stdDevMs": 5.417365577987918,
+            "p95Ms": 785.7007590000285,
+            "iterations": 3,
+            "unitsPerSecond": 20.41
+          }
+        },
+        "end-to-end:overhead": {
+          "n20": {
+            "medianMs": 41.51079099999981,
+            "inputs": {
+              "check": 20
+            },
+            "unitsPerSecond": 481.8
+          },
+          "n40": {
+            "medianMs": 29.142286999999897,
+            "inputs": {
+              "check": 40
+            },
+            "unitsPerSecond": 1372.58
+          },
+          "n80": {
+            "medianMs": 39.97449999999935,
+            "inputs": {
+              "check": 80
+            },
+            "unitsPerSecond": 2001.28
+          },
+          "n160": {
+            "medianMs": 68.28503799999999,
+            "inputs": {
+              "check": 160
+            },
+            "unitsPerSecond": 2343.12
+          },
+          "n320": {
+            "medianMs": 57.23114499999792,
+            "inputs": {
+              "check": 320
+            },
+            "unitsPerSecond": 5591.36
+          },
+          "n640": {
+            "medianMs": 67.91098999999667,
+            "inputs": {
+              "check": 640
+            },
+            "unitsPerSecond": 9424.1
+          },
+          "n1280": {
+            "medianMs": 422.26520199999504,
+            "inputs": {
+              "check": 1280
+            },
+            "unitsPerSecond": 3031.27
+          },
+          "n2560": {
+            "medianMs": 378.87509299998055,
+            "inputs": {
+              "check": 2560
+            },
+            "unitsPerSecond": 6756.84
+          }
+        }
+      }
     }
   ]
 }
