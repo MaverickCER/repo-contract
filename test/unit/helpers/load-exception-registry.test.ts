@@ -333,9 +333,14 @@ describe("loadExceptionRegistry: symbolic links and error text", () => {
       await writeFile(path.join(dir, "file"), "")
       const broken = path.join(dir, "file", "registry.json")
       const result = await loadExceptionRegistry({ path: broken, schema: fixtureExceptionsSchema })
-      expect(result.ok).toBe(false)
-      // The probe's own failure, before any read: lstat, not open, names the path.
-      if (!result.ok) expect(result.errors[0]).toMatch(/^Could not read .*ENOTDIR.*lstat/)
+      if (process.platform === "win32") {
+        // Windows reports a path under a file as not found, so it reads as a missing registry.
+        expect(result).toEqual({ ok: true, records: [] })
+      } else {
+        expect(result.ok).toBe(false)
+        // The probe's own failure, before any read: lstat, not open, names the path.
+        if (!result.ok) expect(result.errors[0]).toMatch(/^Could not read .*ENOTDIR.*lstat/)
+      }
     } finally {
       await rm(dir, { recursive: true, force: true })
     }

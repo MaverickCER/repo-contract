@@ -32,7 +32,7 @@ Reflect.set(globalThis, CONFIG_GLOBAL, {
   spawn: () => undefined,
   ...engine.strict({ Coverage: { thresholds: { branches: 70 } } }),
 })
-const STRICT_CONFIG = `export default globalThis[${JSON.stringify(CONFIG_GLOBAL)}]\n`
+const STRICT_CONFIG = `export default globalThis.${CONFIG_GLOBAL}\n`
 
 async function invoke(
   argv: string[],
@@ -234,10 +234,7 @@ describe("R4 repo-contract explain", () => {
   const LOADED_GLOBAL = "__repoContractExplainCliLoaded"
   const fakeTsx = (dir: string) => {
     const api = path.join(dir, "fake-tsx.mjs")
-    writeFileSync(
-      api,
-      `export const tsImport = async () => globalThis[${JSON.stringify(LOADED_GLOBAL)}]\n`,
-    )
+    writeFileSync(api, `export const tsImport = async () => globalThis.${LOADED_GLOBAL}\n`)
     return () => ({ resolve: () => api }) as unknown as NodeJS.Require
   }
 

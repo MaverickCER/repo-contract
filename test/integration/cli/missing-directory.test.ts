@@ -46,8 +46,9 @@ const longMessage = spawnSync(
   [
     "--input-type=module",
     "-e",
-    `const { checkDirectory } = await import(${JSON.stringify(options)})
-process.stdout.write(checkDirectory(process.argv[1]) ?? "the shared check accepted a 300-character name")`,
+    `const { checkDirectory } = await import(process.argv[1])
+process.stdout.write(checkDirectory(process.argv[2]) ?? "the shared check accepted a 300-character name")`,
+    options,
     long,
   ],
   { encoding: "utf8" },

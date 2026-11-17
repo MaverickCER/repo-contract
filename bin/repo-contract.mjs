@@ -165,9 +165,10 @@ function shellCapability(command, { cwd, timeoutMs }) {
       clearTimeout(timer)
       resolve({ exitCode: null, timedOut, output: `${output.text()}${error.message}` })
     })
+    // A stopped run has no exit code on any platform. taskkill /F would otherwise report 1.
     child.on("close", (exitCode) => {
       clearTimeout(timer)
-      resolve({ exitCode, timedOut, output: output.text() })
+      resolve({ exitCode: timedOut ? null : exitCode, timedOut, output: output.text() })
     })
   })
 }
@@ -460,9 +461,15 @@ async function main() {
             stderr: `${stderr.text()}${error.message}`,
           })
         })
+        // A stopped run has no exit code on any platform. taskkill /F would otherwise report 1.
         child.on("close", (exitCode) => {
           clearTimeout(timer)
-          resolve({ exitCode, timedOut, stdout: stdout.text(), stderr: stderr.text() })
+          resolve({
+            exitCode: timedOut ? null : exitCode,
+            timedOut,
+            stdout: stdout.text(),
+            stderr: stderr.text(),
+          })
         })
       })
     process.exitCode = await runNpmScript({
