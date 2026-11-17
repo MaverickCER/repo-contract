@@ -178,7 +178,7 @@
   },
   "kind": "Package",
   "canonicalReference": "repo-contract!",
-  "docComment": "/**\n * Governed exceptions: let a check waive one finding when a named record justifies it, without\n * weakening the check. A record names its `{ group, category }`, and this barrel resolves that to\n * a policy (exact, then glob, then default) and checks the record's fields against it.\n *\n * The check stays in charge of everything else. It decides what a finding is, matches records to\n * findings and owns the identity of each finding (see `scripts/shared/`, unpublished). This is the\n * mechanism `scripts/suppression-governance/` built for `disable-comments.json` (ADR 0006),\n * extracted for any check; specs/decisions/0013-reusable-exception-policy-helper.md has the\n * boundary.\n *\n * Published **Stable** (see `VERSIONING.md` and\n * specs/decisions/0019-helpers-promoted-presets-stay-experimental.md). From `1.0` a new export is\n * a minor release and a changed signature or behavior is a major one. While the package is `0.x`,\n * the release tooling deflates a new export to a patch.\n *\n * Published under its `./helpers` subpath, independent of the root and `./presets` barrels.\n *\n * @packageDocumentation\n */\n",
+  "docComment": "/**\n * Governed exceptions: let a check waive one finding when a named record justifies it, without\n * weakening the check. A record names its `{ group, category }`, and this barrel resolves that to\n * a policy (exact, then glob, then default) and checks the record's fields against it.\n *\n * The barrel also ships the v2 record every registry shares, its vocabulary of eight exception\n * types and three methods, and the read-reconcile-write sequence. The check stays in charge of\n * what a finding is, of each finding's identity and of which types it accepts. This is the\n * mechanism `scripts/suppression-governance/` built for `disable-comments.json` (ADR 0006),\n * extracted for any check; specs/decisions/0013-reusable-exception-policy-helper.md has the\n * boundary.\n *\n * Published **Stable** (see `VERSIONING.md` and\n * specs/decisions/0019-helpers-promoted-presets-stay-experimental.md). From `1.0` a new export is\n * a minor release and a changed signature or behavior is a major one. While the package is `0.x`,\n * the release tooling deflates a new export to a patch.\n *\n * Published under its `./helpers` subpath, independent of the root and `./presets` barrels.\n *\n * @packageDocumentation\n */\n",
   "name": "repo-contract",
   "preserveMemberOrder": false,
   "members": [
@@ -188,6 +188,60 @@
       "name": "",
       "preserveMemberOrder": false,
       "members": [
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!asFlatExceptionRecords:function(1)",
+          "docComment": "/**\n * Widens typed records to the flat shape `writeExceptionRegistry` takes.\n *\n * @param records - typed records.\n *\n * @returns the same array, typed as flat records.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function asFlatExceptionRecords(records: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly {\n    readonly id: string;\n}[]"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly ("
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, unknown> & {\n    readonly id: string;\n})[]"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 6
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "records",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "asFlatExceptionRecords"
+        },
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!createFileCacheStore:function(1)",
@@ -233,6 +287,35 @@
             }
           ],
           "name": "createFileCacheStore"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!emptyV2Fields:function(1)",
+          "docComment": "/**\n * @returns every v2 field blank: what a new stub starts with.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function emptyV2Fields(): "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionV2Fields",
+              "canonicalReference": "repo-contract!ExceptionV2Fields:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [],
+          "name": "emptyV2Fields"
         },
         {
           "kind": "Function",
@@ -377,6 +460,215 @@
             }
           ],
           "name": "evaluateExceptionRecords"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!evaluateFindingVerdict:function(1)",
+          "docComment": "/**\n * Judges one finding against its reconciled record. A missing record is `\"unmatched\"`.\n *\n * @param record - the finding's record, or `undefined`.\n *\n * @param classifications - the finding's classifications.\n *\n * @param config - the check's policy config.\n *\n * @param globalDefault - the check's fallback policy.\n *\n * @returns the verdict and the fields still missing.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function evaluateFindingVerdict(record: "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": ", classifications: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly ["
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionClassification",
+              "canonicalReference": "repo-contract!ExceptionClassification:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ", ..."
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionClassification",
+              "canonicalReference": "repo-contract!ExceptionClassification:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[]]"
+            },
+            {
+              "kind": "Content",
+              "text": ", config: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionPolicyConfig",
+              "canonicalReference": "repo-contract!ExceptionPolicyConfig:type"
+            },
+            {
+              "kind": "Content",
+              "text": ", globalDefault: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionPolicy",
+              "canonicalReference": "repo-contract!ExceptionPolicy:type"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly verdict: \"forbidden\" | \"insufficient\" | \"permitted\" | \"unmatched\";\n    readonly missing: readonly string[];\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 13,
+            "endIndex": 14
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "record",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "classifications",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 8
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "config",
+              "parameterTypeTokenRange": {
+                "startIndex": 9,
+                "endIndex": 10
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "globalDefault",
+              "parameterTypeTokenRange": {
+                "startIndex": 11,
+                "endIndex": 12
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "evaluateFindingVerdict"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!EXCEPTION_METHODS:var",
+          "docComment": "/**\n * How an exception's claim was substantiated. `validated-false-positive` needs `mechanical-reverification`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "EXCEPTION_METHODS: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly [\"mechanical-reverification\", \"independent-human-review\", \"policy-rule\"]"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "EXCEPTION_METHODS",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!EXCEPTION_REGISTRY_DIRECTORY:var",
+          "docComment": "/**\n * Where a repository keeps its exception registries.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "EXCEPTION_REGISTRY_DIRECTORY = "
+            },
+            {
+              "kind": "Content",
+              "text": "\".repo-contract/exceptions\""
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-inventory.ts",
+          "initializerTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "EXCEPTION_REGISTRY_DIRECTORY",
+          "variableTypeTokenRange": {
+            "startIndex": 0,
+            "endIndex": 0
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!EXCEPTION_TYPES:var",
+          "docComment": "/**\n * Why an exception is legitimate. A check may accept only some of them.\n * `required-for-package-to-exist` and `dev-only-not-shipped` came from internal-package-contract;\n * consumer registries already use them.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "EXCEPTION_TYPES: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly [\"validated-false-positive\", \"accepted-risk\", \"compensating-control\", \"tooling-limitation\", \"scheduled-remediation\", \"platform-or-vendor-constraint\", \"required-for-package-to-exist\", \"dev-only-not-shipped\"]"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "EXCEPTION_TYPES",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!EXCEPTION_V2_FIELD_KEYS:var",
+          "docComment": "/**\n * The six text fields a `version: 2` record adds. With `expires`, they make an exception auditable.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "EXCEPTION_V2_FIELD_KEYS: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly [\"ruleBroken\", \"attempted\", \"constraint\", \"whyPreferable\", \"residualRisk\", \"revisitWhen\"]"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "EXCEPTION_V2_FIELD_KEYS",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
         },
         {
           "kind": "Interface",
@@ -660,6 +952,266 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ExceptionInventory:interface",
+          "docComment": "/**\n * What `repo-contract exceptions --json` prints. It decides nothing.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ExceptionInventory "
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-inventory.ts",
+          "releaseTag": "Public",
+          "name": "ExceptionInventory",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionInventory#errors:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly errors: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ExceptionRegistryError",
+                  "canonicalReference": "repo-contract!ExceptionRegistryError:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "errors",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionInventory#expired:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly expired: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "expired",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionInventory#incomplete:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly incomplete: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "incomplete",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionInventory#legacy:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly legacy: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "legacy",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionInventory#registries:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly registries: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ExceptionRegistrySummary",
+                  "canonicalReference": "repo-contract!ExceptionRegistrySummary:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "registries",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionInventory#schemaVersion:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly schemaVersion: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "1"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "schemaVersion",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionInventory#total:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly total: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "total",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!ExceptionMethod:type",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type ExceptionMethod = "
+            },
+            {
+              "kind": "Content",
+              "text": "(typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "EXCEPTION_METHODS",
+              "canonicalReference": "repo-contract!EXCEPTION_METHODS:var"
+            },
+            {
+              "kind": "Content",
+              "text": ")[number]"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "releaseTag": "Public",
+          "name": "ExceptionMethod",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!ExceptionPolicy:type",
           "docComment": "/**\n * A resolved decision for one `{ group, category }` classification. `\"forbidden\"`: never\n * permitted, whatever the fields hold. `\"allowed\"`: permitted unconditionally; no field is\n * required. `\"exception\"`: permitted once every field named in `requirements` is a non-empty\n * (post-`.trim()`) string on the record (see `evaluateExceptionRecord`).\n *\n * It names fields instead of setting a numeric threshold. Generic filler entries satisfy a plain\n * count without the work the count was meant to prove. A named field can be reviewed against a\n * specific question. `scripts/suppression-governance/policy-config.ts`'s `SuppressionPolicy` uses\n * the same design for the disable-comment domain this type generalizes.\n *\n * @public\n */\n",
@@ -887,7 +1439,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "repo-contract!ExceptionRecordCore:interface",
-          "docComment": "/**\n * The three fields every exception record in `.repo-contract/exceptions/*.json` carries, whatever\n * the owning check. A registry adds its typed fields on top; this is the shared core the\n * generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,\n * `validateExceptionRegistry` in the check-owned layer) relies on.\n *\n * @public\n */\n",
+          "docComment": "/**\n * The three fields every exception record in `.repo-contract/exceptions/*.json` carries, whatever\n * the owning check. A registry adds its typed fields on top; this is the shared core the\n * generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,\n * `validateExceptionRegistry` in `exception-record.ts`) relies on.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1161,6 +1713,836 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "record",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ExceptionRegistryContents:interface",
+          "docComment": "/**\n * One registry file's records, named by its file name without `.json`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ExceptionRegistryContents "
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-inventory.ts",
+          "releaseTag": "Public",
+          "name": "ExceptionRegistryContents",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistryContents#name:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistryContents#records:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly records: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly unknown[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "records",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ExceptionRegistryError:interface",
+          "docComment": "/**\n * A registry file that could not be read or has no `exceptions` array.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ExceptionRegistryError "
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-inventory.ts",
+          "releaseTag": "Public",
+          "name": "ExceptionRegistryError",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistryError#error:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly error: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "error",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistryError#name:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ExceptionRegistrySchema:interface",
+          "docComment": "/**\n * A per-registry validator plugged into {@link validateExceptionRegistry}. It owns one registry's\n * record shape beyond the core every `.repo-contract/exceptions/*.json` record shares.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ExceptionRegistrySchema<TRecord extends "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly id: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "TRecord",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "ExceptionRegistrySchema",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySchema#id:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly id: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "id",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySchema#metadataKeys:member",
+              "docComment": "/**\n * Every own key a record may carry beyond `id`, `version` and `justification`. Any other key fails validation.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly metadataKeys: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "metadataKeys",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySchema#namespace:member",
+              "docComment": "/**\n * The mandatory `id` prefix, such as `\"mutation:\"`. A record outside it fails validation; it is never called stale.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly namespace: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "namespace",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySchema#validateRecord:member",
+              "docComment": "/**\n * Validates the registry's own fields and rebuilds the typed record from scratch.\n *\n * @param core - the validated `id`, `version` and `justification`.\n *\n * @param raw - the untrusted parsed object.\n *\n * @param index - the record's index, for messages.\n *\n * @param errors - collects one message per problem.\n *\n * @returns the rebuilt record, or `undefined` when a field is invalid.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly validateRecord: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(core: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ExceptionRecordCore",
+                  "canonicalReference": "repo-contract!ExceptionRecordCore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", raw: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Readonly",
+                  "canonicalReference": "!Readonly:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, unknown>>, index: number, errors: string[]) => TRecord | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "validateRecord",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 8
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!exceptionRegistryStandardSchema:function(1)",
+          "docComment": "/**\n * Wraps {@link validateExceptionRegistry} as the Standard Schema `loadExceptionRegistry` takes.\n *\n * @param schema - the registry's schema.\n *\n * @returns a Standard Schema whose output is the validated records.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function exceptionRegistryStandardSchema<TRecord extends "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly id: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ">(schema: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionRegistrySchema",
+              "canonicalReference": "repo-contract!ExceptionRegistrySchema:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TRecord>"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "StandardSchemaV1",
+              "canonicalReference": "repo-contract!StandardSchemaV1:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<unknown, readonly TRecord[]>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 6,
+            "endIndex": 8
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "schema",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "isOptional": false
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "TRecord",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "exceptionRegistryStandardSchema"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ExceptionRegistrySummary:interface",
+          "docComment": "/**\n * One registry's counts.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ExceptionRegistrySummary "
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-inventory.ts",
+          "releaseTag": "Public",
+          "name": "ExceptionRegistrySummary",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySummary#byType:member",
+              "docComment": "/**\n * Records per `exceptionType`; a record without one counts as `\"(untyped)\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly byType: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Readonly",
+                  "canonicalReference": "!Readonly:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, number>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "byType",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySummary#expired:member",
+              "docComment": "/**\n * Records whose `expires` is before today.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly expired: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "expired",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySummary#incomplete:member",
+              "docComment": "/**\n * Records with a blank `justification`, or a blank v2 field on a `version: 2` record.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly incomplete: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "incomplete",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySummary#legacy:member",
+              "docComment": "/**\n * Records still `version: 1`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly legacy: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "legacy",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySummary#name:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionRegistrySummary#total:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly total: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "total",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!ExceptionType:type",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type ExceptionType = "
+            },
+            {
+              "kind": "Content",
+              "text": "(typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "EXCEPTION_TYPES",
+              "canonicalReference": "repo-contract!EXCEPTION_TYPES:var"
+            },
+            {
+              "kind": "Content",
+              "text": ")[number]"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "releaseTag": "Public",
+          "name": "ExceptionType",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ExceptionV2Fields:interface",
+          "docComment": "/**\n * The fields of a `version: 2` record. Each is `\"\"` on a fresh stub until a person writes it.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ExceptionV2Fields "
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "releaseTag": "Public",
+          "name": "ExceptionV2Fields",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionV2Fields#attempted:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly attempted: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "attempted",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionV2Fields#constraint:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly constraint: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "constraint",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionV2Fields#expires:member",
+              "docComment": "/**\n * `YYYY-MM-DD`, or `\"\"` for none. The key must be present.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly expires: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "expires",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionV2Fields#residualRisk:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly residualRisk: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "residualRisk",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionV2Fields#revisitWhen:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly revisitWhen: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "revisitWhen",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionV2Fields#ruleBroken:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly ruleBroken: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "ruleBroken",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ExceptionV2Fields#whyPreferable:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly whyPreferable: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "whyPreferable",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -1449,8 +2831,392 @@
         },
         {
           "kind": "Function",
+          "canonicalReference": "repo-contract!isExpired:function(1)",
+          "docComment": "/**\n * @param expires - a record's `expires` (`\"\"` never expires), untrusted.\n *\n * @param now - the clock to compare against.\n *\n * @returns `true` only for a valid date strictly before `now`'s date.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function isExpired(expires: "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": ", now?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Date",
+              "canonicalReference": "!Date:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "boolean"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 5,
+            "endIndex": 6
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "expires",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "now",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "isExpired"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!isLegacyRecord:function(1)",
+          "docComment": "/**\n * @param record - a record of either version.\n *\n * @param  - record.version - `1` or `2`.\n *\n * @returns whether it is a legacy `version: 1` record.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function isLegacyRecord(record: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly version: 1 | 2;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "boolean"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "record",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "isLegacyRecord"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!isValidNonEmptyStringField:function(1)",
+          "docComment": "/**\n * @param value - a field value.\n *\n * @param at - its path, for the message.\n *\n * @param errors - collects `\"<at> must be a non-empty string.\"`.\n *\n * @returns whether `value` is a non-empty string.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function isValidNonEmptyStringField(value: "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": ", at: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ", errors: "
+            },
+            {
+              "kind": "Content",
+              "text": "string[]"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "value",
+              "canonicalReference": "repo-contract!~value"
+            },
+            {
+              "kind": "Content",
+              "text": " is string"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 7,
+            "endIndex": 9
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "value",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "at",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "errors",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "isValidNonEmptyStringField"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!LEGACY_FIELD_VALUE:var",
+          "docComment": "/**\n * What a `version: 1` record answers for a v2 field it never had. Non-empty, so the record still passes.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "LEGACY_FIELD_VALUE = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"(legacy version 1 record)\""
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "initializerTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "LEGACY_FIELD_VALUE",
+          "variableTypeTokenRange": {
+            "startIndex": 0,
+            "endIndex": 0
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!loadAndReconcileExceptionRegistry:function(1)",
+          "docComment": "/**\n * Loads a registry, reconciles findings against it and writes it back.\n *\n * @param registryPath - the registry's absolute path.\n *\n * @param registryRelativePath - its repository-relative path, for rationales.\n *\n * @param schema - validates the file's records.\n *\n * @param findings - this run's findings.\n *\n * @param createStub - builds a blank record for a finding.\n *\n * @returns the reconciled registry, or the rationale to fail with.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function loadAndReconcileExceptionRegistry<TFinding extends "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly id: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ", TRecord extends "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly id: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ">(registryPath: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ", registryRelativePath: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ", schema: "
+            },
+            {
+              "kind": "Reference",
+              "text": "StandardSchemaV1",
+              "canonicalReference": "repo-contract!StandardSchemaV1:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<unknown, readonly TRecord[]>"
+            },
+            {
+              "kind": "Content",
+              "text": ", findings: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly TFinding[]"
+            },
+            {
+              "kind": "Content",
+              "text": ", createStub: "
+            },
+            {
+              "kind": "Content",
+              "text": "(finding: TFinding, id: string) => TRecord"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "PersistExceptionRegistryResult",
+              "canonicalReference": "repo-contract!PersistExceptionRegistryResult:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<TRecord>>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/persist-exception-registry.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 16,
+            "endIndex": 20
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "registryPath",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "registryRelativePath",
+              "parameterTypeTokenRange": {
+                "startIndex": 7,
+                "endIndex": 8
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "schema",
+              "parameterTypeTokenRange": {
+                "startIndex": 9,
+                "endIndex": 11
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "findings",
+              "parameterTypeTokenRange": {
+                "startIndex": 12,
+                "endIndex": 13
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "createStub",
+              "parameterTypeTokenRange": {
+                "startIndex": 14,
+                "endIndex": 15
+              },
+              "isOptional": false
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "TFinding",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "TRecord",
+              "constraintTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "loadAndReconcileExceptionRegistry"
+        },
+        {
+          "kind": "Function",
           "canonicalReference": "repo-contract!loadExceptionRegistry:function(1)",
-          "docComment": "/**\n * Reads and validates one exception registry file from disk: `path -> { \"$schema\"?: string,\n * \"exceptions\": T[] }`, in two independently-validated layers. This function owns only the\n * envelope. The file exists or is absent (a normal empty-registry state), parses as JSON, and is\n * an object carrying an `\"exceptions\"` field. It never inspects what is inside `exceptions`.\n * `schema` (a `StandardSchemaV1`, hand-written or from a library; see\n * `src/standard-schema/types.ts`) owns every field-level concern for the caller's record shape.\n * That is the same \"consumer supplies a trusted capability, this package calls it without\n * owning its internals\" relationship `RepoContractConfig.spawn`/`env` already establish (see\n * `specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md`).\n *\n * `readFile` defaults to `node:fs/promises`' `readFile`. `src/presets/security-secrets.ts`\n * already uses it, so this introduces no new filesystem-access surface. A missing file is a normal\n * \"no exceptions recorded yet\" state, not an error (`{ ok: true, records: [] }`). That matches\n * `scripts/suppression-governance/check.ts`'s `loadExistingRegistry` precedent for the same\n * first-run case. Every other failure returns `{ ok: false, errors }` rather than throwing:\n * unreadable for another reason, malformed JSON, a missing/malformed envelope, or a schema\n * validation failure. A bad registry is reported as data for a check's policy to fail on, never an\n * uncaught exception that crashes the run. The one exception is a throwing or rejecting\n * `schema.validate()`. That is a bug in the *caller-supplied schema*, not malformed registry data.\n * It propagates as a rejected `Promise`, as a throwing `output.schema` does in\n * `src/parsing/parse-output.ts`.\n *\n * @param input - Where to read the registry from, the schema that validates its `exceptions` array, and (for tests, or a non-`node:fs` environment) an override for how to read `path`.\n *\n * @param  - input.path - The registry file's path, passed to `input.readFile` verbatim.\n *\n * @param  - input.schema - Validates (and may transform) the envelope's `exceptions` array once the envelope checks pass.\n *\n * @param  - input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' `readFile(path, \"utf8\")`.\n *\n * @returns Every valid record (`ok: true`), or every problem found reading/parsing/validating the file (`ok: false`).\n *\n * @public\n */\n",
+          "docComment": "/**\n * Reads and validates one exception registry file from disk: `path -> { \"$schema\"?: string,\n * \"exceptions\": T[] }`, in two independently-validated layers. This function owns only the\n * envelope. The file exists or is absent (a normal empty-registry state), parses as JSON, and is\n * an object carrying an `\"exceptions\"` field. It never inspects what is inside `exceptions`.\n * `schema` (a `StandardSchemaV1`, hand-written or from a library; see\n * `src/standard-schema/types.ts`) owns every field-level concern for the caller's record shape.\n * That is the same \"consumer supplies a trusted capability, this package calls it without\n * owning its internals\" relationship `RepoContractConfig.spawn`/`env` already establish (see\n * `specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md`).\n *\n * `readFile` defaults to `node:fs/promises`' `readFile`. `src/presets/security-secrets.ts`\n * already uses it, so this introduces no new filesystem-access surface. A missing file is a normal\n * \"no exceptions recorded yet\" state, not an error (`{ ok: true, records: [] }`). That matches\n * `scripts/suppression-governance/check.ts`'s `loadExistingRegistry` precedent for the same\n * first-run case. Every other failure returns `{ ok: false, errors }` rather than throwing:\n * unreadable for another reason, malformed JSON, a missing/malformed envelope, or a schema\n * validation failure. A bad registry is reported as data for a check's policy to fail on, never an\n * uncaught exception that crashes the run. The one exception is a throwing or rejecting\n * `schema.validate()`. That is a bug in the *caller-supplied schema*, not malformed registry data.\n * It propagates as a rejected `Promise`, as a throwing `output.schema` does in\n * `src/parsing/parse-output.ts`.\n *\n * @param input - Where to read the registry from, the schema that validates its `exceptions` array, and (for tests, or a non-`node:fs` environment) an override for how to read `path`.\n *\n * @param  - input.path - The registry file's path, passed to `input.readFile` verbatim.\n *\n * @param  - input.schema - Validates (and may transform) the envelope's `exceptions` array once the envelope checks pass.\n *\n * @param  - input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' `readFile(path, \"utf8\")`.\n *\n * @param  - input.isSymlink - Whether `input.path` is a symbolic link. Defaults to `lstat`, with a missing path not a link. A link is refused, never followed: it could lead out of the registry directory.\n *\n * @returns Every valid record (`ok: true`), or every problem found reading/parsing/validating the file (`ok: false`).\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1476,7 +3242,16 @@
             },
             {
               "kind": "Content",
-              "text": "<string>;\n}"
+              "text": "<string>;\n    readonly isSymlink?: (path: string) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<boolean>;\n}"
             },
             {
               "kind": "Content",
@@ -1498,8 +3273,8 @@
           ],
           "fileUrlPath": "src/helpers/load-exception-registry.ts",
           "returnTypeTokenRange": {
-            "startIndex": 7,
-            "endIndex": 9
+            "startIndex": 9,
+            "endIndex": 11
           },
           "releaseTag": "Public",
           "overloadIndex": 1,
@@ -1508,7 +3283,7 @@
               "parameterName": "input",
               "parameterTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 6
+                "endIndex": 8
               },
               "isOptional": false
             }
@@ -1639,6 +3414,397 @@
           "name": "onVerdictPrependRepoContractLogs"
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!PersistedExceptionRegistry:interface",
+          "docComment": "/**\n * A registry after a batch of findings was reconciled against it and written back.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface PersistedExceptionRegistry<TRecord> "
+            }
+          ],
+          "fileUrlPath": "src/helpers/persist-exception-registry.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "TRecord",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "PersistedExceptionRegistry",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!PersistedExceptionRegistry#activeRecords:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly activeRecords: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly TRecord[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "activeRecords",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!PersistedExceptionRegistry#newStubIds:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly newStubIds: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "newStubIds",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!PersistedExceptionRegistry#staleRecords:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly staleRecords: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly TRecord[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "staleRecords",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!PersistExceptionRegistryResult:type",
+          "docComment": "/**\n * The reconciled registry, or the rationale a check fails with when it cannot be read or written.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type PersistExceptionRegistryResult<TRecord> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly ok: true;\n    readonly registry: "
+            },
+            {
+              "kind": "Reference",
+              "text": "PersistedExceptionRegistry",
+              "canonicalReference": "repo-contract!PersistedExceptionRegistry:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TRecord>;\n} | {\n    readonly ok: false;\n    readonly rationale: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/persist-exception-registry.ts",
+          "releaseTag": "Public",
+          "name": "PersistExceptionRegistryResult",
+          "typeParameters": [
+            {
+              "typeParameterName": "TRecord",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!readExceptionRegistries:function(1)",
+          "docComment": "/**\n * Reads every `*.json` registry in a directory. A file that cannot be read becomes an error row,\n * never a throw: the check that owns the registry fails on it. A symbolic link is listed as\n * skipped and never followed, since it could lead out of the directory.\n *\n * @param directory - the registry directory, usually {@link EXCEPTION_REGISTRY_DIRECTORY}.\n *\n * @returns the registries in file-name order, and the files that could not be read.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function readExceptionRegistries(directory: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n    readonly registries: readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionRegistryContents",
+              "canonicalReference": "repo-contract!ExceptionRegistryContents:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[];\n    readonly errors: readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionRegistryError",
+              "canonicalReference": "repo-contract!ExceptionRegistryError:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[];\n}>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-inventory.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 9
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "directory",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "readExceptionRegistries"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!reconcileAndPersistExceptionRegistry:function(1)",
+          "docComment": "/**\n * Reconciles findings against existing records and writes the registry back: a blank stub for\n * each new finding, a stale record kept for the policy to fail on.\n *\n * @param registryPath - the registry's absolute path.\n *\n * @param registryRelativePath - its repository-relative path, for rationales.\n *\n * @param existing - the records already loaded.\n *\n * @param findings - this run's findings.\n *\n * @param createStub - builds a blank record for a finding.\n *\n * @returns the reconciled registry, or the rationale to fail with.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function reconcileAndPersistExceptionRegistry<TFinding extends "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly id: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ", TRecord extends "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly id: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ">(registryPath: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ", registryRelativePath: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ", existing: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly TRecord[]"
+            },
+            {
+              "kind": "Content",
+              "text": ", findings: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly TFinding[]"
+            },
+            {
+              "kind": "Content",
+              "text": ", createStub: "
+            },
+            {
+              "kind": "Content",
+              "text": "(finding: TFinding, id: string) => TRecord"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "PersistExceptionRegistryResult",
+              "canonicalReference": "repo-contract!PersistExceptionRegistryResult:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<TRecord>>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/persist-exception-registry.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 15,
+            "endIndex": 19
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "registryPath",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "registryRelativePath",
+              "parameterTypeTokenRange": {
+                "startIndex": 7,
+                "endIndex": 8
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "existing",
+              "parameterTypeTokenRange": {
+                "startIndex": 9,
+                "endIndex": 10
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "findings",
+              "parameterTypeTokenRange": {
+                "startIndex": 11,
+                "endIndex": 12
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "createStub",
+              "parameterTypeTokenRange": {
+                "startIndex": 13,
+                "endIndex": 14
+              },
+              "isOptional": false
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "TFinding",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "TRecord",
+              "constraintTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "reconcileAndPersistExceptionRegistry"
+        },
+        {
           "kind": "Function",
           "canonicalReference": "repo-contract!reconcileExceptions:function(1)",
           "docComment": "/**\n * Reconciles this run's raw findings against the check's already-loaded, already-validated\n * exception registry. Pure and add-only: it never mutates a matched record and never removes a\n * stale one.\n *\n * `deriveId` must be **injective** over `findings`: every independently-governable finding needs\n * a distinct id, or the mechanism cannot tell which finding a record's `justification` belongs to.\n * A collision is returned as `{ ok: false }`, naming both finding indices so the check can point a\n * developer at them. It is a condition a check must surface: the source holds two identical\n * directives.\n *\n * `createStub(finding, id)` is handed the canonical id, and its result's `id` is asserted equal to\n * it. A `createStub` that derives its identity differently gets a `{ ok: false }` bug report, never\n * a silently-mismatched record.\n *\n * Precondition: `existing` has already passed the check's registry validator (unique ids, correct\n * namespace). This function does not re-validate it.\n *\n * @param input - The already-loaded registry, this run's findings, and the check-owned identity + stub callbacks.\n *\n * @param  - input.existing - The validated records currently on disk.\n *\n * @param  - input.findings - Every raw finding this run produced: nothing filtered.\n *\n * @param  - input.deriveId - The finding's check-namespaced semantic id. Must be injective over `findings`.\n *\n * @param  - input.createStub - Builds a fresh record for an unmatched finding; receives the canonical id and must return a record carrying it.\n *\n * @returns The reconciliation, or the first integrity problem found.\n *\n * @public\n */\n",
@@ -1723,6 +3889,113 @@
             }
           ],
           "name": "reconcileExceptions"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!recordFieldValue:function(1)",
+          "docComment": "/**\n * The `fieldValue` accessor `evaluateExceptionRecord` takes. A legacy record answers\n * {@link LEGACY_FIELD_VALUE} for a v2 field.\n *\n * @param record - a flat record.\n *\n * @param requirement - the field name.\n *\n * @returns the field's text, or `\"\"`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function recordFieldValue(record: "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": ", requirement: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 5,
+            "endIndex": 6
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "record",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "requirement",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "recordFieldValue"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!renderExceptionInventory:function(1)",
+          "docComment": "/**\n * @param inventory - what {@link summarizeExceptionRegistries} returned.\n *\n * @returns one line per registry under a total line, ending in a newline.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function renderExceptionInventory(inventory: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionInventory",
+              "canonicalReference": "repo-contract!ExceptionInventory:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-inventory.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "inventory",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "renderExceptionInventory"
         },
         {
           "kind": "Variable",
@@ -2518,6 +4791,165 @@
             }
           ],
           "name": "resolveExceptionPolicy"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!SECURITY_EXCEPTION_FIELD_KEYS:var",
+          "docComment": "/**\n * The {@link SecurityExceptionFields} keys, in canonical order, for a schema's `metadataKeys`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "SECURITY_EXCEPTION_FIELD_KEYS: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly [\"alternatives\", \"remediation\", \"method\", \"exceptionType\"]"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "SECURITY_EXCEPTION_FIELD_KEYS",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!SecurityExceptionFields:interface",
+          "docComment": "/**\n * The four fields a security-family record adds. Each is `\"\"` on a fresh stub.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface SecurityExceptionFields "
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "releaseTag": "Public",
+          "name": "SecurityExceptionFields",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SecurityExceptionFields#alternatives:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly alternatives: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "alternatives",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SecurityExceptionFields#exceptionType:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly exceptionType: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"\" | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ExceptionType",
+                  "canonicalReference": "repo-contract!ExceptionType:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "exceptionType",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SecurityExceptionFields#method:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly method: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"\" | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ExceptionMethod",
+                  "canonicalReference": "repo-contract!ExceptionMethod:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "method",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SecurityExceptionFields#remediation:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly remediation: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "remediation",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Function",
@@ -3471,6 +5903,103 @@
         },
         {
           "kind": "Function",
+          "canonicalReference": "repo-contract!summarizeExceptionRegistries:function(1)",
+          "docComment": "/**\n * Counts every registry's records by type, legacy, expired and incomplete.\n *\n * @param registries - the registries' records.\n *\n * @param now - the date `expires` is compared with.\n *\n * @param errors - files that could not be read, carried into the inventory.\n *\n * @returns the inventory.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function summarizeExceptionRegistries(registries: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionRegistryContents",
+              "canonicalReference": "repo-contract!ExceptionRegistryContents:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            },
+            {
+              "kind": "Content",
+              "text": ", now: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Date",
+              "canonicalReference": "!Date:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ", errors?: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionRegistryError",
+              "canonicalReference": "repo-contract!ExceptionRegistryError:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionInventory",
+              "canonicalReference": "repo-contract!ExceptionInventory:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-inventory.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 11,
+            "endIndex": 12
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "registries",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "now",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "errors",
+              "parameterTypeTokenRange": {
+                "startIndex": 7,
+                "endIndex": 10
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "summarizeExceptionRegistries"
+        },
+        {
+          "kind": "Function",
           "canonicalReference": "repo-contract!validateExceptionPolicyConfig:function(1)",
           "docComment": "/**\n * Validates an `ExceptionPolicyConfig`'s shape. Every group's `default` and every entry in its\n * `rules` must be a well-formed `ExceptionPolicy` (see `validateExceptionPolicyValue`). No group's\n * `rules` may use the literal `\"*\"` as a key, because that key is never a blanket policy.\n * `resolveExceptionPolicy` applies the blanket policy when the *input* `category` is `\"*\"`. A\n * `\"*\"` rules key is consulted only as an ordinary glob, which matches no category containing a\n * `/`. See `resolveExceptionPolicy`'s doc comment, case 1, for the failure mode this prevents.\n *\n * @param config - The exception policy configuration to validate.\n *\n * @param validRequirements - The complete set of field names this consumer's policy may require, if the consumer wants that checked. Omit to skip that check entirely.\n *\n * @returns Every configuration problem found; empty if `config` is valid.\n *\n * @public\n */\n",
           "excerptTokens": [
@@ -3533,8 +6062,288 @@
         },
         {
           "kind": "Function",
+          "canonicalReference": "repo-contract!validateExceptionRegistry:function(1)",
+          "docComment": "/**\n * Validates an untrusted `exceptions` array: the core, the id namespace, unknown keys, duplicate\n * ids, the v2 fields of a `version: 2` record, then `schema.validateRecord`. Reports every\n * problem. A blank field is valid data; completeness is the check's policy.\n *\n * @param value - the parsed `exceptions` value.\n *\n * @param schema - the registry's schema.\n *\n * @returns every rebuilt record, or every problem found.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function validateExceptionRegistry<TRecord extends "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly id: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ">(value: "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": ", schema: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionRegistrySchema",
+              "canonicalReference": "repo-contract!ExceptionRegistrySchema:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TRecord>"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly ok: true;\n    readonly records: readonly TRecord[];\n} | {\n    readonly ok: false;\n    readonly errors: readonly string[];\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 8,
+            "endIndex": 9
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "value",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "schema",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 7
+              },
+              "isOptional": false
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "TRecord",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "validateExceptionRegistry"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!validateSecurityExceptionFields:function(1)",
+          "docComment": "/**\n * Validates the four security fields. Each must be a string; `method` and `exceptionType` must be\n * `\"\"` or a known member. A filled `validated-false-positive` needs `mechanical-reverification`.\n *\n * @param raw - the untrusted record.\n *\n * @param index - its index, for messages.\n *\n * @param allowedExceptionTypes - the types this registry accepts.\n *\n * @param errors - collects one message per problem.\n *\n * @returns the four fields, or `undefined` when one is invalid.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function validateSecurityExceptionFields(raw: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Readonly",
+              "canonicalReference": "!Readonly:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, unknown>>"
+            },
+            {
+              "kind": "Content",
+              "text": ", index: "
+            },
+            {
+              "kind": "Content",
+              "text": "number"
+            },
+            {
+              "kind": "Content",
+              "text": ", allowedExceptionTypes: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "ExceptionType",
+              "canonicalReference": "repo-contract!ExceptionType:type"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            },
+            {
+              "kind": "Content",
+              "text": ", errors: "
+            },
+            {
+              "kind": "Content",
+              "text": "string[]"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "SecurityExceptionFields",
+              "canonicalReference": "repo-contract!SecurityExceptionFields:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " | undefined"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 14,
+            "endIndex": 16
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "raw",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "index",
+              "parameterTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 7
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "allowedExceptionTypes",
+              "parameterTypeTokenRange": {
+                "startIndex": 8,
+                "endIndex": 11
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "errors",
+              "parameterTypeTokenRange": {
+                "startIndex": 12,
+                "endIndex": 13
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "validateSecurityExceptionFields"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!VersionedExceptionRecord:interface",
+          "docComment": "/**\n * A record of either version. A registry can migrate one record at a time.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface VersionedExceptionRecord "
+            }
+          ],
+          "fileUrlPath": "src/helpers/exception-record.ts",
+          "releaseTag": "Public",
+          "name": "VersionedExceptionRecord",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!VersionedExceptionRecord#id:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly id: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "id",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!VersionedExceptionRecord#version:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly version: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "1 | 2"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "version",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
           "canonicalReference": "repo-contract!writeExceptionRegistry:function(1)",
-          "docComment": "/**\n * Writes one exception registry to disk in its canonical form (`serializeExceptionRegistry`),\n * atomically and idempotently: the sole filesystem-writing primitive in `repo-contract/helpers`.\n *\n * - **Symlinked target** -> `{ ok: false }`: a governance registry is never a symlink, and writing\n *  through one would escape `.repo-contract/exceptions/`.\n * - **No file yet** -> written.\n * - **On-disk bytes already equal the canonical form** -> `{ ok: true, written: false }`, no\n *  write. A reconcile that changed nothing never dirties the working tree.\n * - **Different** -> the canonical bytes go to a sibling temp file (`<path>.<uuid>.tmp`), which is\n *  `rename`d over the target. The target is replaced atomically and never holds partial content.\n *  A `rename` failure (e.g. a Windows lock on the target) returns `{ ok: false }`. The temp file\n *  stays in place: it has a uuid name and the run has already failed. `.gitignore` covers\n *  `.repo-contract/exceptions/*.tmp`.\n *\n * Path containment is the caller's responsibility: repo-contract's checks always pass\n * `.repo-contract/exceptions/<name>.json`. `readFile`/`writeFile`/`rename`/`isSymlink` default to\n * `node:fs/promises` and are overridable for tests or a non-`node:fs` environment, mirroring\n * `loadExceptionRegistry`'s `readFile` parameter.\n *\n * @param input - The target path, the records to persist, and (optional) filesystem-capability overrides.\n *\n * @param  - input.path - Where to write. Passed verbatim to every capability.\n *\n * @param  - input.records - The reconciled records; serialized via `serializeExceptionRegistry`.\n *\n * @param  - input.readFile - Reads the current file. Default: `node:fs/promises` `readFile(path, \"utf8\")`.\n *\n * @param  - input.writeFile - Writes the temp file. Default: `node:fs/promises` `writeFile(path, data, \"utf8\")`.\n *\n * @param  - input.rename - Replaces the target with the temp file. Default: `node:fs/promises` `rename`.\n *\n * @param  - input.isSymlink - Whether `path` is a symlink. Default: `lstat(path).isSymbolicLink()`, treating a missing path as not a symlink.\n *\n * @returns `{ ok: true, written }` on success, or `{ ok: false, error }` for a symlink, an unreadable target, or a failed write/rename.\n *\n * @public\n */\n",
+          "docComment": "/**\n * Writes one exception registry to disk in its canonical form (`serializeExceptionRegistry`),\n * atomically and idempotently: the sole filesystem-writing primitive in `repo-contract/helpers`.\n *\n * - **A record that is not an object with a string `id`** -> `{ ok: false }` naming its index.\n *  Nothing is read or written.\n * - **Symlinked target** -> `{ ok: false }`: a governance registry is never a symlink, and writing\n *  through one would escape `.repo-contract/exceptions/`.\n * - **No file yet** -> written.\n * - **On-disk bytes already equal the canonical form** -> `{ ok: true, written: false }`, no\n *  write. A reconcile that changed nothing never dirties the working tree.\n * - **Different** -> the canonical bytes go to a sibling temp file (`<path>.<uuid>.tmp`), which is\n *  `rename`d over the target. The target is replaced atomically and never holds partial content.\n *  A `rename` failure (e.g. a Windows lock on the target) returns `{ ok: false }`. The temp file\n *  stays in place: it has a uuid name and the run has already failed. `.gitignore` covers\n *  `.repo-contract/exceptions/*.tmp`.\n *\n * Path containment is the caller's responsibility: repo-contract's checks always pass\n * `.repo-contract/exceptions/<name>.json`. `readFile`/`writeFile`/`rename`/`isSymlink` default to\n * `node:fs/promises` and are overridable for tests or a non-`node:fs` environment, mirroring\n * `loadExceptionRegistry`'s `readFile` parameter.\n *\n * @param input - The target path, the records to persist, and (optional) filesystem-capability overrides.\n *\n * @param  - input.path - Where to write. Passed verbatim to every capability.\n *\n * @param  - input.records - The reconciled records; serialized via `serializeExceptionRegistry`.\n *\n * @param  - input.readFile - Reads the current file. Default: `node:fs/promises` `readFile(path, \"utf8\")`.\n *\n * @param  - input.writeFile - Writes the temp file. Default: `node:fs/promises` `writeFile(path, data, \"utf8\")`.\n *\n * @param  - input.rename - Replaces the target with the temp file. Default: `node:fs/promises` `rename`.\n *\n * @param  - input.isSymlink - Whether `path` is a symlink. Default: `lstat(path).isSymbolicLink()`, treating a missing path as not a symlink.\n *\n * @returns `{ ok: true, written }` on success, or `{ ok: false, error }` for a symlink, an unreadable target, or a failed write/rename.\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

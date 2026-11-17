@@ -3,8 +3,9 @@
  * weakening the check. A record names its `{ group, category }`, and this barrel resolves that to
  * a policy (exact, then glob, then default) and checks the record's fields against it.
  *
- * The check stays in charge of everything else. It decides what a finding is, matches records to
- * findings and owns the identity of each finding (see `scripts/shared/`, unpublished). This is the
+ * The barrel also ships the v2 record every registry shares, its vocabulary of eight exception
+ * types and three methods, and the read-reconcile-write sequence. The check stays in charge of
+ * what a finding is, of each finding's identity and of which types it accepts. This is the
  * mechanism `scripts/suppression-governance/` built for `disable-comments.json` (ADR 0006),
  * extracted for any check; specs/decisions/0013-reusable-exception-policy-helper.md has the
  * boundary.
@@ -17,6 +18,17 @@
  * Published under its `./helpers` subpath, independent of the root and `./presets` barrels.
  * @packageDocumentation
  */
+
+/**
+ * Widens typed records to the flat shape `writeExceptionRegistry` takes.
+ * @param records - typed records.
+ * @returns the same array, typed as flat records.
+ */
+export declare function asFlatExceptionRecords(records: readonly {
+    readonly id: string;
+}[]): readonly (Record<string, unknown> & {
+    readonly id: string;
+})[];
 
 /**
  * What happened when one configured check ran. `output` is present only if
@@ -107,6 +119,11 @@ declare type CheckStatus = "completed" | "timed_out" | "signaled" | "host_termin
 export declare function createFileCacheStore(directory: string): FileCacheStore;
 
 /**
+ * @returns every v2 field blank: what a new stub starts with.
+ */
+export declare function emptyV2Fields(): ExceptionV2Fields;
+
+/**
  * Evaluates one record against each of its classifications and takes the strictest
  * (`stricterOf`) resolved policy. A record matching a forbidden classification and an
  * otherwise-fine one is forbidden overall. `classifications` is a non-empty tuple by type. Zero
@@ -133,6 +150,35 @@ export declare function evaluateExceptionRecord<TRecord>(input: ExceptionRecordE
  * @public
  */
 export declare function evaluateExceptionRecords<TRecord>(inputs: readonly ExceptionRecordEvaluation<TRecord>[]): readonly ExceptionDeterminant<TRecord>[];
+
+/**
+ * Judges one finding against its reconciled record. A missing record is `"unmatched"`.
+ * @param record - the finding's record, or `undefined`.
+ * @param classifications - the finding's classifications.
+ * @param config - the check's policy config.
+ * @param globalDefault - the check's fallback policy.
+ * @returns the verdict and the fields still missing.
+ */
+export declare function evaluateFindingVerdict(record: unknown, classifications: readonly [ExceptionClassification, ...ExceptionClassification[]], config: ExceptionPolicyConfig, globalDefault: ExceptionPolicy): {
+    readonly verdict: "forbidden" | "insufficient" | "permitted" | "unmatched";
+    readonly missing: readonly string[];
+};
+
+/** How an exception's claim was substantiated. `validated-false-positive` needs `mechanical-reverification`. */
+export declare const EXCEPTION_METHODS: readonly ["mechanical-reverification", "independent-human-review", "policy-rule"];
+
+/** Where a repository keeps its exception registries. */
+export declare const EXCEPTION_REGISTRY_DIRECTORY = ".repo-contract/exceptions";
+
+/**
+ * Why an exception is legitimate. A check may accept only some of them.
+ * `required-for-package-to-exist` and `dev-only-not-shipped` came from internal-package-contract;
+ * consumer registries already use them.
+ */
+export declare const EXCEPTION_TYPES: readonly ["validated-false-positive", "accepted-risk", "compensating-control", "tooling-limitation", "scheduled-remediation", "platform-or-vendor-constraint", "required-for-package-to-exist", "dev-only-not-shipped"];
+
+/** The six text fields a `version: 2` record adds. With `expires`, they make an exception auditable. */
+export declare const EXCEPTION_V2_FIELD_KEYS: readonly ["ruleBroken", "attempted", "constraint", "whyPreferable", "residualRisk", "revisitWhen"];
 
 /**
  * One classification group's policy. `default` is the group's fallback for any `category` with
@@ -180,6 +226,19 @@ export declare interface ExceptionDeterminant<TRecord> {
     /** Every required field (by name) still empty on `record`, in the resolved policy's `requirements` order. Always `[]` for `"forbidden"`/`"permitted"`. */
     readonly missing: readonly string[];
 }
+
+/** What `repo-contract exceptions --json` prints. It decides nothing. */
+export declare interface ExceptionInventory {
+    readonly schemaVersion: 1;
+    readonly registries: readonly ExceptionRegistrySummary[];
+    readonly total: number;
+    readonly legacy: number;
+    readonly expired: number;
+    readonly incomplete: number;
+    readonly errors: readonly ExceptionRegistryError[];
+}
+
+export declare type ExceptionMethod = (typeof EXCEPTION_METHODS)[number];
 
 /**
  * A resolved decision for one `{ group, category }` classification. `"forbidden"`: never
@@ -242,7 +301,7 @@ export declare interface ExceptionReconciliation<TFinding, TRecord> {
  * The three fields every exception record in `.repo-contract/exceptions/*.json` carries, whatever
  * the owning check. A registry adds its typed fields on top; this is the shared core the
  * generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,
- * `validateExceptionRegistry` in the check-owned layer) relies on.
+ * `validateExceptionRegistry` in `exception-record.ts`) relies on.
  * @public
  */
 export declare interface ExceptionRecordCore {
@@ -271,6 +330,77 @@ export declare interface ExceptionRecordEvaluation<TRecord> {
     readonly globalDefault: ExceptionPolicy;
     /** Resolves one named required field's current string value on `record`. */
     readonly fieldValue: (record: TRecord, requirement: string) => string;
+}
+
+/** One registry file's records, named by its file name without `.json`. */
+export declare interface ExceptionRegistryContents {
+    readonly name: string;
+    readonly records: readonly unknown[];
+}
+
+/** A registry file that could not be read or has no `exceptions` array. */
+export declare interface ExceptionRegistryError {
+    readonly name: string;
+    readonly error: string;
+}
+
+/**
+ * A per-registry validator plugged into {@link validateExceptionRegistry}. It owns one registry's
+ * record shape beyond the core every `.repo-contract/exceptions/*.json` record shares.
+ */
+export declare interface ExceptionRegistrySchema<TRecord extends {
+    readonly id: string;
+}> {
+    /** The mandatory `id` prefix, such as `"mutation:"`. A record outside it fails validation; it is never called stale. */
+    readonly namespace: string;
+    /** Every own key a record may carry beyond `id`, `version` and `justification`. Any other key fails validation. */
+    readonly metadataKeys: readonly string[];
+    /**
+     * Validates the registry's own fields and rebuilds the typed record from scratch.
+     * @param core - the validated `id`, `version` and `justification`.
+     * @param raw - the untrusted parsed object.
+     * @param index - the record's index, for messages.
+     * @param errors - collects one message per problem.
+     * @returns the rebuilt record, or `undefined` when a field is invalid.
+     */
+    readonly validateRecord: (core: ExceptionRecordCore, raw: Readonly<Record<string, unknown>>, index: number, errors: string[]) => TRecord | undefined;
+}
+
+/**
+ * Wraps {@link validateExceptionRegistry} as the Standard Schema `loadExceptionRegistry` takes.
+ * @param schema - the registry's schema.
+ * @returns a Standard Schema whose output is the validated records.
+ */
+export declare function exceptionRegistryStandardSchema<TRecord extends {
+    readonly id: string;
+}>(schema: ExceptionRegistrySchema<TRecord>): StandardSchemaV1<unknown, readonly TRecord[]>;
+
+/** One registry's counts. */
+export declare interface ExceptionRegistrySummary {
+    readonly name: string;
+    readonly total: number;
+    /** Records per `exceptionType`; a record without one counts as `"(untyped)"`. */
+    readonly byType: Readonly<Record<string, number>>;
+    /** Records still `version: 1`. */
+    readonly legacy: number;
+    /** Records whose `expires` is before today. */
+    readonly expired: number;
+    /** Records with a blank `justification`, or a blank v2 field on a `version: 2` record. */
+    readonly incomplete: number;
+}
+
+export declare type ExceptionType = (typeof EXCEPTION_TYPES)[number];
+
+/** The fields of a `version: 2` record. Each is `""` on a fresh stub until a person writes it. */
+export declare interface ExceptionV2Fields {
+    readonly ruleBroken: string;
+    readonly attempted: string;
+    readonly constraint: string;
+    readonly whyPreferable: string;
+    readonly residualRisk: string;
+    readonly revisitWhen: string;
+    /** `YYYY-MM-DD`, or `""` for none. The key must be present. */
+    readonly expires: string;
 }
 
 /**
@@ -316,6 +446,48 @@ export declare interface FileCacheStore {
 export declare function hashRequirementFields<TRecord>(record: TRecord, fields: readonly string[], fieldValue: (record: TRecord, requirement: string) => string): string;
 
 /**
+ * @param expires - a record's `expires` (`""` never expires), untrusted.
+ * @param now - the clock to compare against.
+ * @returns `true` only for a valid date strictly before `now`'s date.
+ */
+export declare function isExpired(expires: unknown, now?: Date): boolean;
+
+/**
+ * @param record - a record of either version.
+ * @param record.version - `1` or `2`.
+ * @returns whether it is a legacy `version: 1` record.
+ */
+export declare function isLegacyRecord(record: {
+    readonly version: 1 | 2;
+}): boolean;
+
+/**
+ * @param value - a field value.
+ * @param at - its path, for the message.
+ * @param errors - collects `"<at> must be a non-empty string."`.
+ * @returns whether `value` is a non-empty string.
+ */
+export declare function isValidNonEmptyStringField(value: unknown, at: string, errors: string[]): value is string;
+
+/** What a `version: 1` record answers for a v2 field it never had. Non-empty, so the record still passes. */
+export declare const LEGACY_FIELD_VALUE = "(legacy version 1 record)";
+
+/**
+ * Loads a registry, reconciles findings against it and writes it back.
+ * @param registryPath - the registry's absolute path.
+ * @param registryRelativePath - its repository-relative path, for rationales.
+ * @param schema - validates the file's records.
+ * @param findings - this run's findings.
+ * @param createStub - builds a blank record for a finding.
+ * @returns the reconciled registry, or the rationale to fail with.
+ */
+export declare function loadAndReconcileExceptionRegistry<TFinding extends {
+    readonly id: string;
+}, TRecord extends {
+    readonly id: string;
+}>(registryPath: string, registryRelativePath: string, schema: StandardSchemaV1<unknown, readonly TRecord[]>, findings: readonly TFinding[], createStub: (finding: TFinding, id: string) => TRecord): Promise<PersistExceptionRegistryResult<TRecord>>;
+
+/**
  * Reads and validates one exception registry file from disk: `path -> { "$schema"?: string,
  * "exceptions": T[] }`, in two independently-validated layers. This function owns only the
  * envelope. The file exists or is absent (a normal empty-registry state), parses as JSON, and is
@@ -341,6 +513,7 @@ export declare function hashRequirementFields<TRecord>(record: TRecord, fields: 
  * @param input.path - The registry file's path, passed to `input.readFile` verbatim.
  * @param input.schema - Validates (and may transform) the envelope's `exceptions` array once the envelope checks pass.
  * @param input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' `readFile(path, "utf8")`.
+ * @param input.isSymlink - Whether `input.path` is a symbolic link. Defaults to `lstat`, with a missing path not a link. A link is refused, never followed: it could lead out of the registry directory.
  * @returns Every valid record (`ok: true`), or every problem found reading/parsing/validating the file (`ok: false`).
  * @public
  */
@@ -348,6 +521,7 @@ export declare function loadExceptionRegistry<T>(input: {
     readonly path: string;
     readonly schema: StandardSchemaV1<unknown, readonly T[]>;
     readonly readFile?: (path: string) => Promise<string>;
+    readonly isSymlink?: (path: string) => Promise<boolean>;
 }): Promise<{
     ok: true;
     records: readonly T[];
@@ -419,6 +593,22 @@ declare interface ParsedOutputSuccess<T> {
     readonly value: T;
 }
 
+/** A registry after a batch of findings was reconciled against it and written back. */
+export declare interface PersistedExceptionRegistry<TRecord> {
+    readonly activeRecords: readonly TRecord[];
+    readonly staleRecords: readonly TRecord[];
+    readonly newStubIds: readonly string[];
+}
+
+/** The reconciled registry, or the rationale a check fails with when it cannot be read or written. */
+export declare type PersistExceptionRegistryResult<TRecord> = {
+    readonly ok: true;
+    readonly registry: PersistedExceptionRegistry<TRecord>;
+} | {
+    readonly ok: false;
+    readonly rationale: string;
+};
+
 /**
  * `"pass"`: the repository-owned policy evaluated the captured evidence as
  * satisfying its configured requirements. `"fail"`: the evidence did not
@@ -460,6 +650,34 @@ declare interface PolicyResult {
 }
 
 /**
+ * Reads every `*.json` registry in a directory. A file that cannot be read becomes an error row,
+ * never a throw: the check that owns the registry fails on it. A symbolic link is listed as
+ * skipped and never followed, since it could lead out of the directory.
+ * @param directory - the registry directory, usually {@link EXCEPTION_REGISTRY_DIRECTORY}.
+ * @returns the registries in file-name order, and the files that could not be read.
+ */
+export declare function readExceptionRegistries(directory: string): Promise<{
+    readonly registries: readonly ExceptionRegistryContents[];
+    readonly errors: readonly ExceptionRegistryError[];
+}>;
+
+/**
+ * Reconciles findings against existing records and writes the registry back: a blank stub for
+ * each new finding, a stale record kept for the policy to fail on.
+ * @param registryPath - the registry's absolute path.
+ * @param registryRelativePath - its repository-relative path, for rationales.
+ * @param existing - the records already loaded.
+ * @param findings - this run's findings.
+ * @param createStub - builds a blank record for a finding.
+ * @returns the reconciled registry, or the rationale to fail with.
+ */
+export declare function reconcileAndPersistExceptionRegistry<TFinding extends {
+    readonly id: string;
+}, TRecord extends {
+    readonly id: string;
+}>(registryPath: string, registryRelativePath: string, existing: readonly TRecord[], findings: readonly TFinding[], createStub: (finding: TFinding, id: string) => TRecord): Promise<PersistExceptionRegistryResult<TRecord>>;
+
+/**
  * Reconciles this run's raw findings against the check's already-loaded, already-validated
  * exception registry. Pure and add-only: it never mutates a matched record and never removes a
  * stale one.
@@ -498,6 +716,21 @@ export declare function reconcileExceptions<TFinding, TRecord extends {
     readonly ok: false;
     readonly error: string;
 };
+
+/**
+ * The `fieldValue` accessor `evaluateExceptionRecord` takes. A legacy record answers
+ * {@link LEGACY_FIELD_VALUE} for a v2 field.
+ * @param record - a flat record.
+ * @param requirement - the field name.
+ * @returns the field's text, or `""`.
+ */
+export declare function recordFieldValue(record: unknown, requirement: string): string;
+
+/**
+ * @param inventory - what {@link summarizeExceptionRegistries} returned.
+ * @returns one line per registry under a total line, ending in a newline.
+ */
+export declare function renderExceptionInventory(inventory: ExceptionInventory): string;
 
 /**
  * The default folder, relative to the repository root.
@@ -633,6 +866,17 @@ export declare interface RepoContractLogsOptions {
  */
 export declare function resolveExceptionPolicy(classification: ExceptionClassification, config: ExceptionPolicyConfig, globalDefault: ExceptionPolicy): ExceptionPolicy;
 
+/** The {@link SecurityExceptionFields} keys, in canonical order, for a schema's `metadataKeys`. */
+export declare const SECURITY_EXCEPTION_FIELD_KEYS: readonly ["alternatives", "remediation", "method", "exceptionType"];
+
+/** The four fields a security-family record adds. Each is `""` on a fresh stub. */
+export declare interface SecurityExceptionFields {
+    readonly alternatives: string;
+    readonly remediation: string;
+    readonly method: "" | ExceptionMethod;
+    readonly exceptionType: "" | ExceptionType;
+}
+
 /**
  * The canonical on-disk form of one exception registry: `{ "exceptions": [ ... ] }`. Records are
  * sorted ascending by `id` (code-unit order, locale-independent), with each record's keys in
@@ -738,6 +982,15 @@ export declare namespace StandardSchemaV1 {
 }
 
 /**
+ * Counts every registry's records by type, legacy, expired and incomplete.
+ * @param registries - the registries' records.
+ * @param now - the date `expires` is compared with.
+ * @param errors - files that could not be read, carried into the inventory.
+ * @returns the inventory.
+ */
+export declare function summarizeExceptionRegistries(registries: readonly ExceptionRegistryContents[], now: Date, errors?: readonly ExceptionRegistryError[]): ExceptionInventory;
+
+/**
  * Validates an `ExceptionPolicyConfig`'s shape. Every group's `default` and every entry in its
  * `rules` must be a well-formed `ExceptionPolicy` (see `validateExceptionPolicyValue`). No group's
  * `rules` may use the literal `"*"` as a key, because that key is never a blanket policy.
@@ -752,9 +1005,46 @@ export declare namespace StandardSchemaV1 {
 export declare function validateExceptionPolicyConfig(config: ExceptionPolicyConfig, validRequirements?: readonly string[]): readonly string[];
 
 /**
+ * Validates an untrusted `exceptions` array: the core, the id namespace, unknown keys, duplicate
+ * ids, the v2 fields of a `version: 2` record, then `schema.validateRecord`. Reports every
+ * problem. A blank field is valid data; completeness is the check's policy.
+ * @param value - the parsed `exceptions` value.
+ * @param schema - the registry's schema.
+ * @returns every rebuilt record, or every problem found.
+ */
+export declare function validateExceptionRegistry<TRecord extends {
+    readonly id: string;
+}>(value: unknown, schema: ExceptionRegistrySchema<TRecord>): {
+    readonly ok: true;
+    readonly records: readonly TRecord[];
+} | {
+    readonly ok: false;
+    readonly errors: readonly string[];
+};
+
+/**
+ * Validates the four security fields. Each must be a string; `method` and `exceptionType` must be
+ * `""` or a known member. A filled `validated-false-positive` needs `mechanical-reverification`.
+ * @param raw - the untrusted record.
+ * @param index - its index, for messages.
+ * @param allowedExceptionTypes - the types this registry accepts.
+ * @param errors - collects one message per problem.
+ * @returns the four fields, or `undefined` when one is invalid.
+ */
+export declare function validateSecurityExceptionFields(raw: Readonly<Record<string, unknown>>, index: number, allowedExceptionTypes: readonly ExceptionType[], errors: string[]): SecurityExceptionFields | undefined;
+
+/** A record of either version. A registry can migrate one record at a time. */
+export declare interface VersionedExceptionRecord {
+    readonly id: string;
+    readonly version: 1 | 2;
+}
+
+/**
  * Writes one exception registry to disk in its canonical form (`serializeExceptionRegistry`),
  * atomically and idempotently: the sole filesystem-writing primitive in `repo-contract/helpers`.
  *
+ * - **A record that is not an object with a string `id`** -> `{ ok: false }` naming its index.
+ *   Nothing is read or written.
  * - **Symlinked target** -> `{ ok: false }`: a governance registry is never a symlink, and writing
  *   through one would escape `.repo-contract/exceptions/`.
  * - **No file yet** -> written.

@@ -191,7 +191,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!aiReview:function(1)",
-          "docComment": "/**\n * An AI review as a check. It runs your agent with a prompt that asks for one fixed JSON shape,\n * {@link AiReviewReply}. Every finding carries a confidence score, and the check gates on them. A\n * model can answer differently on every run, so the policy reads only that structured reply,\n * never prose.\n *\n * The output is read in three steps. The whole output is parsed as JSON. If that fails, the text\n * from its first `{` to its last `}` is parsed. If that fails too, or the JSON is not the\n * requested shape, `fallback` is judged in its place and the reason lists the problems.\n *\n * The verdict is `fail` when an `error` finding scores at or above `errorThreshold`. It is `warn`\n * for any other `warn` or `error` finding, including the default fallback. It is `pass` for `info`\n * findings only. Each reason lists every `warn` and `error` finding with its file, line, rule and\n * confidence.\n * A timeout, a missing agent or a process killed by a signal fails. A non-zero exit code alone\n * does not: a well-formed reply still counts, and an unreadable one names the code. The tests prove\n * the parsing and the policy; they do not prove a model's judgement.\n *\n * @param options - The agent to run and how to judge it; see {@link AiReviewOptions}.\n *\n * @returns The configured check.\n *\n * @example\n * ```ts\n * aiReview: aiReview({\n *   agent: [\"claude\", \"-p\", \"{prompt}\"],\n *   credentials: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY },\n *   errorThreshold: 0.8,\n * }),\n * ```\n *\n * @beta\n */\n",
+          "docComment": "/**\n * An AI review as a check. It runs your agent with a prompt that asks for one fixed JSON shape,\n * {@link AiReviewReply}. Every finding carries a confidence score, and the check gates on them. A\n * model can answer differently on every run, so the policy reads only that structured reply,\n * never prose.\n *\n * The output is read in three steps. The whole output is parsed as JSON. If that fails, the text\n * from its first `{` to its last `}` is parsed. If that fails too, or the JSON is not the\n * requested shape, `fallback` is judged in its place and the reason lists the problems.\n *\n * The verdict is `fail` when an `error` finding scores at or above `errorThreshold`. It is `warn`\n * for any other `warn` or `error` finding, including the default fallback. It is `pass` for `info`\n * findings only. Each reason lists every `warn` and `error` finding with its file, line, rule and\n * confidence.\n * A timeout, a missing agent or a process killed by a signal fails. A non-zero exit code alone\n * does not: a well-formed reply still counts, and an unreadable one names the code. The tests prove\n * the parsing and the policy; they do not prove a model's judgement.\n *\n * @param options - The agent to run and how to judge it; see {@link AiReviewOptions}.\n *\n * @returns The configured check.\n *\n * @throws\n *\n * {TypeError} When `options` is not an object.\n *\n * @example\n * ```ts\n * aiReview: aiReview({\n *   agent: [\"claude\", \"-p\", \"{prompt}\"],\n *   credentials: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY },\n *   errorThreshold: 0.8,\n * }),\n * ```\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -773,25 +773,128 @@
           "extendsTokenRanges": []
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "repo-contract!arethetypeswrong:var",
-          "docComment": "/**\n * Published-package type-resolution correctness via `@arethetypeswrong/cli`.\n *\n * @beta\n */\n",
+          "kind": "Function",
+          "canonicalReference": "repo-contract!arethetypeswrong:function(1)",
+          "docComment": "/**\n * Published-package type-resolution correctness via `@arethetypeswrong/cli`.\n *\n * @param options - configuration for this check; see {@link ArethetypeswrongOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @throws\n *\n * {RangeError} when `ignoreResolutions` names a resolution attw does not use.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "arethetypeswrong: "
+              "text": "export declare function arethetypeswrong(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ArethetypeswrongOptions",
+              "canonicalReference": "repo-contract!ArethetypeswrongOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
             },
             {
               "kind": "Reference",
               "text": "CheckDefinitionConfig",
               "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
             }
           ],
           "fileUrlPath": "src/presets/arethetypeswrong.ts",
-          "isReadonly": true,
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
           "releaseTag": "Beta",
-          "name": "arethetypeswrong",
-          "variableTypeTokenRange": {
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "arethetypeswrong"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ArethetypeswrongOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link arethetypeswrong}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ArethetypeswrongOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/arethetypeswrong.ts",
+          "releaseTag": "Public",
+          "name": "ArethetypeswrongOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ArethetypeswrongOptions#ignoreResolutions:member",
+              "docComment": "/**\n * Resolutions whose problems are dropped before judging. `[\"node10\"]` suits a package that supports only `exports`-aware resolution. Defaults to none.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly ignoreResolutions?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AttwResolutionKind",
+                  "canonicalReference": "repo-contract!AttwResolutionKind:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "ignoreResolutions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!AttwResolutionKind:type",
+          "docComment": "/**\n * A module resolution attw judges a package under.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type AttwResolutionKind = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"node10\" | \"node16-cjs\" | \"node16-esm\" | \"bundler\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/rules/attw-resolutions.ts",
+          "releaseTag": "Public",
+          "name": "AttwResolutionKind",
+          "typeTokenRange": {
             "startIndex": 1,
             "endIndex": 2
           }
@@ -799,7 +902,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!brokenLinks:function(1)",
-          "docComment": "/**\n * Broken-link detection via linkinator, recursing through local files and\n * following both local and remote links. `--skip node_modules` avoids\n * wasting the crawl on vendored files that were never authored content.\n *\n * @param options - configuration for this check; see {@link BrokenLinksOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Broken-link detection via linkinator, recursing through local files and following both local\n * and remote links. `--skip node_modules` avoids wasting the crawl on vendored files that were\n * never authored content. A link that answered HTTP 429 passes, since a rate limit says nothing\n * about whether the page exists. A local link linkinator could not serve passes when it exists\n * on disk, resolved from the working directory: linkinator reports a bare directory link as\n * broken, though every git host renders it.\n *\n * @param options - configuration for this check; see {@link BrokenLinksOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @throws\n *\n * {RangeError} when `start` is an empty list.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -808,7 +911,7 @@
             {
               "kind": "Reference",
               "text": "BrokenLinksOptions",
-              "canonicalReference": "repo-contract!~BrokenLinksOptions:interface"
+              "canonicalReference": "repo-contract!BrokenLinksOptions:interface"
             },
             {
               "kind": "Content",
@@ -844,6 +947,132 @@
           "name": "brokenLinks"
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!BrokenLinksOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link brokenLinks}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface BrokenLinksOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/broken-links.ts",
+          "releaseTag": "Public",
+          "name": "BrokenLinksOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!BrokenLinksOptions#start:member",
+              "docComment": "/**\n * Where the crawl starts. A string is one HTML start point. Defaults to `\".\"`. A list runs one\n * crawl over every start point, served from the working directory. linkinator's Markdown mode\n * is all or nothing, so one `\"markdown\"` start turns it on for the whole crawl.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly start?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | readonly "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "BrokenLinksStart",
+                  "canonicalReference": "repo-contract!BrokenLinksStart:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "start",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!BrokenLinksStart:interface",
+          "docComment": "/**\n * One place a crawl starts, and how its files are read.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface BrokenLinksStart "
+            }
+          ],
+          "fileUrlPath": "src/presets/rules/link-results.ts",
+          "releaseTag": "Public",
+          "name": "BrokenLinksStart",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!BrokenLinksStart#mode:member",
+              "docComment": "/**\n * `\"markdown\"` follows links in Markdown files; `\"html\"` (the default) reads HTML only.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly mode?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"html\" | \"markdown\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "mode",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!BrokenLinksStart#path:member",
+              "docComment": "/**\n * A file or directory, relative to the working directory.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "path",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Variable",
           "canonicalReference": "repo-contract!bundledDependencies:var",
           "docComment": "/**\n * Fails when package.json bundles a package (`bundleDependencies` or `bundledDependencies`) that\n * its `dependencies` do not declare. npm writes each such name into the published registry\n * manifest as `\"*\"`, and supply-chain scanners such as Socket report the mismatch as manifest\n * confusion. Passes a package that bundles nothing. Reads package.json in the working directory\n * with `node -e`; no external tool.\n *\n * @beta\n */\n",
@@ -870,7 +1099,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!commitlint:function(1)",
-          "docComment": "/**\n * Commit-message governance via commitlint, using whatever commitlint\n * config the consumer's repository already has (commitlint ships no\n * rules of its own: e.g. `@commitlint/config-conventional`). It judges the\n * exit code, not `--format json`: commitlint has no broadly-documented,\n * stable JSON CLI output. This preset reads its plain-text report as the\n * `format`/`typecheck` presets do for their tools, instead of relying on an\n * unconfirmed flag.\n *\n * @param options - configuration for this check; see {@link CommitlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Commit-message governance via commitlint, using whatever commitlint\n * config the consumer's repository already has (commitlint ships no\n * rules of its own: e.g. `@commitlint/config-conventional`). It judges the\n * exit code, not `--format json`: commitlint has no broadly-documented,\n * stable JSON CLI output. This preset reads its plain-text report as the\n * `format`/`typecheck` presets do for their tools, instead of relying on an\n * unconfirmed flag.\n *\n * @param options - configuration for this check; see {@link CommitlintOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -916,8 +1145,481 @@
         },
         {
           "kind": "Function",
+          "canonicalReference": "repo-contract!coverage:function(1)",
+          "docComment": "/**\n * Package-wide test coverage, read from the `json-summary` report a test run wrote. It runs no\n * tests: declare `dependsOn` on the check that does. Fails on any judged metric below its\n * threshold, and when the report is missing or unreadable. Warns, not evaluated, when a check it\n * depends on failed: that check is already red, and its coverage would describe a broken run.\n *\n * @param options - configuration for this check; see {@link CoverageOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @throws\n *\n * {RangeError} when `thresholds` is not an object of metrics from 0 to 100.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function coverage(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CoverageOptions",
+              "canonicalReference": "repo-contract!CoverageOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/coverage.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "coverage"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!CoverageOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link coverage}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface CoverageOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/coverage.ts",
+          "releaseTag": "Public",
+          "name": "CoverageOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CoverageOptions#summary:member",
+              "docComment": "/**\n * The `json-summary` report a test run wrote. Defaults to `\"coverage/coverage-summary.json\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly summary?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "summary",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CoverageOptions#thresholds:member",
+              "docComment": "/**\n * Defaults to 80 on lines and statements. Given, it replaces the default whole.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly thresholds?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CoverageThresholds",
+                  "canonicalReference": "repo-contract!CoverageThresholds:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "thresholds",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!CoverageThresholds:interface",
+          "docComment": "/**\n * Minimum coverage per metric, in percent. A metric left out is not judged.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface CoverageThresholds "
+            }
+          ],
+          "fileUrlPath": "src/presets/rules/coverage-summary.ts",
+          "releaseTag": "Public",
+          "name": "CoverageThresholds",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CoverageThresholds#branches:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly branches?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "branches",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CoverageThresholds#functions:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly functions?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "functions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CoverageThresholds#lines:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly lines?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "lines",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CoverageThresholds#statements:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly statements?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "statements",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!crap:function(1)",
+          "docComment": "/**\n * No function both complex and poorly covered, via `@danibram/crap4ts`. Fails on a function above\n * the CRAP threshold or the complexity ceiling, and on an unreadable score. Reads the coverage a\n * test run wrote: declare `dependsOn` on that check. Warns, not evaluated, when a check it depends\n * on failed.\n *\n * crap4ts writes its report to a file, not stdout: it exits before a large report drains through a\n * pipe, which cuts the JSON at 64 KiB.\n *\n * @param options - configuration for this check; see {@link CrapOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @throws\n *\n * {RangeError} when `threshold` or `maxComplexity` is not a finite number above 0.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function crap(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CrapOptions",
+              "canonicalReference": "repo-contract!CrapOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/crap.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "crap"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!CrapOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link crap}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface CrapOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/crap.ts",
+          "releaseTag": "Public",
+          "name": "CrapOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CrapOptions#coverage:member",
+              "docComment": "/**\n * The Istanbul `coverage-final.json` to score against. Defaults to `\"coverage/coverage-final.json\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly coverage?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "coverage",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CrapOptions#ignore:member",
+              "docComment": "/**\n * Globs crap4ts skips.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly ignore?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "ignore",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CrapOptions#maxComplexity:member",
+              "docComment": "/**\n * The highest cyclomatic complexity a function may have, however well covered. Defaults to `20`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly maxComplexity?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "maxComplexity",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CrapOptions#report:member",
+              "docComment": "/**\n * Where crap4ts writes its JSON report. Defaults to `\"reports/crap.json\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly report?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "report",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CrapOptions#src:member",
+              "docComment": "/**\n * The source directories to score. Defaults to `\"src\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly src?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "src",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!CrapOptions#threshold:member",
+              "docComment": "/**\n * The highest CRAP score a function may have. Defaults to `30`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly threshold?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "threshold",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
           "canonicalReference": "repo-contract!deadCode:function(1)",
-          "docComment": "/**\n * Dead/unused-code detection via knip.\n *\n * @param options - configuration for this check; see {@link DeadCodeOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Dead/unused-code detection via knip.\n *\n * @param options - configuration for this check; see {@link DeadCodeOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -964,7 +1666,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!distNoUrls:function(1)",
-          "docComment": "/**\n * Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the\n * build output directory. Supply-chain scanners that flag shipped URLs then have nothing to flag\n * (Socket.dev's \"URL strings\" alert, for one). Scans every file, sourcemaps and declaration files\n * included. Individual URLs can be allowed with a mandatory, reviewable `reason`; there is no\n * blanket opt-out.\n *\n * @param options - configuration for this check; see {@link DistNoUrlsOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Fails when any URL (any scheme followed by a colon and two slashes) appears in any file of the\n * build output directory. Supply-chain scanners that flag shipped URLs then have nothing to flag\n * (Socket.dev's \"URL strings\" alert, for one). Scans every file, sourcemaps and declaration files\n * included. Individual URLs can be allowed with a mandatory, reviewable `reason`; there is no\n * blanket opt-out.\n *\n * @param options - configuration for this check; see {@link DistNoUrlsOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1164,7 +1866,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!duplication:function(1)",
-          "docComment": "/**\n * Duplicated-code detection via jscpd.\n *\n * @param options - configuration for this check; see {@link DuplicationOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Duplicated-code detection via jscpd.\n *\n * @param options - configuration for this check; see {@link DuplicationOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @throws\n *\n * {RangeError} when `maxPercentage` is not a number from 0 to 100.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1173,7 +1875,7 @@
             {
               "kind": "Reference",
               "text": "DuplicationOptions",
-              "canonicalReference": "repo-contract!~DuplicationOptions:interface"
+              "canonicalReference": "repo-contract!DuplicationOptions:interface"
             },
             {
               "kind": "Content",
@@ -1207,6 +1909,78 @@
             }
           ],
           "name": "duplication"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!DuplicationOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link duplication}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface DuplicationOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/duplication.ts",
+          "releaseTag": "Public",
+          "name": "DuplicationOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!DuplicationOptions#maxPercentage:member",
+              "docComment": "/**\n * The largest share of scanned lines that may be duplicated, in percent. A pass still lists every block. Defaults to `0`: any duplicated block fails.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly maxPercentage?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "maxPercentage",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!DuplicationOptions#path:member",
+              "docComment": "/**\n * Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `\".\"`: narrow it (e.g. `\"src\"`) to scope the scan to your source tree.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly path?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "path",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Variable",
@@ -1283,7 +2057,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!lint:function(1)",
-          "docComment": "/**\n * Static analysis via ESLint, using whatever `eslint.config.js` the\n * consumer's repository already has. This preset assumes nothing about\n * rule configuration, only how to run the tool and read its JSON output.\n * Severity `2` (error) blocks. Severity `1` (warning) is reported but\n * never blocks. ESLint's severities already encode that distinction, and\n * this preset keeps it instead of treating every finding as blocking.\n *\n * @param options - configuration for this check; see {@link LintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Static analysis via ESLint, using whatever `eslint.config.js` the\n * consumer's repository already has. This preset assumes nothing about\n * rule configuration, only how to run the tool and read its JSON output.\n * Severity `2` (error) blocks. Severity `1` (warning) is reported but\n * never blocks. ESLint's severities already encode that distinction, and\n * this preset keeps it instead of treating every finding as blocking.\n *\n * @param options - configuration for this check; see {@link LintOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1330,7 +2104,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!markdownlint:function(1)",
-          "docComment": "/**\n * Markdown structure/style lint via markdownlint-cli2. Unlike this\n * package's other file-based-report presets, the report path comes from\n * config, not a CLI flag. The `markdownlint-cli2` tool writes JSON only\n * when its config file requests it. This preset assumes the\n * consumer's `.markdownlint-cli2.jsonc` includes:\n * ```jsonc\n * \"outputFormatters\": [[\"markdownlint-cli2-formatter-json\", { \"name\": \"reports/markdownlint.json\" }]]\n * ```\n *\n * which also requires the `markdownlint-cli2-formatter-json` package\n * alongside `markdownlint-cli2` itself.\n *\n * @param options - configuration for this check; see {@link MarkdownlintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Markdown structure/style lint via markdownlint-cli2. The default `\"json\"` verdict reads a\n * report file whose path comes from config, not a CLI flag. markdownlint-cli2 writes JSON only\n * when its config asks for it, so this verdict assumes the consumer's `.markdownlint-cli2.jsonc`\n * includes:\n * ```jsonc\n * \"outputFormatters\": [[\"markdownlint-cli2-formatter-json\", { \"name\": \"reports/markdownlint.json\" }]]\n * ```\n *\n * which also requires the `markdownlint-cli2-formatter-json` package alongside\n * `markdownlint-cli2` itself. The `\"exit-code\"` verdict needs neither: it reads the exit code and\n * the printed findings.\n *\n * @param options - configuration for this check; see {@link MarkdownlintOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @throws\n *\n * {RangeError} when `globs` is an empty list.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1339,7 +2113,7 @@
             {
               "kind": "Reference",
               "text": "MarkdownlintOptions",
-              "canonicalReference": "repo-contract!~MarkdownlintOptions:interface"
+              "canonicalReference": "repo-contract!MarkdownlintOptions:interface"
             },
             {
               "kind": "Content",
@@ -1375,6 +2149,667 @@
           "name": "markdownlint"
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!MarkdownlintOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link markdownlint}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface MarkdownlintOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/markdownlint.ts",
+          "releaseTag": "Public",
+          "name": "MarkdownlintOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MarkdownlintOptions#config:member",
+              "docComment": "/**\n * A markdownlint config file, passed as `--config`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly config?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "config",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MarkdownlintOptions#glob:member",
+              "docComment": "/**\n * Glob passed straight through to markdownlint-cli2 as its positional target. Defaults to `\"**\\/*.md\"`. Ignored when `globs` is set.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly glob?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "glob",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MarkdownlintOptions#globs:member",
+              "docComment": "/**\n * Globs passed to markdownlint-cli2 in place of `glob`. Explicit globs such as `[\"*.md\", \"docs/**\\/*.md\"]` keep the run out of `node_modules`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly globs?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "globs",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MarkdownlintOptions#verdict:member",
+              "docComment": "/**\n * How the verdict is read. `\"json\"` (the default) reads the JSON formatter's report file. `\"exit-code\"` reads the exit code and printed output, so no formatter is needed.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly verdict?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"json\" | \"exit-code\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "verdict",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!mutation:function(1)",
+          "docComment": "/**\n * Mutation testing via Stryker, run through `repo-contract mutation run --json`. Fails below\n * `minScore`, on any Timeout still standing after it is re-run alone, and on an incomplete or\n * stale registry record. Killed, RuntimeError and CompileError count as detected; Ignored mutants\n * are left out of the score. A run in which a Survived mutant ran 0 tests fails: it proves nothing.\n *\n * The command always runs Stryker cold: it deletes the incremental file and passes `--force`.\n *\n * @param options - configuration for this check; see {@link MutationOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function mutation(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "MutationOptions",
+              "canonicalReference": "repo-contract!MutationOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/mutation.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "mutation"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!MutationOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link mutation}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface MutationOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/mutation.ts",
+          "releaseTag": "Public",
+          "name": "MutationOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#cache:member",
+              "docComment": "/**\n * Reuse a clean run while nothing it depends on has changed. Defaults to `\"off\"`; a CI run should keep it off.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly cache?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"read-write\" | \"read-only\" | \"off\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "cache",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#config:member",
+              "docComment": "/**\n * The Stryker config file. Defaults to the first `stryker.config.*` or `stryker.conf.*` found.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly config?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "config",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#confirmTimeouts:member",
+              "docComment": "/**\n * Re-run at most this many timed-out mutants alone before a timeout counts. Defaults to `5`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly confirmTimeouts?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "confirmTimeouts",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#minScore:member",
+              "docComment": "/**\n * The lowest mutation score that passes, in percent. `100` demands every mutant detected or recorded. Defaults to `80`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly minScore?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "minScore",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#mutate:member",
+              "docComment": "/**\n * Mutate only these files. An empty list passes with nothing to mutate.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly mutate?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "mutate",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#patchVitestRunner:member",
+              "docComment": "/**\n * Patch `@stryker-mutator/vitest-runner` when Vitest 5 needs it. Defaults to `true`. The patch\n * changes the runner's test-name separator to Vitest 5's (stryker-js#6210). Without it, every\n * mutant runs 0 tests. Only an install inside the project is patched. `false` passes\n * `--no-patch-vitest-runner`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly patchVitestRunner?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "patchVitestRunner",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#registry:member",
+              "docComment": "/**\n * The registry of hand-verified mutants. Defaults to `\".repo-contract/exceptions/mutation.json\"`; `false` reads none.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly registry?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | false"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "registry",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#report:member",
+              "docComment": "/**\n * Judge this Stryker report and mutate nothing, such as the merged report of a sharded run.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly report?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "report",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#shard:member",
+              "docComment": "/**\n * Mutate one slice, written `<index>/<total>`. A sharded run cannot call a record stale.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly shard?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "shard",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationOptions#timeoutMs:member",
+              "docComment": "/**\n * Time the whole run may take, in milliseconds.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly timeoutMs?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "timeoutMs",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!npmScript:function(1)",
+          "docComment": "/**\n * Runs one of the package's own npm scripts as a check, through `repo-contract npm-script --json`.\n * Fails when the script exits non-zero, runs out of time, or changes a `mustNotChange` path. The\n * paths are hashed before and after, so the verdict does not depend on git state.\n *\n * @param options - configuration for this check; see {@link NpmScriptOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @throws\n *\n * {RangeError} when `script` is blank or starts with `-`, a `mustNotChange` entry is not a\n * non-empty path that does not start with `-`, or `timeoutMs` is not a whole number above 0.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function npmScript(options: "
+            },
+            {
+              "kind": "Reference",
+              "text": "NpmScriptOptions",
+              "canonicalReference": "repo-contract!NpmScriptOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/npm-script.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "npmScript"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!NpmScriptOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link npmScript}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface NpmScriptOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/npm-script.ts",
+          "releaseTag": "Public",
+          "name": "NpmScriptOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!NpmScriptOptions#label:member",
+              "docComment": "/**\n * The name rationales use. Defaults to the script name.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly label?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "label",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!NpmScriptOptions#mustNotChange:member",
+              "docComment": "/**\n * Paths the script must leave byte-identical. Set them for a script that regenerates committed files: a change means the committed copy is stale.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly mustNotChange?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "readonly string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "mustNotChange",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!NpmScriptOptions#script:member",
+              "docComment": "/**\n * The npm script to run.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly script: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "script",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!NpmScriptOptions#timeoutMs:member",
+              "docComment": "/**\n * Time the script may take, in milliseconds.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly timeoutMs?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "timeoutMs",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!NpmScriptOptions#whenMissing:member",
+              "docComment": "/**\n * When package.json has no such script: `\"skip\"` (the default) passes as not applicable; `\"fail\"` fails.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly whenMissing?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"skip\" | \"fail\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "whenMissing",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Variable",
           "canonicalReference": "repo-contract!publint:var",
           "docComment": "/**\n * publint has no machine-readable output mode: only a plain-text CLI\n * reporter (see its `src/cli.js` `formatMessages`). Its process exit\n * code reflects only 'error'-level findings; 'warning'/'suggestion'-level\n * findings never affect it. This preset reads the three section headers\n * publint's CLI writes (\"Errors:\", \"Warnings:\", \"Suggestions:\") to tell\n * blocking findings from non-blocking ones. It depends on no per-message\n * structure, which publint doesn't expose. Relevant only to repositories\n * that publish an npm package.\n *\n * @beta\n */\n",
@@ -1401,7 +2836,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!quickStart:function(1)",
-          "docComment": "/**\n * Runs the README's marked quick start, one line at a time, against the tarball npm would publish.\n * The commands run in an empty project: a directory holding only a package.json. The command that\n * installs this package installs the packed tarball instead. Fails when any command exits non-zero or the time\n * budget runs out, and when the README has no marked block. Mark the block by putting\n * `<!-- quick-start:begin -->` on the line before its fenced `sh` block and\n * `<!-- quick-start:end -->` on the line after it.\n *\n * Runs `repo-contract quick-start`, so the package must be built first, and the commands reach\n * whatever network they reach (an install usually reaches the registry).\n *\n * @param options - configuration for this check; see {@link QuickStartOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * Runs the README's marked quick start, one line at a time, against the tarball npm would publish.\n * The commands run in an empty project: a directory holding only a package.json. The command that\n * installs this package installs the packed tarball instead. Fails when any command exits non-zero or the time\n * budget runs out, and when the README has no marked block. Mark the block by putting\n * `<!-- quick-start:begin -->` on the line before its fenced `sh` block and\n * `<!-- quick-start:end -->` on the line after it.\n *\n * Runs `repo-contract quick-start`, so the package must be built first, and the commands reach\n * whatever network they reach (an install usually reaches the registry).\n *\n * @param options - configuration for this check; see {@link QuickStartOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1518,28 +2953,296 @@
           "extendsTokenRanges": []
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "repo-contract!securityDeps:var",
-          "docComment": "/**\n * Dependency vulnerability scanning via `npm audit`.\n *\n * @beta\n */\n",
+          "kind": "Function",
+          "canonicalReference": "repo-contract!sbom:function(1)",
+          "docComment": "/**\n * Keeps a CycloneDX 1.6 SBOM of the package's locked dependencies current. It builds the document\n * from the npm lockfile with no external tool, deterministically: the same lockfile always gives\n * the same document. By default it writes nothing. It fails when a committed document is missing\n * or differs from what the lockfile gives. The comparison ignores only `serialNumber` and\n * `metadata.timestamp`. So a document another tool regenerated, or a reformatted one, still counts\n * as current when its content matches. With `write: true` it writes the documents instead, for a\n * regenerate command.\n *\n * The documents list every package in the lockfile's `packages` map. Each carries its purl, the\n * hashes from `integrity`, the declared license and the resolved URL. The full dependency graph\n * follows. The production document leaves out packages marked `dev`. It describes what the\n * lockfile pins, not what is installed in `node_modules`.\n *\n * @param options - configuration for this check; see {@link SbomOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @throws\n *\n * {RangeError} when `lockfile`, `output` or `productionOutput` is not a non-empty path,\n * when `output` or `productionOutput` is spelled as the lockfile's path, or when `write` is not a\n * boolean.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "securityDeps: "
+              "text": "export declare function sbom(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "SbomOptions",
+              "canonicalReference": "repo-contract!SbomOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
             },
             {
               "kind": "Reference",
               "text": "CheckDefinitionConfig",
               "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/presets/sbom.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Beta",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "sbom"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!SbomOptions:interface",
+          "docComment": "/**\n * Options for {@link sbom}.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface SbomOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/sbom.ts",
+          "releaseTag": "Beta",
+          "name": "SbomOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SbomOptions#fix:member",
+              "docComment": "/**\n * The command a failure message tells the reader to run to regenerate the documents.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly fix?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "fix",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SbomOptions#lockfile:member",
+              "docComment": "/**\n * The npm lockfile the SBOM is built from. It must have a `packages` map (lockfileVersion 2 or 3). Defaults to `\"package-lock.json\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly lockfile?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "lockfile",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SbomOptions#output:member",
+              "docComment": "/**\n * The SBOM of every locked package, dev dependencies included (their `scope` is `\"excluded\"`). Defaults to `\"docs/sbom.cdx.json\"`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly output?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "output",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SbomOptions#productionOutput:member",
+              "docComment": "/**\n * The SBOM of what installing the package brings in: every locked package not marked `dev`. Defaults to `\"docs/sbom.production.cdx.json\"`; `null` skips it.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly productionOutput?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | null"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "productionOutput",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SbomOptions#write:member",
+              "docComment": "/**\n * Write the documents instead of checking them. Defaults to `false`: the check fails when a committed document is missing or out of date. Write mode refuses a path that is a symbolic link, is not a regular file, or resolves outside the working directory. It also refuses the lockfile: its path, a hard link to it, or a case-variant name on a case-insensitive file system. A refusal writes nothing and exits 1.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly write?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Beta",
+              "name": "write",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!securityDeps:function(1)",
+          "docComment": "/**\n * Dependency vulnerability scanning via `npm audit`.\n *\n * @param options - configuration for this check; see {@link SecurityDepsOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @beta\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function securityDeps(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "SecurityDepsOptions",
+              "canonicalReference": "repo-contract!SecurityDepsOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "CheckDefinitionConfig",
+              "canonicalReference": "repo-contract!~CheckDefinitionConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
             }
           ],
           "fileUrlPath": "src/presets/security-deps.ts",
-          "isReadonly": true,
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
           "releaseTag": "Beta",
-          "name": "securityDeps",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 2
-          }
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "options",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": true
+            }
+          ],
+          "name": "securityDeps"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!SecurityDepsOptions:interface",
+          "docComment": "/**\n * Options accepted by {@link securityDeps}.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface SecurityDepsOptions "
+            }
+          ],
+          "fileUrlPath": "src/presets/security-deps.ts",
+          "releaseTag": "Public",
+          "name": "SecurityDepsOptions",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!SecurityDepsOptions#registry:member",
+              "docComment": "/**\n * The exception registry, such as `\".repo-contract/exceptions/security-deps.json\"`. With one, a\n * `critical` advisory still fails, and a lower one passes only while a complete record accepts\n * it. The check writes a blank record for each new advisory and fails on a record whose advisory\n * is gone. An `info` finding warns and gets no record. Defaults to `false`: no registry,\n * so any low, moderate, high or critical advisory fails.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly registry?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | false"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "registry",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Variable",
@@ -1568,7 +3271,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!stylelint:function(1)",
-          "docComment": "/**\n * CSS/SCSS lint via stylelint, using whatever stylelint config the\n * consumer's repository already has. `severity: \"error\"` blocks;\n * `severity: \"warning\"` is reported but never blocks, matching how the\n * `lint` preset treats ESLint's severities.\n *\n * @param options - configuration for this check; see {@link StylelintOptions}.\n *\n * @returns the configured check.\n *\n * @beta\n */\n",
+          "docComment": "/**\n * CSS/SCSS lint via stylelint, using whatever stylelint config the\n * consumer's repository already has. `severity: \"error\"` blocks;\n * `severity: \"warning\"` is reported but never blocks, matching how the\n * `lint` preset treats ESLint's severities.\n *\n * @param options - configuration for this check; see {@link StylelintOptions}.\n *\n * @returns the configured check.\n *\n * @throws\n *\n * {TypeError} when `options` is not an object.\n *\n * @beta\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

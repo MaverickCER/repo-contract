@@ -236,6 +236,16 @@ export declare interface ComputeAffectedInput {
     readonly fullBecause?: Widening;
 }
 
+/** The settings repo-contract reads from package.json. Other keys under `"contract"` belong to other tools. */
+export declare interface ContractConfig {
+    readonly affected: AffectedOptions;
+    /** `"repo-contract"` means the legacy `"repo-contract".affected` key was read; `doctor` reports it. */
+    readonly source: ContractConfigSource;
+}
+
+/** Where a repository's settings came from in package.json. */
+export declare type ContractConfigSource = "contract" | "repo-contract" | "none";
+
 /**
  * Creates a cache over a store.
  * @param options - The store, the mode and (for tests) a clock.
@@ -310,6 +320,8 @@ export declare interface DoctorSnapshot {
     readonly hooksInstalled: boolean;
     /** Source files that re-export with `export *`. */
     readonly starExportFiles: readonly string[];
+    /** The root package.json, parsed; `undefined` when it is missing or not valid JSON. */
+    readonly manifest?: unknown;
 }
 
 /**
@@ -330,6 +342,14 @@ export declare function explainAffected(result: AffectedResult): string[];
 export declare function findEscapes(input: CanaryInput): CanaryResult;
 
 export declare type FindingSeverity = "warn" | "info";
+
+/**
+ * Finds the mutant a mutation exception id names, for `repo-contract except`.
+ * @param mutants - a report's mutants.
+ * @param id - a `mutation:` id.
+ * @returns the first mutant with that id, or `undefined`.
+ */
+export declare function findMutantById(mutants: readonly ResolvedMutant[], id: string): ResolvedMutant | undefined;
 
 /** The two things the collector needs from the machine, supplied by the caller. */
 export declare interface GitCapabilities {
@@ -366,6 +386,9 @@ export declare interface LoadCompilerOptionsInput {
     readonly file?: string;
 }
 
+/** The most shards a plan asks for. */
+export declare const MAX_MUTATION_SHARDS = 256;
+
 /**
  * Combines per-shard Stryker reports into the report an unsharded run would have produced. It never
  * passes partially. These all fail the merge: a missing, repeated or out-of-range shard, an
@@ -398,6 +421,52 @@ export declare type MissExplanation = {
     readonly comparedWith: string;
 };
 
+/** The fields a mutation exception id is derived from. Never the line: a record survives code moving. */
+export declare type MutantIdentity = Pick<ResolvedMutant, "file" | "mutator" | "original" | "replacement">;
+
+/** One file the Stryker config mutates, and its size. */
+export declare interface MutatedFile {
+    readonly path: string;
+    readonly bytes: number;
+}
+
+/** Bytes of mutated source one shard is sized for. */
+export declare const MUTATION_SHARD_BYTES = 65536;
+
+/**
+ * `mutation:<file>:<mutator>:<first 12 hex of the hash of original and replacement>`. The format
+ * matches internal-package-contract's, so existing `mutation.json` records keep their ids.
+ * @param mutant - the identity fields.
+ * @returns the id.
+ */
+export declare function mutationExceptionId(mutant: MutantIdentity): string;
+
+/** What {@link planMutationShards} returns, and the core of `repo-contract mutation plan --json`. */
+export declare interface MutationPlan {
+    readonly files: number;
+    readonly bytes: number;
+    /** `clamp(ceil(bytes / 65536), 1, min(files, 256))`. */
+    readonly count: number;
+    /** The files of each shard. `weightsMs` holds each shard's bytes here, not milliseconds. */
+    readonly plan: ShardPlan;
+    readonly matrix: ShardMatrix;
+}
+
+/**
+ * The shard count with no knobs: one shard per 64 KiB of mutated source, at least one, never more
+ * shards than files, and never more than {@link MAX_MUTATION_SHARDS}. Bytes stand in for Stryker's
+ * cost because every repository has them; recorded timings exist only after a run.
+ * @param input - the mutated source.
+ * @param input.bytes - its total size.
+ * @param input.files - how many files it spans.
+ * @returns the count; `0` only when there are no files.
+ * @throws {RangeError} If either input is not a whole number of at least 0, or bytes come with no files.
+ */
+export declare function mutationShardCount(input: {
+    readonly bytes: number;
+    readonly files: number;
+}): number;
+
 /**
  * Packs build output so a cache can hold it and restore it later.
  * @param files - The files to keep, by safe relative path.
@@ -421,8 +490,9 @@ export declare interface PackedArtifacts {
 
 /**
  * Validates the `affected` block of a repository's configuration (`package.json`'s
- * `"repo-contract"."affected"`). Strict on purpose: a misspelt key would otherwise silently
- * leave a coupling undeclared, which is the one thing this block exists to prevent.
+ * `"contract"."affected"`, or the legacy `"repo-contract"."affected"`). `readContractConfig` picks
+ * the block; this checks it. Strict on purpose: a misspelt key would otherwise silently leave a
+ * coupling undeclared, which is the one thing this block exists to prevent.
  * @param value - The parsed block, or `undefined` if the repository has none.
  * @returns The options, or a one-line description of what is wrong.
  */
@@ -483,6 +553,16 @@ export declare function parseShardSpec(text: string): ShardSpec;
  */
 export declare function planFixes(findings: readonly DoctorFinding[], files: Readonly<Record<string, string | undefined>>): PlannedChange[];
 
+/**
+ * Plans a sharded mutation run of every file the Stryker config mutates. Files are split
+ * heaviest first onto the lightest shard, by bytes, so the shards finish at about the same time.
+ * The same files give the same plan in any order.
+ * @param files - the mutated files and their sizes; each path once.
+ * @returns the count, the split and the matrix. No files gives a count of 0 and an empty matrix.
+ * @throws {RangeError} If a path is empty or listed twice, or a size is not a whole number of at least 0.
+ */
+export declare function planMutationShards(files: readonly MutatedFile[]): MutationPlan;
+
 /** One file a set of fixes would change. */
 export declare interface PlannedChange {
     readonly file: string;
@@ -507,6 +587,21 @@ export declare interface PruneLimits {
     readonly maxEntries?: number;
 }
 
+/**
+ * Reads `"contract".affected` from a parsed package.json, through `parseAffectedConfig`. Falls back
+ * to the legacy `"repo-contract".affected` when the new key is absent. When both are present, the
+ * new key wins and the legacy block is not read, so a broken legacy block cannot fail a migrated
+ * repository; `doctor` warns about it. A `"contract"` key that is not an object belongs to another
+ * tool and is skipped like an absent one.
+ * @param manifest - the parsed package.json, or `undefined` when there is none.
+ * @returns the settings, or a one-line description of what is wrong, naming the key it read.
+ */
+export declare function readContractConfig(manifest: unknown): {
+    readonly config: ContractConfig;
+} | {
+    readonly error: string;
+};
+
 /** What a caller may ask for; `"auto"` leaves the choice to the environment. */
 export declare type RequestedScope = RunScope | "auto";
 
@@ -530,6 +625,22 @@ export declare function resolveCacheMode(input: {
     readonly reason: string;
 };
 
+/** One mutant of a Stryker JSON report, with the source text it replaces. */
+export declare interface ResolvedMutant {
+    readonly file: string;
+    readonly status: string;
+    readonly mutator: string;
+    /** The exact source span the mutant replaces, read from the report's `source`. */
+    readonly original: string;
+    readonly replacement: string;
+    /** 1-indexed start line, or `0` when the report has no location. */
+    readonly line: number;
+    readonly column: number;
+    readonly statusReason: string | undefined;
+    /** How many tests ran against the mutant, or `undefined` when the report does not say. */
+    readonly testsCompleted: number | undefined;
+}
+
 /**
  * Decides whether a run stops spending time on expensive checks once a cheap one has failed. It is
  * off unless asked for, in CI and locally, so a run reports every problem by default. It is never
@@ -543,6 +654,19 @@ export declare function resolveFailFast(input: {
     readonly flag?: boolean;
     readonly env: Readonly<Record<string, string | undefined>>;
 }): boolean;
+
+/**
+ * Reads every mutant of a Stryker JSON report (schema version 1 or 2).
+ * @param report - the parsed report.
+ * @returns the mutants in file then report order, or why the report cannot be read.
+ */
+export declare function resolveMutants(report: unknown): {
+    readonly ok: true;
+    readonly mutants: readonly ResolvedMutant[];
+} | {
+    readonly ok: false;
+    readonly error: string;
+};
 
 /**
  * Decides whether a run validates the affected part of the tree or all of it. A release is always
