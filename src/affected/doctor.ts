@@ -1,3 +1,5 @@
+import { declaredAffectedKeys, foreignContractKey } from "./contract-namespace.js"
+
 /** Facts about a repository, gathered by the caller; `diagnose` reads no file itself. */
 export interface DoctorSnapshot {
   /** The root `.gitignore`'s content, or `undefined` if there is none. */
@@ -10,6 +12,8 @@ export interface DoctorSnapshot {
   readonly hooksInstalled: boolean
   /** Source files that re-export with `export *`. */
   readonly starExportFiles: readonly string[]
+  /** The root package.json, parsed; `undefined` when it is missing or not valid JSON. */
+  readonly manifest?: unknown
 }
 
 /** A mechanical change a finding can be repaired with: text appended to a file. */
@@ -90,6 +94,19 @@ const checkoutShallow = (snapshot: DoctorSnapshot): DoctorFinding[] =>
       hint: "Set fetch-depth: 0 on actions/checkout.",
     }))
 
+const contractKeyNotObject = (snapshot: DoctorSnapshot): DoctorFinding[] =>
+  foreignContractKey(snapshot.manifest)
+    ? [
+        {
+          id: "contract-key-not-object",
+          severity: "info",
+          message:
+            'package.json\'s "contract" key is not an object, so repo-contract reads no settings from it.',
+          hint: 'Leave it if another tool owns it, and keep affected-scope settings under "repo-contract".affected.',
+        },
+      ]
+    : []
+
 const hooksMissing = (snapshot: DoctorSnapshot): DoctorFinding[] =>
   snapshot.hooksInstalled
     ? []
@@ -101,6 +118,29 @@ const hooksMissing = (snapshot: DoctorSnapshot): DoctorFinding[] =>
           hint: "Install them so a commit is checked before it leaves the machine.",
         },
       ]
+
+const legacyAffectedKey = (snapshot: DoctorSnapshot): DoctorFinding[] => {
+  const keys = declaredAffectedKeys(snapshot.manifest)
+  if (!keys.legacy) return []
+  // With both keys, readContractConfig reads only the new one, so a coupling left in the old block is lost.
+  return [
+    keys.contract
+      ? {
+          id: "legacy-affected-key",
+          severity: "warn",
+          message:
+            'package.json has both "contract".affected and the legacy "repo-contract".affected; the legacy block is ignored.',
+          hint: 'Move anything still needed into "contract".affected, then delete "repo-contract".affected.',
+        }
+      : {
+          id: "legacy-affected-key",
+          severity: "info",
+          message:
+            'package.json keeps affected-scope settings under "repo-contract".affected, which still reads but is deprecated.',
+          hint: 'Move the block to "contract".affected; other tools may keep their own keys under "contract".',
+        },
+  ]
+}
 
 const starExports = (snapshot: DoctorSnapshot): DoctorFinding[] =>
   snapshot.starExportFiles.length === 0
@@ -125,8 +165,10 @@ export function diagnose(snapshot: DoctorSnapshot): DoctorReport {
   const found = [
     ...cacheNotIgnored(snapshot),
     ...checkoutShallow(snapshot),
+    ...contractKeyNotObject(snapshot),
     ...coverageJsonReporter(snapshot),
     ...hooksMissing(snapshot),
+    ...legacyAffectedKey(snapshot),
     ...starExports(snapshot),
   ]
   const findings = [

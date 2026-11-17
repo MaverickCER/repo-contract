@@ -13,7 +13,7 @@
  * The three fields every exception record in `.repo-contract/exceptions/*.json` carries, whatever
  * the owning check. A registry adds its typed fields on top; this is the shared core the
  * generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,
- * `validateExceptionRegistry` in the check-owned layer) relies on.
+ * `validateExceptionRegistry` in `exception-record.ts`) relies on.
  * @public
  */
 export interface ExceptionRecordCore {

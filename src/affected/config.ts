@@ -11,8 +11,9 @@ const isStringList = (value: unknown): value is string[] =>
 
 /**
  * Validates the `affected` block of a repository's configuration (`package.json`'s
- * `"repo-contract"."affected"`). Strict on purpose: a misspelt key would otherwise silently
- * leave a coupling undeclared, which is the one thing this block exists to prevent.
+ * `"contract"."affected"`, or the legacy `"repo-contract"."affected"`). `readContractConfig` picks
+ * the block; this checks it. Strict on purpose: a misspelt key would otherwise silently leave a
+ * coupling undeclared, which is the one thing this block exists to prevent.
  * @param value - The parsed block, or `undefined` if the repository has none.
  * @returns The options, or a one-line description of what is wrong.
  */
@@ -53,10 +54,6 @@ export function parseAffectedConfig(
   return { options }
 }
 
-/**
- *
- * @param value
- */
 /**
  * Validates the `links` list.
  * @param value - The parsed `links` value.

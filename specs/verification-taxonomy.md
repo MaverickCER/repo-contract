@@ -644,9 +644,10 @@ Six checks express a reviewed, accepted exception the same way: `suppression-gov
 `security-network`, `security-socket`, `coderabbitai`, `preset-commands`, and `dead-code`. They use
 the shared `repo-contract/helpers` primitives: `reconcileExceptions` / `serializeExceptionRegistry`
 / `writeExceptionRegistry` / the exception-policy resolver
-([ADR 0013](decisions/0013-reusable-exception-policy-helper.md)). They also use one check-owned
-layer, unpublished: `scripts/shared/exception-record.ts` (`validateExceptionRegistry` + a
-per-registry `ExceptionRegistrySchema`). The unification spanned four PRs of the 2026-09 v0.4.0
+([ADR 0013](decisions/0013-reusable-exception-policy-helper.md)). Each also plugs a per-registry
+`ExceptionRegistrySchema` into `validateExceptionRegistry`, published in `repo-contract/helpers`
+since the preset redesign. The `securityDeps` preset's `registry` option uses the same layer. The
+unification spanned four PRs of the 2026-09 v0.4.0
 effort: PR 2 (suppression), PR 3 (the three security checks), PR 4 (preset commands), and PR 5
 (dead-code).
 
@@ -755,7 +756,7 @@ coverage/unit/coverage-final.json   coverage/integration/...        coverage/pro
   tests are executed by name for the standalone dev/CI workflow. Separately, repo-contract's own
   `test-unit`/`test-integration`/`test-property` checks produce the same artifacts. They do so as a
   side effect of their own `--coverage` evidence-producing run (no duplicate execution either way).
-- **`coverage` check** (`checks/coverage.ts`): `run: ["node", "scripts/check-coverage.mjs"]`,
+- **`coverage` check** (the `coverage` preset with `run: ["node", "scripts/check-coverage.mjs"]`):
   aggregation + reporting only. Its `dependsOn: ["test-unit", "test-integration", "test-property"]`
   is attached in `repo-contract.config.ts`. That file is the one place every check id is in scope to
   depend on another.

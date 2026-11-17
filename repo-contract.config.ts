@@ -40,44 +40,46 @@
  *    - `test-unit`, `test-integration` and `mutation` are `isolated: true` for resource
  *      contention, not data. Each spawns heavy child processes. Running them beside the other
  *      readers caused real flakes: the SIGINT-cleanup test in run-checks.test.ts, and Vitest
- *      `STACK_TRACE_ERROR`s. `mutation` sets `isolated` in checks/mutation.ts and is declared near
- *      the end, so its barrier blocks as little as possible.
+ *      `STACK_TRACE_ERROR`s. `mutation` takes `isolated` from the `mutation` preset and is
+ *      declared near the end, so its barrier blocks as little as possible.
  *
  * The evidence dependencies:
  *
  * - `coverage` depends on `test-unit`, `test-integration` and `test-property`. It only
  *   aggregates the coverage those three produced (scripts/check-coverage.mjs).
  * - `crap` depends on `coverage` and reads that same aggregate.
- * - `mutation` depends on `suppression-governance`. Its policy checks each Stryker suppression
- *   against the registry before it trusts an ignored mutant
- *   (specs/decisions/0006-suppression-governance.md).
+ * - `mutation` depends on `suppression-governance`. checks/mutation.ts wraps the `mutation`
+ *   preset at a floor of 100. Its policy checks each Stryker suppression against the registry
+ *   before it trusts a comment-ignored mutant (specs/decisions/0006-suppression-governance.md).
  *
  * They are attached here, not in each check file, because this is the one place every check id is
  * in scope.
  *
- * `typecheck`, `format`, `license`, `publint`, `arethetypeswrong`, `security-secrets` and
- * `duplication` come from `src/presets/`, the catalog a consumer imports from `repo-contract/presets`
+ * `typecheck`, `format`, `license`, `publint`, `arethetypeswrong`, `security-secrets`,
+ * `duplication`, `coverage`, `crap` and `mutation` come from `src/presets/`, the catalog a
+ * consumer imports from `repo-contract/presets`
  * (specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md). This
  * repository uses its own presets instead of a private copy. Where a value differs from a preset's
- * default (`duplication`'s scanned path), a factory option supplies it. `arethetypeswrong` also
- * overrides `run`, because this repository's several entry points trigger an upstream attw bug (see
- * its inline comment).
+ * default (`duplication`'s scanned path, the coverage thresholds), a factory option supplies it.
+ * Three override `run`: `arethetypeswrong`, because this repository's several entry points
+ * trigger an upstream attw bug (see its inline comment); `coverage`, which merges three
+ * categories first; and `mutation`, which runs the CLI from bin/.
  *
- * `api-contract` and `api-docs-report` come from IPC. This repository hosted both engines until
- * the fleet moved from release-please to Changesets. Then repo-contract, env-cap and data-cap all
- * needed the same rule: the declared semver bump must cover the real API diff. `api-contract` still
- * uses API Extractor underneath. `api-docs-report` writes TypeDoc Markdown (`typedoc.json`,
- * `typedoc.markdown.json`) in place of API Extractor reports. IPC imports repo-contract's runtime,
- * so IPC's `sync-repo-contract-version.yml` adds a changeset on every bump. This repository's
- * `sync-internal-package-contract.yml` does not (see that workflow's comment).
+ * `api-contract` comes from IPC. This repository hosted its engine until the fleet moved from
+ * release-please to Changesets. Then repo-contract, env-cap and data-cap all needed the same rule:
+ * the declared semver bump must cover the real API diff. `api-contract` still uses API Extractor
+ * underneath. IPC imports repo-contract's runtime, so IPC's `sync-repo-contract-version.yml` adds
+ * a changeset on every bump. This repository's `sync-internal-package-contract.yml` does not (see
+ * that workflow's comment). `api-docs-report` runs this package's own `npmScript` preset. It
+ * writes TypeDoc Markdown (`typedoc.json`, `typedoc.markdown.json`) in place of API Extractor
+ * reports.
  *
- * `dead-code` and `security-deps` do not use their published presets, which stay unchanged for
- * consumers. Each runs a `checks/*.ts` that reconciles a `.repo-contract/exceptions/*.json`
- * registry against every raw finding. A preset's `exemptUnusedDevDependencies` list must exist
- * before knip runs, and a reconciled registry is built from findings, so it cannot supply one
- * (specs/decisions/0008-self-hosting-tool-and-dependency-choices.md, amendment). The `securityDeps`
- * preset reports only a raw `npm audit` count, with no way to accept a justified finding. So
- * `security-deps` reuses the exception-policy model of `security-socket.ts`
+ * `dead-code` does not use its published preset, which stays unchanged for consumers. It runs
+ * `checks/dead-code.ts`, which reconciles `.repo-contract/exceptions/dead-code.json` against every
+ * raw finding. A preset's `exemptUnusedDevDependencies` list must exist before knip runs, and a
+ * reconciled registry is built from findings, so it cannot supply one
+ * (specs/decisions/0008-self-hosting-tool-and-dependency-choices.md, amendment). `security-deps`
+ * uses the `securityDeps` preset's `registry` option
  * (specs/decisions/0013-reusable-exception-policy-helper.md).
  */
 import crossSpawn, { sync as crossSpawnSync } from "cross-spawn"
@@ -100,7 +102,6 @@ import { codeScanning } from "internal-package-contract/checks/code-scanning"
 import { envContractCheck } from "internal-package-contract/checks/env-contract"
 import { generatedRegionsCheck } from "internal-package-contract/checks/generated-regions"
 import { managedFilesCheck } from "internal-package-contract/checks/managed-files"
-import { npmScriptCheck } from "internal-package-contract/checks/npm-script"
 import { pinConsistency } from "internal-package-contract/checks/pin-consistency"
 import { proseCheck } from "internal-package-contract/checks/prose"
 import { readmeStructureCheck } from "internal-package-contract/checks/readme-structure"
@@ -111,8 +112,6 @@ import { adrGovernance } from "./checks/adr-governance.js"
 import { coderabbitai } from "./checks/coderabbitai.js"
 import { architecture } from "./checks/architecture.js"
 import { build } from "./checks/build.js"
-import { coverage } from "./checks/coverage.js"
-import { crap } from "./checks/crap.js"
 import { deadCode } from "./checks/dead-code.js"
 import { docs } from "./checks/docs.js"
 import { githubActions } from "./checks/github-actions.js"
@@ -121,7 +120,6 @@ import { mutation } from "./checks/mutation.js"
 import { openssfScorecard } from "./checks/openssf-scorecard.js"
 import { presetCommands } from "./checks/preset-commands.js"
 import { schema } from "./checks/schema.js"
-import { securityDeps } from "./checks/security-deps.js"
 import { securityNetwork } from "./checks/security-network.js"
 import { securitySocket } from "./checks/security-socket.js"
 import { size } from "./checks/size.js"
@@ -136,21 +134,33 @@ import type { AttwReport } from "./src/presets/arethetypeswrong.js"
 import { sbom } from "./src/presets/sbom.js"
 import { evaluateAttwReport } from "./src/presets/arethetypeswrong.js"
 import { readJsonReport } from "./src/presets/shared/read-json-report.js"
+import { AGGREGATE_COVERAGE_FINAL_PATH } from "./scripts/aggregate-coverage-paths.mjs"
+import { COVERAGE_THRESHOLDS } from "./scripts/coverage-thresholds.mjs"
 import {
   bundledDependencies,
   commitlint,
+  coverage,
+  crap,
   distNoUrls,
   duplication,
   format,
   license,
+  npmScript,
   publint,
   quickStart,
+  securityDeps,
   securitySecrets,
   typecheck,
 } from "./src/presets/index.js"
 
 const quickStartCheck = quickStart()
 const [, ...quickStartArgs] = quickStartCheck.run as readonly string[]
+const apiDocsReportCheck = npmScript({
+  script: "docs:api:report",
+  label: "API docs report",
+  mustNotChange: ["docs/api-report"],
+})
+const [, ...apiDocsReportArgs] = apiDocsReportCheck.run as readonly string[]
 
 export default defineRepoContract({
   // repo-contract's own checks are exactly the kind of npm-installed CLI
@@ -170,15 +180,13 @@ export default defineRepoContract({
   checks: {
     // (Writers)
     "suppression-governance": suppressionGovernance,
-    // IPC's generic npm-script factory, wired to this repo's own `docs:api:report` script
-    // (TypeDoc + typedoc-plugin-markdown, reading src/** directly: no dist/ dependency).
-    // `mustNotChange: ["docs/api-report"]` reruns that generation through a hash-diff wrapper and
-    // fails if it regenerates anything, i.e. the committed report is stale. See module doc comment.
-    "api-docs-report": npmScriptCheck({
-      script: "docs:api:report",
-      label: "API docs report",
-      mustNotChange: ["docs/api-report"],
-    }),
+    // The `npmScript` preset on this repository's `docs:api:report` script (TypeDoc reading src/**,
+    // so no dist/ is needed). `mustNotChange` hashes docs/api-report before and after: a change
+    // means the committed report is stale. The command runs from bin/, as `quick-start` does.
+    "api-docs-report": {
+      ...apiDocsReportCheck,
+      run: ["node", "bin/repo-contract.mjs", ...apiDocsReportArgs],
+    },
     // Dogfoods the `sbom` preset: regenerates docs/sbom.cdx.json and docs/sbom.production.cdx.json
     // (CycloneDX 1.6, built from package-lock.json alone) on every run. The generator is
     // deterministic, so an unchanged lockfile gives byte-identical files and the "working tree is
@@ -286,11 +294,26 @@ export default defineRepoContract({
     "test-property": { ...testProperty, isolated: true },
     architecture,
     // GitHub Actions correctness + security via actionlint (see checks/github-actions.ts). A pure
-    // reader: lints `.github/workflows/*` and touches nothing; needs no build, declared here only
+    // reader: lints `.github/workflows/*` and `examples/ci/*` and touches nothing; needs no build, declared here only
     // to keep it in the concurrently-scheduled reader phase.
     "github-actions": githubActions,
-    coverage: { ...coverage, dependsOn: ["test-unit", "test-integration", "test-property"] },
-    crap: { ...crap, dependsOn: ["coverage"] },
+    // The `coverage` preset at this repository's own thresholds. Its `run` merges the three
+    // categories' coverage first (scripts/check-coverage.mjs), because the preset reads one
+    // summary and this repository's coverage is their union (ADR 0005).
+    coverage: {
+      ...coverage({ thresholds: COVERAGE_THRESHOLDS }),
+      run: ["node", "scripts/check-coverage.mjs"],
+      dependsOn: ["test-unit", "test-integration", "test-property"],
+    },
+    // The `crap` preset (CRAP 30, complexity 20) scored against the merged coverage. Its report
+    // goes under coverage/aggregate/, which the `coverage` check has just created.
+    crap: {
+      ...crap({
+        coverage: AGGREGATE_COVERAGE_FINAL_PATH,
+        report: "coverage/aggregate/crap4ts-report.json",
+      }),
+      dependsOn: ["coverage"],
+    },
     "test-e2e": { ...testE2e, isolated: true },
     size,
     duplication: duplication({ path: "src" }),
@@ -374,7 +397,7 @@ export default defineRepoContract({
     },
     docs,
     accessibility,
-    "security-deps": securityDeps(),
+    "security-deps": securityDeps({ registry: ".repo-contract/exceptions/security-deps.json" }),
     "security-secrets": securitySecrets,
     // Reads the build output the Build barrier above just produced: no URL (not even in
     // JSDoc, declarations or sourcemaps) may ship, so supply-chain scanners have nothing to flag.
@@ -453,8 +476,8 @@ export default defineRepoContract({
     "benchmark-guides": benchmarkGuides(),
     "benchmark-complexity": benchmarkComplexityCheck(),
     "security-dev-deps": securityDevDeps(),
-    // Declared last among the readers so its own scheduling barrier (see checks/mutation.ts and
-    // this file's own doc comment) blocks as little else as possible.
+    // Declared last among the readers so its scheduling barrier (see this file's doc comment)
+    // blocks as little else as possible.
     mutation: { ...mutation, dependsOn: ["suppression-governance"] },
   },
 })

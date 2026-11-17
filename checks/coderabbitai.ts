@@ -1,4 +1,8 @@
-import { evaluateExceptionRecord, validateExceptionPolicyConfig } from "../src/helpers/index.js"
+import {
+  evaluateExceptionRecord,
+  validateExceptionPolicyConfig,
+  validateExceptionRegistry,
+} from "../src/helpers/index.js"
 import type { ExceptionClassification } from "../src/helpers/index.js"
 import type {
   CoderabbitEvidence,
@@ -11,7 +15,6 @@ import {
   coderabbitPolicy,
 } from "../scripts/coderabbitai/policy-config.js"
 import { CODERABBIT_EXCEPTION_SCHEMA } from "../scripts/coderabbitai/registry.js"
-import { validateExceptionRegistry } from "../scripts/shared/exception-record.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 

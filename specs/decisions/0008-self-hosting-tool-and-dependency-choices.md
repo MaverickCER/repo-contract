@@ -266,3 +266,12 @@ output under the same `docs/api-report/` directory, with different filenames
   already noted the one accessibility-relevant consequence (TypeDoc's theme renders symbol members as
   `<dl>`/`<div class="tsd-*">`, not the raw, uncaptioned `<table>` markup API Documenter emitted, so
   the representative-table-page accessibility scan this repository used to need no longer applies).
+
+## Amendment (2026-11): `crap` and `coverage` run the published presets
+
+The `crap` check now runs the published `crap` preset (`src/presets/crap.ts`), and
+`checks/crap.ts` is gone. The two numbers above did not change: the preset's defaults are a CRAP
+threshold of 30 and a complexity ceiling of 20, and its policy still compares each function's
+`complexity` itself (`src/presets/rules/crap-report.ts`). It still scores against the merged
+coverage in `coverage/aggregate/`. The `coverage` check runs the `coverage` preset at the
+thresholds in `scripts/coverage-thresholds.mjs`; its `run` merges the three categories first.

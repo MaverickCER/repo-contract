@@ -3,7 +3,7 @@
 ## Status
 
 Accepted. Amends [ADR 0004](0004-public-surface-stays-narrow-no-cli-experimental-presets.md) and
-[ADR 0013](0013-reusable-exception-policy-helper.md).
+[ADR 0013](0013-reusable-exception-policy-helper.md). Amended 2026-11-16 (see the end).
 
 ## Context
 
@@ -33,3 +33,14 @@ most-used surfaces carry no compatibility promise would be misleading.
 - **Promote presets too.** Rejected: their default paths and severities are still being tuned.
 - **Keep both Experimental and pin consumers to exact versions.** Rejected: it leaves the most-used
   surface without a promise and pushes the burden onto every consumer.
+
+## Amendment, 2026-11-16: `helpers` gains the record; `tiers` and `config` are Experimental
+
+- `repo-contract/helpers` stays Stable and gains the v2 exception record, its eight types and
+  three methods, the read-reconcile-write sequence and the exception inventory
+  ([ADR 0013](0013-reusable-exception-policy-helper.md)'s 2026-11-16 amendment). These are
+  permanent: from 1.0 a changed signature or behaviour is a major release.
+- The new `repo-contract/tiers` and `repo-contract/config/*` subpaths are Experimental. Tiers are
+  built from presets, which are still being tuned, and the tool-config helpers are new. Either
+  may change shape, breaking changes included, in a minor or patch release.
+- `VERSIONING.md` and `docs/surface.json` list them that way.

@@ -1,7 +1,7 @@
 import type { PresetCommandsEvidence } from "../scripts/preset-commands/evidence-types.js"
 import { PRESET_COMMAND_EXCEPTION_SCHEMA } from "../scripts/preset-commands/registry.js"
 import { guidanceFor } from "../scripts/preset-commands/review-guidance.js"
-import { validateExceptionRegistry } from "../scripts/shared/exception-record.js"
+import { validateExceptionRegistry } from "../src/helpers/index.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 

@@ -5,7 +5,7 @@ import {
   createPresetCommandStub,
 } from "../../../scripts/preset-commands/registry.js"
 import { derivePresetCommandId } from "../../../scripts/preset-commands/evidence-types.js"
-import { validateExceptionRegistry } from "../../../scripts/shared/exception-record.js"
+import { validateExceptionRegistry } from "../../../src/helpers/index.js"
 
 const validate = (records: readonly unknown[]) =>
   validateExceptionRegistry(records, PRESET_COMMAND_EXCEPTION_SCHEMA)

@@ -43,7 +43,11 @@ the package reaches 1.0 (see [Pre-1.0 status](#pre-10-status) below):
 - **`repo-contract/helpers`** (the whole subpath): the exception-registry and exception-policy
   primitives. These are `loadExceptionRegistry`, `reconcileExceptions`, `writeExceptionRegistry`,
   `evaluateExceptionRecord`, `hashRequirementFields`, `validateExceptionPolicyConfig`, the
-  exception record types and the v2 record fields.
+  exception record types and the v2 record fields. The v2 record's validator
+  (`validateExceptionRegistry`, `exceptionRegistryStandardSchema`), its vocabulary
+  (`EXCEPTION_TYPES`, `EXCEPTION_METHODS`), its persistence (`loadAndReconcileExceptionRegistry`,
+  `reconcileAndPersistExceptionRegistry`) and the inventory (`readExceptionRegistries`,
+  `summarizeExceptionRegistries`, `renderExceptionInventory`) are Stable too.
   - [ADR 0019](specs/decisions/0019-helpers-promoted-presets-stay-experimental.md) promoted them
     from Experimental after a real feedback cycle. `internal-package-contract` builds its whole
     exceptions system on them and needed additive changes only.
@@ -57,13 +61,17 @@ the package reaches 1.0 (see [Pre-1.0 status](#pre-10-status) below):
 ## Experimental
 
 **`repo-contract/presets`** (the whole subpath, including every preset it exports) is an
-Experimental library surface, along with `./affected` and `./metrics` below.
+Experimental library surface, along with `./tiers`, `./config`, `./affected` and `./metrics`
+below.
 
 - Consumers that cannot tolerate a changed preset pin a tilde range: `internal-package-contract`
   uses `~0.15.0`.
 - It is a new pre-1.0 surface shipped before a real feedback cycle, per this section's own stated
   convention (see
   [ADR 0004](specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md)).
+- The `api-contract` check leaves `@beta` exports out of the bump it requires. Every preset, the
+  five tier functions and the five `config/*` helpers are `@beta`, so no gate holds a breaking
+  change to them to a minor.
 - An Experimental surface may change shape, including in a breaking way, in a minor or patch
   release without that being a semver violation. This applies to a preset's TypeScript signature
   and to its runtime behavior:
@@ -79,6 +87,21 @@ or not it would be a semver violation while Experimental:
 - a changed policy interpretation (e.g. a finding that used to fail now warns) → potentially
   major;
 - a bug fix that restores documented behavior → patch or minor depending on impact.
+
+**`repo-contract/tiers`** (the whole subpath) is built from the presets, so it is Experimental with
+them. A tier's checks, order and defaults may change in a minor release while `0.x`. A planned
+check joining a tier is such a change: it can fail a repository that passed before, and its
+changeset says so. The classification rules above apply, and
+[ADR 0025](specs/decisions/0025-four-tiers-each-a-general-rule.md) records why each check sits in
+its tier.
+
+**`repo-contract/config`** and its five tool subpaths (`./config/tsup`, `./config/typedoc`,
+`./config/knip`, `./config/vitest`, `./config/stryker`) are Experimental. Each returns a plain
+object shaped by the tool's current options, and a tool's next major can reshape it.
+
+The `mutation` and `npm-script` commands are Experimental with the presets that run them.
+
+The `explain`, `except` and `exceptions` commands and `init --preset` are Experimental like `init`. `except` writes records in the Stable v2 format that `repo-contract/helpers` validates.
 
 **`repo-contract/affected`** (the whole subpath) and the `affected`, `cache`, `doctor` and
 `merge-mutation` commands (0.12.0) cover scope resolution, the affected-test analysis, the result

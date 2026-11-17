@@ -1,4 +1,8 @@
-import { evaluateExceptionRecord, validateExceptionPolicyConfig } from "../src/helpers/index.js"
+import {
+  evaluateExceptionRecord,
+  validateExceptionPolicyConfig,
+  validateExceptionRegistry,
+} from "../src/helpers/index.js"
 import type { ExceptionClassification } from "../src/helpers/index.js"
 import type {
   NormalizedSocketAlert,
@@ -11,7 +15,6 @@ import {
   socketPolicy,
 } from "../scripts/security-socket/policy-config.js"
 import { SOCKET_EXCEPTION_SCHEMA } from "../scripts/security-socket/registry.js"
-import { validateExceptionRegistry } from "../scripts/shared/exception-record.js"
 import { requireParsedOutput } from "./shared/require-parsed-output.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../src/types.js"
 

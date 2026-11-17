@@ -534,7 +534,7 @@ export default tseslint.config(
     // `flat/recommended`. Its Node-specific correctness and forward-compat checks apply equally to
     // library source, tests, and tooling scripts. `no-missing-import` is off. eslint-plugin-n's
     // resolver produces false positives on existing files throughout this repo, e.g.
-    // checks/coverage.ts's relative import of scripts/coverage-thresholds.mjs. This package's root
+    // repo-contract.config.ts's relative import of scripts/coverage-thresholds.mjs. This package's root
     // `package.json#exports` map appears to leak into how the resolver treats plain relative
     // imports. That map curates only the *published* subpaths, not every internal relative import.
     // import-x's `no-unresolved` (see the import-x blocks above) covers the same "does this import
@@ -622,8 +622,8 @@ export default tseslint.config(
     // might want to catch; don't read ambient env instead of explicit config. None applies to a
     // one-shot script that IS the whole process for a single `npm run` invocation. None applies to
     // test setup/teardown code either. `no-process-exit` in particular is how
-    // scripts/run-mutation.mjs and scripts/run-test-category.mjs propagate a spawned child's exit
-    // code. They do it from inside an `"exit"` event callback, where `throw` can't.
+    // scripts/run-test-category.mjs propagates a spawned child's exit code. It does so from inside
+    // an `"exit"` event callback, where `throw` can't.
     files: ["scripts/**/*.mjs", "scripts/**/*.ts", "test/**/*.ts"],
     plugins: { n },
     rules: {
@@ -671,9 +671,10 @@ export default tseslint.config(
     },
   },
   {
-    // Same narrow carve-out as the scripts/ block above, for the same reason, scoped to four files
-    // in src/helpers/: load-exception-registry.ts, write-exception-registry.ts, file-cache-store.ts
-    // and contract-logs.ts. The registry helpers
+    // Same narrow carve-out as the scripts/ block above, for the same reason, scoped to six files
+    // in src/helpers/: load-exception-registry.ts, write-exception-registry.ts,
+    // persist-exception-registry.ts, exception-inventory.ts, file-cache-store.ts and
+    // contract-logs.ts. The registry helpers
     // (specs/decisions/0013-reusable-exception-policy-helper.md) take a caller-supplied `path`: the
     // calling application's registry-file location, e.g. from its check config. contract-logs.ts
     // writes under the caller's `directory` option, inside the caller's `cwd`. They access these
@@ -693,9 +694,20 @@ export default tseslint.config(
       "src/helpers/load-exception-registry.ts",
       "src/helpers/write-exception-registry.ts",
       "src/helpers/contract-logs.ts",
+      // Both take the caller's registry path or directory, as the two registry helpers above do.
+      "src/helpers/persist-exception-registry.ts",
+      "src/helpers/exception-inventory.ts",
       // The cache directory is the caller's (`.repo-contract/cache` by default). Every path inside
       // it is validated segment by segment: no `..`, absolute, drive or backslash form.
       "src/helpers/file-cache-store.ts",
+      // The `crap` preset's `report` option: crap4ts writes there, and the policy reads it back.
+      "src/presets/crap.ts",
+      // The `mutation` preset reads the Stryker report its own `repo-contract mutation run` names.
+      "src/presets/mutation.ts",
+      // `brokenLinks` asks whether a local link linkinator reported broken exists on disk. The
+      // path comes from the repository's own docs and is checked for no `..`, absolute or drive
+      // form first (localLinkPath in src/presets/rules/link-results.ts).
+      "src/presets/broken-links.ts",
     ],
     plugins: { "secure-coding": secureCoding, security },
     rules: {

@@ -1,6 +1,6 @@
 import type { DeadCodeExceptionRecord, DeadCodeFinding, DeadCodeKind } from "./evidence-types.js"
 import { deriveDeadCodeId } from "./evidence-types.js"
-import type { ExceptionRegistrySchema } from "../shared/exception-record.js"
+import type { ExceptionRegistrySchema } from "../../src/helpers/index.js"
 
 export type { DeadCodeExceptionRecord } from "./evidence-types.js"
 

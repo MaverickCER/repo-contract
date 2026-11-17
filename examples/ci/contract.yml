@@ -1,0 +1,105 @@
+# An example GitHub Actions workflow for a repository on the `strict` tier. Copy it to
+# .github/workflows/contract.yml and adapt it; repo-contract does not keep your copy's pins fresh.
+#
+# Three jobs:
+#   plan      `repo-contract mutation plan --json` sizes the shard matrix: one shard per 64 KiB of
+#             source, at most 256.
+#   mutation  Each shard runs Stryker on its slice and uploads its report.
+#   contract  Merges the shard reports, then runs every check once. The Mutation check judges the
+#             merged report instead of running Stryker again.
+#
+# The contract job reads the merged report through your config, for example:
+#
+#   const report = process.env.MUTATION_REPORT
+#   export default defineRepoContract({
+#     spawn,
+#     env: process.env,
+#     ...strict(report === undefined ? {} : { Mutation: { report } }),
+#   })
+#
+# The actions are pinned by commit SHA, as repo-contract's own workflows pin them.
+# test/unit/docs/example-workflow.test.ts fails when a pin here differs from .github/workflows/.
+
+name: Contract
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      total: ${{ steps.plan.outputs.total }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+          cache: npm
+      - run: npm ci
+      # Exits 1 when the Stryker config cannot be read or selects no file.
+      - id: plan
+        run: |
+          plan="$(npx repo-contract mutation plan --json)"
+          echo "matrix=$(jq -c '.matrix' <<<"$plan")" >> "$GITHUB_OUTPUT"
+          echo "total=$(jq '.count' <<<"$plan")" >> "$GITHUB_OUTPUT"
+
+  mutation:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      # Every shard must report, or the merge step refuses to merge.
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+          cache: npm
+      - run: npm ci
+      # Cold by design: the cache stays off in CI, and the run deletes Stryker's incremental file.
+      - run: npx repo-contract mutation run --shard "${{ matrix.spec }}" --json
+      # The path your Stryker config's jsonReporter writes. repo-contract/config/stryker sets this one.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutation-${{ matrix.shard }}
+          path: reports/mutation/mutation.json
+          if-no-files-found: error
+
+  contract:
+    needs: [plan, mutation]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Commits needs the history to lint every commit on the branch.
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mutation-*
+          path: shards
+      # Fails, and writes nothing, when a shard is missing, repeated or unreadable, or when two
+      # shards mutated the same file.
+      - name: Merge the shard reports
+        env:
+          TOTAL: ${{ needs.plan.outputs.total }}
+        run: |
+          mkdir -p reports/mutation
+          args=()
+          for i in $(seq 1 "$TOTAL"); do args+=("$i=shards/mutation-$i/mutation.json"); done
+          npx repo-contract merge-mutation --total "$TOTAL" --out reports/mutation/merged.json "${args[@]}"
+      - run: npm run contract
+        env:
+          MUTATION_REPORT: reports/mutation/merged.json

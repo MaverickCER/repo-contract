@@ -1,13 +1,13 @@
-import { readFile as readFileFromFs } from "node:fs/promises"
+import { lstat as lstatFromFs, readFile as readFileFromFs } from "node:fs/promises"
 import type { StandardSchemaV1 } from "../standard-schema/types.js"
+import { jsonErrorLocation } from "./registry-file.js"
 
 /**
  * Renders one failed-validation issue as `path: message`, or just `message` when it has no path.
- * That is the same shape `src/parsing/format-schema-issues.ts` produces for `output.schema`
- * failures. It is kept as an independent, much smaller copy here rather than an import.
- * `src/helpers/**` is a second, independent published barrel (see `src/presets/index.ts`'s doc
- * comment on the same point). It deliberately never reaches into `src/parsing/`, an internal layer
- * of the root barrel it has no business depending on.
+ * It is a smaller copy of the shape `src/parsing/format-schema-issues.ts` produces for
+ * `output.schema` failures, kept here rather than imported. `src/helpers/**` is a second
+ * published barrel (see `src/presets/index.ts`'s doc comment on the same point). So it never
+ * reaches into `src/parsing/`, an internal layer of the root barrel.
  * @param issue - one issue from a failed `StandardSchemaV1.Result`.
  * @returns the rendered issue.
  */
@@ -38,6 +38,29 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * The default `isSymlink`: whether `target` is a symbolic link, dangling or not. A missing path is
+ * not one. Any other `lstat` failure is rethrown, so an unreadable path is never taken as safe.
+ * @param target - the path to probe.
+ * @returns `true` for a symbolic link.
+ */
+async function isSymlinkOnDisk(target: string): Promise<boolean> {
+  try {
+    return (await lstatFromFs(target)).isSymbolicLink()
+  } catch (error) {
+    if ((error as { readonly code?: unknown }).code === "ENOENT") return false
+    throw error
+  }
+}
+
+/**
+ * @param error - a caught value, possibly not an `Error`.
+ * @returns its string `message`, or the value as a string.
+ */
+function messageOf(error: unknown): string {
+  return isPlainObject(error) && typeof error.message === "string" ? error.message : String(error)
+}
+
+/**
  * Reads and validates one exception registry file from disk: `path -> { "$schema"?: string,
  * "exceptions": T[] }`, in two independently-validated layers. This function owns only the
  * envelope. The file exists or is absent (a normal empty-registry state), parses as JSON, and is
@@ -63,6 +86,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
  * @param input.path - The registry file's path, passed to `input.readFile` verbatim.
  * @param input.schema - Validates (and may transform) the envelope's `exceptions` array once the envelope checks pass.
  * @param input.readFile - Reads `input.path`'s content. Defaults to `node:fs/promises`' `readFile(path, "utf8")`.
+ * @param input.isSymlink - Whether `input.path` is a symbolic link. Defaults to `lstat`, with a missing path not a link. A link is refused, never followed: it could lead out of the registry directory.
  * @returns Every valid record (`ok: true`), or every problem found reading/parsing/validating the file (`ok: false`).
  * @public
  */
@@ -70,12 +94,29 @@ export async function loadExceptionRegistry<T>(input: {
   readonly path: string
   readonly schema: StandardSchemaV1<unknown, readonly T[]>
   readonly readFile?: (path: string) => Promise<string>
+  readonly isSymlink?: (path: string) => Promise<boolean>
 }): Promise<{ ok: true; records: readonly T[] } | { ok: false; errors: readonly string[] }> {
   const {
     path,
     schema,
     readFile = async (target: string) => (await readFileFromFs(target)).toString(),
+    isSymlink = isSymlinkOnDisk,
   } = input
+
+  let linked: boolean
+  try {
+    linked = await isSymlink(path)
+  } catch (error) {
+    return { ok: false, errors: [`Could not read ${path}: ${messageOf(error)}`] }
+  }
+  if (linked) {
+    return {
+      ok: false,
+      errors: [
+        `${path} is a symbolic link. An exception registry must be a regular file, and a link is never followed.`,
+      ],
+    }
+  }
 
   let raw: string
   try {
@@ -88,16 +129,15 @@ export async function loadExceptionRegistry<T>(input: {
     // promises for every other failure. `isPlainObject` narrows first.
     const code = isPlainObject(error) ? error.code : undefined
     if (code === "ENOENT") return { ok: true, records: [] }
-    const message =
-      isPlainObject(error) && typeof error.message === "string" ? error.message : String(error)
-    return { ok: false, errors: [`Could not read ${path}: ${message}`] }
+    return { ok: false, errors: [`Could not read ${path}: ${messageOf(error)}`] }
   }
 
   let parsed: unknown
   try {
     parsed = JSON.parse(raw)
   } catch (error) {
-    return { ok: false, errors: [`${path} is not valid JSON: ${(error as Error).message}`] }
+    // Only the location: V8's message quotes the bytes around the fault.
+    return { ok: false, errors: [`${path} is not valid JSON${jsonErrorLocation(error)}.`] }
   }
 
   if (!isPlainObject(parsed)) {

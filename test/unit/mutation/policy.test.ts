@@ -7,13 +7,26 @@ import type {
 } from "../../../scripts/suppression-governance/evidence-types.js"
 import type { CheckEvidence, Evidence, PolicyContext } from "../../../src/types.js"
 
-// Same real-fs-collision rationale as test/unit/presets/duplication.test.ts. The mutation policy
-// reads a fixed relative path with no injectable cwd. This repository's `mutation` check touches
-// that same path concurrently during `npm run contract`. test/unit/presets/security-secrets.test.ts
-// has the same constraint: it reads its JSON report via the same dynamic
-// `import("node:fs/promises")` that `checks/mutation.ts` uses.
-const { readFile } = vi.hoisted(() => ({ readFile: vi.fn() }))
-vi.mock("node:fs/promises", () => ({ readFile }))
+// The wrapper and the preset under it read the Stryker report, and the preset reads the mutation
+// registry, through node:fs/promises. The real files are what `npm run contract` writes, so a
+// test must never touch them.
+// The registry loader probes for a symbolic link first; here no path exists to be one.
+const { readFile, lstat } = vi.hoisted(() => ({
+  readFile: vi.fn(),
+  lstat: () => Promise.reject(Object.assign(new Error("ENOENT"), { code: "ENOENT" })),
+}))
+vi.mock("node:fs/promises", () => ({ readFile, lstat }))
+
+const REPORT = "reports/mutation/mutation.json"
+
+/** Serves `report` at the report path; every other file, the registry included, is missing. */
+function serveReport(report: unknown): void {
+  readFile.mockImplementation((file: string) =>
+    file === REPORT
+      ? Promise.resolve(JSON.stringify(report))
+      : Promise.reject(Object.assign(new Error(`ENOENT: ${file}`), { code: "ENOENT" })),
+  )
+}
 
 beforeEach(() => {
   readFile.mockReset()
@@ -21,7 +34,7 @@ beforeEach(() => {
 
 function fakeCheckEvidence(overrides: Partial<CheckEvidence> = {}): CheckEvidence {
   return {
-    command: "tool",
+    command: "node",
     args: [],
     startedAt: "2026-01-01T00:00:00.000Z",
     completedAt: "2026-01-01T00:00:01.000Z",
@@ -35,10 +48,26 @@ function fakeCheckEvidence(overrides: Partial<CheckEvidence> = {}): CheckEvidenc
   }
 }
 
-function contextWithDependencies(
-  dependencies: Readonly<Record<string, CheckEvidence>>,
+function runReport(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    state: "ran",
+    report: REPORT,
+    exitCode: 0,
+    shard: null,
+    mutate: null,
+    timeouts: { rerun: 0, caught: 0 },
+    inputs: null,
+    message: "Stryker ran every mutant cold.",
+    ...overrides,
+  }
+}
+
+function context(
+  dependencies: Readonly<Record<string, CheckEvidence>> = {},
+  run: unknown = runReport(),
 ): PolicyContext {
-  const result = fakeCheckEvidence()
+  const result = fakeCheckEvidence({ output: { format: "json", success: true, value: run } })
   const evidence: Evidence = {
     version: 1,
     startedAt: result.startedAt,
@@ -123,235 +152,156 @@ function fullyJustifiedPair(): {
   return { finding, record: strykerRecord(finding) }
 }
 
-function strykerReport(mutants: readonly Record<string, unknown>[], source = ""): unknown {
+const SOURCE = "export const x = a ? b : c\n"
+
+function strykerReport(mutants: readonly Record<string, unknown>[]): unknown {
   return {
     schemaVersion: "1",
-    files: { "src/example.ts": { language: "typescript", source, mutants } },
+    files: { "src/example.ts": { language: "typescript", source: SOURCE, mutants } },
   }
 }
 
-function killedMutant(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+function mutant(status: string, overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
-    id: 1,
+    id: "1",
     mutatorName: "ConditionalExpression",
     replacement: "true",
-    status: "Killed",
+    status,
+    testsCompleted: 1,
+    location: { start: { line: 1, column: 18 }, end: { line: 1, column: 27 } },
     ...overrides,
   }
 }
 
-function commentIgnoredMutant(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  return {
-    id: 2,
-    mutatorName: "ConditionalExpression",
-    replacement: "true",
-    status: "Ignored",
-    statusReason: "Ignored using a comment",
-    ...overrides,
-  }
-}
+const commentIgnored = (): Record<string, unknown> =>
+  mutant("Ignored", { id: "2", statusReason: "Ignored using a comment" })
 
-describe("mutation policy", () => {
-  it("fails when Stryker did not produce its expected JSON report", async () => {
-    readFile.mockRejectedValue(new Error("ENOENT"))
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("did not produce its expected JSON report")
+const justified = (): Record<string, CheckEvidence> => ({
+  "suppression-governance": suppressionGovernanceEvidence({ pairs: [fullyJustifiedPair()] }),
+})
+
+describe("repo-contract's own mutation check: the preset at 100 plus two private rules", () => {
+  it("runs the preset's command from bin/, at a score floor of 100, against stryker.config.mjs", () => {
+    expect(mutation.run).toEqual([
+      "node",
+      "bin/repo-contract.mjs",
+      "mutation",
+      "run",
+      "--json",
+      "--cache",
+      "off",
+      "--confirm-timeouts",
+      "5",
+      "--config",
+      "stryker.config.mjs",
+    ])
+    expect(mutation.isolated).toBe(true)
+    expect(mutation.output).toEqual({ format: "json" })
   })
 
-  it("fails when the report file contains invalid JSON", async () => {
-    readFile.mockResolvedValue("not json")
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("invalid JSON evidence")
-  })
-
-  it("fails with a clear rationale, instead of throwing, when the report has no files object", async () => {
-    readFile.mockResolvedValue(JSON.stringify({ schemaVersion: "1" }))
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain('"files" object')
-  })
-
-  it("fails with a clear rationale, instead of throwing, when the report's files field is null", async () => {
-    readFile.mockResolvedValue(JSON.stringify({ schemaVersion: "1", files: null }))
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain('"files" object')
-  })
-
-  it("fails when Stryker produced no mutants", async () => {
-    readFile.mockResolvedValue(JSON.stringify(strykerReport([])))
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Stryker produced no mutants")
-  })
-
-  it("passes on killed mutants alone: the suppression gate is skipped entirely with no comment-ignored mutants", async () => {
-    readFile.mockResolvedValue(JSON.stringify(strykerReport([killedMutant()])))
-    const result = await mutation.policy(contextWithDependencies({}))
+  it("passes on killed mutants alone, with the preset's own rationale", async () => {
+    serveReport(strykerReport([mutant("Killed")]))
+    const result = await mutation.policy(context())
     expect(result.outcome).toBe("pass")
+    expect(result.rationale).toContain("score 100.00% of 1 scored mutants (minimum 100%)")
   })
 
-  it("fails on a Survived mutant regardless of the suppression gate", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([{ id: 3, mutatorName: "X", replacement: "y", status: "Survived" }]),
-      ),
-    )
-    const result = await mutation.policy(contextWithDependencies({}))
+  it("fails a single survivor: the floor is 100", async () => {
+    serveReport(strykerReport([mutant("Killed"), mutant("Survived", { id: "3" })]))
+    const result = await mutation.policy(context())
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Survived")
+    expect(result.rationale).toContain("Below the minimum score of 100%")
   })
 
-  it("inlines the real original line alongside the mutated replacement for a Survived mutant, not the replacement alone", async () => {
-    const source = [
-      "export function add(a: number, b: number): number {",
-      "  return a + b",
-      "}",
-    ].join("\n")
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport(
-          [
-            {
-              id: 3,
-              mutatorName: "ArithmeticOperator",
-              replacement: "a - b",
-              status: "Survived",
-              location: { start: { line: 2, column: 10 }, end: { line: 2, column: 15 } },
-            },
-          ],
-          source,
-        ),
-      ),
+  it("accepts a static mutant without consulting the suppression gate", async () => {
+    serveReport(
+      strykerReport([
+        mutant("Killed"),
+        mutant("Ignored", {
+          id: "7",
+          statusReason: 'Static mutant (and "ignoreStatic" was enabled)',
+        }),
+      ]),
     )
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.rationale).toContain("src/example.ts:2:10")
-    expect(result.rationale).toContain("`return a + b` → `a - b`")
+    const result = await mutation.policy(context())
+    expect(result.outcome).toBe("pass")
+    expect(result.rationale).toContain("static, skipped by ignoreStatic")
   })
 
-  it("falls back to the replacement alone when a mutant's location is out of the file's real line range", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport(
-          [
-            {
-              id: 3,
-              mutatorName: "X",
-              replacement: "y",
-              status: "Survived",
-              location: { start: { line: 999, column: 1 }, end: { line: 999, column: 2 } },
-            },
-          ],
-          "one line only",
-        ),
-      ),
+  it("fails an Ignored mutant left out for any other reason, naming it and its reason", async () => {
+    serveReport(
+      strykerReport([
+        mutant("Killed"),
+        mutant("Ignored", { id: "8", statusReason: "Excluded by mutator.excludedMutations" }),
+      ]),
     )
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.rationale).toContain("- src/example.ts:999:1 (X: y)")
-  })
-
-  it("tells the reader what to do for each failing category: Survived, No coverage, and Timed out each get their own actionable instruction, not just a bare label", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([
-          { id: 3, mutatorName: "X", replacement: "y", status: "Survived" },
-          { id: 7, mutatorName: "X", replacement: "y", status: "NoCoverage" },
-          { id: 8, mutatorName: "X", replacement: "y", status: "Timeout" },
-        ]),
-      ),
-    )
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.rationale).toContain("add or strengthen a test that exercises this exact line")
-    expect(result.rationale).toContain("add a test that executes this code path")
-    expect(result.rationale).toContain("add a test that would fail fast against it")
-  })
-
-  it("fails on an Ignored mutant whose statusReason is not the comment-ignore marker", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([
-          {
-            id: 4,
-            mutatorName: "X",
-            replacement: "y",
-            status: "Ignored",
-            statusReason: "Ignored because of excludedMutations config",
-          },
-        ]),
-      ),
-    )
-    const result = await mutation.policy(contextWithDependencies({}))
+    const result = await mutation.policy(context(justified()))
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Unjustified ignores")
+    expect(result.rationale).toContain("Ignored without a reviewed reason (1)")
+    expect(result.rationale).toContain(
+      'src/example.ts:1:18 [ConditionalExpression] "a ? b : c" -> "true" (Excluded by mutator.excludedMutations)',
+    )
   })
 
-  it("accepts RuntimeError and CompileError mutants", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([
-          { id: 5, mutatorName: "X", replacement: "y", status: "RuntimeError" },
-          { id: 6, mutatorName: "X", replacement: "y", status: "CompileError" },
-        ]),
-      ),
-    )
-    const result = await mutation.policy(contextWithDependencies({}))
+  it("fails an Ignored mutant with no reason at all", async () => {
+    serveReport(strykerReport([mutant("Killed"), mutant("Ignored", { id: "9" })]))
+    const result = await mutation.policy(context())
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("(no reason given)")
+  })
+
+  it("accepts a comment-ignored mutant when every Stryker-domain record is fully justified", async () => {
+    serveReport(strykerReport([mutant("Killed"), commentIgnored()]))
+    const result = await mutation.policy(context(justified()))
     expect(result.outcome).toBe("pass")
+    expect(result.rationale).toContain("ignored by a Stryker disable comment")
   })
 
-  it("accepts a static mutant skipped by the config-level ignoreStatic option, without consulting the suppression gate", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([
-          killedMutant(),
-          {
-            id: 7,
-            mutatorName: "X",
-            replacement: "y",
-            status: "Ignored",
-            statusReason: 'Static mutant (and "ignoreStatic" was enabled)',
-          },
-        ]),
-      ),
-    )
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.outcome).toBe("pass")
-    expect(result.rationale).toContain("1 Static (ignoreStatic)")
-    expect(result.rationale).not.toContain("Unjustified ignores")
-  })
-
-  it("accepts a comment-ignored mutant when every Stryker-domain registry record is fully justified", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
-    )
-    const dependencies = {
-      "suppression-governance": suppressionGovernanceEvidence({ pairs: [fullyJustifiedPair()] }),
-    }
-    const result = await mutation.policy(contextWithDependencies(dependencies))
-    expect(result.outcome).toBe("pass")
-  })
-
-  it("rejects a comment-ignored mutant when a Stryker-domain registry record is under-justified, naming it", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
-    )
+  it("rejects a comment-ignored mutant when a Stryker-domain record is under-justified, naming it", async () => {
+    serveReport(strykerReport([mutant("Killed"), commentIgnored()]))
     const finding = strykerFinding()
     const dependencies = {
       "suppression-governance": suppressionGovernanceEvidence({
         pairs: [{ finding, record: strykerRecord(finding, { justification: "" }) }],
       }),
     }
-    const result = await mutation.policy(contextWithDependencies(dependencies))
+    const result = await mutation.policy(context(dependencies))
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Stryker suppressions")
+    expect(result.rationale).toContain("Under-justified or stale Stryker suppressions (1):")
     expect(result.rationale).toContain("src/example.ts:10")
   })
 
-  it("ignores a non-stryker registry record entirely, even if under-justified", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
+  it("rejects a comment-ignored mutant when a Stryker-domain record is stale", async () => {
+    serveReport(strykerReport([mutant("Killed"), commentIgnored()]))
+    const stale = strykerRecord(strykerFinding({ line: 77 }))
+    const dependencies = {
+      "suppression-governance": suppressionGovernanceEvidence({
+        pairs: [fullyJustifiedPair()],
+        stale: [stale],
+      }),
+    }
+    const result = await mutation.policy(context(dependencies))
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain(
+      `- stale: ${JSON.stringify(stale.id)} (directive gone; delete this entry)`,
     )
+  })
+
+  it("does not judge a stale record of another domain", async () => {
+    serveReport(strykerReport([mutant("Killed"), commentIgnored()]))
+    const stale = strykerRecord(strykerFinding({ line: 77 }), { domain: "eslint" })
+    const dependencies = {
+      "suppression-governance": suppressionGovernanceEvidence({
+        pairs: [fullyJustifiedPair()],
+        stale: [stale],
+      }),
+    }
+    const result = await mutation.policy(context(dependencies))
+    expect(result.outcome).toBe("pass")
+  })
+
+  it("ignores an under-justified record of another domain", async () => {
+    serveReport(strykerReport([mutant("Killed"), commentIgnored()]))
     const finding = strykerFinding({
       domain: "eslint",
       rule: ["no-console"],
@@ -365,29 +315,49 @@ describe("mutation policy", () => {
         ],
       }),
     }
-    const result = await mutation.policy(contextWithDependencies(dependencies))
+    const result = await mutation.policy(context(dependencies))
     expect(result.outcome).toBe("pass")
   })
 
-  it("rejects a comment-ignored mutant when suppression-governance's dependency evidence is missing entirely", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
-    )
-    const result = await mutation.policy(contextWithDependencies({}))
+  it("rejects a comment-ignored mutant when suppression-governance left no evidence", async () => {
+    serveReport(strykerReport([mutant("Killed"), commentIgnored()]))
+    const result = await mutation.policy(context())
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Stryker suppression registry unverifiable")
+    expect(result.rationale).toContain(
+      "Stryker suppression registry unverifiable: suppression-governance produced no usable evidence.",
+    )
   })
 
-  it("fails specifically because of an unrelated, under-justified Stryker record: proving a true global gate, not an incidental per-mutant match", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
+  it("rejects a comment-ignored mutant when suppression-governance's output did not parse", async () => {
+    serveReport(strykerReport([mutant("Killed"), commentIgnored()]))
+    const dependencies = {
+      "suppression-governance": fakeCheckEvidence({
+        output: { format: "json", success: false, error: "Unexpected token" },
+      }),
+    }
+    const result = await mutation.policy(context(dependencies))
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain("produced no usable evidence")
+  })
+
+  it("rejects a comment-ignored mutant when suppression-governance's evidence is ok: false", async () => {
+    serveReport(strykerReport([mutant("Killed"), commentIgnored()]))
+    const dependencies = {
+      "suppression-governance": suppressionGovernanceEvidence({
+        ok: false,
+        error: ".repo-contract/exceptions/disable-comments.json failed validation.",
+      }),
+    }
+    const result = await mutation.policy(context(dependencies))
+    expect(result.outcome).toBe("fail")
+    expect(result.rationale).toContain(
+      "Stryker suppression registry unverifiable: .repo-contract/exceptions/disable-comments.json failed validation.",
     )
-    // Fully justified, at the exact location of the reported comment-ignored mutant.
-    const related = fullyJustifiedPair()
-    // Insufficient, and deliberately at a different file/line, unrelated to the reported mutant:
-    // Stryker's own report gives no per-mutant back-reference to a specific disable comment, so
-    // this must still fail the whole check.
-    const unrelatedFinding = strykerFinding({
+  })
+
+  it("gates globally: an unrelated under-justified Stryker record fails the run", async () => {
+    serveReport(strykerReport([mutant("Killed"), commentIgnored()]))
+    const unrelated = strykerFinding({
       file: "src/unrelated-other-file.ts",
       line: 999,
       content: "Stryker disable next-line ConditionalExpression -- unrelated reason",
@@ -396,132 +366,77 @@ describe("mutation policy", () => {
     const dependencies = {
       "suppression-governance": suppressionGovernanceEvidence({
         pairs: [
-          related,
-          {
-            finding: unrelatedFinding,
-            record: strykerRecord(unrelatedFinding, { justification: "" }),
-          },
+          fullyJustifiedPair(),
+          { finding: unrelated, record: strykerRecord(unrelated, { justification: "" }) },
         ],
       }),
     }
-    const result = await mutation.policy(contextWithDependencies(dependencies))
+    const result = await mutation.policy(context(dependencies))
     expect(result.outcome).toBe("fail")
-    // The unrelated record must be named: not merely that *something* failed.
     expect(result.rationale).toContain("src/unrelated-other-file.ts:999")
-    // And the fully-justified record must not itself be flagged as an offender.
     expect(result.rationale).not.toContain("src/example.ts:10")
   })
 
-  it("rejects a comment-ignored mutant when suppression-governance's own evidence is ok: false", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(strykerReport([killedMutant(), commentIgnoredMutant()])),
-    )
-    const dependencies = {
-      "suppression-governance": suppressionGovernanceEvidence({
-        ok: false,
-        error: ".repo-contract/exceptions/disable-comments.json failed validation.",
-      }),
-    }
-    const result = await mutation.policy(contextWithDependencies(dependencies))
+  it("keeps the preset's failure and adds its own when both fail", async () => {
+    serveReport(strykerReport([mutant("Survived", { id: "3" }), mutant("Ignored", { id: "8" })]))
+    const result = await mutation.policy(context())
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Stryker suppression registry unverifiable")
+    expect(result.rationale).toContain("Below the minimum score of 100%")
+    expect(result.rationale).toContain("Ignored without a reviewed reason (1)")
   })
 
-  it("fails on a NoCoverage mutant regardless of the suppression gate", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([{ id: 7, mutatorName: "X", replacement: "y", status: "NoCoverage" }]),
-      ),
+  it("returns the preset's verdict untouched, reading nothing, when the run reported an error", async () => {
+    const result = await mutation.policy(
+      context({}, runReport({ state: "error", message: "Stryker could not start." })),
     )
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("No coverage")
-    expect(result.rationale).toContain("1 No coverage")
+    expect(result).toEqual({ outcome: "fail", rationale: "Mutation: Stryker could not start." })
+    expect(readFile).not.toHaveBeenCalled()
   })
 
-  it("fails on a Timeout mutant regardless of the suppression gate", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([{ id: 8, mutatorName: "X", replacement: "y", status: "Timeout" }]),
-      ),
+  it("returns the preset's pass untouched when there was nothing to mutate", async () => {
+    const result = await mutation.policy(
+      context({}, runReport({ state: "nothing-to-mutate", message: "Nothing to mutate." })),
     )
-    const result = await mutation.policy(contextWithDependencies({}))
-    expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Timed out")
-    expect(result.rationale).toContain("1 Timed out")
+    expect(result).toEqual({ outcome: "pass", rationale: "Mutation: Nothing to mutate." })
+    expect(readFile).not.toHaveBeenCalled()
   })
 
-  it("fails on a mutant status this policy does not recognize, rather than silently accepting it", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([
-          // The type declares this value as a StrykerMutantStatus, but the runtime JSON isn't
-          // trusted to match: see this file's KNOWN_MUTANT_STATUSES comment.
-          { id: 9, mutatorName: "X", replacement: "y", status: "Pending" },
-        ]),
-      ),
-    )
-    const result = await mutation.policy(contextWithDependencies({}))
+  it("returns the preset's verdict when the command printed no run report", async () => {
+    const result = await mutation.policy(context({}, { schemaVersion: 2 }))
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Unexpected statuses")
-    expect(result.rationale).toContain("1 Unknown")
+    expect(result.rationale).toContain("printed an invalid report")
+    expect(readFile).not.toHaveBeenCalled()
   })
 
-  it("renders a mutant's exact file:line:column when its report entry carries a location", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([
-          {
-            id: 10,
-            mutatorName: "ConditionalExpression",
-            replacement: "false",
-            status: "Survived",
-            location: { start: { line: 42, column: 7 }, end: { line: 42, column: 12 } },
-          },
-        ]),
-      ),
-    )
-    const result = await mutation.policy(contextWithDependencies({}))
+  it("returns the preset's verdict when the report cannot be read", async () => {
+    serveReport(undefined)
+    readFile.mockRejectedValue(Object.assign(new Error("ENOENT"), { code: "ENOENT" }))
+    const result = await mutation.policy(context())
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("src/example.ts:42:7")
+    expect(result.rationale).toBe(`Mutation: cannot read the Stryker report ${REPORT}.`)
   })
 
-  it("falls back to the bare file path when a mutant's report entry carries no location", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([{ id: 11, mutatorName: "X", replacement: "y", status: "Survived" }]),
-      ),
+  it("fails when the run judged a report other than the one stryker.config.mjs writes", async () => {
+    readFile.mockImplementation((file: string) =>
+      file === "elsewhere.json"
+        ? Promise.resolve(JSON.stringify(strykerReport([mutant("Killed")])))
+        : Promise.reject(Object.assign(new Error(`ENOENT: ${file}`), { code: "ENOENT" })),
     )
-    const result = await mutation.policy(contextWithDependencies({}))
+    const result = await mutation.policy(
+      context({}, runReport({ state: "adopted", report: "elsewhere.json" })),
+    )
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("src/example.ts (X: y)")
+    expect(result.rationale).toContain(
+      `The run judged elsewhere.json, not ${REPORT}, so its ignored mutants cannot be checked.`,
+    )
   })
 
-  it("computes the exact mutation score from Killed/RuntimeError/CompileError against every applicable mutant", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(
-        strykerReport([
-          killedMutant({ id: 12 }),
-          { id: 13, mutatorName: "X", replacement: "y", status: "Survived" },
-        ]),
-      ),
-    )
-    const result = await mutation.policy(contextWithDependencies({}))
+  it("returns the preset's verdict when the report has no files object", async () => {
+    serveReport({ schemaVersion: "1" })
+    const result = await mutation.policy(context())
     expect(result.outcome).toBe("fail")
-    expect(result.rationale).toContain("Detected mutation score: 50.00% (2 Total).")
-  })
-
-  it("excludes a justified comment-ignored mutant from the score's denominator, not just its numerator", async () => {
-    readFile.mockResolvedValue(
-      JSON.stringify(strykerReport([killedMutant({ id: 14 }), commentIgnoredMutant({ id: 15 })])),
+    expect(result.rationale).toBe(
+      'Mutation: The mutation report is not an object with a "files" object.',
     )
-    const dependencies = {
-      "suppression-governance": suppressionGovernanceEvidence({ pairs: [fullyJustifiedPair()] }),
-    }
-    const result = await mutation.policy(contextWithDependencies(dependencies))
-    expect(result.outcome).toBe("pass")
-    // The score is 1 Killed / 1 applicable, because the Ignored mutant is excluded from
-    // applicableMutants. Counting it in the denominator would read 50.00%, not 100.00%.
-    expect(result.rationale).toContain("Detected mutation score: 100.00% (2 Total).")
   })
 })

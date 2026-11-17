@@ -1,5 +1,17 @@
 import { spawnSync } from "node:child_process"
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import {
+  existsSync,
+  linkSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { Ajv } from "ajv"
@@ -39,6 +51,63 @@ describe("sbom preset: run", () => {
     }).run as readonly string[]
     expect(run.slice(3)).toEqual(["lock.json", "out/full.json", "", "write"])
     expect((sbom({ productionOutput: "p.json" }).run as readonly string[])[5]).toBe("p.json")
+  })
+
+  it.each([
+    ["output", 42, "42"],
+    ["output", "", '""'],
+    ["lockfile", "", '""'],
+    ["lockfile", null, "null"],
+    ["productionOutput", "", '""'],
+    ["productionOutput", 7, "7"],
+  ])("throws RangeError when the config loads, on a %s of %j", (option, value, shown) => {
+    expect(() => sbom({ [option]: value })).toThrow(
+      new RangeError(`sbom: ${option} must be a non-empty path, got ${shown}.`),
+    )
+  })
+
+  it.each([
+    ["a string", "yes", '"yes"'],
+    ["a number", 1, "1"],
+    ["null", null, "null"],
+  ])("throws RangeError when the config loads, on a write that is %s", (_label, write, shown) => {
+    expect(() => sbom({ write } as unknown as SbomOptions)).toThrow(
+      new RangeError(`sbom: write must be true or false, got ${shown}.`),
+    )
+  })
+
+  it.each([
+    ["null", null, "null"],
+    ["a string", "docs", '"docs"'],
+    ["a list", [], "a list"],
+  ])("throws TypeError when the config loads, on options that are %s", (_label, options, shown) => {
+    expect(() => sbom(options as unknown as SbomOptions)).toThrow(
+      new TypeError(`sbom: options must be an object, got ${shown}.`),
+    )
+  })
+
+  it.each([
+    ["output", { output: "package-lock.json" }, "package-lock.json"],
+    ["output", { output: "./package-lock.json" }, "./package-lock.json"],
+    [
+      "productionOutput",
+      { productionOutput: "docs/../package-lock.json" },
+      "docs/../package-lock.json",
+    ],
+    ["output", { lockfile: "lock/a.json", output: "lock//a.json" }, "lock//a.json"],
+  ])(
+    "throws RangeError when the config loads, on a %s that is the lockfile: %j",
+    (option, options, shown) => {
+      expect(() => sbom(options)).toThrow(
+        new RangeError(
+          `sbom: ${option} must name a file other than the lockfile, got ${JSON.stringify(shown)}.`,
+        ),
+      )
+    },
+  )
+
+  it("accepts an output beside the lockfile with a similar name", () => {
+    expect(() => sbom({ output: "package-lock.json.cdx.json" })).not.toThrow()
   })
 })
 
@@ -625,6 +694,192 @@ describe("sbom preset: generator (write mode)", () => {
   })
 })
 
+describe("sbom preset: generator (write mode stays inside the project)", () => {
+  const CANARY = "canary: must stay unchanged\n"
+
+  /** A directory outside every workspace, holding one canary file. */
+  function outside(): string {
+    const dir = mkdtempSync(path.join(tmpdir(), "rc-sbom-outside-"))
+    dirs.push(dir)
+    writeFileSync(path.join(dir, "canary.json"), CANARY)
+    return dir
+  }
+
+  /** Runs the generator and returns its exit status and parsed report. */
+  function attempt(cwd: string, options: SbomOptions): { status: number | null; report: unknown } {
+    const [command, ...args] = sbom({ write: true, ...options }).run as readonly string[]
+    const child = spawnSync(command ?? "node", args, { cwd, encoding: "utf8" })
+    expect(child.stderr).toBe("")
+    return { status: child.status, report: JSON.parse(child.stdout) as unknown }
+  }
+
+  const refused = (error: string) => ({ status: 1, report: { ok: false, error } })
+
+  it("refuses an output that is a symbolic link to a file outside, and writes nothing", () => {
+    const dir = workspace()
+    const away = outside()
+    mkdirSync(path.join(dir, "docs"))
+    symlinkSync(path.join(away, "canary.json"), path.join(dir, "docs/sbom.cdx.json"))
+    expect(attempt(dir, {})).toStrictEqual(
+      refused('Refused to write output "docs/sbom.cdx.json": it is a symbolic link.'),
+    )
+    expect(read(away, "canary.json")).toBe(CANARY)
+    expect(lstatSync(path.join(dir, "docs/sbom.cdx.json")).isSymbolicLink()).toBe(true)
+    expect(readdirSync(path.join(dir, "docs"))).toEqual(["sbom.cdx.json"])
+  })
+
+  it("refuses a symbolic-link productionOutput before writing output", () => {
+    const dir = workspace()
+    const away = outside()
+    mkdirSync(path.join(dir, "docs"))
+    symlinkSync(path.join(away, "canary.json"), path.join(dir, "docs/prod.json"))
+    expect(attempt(dir, { productionOutput: "docs/prod.json" })).toStrictEqual(
+      refused('Refused to write productionOutput "docs/prod.json": it is a symbolic link.'),
+    )
+    expect(read(away, "canary.json")).toBe(CANARY)
+    expect(readdirSync(path.join(dir, "docs"))).toEqual(["prod.json"])
+  })
+
+  it("refuses when docs/ is a symbolic link to a directory outside, and writes nothing there", () => {
+    const dir = workspace()
+    const away = outside()
+    symlinkSync(away, path.join(dir, "docs"))
+    const target = path.join(realpathSync(away), "sbom.cdx.json")
+    expect(attempt(dir, {})).toStrictEqual(
+      refused(
+        `Refused to write output "docs/sbom.cdx.json": it resolves to ${JSON.stringify(target)}, outside the project.`,
+      ),
+    )
+    expect(readdirSync(away)).toEqual(["canary.json"])
+    expect(read(away, "canary.json")).toBe(CANARY)
+  })
+
+  it("refuses a path that climbs out of the project with ..", () => {
+    const dir = workspace()
+    const away = outside()
+    const escape = path.relative(dir, path.join(away, "escape.json"))
+    const target = path.join(realpathSync(away), "escape.json")
+    expect(attempt(dir, { productionOutput: null, output: escape })).toStrictEqual(
+      refused(
+        `Refused to write output ${JSON.stringify(escape)}: it resolves to ${JSON.stringify(target)}, outside the project.`,
+      ),
+    )
+    expect(readdirSync(away)).toEqual(["canary.json"])
+  })
+
+  it("refuses an absolute output that is the lockfile, and leaves the lockfile as it was", () => {
+    const dir = workspace()
+    const before = read(dir, "package-lock.json")
+    const output = path.join(dir, "package-lock.json")
+    expect(attempt(dir, { output, productionOutput: null })).toStrictEqual(
+      refused(`Refused to write output ${JSON.stringify(output)}: it is the lockfile.`),
+    )
+    expect(read(dir, "package-lock.json")).toBe(before)
+  })
+
+  it("refuses a productionOutput that is the file a symlinked lockfile points to", () => {
+    const dir = workspace()
+    const before = read(dir, "package-lock.json")
+    symlinkSync("package-lock.json", path.join(dir, "lock.json"))
+    expect(
+      attempt(dir, { lockfile: "lock.json", productionOutput: "package-lock.json" }),
+    ).toStrictEqual(
+      refused('Refused to write productionOutput "package-lock.json": it is the lockfile.'),
+    )
+    expect(read(dir, "package-lock.json")).toBe(before)
+    expect(existsSync(path.join(dir, "docs"))).toBe(false)
+  })
+
+  it("refuses an output that is a hard link to the lockfile, and writes nothing", () => {
+    const dir = workspace()
+    const before = read(dir, "package-lock.json")
+    mkdirSync(path.join(dir, "docs"))
+    linkSync(path.join(dir, "package-lock.json"), path.join(dir, "docs/sbom.cdx.json"))
+    expect(attempt(dir, {})).toStrictEqual(
+      refused('Refused to write output "docs/sbom.cdx.json": it is the lockfile.'),
+    )
+    expect(read(dir, "package-lock.json")).toBe(before)
+    expect(lstatSync(path.join(dir, "docs/sbom.cdx.json")).nlink).toBe(2)
+    expect(readdirSync(path.join(dir, "docs"))).toEqual(["sbom.cdx.json"])
+  })
+
+  it("refuses a productionOutput that is a hard link to the lockfile, before writing output", () => {
+    const dir = workspace()
+    const before = read(dir, "package-lock.json")
+    linkSync(path.join(dir, "package-lock.json"), path.join(dir, "prod.json"))
+    expect(attempt(dir, { productionOutput: "prod.json" })).toStrictEqual(
+      refused('Refused to write productionOutput "prod.json": it is the lockfile.'),
+    )
+    expect(read(dir, "package-lock.json")).toBe(before)
+    expect(existsSync(path.join(dir, "docs"))).toBe(false)
+  })
+
+  // Whether names differing only in case reach one file here. The default macOS and Windows file
+  // systems are case-insensitive. Most Linux ones are not, and the case-variant test skips there.
+  const caseInsensitive = ((): boolean => {
+    const dir = mkdtempSync(path.join(tmpdir(), "rc-sbom-case-"))
+    dirs.push(dir)
+    writeFileSync(path.join(dir, "probe"), "")
+    return existsSync(path.join(dir, "PROBE"))
+  })()
+
+  it.runIf(caseInsensitive)(
+    "refuses a case-variant spelling of the lockfile on a case-insensitive file system",
+    () => {
+      const dir = workspace()
+      const before = read(dir, "package-lock.json")
+      expect(attempt(dir, { output: "Package-Lock.json", productionOutput: null })).toStrictEqual(
+        refused('Refused to write output "Package-Lock.json": it is the lockfile.'),
+      )
+      expect(read(dir, "package-lock.json")).toBe(before)
+      expect(readdirSync(dir)).toEqual(["package-lock.json"])
+    },
+  )
+
+  it("refuses an output that is a directory", () => {
+    const dir = workspace()
+    mkdirSync(path.join(dir, "docs/sbom.cdx.json"), { recursive: true })
+    expect(attempt(dir, {})).toStrictEqual(
+      refused('Refused to write output "docs/sbom.cdx.json": it is not a regular file.'),
+    )
+    expect(readdirSync(path.join(dir, "docs"))).toEqual(["sbom.cdx.json"])
+  })
+
+  it("replaces a document in a real docs/ through a rename, so a hard link outside keeps its bytes", () => {
+    const dir = workspace()
+    const away = outside()
+    mkdirSync(path.join(dir, "docs"))
+    writeFileSync(path.join(dir, "docs/keep.txt"), "keep")
+    linkSync(path.join(away, "canary.json"), path.join(dir, "docs/sbom.cdx.json"))
+    expect(attempt(dir, {})).toStrictEqual({
+      status: 0,
+      report: {
+        ok: true,
+        documents: [
+          doc("docs/sbom.cdx.json", "written", 10),
+          doc("docs/sbom.production.cdx.json", "written", 8),
+        ],
+      },
+    })
+    expect(read(away, "canary.json")).toBe(CANARY)
+    expect(readJson(dir, "docs/sbom.cdx.json").bomFormat).toBe("CycloneDX")
+    expect(readdirSync(path.join(dir, "docs")).sort()).toEqual([
+      "keep.txt",
+      "sbom.cdx.json",
+      "sbom.production.cdx.json",
+    ])
+  })
+
+  it("follows a symbolic link that stays inside the project, and writes at the project root", () => {
+    const dir = workspace()
+    mkdirSync(path.join(dir, "real-docs"))
+    symlinkSync(path.join(dir, "real-docs"), path.join(dir, "docs"))
+    expect(attempt(dir, { productionOutput: "sbom.json" }).status).toBe(0)
+    expect(readdirSync(path.join(dir, "real-docs"))).toEqual(["sbom.cdx.json"])
+    expect(readJson(dir, "sbom.json").bomFormat).toBe("CycloneDX")
+  })
+})
+
 describe("sbom preset: generator (check mode)", () => {
   /** A workspace whose documents were just written. */
   function written(): string {
@@ -770,6 +1025,22 @@ describe("sbom preset: generator (lockfile errors)", () => {
       error:
         'The lockfile "package-lock.json" has no packages map: lockfileVersion 2 or 3 is required.',
     })
+  })
+
+  it.each([
+    ["null", "node_modules/c", null],
+    ["a string", "node_modules/c", "1.0.0"],
+    ["a list", "node_modules/c", []],
+    ["a null root", "", null],
+  ])("reports a packages entry that is %s, with no stack trace", (_label, key, entry) => {
+    const lock = structuredClone(LOCK) as { packages: Record<string, unknown> }
+    lock.packages[key] = entry
+    const expected = {
+      ok: false,
+      error: `The lockfile "package-lock.json" has a packages entry that is not an object: ${JSON.stringify(key)}.`,
+    }
+    expect(generate(workspace(lock))).toStrictEqual(expected)
+    expect(generate(workspace(lock), { write: true })).toStrictEqual(expected)
   })
 
   it("ignores a key named like an Object prototype property", () => {

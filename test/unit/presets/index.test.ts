@@ -49,6 +49,23 @@ describe("presets barrel (src/presets/index.ts)", () => {
     expect(Object.keys(presets).sort()).toEqual(names)
   })
 
+  // Every function the barrel exports is a factory that takes options. A parameter default
+  // replaces only undefined, so null must reach the factory's own check, not a property read.
+  const factories = Object.entries(presets).filter(
+    (entry): entry is [string, (options: unknown) => CheckDefinitionConfig] =>
+      typeof entry[1] === "function",
+  )
+
+  it("lists every exported factory among the factory presets", () => {
+    expect(factories.map(([name]) => name).sort()).toEqual(Object.keys(factoryPresets).sort())
+  })
+
+  it.each(factories)("%s(null) throws a TypeError naming the preset", (name, factory) => {
+    expect(() => factory(null)).toThrow(
+      new TypeError(`${name}: options must be an object, got null.`),
+    )
+  })
+
   it("exports every plain-object preset as a { run, policy } shape", () => {
     for (const [name, preset] of Object.entries(plainObjectPresets)) {
       expect(typeof preset.run === "string" || Array.isArray(preset.run), name).toBe(true)

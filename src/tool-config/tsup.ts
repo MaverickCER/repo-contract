@@ -2,7 +2,7 @@
  * A tsup config built from package.json `exports`: one entry per code subpath.
  * @packageDocumentation
  */
-import { notImplemented } from "../not-implemented.js"
+import { entries } from "./entries.js"
 import type { ToolConfigOptions } from "./types.js"
 
 /** Options for {@link tsupConfig}. */
@@ -15,11 +15,14 @@ export interface TsupConfigOptions extends ToolConfigOptions {
   readonly target?: string
 }
 
-/** The tsup settings the helper sets. Spread it into `defineConfig`. */
+/**
+ * The tsup settings the helper sets. Spread it into `defineConfig`. Arrays are mutable copies
+ * because tsup's `Options` type takes mutable arrays.
+ */
 export interface TsupConfigFragment {
   /** Built file name to source file, from {@link entries}. */
-  readonly entry: Readonly<Record<string, string>>
-  readonly format: readonly ("esm" | "cjs")[]
+  readonly entry: Record<string, string>
+  readonly format: ("esm" | "cjs")[]
   readonly platform: "node" | "neutral" | "browser"
   readonly target: string
   readonly sourcemap: boolean
@@ -27,10 +30,26 @@ export interface TsupConfigFragment {
 }
 
 /**
+ * The defaults are what repo-contract, env-cap and data-cap build with today. Declarations are
+ * left to the caller: all three emit them with `tsc`, so the fragment sets no `dts`.
  * @param options - the manifest and overrides.
  * @returns the tsup settings.
+ * @throws {RangeError} when `format` is empty.
  * @beta
  */
 export function tsupConfig(options: TsupConfigOptions): TsupConfigFragment {
-  return notImplemented("R3", options)
+  const { format = ["esm", "cjs"], platform = "node", target = "node22" } = options
+  if (format.length === 0) {
+    throw new RangeError("format needs at least one of esm and cjs")
+  }
+  return {
+    entry: Object.fromEntries(
+      entries(options.manifest, options).map((entry) => [entry.name, entry.source]),
+    ),
+    format: [...format],
+    platform,
+    target,
+    sourcemap: true,
+    treeshake: true,
+  }
 }

@@ -105,8 +105,13 @@ export function parseAffectedArgs(argv) {
   }
   const options = { format: "text", explain: false }
   let formatFlag
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index]
+  // A `for...of` over the entries cannot loop forever, whatever the body does to its position.
+  let valueTaken = false
+  for (const [index, arg] of argv.entries()) {
+    if (valueTaken) {
+      valueTaken = false
+      continue
+    }
     if (arg === "--") {
       return unexpected(argv[index + 1])
     }
@@ -119,11 +124,11 @@ export function parseAffectedArgs(argv) {
       }
       const parsedValue =
         name === "--shard" ? shardOf(value) : name in NUMERIC ? numeric(name, value) : value
-      if (parsedValue?.kind === "error") {
+      if (parsedValue.kind === "error") {
         return parsedValue
       }
       options[VALUE_OPTIONS[name]] = parsedValue
-      index += equals === -1 ? 1 : 0
+      valueTaken = equals === -1
     } else if (FLAG_OPTIONS.has(name)) {
       if (equals !== -1) {
         return { kind: "error", message: `option '${name}' does not take a value` }
@@ -249,29 +254,31 @@ function renderJson(result, explanations, explain, shard) {
   const report = {
     schemaVersion: 1,
     scope: result.scope,
-    ...(result.fullBecause === undefined ? {} : { fullBecause: result.fullBecause }),
+    // JSON leaves out a key whose value is undefined, so a narrow result has no fullBecause.
+    fullBecause: result.fullBecause,
     changedFiles: result.changedFiles,
     changedSymbols: result.changedSymbols,
     affectedSources: result.affectedSources,
     affectedTests: result.affectedTests,
     mutateTargets: result.mutateTargets,
     widened: result.widened,
-    ...(shard === undefined ? {} : { shard }),
+    shard,
     ...(explain ? { explanations } : {}),
   }
   return `${JSON.stringify(report, null, 2)}\n`
 }
 
 /**
- * Reads this tool's block from the project's package.json (`"repo-contract"."affected"`).
+ * Reads this tool's block from the project's package.json: `"contract".affected`, or the legacy
+ * `"repo-contract".affected` when the new key is absent.
  * @param {{ readFile: (path: string) => Promise<string | undefined> }} capabilities - File access.
- * @param {(value: unknown) => object} parse - Validates the block.
+ * @param {(manifest: unknown) => object} readContractConfig - Picks and validates the block.
  * @returns {Promise<{ options?: object, error?: string }>} The options, or what is wrong.
  */
-async function readConfig(capabilities, parse) {
+async function readConfig(capabilities, readContractConfig) {
   const text = await capabilities.readFile("package.json")
   if (text === undefined) {
-    return { options: {} }
+    return {}
   }
   let manifest
   try {
@@ -279,10 +286,8 @@ async function readConfig(capabilities, parse) {
   } catch {
     return { error: "package.json is not valid JSON" }
   }
-  const parsed = parse(manifest?.["repo-contract"]?.affected)
-  return "error" in parsed
-    ? { error: `invalid configuration in package.json (repo-contract.affected): ${parsed.error}` }
-    : { options: parsed.options }
+  const read = readContractConfig(manifest)
+  return "error" in read ? { error: read.error } : { options: read.config.affected }
 }
 
 /**
@@ -298,18 +303,18 @@ async function readTimings(capabilities, file) {
   if (text === undefined) {
     return `could not read timings file ${file}`
   }
-  let parsed
   try {
-    parsed = JSON.parse(text)
+    const parsed = JSON.parse(text)
+    // null passes the typeof test, and Object.values(null) throws into the catch below.
+    const valid =
+      typeof parsed === "object" &&
+      !Array.isArray(parsed) &&
+      Object.values(parsed).every((ms) => Number.isFinite(ms) && ms >= 0)
+    if (valid) return parsed
   } catch {
-    parsed = undefined
+    // Text that is not JSON gets the same answer as JSON of the wrong shape.
   }
-  const valid =
-    typeof parsed === "object" &&
-    parsed !== null &&
-    !Array.isArray(parsed) &&
-    Object.values(parsed).every((ms) => typeof ms === "number" && ms >= 0 && Number.isFinite(ms))
-  return valid ? parsed : `timings file ${file} must be a JSON object of file to milliseconds`
+  return `timings file ${file} must be a JSON object of file to milliseconds`
 }
 
 const LISTS = { tests: "affectedTests", sources: "affectedSources", mutate: "mutateTargets" }
@@ -322,7 +327,7 @@ const LISTS = { tests: "affectedTests", sources: "affectedSources", mutate: "mut
  * @param {string} input.version - This package's version.
  * @param {(text: string) => void} input.stdout - Writes to standard output.
  * @param {(text: string) => void} input.stderr - Writes to standard error.
- * @param {object} input.engine - `computeAffectedFromGit`, `explainAffected` and `parseAffectedConfig`.
+ * @param {object} input.engine - `computeAffectedFromGit`, `explainAffected` and `readContractConfig`.
  * @param {(dir: string) => object} input.createCapabilities - Builds the git and file capabilities.
  * @param {(dir: string) => Promise<object>} input.loadTypeScript - Loads the project's TypeScript.
  * @returns {Promise<number>} The exit status.
@@ -345,7 +350,7 @@ export async function runAffected(input) {
   }
 
   const { options } = parsed
-  const dir = path.resolve(input.cwd, options.cwd ?? ".")
+  const dir = path.resolve(input.cwd, options.cwd ?? "")
   let ts
   try {
     ts = await input.loadTypeScript(dir)
@@ -366,7 +371,7 @@ export async function runAffected(input) {
   let capabilities
   try {
     capabilities = input.createCapabilities(dir)
-    const config = await readConfig(capabilities, input.engine.parseAffectedConfig)
+    const config = await readConfig(capabilities, input.engine.readContractConfig)
     if (config.error !== undefined) {
       input.stderr(`repo-contract affected: ${config.error}\n`)
       return 1
@@ -375,8 +380,8 @@ export async function runAffected(input) {
       ts,
       capabilities,
       options: config.options,
-      ...(options.base === undefined ? {} : { base: options.base }),
-      ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }),
+      base: options.base,
+      tsconfig: options.tsconfig,
     })
   } catch (error) {
     input.stderr(`repo-contract affected: failed: ${messageOf(error)}\n`)
@@ -395,9 +400,9 @@ export async function runAffected(input) {
     const plan = input.engine.planShards({
       targets: result.mutateTargets,
       timingsMs: timings,
-      ...(options.shards === undefined ? {} : { shards: options.shards }),
-      ...(options.targetMinutes === undefined ? {} : { targetMinutes: options.targetMinutes }),
-      ...(options.maxShards === undefined ? {} : { max: options.maxShards }),
+      shards: options.shards,
+      targetMinutes: options.targetMinutes,
+      max: options.maxShards,
     })
     input.stdout(
       `${JSON.stringify({ count: plan.count, ...input.engine.shardMatrix(plan.count) }, null, 2)}\n`,

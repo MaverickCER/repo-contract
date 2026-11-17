@@ -1,18 +1,11 @@
 {
   "name": "repo-contract",
   "version": "0.15.0",
-  "description": "Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason.",
+  "description": "One typed contract for the tools your CI runs: each check says pass, warn or fail and why; every governed exception is a reviewable record.",
   "keywords": [
     "quality-gate",
-    "code-quality",
     "policy-as-code",
-    "ci",
-    "pre-commit",
-    "git-hooks",
-    "engineering-standards",
-    "evidence",
-    "typescript",
-    "contract"
+    "pre-commit"
   ],
   "homepage": "https://maverickcer.github.io/repo-contract/",
   "bugs": {
@@ -169,6 +162,7 @@
     "metrics",
     "presets",
     "schemas",
+    "skills",
     "src",
     "tiers",
     "/*.md",
@@ -343,6 +337,14 @@
       "AgentSkill",
       "AmbientCapabilities"
     ],
+    "apiTargets": {
+      "./config": "src/tool-config/index.ts",
+      "./config/tsup": "src/tool-config/tsup.ts",
+      "./config/typedoc": "src/tool-config/typedoc.ts",
+      "./config/knip": "src/tool-config/knip.ts",
+      "./config/vitest": "src/tool-config/vitest.ts",
+      "./config/stryker": "src/tool-config/stryker.ts"
+    },
     "ambientCapabilities": {
       "forbiddenDependencies": [
         "cross-spawn"

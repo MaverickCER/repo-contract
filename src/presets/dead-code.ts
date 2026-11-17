@@ -1,6 +1,7 @@
 import type { CheckDefinitionConfig } from "../types.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /**
  * Knip does not expose the serialized JSON reporter result as a public
@@ -119,9 +120,11 @@ function formatEntry(entry: KnipIssueEntry | readonly KnipIssueEntry[]): {
  * Dead/unused-code detection via knip.
  * @param options - configuration for this check; see {@link DeadCodeOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export function deadCode(options: DeadCodeOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("deadCode", options)
   const { exemptUnusedDevDependencies = [] } = options
 
   return {

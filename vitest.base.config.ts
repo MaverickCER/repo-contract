@@ -59,6 +59,28 @@ const maxWorkers = Math.min(
   Math.max(2, Math.floor(os.availableParallelism() / 4)),
 )
 
+// What coverage measures: src/, plus the bin/ commands stryker.config.mjs mutates. A mutant
+// needs a covering test, and the coverage and crap checks should see the same code Stryker does.
+// test/unit/config/coverage-scope.test.ts fails when the two lists drift apart.
+export const COVERAGE_INCLUDE = [
+  "src/**/*.ts",
+  "bin/init-cli.mjs",
+  "bin/mutation-cli.mjs",
+  "bin/mutation-plan.mjs",
+  "bin/mutation-adopt.mjs",
+  "bin/mutation-cache.mjs",
+  "bin/affected-cli.mjs",
+  "bin/doctor-cli.mjs",
+  "bin/except-cli.mjs",
+  "bin/exceptions-cli.mjs",
+  "bin/explain-cli.mjs",
+  "bin/npm-script-cli.mjs",
+  "bin/cli-options.mjs",
+  "bin/stryker-vitest5-compat.mjs",
+  "bin/templates.mjs",
+  "bin/preset-catalog.mjs",
+]
+
 export default defineConfig({
   test: {
     environment: "node",

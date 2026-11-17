@@ -16,8 +16,8 @@
  * function.
  */
 
-import type { ExceptionRegistrySchema } from "../shared/exception-record.js"
-import { validateExceptionRegistry } from "../shared/exception-record.js"
+import type { ExceptionRegistrySchema } from "../../src/helpers/index.js"
+import { validateExceptionRegistry } from "../../src/helpers/index.js"
 
 // Re-exported so the policy layer and tests reach the suppression registry validator through this
 // same module they get `SUPPRESSION_EXCEPTION_SCHEMA` from. `reconcileExceptions`/

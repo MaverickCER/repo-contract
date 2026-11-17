@@ -1,7 +1,12 @@
-import { notImplementedCheck } from "../not-implemented.js"
 import type { CheckDefinitionConfig, PolicyResult } from "../types.js"
+import {
+  type AttwResolutionKind,
+  checkResolutionKinds,
+  dropResolutionProblems,
+} from "./rules/attw-resolutions.js"
 import { checkDependencyInstalled } from "./shared/missing-dependency.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /**
  * attw's `--format json` contract: not published as a TypeScript type
@@ -92,8 +97,8 @@ export function evaluateAttwReport(report: unknown): PolicyResult {
 // preset excludes no entrypoint. `--exclude-entrypoints` depends on which of
 // a consumer's `exports` subpaths are non-code (e.g. a bare JSON schema
 // export). So it is left as a `run` override for the consumer to add.
-/** A module resolution attw judges a package under. */
-export type AttwResolutionKind = "node10" | "node16-cjs" | "node16-esm" | "bundler"
+// Declared beside the filter that reads it, so the rule never imports this file back.
+export type { AttwResolutionKind }
 
 /** Options accepted by {@link arethetypeswrong}. */
 export interface ArethetypeswrongOptions {
@@ -105,12 +110,13 @@ export interface ArethetypeswrongOptions {
  * Published-package type-resolution correctness via `@arethetypeswrong/cli`.
  * @param options - configuration for this check; see {@link ArethetypeswrongOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `ignoreResolutions` names a resolution attw does not use.
  * @beta
  */
 export function arethetypeswrong(options: ArethetypeswrongOptions = {}): CheckDefinitionConfig {
-  const { ignoreResolutions = [] } = options
-  // R2 drops these resolutions' problems before evaluateAttwReport; until then, asking fails.
-  if (ignoreResolutions.length > 0) return notImplementedCheck("R2", ignoreResolutions)
+  checkOptionsObject("arethetypeswrong", options)
+  const ignoreResolutions = checkResolutionKinds(options.ignoreResolutions ?? [])
   return {
     run: ["attw", "--pack", ".", "--format", "json"],
     output: { format: "json" },
@@ -128,7 +134,7 @@ export function arethetypeswrong(options: ArethetypeswrongOptions = {}): CheckDe
         }
       }
 
-      return evaluateAttwReport(result.output.value)
+      return evaluateAttwReport(dropResolutionProblems(result.output.value, ignoreResolutions))
     },
   }
 }

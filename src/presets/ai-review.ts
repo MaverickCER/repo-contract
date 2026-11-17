@@ -1,5 +1,6 @@
 import type { CheckDefinitionConfig, CheckEvidence, PolicyResult } from "../types.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /**
  * One finding in an AI reviewer's reply.
@@ -299,6 +300,7 @@ function redact(text: string, secrets: readonly string[]): string {
  * the parsing and the policy; they do not prove a model's judgement.
  * @param options - The agent to run and how to judge it; see {@link AiReviewOptions}.
  * @returns The configured check.
+ * @throws {TypeError} When `options` is not an object.
  * @example
  * ```ts
  * aiReview: aiReview({
@@ -310,6 +312,7 @@ function redact(text: string, secrets: readonly string[]): string {
  * @beta
  */
 export function aiReview(options: AiReviewOptions): CheckDefinitionConfig {
+  checkOptionsObject("aiReview", options)
   const {
     agent,
     prompt = DEFAULT_PROMPT,

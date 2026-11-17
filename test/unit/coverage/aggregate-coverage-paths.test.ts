@@ -4,7 +4,7 @@ import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { aggregateCoverage } from "../../../scripts/aggregate-coverage.mjs"
 import { AGGREGATE_COVERAGE_FINAL_PATH } from "../../../scripts/aggregate-coverage-paths.mjs"
-import { crap } from "../../../checks/crap.js"
+import config from "../../../repo-contract.config.js"
 
 /**
  * Proves the shared-path contract for both consumers of the aggregate coverage artifact. The writer
@@ -42,7 +42,13 @@ describe("crap and coverage read the byte-identical aggregate coverage artifact"
     expect(parsed).not.toBeNull()
   })
 
-  it("checks/crap.ts's run array names the exact shared AGGREGATE_COVERAGE_FINAL_PATH constant", () => {
-    expect(crap.run).toContain(AGGREGATE_COVERAGE_FINAL_PATH)
+  it("the config's crap check scores against the exact shared AGGREGATE_COVERAGE_FINAL_PATH", () => {
+    const run = config.checks.crap.run as readonly string[]
+    expect(run[run.indexOf("--coverage") + 1]).toBe(AGGREGATE_COVERAGE_FINAL_PATH)
+  })
+
+  it("the config's crap report lands in the aggregate directory the coverage check creates", () => {
+    const run = config.checks.crap.run as readonly string[]
+    expect(run[run.indexOf("--output") + 1]).toBe("coverage/aggregate/crap4ts-report.json")
   })
 })

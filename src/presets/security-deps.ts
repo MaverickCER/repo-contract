@@ -1,6 +1,15 @@
-import { notImplementedCheck } from "../not-implemented.js"
-import type { CheckDefinitionConfig } from "../types.js"
+import { exceptionRegistryStandardSchema } from "../helpers/exception-record.js"
+import { loadAndReconcileExceptionRegistry } from "../helpers/persist-exception-registry.js"
+import type { CheckDefinitionConfig, PolicyResult } from "../types.js"
+import {
+  auditReportProblem,
+  createSecurityDepsStub,
+  judgeAuditFindings,
+  normalizeAuditFindings,
+  SECURITY_DEPS_EXCEPTION_SCHEMA,
+} from "./rules/security-deps-registry.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 interface NpmAuditVulnerabilityCounts {
   readonly info: number
@@ -46,7 +55,8 @@ export interface SecurityDepsOptions {
   /**
    * The exception registry, such as `".repo-contract/exceptions/security-deps.json"`. With one, a
    * `critical` advisory still fails, and a lower one passes only while a complete record accepts
-   * it. The check writes a blank record for each new advisory. Defaults to `false`: no registry,
+   * it. The check writes a blank record for each new advisory and fails on a record whose advisory
+   * is gone. An `info` finding warns and gets no record. Defaults to `false`: no registry,
    * so any low, moderate, high or critical advisory fails.
    */
   readonly registry?: string | false
@@ -56,12 +66,13 @@ export interface SecurityDepsOptions {
  * Dependency vulnerability scanning via `npm audit`.
  * @param options - configuration for this check; see {@link SecurityDepsOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export function securityDeps(options: SecurityDepsOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("securityDeps", options)
   const { registry = false } = options
-  // R2x judges against the registry in src/presets/rules/security-deps-registry.ts; until then, asking fails.
-  if (registry !== false) return notImplementedCheck("R2x", registry)
+  if (registry !== false) return securityDepsWithRegistry(registry)
   return {
     run: ["npm", "audit", "--omit=dev", "--json"],
     output: { format: "json" },
@@ -161,6 +172,43 @@ export function securityDeps(options: SecurityDepsOptions = {}): CheckDefinition
         rationale:
           "Runtime dependency policy passed. 0 critical, 0 high, 0 moderate, and 0 low vulnerabilities were found.",
       }
+    },
+  }
+}
+
+const REGISTRY_SCHEMA = exceptionRegistryStandardSchema(SECURITY_DEPS_EXCEPTION_SCHEMA)
+
+/**
+ * @param registry - the registry path, relative to the working directory or absolute.
+ * @returns the check that judges advisories against the registry and writes it back.
+ */
+function securityDepsWithRegistry(registry: string): CheckDefinitionConfig {
+  return {
+    run: ["npm", "audit", "--omit=dev", "--json"],
+    output: { format: "json" },
+    policy: async ({ result }): Promise<PolicyResult> => {
+      const terminated = checkTerminatedAbnormally(result, "npm audit")
+      if (terminated) return terminated
+      // npm audit exits non-zero whenever it finds anything, so only the parse result matters here.
+      if (!result.output?.success) {
+        return { outcome: "fail", rationale: "npm audit output could not be parsed as JSON." }
+      }
+      const report: unknown = result.output.value
+      const problem = auditReportProblem(report)
+      if (problem !== undefined) return { outcome: "fail", rationale: problem }
+
+      const findings = normalizeAuditFindings(report)
+      // An info finding never blocks, so it gets no record to fill in.
+      const blocking = findings.filter((finding) => finding.severity !== "info")
+      const persisted = await loadAndReconcileExceptionRegistry(
+        registry,
+        registry,
+        REGISTRY_SCHEMA,
+        blocking,
+        createSecurityDepsStub,
+      )
+      if (!persisted.ok) return { outcome: "fail", rationale: persisted.rationale }
+      return judgeAuditFindings(findings, persisted.registry)
     },
   }
 }

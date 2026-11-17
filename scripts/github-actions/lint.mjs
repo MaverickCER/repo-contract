@@ -1,6 +1,7 @@
 // Entry point for repo-contract's `github-actions` check (see repo-contract.config.ts).
 //
-// It runs `actionlint` (rhysd/actionlint) over a repository's workflow files via the
+// It runs `actionlint` (rhysd/actionlint) over a repository's workflow files, and the example
+// workflows under examples/ci/, via the
 // `github-actionlint` npm wrapper. The wrapper is a devDependency that resolves the official
 // actionlint binary on first use and caches it. The whole thing stays
 // `npm install`-only, with no `go`/`brew`/`pip` step (ADR 0008's "package install only" bar).
@@ -35,21 +36,34 @@ const require = createRequire(import.meta.url)
 // `node scripts/...` invocation or a test that imports this module.
 const ACTIONLINT_ENTRY = require.resolve("github-actionlint/dist/bin/actionlint.js")
 
+// The repository's own workflows, and the example workflows the docs tell a consumer to copy:
+// an example that stops parsing would break every project that copied it.
+const WORKFLOW_DIRECTORIES = [".github/workflows", "examples/ci"]
+
 /**
- * @param root - repository root to resolve `.github/workflows/` against.
- * @returns Repository-relative POSIX paths of every `.github/workflows/*.{yml,yaml}` file, sorted for determinism.
+ * @param root - repository root to resolve each workflow directory against.
+ * @param directory - a POSIX path relative to `root`.
+ * @returns Repository-relative POSIX paths of every `*.{yml,yaml}` file in it, sorted for determinism.
  */
-function listWorkflowFiles(root) {
+function listYamlFiles(root, directory) {
   let entries
   try {
-    entries = readdirSync(path.join(root, ".github", "workflows"))
+    entries = readdirSync(path.join(root, ...directory.split("/")))
   } catch {
     return []
   }
   return entries
     .filter((name) => name.endsWith(".yml") || name.endsWith(".yaml"))
     .sort()
-    .map((name) => path.posix.join(".github", "workflows", name))
+    .map((name) => path.posix.join(directory, name))
+}
+
+/**
+ * @param root - repository root.
+ * @returns every workflow file under {@link WORKFLOW_DIRECTORIES}, in that order.
+ */
+function listWorkflowFiles(root) {
+  return WORKFLOW_DIRECTORIES.flatMap((directory) => listYamlFiles(root, directory))
 }
 
 /**

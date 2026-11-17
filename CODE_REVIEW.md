@@ -990,13 +990,33 @@ Each mechanism under review, and every earlier result, is evidence only that it 
 
 #### Context sources
 
-Use the ones the changes reach: relevant ADRs, `specs/`, `SECURITY.md`, `VERSIONING.md`, `specs/architecture.md`, callers and consumers, related tests, configuration the changed code consumes, package exports, check definitions, enforcement configuration, security allowlists, enforcement fixtures, publication configuration, schema definitions, and state or lifecycle contracts.
+Use the ones the changes reach:
+
+- relevant ADRs, `specs/`, `specs/architecture.md`, `SECURITY.md` and `VERSIONING.md`;
+- callers, consumers and related tests;
+- configuration the changed code consumes, and package exports;
+- check definitions, enforcement configuration, enforcement fixtures and security allowlists;
+- publication configuration and schema definitions;
+- state and lifecycle contracts.
 
 #### Review passes
 
 1. **Each file alone**, against every applicable requirement in Sections 5–35.
-2. **Each file within the complete diff.** Look for interactions between independent changes, behavior that becomes unsafe only in combination, enforcement changes that affect unrelated checks, shared state or orchestration, publication or API consequences, lifecycle and state-machine interactions, platform consequences, documentation made inaccurate or drift-prone by another change, and scope or intent expansion.
-3. **The whole change against the repository.** Determine whether it affects consumers, check orchestration, package boundaries, security and trust boundaries, release behavior, persisted evidence, compatibility guarantees, enforcement capability, resource lifecycle, state invariants, supported platforms, deterministic output, performance, or diagnostic evidence.
+2. **Each file within the complete diff.** Look for:
+   - interactions between independent changes, and behavior that becomes unsafe only in combination;
+   - enforcement changes that affect unrelated checks;
+   - shared state or orchestration, and lifecycle or state-machine interactions;
+   - publication, API and platform consequences;
+   - documentation that another change made inaccurate or drift-prone;
+   - scope or intent expansion.
+3. **The whole change against the repository.** Determine whether it affects:
+   - consumers, check orchestration and package boundaries;
+   - security and trust boundaries;
+   - release behavior, persisted evidence and compatibility guarantees;
+   - enforcement capability;
+   - resource lifecycle and state invariants;
+   - supported platforms, deterministic output and performance;
+   - diagnostic evidence.
 
 #### Targeted traces
 
@@ -1011,7 +1031,14 @@ Use the ones the changes reach: relevant ADRs, `specs/`, `SECURITY.md`, `VERSION
 
 #### Contract evidence
 
-Read past the final PASS/FAIL line to the values behind it: check counts, failures, warnings, mutation survivors and timeouts, ignored mutations and their justifications, coverage percentages, CRAP scores, size budgets, dependency findings, suppression counts, architecture findings, security findings, API-contract results, and every other reported boundary or count.
+Read past the final PASS/FAIL line to the values behind it:
+
+- check counts, failures and warnings;
+- mutation survivors and timeouts, and ignored mutations with their justifications;
+- coverage percentages, CRAP scores and size budgets;
+- dependency, architecture and security findings, and suppression counts;
+- API-contract results;
+- every other reported boundary or count.
 
 #### Review categories
 

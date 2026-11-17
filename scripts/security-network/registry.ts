@@ -7,8 +7,8 @@ import {
   EXCEPTION_TYPES,
   SECURITY_EXCEPTION_FIELD_KEYS,
   validateSecurityExceptionFields,
-} from "../shared/exception-record.js"
-import type { ExceptionRegistrySchema, ExceptionType } from "../shared/exception-record.js"
+} from "../../src/helpers/index.js"
+import type { ExceptionRegistrySchema, ExceptionType } from "../../src/helpers/index.js"
 
 export type { NetworkExceptionRecord } from "./evidence-types.js"
 

@@ -55,6 +55,27 @@ describe("writeExceptionRegistry: real filesystem", () => {
     })
   })
 
+  it.each([
+    ["null", [null, ...records], 0],
+    ["a number", [...records, 7], 1],
+    ["a record without an id", [...records, { version: 1, justification: "x" }], 1],
+    ["a record with a numeric id", [{ id: 3 }], 0],
+  ])("refuses %s in the records and leaves the file byte-identical", async (_, given, index) => {
+    const target = path.join(dir, "reg.json")
+    await writeFile(target, "before", "utf8")
+
+    const result = await writeExceptionRegistry({
+      path: target,
+      records: given as unknown as typeof records,
+    })
+
+    expect(result).toEqual({
+      ok: false,
+      error: `${target}: exceptions[${String(index)}] is not a record with a string id, so nothing was written.`,
+    })
+    expect(await readFile(target, "utf8")).toBe("before")
+  })
+
   it("refuses a symlinked target and does not follow it (default isSymlink)", async () => {
     const real = path.join(dir, "outside.json")
     await writeFile(real, "untouched", "utf8")

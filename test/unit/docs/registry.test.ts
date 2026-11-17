@@ -4,7 +4,7 @@ import {
   createDocsLinkStub,
   deriveDocsLinkExceptionId,
 } from "../../../checks/docs.js"
-import { validateExceptionRegistry } from "../../../scripts/shared/exception-record.js"
+import { validateExceptionRegistry } from "../../../src/helpers/index.js"
 
 function validRecord(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {

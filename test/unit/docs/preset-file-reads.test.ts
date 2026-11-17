@@ -37,7 +37,15 @@ describe("presets that read their own report file", () => {
   const expected = presetsReadingFiles()
 
   it("finds the presets that import node:fs", () => {
-    expect(expected).toEqual(["duplication", "markdownlint", "securitySecrets", "test"])
+    expect(expected).toEqual([
+      "brokenLinks",
+      "crap",
+      "duplication",
+      "markdownlint",
+      "mutation",
+      "securitySecrets",
+      "test",
+    ])
   })
 
   it("are the presets GUIDE.md names", () => {

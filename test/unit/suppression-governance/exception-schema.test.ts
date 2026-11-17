@@ -7,7 +7,7 @@ import {
 } from "../../../scripts/suppression-governance/evidence-types.js"
 
 /**
- * `validateExceptionRegistry` (scripts/shared/exception-record.ts) + `SUPPRESSION_EXCEPTION_SCHEMA`
+ * `validateExceptionRegistry` (src/helpers/exception-record.ts) + `SUPPRESSION_EXCEPTION_SCHEMA`
  * are the sole runtime gate on `.repo-contract/exceptions/disable-comments.json`. These cases pin
  * the core rules (id namespace, `version === 1`, unknown-field rejection, id uniqueness) and the
  * suppression-specific rules (typed metadata, id self-consistency), and prove the real committed

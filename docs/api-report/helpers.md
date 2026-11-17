@@ -4,8 +4,9 @@ Governed exceptions: let a check waive one finding when a named record justifies
 weakening the check. A record names its `{ group, category }`, and this barrel resolves that to
 a policy (exact, then glob, then default) and checks the record's fields against it.
 
-The check stays in charge of everything else. It decides what a finding is, matches records to
-findings and owns the identity of each finding (see `scripts/shared/`, unpublished). This is the
+The barrel also ships the v2 record every registry shares, its vocabulary of eight exception
+types and three methods, and the read-reconcile-write sequence. The check stays in charge of
+what a finding is, of each finding's identity and of which types it accepts. This is the
 mechanism `scripts/suppression-governance/` built for `disable-comments.json` (ADR 0006),
 extracted for any check; specs/decisions/0013-reusable-exception-policy-helper.md has the
 boundary.
@@ -117,6 +118,56 @@ readonly verdict: ExceptionVerdict;
 
 ***
 
+### ExceptionInventory
+
+What `repo-contract exceptions --json` prints. It decides nothing.
+
+#### Properties
+
+##### errors
+
+```ts
+readonly errors: readonly ExceptionRegistryError[];
+```
+
+##### expired
+
+```ts
+readonly expired: number;
+```
+
+##### incomplete
+
+```ts
+readonly incomplete: number;
+```
+
+##### legacy
+
+```ts
+readonly legacy: number;
+```
+
+##### registries
+
+```ts
+readonly registries: readonly ExceptionRegistrySummary[];
+```
+
+##### schemaVersion
+
+```ts
+readonly schemaVersion: 1;
+```
+
+##### total
+
+```ts
+readonly total: number;
+```
+
+***
+
 ### ExceptionReconciliation
 
 The outcome of reconciling one run's findings against one exception registry.
@@ -172,7 +223,7 @@ Existing records whose id matched no finding this run. They are surfaced for the
 The three fields every exception record in `.repo-contract/exceptions/*.json` carries, whatever
 the owning check. A registry adds its typed fields on top; this is the shared core the
 generic machinery (`reconcileExceptions`, `serializeExceptionRegistry`,
-`validateExceptionRegistry` in the check-owned layer) relies on.
+`validateExceptionRegistry` in `exception-record.ts`) relies on.
 
 #### Properties
 
@@ -269,6 +320,204 @@ The record to evaluate.
 
 ***
 
+### ExceptionRegistryContents
+
+One registry file's records, named by its file name without `.json`.
+
+#### Properties
+
+##### name
+
+```ts
+readonly name: string;
+```
+
+##### records
+
+```ts
+readonly records: readonly unknown[];
+```
+
+***
+
+### ExceptionRegistryError
+
+A registry file that could not be read or has no `exceptions` array.
+
+#### Properties
+
+##### error
+
+```ts
+readonly error: string;
+```
+
+##### name
+
+```ts
+readonly name: string;
+```
+
+***
+
+### ExceptionRegistrySchema
+
+A per-registry validator plugged into [validateExceptionRegistry](#validateexceptionregistry). It owns one registry's
+record shape beyond the core every `.repo-contract/exceptions/*.json` record shares.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| <a id="type-parameter-trecord-3"></a> `TRecord` *extends* \{ `id`: `string`; \} |
+
+#### Properties
+
+##### metadataKeys
+
+```ts
+readonly metadataKeys: readonly string[];
+```
+
+Every own key a record may carry beyond `id`, `version` and `justification`. Any other key fails validation.
+
+##### namespace
+
+```ts
+readonly namespace: string;
+```
+
+The mandatory `id` prefix, such as `"mutation:"`. A record outside it fails validation; it is never called stale.
+
+##### validateRecord
+
+```ts
+readonly validateRecord: (core, raw, index, errors) => TRecord | undefined;
+```
+
+Validates the registry's own fields and rebuilds the typed record from scratch.
+
+###### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `core` | [`ExceptionRecordCore`](#exceptionrecordcore) | the validated `id`, `version` and `justification`. |
+| `raw` | `Readonly`\<`Record`\<`string`, `unknown`\>\> | the untrusted parsed object. |
+| `index` | `number` | the record's index, for messages. |
+| `errors` | `string`[] | collects one message per problem. |
+
+###### Returns
+
+`TRecord` \| `undefined`
+
+the rebuilt record, or `undefined` when a field is invalid.
+
+***
+
+### ExceptionRegistrySummary
+
+One registry's counts.
+
+#### Properties
+
+##### byType
+
+```ts
+readonly byType: Readonly<Record<string, number>>;
+```
+
+Records per `exceptionType`; a record without one counts as `"(untyped)"`.
+
+##### expired
+
+```ts
+readonly expired: number;
+```
+
+Records whose `expires` is before today.
+
+##### incomplete
+
+```ts
+readonly incomplete: number;
+```
+
+Records with a blank `justification`, or a blank v2 field on a `version: 2` record.
+
+##### legacy
+
+```ts
+readonly legacy: number;
+```
+
+Records still `version: 1`.
+
+##### name
+
+```ts
+readonly name: string;
+```
+
+##### total
+
+```ts
+readonly total: number;
+```
+
+***
+
+### ExceptionV2Fields
+
+The fields of a `version: 2` record. Each is `""` on a fresh stub until a person writes it.
+
+#### Properties
+
+##### attempted
+
+```ts
+readonly attempted: string;
+```
+
+##### constraint
+
+```ts
+readonly constraint: string;
+```
+
+##### expires
+
+```ts
+readonly expires: string;
+```
+
+`YYYY-MM-DD`, or `""` for none. The key must be present.
+
+##### residualRisk
+
+```ts
+readonly residualRisk: string;
+```
+
+##### revisitWhen
+
+```ts
+readonly revisitWhen: string;
+```
+
+##### ruleBroken
+
+```ts
+readonly ruleBroken: string;
+```
+
+##### whyPreferable
+
+```ts
+readonly whyPreferable: string;
+```
+
+***
+
 ### FileCacheStore
 
 A directory used as a cache store: paths are relative and slash-separated, each maps to a file.
@@ -349,6 +598,38 @@ Writes atomically: a reader sees the old content or the new, never part of eithe
 ###### Returns
 
 `Promise`\<`void`\>
+
+***
+
+### PersistedExceptionRegistry
+
+A registry after a batch of findings was reconciled against it and written back.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| <a id="type-parameter-trecord-4"></a> `TRecord` |
+
+#### Properties
+
+##### activeRecords
+
+```ts
+readonly activeRecords: readonly TRecord[];
+```
+
+##### newStubIds
+
+```ts
+readonly newStubIds: readonly string[];
+```
+
+##### staleRecords
+
+```ts
+readonly staleRecords: readonly TRecord[];
+```
 
 ***
 
@@ -665,7 +946,80 @@ Told once, with the reason, the first time a log cannot be written. Defaults to 
 
 `void`
 
+***
+
+### SecurityExceptionFields
+
+The four fields a security-family record adds. Each is `""` on a fresh stub.
+
+#### Properties
+
+##### alternatives
+
+```ts
+readonly alternatives: string;
+```
+
+##### exceptionType
+
+```ts
+readonly exceptionType: 
+  | ""
+  | "validated-false-positive"
+  | "accepted-risk"
+  | "compensating-control"
+  | "tooling-limitation"
+  | "scheduled-remediation"
+  | "platform-or-vendor-constraint"
+  | "required-for-package-to-exist"
+  | "dev-only-not-shipped";
+```
+
+##### method
+
+```ts
+readonly method: 
+  | ""
+  | "mechanical-reverification"
+  | "independent-human-review"
+  | "policy-rule";
+```
+
+##### remediation
+
+```ts
+readonly remediation: string;
+```
+
+***
+
+### VersionedExceptionRecord
+
+A record of either version. A registry can migrate one record at a time.
+
+#### Properties
+
+##### id
+
+```ts
+readonly id: string;
+```
+
+##### version
+
+```ts
+readonly version: 1 | 2;
+```
+
 ## Type Aliases
+
+### ExceptionMethod
+
+```ts
+type ExceptionMethod = typeof EXCEPTION_METHODS[number];
+```
+
+***
 
 ### ExceptionPolicy
 
@@ -707,6 +1061,14 @@ each consumer. The core sees them only as `{ group, category }` (see `ExceptionC
 
 ***
 
+### ExceptionType
+
+```ts
+type ExceptionType = typeof EXCEPTION_TYPES[number];
+```
+
+***
+
 ### ExceptionVerdict
 
 ```ts
@@ -715,6 +1077,30 @@ type ExceptionVerdict = "forbidden" | "insufficient" | "permitted";
 
 A resolved judgment about one record, once its `ExceptionPolicy` has been checked against its
 field values. See `ExceptionDeterminant`.
+
+***
+
+### PersistExceptionRegistryResult
+
+```ts
+type PersistExceptionRegistryResult<TRecord> = 
+  | {
+  ok: true;
+  registry: PersistedExceptionRegistry<TRecord>;
+}
+  | {
+  ok: false;
+  rationale: string;
+};
+```
+
+The reconciled registry, or the rationale a check fails with when it cannot be read or written.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| <a id="type-parameter-trecord-5"></a> `TRecord` |
 
 ***
 
@@ -729,6 +1115,58 @@ type RepoContractLogMode = "all" | "failing" | "off";
 Which logs are kept: every check's, only the checks that did not pass, or none.
 
 ## Variables
+
+### EXCEPTION\_METHODS
+
+```ts
+const EXCEPTION_METHODS: readonly ["mechanical-reverification", "independent-human-review", "policy-rule"];
+```
+
+How an exception's claim was substantiated. `validated-false-positive` needs `mechanical-reverification`.
+
+***
+
+### EXCEPTION\_REGISTRY\_DIRECTORY
+
+```ts
+const EXCEPTION_REGISTRY_DIRECTORY: ".repo-contract/exceptions" = ".repo-contract/exceptions";
+```
+
+Where a repository keeps its exception registries.
+
+***
+
+### EXCEPTION\_TYPES
+
+```ts
+const EXCEPTION_TYPES: readonly ["validated-false-positive", "accepted-risk", "compensating-control", "tooling-limitation", "scheduled-remediation", "platform-or-vendor-constraint", "required-for-package-to-exist", "dev-only-not-shipped"];
+```
+
+Why an exception is legitimate. A check may accept only some of them.
+`required-for-package-to-exist` and `dev-only-not-shipped` came from internal-package-contract;
+consumer registries already use them.
+
+***
+
+### EXCEPTION\_V2\_FIELD\_KEYS
+
+```ts
+const EXCEPTION_V2_FIELD_KEYS: readonly ["ruleBroken", "attempted", "constraint", "whyPreferable", "residualRisk", "revisitWhen"];
+```
+
+The six text fields a `version: 2` record adds. With `expires`, they make an exception auditable.
+
+***
+
+### LEGACY\_FIELD\_VALUE
+
+```ts
+const LEGACY_FIELD_VALUE: "(legacy version 1 record)" = "(legacy version 1 record)";
+```
+
+What a `version: 1` record answers for a v2 field it never had. Non-empty, so the record still passes.
+
+***
 
 ### REPO\_CONTRACT\_LOG\_DIRECTORY
 
@@ -752,7 +1190,43 @@ const REPO_CONTRACT_LOG_EVIDENCE_MARKER: "=== evidence ===" = "=== evidence ==="
 
 Starts the part of a log that is the check's evidence, so the verdict above it can be rewritten alone.
 
+***
+
+### SECURITY\_EXCEPTION\_FIELD\_KEYS
+
+```ts
+const SECURITY_EXCEPTION_FIELD_KEYS: readonly ["alternatives", "remediation", "method", "exceptionType"];
+```
+
+The [SecurityExceptionFields](#securityexceptionfields) keys, in canonical order, for a schema's `metadataKeys`.
+
 ## Functions
+
+### asFlatExceptionRecords()
+
+```ts
+function asFlatExceptionRecords(records): readonly (Record<string, unknown> & {
+  id: string;
+})[];
+```
+
+Widens typed records to the flat shape `writeExceptionRegistry` takes.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `records` | readonly \{ `id`: `string`; \}[] | typed records. |
+
+#### Returns
+
+readonly (`Record`\<`string`, `unknown`\> & \{
+  `id`: `string`;
+\})[]
+
+the same array, typed as flat records.
+
+***
 
 ### createFileCacheStore()
 
@@ -778,6 +1252,20 @@ The store.
 
 ***
 
+### emptyV2Fields()
+
+```ts
+function emptyV2Fields(): ExceptionV2Fields;
+```
+
+#### Returns
+
+[`ExceptionV2Fields`](#exceptionv2fields)
+
+every v2 field blank: what a new stub starts with.
+
+***
+
 ### evaluateExceptionRecord()
 
 ```ts
@@ -798,7 +1286,7 @@ trims the result.
 
 | Type Parameter |
 | ------ |
-| <a id="type-parameter-trecord-3"></a> `TRecord` |
+| <a id="type-parameter-trecord-6"></a> `TRecord` |
 
 #### Parameters
 
@@ -830,7 +1318,7 @@ function takes already-paired inputs and does no matching.
 
 | Type Parameter |
 | ------ |
-| <a id="type-parameter-trecord-4"></a> `TRecord` |
+| <a id="type-parameter-trecord-7"></a> `TRecord` |
 
 #### Parameters
 
@@ -843,6 +1331,84 @@ function takes already-paired inputs and does no matching.
 readonly [`ExceptionDeterminant`](#exceptiondeterminant)\<`TRecord`\>[]
 
 Each input's determinant, in the same order as `inputs`.
+
+***
+
+### evaluateFindingVerdict()
+
+```ts
+function evaluateFindingVerdict(
+   record, 
+   classifications, 
+   config, 
+   globalDefault
+): {
+  missing: readonly string[];
+  verdict: "forbidden" | "insufficient" | "permitted" | "unmatched";
+};
+```
+
+Judges one finding against its reconciled record. A missing record is `"unmatched"`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `record` | `unknown` | the finding's record, or `undefined`. |
+| `classifications` | readonly \[[`ExceptionClassification`](#exceptionclassification), [`ExceptionClassification`](#exceptionclassification)\] | the finding's classifications. |
+| `config` | [`ExceptionPolicyConfig`](#exceptionpolicyconfig) | the check's policy config. |
+| `globalDefault` | [`ExceptionPolicy`](#exceptionpolicy) | the check's fallback policy. |
+
+#### Returns
+
+```ts
+{
+  missing: readonly string[];
+  verdict: "forbidden" | "insufficient" | "permitted" | "unmatched";
+}
+```
+
+the verdict and the fields still missing.
+
+##### missing
+
+```ts
+readonly missing: readonly string[];
+```
+
+##### verdict
+
+```ts
+readonly verdict: "forbidden" | "insufficient" | "permitted" | "unmatched";
+```
+
+***
+
+### exceptionRegistryStandardSchema()
+
+```ts
+function exceptionRegistryStandardSchema<TRecord>(schema): StandardSchemaV1<unknown, readonly TRecord[]>;
+```
+
+Wraps [validateExceptionRegistry](#validateexceptionregistry) as the Standard Schema `loadExceptionRegistry` takes.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| <a id="type-parameter-trecord-8"></a> `TRecord` *extends* \{ `id`: `string`; \} |
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `schema` | [`ExceptionRegistrySchema`](#exceptionregistryschema)\<`TRecord`\> | the registry's schema. |
+
+#### Returns
+
+[`StandardSchemaV1`](index/README.md#standardschemav1)\<`unknown`, readonly `TRecord`[]\>
+
+a Standard Schema whose output is the validated records.
 
 ***
 
@@ -871,7 +1437,7 @@ sets whose values concatenate to the same plain text cannot collide.
 
 | Type Parameter |
 | ------ |
-| <a id="type-parameter-trecord-5"></a> `TRecord` |
+| <a id="type-parameter-trecord-9"></a> `TRecord` |
 
 #### Parameters
 
@@ -886,6 +1452,113 @@ sets whose values concatenate to the same plain text cannot collide.
 `string`
 
 A hex-encoded SHA-256 digest of `fields`' current values.
+
+***
+
+### isExpired()
+
+```ts
+function isExpired(expires, now?): boolean;
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `expires` | `unknown` | a record's `expires` (`""` never expires), untrusted. |
+| `now?` | `Date` | the clock to compare against. |
+
+#### Returns
+
+`boolean`
+
+`true` only for a valid date strictly before `now`'s date.
+
+***
+
+### isLegacyRecord()
+
+```ts
+function isLegacyRecord(record): boolean;
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `record` | \{ `version`: `1` \| `2`; \} | a record of either version. |
+| `record.version` | `1` \| `2` | `1` or `2`. |
+
+#### Returns
+
+`boolean`
+
+whether it is a legacy `version: 1` record.
+
+***
+
+### isValidNonEmptyStringField()
+
+```ts
+function isValidNonEmptyStringField(
+   value, 
+   at, 
+   errors
+): value is string;
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `value` | `unknown` | a field value. |
+| `at` | `string` | its path, for the message. |
+| `errors` | `string`[] | collects `"<at> must be a non-empty string."`. |
+
+#### Returns
+
+`value is string`
+
+whether `value` is a non-empty string.
+
+***
+
+### loadAndReconcileExceptionRegistry()
+
+```ts
+function loadAndReconcileExceptionRegistry<TFinding, TRecord>(
+   registryPath, 
+   registryRelativePath, 
+   schema, 
+   findings, 
+   createStub
+): Promise<PersistExceptionRegistryResult<TRecord>>;
+```
+
+Loads a registry, reconciles findings against it and writes it back.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| <a id="type-parameter-tfinding-1"></a> `TFinding` *extends* \{ `id`: `string`; \} |
+| <a id="type-parameter-trecord-10"></a> `TRecord` *extends* \{ `id`: `string`; \} |
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `registryPath` | `string` | the registry's absolute path. |
+| `registryRelativePath` | `string` | its repository-relative path, for rationales. |
+| `schema` | [`StandardSchemaV1`](index/README.md#standardschemav1)\<`unknown`, readonly `TRecord`[]\> | validates the file's records. |
+| `findings` | readonly `TFinding`[] | this run's findings. |
+| `createStub` | (`finding`, `id`) => `TRecord` | builds a blank record for a finding. |
+
+#### Returns
+
+`Promise`\<[`PersistExceptionRegistryResult`](#persistexceptionregistryresult)\<`TRecord`\>\>
+
+the reconciled registry, or the rationale to fail with.
 
 ***
 
@@ -935,7 +1608,8 @@ It propagates as a rejected `Promise`, as a throwing `output.schema` does in
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `input` | \{ `path`: `string`; `readFile?`: (`path`) => `Promise`\<`string`\>; `schema`: [`StandardSchemaV1`](index/README.md#standardschemav1)\<`unknown`, readonly `T`[]\>; \} | Where to read the registry from, the schema that validates its `exceptions` array, and (for tests, or a non-`node:fs` environment) an override for how to read `path`. |
+| `input` | \{ `isSymlink?`: (`path`) => `Promise`\<`boolean`\>; `path`: `string`; `readFile?`: (`path`) => `Promise`\<`string`\>; `schema`: [`StandardSchemaV1`](index/README.md#standardschemav1)\<`unknown`, readonly `T`[]\>; \} | Where to read the registry from, the schema that validates its `exceptions` array, and (for tests, or a non-`node:fs` environment) an override for how to read `path`. |
+| `input.isSymlink?` | (`path`) => `Promise`\<`boolean`\> | Whether `input.path` is a symbolic link. Defaults to `lstat`, with a missing path not a link. A link is refused, never followed: it could lead out of the registry directory. |
 | `input.path` | `string` | The registry file's path, passed to `input.readFile` verbatim. |
 | `input.readFile?` | (`path`) => `Promise`\<`string`\> | Reads `input.path`'s content. Defaults to `node:fs/promises`' `readFile(path, "utf8")`. |
 | `input.schema` | [`StandardSchemaV1`](index/README.md#standardschemav1)\<`unknown`, readonly `T`[]\> | Validates (and may transform) the envelope's `exceptions` array once the envelope checks pass. |
@@ -1006,6 +1680,76 @@ the hook to pass as `onVerdict`.
 
 ***
 
+### readExceptionRegistries()
+
+```ts
+function readExceptionRegistries(directory): Promise<{
+  errors: readonly ExceptionRegistryError[];
+  registries: readonly ExceptionRegistryContents[];
+}>;
+```
+
+Reads every `*.json` registry in a directory. A file that cannot be read becomes an error row,
+never a throw: the check that owns the registry fails on it. A symbolic link is listed as
+skipped and never followed, since it could lead out of the directory.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `directory` | `string` | the registry directory, usually [EXCEPTION\_REGISTRY\_DIRECTORY](#exception_registry_directory). |
+
+#### Returns
+
+`Promise`\<\{
+  `errors`: readonly [`ExceptionRegistryError`](#exceptionregistryerror)[];
+  `registries`: readonly [`ExceptionRegistryContents`](#exceptionregistrycontents)[];
+\}\>
+
+the registries in file-name order, and the files that could not be read.
+
+***
+
+### reconcileAndPersistExceptionRegistry()
+
+```ts
+function reconcileAndPersistExceptionRegistry<TFinding, TRecord>(
+   registryPath, 
+   registryRelativePath, 
+   existing, 
+   findings, 
+   createStub
+): Promise<PersistExceptionRegistryResult<TRecord>>;
+```
+
+Reconciles findings against existing records and writes the registry back: a blank stub for
+each new finding, a stale record kept for the policy to fail on.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| <a id="type-parameter-tfinding-2"></a> `TFinding` *extends* \{ `id`: `string`; \} |
+| <a id="type-parameter-trecord-11"></a> `TRecord` *extends* \{ `id`: `string`; \} |
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `registryPath` | `string` | the registry's absolute path. |
+| `registryRelativePath` | `string` | its repository-relative path, for rationales. |
+| `existing` | readonly `TRecord`[] | the records already loaded. |
+| `findings` | readonly `TFinding`[] | this run's findings. |
+| `createStub` | (`finding`, `id`) => `TRecord` | builds a blank record for a finding. |
+
+#### Returns
+
+`Promise`\<[`PersistExceptionRegistryResult`](#persistexceptionregistryresult)\<`TRecord`\>\>
+
+the reconciled registry, or the rationale to fail with.
+
+***
+
 ### reconcileExceptions()
 
 ```ts
@@ -1041,8 +1785,8 @@ namespace). This function does not re-validate it.
 
 | Type Parameter |
 | ------ |
-| <a id="type-parameter-tfinding-1"></a> `TFinding` |
-| <a id="type-parameter-trecord-6"></a> `TRecord` *extends* \{ `id`: `string`; \} |
+| <a id="type-parameter-tfinding-3"></a> `TFinding` |
+| <a id="type-parameter-trecord-12"></a> `TRecord` *extends* \{ `id`: `string`; \} |
 
 #### Parameters
 
@@ -1066,6 +1810,50 @@ namespace). This function does not re-validate it.
 \}
 
 The reconciliation, or the first integrity problem found.
+
+***
+
+### recordFieldValue()
+
+```ts
+function recordFieldValue(record, requirement): string;
+```
+
+The `fieldValue` accessor `evaluateExceptionRecord` takes. A legacy record answers
+[LEGACY\_FIELD\_VALUE](#legacy_field_value) for a v2 field.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `record` | `unknown` | a flat record. |
+| `requirement` | `string` | the field name. |
+
+#### Returns
+
+`string`
+
+the field's text, or `""`.
+
+***
+
+### renderExceptionInventory()
+
+```ts
+function renderExceptionInventory(inventory): string;
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `inventory` | [`ExceptionInventory`](#exceptioninventory) | what [summarizeExceptionRegistries](#summarizeexceptionregistries) returned. |
+
+#### Returns
+
+`string`
+
+one line per registry under a total line, ending in a newline.
 
 ***
 
@@ -1174,6 +1962,34 @@ The exact file contents to persist.
 
 ***
 
+### summarizeExceptionRegistries()
+
+```ts
+function summarizeExceptionRegistries(
+   registries, 
+   now, 
+   errors?
+): ExceptionInventory;
+```
+
+Counts every registry's records by type, legacy, expired and incomplete.
+
+#### Parameters
+
+| Parameter | Type | Default value | Description |
+| ------ | ------ | ------ | ------ |
+| `registries` | readonly [`ExceptionRegistryContents`](#exceptionregistrycontents)[] | `undefined` | the registries' records. |
+| `now` | `Date` | `undefined` | the date `expires` is compared with. |
+| `errors?` | readonly [`ExceptionRegistryError`](#exceptionregistryerror)[] | `[]` | files that could not be read, carried into the inventory. |
+
+#### Returns
+
+[`ExceptionInventory`](#exceptioninventory)
+
+the inventory.
+
+***
+
 ### validateExceptionPolicyConfig()
 
 ```ts
@@ -1202,6 +2018,83 @@ Every configuration problem found; empty if `config` is valid.
 
 ***
 
+### validateExceptionRegistry()
+
+```ts
+function validateExceptionRegistry<TRecord>(value, schema): 
+  | {
+  ok: true;
+  records: readonly TRecord[];
+}
+  | {
+  errors: readonly string[];
+  ok: false;
+};
+```
+
+Validates an untrusted `exceptions` array: the core, the id namespace, unknown keys, duplicate
+ids, the v2 fields of a `version: 2` record, then `schema.validateRecord`. Reports every
+problem. A blank field is valid data; completeness is the check's policy.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| <a id="type-parameter-trecord-13"></a> `TRecord` *extends* \{ `id`: `string`; \} |
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `value` | `unknown` | the parsed `exceptions` value. |
+| `schema` | [`ExceptionRegistrySchema`](#exceptionregistryschema)\<`TRecord`\> | the registry's schema. |
+
+#### Returns
+
+  \| \{
+  `ok`: `true`;
+  `records`: readonly `TRecord`[];
+\}
+  \| \{
+  `errors`: readonly `string`[];
+  `ok`: `false`;
+\}
+
+every rebuilt record, or every problem found.
+
+***
+
+### validateSecurityExceptionFields()
+
+```ts
+function validateSecurityExceptionFields(
+   raw, 
+   index, 
+   allowedExceptionTypes, 
+   errors
+): SecurityExceptionFields | undefined;
+```
+
+Validates the four security fields. Each must be a string; `method` and `exceptionType` must be
+`""` or a known member. A filled `validated-false-positive` needs `mechanical-reverification`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `raw` | `Readonly`\<`Record`\<`string`, `unknown`\>\> | the untrusted record. |
+| `index` | `number` | its index, for messages. |
+| `allowedExceptionTypes` | readonly ( \| `"validated-false-positive"` \| `"accepted-risk"` \| `"compensating-control"` \| `"tooling-limitation"` \| `"scheduled-remediation"` \| `"platform-or-vendor-constraint"` \| `"required-for-package-to-exist"` \| `"dev-only-not-shipped"`)[] | the types this registry accepts. |
+| `errors` | `string`[] | collects one message per problem. |
+
+#### Returns
+
+[`SecurityExceptionFields`](#securityexceptionfields) \| `undefined`
+
+the four fields, or `undefined` when one is invalid.
+
+***
+
 ### writeExceptionRegistry()
 
 ```ts
@@ -1219,6 +2112,8 @@ function writeExceptionRegistry(input): Promise<
 Writes one exception registry to disk in its canonical form (`serializeExceptionRegistry`),
 atomically and idempotently: the sole filesystem-writing primitive in `repo-contract/helpers`.
 
+- **A record that is not an object with a string `id`** -> `{ ok: false }` naming its index.
+  Nothing is read or written.
 - **Symlinked target** -> `{ ok: false }`: a governance registry is never a symlink, and writing
   through one would escape `.repo-contract/exceptions/`.
 - **No file yet** -> written.

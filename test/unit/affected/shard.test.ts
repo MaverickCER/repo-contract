@@ -60,6 +60,37 @@ describe("planShards", () => {
     expect(plan.weightsMs).toEqual([100, 90])
   })
 
+  it("leaves no shard empty when several files weigh nothing", () => {
+    // fast-check's counterexample: one heavy file and nine empty ones across three shards.
+    const empty = ["a", "b", "c", "d", "e", "f", "g", "h", "i"].map((name) => `src/${name}.ts`)
+    const plan = planShards({
+      targets: ["src/big.ts", ...empty],
+      timingsMs: { "src/big.ts": 131_073, ...Object.fromEntries(empty.map((f) => [f, 0])) },
+      shards: 3,
+    })
+    expect(plan.shards).toEqual([
+      ["src/big.ts"],
+      ["src/a.ts", "src/c.ts", "src/e.ts", "src/g.ts", "src/i.ts"],
+      ["src/b.ts", "src/d.ts", "src/f.ts", "src/h.ts"],
+    ])
+    expect(plan.weightsMs).toEqual([131_073, 0, 0])
+  })
+
+  it("breaks a tie on files only between shards of equal weight", () => {
+    // Before f: shard 1 weighs 3 with 3 files, shard 2 weighs 4 with 2. The lighter shard takes
+    // f although it holds more files.
+    const plan = planShards({
+      targets: ["a", "b", "c", "d", "e", "f"],
+      timingsMs: { a: 3, b: 2, c: 2, d: 0, e: 0, f: 0 },
+      shards: 2,
+    })
+    expect(plan.shards).toEqual([
+      ["a", "d", "e", "f"],
+      ["b", "c"],
+    ])
+    expect(plan.weightsMs).toEqual([3, 4])
+  })
+
   it("weighs a file without a timing as the mean of the known ones", () => {
     const plan = planShards({
       targets: ["a.ts", "b.ts", "new.ts"],

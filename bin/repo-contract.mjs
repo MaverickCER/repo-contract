@@ -1,229 +1,27 @@
 #!/usr/bin/env node
-// The one executable this package ships. It has seven commands: `init`, `affected`, `doctor`,
-// `metrics`, `merge-mutation`, `cache` and `quick-start` (`repo-contract --help` lists them).
-// The amendments to specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md
-// cover `init` (2026-09-09), `affected` (2026-11-01), `cache`, `doctor` and `metrics`
-// (2026-11-02), and `quick-start` (2026-11-15).
+// The one executable this package ships. It has twelve commands: `init`, `affected`, `doctor`,
+// `metrics`, `merge-mutation`, `cache`, `quick-start`, `explain`, `except`, `exceptions`,
+// `mutation` and `npm-script` (`repo-contract --help` lists them). The amendments to
+// specs/decisions/0004-public-surface-stays-narrow-no-cli-experimental-presets.md cover `init`
+// (2026-09-09), `affected` (2026-11-01), `cache`, `doctor` and `metrics` (2026-11-02),
+// `quick-start` (2026-11-15), and the rest with `init --preset` (2026-11-16).
 // `init` spawns nothing and reads no environment: it reads the local package.json and writes local
-// files. `metrics`, `merge-mutation` and `cache` read and write files only. `affected` and `doctor`
-// must run git and read files, and `affected` also loads the project's TypeScript. `quick-start`
-// runs npm and the README's commands. This entry point is the only shipped code that supplies
-// them (see "What `affected` takes from the machine" below and the 2026-11-01 amendment to
-// specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
+// files. `metrics`, `merge-mutation`, `cache`, `except` and `exceptions` read and write files only.
+// `explain` loads the project's config through the project's tsx and starts no check. `affected`
+// and `doctor` must run git and read files, and `affected` also loads the project's TypeScript.
+// `quick-start` runs npm and the README's commands, `npm-script` runs one npm script, and
+// `mutation run` runs Stryker (and git, with the cache on). This entry point is the only shipped
+// code that supplies them (see "What `affected` takes from the machine" below and the amendments
+// to specs/decisions/0011-process-spawning-and-ambient-environment-access-are-consumer-supplied-capabilities-not-package-owned.md).
 // The `AmbientCapabilities` check scans the published tarball and exempts only this entry point,
 // so the library bundles under dist/ stay free of both capabilities.
 
 import { execFile, spawn } from "node:child_process"
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
+import { readFileSync } from "node:fs"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import path from "node:path"
-import {
-  AGENT_COMMAND,
-  DIST_OUTPUT,
-  PUBLISHED_PACKAGE,
-  NPM_LOCKFILE,
-  QUICK_START_BLOCK,
-  NPM_SCRIPT,
-  detectPresets,
-} from "./preset-catalog.mjs"
-import { buildConfigTemplate, CONTRACT_RUNNER_TEMPLATE } from "./templates.mjs"
-import { patchContractScript } from "./package-json-patch.mjs"
-
-const USAGE = `Usage: repo-contract init
-
-Scaffolds repo-contract.config.mts and scripts/contract.mjs from your package.json's declared
-dependencies, and wires "scripts.contract" into package.json. That is all this command does.
-Checks always run afterwards via \`npm run contract\`, never through this CLI.`
-
-const CONTRACT_SCRIPT_VALUE = "tsx scripts/contract.mjs"
-
-/**
- * Reads and validates the consumer's package.json at `cwd`. It throws when the file is missing,
- * unparsable, or not an object, with a message meant for printing without a stack trace. Each
- * such failure is a preflight failure, so nothing is written.
- * @param cwd - Directory `init` was invoked from.
- * @returns The parsed package.json content and its raw source text.
- */
-function readPackageJson(cwd) {
-  const packageJsonPath = path.join(cwd, "package.json")
-  if (!existsSync(packageJsonPath)) {
-    throw new Error(`no package.json found at ${packageJsonPath}. Run \`npm init\` first.`)
-  }
-  const text = readFileSync(packageJsonPath, "utf8")
-  let parsed
-  try {
-    parsed = JSON.parse(text)
-  } catch (error) {
-    throw new Error(`package.json at ${packageJsonPath} is not valid JSON: ${error.message}`)
-  }
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    throw new Error(`package.json at ${packageJsonPath} must contain a top-level object.`)
-  }
-  return { packageJsonPath, text, parsed }
-}
-
-/**
- * Preflight-checks the two scaffold targets: neither may already exist as a directory, and
- * `scripts/`'s path must not be blocked by a non-directory file. A failure here means `init`
- * performs zero writes, rather than discovering a problem partway through.
- * @param cwd - Directory `init` was invoked from.
- * @returns The absolute paths of the two scaffold targets.
- */
-function preflight(cwd) {
-  const configPath = path.join(cwd, "repo-contract.config.mts")
-  const scriptsDir = path.join(cwd, "scripts")
-  const runnerPath = path.join(scriptsDir, "contract.mjs")
-
-  if (existsSync(configPath) && statSync(configPath).isDirectory()) {
-    throw new Error(`${configPath} already exists and is a directory.`)
-  }
-  if (existsSync(scriptsDir) && !statSync(scriptsDir).isDirectory()) {
-    throw new Error(`${scriptsDir} already exists and is not a directory.`)
-  }
-  if (existsSync(runnerPath) && statSync(runnerPath).isDirectory()) {
-    throw new Error(`${runnerPath} already exists and is a directory.`)
-  }
-
-  return { configPath, scriptsDir, runnerPath }
-}
-
-/**
- * Writes `content` to `filePath` if it doesn't already exist. It uses exclusive-create (`"wx"`),
- * not an existsSync check followed by a write. The two-step form races between the check and the
- * write. Exclusive-create makes "don't overwrite an existing file" atomic. An existing file is
- * skipped, never overwritten.
- * @param filePath - Absolute path to write.
- * @param content - File content.
- * @returns Whether the file was created or already existed.
- */
-function writeIfAbsent(filePath, content) {
-  try {
-    writeFileSync(filePath, content, { flag: "wx" })
-    return "created"
-  } catch (error) {
-    if (error.code === "EEXIST") return "skipped"
-    throw error
-  }
-}
-
-/**
- * Whether `name` is declared in `packageJson.devDependencies`: the same devDependencies-only
- * convention `detectPresets` uses (see preset-catalog.mjs).
- * @param packageJson - Parsed package.json content.
- * @param name - Package name to look up.
- * @returns Whether it's declared.
- */
-function isDevDependencyDeclared(packageJson, name) {
-  return Object.hasOwn(packageJson.devDependencies ?? {}, name)
-}
-
-function runInit(cwd) {
-  const { packageJsonPath, text, parsed } = readPackageJson(cwd)
-  const { configPath, scriptsDir, runnerPath } = preflight(cwd)
-
-  const { detected, skipped } = detectPresets(parsed)
-  const tsxInstalled = isDevDependencyDeclared(parsed, "tsx")
-
-  // Always compute (and, for a malformed "scripts" field, validate) the package.json patch
-  // before writing anything else. A failure here must mean zero writes, never a config/runner
-  // file left behind with no matching package.json change. Computing it writes nothing, so it
-  // happens regardless of tsx. An existing "scripts.contract" (matching or conflicting) must
-  // still be detected and reported correctly when tsx is missing. Only *writing a brand-new
-  // value* is gated on tsx being installed. A generated "scripts.contract" that shells out to a
-  // missing tsx would fail on its first run.
-  const patch = patchContractScript(text, CONTRACT_SCRIPT_VALUE)
-  const writeNewScript = patch.status === "created" && tsxInstalled
-
-  const configResult = writeIfAbsent(configPath, buildConfigTemplate(detected))
-  if (!existsSync(scriptsDir)) mkdirSync(scriptsDir, { recursive: true })
-  const runnerResult = writeIfAbsent(runnerPath, CONTRACT_RUNNER_TEMPLATE)
-
-  if (writeNewScript) {
-    writeFileSync(packageJsonPath, patch.text)
-  }
-
-  const scriptStatus = patch.status === "created" && !tsxInstalled ? "tsx-missing" : patch.status
-  report({ configResult, runnerResult, scriptStatus, detected, skipped })
-}
-
-/**
- * Why `init` left a preset out, as its "Not detected" line says it.
- * @param dependency - The preset's PRESET_DEPENDENCIES value.
- * @returns The reason.
- */
-function skipReason(dependency) {
-  if (dependency === DIST_OUTPUT) return "package.json names no dist/ build output"
-  if (dependency === AGENT_COMMAND)
-    return "runs the AI agent you name; see GUIDE.md#ai-review-checks"
-  if (dependency === PUBLISHED_PACKAGE) return "package.json is private, so npm never publishes it"
-  if (dependency === QUICK_START_BLOCK)
-    return "runs the README block you mark; see GUIDE.md#presets"
-  if (dependency === NPM_LOCKFILE)
-    return "checks SBOM documents you write and commit first; see GUIDE.md#keep-an-sbom-current"
-  if (dependency === NPM_SCRIPT) return "runs the npm script you name; see GUIDE.md#presets"
-  return `${dependency} not installed`
-}
-
-function report({ configResult, runnerResult, scriptStatus, detected, skipped }) {
-  const lines = ["repo-contract initialized", ""]
-
-  const createdFiles = []
-  const skippedFiles = []
-  if (configResult === "created") createdFiles.push("repo-contract.config.mts")
-  else skippedFiles.push("repo-contract.config.mts (already exists)")
-  if (runnerResult === "created") createdFiles.push("scripts/contract.mjs")
-  else skippedFiles.push("scripts/contract.mjs (already exists)")
-
-  if (createdFiles.length > 0) {
-    lines.push("Created:")
-    for (const file of createdFiles) lines.push(`  ✓ ${file}`)
-    lines.push("")
-  }
-  if (skippedFiles.length > 0) {
-    lines.push("Skipped:")
-    for (const file of skippedFiles) lines.push(`  - ${file}`)
-    lines.push("")
-  }
-
-  if (scriptStatus === "created") lines.push('Added "scripts.contract" to package.json.', "")
-  else if (scriptStatus === "unchanged")
-    lines.push('"scripts.contract" already set to this value.', "")
-  else if (scriptStatus === "tsx-missing")
-    lines.push(
-      'Skipped "scripts.contract": install tsx as a devDependency, then run `repo-contract init` again.',
-      "",
-    )
-  else
-    lines.push(
-      '"scripts.contract" already exists with a different value, so it was left untouched.',
-      "",
-    )
-
-  lines.push("Detected:")
-  for (const preset of detected) lines.push(`  ✓ ${preset}`)
-  lines.push("")
-
-  if (skipped.length > 0) {
-    lines.push("Not detected (install the tool to add its check):")
-    for (const { preset, dependency } of skipped)
-      lines.push(`  - ${preset} (${skipReason(dependency)})`)
-    lines.push("")
-  }
-
-  if (scriptStatus === "tsx-missing") {
-    lines.push(
-      "Next:",
-      "  npm install --save-dev tsx",
-      "  npx repo-contract init",
-      "  npm run contract",
-    )
-  } else {
-    lines.push("Next:", "  npm run contract")
-  }
-
-  console.log(lines.join("\n"))
-}
+import { outputTail, stopProcessGroup } from "./npm-script-cli.mjs"
 
 // --- What `affected` takes from the machine: git, files and the project's TypeScript.
 // Kept in this entry point, not a module beside it, because AmbientCapabilities exempts only the
@@ -352,23 +150,23 @@ function shellCapability(command, { cwd, timeoutMs }) {
       detached: !IS_WINDOWS,
       stdio: ["ignore", "pipe", "pipe"],
     })
-    let output = ""
+    // One tail for both streams, as the report shows them interleaved. A flood cannot fill memory.
+    const output = outputTail()
     let timedOut = false
-    const collect = (chunk) => (output += chunk)
-    child.stdout.on("data", collect)
-    child.stderr.on("data", collect)
+    child.stdout.setEncoding("utf8").on("data", output.push)
+    child.stderr.setEncoding("utf8").on("data", output.push)
     const timer = setTimeout(() => {
       timedOut = true
       if (IS_WINDOWS) execFile("taskkill", ["/pid", String(child.pid), "/T", "/F"], () => {})
-      else process.kill(-child.pid, "SIGKILL")
+      else stopProcessGroup((pid, signal) => process.kill(pid, signal), child.pid)
     }, timeoutMs)
     child.on("error", (error) => {
       clearTimeout(timer)
-      resolve({ exitCode: null, timedOut, output: `${output}${error.message}` })
+      resolve({ exitCode: null, timedOut, output: `${output.text()}${error.message}` })
     })
     child.on("close", (exitCode) => {
       clearTimeout(timer)
-      resolve({ exitCode, timedOut, output })
+      resolve({ exitCode, timedOut, output: output.text() })
     })
   })
 }
@@ -533,7 +331,6 @@ async function main() {
     return
   }
 
-  // R4 owns this block.
   if (command === "explain") {
     const { runExplain } = await import("./explain-cli.mjs")
     process.exitCode = await runExplain({
@@ -549,7 +346,6 @@ async function main() {
     return
   }
 
-  // R4 owns this block.
   if (command === "except") {
     const { runExcept } = await import("./except-cli.mjs")
     const [helpers, affected] = await Promise.all([
@@ -566,16 +362,11 @@ async function main() {
       helpers,
       affected,
       readFile: (file) => readFile(file, "utf8").catch(() => undefined),
-      writeFile: async (file, text) => {
-        await mkdir(path.dirname(file), { recursive: true })
-        await writeFile(file, text, "utf8")
-      },
-      now: () => new Date(),
+      mkdir: (dir) => mkdir(dir, { recursive: true }),
     })
     return
   }
 
-  // R4 owns this block.
   if (command === "exceptions") {
     const { runExceptions } = await import("./exceptions-cli.mjs")
     process.exitCode = await runExceptions({
@@ -591,7 +382,6 @@ async function main() {
     return
   }
 
-  // R7a owns this block.
   if (command === "mutation") {
     const { runMutation } = await import("./mutation-cli.mjs")
     const [affected, helpers] = await Promise.all([
@@ -607,21 +397,68 @@ async function main() {
       stderr: (text) => process.stderr.write(text),
       affected,
       helpers,
-      exec: execCapability,
-      createCapabilities,
-      readFile: (file) => readFile(file, "utf8").catch(() => undefined),
-      writeFile: async (file, text) => {
-        await mkdir(path.dirname(file), { recursive: true })
-        await writeFile(file, text, "utf8")
-      },
+      // Stryker's own output goes to stderr, so stdout carries only the report. A re-run of one
+      // timed-out mutant is quiet: its log would bury the full run's.
+      stryker: (args, { cwd, quiet }) =>
+        new Promise((resolve) => {
+          const quoted = IS_WINDOWS ? args.map((arg) => (/\s/.test(arg) ? `"${arg}"` : arg)) : args
+          const sink = quiet ? "ignore" : 2
+          const child = spawn("stryker", quoted, {
+            cwd,
+            shell: IS_WINDOWS,
+            stdio: ["ignore", sink, sink],
+          })
+          child.on("error", (error) => resolve({ exitCode: null, error: error.message }))
+          child.on("close", (exitCode) => resolve({ exitCode }))
+        }),
+      git: (args, dir) => createCapabilities(dir).git(args),
       now: () => new Date(),
     })
     return
   }
 
-  // R7b owns this block.
   if (command === "npm-script") {
     const { runNpmScript } = await import("./npm-script-cli.mjs")
+    // Argv-only on POSIX, so the script name never meets a shell. A POSIX child leads its own
+    // process group, so a timeout stops npm and the script it started together. Each stream
+    // keeps only its tail, so a script that floods its output cannot exhaust memory.
+    const exec = (program, args, { cwd, timeoutMs }) =>
+      new Promise((resolve) => {
+        const child = spawn(program, args, {
+          cwd,
+          env: quickStartEnvironment(),
+          shell: IS_WINDOWS,
+          detached: !IS_WINDOWS,
+          stdio: ["ignore", "pipe", "pipe"],
+        })
+        const stdout = outputTail()
+        const stderr = outputTail()
+        let timedOut = false
+        child.stdout.setEncoding("utf8").on("data", stdout.push)
+        child.stderr.setEncoding("utf8").on("data", stderr.push)
+        const timer =
+          timeoutMs === undefined
+            ? undefined
+            : setTimeout(() => {
+                timedOut = true
+                if (IS_WINDOWS)
+                  execFile("taskkill", ["/pid", String(child.pid), "/T", "/F"], () => {})
+                else stopProcessGroup((pid, signal) => process.kill(pid, signal), child.pid)
+              }, timeoutMs)
+        child.on("error", (error) => {
+          clearTimeout(timer)
+          resolve({
+            exitCode: null,
+            timedOut,
+            stdout: stdout.text(),
+            stderr: `${stderr.text()}${error.message}`,
+          })
+        })
+        child.on("close", (exitCode) => {
+          clearTimeout(timer)
+          resolve({ exitCode, timedOut, stdout: stdout.text(), stderr: stderr.text() })
+        })
+      })
     process.exitCode = await runNpmScript({
       argv: rest,
       cwd: process.cwd(),
@@ -629,36 +466,24 @@ async function main() {
         .version,
       stdout: (text) => process.stdout.write(text),
       stderr: (text) => process.stderr.write(text),
-      exec: execCapability,
-      readFile: (file) => readFile(file, "utf8").catch(() => undefined),
+      exec,
     })
     return
   }
 
-  if (command !== "init") {
-    usageError(`repo-contract: unknown command '${command}'`, "repo-contract --help")
+  if (command === "init") {
+    const { runInit } = await import("./init-cli.mjs")
+    process.exitCode = await runInit({
+      argv: rest,
+      cwd: process.cwd(),
+      stdout: (text) => process.stdout.write(text),
+      stderr: (text) => process.stderr.write(text),
+      loadTiers: () => import("../dist/tiers.js"),
+    })
     return
   }
 
-  if (rest.includes("--help") || rest.includes("-h")) {
-    console.log(USAGE)
-    return
-  }
-
-  if (rest.length > 0) {
-    usageError(
-      `repo-contract init takes no arguments (got: ${rest.join(" ")})`,
-      "repo-contract init --help",
-    )
-    return
-  }
-
-  try {
-    runInit(process.cwd())
-  } catch (error) {
-    console.error(`repo-contract init failed: ${error.message}`)
-    process.exitCode = 1
-  }
+  usageError(`repo-contract: unknown command '${command}'`, "repo-contract --help")
 }
 
 await main()

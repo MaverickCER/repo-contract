@@ -33,7 +33,7 @@ reports
 # docs:api:report`, via internal-package-contract's shared
 # typedoc.markdown.json config) and compared byte-for-byte against a fresh
 # regeneration -- see the `api-docs-report` check
-# (internal-package-contract/checks/npm-script's `mustNotChange` wrapper) in
+# (this package's `npmScript` preset with `mustNotChange`) in
 # repo-contract.config.ts. Reformatting the committed copy makes it
 # permanently "out of date" from that check's point of view.
 docs/api-report

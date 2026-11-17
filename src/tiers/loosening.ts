@@ -1,4 +1,3 @@
-import { notImplemented } from "../not-implemented.js"
 import type { TierCheckId, TierSettings } from "./types.js"
 
 /** Which way a setting gets stricter. */
@@ -19,11 +18,20 @@ export type SettingComparison = "stricter" | "same" | "looser"
  * The duplication budget and the CRAP and complexity ceilings are stricter lower. A check turned
  * off is always looser, and needs no rule.
  */
-export const LOOSENING_RULES: readonly LooseningRule[] = []
+export const LOOSENING_RULES: readonly LooseningRule[] = [
+  { check: "Coverage", setting: "lines", direction: "higher-is-stricter" },
+  { check: "Coverage", setting: "statements", direction: "higher-is-stricter" },
+  { check: "Coverage", setting: "functions", direction: "higher-is-stricter" },
+  { check: "Coverage", setting: "branches", direction: "higher-is-stricter" },
+  { check: "Duplication", setting: "maxPercentage", direction: "lower-is-stricter" },
+  { check: "Crap", setting: "threshold", direction: "lower-is-stricter" },
+  { check: "Crap", setting: "maxComplexity", direction: "lower-is-stricter" },
+  { check: "Mutation", setting: "minScore", direction: "higher-is-stricter" },
+]
 
 /**
  * Compares one setting with its baseline. A value the baseline sets but the config leaves out
- * (a coverage metric no longer judged) is looser.
+ * (a coverage metric no longer judged) is looser; one only the config sets is stricter.
  * @param direction - which way the setting gets stricter.
  * @param baseline - the baseline's value, or `undefined` when the baseline does not judge it.
  * @param value - the config's value, or `undefined` when the config does not judge it.
@@ -34,5 +42,10 @@ export function compareSetting(
   baseline: number | undefined,
   value: number | undefined,
 ): SettingComparison {
-  return notImplemented("R1e", direction, baseline, value)
+  if (value === undefined) return baseline === undefined ? "same" : "looser"
+  if (baseline === undefined) return "stricter"
+  // Positive when the config is stricter, whichever way the setting points.
+  const gain = direction === "higher-is-stricter" ? value - baseline : baseline - value
+  if (gain > 0) return "stricter"
+  return gain < 0 ? "looser" : "same"
 }

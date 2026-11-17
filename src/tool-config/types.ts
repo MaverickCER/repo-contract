@@ -27,7 +27,19 @@ export interface ToolConfigOptions {
   readonly srcDir?: string
   /** Globs left out of the build's checks: mutation targets, coverage and dead-code analysis. Added to {@link DEFAULT_EXCLUDE}. */
   readonly exclude?: readonly string[]
+  /** Whether a file exists, relative to the working directory. Defaults to `node:fs`'s `existsSync`; tests pass their own. */
+  readonly exists?: (path: string) => boolean
 }
 
-/** Globs every helper leaves out: tests, declarations and fixtures. */
-export const DEFAULT_EXCLUDE: readonly string[] = []
+/**
+ * Globs every helper leaves out: tests, mocks, fixtures and declarations. Each starts with `**`
+ * so it matches under any source directory.
+ */
+export const DEFAULT_EXCLUDE: readonly string[] = Object.freeze([
+  "**/*.{test,spec}.{ts,tsx}",
+  "**/__tests__/**",
+  "**/__mocks__/**",
+  "**/fixtures/**",
+  "**/__fixtures__/**",
+  "**/*.d.ts",
+])

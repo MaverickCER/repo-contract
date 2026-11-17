@@ -112,7 +112,14 @@ export function planShards(input: ShardPlanInput): ShardPlan {
   // `targets` is already in name order and a sort is stable, so equal weights keep that order.
   const heaviestFirst = [...targets].sort((a, b) => weightOf(b) - weightOf(a))
   for (const target of heaviestFirst) {
-    const lightest = bins.reduce((best, bin) => (bin.weight < best.weight ? bin : best))
+    // Among equally light shards the one with fewer files wins, so zero-weight files cannot all
+    // pile onto one shard and leave another empty.
+    const lightest = bins.reduce((best, bin) =>
+      bin.weight < best.weight ||
+      (bin.weight === best.weight && bin.files.length < best.files.length)
+        ? bin
+        : best,
+    )
     lightest.files.push(target)
     lightest.weight += weightOf(target)
   }

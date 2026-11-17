@@ -59,7 +59,8 @@ release-please era) stays as-is; only future entries render through Changesets.
 The `version` script runs `internal-package-contract update-baseline` after the build. So the
 `chore: version packages` pull request carries the new version's baselines in the same merge as
 the version bump. They are each entry point's `.repo-contract/api-contract/<target>/baseline.*`
-(`index`, `presets`, `helpers`, `affected`, `metrics`) and `.repo-contract/surface-contract/baseline.json`.
+and `.repo-contract/surface-contract/baseline.json`. The twelve targets are `index`, `presets`,
+`helpers`, `affected`, `metrics`, `tiers`, `tool-config` and `tool-config/{knip,stryker,tsup,typedoc,vitest}`.
 `api-contract` and `surface-contract` fail on a baseline that records another version than
 `package.json`, so a release that skipped the refresh fails its own pull request.
 `npm run contract:baseline` runs the same command by hand.

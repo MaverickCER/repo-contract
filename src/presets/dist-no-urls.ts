@@ -1,6 +1,7 @@
 import { globMatch } from "../helpers/glob-match.js"
 import type { CheckDefinitionConfig } from "../types.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
+import { checkOptionsObject } from "./rules/option-checks.js"
 
 /** One allowlisted URL (glob) and the reviewable reason it may ship. */
 export interface DistNoUrlsAllowEntry {
@@ -110,9 +111,11 @@ function isReport(value: unknown): value is UrlScanReport {
  * blanket opt-out.
  * @param options - configuration for this check; see {@link DistNoUrlsOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export function distNoUrls(options: DistNoUrlsOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("distNoUrls", options)
   const { dir = "dist", allow = [] } = options
 
   return {

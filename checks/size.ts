@@ -29,16 +29,35 @@ export const SIZE_BUDGETS: readonly SizeBudget[] = [
   // regression in either file alone fails this check.
   { label: "index (esm)", file: "dist/index.js", maxGzipBytes: 13 * 1024 },
   { label: "index (cjs)", file: "dist/index.cjs", maxGzipBytes: 13 * 1024 },
-  { label: "presets (esm)", file: "dist/presets.js", maxGzipBytes: 16 * 1024 },
-  { label: "presets (cjs)", file: "dist/presets.cjs", maxGzipBytes: 16 * 1024 },
+  // The preset redesign (tiers' presets, the mutation verdict, the v2 exception record) took the
+  // CJS bundle from about 13 KiB to 33 KiB; CJS inlines what ESM shares in chunks.
+  { label: "presets (esm)", file: "dist/presets.js", maxGzipBytes: 42 * 1024 },
+  { label: "presets (cjs)", file: "dist/presets.cjs", maxGzipBytes: 42 * 1024 },
   // These three budgets also add about a quarter of headroom over their CJS size. A stray
   // dependency or a duplicated module then shows up as a failure, not a trend.
-  { label: "helpers (esm)", file: "dist/helpers.js", maxGzipBytes: 9 * 1024 },
-  { label: "helpers (cjs)", file: "dist/helpers.cjs", maxGzipBytes: 9 * 1024 },
+  // The v2 exception record and the registry inventory took helpers' CJS to about 10 KiB.
+  { label: "helpers (esm)", file: "dist/helpers.js", maxGzipBytes: 13 * 1024 },
+  { label: "helpers (cjs)", file: "dist/helpers.cjs", maxGzipBytes: 13 * 1024 },
   { label: "affected (esm)", file: "dist/affected.js", maxGzipBytes: 23 * 1024 },
   { label: "affected (cjs)", file: "dist/affected.cjs", maxGzipBytes: 23 * 1024 },
   { label: "metrics (esm)", file: "dist/metrics.js", maxGzipBytes: 5 * 1024 },
   { label: "metrics (cjs)", file: "dist/metrics.cjs", maxGzipBytes: 5 * 1024 },
+  // tiers' CJS inlines every preset it builds on, about 31 KiB.
+  { label: "tiers (esm)", file: "dist/tiers.js", maxGzipBytes: 40 * 1024 },
+  { label: "tiers (cjs)", file: "dist/tiers.cjs", maxGzipBytes: 40 * 1024 },
+  // Each tool-config helper returns a plain object; each is under 2 KiB in CJS.
+  { label: "config (esm)", file: "dist/config.js", maxGzipBytes: 2 * 1024 },
+  { label: "config (cjs)", file: "dist/config.cjs", maxGzipBytes: 2 * 1024 },
+  { label: "config/knip (esm)", file: "dist/config/knip.js", maxGzipBytes: 2 * 1024 },
+  { label: "config/knip (cjs)", file: "dist/config/knip.cjs", maxGzipBytes: 2 * 1024 },
+  { label: "config/stryker (esm)", file: "dist/config/stryker.js", maxGzipBytes: 2 * 1024 },
+  { label: "config/stryker (cjs)", file: "dist/config/stryker.cjs", maxGzipBytes: 2 * 1024 },
+  { label: "config/tsup (esm)", file: "dist/config/tsup.js", maxGzipBytes: 2 * 1024 },
+  { label: "config/tsup (cjs)", file: "dist/config/tsup.cjs", maxGzipBytes: 2 * 1024 },
+  { label: "config/typedoc (esm)", file: "dist/config/typedoc.js", maxGzipBytes: 2 * 1024 },
+  { label: "config/typedoc (cjs)", file: "dist/config/typedoc.cjs", maxGzipBytes: 2 * 1024 },
+  { label: "config/vitest (esm)", file: "dist/config/vitest.js", maxGzipBytes: 2 * 1024 },
+  { label: "config/vitest (cjs)", file: "dist/config/vitest.cjs", maxGzipBytes: 2 * 1024 },
 ]
 
 export interface SizeReportEntry {

@@ -1,4 +1,5 @@
 export const MUTATION_USAGE: string
+export const CAUGHT_ALONE: string
 export interface MutationRunOptions {
   json: boolean
   shard?: string
@@ -7,6 +8,7 @@ export interface MutationRunOptions {
   config?: string
   cache: "read-write" | "read-only" | "off"
   confirmTimeouts: number
+  patchVitestRunner: boolean
   cwd?: string
 }
 export type ParsedMutationArgs =

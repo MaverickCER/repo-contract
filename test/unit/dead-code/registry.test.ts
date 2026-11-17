@@ -5,7 +5,7 @@ import {
   createDeadCodeStub,
 } from "../../../scripts/dead-code/registry.js"
 import { deriveDeadCodeId } from "../../../scripts/dead-code/evidence-types.js"
-import { validateExceptionRegistry } from "../../../scripts/shared/exception-record.js"
+import { validateExceptionRegistry } from "../../../src/helpers/index.js"
 
 const validate = (records: readonly unknown[]) =>
   validateExceptionRegistry(records, DEAD_CODE_EXCEPTION_SCHEMA)

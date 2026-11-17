@@ -1,13 +1,13 @@
 {
   "siteUrl": "https://maverickcer.github.io/repo-contract/",
   "repoUrl": "https://github.com/maverickcer/repo-contract",
-  "title": "repo-contract: deterministic and AI checks, one engineering standard",
-  "description": "Use deterministic and AI checks to enforce a baseline engineering standard across your org. Each check reports pass, warn or fail with a reason.",
+  "title": "repo-contract: one typed contract for the tools your CI runs",
+  "description": "One typed contract for the tools your CI runs: each check says pass, warn or fail and why; every governed exception is a reviewable record. It runs the tools you install and replaces none of them.",
   "ogImage": "assets/og-image.png",
   "maturity": "repo-contract is pre-1.0. A `0.x` minor may carry a breaking change to the Stable tier before 1.0, so pin the version and read the changelog on every minor upgrade.",
   "hero": {
-    "eyebrow": "Deterministic and AI checks, one contract",
-    "heading": "Use deterministic and AI checks to enforce a baseline engineering standard across your org.",
+    "eyebrow": "Your tools, your policies, one contract",
+    "heading": "One typed contract for the tools your CI runs: each check says pass, warn or fail and why; every governed exception is a reviewable record.",
     "lede": "Your linters, test runners and security scanners can tell you what happened. They don't define what your organization considers acceptable.",
     "support": "repo-contract is that layer. You list your tools as checks in one typed file, the contract, and write the policies that judge their results. Each check then reports pass, warn or fail with a reason, on a laptop and in CI.",
     "outcome": "Published as an npm package, the contract becomes your baseline standard: every repository that extends it runs the same checks and can add its own."
@@ -15,11 +15,11 @@
   "install": {
     "label": "Quick start",
     "commands": [
-      "npm install --save-dev repo-contract tsx",
-      "npx repo-contract init",
-      "npm run contract"
+      "npm i -D repo-contract tsx",
+      "npx repo-contract init --preset strict",
+      "npx repo-contract explain"
     ],
-    "note": "For a project that already has its tools, such as `typescript`, `vitest` and `eslint`. repo-contract bundles none of them; `init` wires up only the ones it finds in your `package.json`."
+    "note": "`init` names each tool the tier runs that your devDependencies lack; repo-contract installs none of them. Install those, then run `npm run contract`. Tiers and `explain` are Experimental."
   },
   "cta": {
     "primary": {
@@ -100,13 +100,16 @@
   "comparison": {
     "eyebrow": "Why not just CI",
     "heading": "CI distributes how checks run. repo-contract distributes what your organization considers acceptable.",
-    "lede": "Keep your CI. Shared ESLint configs, reusable workflows and template repositories all distribute individual checks. repo-contract distributes a standard: one versioned package with the checks, the policies that relate them, and the reason for each outcome.",
+    "lede": "Keep your CI. Reusable workflows, lefthook remotes and MegaLinter EXTENDS already share commands across repositories. A repo-contract standard also shares the policies that judge their results. It is one versioned package with the checks, the policies that relate them, and the reason for each outcome.",
     "caption": "Where common approaches stop and repo-contract begins",
     "rows": [
       ["Rules scattered across workflows and scripts", "One repository-owned contract"],
       ["Individual checks", "Checks, the relationships between them, and their policies"],
       ["CI-specific orchestration logic", "The same contract, run locally and in CI"],
-      ["Exit codes and CI job state", "Structured evidence with a stable, versioned shape"],
+      [
+        "Hook runners such as pre-commit and lefthook judge by exit code",
+        "Each tool's output becomes evidence with a published schema, and your policies judge it"
+      ],
       ["\"CI failed\"", "A reason to act on for every outcome, including pass"],
       ["Each repository reinvents the glue", "One standard, inherited as a dependency"]
     ],
@@ -131,7 +134,7 @@
   },
   "brief": {
     "heading": "A one-page brief for your manager",
-    "oneLine": "repo-contract runs a team's deterministic and AI checks on every developer's machine and in CI, and shares them across repositories as one baseline engineering standard.",
+    "oneLine": "repo-contract runs a team's existing quality checks on every developer's machine and in CI, gives each result a written reason, and can share them across repositories.",
     "problem": "Each team keeps its quality rules in different places, so nobody can say what \"acceptable\" means across the organization. New requirements are hard to introduce without breaking people's builds.",
     "whatItDoes": "It runs the checks a team already has, such as tests, linting and security scans. It then applies one agreed contract to their results and gives a single verdict, with a plain-language reason, on a developer's machine and in CI.",
     "whyItMatters": [

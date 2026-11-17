@@ -15,6 +15,20 @@
       "whyPreferable": "Recording what the name is is preferable to renaming a test artifact to dodge the scanner, or to ignoring the binary for every future knip run."
     },
     {
+      "id": "dead-code:unlisted-dependency:@stryker-mutator/instrumenter",
+      "version": 2,
+      "justification": "bin/mutation-adopt.mjs resolves `@stryker-mutator/instrumenter` from the project it runs in, through `createRequire(<project>/package.json)`, to find files Stryker places no mutant in. Any project that runs `repo-contract mutation run` has it, because `@stryker-mutator/core` depends on it at an exact version.",
+      "attempted": "Searched the repository for `@stryker-mutator/instrumenter`: it appears in bin/mutation-adopt.mjs and package-lock.json, where `@stryker-mutator/core` pins it.",
+      "constraint": "Listing it as a devDependency would pin a second copy that can drift from the one `@stryker-mutator/core` pins; the import must match the instrumenter Stryker itself runs.",
+      "expires": "",
+      "kind": "unlisted-dependency",
+      "name": "@stryker-mutator/instrumenter",
+      "residualRisk": "If `@stryker-mutator/core` stops depending on the instrumenter, `mutation run --report` fails to resolve it, and knip can no longer say so.",
+      "revisitWhen": "`@stryker-mutator/core` drops or renames the dependency, or bin/mutation-adopt.mjs stops importing it.",
+      "ruleBroken": "knip reports `@stryker-mutator/instrumenter` as an unlisted dependency.",
+      "whyPreferable": "Resolving the instrumenter Stryker already installed is preferable to pinning a second copy the two could disagree on."
+    },
+    {
       "id": "dead-code:unused-dev-dependency:@arethetypeswrong/cli",
       "version": 2,
       "justification": "Spawned by literal command name (\"attw\") via the arethetypeswrong preset's `run: [\"attw\", ...]` (src/presets/arethetypeswrong.ts) -- nothing `import`s the package, so knip cannot see the use.",

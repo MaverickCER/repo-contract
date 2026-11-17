@@ -1,4 +1,6 @@
+import { normalize } from "node:path"
 import type { CheckDefinitionConfig, PolicyResult } from "../types.js"
+import { checkBoolean, checkOptionsObject, checkPaths, shownValue } from "./rules/option-checks.js"
 import { checkTerminatedAbnormally } from "./shared/terminal-status.js"
 
 /**
@@ -12,7 +14,7 @@ export interface SbomOptions {
   readonly output?: string
   /** The SBOM of what installing the package brings in: every locked package not marked `dev`. Defaults to `"docs/sbom.production.cdx.json"`; `null` skips it. */
   readonly productionOutput?: string | null
-  /** Write the documents instead of checking them. Defaults to `false`: the check fails when a committed document is missing or out of date. */
+  /** Write the documents instead of checking them. Defaults to `false`: the check fails when a committed document is missing or out of date. Write mode refuses a path that is a symbolic link, is not a regular file, or resolves outside the working directory. It also refuses the lockfile: its path, a hard link to it, or a case-variant name on a case-insensitive file system. A refusal writes nothing and exits 1. */
   readonly write?: boolean
   /** The command a failure message tells the reader to run to regenerate the documents. */
   readonly fix?: string
@@ -33,10 +35,11 @@ type GeneratorReport =
 /**
  * The generator executed by `node -e`. It is self-contained, so the preset needs no external tool
  * and never calls `npm ls` (whose output npm corrupts on some deprecation notices). It builds a
- * CycloneDX 1.6 document from the lockfile alone, so the output is deterministic: components and
- * dependency edges are sorted, there is no timestamp, and the serial number is a UUIDv5 of the
+ * CycloneDX 1.6 document from the lockfile alone, so the output is deterministic. Components and
+ * dependency edges are sorted, and there is no timestamp. The serial number is a UUIDv5 of the
  * document's content. Arguments: lockfile, output, production output ("" for none), mode
- * ("check" or "write"). It prints only a JSON report.
+ * ("check" or "write"). It prints only a JSON report. In write mode it checks every path before
+ * writing any, and writes each through a temporary file and a rename. A refused path exits 1.
  */
 const GENERATOR_SOURCE = String.raw`
 const fs = require("node:fs")
@@ -66,6 +69,13 @@ function readLock() {
   }
   if (typeof lock !== "object" || lock === null || typeof lock.packages !== "object" || lock.packages === null || Array.isArray(lock.packages)) {
     return "The lockfile " + JSON.stringify(lockfile) + " has no packages map: lockfileVersion 2 or 3 is required."
+  }
+  const broken = Object.keys(lock.packages).find((key) => {
+    const entry = lock.packages[key]
+    return typeof entry !== "object" || entry === null || Array.isArray(entry)
+  })
+  if (broken !== undefined) {
+    return "The lockfile " + JSON.stringify(lockfile) + " has a packages entry that is not an object: " + JSON.stringify(broken) + "."
   }
   return lock.packages
 }
@@ -202,11 +212,6 @@ function comparable(document) {
 }
 function settle(file, document) {
   const components = document.components.length
-  if (mode === "write") {
-    fs.mkdirSync(path.dirname(file), { recursive: true })
-    fs.writeFileSync(file, JSON.stringify(document, null, 2) + "\n")
-    return { file, status: "written", components }
-  }
   let text
   try {
     text = fs.readFileSync(file, "utf8")
@@ -222,9 +227,67 @@ function settle(file, document) {
   if (typeof committed !== "object" || committed === null || Array.isArray(committed)) return { file, status: "invalid", components }
   return { file, status: comparable(committed) === comparable(document) ? "current" : "stale", components }
 }
-const documents = [settle(output, build(false))]
-if (productionOutput !== "") documents.push(settle(productionOutput, build(true)))
-report({ ok: true, documents })
+// Write mode refuses any path that resolves outside the working directory, so a symbolic link
+// committed to the repository cannot redirect the write onto a file elsewhere. It also refuses
+// the lockfile itself. A path is the lockfile when it resolves to the lockfile's path, or when it
+// names the same file (device and inode). The second test catches a hard link, and a case-variant
+// spelling on a case-insensitive file system.
+const PROJECT = fs.realpathSync(".")
+const LOCKFILE = fs.realpathSync(lockfile)
+const LOCKED = fs.statSync(lockfile)
+class Refusal extends Error {}
+function refuse(option, file, reason) {
+  throw new Refusal("Refused to write " + option + " " + JSON.stringify(file) + ": " + reason)
+}
+function confine(option, file, resolved) {
+  if (!resolved.startsWith(PROJECT + path.sep)) refuse(option, file, "it resolves to " + JSON.stringify(resolved) + ", outside the project.")
+}
+function place(option, file) {
+  const absolute = path.resolve(file)
+  let ancestor = path.dirname(absolute)
+  const missing = []
+  while (!fs.existsSync(ancestor)) {
+    missing.unshift(path.basename(ancestor))
+    ancestor = path.dirname(ancestor)
+  }
+  const directory = path.join(fs.realpathSync(ancestor), ...missing)
+  const target = path.join(directory, path.basename(absolute))
+  confine(option, file, target)
+  if (target === LOCKFILE) refuse(option, file, "it is the lockfile.")
+  let found = null
+  try {
+    found = fs.lstatSync(target)
+  } catch {}
+  if (found !== null && found.dev === LOCKED.dev && found.ino === LOCKED.ino) refuse(option, file, "it is the lockfile.")
+  if (found?.isSymbolicLink()) refuse(option, file, "it is a symbolic link.")
+  if (found !== null && !found.isFile()) refuse(option, file, "it is not a regular file.")
+  return { option, file, directory, target }
+}
+function writeAll(wanted) {
+  const places = wanted.map(([option, file]) => place(option, file))
+  for (const { option, file, directory, target } of places) {
+    fs.mkdirSync(directory, { recursive: true })
+    // Re-resolved after creation: a directory swapped for a link since place() ran is caught here.
+    confine(option, file, path.join(fs.realpathSync(directory), path.basename(target)))
+  }
+  return places.map(({ file, directory, target }, index) => {
+    const document = build(wanted[index][2])
+    // A rename replaces a link or hard link at the target instead of writing through it.
+    const temporary = path.join(directory, "." + path.basename(target) + "." + crypto.randomBytes(8).toString("hex") + ".tmp")
+    fs.writeFileSync(temporary, JSON.stringify(document, null, 2) + "\n", { flag: "wx" })
+    fs.renameSync(temporary, target)
+    return { file, status: "written", components: document.components.length }
+  })
+}
+const wanted = [["output", output, false]]
+if (productionOutput !== "") wanted.push(["productionOutput", productionOutput, true])
+try {
+  report({ ok: true, documents: mode === "write" ? writeAll(wanted) : wanted.map(([, file, production]) => settle(file, build(production))) })
+} catch (error) {
+  if (!(error instanceof Refusal)) throw error
+  report({ ok: false, error: error.message })
+  process.exitCode = 1
+}
 `
 
 const STATUSES: ReadonlySet<unknown> = new Set([
@@ -267,22 +330,49 @@ function summarize(document: DocumentReport): string {
 }
 
 /**
+ * Refuses an output path spelled as the lockfile's path, so the mistake fails when the config
+ * loads. Spellings are compared after normalizing. The generator refuses the rest in write mode: a
+ * symbolic link, a hard link, or a case-variant name that reaches the lockfile.
+ * @param lockfile - the `lockfile` option.
+ * @param outputs - the `output` and `productionOutput` options; `null` skips that document.
+ * @throws {RangeError} naming the first output that is the lockfile.
+ */
+function checkNotLockfile(
+  lockfile: string,
+  outputs: Readonly<Record<string, string | null>>,
+): void {
+  for (const [option, file] of Object.entries(outputs)) {
+    if (file !== null && normalize(file) === normalize(lockfile)) {
+      throw new RangeError(
+        `sbom: ${option} must name a file other than the lockfile, got ${shownValue(file)}.`,
+      )
+    }
+  }
+}
+
+/**
  * Keeps a CycloneDX 1.6 SBOM of the package's locked dependencies current. It builds the document
  * from the npm lockfile with no external tool, deterministically: the same lockfile always gives
- * the same document. By default it writes nothing and fails when a committed document is missing
- * or differs from what the lockfile gives, ignoring only `serialNumber` and `metadata.timestamp`,
- * so a document regenerated by another tool or reformatted still counts as current when its
- * content matches. With `write: true` it writes the documents instead, for a regenerate command.
+ * the same document. By default it writes nothing. It fails when a committed document is missing
+ * or differs from what the lockfile gives. The comparison ignores only `serialNumber` and
+ * `metadata.timestamp`. So a document another tool regenerated, or a reformatted one, still counts
+ * as current when its content matches. With `write: true` it writes the documents instead, for a
+ * regenerate command.
  *
- * The documents list every package in the lockfile's `packages` map, with its purl, the hashes
- * from `integrity`, the declared license and the resolved URL, plus the full dependency graph.
- * The production document leaves out packages marked `dev`. It describes what the lockfile pins,
- * not what is installed in `node_modules`.
+ * The documents list every package in the lockfile's `packages` map. Each carries its purl, the
+ * hashes from `integrity`, the declared license and the resolved URL. The full dependency graph
+ * follows. The production document leaves out packages marked `dev`. It describes what the
+ * lockfile pins, not what is installed in `node_modules`.
  * @param options - configuration for this check; see {@link SbomOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `lockfile`, `output` or `productionOutput` is not a non-empty path,
+ * when `output` or `productionOutput` is spelled as the lockfile's path, or when `write` is not a
+ * boolean.
  * @beta
  */
 export function sbom(options: SbomOptions = {}): CheckDefinitionConfig {
+  checkOptionsObject("sbom", options)
   const {
     lockfile = "package-lock.json",
     output = "docs/sbom.cdx.json",
@@ -290,6 +380,13 @@ export function sbom(options: SbomOptions = {}): CheckDefinitionConfig {
     write = false,
     fix,
   } = options
+  checkPaths("sbom", {
+    lockfile,
+    output,
+    ...(productionOutput === null ? {} : { productionOutput }),
+  })
+  checkBoolean("sbom", "write", write)
+  checkNotLockfile(lockfile, { output, productionOutput })
 
   return {
     run: [

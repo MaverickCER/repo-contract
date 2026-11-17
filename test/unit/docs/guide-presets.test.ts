@@ -11,6 +11,7 @@ import {
   PRESET_DEPENDENCIES,
   PUBLISHED_PACKAGE,
   NPM_LOCKFILE,
+  NPM_SCRIPT,
   QUICK_START_BLOCK,
 } from "../../../bin/preset-catalog.mjs"
 
@@ -50,13 +51,15 @@ function guidePresetRows(): GuidePresetRow[] {
  * @param dependency - One `PRESET_DEPENDENCIES` value.
  * @returns The "Package `init` detects" cell GUIDE.md must show for it.
  */
-function expectedPackageCell(dependency: string | null): string {
+function expectedPackageCell(dependency: string | readonly string[] | null): string {
   if (dependency === null) return "none (`npm`)"
+  if (typeof dependency !== "string") return dependency.map((name) => `\`${name}\``).join(", ")
   if (dependency === DIST_OUTPUT) return "none (a built `dist/`)"
   if (dependency === AGENT_COMMAND) return "none (the agent you name)"
   if (dependency === PUBLISHED_PACKAGE) return "none (a package that is not `private`)"
   if (dependency === QUICK_START_BLOCK) return "none (a marked README block)"
   if (dependency === NPM_LOCKFILE) return "none (`package-lock.json`)"
+  if (dependency === NPM_SCRIPT) return "none (the npm script you name)"
   return `\`${dependency}\``
 }
 
@@ -66,6 +69,7 @@ function expectedPackageCell(dependency: string | null): string {
  */
 const REQUIRED_OPTIONS: Readonly<Record<string, unknown>> = {
   aiReview: { agent: ["<agent>"] },
+  npmScript: { script: "<script>" },
 }
 
 /**
@@ -123,7 +127,7 @@ describe("GUIDE.md's preset table", () => {
   })
 
   it("shows the package `repo-contract init` detects for each preset, as bin/preset-catalog.mjs maps it", () => {
-    const dependencies: Record<string, string | null> = PRESET_DEPENDENCIES
+    const dependencies: Record<string, string | readonly string[] | null> = PRESET_DEPENDENCIES
     const shown = Object.fromEntries(guidePresetRows().map((row) => [row.name, row.packageCell]))
     const expected = Object.fromEntries(
       Object.entries(dependencies).map(([name, dependency]) => [

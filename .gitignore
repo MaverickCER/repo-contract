@@ -55,9 +55,9 @@ examples/**/*.tsbuildinfo
 # Ephemeral, fully re-derivable from dist/.dts/ on every `npm run contract` run -- one
 # subdirectory per ApiContract target (index/, presets/, helpers/ -- see internal-package-contract's
 # own scripts/api-contract/targets.ts), each target's own baseline.* is the only committed state.
-.repo-contract/api-contract/*/current.api.md
-.repo-contract/api-contract/*/current.api.json
-.repo-contract/api-contract/*/current.d.ts
+.repo-contract/api-contract/**/current.api.md
+.repo-contract/api-contract/**/current.api.json
+.repo-contract/api-contract/**/current.d.ts
 # writeExceptionRegistry (src/helpers/) writes <registry>.<uuid>.tmp then renames it over the
 # target; a rename failure leaves the temp file behind (the run has already failed).
 .repo-contract/exceptions/*.tmp

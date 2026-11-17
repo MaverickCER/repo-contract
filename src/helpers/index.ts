@@ -3,8 +3,9 @@
  * weakening the check. A record names its `{ group, category }`, and this barrel resolves that to
  * a policy (exact, then glob, then default) and checks the record's fields against it.
  *
- * The check stays in charge of everything else. It decides what a finding is, matches records to
- * findings and owns the identity of each finding (see `scripts/shared/`, unpublished). This is the
+ * The barrel also ships the v2 record every registry shares, its vocabulary of eight exception
+ * types and three methods, and the read-reconcile-write sequence. The check stays in charge of
+ * what a finding is, of each finding's identity and of which types it accepts. This is the
  * mechanism `scripts/suppression-governance/` built for `disable-comments.json` (ADR 0006),
  * extracted for any check; specs/decisions/0013-reusable-exception-policy-helper.md has the
  * boundary.
@@ -92,7 +93,10 @@ export {
   validateSecurityExceptionFields,
 } from "./exception-record.js"
 
-export type { PersistedExceptionRegistry } from "./persist-exception-registry.js"
+export type {
+  PersistedExceptionRegistry,
+  PersistExceptionRegistryResult,
+} from "./persist-exception-registry.js"
 export {
   loadAndReconcileExceptionRegistry,
   reconcileAndPersistExceptionRegistry,

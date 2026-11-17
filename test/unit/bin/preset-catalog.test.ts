@@ -1,14 +1,19 @@
 import { describe, expect, it } from "vitest"
 import * as presets from "../../../src/presets/index.js"
+import { TIER_NAMES, tierChecks } from "../../../src/tiers/index.js"
 import {
   AGENT_COMMAND,
   detectPresets,
   FACTORY_PRESETS,
   DIST_OUTPUT,
+  missingTierTools,
   PRESET_DEPENDENCIES,
   PUBLISHED_PACKAGE,
   NPM_LOCKFILE,
   QUICK_START_BLOCK,
+  TIER_CHECK_PRESETS,
+  TIER_ONLY_PRESETS,
+  TIER_PRESET_NAMES,
 } from "../../../bin/preset-catalog.mjs"
 
 describe("PRESET_DEPENDENCIES", () => {
@@ -89,6 +94,8 @@ describe("detectPresets", () => {
     expect(detects({ devDependencies: { tsup: "^8.0.0" } })).toBe(false)
     expect(detects({ exports: { ".": null } })).toBe(false)
     expect(detects({ exports: 7 })).toBe(false)
+    // package.json is parsed JSON, so `files` can hold anything.
+    expect(detects({ files: [null, true, 0, "src"] as unknown as string[] })).toBe(false)
     expect(detectPresets({}).skipped.find((s) => s.preset === "distNoUrls")?.dependency).toBe(
       DIST_OUTPUT,
     )
@@ -131,8 +138,117 @@ describe("detectPresets", () => {
       devDependencies: { "some-unrelated-tool": "1.0.0" },
     })
     expect(detected).toEqual(["securityDeps"])
-    // The 19 tools, plus bundledDependencies (private), and aiReview, quickStart, sbom and
-    // npmScript, which are never detected.
+    // The 19 tools (coverage, crap and mutation among them, which flat init leaves to tiers),
+    // plus bundledDependencies (private), and aiReview, quickStart, sbom and npmScript, which
+    // are never detected.
     expect(skipped).toHaveLength(24)
+  })
+})
+
+describe("tier-only presets", () => {
+  it("never detects coverage, crap or mutation: only a tier writes the order they need", () => {
+    expect([...TIER_ONLY_PRESETS].sort()).toEqual(["coverage", "crap", "mutation"])
+    const { detected, skipped } = detectPresets({
+      devDependencies: {
+        vitest: "^4.0.0",
+        "@vitest/coverage-v8": "^4.0.0",
+        "@danibram/crap4ts": "^1.0.0",
+        "@stryker-mutator/core": "^9.0.0",
+      },
+    })
+    expect(detected).toContain("test")
+    for (const preset of TIER_ONLY_PRESETS) {
+      expect(detected).not.toContain(preset)
+      expect(skipped).toContainEqual({ preset, dependency: PRESET_DEPENDENCIES[preset] })
+    }
+  })
+})
+
+describe("flat init's presets", () => {
+  // detectPresets checks one devDependency per preset. A second package would go unchecked.
+  it("each name at most one npm package, so detection checks every one", () => {
+    for (const [preset, dependency] of Object.entries(PRESET_DEPENDENCIES)) {
+      if (TIER_ONLY_PRESETS.has(preset as keyof typeof PRESET_DEPENDENCIES)) continue
+      expect(dependency === null || typeof dependency === "string").toBe(true)
+    }
+  })
+
+  it("detects a single-package preset by that package alone", () => {
+    expect(detectPresets({ devDependencies: { knip: "^5.0.0" } }).detected).toContain("deadCode")
+    expect(detectPresets({ devDependencies: { jscpd: "^4.0.0" } }).detected).not.toContain(
+      "deadCode",
+    )
+  })
+})
+
+describe("TIER_PRESET_NAMES and TIER_CHECK_PRESETS", () => {
+  it("names the same tiers as repo-contract/tiers, loosest first", () => {
+    expect(TIER_PRESET_NAMES).toEqual(TIER_NAMES)
+  })
+
+  it("maps every check of the strict tier, and nothing else, to a published preset", () => {
+    expect(Object.keys(TIER_CHECK_PRESETS).sort()).toEqual([...tierChecks("strict")].sort())
+    for (const preset of Object.values(TIER_CHECK_PRESETS)) {
+      expect(Object.keys(PRESET_DEPENDENCIES)).toContain(preset)
+    }
+  })
+})
+
+describe("missingTierTools", () => {
+  it("lists each check whose npm tool is not a devDependency, in check order", () => {
+    expect(
+      missingTierTools(["Format", "Lint", "Typecheck", "Tests"], {
+        devDependencies: { prettier: "^3.0.0", typescript: "^5.0.0" },
+      }),
+    ).toEqual([
+      { check: "Lint", preset: "lint", dependency: "eslint" },
+      { check: "Tests", preset: "test", dependency: "vitest" },
+    ])
+  })
+
+  it("skips checks that need no npm package: npm itself, a build script, dist or a README block", () => {
+    expect(
+      missingTierTools(
+        ["SecurityDeps", "Build", "DistNoUrls", "BundledDependencies", "QuickStart"],
+        {},
+      ),
+    ).toEqual([])
+  })
+
+  it("names the coverage, crap and mutation tools a strict tier needs", () => {
+    const missing = missingTierTools(["Coverage", "Crap", "Mutation"], {})
+    expect(missing.map(({ dependency }) => dependency)).toEqual([
+      "@vitest/coverage-v8",
+      "@danibram/crap4ts",
+      "@stryker-mutator/core",
+      "@stryker-mutator/vitest-runner",
+    ])
+  })
+
+  // strykerConfig() sets testRunner "vitest", which Stryker loads only from the runner plugin.
+  it("names only the Stryker package that is missing", () => {
+    expect(
+      missingTierTools(["Mutation"], { devDependencies: { "@stryker-mutator/core": "^9.0.0" } }),
+    ).toEqual([
+      { check: "Mutation", preset: "mutation", dependency: "@stryker-mutator/vitest-runner" },
+    ])
+    expect(
+      missingTierTools(["Mutation"], {
+        devDependencies: {
+          "@stryker-mutator/core": "^9.0.0",
+          "@stryker-mutator/vitest-runner": "^9.0.0",
+        },
+      }),
+    ).toEqual([])
+  })
+
+  it("reads devDependencies only, like detectPresets", () => {
+    expect(missingTierTools(["Lint"], { dependencies: { eslint: "^9.0.0" } })).toEqual([
+      { check: "Lint", preset: "lint", dependency: "eslint" },
+    ])
+  })
+
+  it("ignores an id that is not a tier check", () => {
+    expect(missingTierTools(["Nonsense"], {})).toEqual([])
   })
 })

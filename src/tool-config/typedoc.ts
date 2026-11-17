@@ -2,13 +2,14 @@
  * A TypeDoc config built from package.json `exports`: one entry point per code subpath.
  * @packageDocumentation
  */
-import { notImplemented } from "../not-implemented.js"
+import { entries } from "./entries.js"
+import { excludeGlobs } from "./exclude.js"
 import type { ToolConfigOptions } from "./types.js"
 
-/** The TypeDoc settings the helper sets. */
+/** The TypeDoc settings the helper sets. Arrays are mutable copies, as TypeDoc's options type takes. */
 export interface TypedocConfigFragment {
-  readonly entryPoints: readonly string[]
-  readonly exclude: readonly string[]
+  readonly entryPoints: string[]
+  readonly exclude: string[]
 }
 
 /**
@@ -17,5 +18,8 @@ export interface TypedocConfigFragment {
  * @beta
  */
 export function typedocConfig(options: ToolConfigOptions): TypedocConfigFragment {
-  return notImplemented("R3", options)
+  return {
+    entryPoints: entries(options.manifest, options).map((entry) => entry.source),
+    exclude: [...excludeGlobs(options.exclude)],
+  }
 }

@@ -1,5 +1,5 @@
 import { defineConfig, mergeConfig } from "vitest/config"
-import baseConfig from "./vitest.base.config.js"
+import baseConfig, { COVERAGE_INCLUDE } from "./vitest.base.config.js"
 
 /**
  * Dev-convenience aggregate, NOT a verification category of its own:
@@ -32,7 +32,7 @@ export default mergeConfig(
       exclude: ["**/node_modules/**"],
       coverage: {
         provider: "v8",
-        include: ["src/**/*.ts"],
+        include: COVERAGE_INCLUDE,
         exclude: ["src/types.ts"],
         reporter: ["text", "html", "lcov", "json", "json-summary"],
       },

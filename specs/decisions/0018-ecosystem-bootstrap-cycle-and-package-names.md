@@ -94,3 +94,17 @@ and every repository links it from its architecture document.
 - IPC's tilde range makes a `repo-contract` minor an explicit step; it is the price of not letting a
   stable-sounding caret range accept an Experimental surface that broke in a minor.
 - Nothing here changes a published name or interface.
+
+## Amendment (2026-11-16): the self-contract's `npmScriptCheck` import is gone
+
+repo-contract's own config imported IPC's `npmScriptCheck` for one check, `api-docs-report`. That
+check now runs this package's `npmScript` preset through `node bin/repo-contract.mjs npm-script`,
+as `quick-start` runs from `bin/`. So one edge of the dev-only `repo-contract -> IPC` dependency is
+gone: no IPC release is needed to change how this repository runs one of its own npm scripts. The
+[0008 amendment](0008-self-hosting-tool-and-dependency-choices.md) that wired `npmScriptCheck` stays
+as history.
+
+The cycle itself remains. The self-contract still imports `api-contract`, `surface-contract` and the
+other IPC checks, and the two rules above still bound it. IPC moves its own `npmScriptCheck` uses to
+`npmScript` after this release, which removes IPC's copy (`checks/npm-script.ts` and
+`scripts/run-generated.mjs`).

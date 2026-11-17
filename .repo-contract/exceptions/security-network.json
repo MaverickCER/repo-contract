@@ -1,7 +1,59 @@
 {
   "exceptions": [
     {
-      "id": "security-network:restricted-named-import:bin/repo-contract.mjs:19:10",
+      "id": "security-network:dynamic-import-non-literal-specifier:bin/explain-cli.mjs:79:30",
+      "version": 1,
+      "justification": "`repo-contract explain` loads the project's TypeScript config through the project's own tsx: it resolves the constant name \"tsx/esm/api\" from the project with createRequire(<dir>/package.json) and imports the resolved file URL. Only that one constant name is resolved; nothing computed from input picks the module. Accepted as a risk: a module is loaded at run time, bounded to one constant name. bin/ is the one place ADR 0011 lets load or start anything at run time; the AmbientCapabilities check keeps dist/ free of it.",
+      "alternatives": "A static `import \"tsx/esm/api\"` would make tsx a runtime dependency of repo-contract and load repo-contract's copy, not the project's. Asking the user to run the config through tsx themselves would move the same load into their shell.",
+      "capability": "dynamic-import-non-literal-specifier",
+      "column": 30,
+      "exceptionType": "accepted-risk",
+      "file": "bin/explain-cli.mjs",
+      "line": 79,
+      "method": "policy-rule",
+      "remediation": "Remove when explain can read a config without executing TypeScript, or when Node can import TypeScript configs natively in every supported version."
+    },
+    {
+      "id": "security-network:dynamic-import-non-literal-specifier:bin/mutation-adopt.mjs:80:34",
+      "version": 1,
+      "justification": "Imports the file URL that createRequire resolved for the constant name \"@stryker-mutator/instrumenter\" (see the record for line 6). Only that constant name reaches this import. Accepted as a risk: a module is loaded at run time, bounded to one constant name. bin/ is the one place ADR 0011 lets load or start anything at run time; the AmbientCapabilities check keeps dist/ free of it.",
+      "alternatives": "As for line 6: a static import would bundle a second instrumenter that can disagree with the project's Stryker.",
+      "capability": "dynamic-import-non-literal-specifier",
+      "column": 34,
+      "exceptionType": "accepted-risk",
+      "file": "bin/mutation-adopt.mjs",
+      "line": 80,
+      "method": "policy-rule",
+      "remediation": "Remove with the line 6 record, when Stryker's report lists mutant-free files."
+    },
+    {
+      "id": "security-network:dynamic-import-non-literal-specifier:bin/mutation-plan.mjs:50:15",
+      "version": 1,
+      "justification": "`repo-contract mutation run` imports the project's own Stryker config file (stryker.config.mjs or the `--config` path) to read its `mutate`, report and temp paths. That file is the project's code, which Stryker itself imports a moment later in the same run. Accepted as a risk: the import executes project code the user already runs. bin/ is the one place ADR 0011 lets load or start anything at run time; the AmbientCapabilities check keeps dist/ free of it.",
+      "alternatives": "Parsing the config as text would miss computed values; asking Stryker for its resolved config needs a second Stryker start per run.",
+      "capability": "dynamic-import-non-literal-specifier",
+      "column": 15,
+      "exceptionType": "accepted-risk",
+      "file": "bin/mutation-plan.mjs",
+      "line": 50,
+      "method": "policy-rule",
+      "remediation": "Remove when Stryker exposes its resolved config without running, or when the preset passes the paths it needs as options."
+    },
+    {
+      "id": "security-network:restricted-named-import:bin/mutation-adopt.mjs:6:10",
+      "version": 1,
+      "justification": "`repo-contract mutation run` uses createRequire(<project>/package.json) to resolve the constant name \"@stryker-mutator/instrumenter\" from the project, so it asks the same instrumenter the project's Stryker runs which files hold no mutant. Only that constant name is resolved. Accepted as a risk: a module is loaded at run time, bounded to one constant name. bin/ is the one place ADR 0011 lets load or start anything at run time; the AmbientCapabilities check keeps dist/ free of it.",
+      "alternatives": "A static import would make the instrumenter a runtime dependency of repo-contract and could disagree with the version the project's @stryker-mutator/core pins. Dropping the check would let a report that skipped a file pass as complete.",
+      "capability": "restricted-named-import",
+      "column": 10,
+      "exceptionType": "accepted-risk",
+      "file": "bin/mutation-adopt.mjs",
+      "line": 6,
+      "method": "policy-rule",
+      "remediation": "Remove when Stryker's report lists files it found no mutant in, so the CLI need not run the instrumenter itself."
+    },
+    {
+      "id": "security-network:restricted-named-import:bin/repo-contract.mjs:22:10",
       "version": 1,
       "justification": "`repo-contract affected` must run the project's OWN TypeScript (the compiler API it needs is the consumer's, version 6 or earlier), so the CLI resolves the literal module name \"typescript\" from the project directory with createRequire(<dir>/package.json). The specifier is a constant; nothing computed from input is ever loaded, and the loaded module is a build-time dependency the consumer already installed. Accepted as a risk rather than a false positive: the capability is real (a module is loaded at run time), bounded to one constant name, and reviewed here.",
       "alternatives": "A static `import \"typescript\"` would load repo-contract's own copy, or fail when a project has none, instead of the project's compiler; an `import()` of the same literal has the same dynamic-load shape under this scan. Passing the compiler in through the library API (`repo-contract/affected` takes `ts` as an argument) is already how the library avoids this; the CLI is the one place that has to find it.",
@@ -9,7 +61,7 @@
       "column": 10,
       "exceptionType": "accepted-risk",
       "file": "bin/repo-contract.mjs",
-      "line": 19,
+      "line": 22,
       "method": "independent-human-review",
       "remediation": "Remove when TypeScript 7 ships a compiler API and the CLI can import a pinned dependency instead of the project's copy, or when the CLI is folded into a consumer-supplied runner."
     }

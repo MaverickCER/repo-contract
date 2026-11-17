@@ -82,6 +82,21 @@ describe("github-actions check: full real path", () => {
     expect(result.rationale).toContain(".github/workflows/broken.yml")
   }, 30_000)
 
+  it("lints the example workflows under examples/ci/ too, since the docs tell people to copy them", async () => {
+    await writeWorkflow("ci.yml", CLEAN_WORKFLOW)
+    await mkdir(path.join(root, "examples", "ci"), { recursive: true })
+    await writeFile(path.join(root, "examples", "ci", "contract.yml"), WORKFLOW_WITH_ERROR, "utf8")
+    await writeFile(path.join(root, "examples", "ci", "README.md"), "not a workflow\n", "utf8")
+
+    const evidence = lintWorkflows(root)
+    expect(evidence.ok).toBe(true)
+    if (!evidence.ok) return
+
+    expect(evidence.filesScanned).toBe(2)
+    expect(evidence.findings.length).toBeGreaterThan(0)
+    expect(evidence.findings.every((f) => f.file === "examples/ci/contract.yml")).toBe(true)
+  }, 30_000)
+
   it("passes trivially when there are no workflow files", async () => {
     const evidence = lintWorkflows(root)
     expect(evidence).toEqual({ ok: true, filesScanned: 0, findings: [] })

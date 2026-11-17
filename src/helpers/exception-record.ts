@@ -1,10 +1,21 @@
-import { notImplemented } from "../not-implemented.js"
+/**
+ * The v2 exception record every `.repo-contract/exceptions/*.json` registry shares, and its
+ * vocabulary: eight exception types and three methods. A check plugs its own record shape in
+ * through an {@link ExceptionRegistrySchema}; this module owns the core, the v2 fields and the
+ * security fields.
+ *
+ * A registry fails to load on an unknown key, an id outside its namespace, a duplicate id, a wrong
+ * version or a malformed field. A blank field loads: completeness is each check's policy, so a
+ * fresh stub loads and then fails as incomplete. A `version: 1` record still loads, so a registry
+ * can migrate one record at a time.
+ */
 import type { StandardSchemaV1 } from "../standard-schema/types.js"
 import type {
   ExceptionClassification,
   ExceptionPolicy,
   ExceptionPolicyConfig,
 } from "./exception-policy.js"
+import { evaluateExceptionRecord } from "./exception-policy.js"
 import type { ExceptionRecordCore } from "./reconcile-exceptions.js"
 
 /**
@@ -110,7 +121,15 @@ export const LEGACY_FIELD_VALUE = "(legacy version 1 record)"
  * @returns every v2 field blank: what a new stub starts with.
  */
 export function emptyV2Fields(): ExceptionV2Fields {
-  return notImplemented("R2x")
+  return {
+    ruleBroken: "",
+    attempted: "",
+    constraint: "",
+    whyPreferable: "",
+    residualRisk: "",
+    revisitWhen: "",
+    expires: "",
+  }
 }
 
 /**
@@ -119,16 +138,124 @@ export function emptyV2Fields(): ExceptionV2Fields {
  * @returns whether it is a legacy `version: 1` record.
  */
 export function isLegacyRecord(record: { readonly version: 1 | 2 }): boolean {
-  return notImplemented("R2x", record)
+  return record.version === 1
+}
+
+const EXCEPTION_V2_ALL_KEYS = [...EXCEPTION_V2_FIELD_KEYS, "expires"] as const
+
+/**
+ * @param value - an `expires` value, untrusted.
+ * @returns whether `value` is a string holding a real calendar date written `YYYY-MM-DD`, so
+ * `2027-02-30` is not. Only such a string equals the first ten characters of its own date's ISO
+ * form, so that one comparison checks the type, the shape and the date.
+ */
+function isCalendarDate(value: unknown): value is string {
+  const date = new Date(`${String(value)}T00:00:00Z`)
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
 }
 
 /**
- * @param expires - a record's `expires` (`""` never expires).
+ * @param expires - a record's `expires` (`""` never expires), untrusted.
  * @param now - the clock to compare against.
  * @returns `true` only for a valid date strictly before `now`'s date.
  */
-export function isExpired(expires: string, now: Date = new Date()): boolean {
-  return notImplemented("R2x", expires, now)
+export function isExpired(expires: unknown, now: Date = new Date()): boolean {
+  // `YYYY-MM-DD` strings sort as dates, so a string comparison is a date comparison.
+  return isCalendarDate(expires) && expires < now.toISOString().slice(0, 10)
+}
+
+/**
+ * @param value - a candidate value.
+ * @returns whether it is a non-`null`, non-array object.
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+/**
+ * @param entry - the untrusted record.
+ * @param index - its position, for messages.
+ * @param errors - collects one message per problem.
+ * @returns the v2 fields, or `undefined` when one is missing or malformed.
+ */
+function validateV2Fields(
+  entry: Readonly<Record<string, unknown>>,
+  index: number,
+  errors: string[],
+): ExceptionV2Fields | undefined {
+  const at = `exceptions[${String(index)}]`
+  let ok = true
+  for (const key of EXCEPTION_V2_FIELD_KEYS) {
+    if (typeof entry[key] !== "string") {
+      errors.push(`${at}.${key} must be a string (a version 2 record carries it).`)
+      ok = false
+    }
+  }
+  const { expires } = entry
+  if (expires !== "" && !isCalendarDate(expires)) {
+    errors.push(`${at}.expires must be "" or a YYYY-MM-DD date (got ${JSON.stringify(expires)}).`)
+    ok = false
+  }
+  if (!ok) return undefined
+  return Object.fromEntries(
+    EXCEPTION_V2_ALL_KEYS.map((key) => [key, entry[key]]),
+  ) as unknown as ExceptionV2Fields
+}
+
+/**
+ * @param entry - the untrusted record.
+ * @param index - its position, for messages.
+ * @param schema - the registry's schema.
+ * @param errors - collects one message per problem.
+ * @returns the rebuilt record, or `undefined` when anything is invalid.
+ */
+function validateOneExceptionRecord<TRecord extends { readonly id: string }>(
+  entry: unknown,
+  index: number,
+  schema: ExceptionRegistrySchema<TRecord>,
+  errors: string[],
+): TRecord | undefined {
+  const at = `exceptions[${String(index)}]`
+  if (!isPlainObject(entry)) {
+    errors.push(`${at} must be an object.`)
+    return undefined
+  }
+
+  const allowedKeys = new Set<string>(["id", "version", "justification", ...schema.metadataKeys])
+  if (entry.version === 2) for (const key of EXCEPTION_V2_ALL_KEYS) allowedKeys.add(key)
+  const unknownKeys = Object.keys(entry).filter((key) => !allowedKeys.has(key))
+  if (unknownKeys.length > 0) {
+    errors.push(
+      `${at} has unrecognized field(s) ${unknownKeys.map((key) => JSON.stringify(key)).join(", ")}: only ${[...allowedKeys].map((key) => JSON.stringify(key)).join(", ")} are permitted.`,
+    )
+  }
+
+  const { id, version, justification } = entry
+  const idValid =
+    typeof id === "string" && id.startsWith(schema.namespace) && id.length > schema.namespace.length
+  if (!idValid) {
+    errors.push(
+      `${at}.id must be a non-empty string beginning with ${JSON.stringify(schema.namespace)} (got ${JSON.stringify(id)}).`,
+    )
+  }
+  const versionValid = version === 1 || version === 2
+  if (!versionValid) {
+    errors.push(
+      `${at}.version must be the number 2 (or the legacy 1) (got ${JSON.stringify(version)}).`,
+    )
+  }
+  const justificationValid = typeof justification === "string"
+  if (!justificationValid) errors.push(`${at}.justification must be a string.`)
+
+  // The v2 fields are checked before any return, so one pass names every problem in the record.
+  const v2 = version === 2 ? validateV2Fields(entry, index, errors) : undefined
+  if (!idValid || !versionValid || !justificationValid || unknownKeys.length > 0) return undefined
+
+  // The schema rebuilds at version 1, so a validator written before v2 keeps working unchanged.
+  const record = schema.validateRecord({ id, version: 1, justification }, entry, index, errors)
+  if (record === undefined || version === 1) return record
+  if (v2 === undefined) return undefined
+  return { ...record, version: 2, ...v2 }
 }
 
 /**
@@ -145,7 +272,32 @@ export function validateExceptionRegistry<TRecord extends { readonly id: string 
 ):
   | { readonly ok: true; readonly records: readonly TRecord[] }
   | { readonly ok: false; readonly errors: readonly string[] } {
-  return notImplemented("R2x", value, schema)
+  if (!Array.isArray(value)) {
+    return {
+      ok: false,
+      errors: ['An exception registry\'s "exceptions" must be a JSON array of records.'],
+    }
+  }
+
+  const errors: string[] = []
+  const records: TRecord[] = []
+  const seenIds = new Map<string, number>()
+  for (const [index, entry] of value.entries()) {
+    const record = validateOneExceptionRecord(entry, index, schema, errors)
+    if (record === undefined) continue
+    const firstIndex = seenIds.get(record.id)
+    if (firstIndex !== undefined) {
+      errors.push(
+        `exceptions[${String(index)}] reuses the id ${JSON.stringify(record.id)} already held by exceptions[${String(firstIndex)}].`,
+      )
+      continue
+    }
+    seenIds.set(record.id, index)
+    records.push(record)
+  }
+
+  if (errors.length > 0) return { ok: false, errors }
+  return { ok: true, records }
 }
 
 /**
@@ -156,7 +308,18 @@ export function validateExceptionRegistry<TRecord extends { readonly id: string 
 export function exceptionRegistryStandardSchema<TRecord extends { readonly id: string }>(
   schema: ExceptionRegistrySchema<TRecord>,
 ): StandardSchemaV1<unknown, readonly TRecord[]> {
-  return notImplemented("R2x", schema)
+  return {
+    "~standard": {
+      version: 1,
+      vendor: "repo-contract",
+      validate: (value: unknown) => {
+        const result = validateExceptionRegistry(value, schema)
+        return result.ok
+          ? { value: result.records }
+          : { issues: result.errors.map((message) => ({ message })) }
+      },
+    },
+  }
 }
 
 /**
@@ -174,7 +337,51 @@ export function validateSecurityExceptionFields(
   allowedExceptionTypes: readonly ExceptionType[],
   errors: string[],
 ): SecurityExceptionFields | undefined {
-  return notImplemented("R2x", raw, index, allowedExceptionTypes, errors)
+  const at = `exceptions[${String(index)}]`
+  const { alternatives, remediation, method, exceptionType } = raw
+
+  const alternativesValid = typeof alternatives === "string"
+  if (!alternativesValid) errors.push(`${at}.alternatives must be a string.`)
+  const remediationValid = typeof remediation === "string"
+  if (!remediationValid) errors.push(`${at}.remediation must be a string.`)
+
+  // `includes` uses SameValueZero, so a non-string never matches a member and needs no type guard.
+  const methodValid = method === "" || (EXCEPTION_METHODS as readonly unknown[]).includes(method)
+  if (!methodValid) {
+    errors.push(
+      `${at}.method must be "" or one of ${EXCEPTION_METHODS.map((m) => JSON.stringify(m)).join(", ")} (got ${JSON.stringify(method)}).`,
+    )
+  }
+  const exceptionTypeValid =
+    exceptionType === "" || (allowedExceptionTypes as readonly unknown[]).includes(exceptionType)
+  if (!exceptionTypeValid) {
+    errors.push(
+      `${at}.exceptionType must be "" or one of ${allowedExceptionTypes.map((t) => JSON.stringify(t)).join(", ")} (got ${JSON.stringify(exceptionType)}).`,
+    )
+  }
+
+  if (!alternativesValid || !remediationValid || !methodValid || !exceptionTypeValid) {
+    return undefined
+  }
+
+  // A false-positive claim rests on re-running the tool. A blank method is an unfinished stub.
+  if (
+    exceptionType === "validated-false-positive" &&
+    method !== "" &&
+    method !== "mechanical-reverification"
+  ) {
+    errors.push(
+      `${at}: exceptionType "validated-false-positive" requires method "mechanical-reverification" (a false-positive claim rests on a re-run, not opinion); got method ${JSON.stringify(method)}.`,
+    )
+    return undefined
+  }
+
+  return {
+    alternatives,
+    remediation,
+    method: method as SecurityExceptionFields["method"],
+    exceptionType: exceptionType as SecurityExceptionFields["exceptionType"],
+  }
 }
 
 /**
@@ -188,7 +395,9 @@ export function isValidNonEmptyStringField(
   at: string,
   errors: string[],
 ): value is string {
-  return notImplemented("R2x", value, at, errors)
+  const valid = typeof value === "string" && value.length > 0
+  if (!valid) errors.push(`${at} must be a non-empty string.`)
+  return valid
 }
 
 /**
@@ -199,7 +408,11 @@ export function isValidNonEmptyStringField(
  * @returns the field's text, or `""`.
  */
 export function recordFieldValue(record: unknown, requirement: string): string {
-  return notImplemented("R2x", record, requirement)
+  if (!isPlainObject(record)) return ""
+  const value = record[requirement]
+  if (typeof value === "string") return value
+  const isV2Field = (EXCEPTION_V2_FIELD_KEYS as readonly string[]).includes(requirement)
+  return isV2Field && record.version === 1 ? LEGACY_FIELD_VALUE : ""
 }
 
 /**
@@ -210,7 +423,7 @@ export function recordFieldValue(record: unknown, requirement: string): string {
 export function asFlatExceptionRecords(
   records: readonly { readonly id: string }[],
 ): readonly (Record<string, unknown> & { readonly id: string })[] {
-  return notImplemented("R2x", records)
+  return records
 }
 
 /**
@@ -230,5 +443,13 @@ export function evaluateFindingVerdict(
   readonly verdict: "forbidden" | "insufficient" | "permitted" | "unmatched"
   readonly missing: readonly string[]
 } {
-  return notImplemented("R2x", record, classifications, config, globalDefault)
+  if (record === undefined) return { verdict: "unmatched", missing: [] }
+  const { verdict, missing } = evaluateExceptionRecord({
+    record,
+    classifications,
+    config,
+    globalDefault,
+    fieldValue: recordFieldValue,
+  })
+  return { verdict, missing }
 }

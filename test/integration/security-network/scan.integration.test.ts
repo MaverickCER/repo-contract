@@ -22,15 +22,19 @@ const runningInsideMutationSandbox = REPO_ROOT.split(path.sep).includes(".stryke
 
 describe("security-network scan: full real path", () => {
   it.runIf(!runningInsideMutationSandbox)(
-    "this repository's own src/ is network-free, bin/ has only the recorded finding, and the registry reconciles clean (read-only composition, no write)",
+    "this repository's own src/ is network-free, bin/ has only the recorded findings, and the registry reconciles clean (read-only composition, no write)",
     async () => {
       const { filesScanned, findings } = await scanForNetworkCapability(REPO_ROOT)
       expect(filesScanned).toBeGreaterThan(0)
-      // src/ is network-free. The scan also covers the shipped bin/, where the CLI's one
-      // restricted import (`createRequire`, to load the project's TypeScript for `affected`) is
-      // the finding the registry records.
-      expect(findings.map((finding) => finding.id)).toEqual([
-        "security-network:restricted-named-import:bin/repo-contract.mjs:19:10",
+      // src/ is network-free. The scan also covers the shipped bin/, where each finding loads a
+      // module the project itself owns: its TypeScript for `affected`, its tsx for `explain`, and
+      // its Stryker config and instrumenter for `mutation run`. The registry records each one.
+      expect(findings.map((finding) => finding.id).sort()).toEqual([
+        "security-network:dynamic-import-non-literal-specifier:bin/explain-cli.mjs:79:30",
+        "security-network:dynamic-import-non-literal-specifier:bin/mutation-adopt.mjs:80:34",
+        "security-network:dynamic-import-non-literal-specifier:bin/mutation-plan.mjs:50:15",
+        "security-network:restricted-named-import:bin/mutation-adopt.mjs:6:10",
+        "security-network:restricted-named-import:bin/repo-contract.mjs:22:10",
       ])
 
       const registry = JSON.parse(
