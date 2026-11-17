@@ -30,6 +30,7 @@
  * the parsing and the policy; they do not prove a model's judgement.
  * @param options - The agent to run and how to judge it; see {@link AiReviewOptions}.
  * @returns The configured check.
+ * @throws {TypeError} When `options` is not an object.
  * @example
  * ```ts
  * aiReview: aiReview({
@@ -124,24 +125,54 @@ export declare interface AiReviewReply {
 
 /**
  * Published-package type-resolution correctness via `@arethetypeswrong/cli`.
+ * @param options - configuration for this check; see {@link ArethetypeswrongOptions}.
+ * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `ignoreResolutions` names a resolution attw does not use.
  * @beta
  */
-export declare const arethetypeswrong: CheckDefinitionConfig;
+export declare function arethetypeswrong(options?: ArethetypeswrongOptions): CheckDefinitionConfig;
+
+/** Options accepted by {@link arethetypeswrong}. */
+export declare interface ArethetypeswrongOptions {
+    /** Resolutions whose problems are dropped before judging. `["node10"]` suits a package that supports only `exports`-aware resolution. Defaults to none. */
+    readonly ignoreResolutions?: readonly AttwResolutionKind[];
+}
+
+/** A module resolution attw judges a package under. */
+export declare type AttwResolutionKind = "node10" | "node16-cjs" | "node16-esm" | "bundler";
 
 /**
- * Broken-link detection via linkinator, recursing through local files and
- * following both local and remote links. `--skip node_modules` avoids
- * wasting the crawl on vendored files that were never authored content.
+ * Broken-link detection via linkinator, recursing through local files and following both local
+ * and remote links. `--skip node_modules` avoids wasting the crawl on vendored files that were
+ * never authored content. A link that answered HTTP 429 passes, since a rate limit says nothing
+ * about whether the page exists. A local link linkinator could not serve passes when it exists
+ * on disk, resolved from the working directory: linkinator reports a bare directory link as
+ * broken, though every git host renders it.
  * @param options - configuration for this check; see {@link BrokenLinksOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `start` is an empty list.
  * @beta
  */
 export declare function brokenLinks(options?: BrokenLinksOptions): CheckDefinitionConfig;
 
 /** Options accepted by {@link brokenLinks}. */
-declare interface BrokenLinksOptions {
-    /** File or directory passed straight through to linkinator as its positional target. Defaults to `"."`. */
-    readonly start?: string;
+export declare interface BrokenLinksOptions {
+    /**
+     * Where the crawl starts. A string is one HTML start point. Defaults to `"."`. A list runs one
+     * crawl over every start point, served from the working directory. linkinator's Markdown mode
+     * is all or nothing, so one `"markdown"` start turns it on for the whole crawl.
+     */
+    readonly start?: string | readonly BrokenLinksStart[];
+}
+
+/** One place a crawl starts, and how its files are read. */
+export declare interface BrokenLinksStart {
+    /** A file or directory, relative to the working directory. */
+    readonly path: string;
+    /** `"markdown"` follows links in Markdown files; `"html"` (the default) reads HTML only. */
+    readonly mode?: "html" | "markdown";
 }
 
 /**
@@ -370,6 +401,7 @@ declare type CheckStatus = "completed" | "timed_out" | "signaled" | "host_termin
  * unconfirmed flag.
  * @param options - configuration for this check; see {@link CommitlintOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export declare function commitlint(options?: CommitlintOptions): CheckDefinitionConfig;
@@ -383,9 +415,71 @@ declare interface CommitlintOptions {
 }
 
 /**
+ * Package-wide test coverage, read from the `json-summary` report a test run wrote. It runs no
+ * tests: declare `dependsOn` on the check that does. Fails on any judged metric below its
+ * threshold, and when the report is missing or unreadable. Warns, not evaluated, when a check it
+ * depends on failed: that check is already red, and its coverage would describe a broken run.
+ * @param options - configuration for this check; see {@link CoverageOptions}.
+ * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `thresholds` is not an object of metrics from 0 to 100.
+ * @beta
+ */
+export declare function coverage(options?: CoverageOptions): CheckDefinitionConfig;
+
+/** Options accepted by {@link coverage}. */
+export declare interface CoverageOptions {
+    /** Defaults to 80 on lines and statements. Given, it replaces the default whole. */
+    readonly thresholds?: CoverageThresholds;
+    /** The `json-summary` report a test run wrote. Defaults to `"coverage/coverage-summary.json"`. */
+    readonly summary?: string;
+}
+
+/** Minimum coverage per metric, in percent. A metric left out is not judged. */
+export declare interface CoverageThresholds {
+    readonly lines?: number;
+    readonly statements?: number;
+    readonly functions?: number;
+    readonly branches?: number;
+}
+
+/**
+ * No function both complex and poorly covered, via `@danibram/crap4ts`. Fails on a function above
+ * the CRAP threshold or the complexity ceiling, and on an unreadable score. Reads the coverage a
+ * test run wrote: declare `dependsOn` on that check. Warns, not evaluated, when a check it depends
+ * on failed.
+ *
+ * crap4ts writes its report to a file, not stdout: it exits before a large report drains through a
+ * pipe, which cuts the JSON at 64 KiB.
+ * @param options - configuration for this check; see {@link CrapOptions}.
+ * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `threshold` or `maxComplexity` is not a finite number above 0.
+ * @beta
+ */
+export declare function crap(options?: CrapOptions): CheckDefinitionConfig;
+
+/** Options accepted by {@link crap}. */
+export declare interface CrapOptions {
+    /** The source directories to score. Defaults to `"src"`. */
+    readonly src?: string | readonly string[];
+    /** The Istanbul `coverage-final.json` to score against. Defaults to `"coverage/coverage-final.json"`. */
+    readonly coverage?: string;
+    /** The highest CRAP score a function may have. Defaults to `30`. */
+    readonly threshold?: number;
+    /** The highest cyclomatic complexity a function may have, however well covered. Defaults to `20`. */
+    readonly maxComplexity?: number;
+    /** Globs crap4ts skips. */
+    readonly ignore?: readonly string[];
+    /** Where crap4ts writes its JSON report. Defaults to `"reports/crap.json"`. */
+    readonly report?: string;
+}
+
+/**
  * Dead/unused-code detection via knip.
  * @param options - configuration for this check; see {@link DeadCodeOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export declare function deadCode(options?: DeadCodeOptions): CheckDefinitionConfig;
@@ -413,6 +507,7 @@ declare interface DeadCodeOptions {
  * blanket opt-out.
  * @param options - configuration for this check; see {@link DistNoUrlsOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export declare function distNoUrls(options?: DistNoUrlsOptions): CheckDefinitionConfig;
@@ -437,14 +532,18 @@ export declare interface DistNoUrlsOptions {
  * Duplicated-code detection via jscpd.
  * @param options - configuration for this check; see {@link DuplicationOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `maxPercentage` is not a number from 0 to 100.
  * @beta
  */
 export declare function duplication(options?: DuplicationOptions): CheckDefinitionConfig;
 
 /** Options accepted by {@link duplication}. */
-declare interface DuplicationOptions {
+export declare interface DuplicationOptions {
     /** Directory to scan for duplicated code, passed straight through to jscpd as its positional target. Defaults to `"."`: narrow it (e.g. `"src"`) to scope the scan to your source tree. */
     readonly path?: string;
+    /** The largest share of scanned lines that may be duplicated, in percent. A pass still lists every block. Defaults to `0`: any duplicated block fails. */
+    readonly maxPercentage?: number;
 }
 
 /**
@@ -500,6 +599,7 @@ export declare const license: CheckDefinitionConfig;
  * this preset keeps it instead of treating every finding as blocking.
  * @param options - configuration for this check; see {@link LintOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export declare function lint(options?: LintOptions): CheckDefinitionConfig;
@@ -511,26 +611,104 @@ declare interface LintOptions {
 }
 
 /**
- * Markdown structure/style lint via markdownlint-cli2. Unlike this
- * package's other file-based-report presets, the report path comes from
- * config, not a CLI flag. The `markdownlint-cli2` tool writes JSON only
- * when its config file requests it. This preset assumes the
- * consumer's `.markdownlint-cli2.jsonc` includes:
+ * Markdown structure/style lint via markdownlint-cli2. The default `"json"` verdict reads a
+ * report file whose path comes from config, not a CLI flag. markdownlint-cli2 writes JSON only
+ * when its config asks for it, so this verdict assumes the consumer's `.markdownlint-cli2.jsonc`
+ * includes:
  * ```jsonc
  * "outputFormatters": [["markdownlint-cli2-formatter-json", { "name": "reports/markdownlint.json" }]]
  * ```
- * which also requires the `markdownlint-cli2-formatter-json` package
- * alongside `markdownlint-cli2` itself.
+ * which also requires the `markdownlint-cli2-formatter-json` package alongside
+ * `markdownlint-cli2` itself. The `"exit-code"` verdict needs neither: it reads the exit code and
+ * the printed findings.
  * @param options - configuration for this check; see {@link MarkdownlintOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `globs` is an empty list.
  * @beta
  */
 export declare function markdownlint(options?: MarkdownlintOptions): CheckDefinitionConfig;
 
 /** Options accepted by {@link markdownlint}. */
-declare interface MarkdownlintOptions {
-    /** Glob passed straight through to markdownlint-cli2 as its positional target. Defaults to `"**\/*.md"`. */
+export declare interface MarkdownlintOptions {
+    /** Glob passed straight through to markdownlint-cli2 as its positional target. Defaults to `"**\/*.md"`. Ignored when `globs` is set. */
     readonly glob?: string;
+    /** Globs passed to markdownlint-cli2 in place of `glob`. Explicit globs such as `["*.md", "docs/**\/*.md"]` keep the run out of `node_modules`. */
+    readonly globs?: readonly string[];
+    /** A markdownlint config file, passed as `--config`. */
+    readonly config?: string;
+    /** How the verdict is read. `"json"` (the default) reads the JSON formatter's report file. `"exit-code"` reads the exit code and printed output, so no formatter is needed. */
+    readonly verdict?: "json" | "exit-code";
+}
+
+/**
+ * Mutation testing via Stryker, run through `repo-contract mutation run --json`. Fails below
+ * `minScore`, on any Timeout still standing after it is re-run alone, and on an incomplete or
+ * stale registry record. Killed, RuntimeError and CompileError count as detected; Ignored mutants
+ * are left out of the score. A run in which a Survived mutant ran 0 tests fails: it proves nothing.
+ *
+ * The command always runs Stryker cold: it deletes the incremental file and passes `--force`.
+ * @param options - configuration for this check; see {@link MutationOptions}.
+ * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @beta
+ */
+export declare function mutation(options?: MutationOptions): CheckDefinitionConfig;
+
+/** Options accepted by {@link mutation}. */
+export declare interface MutationOptions {
+    /** The lowest mutation score that passes, in percent. `100` demands every mutant detected or recorded. Defaults to `80`. */
+    readonly minScore?: number;
+    /** The registry of hand-verified mutants. Defaults to `".repo-contract/exceptions/mutation.json"`; `false` reads none. */
+    readonly registry?: string | false;
+    /** Mutate one slice, written `<index>/<total>`. A sharded run cannot call a record stale. */
+    readonly shard?: string;
+    /** Mutate only these files. An empty list passes with nothing to mutate. */
+    readonly mutate?: readonly string[];
+    /** Judge this Stryker report and mutate nothing, such as the merged report of a sharded run. */
+    readonly report?: string;
+    /** Reuse a clean run while nothing it depends on has changed. Defaults to `"off"`; a CI run should keep it off. */
+    readonly cache?: "read-write" | "read-only" | "off";
+    /** The Stryker config file. Defaults to the first `stryker.config.*` or `stryker.conf.*` found. */
+    readonly config?: string;
+    /** Re-run at most this many timed-out mutants alone before a timeout counts. Defaults to `5`. */
+    readonly confirmTimeouts?: number;
+    /** Time the whole run may take, in milliseconds. */
+    readonly timeoutMs?: number;
+    /**
+     * Patch `@stryker-mutator/vitest-runner` when Vitest 5 needs it. Defaults to `true`. The patch
+     * changes the runner's test-name separator to Vitest 5's (stryker-js#6210). Without it, every
+     * mutant runs 0 tests. Only an install inside the project is patched. `false` passes
+     * `--no-patch-vitest-runner`.
+     */
+    readonly patchVitestRunner?: boolean;
+}
+
+/**
+ * Runs one of the package's own npm scripts as a check, through `repo-contract npm-script --json`.
+ * Fails when the script exits non-zero, runs out of time, or changes a `mustNotChange` path. The
+ * paths are hashed before and after, so the verdict does not depend on git state.
+ * @param options - configuration for this check; see {@link NpmScriptOptions}.
+ * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `script` is blank or starts with `-`, a `mustNotChange` entry is not a
+ * non-empty path that does not start with `-`, or `timeoutMs` is not a whole number above 0.
+ * @beta
+ */
+export declare function npmScript(options: NpmScriptOptions): CheckDefinitionConfig;
+
+/** Options accepted by {@link npmScript}. */
+export declare interface NpmScriptOptions {
+    /** The npm script to run. */
+    readonly script: string;
+    /** The name rationales use. Defaults to the script name. */
+    readonly label?: string;
+    /** When package.json has no such script: `"skip"` (the default) passes as not applicable; `"fail"` fails. */
+    readonly whenMissing?: "skip" | "fail";
+    /** Paths the script must leave byte-identical. Set them for a script that regenerates committed files: a change means the committed copy is stale. */
+    readonly mustNotChange?: readonly string[];
+    /** Time the script may take, in milliseconds. */
+    readonly timeoutMs?: number;
 }
 
 /**
@@ -684,6 +862,7 @@ export declare const publint: CheckDefinitionConfig;
  * whatever network they reach (an install usually reaches the registry).
  * @param options - configuration for this check; see {@link QuickStartOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export declare function quickStart(options?: QuickStartOptions): CheckDefinitionConfig;
@@ -697,10 +876,65 @@ export declare interface QuickStartOptions {
 }
 
 /**
- * Dependency vulnerability scanning via `npm audit`.
+ * Keeps a CycloneDX 1.6 SBOM of the package's locked dependencies current. It builds the document
+ * from the npm lockfile with no external tool, deterministically: the same lockfile always gives
+ * the same document. By default it writes nothing. It fails when a committed document is missing
+ * or differs from what the lockfile gives. The comparison ignores only `serialNumber` and
+ * `metadata.timestamp`. So a document another tool regenerated, or a reformatted one, still counts
+ * as current when its content matches. With `write: true` it writes the documents instead, for a
+ * regenerate command.
+ *
+ * The documents list every package in the lockfile's `packages` map. Each carries its purl, the
+ * hashes from `integrity`, the declared license and the resolved URL. The full dependency graph
+ * follows. The production document leaves out packages marked `dev`. It describes what the
+ * lockfile pins, not what is installed in `node_modules`.
+ * @param options - configuration for this check; see {@link SbomOptions}.
+ * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @throws {RangeError} when `lockfile`, `output` or `productionOutput` is not a non-empty path,
+ * when `output` or `productionOutput` is spelled as the lockfile's path, or when `write` is not a
+ * boolean.
  * @beta
  */
-export declare const securityDeps: CheckDefinitionConfig;
+export declare function sbom(options?: SbomOptions): CheckDefinitionConfig;
+
+/**
+ * Options for {@link sbom}.
+ * @beta
+ */
+export declare interface SbomOptions {
+    /** The npm lockfile the SBOM is built from. It must have a `packages` map (lockfileVersion 2 or 3). Defaults to `"package-lock.json"`. */
+    readonly lockfile?: string;
+    /** The SBOM of every locked package, dev dependencies included (their `scope` is `"excluded"`). Defaults to `"docs/sbom.cdx.json"`. */
+    readonly output?: string;
+    /** The SBOM of what installing the package brings in: every locked package not marked `dev`. Defaults to `"docs/sbom.production.cdx.json"`; `null` skips it. */
+    readonly productionOutput?: string | null;
+    /** Write the documents instead of checking them. Defaults to `false`: the check fails when a committed document is missing or out of date. Write mode refuses a path that is a symbolic link, is not a regular file, or resolves outside the working directory. It also refuses the lockfile: its path, a hard link to it, or a case-variant name on a case-insensitive file system. A refusal writes nothing and exits 1. */
+    readonly write?: boolean;
+    /** The command a failure message tells the reader to run to regenerate the documents. */
+    readonly fix?: string;
+}
+
+/**
+ * Dependency vulnerability scanning via `npm audit`.
+ * @param options - configuration for this check; see {@link SecurityDepsOptions}.
+ * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
+ * @beta
+ */
+export declare function securityDeps(options?: SecurityDepsOptions): CheckDefinitionConfig;
+
+/** Options accepted by {@link securityDeps}. */
+export declare interface SecurityDepsOptions {
+    /**
+     * The exception registry, such as `".repo-contract/exceptions/security-deps.json"`. With one, a
+     * `critical` advisory still fails, and a lower one passes only while a complete record accepts
+     * it. The check writes a blank record for each new advisory and fails on a record whose advisory
+     * is gone. An `info` finding warns and gets no record. Defaults to `false`: no registry,
+     * so any low, moderate, high or critical advisory fails.
+     */
+    readonly registry?: string | false;
+}
 
 /**
  * Secret-leak scanning via secretlint.
@@ -803,6 +1037,7 @@ declare namespace StandardSchemaV1 {
  * `lint` preset treats ESLint's severities.
  * @param options - configuration for this check; see {@link StylelintOptions}.
  * @returns the configured check.
+ * @throws {TypeError} when `options` is not an object.
  * @beta
  */
 export declare function stylelint(options?: StylelintOptions): CheckDefinitionConfig;

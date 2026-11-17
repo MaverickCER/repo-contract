@@ -2958,6 +2958,106 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ContractConfig:interface",
+          "docComment": "/**\n * The settings repo-contract reads from package.json. Other keys under `\"contract\"` belong to other tools.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ContractConfig "
+            }
+          ],
+          "fileUrlPath": "src/affected/contract-namespace.ts",
+          "releaseTag": "Public",
+          "name": "ContractConfig",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ContractConfig#affected:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly affected: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AffectedOptions",
+                  "canonicalReference": "repo-contract!AffectedOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "affected",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ContractConfig#source:member",
+              "docComment": "/**\n * `\"repo-contract\"` means the legacy `\"repo-contract\".affected` key was read; `doctor` reports it.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly source: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ContractConfigSource",
+                  "canonicalReference": "repo-contract!ContractConfigSource:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "source",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!ContractConfigSource:type",
+          "docComment": "/**\n * Where a repository's settings came from in package.json.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type ContractConfigSource = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"contract\" | \"repo-contract\" | \"none\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/affected/contract-namespace.ts",
+          "releaseTag": "Public",
+          "name": "ContractConfigSource",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
           "kind": "Function",
           "canonicalReference": "repo-contract!createCache:function(1)",
           "docComment": "/**\n * Creates a cache over a store.\n *\n * @param options - The store, the mode and (for tests) a clock.\n *\n * @param  - options.store - Where entries live.\n *\n * @param  - options.mode - Whether to read and write.\n *\n * @param  - options.now - The clock, for an entry's creation time and for pruning by age.\n *\n * @returns The cache.\n */\n",
@@ -3548,6 +3648,33 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!DoctorSnapshot#manifest:member",
+              "docComment": "/**\n * The root package.json, parsed; `undefined` when it is missing or not valid JSON.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly manifest?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "manifest",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "repo-contract!DoctorSnapshot#starExportFiles:member",
               "docComment": "/**\n * Source files that re-export with `export *`.\n */\n",
               "excerptTokens": [
@@ -3748,6 +3875,81 @@
             "startIndex": 1,
             "endIndex": 2
           }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!findMutantById:function(1)",
+          "docComment": "/**\n * Finds the mutant a mutation exception id names, for `repo-contract except`.\n *\n * @param mutants - a report's mutants.\n *\n * @param id - a `mutation:` id.\n *\n * @returns the first mutant with that id, or `undefined`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function findMutantById(mutants: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "ResolvedMutant",
+              "canonicalReference": "repo-contract!ResolvedMutant:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            },
+            {
+              "kind": "Content",
+              "text": ", id: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "ResolvedMutant",
+              "canonicalReference": "repo-contract!ResolvedMutant:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " | undefined"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-report.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 7,
+            "endIndex": 9
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "mutants",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "id",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "findMutantById"
         },
         {
           "kind": "Interface",
@@ -4118,6 +4320,33 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!MAX_MUTATION_SHARDS:var",
+          "docComment": "/**\n * The most shards a plan asks for.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "MAX_MUTATION_SHARDS = "
+            },
+            {
+              "kind": "Content",
+              "text": "256"
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-plan.ts",
+          "initializerTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "MAX_MUTATION_SHARDS",
+          "variableTypeTokenRange": {
+            "startIndex": 0,
+            "endIndex": 0
+          }
+        },
+        {
           "kind": "Function",
           "canonicalReference": "repo-contract!mergeMutationReports:function(1)",
           "docComment": "/**\n * Combines per-shard Stryker reports into the report an unsharded run would have produced. It never\n * passes partially. These all fail the merge: a missing, repeated or out-of-range shard, an\n * unreadable report, a file mutated by two shards, or disagreeing schema versions.\n *\n * @param reports - Each shard's number and parsed report.\n *\n * @param total - How many shards the run was split into.\n *\n * @returns The merged report, or why the shards cannot be merged.\n */\n",
@@ -4239,6 +4468,391 @@
             "startIndex": 1,
             "endIndex": 2
           }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "repo-contract!MutantIdentity:type",
+          "docComment": "/**\n * The fields a mutation exception id is derived from. Never the line: a record survives code moving.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type MutantIdentity = "
+            },
+            {
+              "kind": "Reference",
+              "text": "Pick",
+              "canonicalReference": "!Pick:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "ResolvedMutant",
+              "canonicalReference": "repo-contract!ResolvedMutant:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ", \"file\" | \"mutator\" | \"original\" | \"replacement\">"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-report.ts",
+          "releaseTag": "Public",
+          "name": "MutantIdentity",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 5
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!MutatedFile:interface",
+          "docComment": "/**\n * One file the Stryker config mutates, and its size.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface MutatedFile "
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-plan.ts",
+          "releaseTag": "Public",
+          "name": "MutatedFile",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutatedFile#bytes:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly bytes: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "bytes",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutatedFile#path:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "path",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "repo-contract!MUTATION_SHARD_BYTES:var",
+          "docComment": "/**\n * Bytes of mutated source one shard is sized for.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "MUTATION_SHARD_BYTES = "
+            },
+            {
+              "kind": "Content",
+              "text": "65536"
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-plan.ts",
+          "initializerTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "MUTATION_SHARD_BYTES",
+          "variableTypeTokenRange": {
+            "startIndex": 0,
+            "endIndex": 0
+          }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!mutationExceptionId:function(1)",
+          "docComment": "/**\n * `mutation:<file>:<mutator>:<first 12 hex of the hash of original and replacement>`. The format\n * matches internal-package-contract's, so existing `mutation.json` records keep their ids.\n *\n * @param mutant - the identity fields.\n *\n * @returns the id.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function mutationExceptionId(mutant: "
+            },
+            {
+              "kind": "Reference",
+              "text": "MutantIdentity",
+              "canonicalReference": "repo-contract!MutantIdentity:type"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-report.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "mutant",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "mutationExceptionId"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!MutationPlan:interface",
+          "docComment": "/**\n * What {@link planMutationShards} returns, and the core of `repo-contract mutation plan --json`.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface MutationPlan "
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-plan.ts",
+          "releaseTag": "Public",
+          "name": "MutationPlan",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationPlan#bytes:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly bytes: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "bytes",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationPlan#count:member",
+              "docComment": "/**\n * `clamp(ceil(bytes / 65536), 1, min(files, 256))`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly count: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "count",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationPlan#files:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly files: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "files",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationPlan#matrix:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly matrix: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ShardMatrix",
+                  "canonicalReference": "repo-contract!ShardMatrix:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "matrix",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!MutationPlan#plan:member",
+              "docComment": "/**\n * The files of each shard. `weightsMs` holds each shard's bytes here, not milliseconds.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly plan: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ShardPlan",
+                  "canonicalReference": "repo-contract!ShardPlan:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "plan",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!mutationShardCount:function(1)",
+          "docComment": "/**\n * The shard count with no knobs: one shard per 64 KiB of mutated source, at least one, never more\n * shards than files, and never more than {@link MAX_MUTATION_SHARDS}. Bytes stand in for Stryker's\n * cost because every repository has them; recorded timings exist only after a run.\n *\n * @param input - the mutated source.\n *\n * @param  - input.bytes - its total size.\n *\n * @param  - input.files - how many files it spans.\n *\n * @returns the count; `0` only when there are no files.\n *\n * @throws\n *\n * {RangeError} If either input is not a whole number of at least 0, or bytes come with no files.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function mutationShardCount(input: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly bytes: number;\n    readonly files: number;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "number"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-plan.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "input",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "mutationShardCount"
         },
         {
           "kind": "Function",
@@ -4478,7 +5092,7 @@
         {
           "kind": "Function",
           "canonicalReference": "repo-contract!parseAffectedConfig:function(1)",
-          "docComment": "/**\n * Validates the `affected` block of a repository's configuration (`package.json`'s\n * `\"repo-contract\".\"affected\"`). Strict on purpose: a misspelt key would otherwise silently\n * leave a coupling undeclared, which is the one thing this block exists to prevent.\n *\n * @param value - The parsed block, or `undefined` if the repository has none.\n *\n * @returns The options, or a one-line description of what is wrong.\n */\n",
+          "docComment": "/**\n * Validates the `affected` block of a repository's configuration (`package.json`'s\n * `\"contract\".\"affected\"`, or the legacy `\"repo-contract\".\"affected\"`). `readContractConfig` picks\n * the block; this checks it. Strict on purpose: a misspelt key would otherwise silently leave a\n * coupling undeclared, which is the one thing this block exists to prevent.\n *\n * @param value - The parsed block, or `undefined` if the repository has none.\n *\n * @returns The options, or a one-line description of what is wrong.\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4841,6 +5455,61 @@
           "name": "planFixes"
         },
         {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!planMutationShards:function(1)",
+          "docComment": "/**\n * Plans a sharded mutation run of every file the Stryker config mutates. Files are split\n * heaviest first onto the lightest shard, by bytes, so the shards finish at about the same time.\n * The same files give the same plan in any order.\n *\n * @param files - the mutated files and their sizes; each path once.\n *\n * @returns the count, the split and the matrix. No files gives a count of 0 and an empty matrix.\n *\n * @throws\n *\n * {RangeError} If a path is empty or listed twice, or a size is not a whole number of at least 0.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function planMutationShards(files: "
+            },
+            {
+              "kind": "Content",
+              "text": "readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "MutatedFile",
+              "canonicalReference": "repo-contract!MutatedFile:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[]"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "MutationPlan",
+              "canonicalReference": "repo-contract!MutationPlan:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-plan.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 5,
+            "endIndex": 6
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "files",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "planMutationShards"
+        },
+        {
           "kind": "Interface",
           "canonicalReference": "repo-contract!PlannedChange:interface",
           "docComment": "/**\n * One file a set of fixes would change.\n */\n",
@@ -5059,6 +5728,60 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!readContractConfig:function(1)",
+          "docComment": "/**\n * Reads `\"contract\".affected` from a parsed package.json, through `parseAffectedConfig`. Falls back\n * to the legacy `\"repo-contract\".affected` when the new key is absent. When both are present, the\n * new key wins and the legacy block is not read, so a broken legacy block cannot fail a migrated\n * repository; `doctor` warns about it. A `\"contract\"` key that is not an object belongs to another\n * tool and is skipped like an absent one.\n *\n * @param manifest - the parsed package.json, or `undefined` when there is none.\n *\n * @returns the settings, or a one-line description of what is wrong, naming the key it read.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function readContractConfig(manifest: "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly config: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ContractConfig",
+              "canonicalReference": "repo-contract!ContractConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n} | {\n    readonly error: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/affected/contract-namespace.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 6
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "manifest",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "readContractConfig"
+        },
+        {
           "kind": "TypeAlias",
           "canonicalReference": "repo-contract!RequestedScope:type",
           "docComment": "/**\n * What a caller may ask for; `\"auto\"` leaves the choice to the environment.\n */\n",
@@ -5180,6 +5903,267 @@
           "name": "resolveCacheMode"
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "repo-contract!ResolvedMutant:interface",
+          "docComment": "/**\n * One mutant of a Stryker JSON report, with the source text it replaces.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ResolvedMutant "
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-report.ts",
+          "releaseTag": "Public",
+          "name": "ResolvedMutant",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ResolvedMutant#column:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly column: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "column",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ResolvedMutant#file:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly file: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "file",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ResolvedMutant#line:member",
+              "docComment": "/**\n * 1-indexed start line, or `0` when the report has no location.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly line: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "line",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ResolvedMutant#mutator:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly mutator: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "mutator",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ResolvedMutant#original:member",
+              "docComment": "/**\n * The exact source span the mutant replaces, read from the report's `source`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly original: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "original",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ResolvedMutant#replacement:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly replacement: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "replacement",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ResolvedMutant#status:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly status: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "status",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ResolvedMutant#statusReason:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly statusReason: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "statusReason",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "repo-contract!ResolvedMutant#testsCompleted:member",
+              "docComment": "/**\n * How many tests ran against the mutant, or `undefined` when the report does not say.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly testsCompleted: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "testsCompleted",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Function",
           "canonicalReference": "repo-contract!resolveFailFast:function(1)",
           "docComment": "/**\n * Decides whether a run stops spending time on expensive checks once a cheap one has failed. It is\n * off unless asked for, in CI and locally, so a run reports every problem by default. It is never\n * on for a release, which always runs everything.\n *\n * @param input - The explicit flag and the environment.\n *\n * @param  - input.flag - `--fail-fast` (true) or `--no-fail-fast` (false), if given.\n *\n * @param  - input.env - The environment variables to read; this function reads no ambient state.\n *\n * @returns Whether to pass `failFast: true` to the run.\n */\n",
@@ -5241,6 +6225,60 @@
             }
           ],
           "name": "resolveFailFast"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "repo-contract!resolveMutants:function(1)",
+          "docComment": "/**\n * Reads every mutant of a Stryker JSON report (schema version 1 or 2).\n *\n * @param report - the parsed report.\n *\n * @returns the mutants in file then report order, or why the report cannot be read.\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function resolveMutants(report: "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    readonly ok: true;\n    readonly mutants: readonly "
+            },
+            {
+              "kind": "Reference",
+              "text": "ResolvedMutant",
+              "canonicalReference": "repo-contract!ResolvedMutant:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "[];\n} | {\n    readonly ok: false;\n    readonly error: string;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/affected/mutation-report.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 6
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "report",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isOptional": false
+            }
+          ],
+          "name": "resolveMutants"
         },
         {
           "kind": "Function",
