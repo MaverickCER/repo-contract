@@ -12,4 +12,8 @@ Four new commands guard the project's files and the run's memory: `mutation run`
 - **`loadExceptionRegistry` no longer follows a symbolic link.** It refuses a symlinked registry, and takes an `isSymlink` option like `writeExceptionRegistry`. Its JSON errors no longer quote the file's bytes; they keep the line and column.
 - **`npm-script` keeps the last 65,536 characters of each output stream.** A timeout that finds the process group already gone counts the script as stopped.
 - **`quick-start` no longer holds a README command's whole output.** It keeps the last 65,536 characters, as `npm-script` does. A timeout that finds the process group already gone no longer throws.
-- **`repo-contract doctor` no longer reports a false all-clear outside a git repository.** When `git ls-files` fails, it exits 1 with "git cannot list the tracked files" instead of printing "Nothing to change." With `--json` it prints `{ schemaVersion, error }` on stdout instead, as `mutation run --json` does.
+- **`repo-contract doctor` no longer reports a false all-clear outside a git repository.** When `git ls-files` fails, it exits 1 with "git cannot list the tracked files" instead of printing "Nothing to change." With `--json` it prints `{ schemaVersion, error }` on stdout instead.
+- **A `-C` path that is not a usable directory is named.** Every command that takes `-C` checks the path first. It exits 1 through the command's usual failure line or JSON error, never a raw ENOENT, a stack trace or an empty result. The message is one of three:
+  - `the directory <dir> does not exist`: nothing is at the path.
+  - `<dir> is not a directory`: a file or other non-directory is there.
+  - `cannot read the directory <dir>: <code>`: the check failed with an error code, such as `ENAMETOOLONG` or `ELOOP`, or the process may not list or enter the directory (`EACCES`).

@@ -9,7 +9,7 @@
 import { createHash } from "node:crypto"
 import { lstat, readFile, readdir, readlink } from "node:fs/promises"
 import path from "node:path"
-import { commandDirectory } from "./cli-options.mjs"
+import { checkDirectory, commandDirectory } from "./cli-options.mjs"
 
 export const NPM_SCRIPT_USAGE = `Usage: repo-contract npm-script <script> [options]
 
@@ -231,6 +231,11 @@ export async function runNpmScript(input) {
 
   const { options } = parsed
   const dir = commandDirectory(input.cwd, options.cwd)
+  const directoryProblem = checkDirectory(dir)
+  if (directoryProblem !== undefined) {
+    input.stderr(`repo-contract npm-script: ${directoryProblem}\n`)
+    return 1
+  }
   const manifest = path.join(dir, "package.json")
   let scripts
   try {

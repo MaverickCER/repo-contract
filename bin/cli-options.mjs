@@ -3,6 +3,7 @@
 // anywhere before `--`. Everything after `--` is a bare argument. A value that starts with `-` is
 // read as a missing value, so a forgotten value never swallows the next option.
 
+import { accessSync, constants, statSync } from "node:fs"
 import path from "node:path"
 
 /**
@@ -80,4 +81,43 @@ export function messageOf(error) {
  */
 export function commandDirectory(cwd, option) {
   return option === undefined ? path.resolve(cwd) : path.resolve(cwd, option)
+}
+
+/**
+ * Checks the directory a command runs in, before the command touches anything there. Without it, a
+ * command fails on its first file with a bare ENOENT. A read that tolerates a missing file would
+ * pass as if the directory were empty. The directory must exist and be one the process can list
+ * and enter. It never throws, so every command reports the message through its usual failure line
+ * or JSON error. Commands that inject their file access take it as their `checkDirectory` input;
+ * the others call it directly.
+ * @param {string} dir - An absolute path.
+ * @returns {string | undefined} `undefined` for a directory. Otherwise a message: `the directory
+ *   <dir> does not exist`, `<dir> is not a directory`, or `cannot read the directory <dir>:
+ *   <code>`. That last one names the code stat failed with, such as ENAMETOOLONG or ELOOP. It
+ *   names EACCES when the process may not read or enter the directory.
+ */
+export function checkDirectory(dir) {
+  let stats
+  try {
+    stats = statSync(dir, { throwIfNoEntry: false })
+  } catch (error) {
+    return unreadable(dir, error)
+  }
+  if (stats === undefined) return `the directory ${dir} does not exist`
+  if (!stats.isDirectory()) return `${dir} is not a directory`
+  try {
+    accessSync(dir, constants.R_OK | constants.X_OK)
+  } catch (error) {
+    return unreadable(dir, error)
+  }
+  return undefined
+}
+
+/**
+ * @param {string} dir - The directory.
+ * @param {unknown} error - What stat or access threw.
+ * @returns {string} The message naming the error code.
+ */
+function unreadable(dir, error) {
+  return `cannot read the directory ${dir}: ${/** @type {NodeJS.ErrnoException} */ (error).code}`
 }

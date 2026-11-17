@@ -6,7 +6,7 @@
 // complete, 1 when it is still incomplete or cannot be found or written, 2 for a usage error.
 
 import path from "node:path"
-import { commandDirectory, messageOf, parseCommandOptions } from "./cli-options.mjs"
+import { checkDirectory, commandDirectory, messageOf, parseCommandOptions } from "./cli-options.mjs"
 
 export const EXCEPT_USAGE = `Usage: repo-contract except <id> [options]
 
@@ -307,6 +307,8 @@ export async function runExcept(input) {
   const root = commandDirectory(input.cwd, options.cwd)
   const directory = path.resolve(root, options.dir)
   try {
+    const directoryProblem = checkDirectory(root)
+    if (directoryProblem !== undefined) throw new ExceptError(directoryProblem)
     const found = await findRecord({ input, root, directory, id })
     let original
     if (found.index === -1) {

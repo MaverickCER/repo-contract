@@ -36,6 +36,8 @@ async function invoke(argv: string[], repo: Repo = healthy, failWrites = false) 
     stdout: (text: string) => out.push(text),
     stderr: (text: string) => err.push(text),
     engine: { diagnose, planFixes },
+    checkDirectory: async (dir: string) =>
+      dir === at("missing") ? `the directory ${dir} does not exist` : undefined,
     createCapabilities: () => ({
       git: async (args: string[]) => {
         if (args[0] === "ls-files") return (repo.tracked ?? Object.keys(files)).join("\0") + "\0"
@@ -229,6 +231,25 @@ describe("runDoctor", () => {
     expect(Object.keys(written)).toEqual([".gitignore"])
   })
 
+  it("exits 1 and names a -C directory that does not exist", async () => {
+    const { code, stdout, stderr } = await invoke(["-C", "missing"])
+    expect(code).toBe(1)
+    expect(stdout).toBe("")
+    expect(stderr).toBe(
+      `repo-contract doctor: failed: the directory ${at("missing")} does not exist\n`,
+    )
+  })
+
+  it("--json names a -C directory that does not exist in a JSON error on stdout", async () => {
+    const { code, stdout, stderr } = await invoke(["-C", "missing", "--json"])
+    expect(code).toBe(1)
+    expect(stderr).toBe("")
+    expect(JSON.parse(stdout)).toStrictEqual({
+      schemaVersion: 1,
+      error: `the directory ${at("missing")} does not exist`,
+    })
+  })
+
   it("exits 1 with a message when a write fails", async () => {
     const repo = { ...healthy, files: { ...healthy.files, ".gitignore": "" } }
     const { code, stderr } = await invoke(["--fix"], repo, true)
@@ -246,6 +267,7 @@ describe("runDoctor", () => {
       stdout: (t: string) => out.push(t),
       stderr: (t: string) => err.push(t),
       engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
       createCapabilities: () => ({
         git: () => Promise.reject(new Error("spawn git ENOENT")),
         readFile: async () => undefined,
@@ -265,6 +287,7 @@ describe("runDoctor", () => {
       stdout: () => undefined,
       stderr: (t: string) => err.push(t),
       engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
       createCapabilities: () => ({
         git: () => {
           const thrown: unknown = "boom"
@@ -314,6 +337,7 @@ describe("runDoctor", () => {
       stdout: (t: string) => out.push(t),
       stderr: (t: string) => err.push(t),
       engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
       createCapabilities: () => ({
         git: async () => undefined,
         readFile: async (file: string) => healthy.files[file],
@@ -335,6 +359,7 @@ describe("runDoctor", () => {
       stdout: (t: string) => out.push(t),
       stderr: (t: string) => err.push(t),
       engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
       createCapabilities: () => ({
         git: async () => undefined,
         readFile: async () => undefined,
@@ -370,6 +395,7 @@ describe("runDoctor", () => {
         },
         planFixes,
       },
+      checkDirectory: async () => undefined,
       createCapabilities: () => ({
         git: async (args: string[]) =>
           args[0] === "ls-files" ? `${tracked.join("\0")}\0` : undefined,
@@ -418,6 +444,7 @@ describe("runDoctor", () => {
           { file: "b", before: "", after: "y\n" },
         ],
       },
+      checkDirectory: async () => undefined,
       createCapabilities: () => ({
         git: async () => "",
         readFile: async () => undefined,
@@ -439,6 +466,7 @@ describe("runDoctor", () => {
         stdout: (t: string) => out.push(t),
         stderr: () => undefined,
         engine: { diagnose, planFixes },
+        checkDirectory: async () => undefined,
         createCapabilities: () => ({
           git: async (args: string[]) => {
             const asked = args.join(" ")
@@ -530,6 +558,7 @@ describe("runDoctor", () => {
       stdout: () => undefined,
       stderr: () => undefined,
       engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
       createCapabilities: (dir: string) => {
         dirs.push(dir)
         return {
@@ -551,6 +580,7 @@ describe("runDoctor", () => {
       stdout: () => undefined,
       stderr: () => undefined,
       engine: { diagnose, planFixes },
+      checkDirectory: async () => undefined,
       createCapabilities: (dir: string) => {
         dirs.push(dir)
         return {

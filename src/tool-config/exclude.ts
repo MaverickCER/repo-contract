@@ -44,7 +44,9 @@ export function negateGlobs(globs: readonly string[]): readonly string[] {
  * @throws {TypeError} when nothing is left: the source glob would then start at the file-system root.
  */
 export function normalizeSrcDir(srcDir = "src"): string {
-  const normalized = (srcDir.startsWith("./") ? srcDir.slice(2) : srcDir).replace(/\/+$/, "")
+  // The lookbehind starts a match only at the first slash of a run. Without it, a run of slashes
+  // before the end is retried from every slash in it, which is quadratic.
+  const normalized = (srcDir.startsWith("./") ? srcDir.slice(2) : srcDir).replace(/(?<!\/)\/+$/, "")
   if (normalized === "") {
     throw new TypeError(`srcDir must name a directory; got "${srcDir}"`)
   }

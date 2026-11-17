@@ -10,8 +10,10 @@
   makes network calls or collects telemetry. An AST scan of `src/` fails the contract on any
   network import or global. A scan of the packed tarball rejects `child_process` and
   `process.env` outside `bin/`.
-- Four features write or delete files when you use them: `securityDeps({ registry })`,
-  `sbom({ write: true })`, `repo-contract except` and `repo-contract mutation run`.
+- Beyond `init`, eight features write or delete files in the project when you use them:
+  `securityDeps({ registry })`, `sbom({ write: true })`, `repo-contract except`,
+  `repo-contract mutation run`, `repo-contract doctor --fix`, `repo-contract merge-mutation --out`,
+  `repo-contract cache clear` and `repo-contract cache prune`.
   `mutation run` also patches `@stryker-mutator/vitest-runner` in the project's own `node_modules`, unless
   `patchVitestRunner: false` or `--no-patch-vitest-runner` turns that off.
   [You own persistence](#application-responsibilities) says what each touches.
@@ -158,6 +160,12 @@ particular:
     tier turns the registry on.
   - `sbom({ write: true })` rewrites the documents at `output` and `productionOutput`.
   - `repo-contract except <id>` writes the registry that holds the record.
+  - `repo-contract doctor --fix` appends the cache rule to `.gitignore`, after printing the change.
+  - `repo-contract merge-mutation --out <file>` writes the merged report to that file.
+  - `repo-contract cache clear` and `cache prune` delete entries in the cache directory
+    (`--cache-dir`, default `.repo-contract/cache`).
+  - `repo-contract quick-start` packs the tarball into a temporary directory under the system temp
+    folder, runs the README commands in an empty project there, then deletes the directory.
   - `repo-contract mutation run`, which the `mutation` preset runs, deletes Stryker's incremental
     file, the previous report and the temp directory. When one of those paths is not strictly
     inside the project once symbolic links resolve, it refuses and deletes nothing. It writes the

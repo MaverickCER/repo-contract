@@ -7,7 +7,7 @@
 import { existsSync } from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import { commandDirectory, messageOf, parseCommandOptions } from "./cli-options.mjs"
+import { checkDirectory, commandDirectory, messageOf, parseCommandOptions } from "./cli-options.mjs"
 
 export const EXPLAIN_USAGE = `Usage: repo-contract explain [options]
 
@@ -126,6 +126,8 @@ export async function runExplain(input) {
   const { options } = parsed
   const root = commandDirectory(input.cwd, options.cwd)
   try {
+    const directoryProblem = checkDirectory(root)
+    if (directoryProblem !== undefined) throw new ExplainError(directoryProblem)
     const name =
       options.config ?? DEFAULT_CONFIGS.find((candidate) => existsSync(path.join(root, candidate)))
     if (name === undefined) {

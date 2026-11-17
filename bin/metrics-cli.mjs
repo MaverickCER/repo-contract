@@ -6,6 +6,7 @@
 // command could not run, 2 for a usage error. Nothing is sent anywhere.
 
 import path from "node:path"
+import { checkDirectory } from "./cli-options.mjs"
 
 export const METRICS_USAGE = `Usage: repo-contract metrics [options]
 
@@ -182,6 +183,9 @@ function messageOf(error) {
  * @param {(text: string) => void} input.stdout - Writes to standard output.
  * @param {(text: string) => void} input.stderr - Writes to standard error.
  * @param {object} input.engine - `parseRunLog` and `summarizeRuns`.
+ * @param {(dir: string) => string | undefined | Promise<string | undefined>} [input.checkDirectory]
+ *   - Checks the `-C` directory without throwing: `undefined`, or a message. Defaults to
+ *   `checkDirectory`.
  * @param {(file: string) => Promise<string | undefined>} input.readFile - Reads a file.
  * @param {() => Date} input.now - The clock.
  * @returns {Promise<number>} The exit status.
@@ -206,6 +210,11 @@ export async function runMetrics(input) {
   const { options } = parsed
   const root = path.resolve(input.cwd, options.cwd ?? ".")
   try {
+    const directoryProblem = await (input.checkDirectory ?? checkDirectory)(root)
+    if (directoryProblem !== undefined) {
+      input.stderr(`repo-contract metrics: ${directoryProblem}\n`)
+      return 1
+    }
     const text = await input.readFile(path.resolve(root, options.log ?? DEFAULT_LOG))
     const { records, errors } = input.engine.parseRunLog(text ?? "")
     if (errors.length > 0) {

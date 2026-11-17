@@ -21,6 +21,7 @@ import { readFileSync } from "node:fs"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import path from "node:path"
+import { checkDirectory } from "./cli-options.mjs"
 import { outputTail, stopProcessGroup } from "./npm-script-cli.mjs"
 
 // --- What `affected` takes from the machine: git, files and the project's TypeScript.
@@ -235,6 +236,7 @@ async function main() {
       stdout: (text) => process.stdout.write(text),
       stderr: (text) => process.stderr.write(text),
       engine: await import("../dist/affected.js"),
+      checkDirectory,
       createCapabilities,
       loadTypeScript,
     })
@@ -267,6 +269,7 @@ async function main() {
       stdout: (text) => process.stdout.write(text),
       stderr: (text) => process.stderr.write(text),
       engine: await import("../dist/affected.js"),
+      checkDirectory,
       readFile: (file) => readFile(file, "utf8").catch(() => undefined),
       writeFile: async (file, text) => {
         await mkdir(path.dirname(file), { recursive: true })
@@ -286,6 +289,7 @@ async function main() {
       stdout: (text) => process.stdout.write(text),
       stderr: (text) => process.stderr.write(text),
       engine: await import("../dist/metrics.js"),
+      checkDirectory,
       readFile: (file) => readFile(file, "utf8").catch(() => undefined),
       now: () => new Date(),
     })
@@ -302,6 +306,7 @@ async function main() {
       stdout: (text) => process.stdout.write(text),
       stderr: (text) => process.stderr.write(text),
       engine: await import("../dist/affected.js"),
+      checkDirectory,
       createCapabilities: (dir) => ({
         ...createCapabilities(dir),
         writeFile: (file, text) => writeFile(path.join(dir, file), text, "utf8"),
@@ -324,6 +329,7 @@ async function main() {
       stdout: (text) => process.stdout.write(text),
       stderr: (text) => process.stderr.write(text),
       engine,
+      checkDirectory,
       createStore: helpers.createFileCacheStore,
       readFile: (file) => readFile(file, "utf8").catch(() => undefined),
       now: () => new Date(),

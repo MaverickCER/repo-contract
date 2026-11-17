@@ -32,7 +32,7 @@ describe("security-network scan: full real path", () => {
       expect(findings.map((finding) => finding.id).sort()).toEqual([
         "security-network:dynamic-import-non-literal-specifier:bin/explain-cli.mjs:79:30",
         "security-network:dynamic-import-non-literal-specifier:bin/mutation-adopt.mjs:80:34",
-        "security-network:dynamic-import-non-literal-specifier:bin/mutation-plan.mjs:50:15",
+        "security-network:dynamic-import-non-literal-specifier:bin/mutation-plan.mjs:51:15",
         "security-network:restricted-named-import:bin/mutation-adopt.mjs:6:10",
         "security-network:restricted-named-import:bin/repo-contract.mjs:22:10",
       ])

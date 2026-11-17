@@ -5,6 +5,7 @@
 import { existsSync, globSync, readFileSync, statSync } from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import { checkDirectory } from "./cli-options.mjs"
 
 const CONFIG_CANDIDATES = [
   "stryker.config.mjs",
@@ -145,6 +146,8 @@ export async function runPlan(input, options, cwd) {
     input.stderr(`repo-contract mutation: ${message}\n`)
     return 1
   }
+  const directoryProblem = checkDirectory(cwd)
+  if (directoryProblem !== undefined) return fail(directoryProblem)
   const loaded = await loadStrykerConfig(cwd, options.config)
   if (!loaded.ok) return fail(loaded.error)
   const targets = targetsOf(cwd, loaded.config)

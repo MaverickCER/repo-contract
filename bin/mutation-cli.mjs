@@ -17,7 +17,7 @@
 
 import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { commandDirectory } from "./cli-options.mjs"
+import { checkDirectory, commandDirectory } from "./cli-options.mjs"
 import { CACHE_CHECK, CACHE_DIRECTORY, cacheInputs, isClean } from "./mutation-cache.mjs"
 import { adoptionProblem, mutantFreeFiles, STATUSES } from "./mutation-adopt.mjs"
 import { loadStrykerConfig, runPlan, sized, targetsOf } from "./mutation-plan.mjs"
@@ -353,6 +353,8 @@ async function runRun(input, options, cwd) {
  */
 async function runSteps(input, options, cwd, finish) {
   const error = (message) => finish({ state: "error", message })
+  const directoryProblem = checkDirectory(cwd)
+  if (directoryProblem !== undefined) return error(directoryProblem)
 
   if (options.mutate?.length === 0) {
     return options.report === undefined

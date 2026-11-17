@@ -305,11 +305,13 @@ npx repo-contract explain</code></pre>
               >
             </div>
             <div class="adoption-card guarantee">
-              <span class="adoption-card-title">No shell by default, and no ambient access.</span
+              <span class="adoption-card-title"
+                >No shell by default, and no ambient access in the library.</span
               ><span class="adoption-card-desc"
                 ><strong>Scope:</strong> The consumer supplies the process and environment
-                capabilities. repo-contract cannot vouch for what the commands you configure do once
-                they run.</span
+                capabilities. The bin/ CLI is the exception: it reads process.env and spawns, as the
+                mutation and npmScript presets use. repo-contract cannot vouch for what the commands
+                you configure do once they run.</span
               ><a
                 class="external-link-note"
                 href="https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md"

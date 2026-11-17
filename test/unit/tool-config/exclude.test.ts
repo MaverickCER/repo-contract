@@ -49,6 +49,16 @@ describe("R3 one exclude list", () => {
     expect(() => sourceGlob("")).toThrow("srcDir must name a directory")
   })
 
+  // A run of slashes before the end used to be retried from each slash in it: 1.5 s for 40,000 and
+  // 73 s for 200,000. The 5 s bound leaves room for a loaded CI runner and still catches that.
+  it("keeps a run of slashes before the end, in linear time", () => {
+    expect(sourceGlob("a//b/")).toBe("a//b/**/*.{ts,tsx}")
+    const srcDir = `a${"/".repeat(200_000)}b`
+    const started = performance.now()
+    expect(sourceGlob(srcDir)).toBe(`${srcDir}/**/*.{ts,tsx}`)
+    expect(performance.now() - started).toBeLessThan(5_000)
+  })
+
   it("returns a fresh array each call, so a caller's push changes no later config", () => {
     const first = excludeGlobs() as string[]
     first.push("src/leak.ts")

@@ -6,6 +6,7 @@
 // everything" answer is still success), 1 when the command could not run, 2 for a usage error.
 
 import path from "node:path"
+import { checkDirectory } from "./cli-options.mjs"
 
 export const AFFECTED_USAGE = `Usage: repo-contract affected [options]
 
@@ -328,6 +329,9 @@ const LISTS = { tests: "affectedTests", sources: "affectedSources", mutate: "mut
  * @param {(text: string) => void} input.stdout - Writes to standard output.
  * @param {(text: string) => void} input.stderr - Writes to standard error.
  * @param {object} input.engine - `computeAffectedFromGit`, `explainAffected` and `readContractConfig`.
+ * @param {(dir: string) => string | undefined | Promise<string | undefined>} [input.checkDirectory]
+ *   - Checks the `-C` directory without throwing: `undefined`, or a message. Defaults to
+ *   `checkDirectory`.
  * @param {(dir: string) => object} input.createCapabilities - Builds the git and file capabilities.
  * @param {(dir: string) => Promise<object>} input.loadTypeScript - Loads the project's TypeScript.
  * @returns {Promise<number>} The exit status.
@@ -351,6 +355,17 @@ export async function runAffected(input) {
 
   const { options } = parsed
   const dir = path.resolve(input.cwd, options.cwd ?? "")
+  let directoryProblem
+  try {
+    directoryProblem = await (input.checkDirectory ?? checkDirectory)(dir)
+  } catch (error) {
+    input.stderr(`repo-contract affected: failed: ${messageOf(error)}\n`)
+    return 1
+  }
+  if (directoryProblem !== undefined) {
+    input.stderr(`repo-contract affected: ${directoryProblem}\n`)
+    return 1
+  }
   let ts
   try {
     ts = await input.loadTypeScript(dir)

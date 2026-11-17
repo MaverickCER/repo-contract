@@ -47,6 +47,8 @@ async function invoke(
     version: "9.9.9",
     stdout: (text: string) => harness.out.push(text),
     stderr: (text: string) => harness.err.push(text),
+    checkDirectory: async (dir: string) =>
+      path.basename(dir) === "missing" ? `the directory ${dir} does not exist` : undefined,
     engine: {
       computeAffectedFromGit,
       explainAffected,

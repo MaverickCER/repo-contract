@@ -110,9 +110,9 @@ Passing `cross-spawn` fixes Windows command resolution; it does not by itself en
 
 ## The runner and CI integration
 
-### Why the CLI only scaffolds
+### Why your runner owns the run
 
-repo-contract is a library, not a repository-wide command. Your repository owns the entry point, the process-spawning capability, and the environment it runs with. That keeps the contract composable, and the package never becomes another opaque layer between you and your tools.
+The contract runs as a library, not as a repository-wide command. Your repository owns the entry point, the process-spawning capability, and the environment it runs with. That keeps the contract composable, and the package never becomes another opaque layer between you and your tools. The `repo-contract` CLI never runs the checks. It scaffolds and explains a config, and runs helper commands such as `mutation run`. Its help lists all twelve commands.
 
 `npx repo-contract init` (see the [README's Quick Start](README.md#install-and-verify)) automates writing the files below. It is a one-time scaffold, not a runtime:
 
@@ -823,7 +823,7 @@ npx repo-contract mutation run --json --shard 2/8       # mutate slice 2 of 8
 npx repo-contract mutation run --json --report reports/mutation/merged.json   # judge a merged report
 ```
 
-`mutation plan` cuts the config's mutate set into one shard per 64 KiB of source, at most 256 and never more than the file count. `--json` prints the matrix to feed a CI job's `strategy.matrix`. It exits `1` when the config cannot be read or selects no file. `mutation run` takes the preset's options as flags: `--shard <i>/<n>`, `--mutate <file>[,<file>...]` (`--mutate=` mutates nothing and passes), `--report <file>`, `--cache read-write|read-only|off`, `--confirm-timeouts <n>`, `--config <file>` and `--no-patch-vitest-runner`. It refuses `--report` with `--shard`. It checks that a `--report` covers every file of this checkout's plan, with the same text on disk, before judging it. Both take `-C <dir>`. `run` exits with Stryker's code when Stryker ran. It exits `0` when it reused, adopted or had nothing to mutate, `1` when it could not run, and `2` for a usage error.
+`mutation plan` cuts the config's mutate set into one shard per 64 KiB of source, at most 256 and never more than the file count. `--json` prints the matrix to feed a CI job's `strategy.matrix`. It exits `1` when the config cannot be read or selects no file. `mutation run` takes the preset's options as flags: `--shard <i>/<n>`, `--mutate <file>[,<file>...]` (`--mutate=` mutates nothing and passes), `--report <file>`, `--cache read-write|read-only|off`, `--confirm-timeouts <n>`, `--config <file>` and `--no-patch-vitest-runner`. It refuses `--report` with `--shard`. It checks that a `--report` covers every file of this checkout's plan, with the same text on disk, before judging it. Both take `-C <dir>`. `run` exits with Stryker's code when Stryker ran. It exits `0` when it reused, adopted or had nothing to mutate, `1` when it could not run, and `2` for a usage error. With `--json`, `run` prints its report on stdout: `{ schemaVersion, state, report, exitCode, shard, mutate, timeouts, inputs, message }`. When the run ends with nothing it can judge, `state` is `"error"` and `message` names the cause.
 
 ### Run an npm script as a check
 
@@ -1031,7 +1031,11 @@ export default strykerConfig({ exclude: ["src/generated/**"] })
 
 ## Running less: affected scope, cache and speed
 
-Everything here is opt-in and lives in `repo-contract/affected`, `repo-contract/metrics` and the `bin` commands. With none of it, a run reports every problem and runs everything. Each command below takes `-C <dir>` to run as if started in `<dir>`, and `--help` lists all of its options.
+Everything here is opt-in and lives in `repo-contract/affected`, `repo-contract/metrics` and the `bin` commands. With none of it, a run reports every problem and runs everything. Each command below takes `-C <dir>` to run as if started in `<dir>`, and `--help` lists all of its options. Every repo-contract command that takes `-C` checks `<dir>` first. When `<dir>` is not a usable directory, the command exits `1` with one of three messages:
+
+- `the directory <dir> does not exist`: nothing is at the path.
+- `<dir> is not a directory`: a file or other non-directory is there.
+- `cannot read the directory <dir>: <code>`: the check failed with an error code, such as `ENAMETOOLONG`, or the process may not list or enter the directory (`EACCES`).
 
 ### See what a change affects
 
@@ -1124,7 +1128,7 @@ npx repo-contract affected --mutate --shard 2/3 --timings timings.json     # thi
 - missing hooks;
 - `export *` barrels, which widen a change to everything behind them.
 
-`doctor --fix` applies only the safe fix (the `.gitignore` line) and shows it first. `doctor --json` prints the report as JSON. When doctor cannot run, as outside a git repository, it exits `1`. With `--json` it then prints `{ schemaVersion, error }` on stdout. `repo-contract cache why tests --inputs inputs.json` names the inputs that changed since a check's last cached result.
+`doctor --fix` applies only the safe fix (the `.gitignore` line) and shows it first. `doctor --json` prints the report as JSON. When doctor cannot run, as outside a git repository or with a `-C` directory that does not exist, it exits `1`. With `--json` it then prints `{ schemaVersion, error }` on stdout. That shape is smaller than the `state: "error"` report of [`mutation run --json`](#mutation-testing). `repo-contract cache why tests --inputs inputs.json` names the inputs that changed since a check's last cached result.
 
 **Prove the narrow scope is sound.** After a merge, run everything once and call `findEscapes({ affectedTests, allTests, failedInFullRun })` (`repo-contract/affected`). Any test that failed in the full run but was left out of the affected set is an escape. `clean: false` means the analysis needs a wider rule.
 
@@ -1311,4 +1315,4 @@ npx repo-contract exceptions              # how many records each registry holds
 
 `except` checks only the shared v2 rules and the shape of a mutation id. A registry's own rules, such as the exception types its check accepts, apply when that check next runs. A record `except` calls complete can still fail there.
 
-`repo-contract exceptions` prints the inventory from `summarizeExceptionRegistries`: per registry, the records by exception type and how many are legacy, expired or incomplete. `--dir <dir>` reads another directory, and `--json` prints the inventory as JSON. It judges nothing, lists an unreadable registry instead of failing, and exits `0` after printing or `2` for a usage error. Both commands take `-C <dir>`.
+`repo-contract exceptions` prints the inventory from `summarizeExceptionRegistries`: per registry, the records by exception type and how many are legacy, expired or incomplete. `--dir <dir>` reads another directory, and `--json` prints the inventory as JSON. It judges nothing and lists an unreadable registry instead of failing. It exits `0` after printing, `1` when `-C` names no readable directory, and `2` for a usage error. Both commands take `-C <dir>`.

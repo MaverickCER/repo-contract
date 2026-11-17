@@ -114,11 +114,12 @@ const TIER_SPREAD = new RegExp(String.raw`\.\.\.\s*(${TIER_PRESET_NAMES.join("|"
 
 /**
  * A string literal, or a comment. At each position a string is tried before a comment, so a `//`
- * inside a string, such as a URL, stays part of the string. An unclosed block comment runs to the
- * end. Regular expression literals are not recognized, so a quote inside one can hide a spread.
+ * inside a string, such as a URL, stays part of the string. An unclosed string or block comment
+ * runs to the end, so every match that starts succeeds and the scan stays linear. Regular
+ * expression literals are not recognized, so a quote inside one can hide a spread.
  */
 const STRING_OR_COMMENT =
-  /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)/g
+  /"(?:[^"\\]|\\[\s\S])*"?|'(?:[^'\\]|\\[\s\S])*'?|`(?:[^`\\]|\\[\s\S])*`?|\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)/g
 
 /**
  * Reads which tier a config spreads, so `init` can describe a config it kept. Comments and

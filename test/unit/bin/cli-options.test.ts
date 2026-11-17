@@ -1,6 +1,13 @@
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import path from "node:path"
-import { describe, expect, it } from "vitest"
-import { commandDirectory, messageOf, parseCommandOptions } from "../../../bin/cli-options.mjs"
+import { afterAll, describe, expect, it } from "vitest"
+import {
+  checkDirectory,
+  commandDirectory,
+  messageOf,
+  parseCommandOptions,
+} from "../../../bin/cli-options.mjs"
 
 const SPEC = {
   values: { "--dir": "dir", "-C": "cwd" },
@@ -135,4 +142,77 @@ describe("commandDirectory", () => {
     expect(commandDirectory(start, "..")).toBe(path.dirname(start))
     expect(commandDirectory("relative", undefined)).toBe(path.resolve("relative"))
   })
+})
+
+describe("checkDirectory", () => {
+  const scratch = mkdtempSync(path.join(tmpdir(), "rc-cli-options-"))
+  afterAll(() => {
+    rmSync(scratch, { recursive: true, force: true })
+  })
+
+  it("passes a directory that exists", () => {
+    expect(checkDirectory(scratch)).toBeUndefined()
+  })
+
+  it("says a path with nothing there does not exist, however deep", () => {
+    const missing = path.join(scratch, "missing")
+    expect(checkDirectory(missing)).toBe(`the directory ${missing} does not exist`)
+    const deeper = path.join(missing, "deeper")
+    expect(checkDirectory(deeper)).toBe(`the directory ${deeper} does not exist`)
+  })
+
+  it("says a regular file is not a directory, and a path under it does not exist", () => {
+    const file = path.join(scratch, "file")
+    writeFileSync(file, "")
+    expect(checkDirectory(file)).toBe(`${file} is not a directory`)
+    // Node 22.13 reports ENOTDIR for a path under a file; later releases report it as not found.
+    const under = path.join(file, "child")
+    expect([
+      `the directory ${under} does not exist`,
+      `cannot read the directory ${under}: ENOTDIR`,
+    ]).toContain(checkDirectory(under))
+  })
+
+  // A name over 255 bytes fails with ENAMETOOLONG on macOS and Linux, even for root, and a
+  // symbolic link to itself fails with ELOOP. Windows reports both differently, and neither may
+  // escape as a throw anywhere.
+  it("never throws for a name too long or a link to itself", () => {
+    const loop = path.join(scratch, "loop-any")
+    try {
+      symlinkSync(loop, loop)
+    } catch {
+      // Windows may refuse to create the link without the privilege; the long name still runs.
+    }
+    for (const target of [path.join(scratch, "a".repeat(300)), loop]) {
+      expect(checkDirectory(target)).toMatch(/^(cannot read the directory|the directory) /)
+    }
+  })
+
+  it.skipIf(process.platform === "win32")("names the error code when stat fails", () => {
+    const long = path.join(scratch, "a".repeat(300))
+    expect(checkDirectory(long)).toBe(`cannot read the directory ${long}: ENAMETOOLONG`)
+    const loop = path.join(scratch, "loop")
+    symlinkSync(loop, loop)
+    expect(checkDirectory(loop)).toBe(`cannot read the directory ${loop}: ELOOP`)
+  })
+
+  // Windows ignores the mode bits and root bypasses them.
+  it.skipIf(process.platform === "win32" || process.getuid?.() === 0)(
+    "names EACCES for a directory the process may not list or enter",
+    () => {
+      for (const [name, mode] of [
+        ["none", 0o000],
+        ["enter-only", 0o100],
+        ["list-only", 0o400],
+      ] as const) {
+        const locked = path.join(scratch, name)
+        mkdirSync(locked, { mode })
+        try {
+          expect(checkDirectory(locked), name).toBe(`cannot read the directory ${locked}: EACCES`)
+        } finally {
+          chmodSync(locked, 0o700)
+        }
+      }
+    },
+  )
 })

@@ -1,12 +1,13 @@
 // `repo-contract exceptions`: count every exception record, by registry and type, with the legacy,
 // expired and incomplete ones. It decides nothing: the check that owns a registry fails on it.
-// Exit 0 after printing, even when a registry is unreadable (it is listed), 2 for a usage error.
+// Exit 0 after printing, even when a registry is unreadable (it is listed), 1 when -C names no
+// readable directory, 2 for a usage error.
 //
 // The helpers' `readExceptionRegistries` lists a symbolic link as skipped and never follows it. Its
 // reasons name an error code or a shape, never a registry's bytes.
 
 import path from "node:path"
-import { commandDirectory, parseCommandOptions } from "./cli-options.mjs"
+import { checkDirectory, commandDirectory, parseCommandOptions } from "./cli-options.mjs"
 
 export const EXCEPTIONS_USAGE = `Usage: repo-contract exceptions [options]
 
@@ -22,7 +23,7 @@ Options:
   -h, --help     Show this help
   -V, --version  Print the version
 
-Exit status: 0 after printing, 2 for a usage error.`
+Exit status: 0 after printing, 1 if -C names no readable directory, 2 for a usage error.`
 
 const DEFAULT_DIRECTORY = ".repo-contract/exceptions"
 
@@ -72,6 +73,12 @@ export async function runExceptions(input) {
 
   const { options } = parsed
   const root = commandDirectory(input.cwd, options.cwd)
+  // A missing directory holds no registries, and "No exceptions recorded" would mislead.
+  const directoryProblem = checkDirectory(root)
+  if (directoryProblem !== undefined) {
+    input.stderr(`repo-contract exceptions: ${directoryProblem}\n`)
+    return 1
+  }
   const { registries, errors } = await input.helpers.readExceptionRegistries(
     path.resolve(root, options.dir),
   )

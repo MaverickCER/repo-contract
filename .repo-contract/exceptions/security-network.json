@@ -27,7 +27,7 @@
       "remediation": "Remove with the line 6 record, when Stryker's report lists mutant-free files."
     },
     {
-      "id": "security-network:dynamic-import-non-literal-specifier:bin/mutation-plan.mjs:50:15",
+      "id": "security-network:dynamic-import-non-literal-specifier:bin/mutation-plan.mjs:51:15",
       "version": 1,
       "justification": "`repo-contract mutation run` imports the project's own Stryker config file (stryker.config.mjs or the `--config` path) to read its `mutate`, report and temp paths. That file is the project's code, which Stryker itself imports a moment later in the same run. Accepted as a risk: the import executes project code the user already runs. bin/ is the one place ADR 0011 lets load or start anything at run time; the AmbientCapabilities check keeps dist/ free of it.",
       "alternatives": "Parsing the config as text would miss computed values; asking Stryker for its resolved config needs a second Stryker start per run.",
@@ -35,7 +35,7 @@
       "column": 15,
       "exceptionType": "accepted-risk",
       "file": "bin/mutation-plan.mjs",
-      "line": 50,
+      "line": 51,
       "method": "policy-rule",
       "remediation": "Remove when Stryker exposes its resolved config without running, or when the preset passes the paths it needs as options."
     },

@@ -90,8 +90,8 @@
         "url": "https://github.com/maverickcer/repo-contract/blob/main/specs/architecture.md"
       },
       {
-        "claim": "No shell by default, and no ambient access.",
-        "scope": "The consumer supplies the process and environment capabilities. repo-contract cannot vouch for what the commands you configure do once they run.",
+        "claim": "No shell by default, and no ambient access in the library.",
+        "scope": "The consumer supplies the process and environment capabilities. The bin/ CLI is the exception: it reads process.env and spawns, as the mutation and npmScript presets use. repo-contract cannot vouch for what the commands you configure do once they run.",
         "linkLabel": "Read the security model",
         "url": "https://github.com/maverickcer/repo-contract/blob/main/SECURITY.md"
       }

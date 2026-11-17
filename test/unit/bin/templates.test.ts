@@ -142,6 +142,34 @@ describe("spreadTierOf", () => {
     expect(spreadTierOf('const note = "...strict()"\nexport default { ...app() }')).toBe("app")
     expect(spreadTierOf("const note = '...strict()', other = `...basic()`")).toBeUndefined()
   })
+
+  it("keeps an escaped line break inside a string", () => {
+    expect(spreadTierOf('"\\\n...strict()" ...app()')).toBe("app")
+    expect(spreadTierOf("'\\ ...strict()' ...app()")).toBe("app")
+  })
+
+  it.each(['"', "'", "`"])("ends a %s string at the quote after an escaped backslash", (quote) => {
+    expect(spreadTierOf(`${quote}a\\\\${quote} ...app()`)).toBe("app")
+  })
+
+  it.each(['"', "'", "`"])("reads an unclosed %s string as running to the end", (quote) => {
+    expect(spreadTierOf(`${quote} ...strict()`)).toBeUndefined()
+    expect(spreadTierOf(`...app() ${quote} ...strict()`)).toBe("app")
+    expect(spreadTierOf(`${quote}\\${quote} ...strict()\\`)).toBeUndefined()
+  })
+
+  // An unclosed string that failed to match used to be retried from each escaped quote inside it,
+  // which made the scan quadratic: 37 s for 100,000 escaped quotes. These run after the cases
+  // above, so a mutant that brings the retry back fails on them first instead of timing out here.
+  // The 5 s bound leaves room for a loaded CI runner and still sits far below the quadratic 37 s.
+  it.each(['"', "'", "`"])("reads 200,000 escaped %s quotes in linear time", (quote) => {
+    for (const tail of ["", "\\"]) {
+      const text = `${quote}${`\\${quote}`.repeat(200_000)}${tail} ...strict()`
+      const started = performance.now()
+      expect(spreadTierOf(text)).toBeUndefined()
+      expect(performance.now() - started).toBeLessThan(5_000)
+    }
+  })
 })
 
 describe("tierInitHeadline", () => {

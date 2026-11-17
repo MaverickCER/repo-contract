@@ -7,6 +7,7 @@
 // usage error. Without --fix nothing is written.
 
 import path from "node:path"
+import { checkDirectory } from "./cli-options.mjs"
 
 export const DOCTOR_USAGE = `Usage: repo-contract doctor [options]
 
@@ -171,6 +172,9 @@ function renderFindings(findings) {
  * @param {(text: string) => void} input.stdout - Writes to standard output.
  * @param {(text: string) => void} input.stderr - Writes to standard error.
  * @param {object} input.engine - `diagnose` and `planFixes`.
+ * @param {(dir: string) => string | undefined | Promise<string | undefined>} [input.checkDirectory]
+ *   - Checks the `-C` directory without throwing: `undefined`, or a message. Defaults to
+ *   `checkDirectory`.
  * @param {(dir: string) => object} input.createCapabilities - Builds git, read and write access.
  * @returns {Promise<number>} The exit status.
  */
@@ -194,6 +198,9 @@ export async function runDoctor(input) {
   const { options } = parsed
   const dir = path.resolve(input.cwd, options.cwd ?? "")
   try {
+    // git started in a missing directory fails as "spawn git ENOENT", which blames git.
+    const directoryProblem = await (input.checkDirectory ?? checkDirectory)(dir)
+    if (directoryProblem !== undefined) throw new Error(directoryProblem)
     const capabilities = input.createCapabilities(dir)
     const report = input.engine.diagnose(await gather(capabilities))
     const files = {}

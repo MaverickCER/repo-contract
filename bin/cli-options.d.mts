@@ -14,3 +14,4 @@ export function parseCommandOptions(
 ): ParsedCommandOptions
 export function messageOf(error: unknown): string
 export function commandDirectory(cwd: string, option: string | undefined): string
+export function checkDirectory(dir: string): string | undefined

@@ -56,6 +56,8 @@ async function invoke(
     version: "9.9.9",
     stdout: (text: string) => out.push(text),
     stderr: (text: string) => err.push(text),
+    checkDirectory: async (dir: string) =>
+      path.basename(dir) === "missing" ? `the directory ${dir} does not exist` : undefined,
     engine: { createCache },
     createStore: (dir: string) => {
       dirs.push(dir)
@@ -329,6 +331,8 @@ describe("runCache", () => {
       version: "1",
       stdout: (text: string) => out.push(text),
       stderr: (text: string) => err.push(text),
+      checkDirectory: async (dir: string) =>
+        path.basename(dir) === "missing" ? `the directory ${dir} does not exist` : undefined,
       engine: { createCache },
       createStore: () => ({
         read: () => Promise.reject(new Error("EACCES: permission denied")),
@@ -351,6 +355,8 @@ describe("runCache", () => {
       version: "1",
       stdout: () => undefined,
       stderr: (text: string) => err.push(text),
+      checkDirectory: async (dir: string) =>
+        path.basename(dir) === "missing" ? `the directory ${dir} does not exist` : undefined,
       engine: { createCache },
       createStore: () => {
         const thrown: unknown = "boom"
