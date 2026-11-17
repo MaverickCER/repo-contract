@@ -164,8 +164,8 @@ particular:
   - `repo-contract merge-mutation --out <file>` writes the merged report to that file.
   - `repo-contract cache clear` and `cache prune` delete entries in the cache directory
     (`--cache-dir`, default `.repo-contract/cache`).
-  - `repo-contract quick-start` packs the tarball into a temporary directory under the system temp
-    folder, runs the README commands in an empty project there, then deletes the directory.
+  - `repo-contract quick-start` packs the tarball and runs the README commands in a new folder under
+    the system temp directory. It then tries to delete that folder.
   - `repo-contract mutation run`, which the `mutation` preset runs, deletes Stryker's incremental
     file, the previous report and the temp directory. When one of those paths is not strictly
     inside the project once symbolic links resolve, it refuses and deletes nothing. It writes the
